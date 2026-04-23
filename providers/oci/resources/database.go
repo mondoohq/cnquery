@@ -367,3 +367,352 @@ func (o *mqlOciDatabaseAutonomousDatabase) subnet() (*mqlOciNetworkSubnet, error
 	}
 	return r.(*mqlOciNetworkSubnet), nil
 }
+
+// Database backups (VM/BM)
+
+func (o *mqlOciDatabase) backups() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	if err != nil {
+		return nil, err
+	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(o.getDatabaseBackups(conn, list.Data), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (o *mqlOciDatabase) getDatabaseBackups(conn *connection.OciConnection, regions []any) []*jobpool.Job {
+	ctx := context.Background()
+	tasks := make([]*jobpool.Job, 0)
+	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling oci database backups with region %s", regionResource.Id.Data)
+
+			svc, err := conn.DatabaseClient(regionResource.Id.Data)
+			if err != nil {
+				return nil, err
+			}
+
+			var items []database.BackupSummary
+			var page *string
+			for {
+				response, err := svc.ListBackups(ctx, database.ListBackupsRequest{
+					CompartmentId: common.String(conn.TenantID()),
+					Page:          page,
+				})
+				if err != nil {
+					return nil, err
+				}
+				items = append(items, response.Items...)
+				if response.OpcNextPage == nil {
+					break
+				}
+				page = response.OpcNextPage
+			}
+
+			var res []any
+			for i := range items {
+				b := items[i]
+
+				var started, ended, expiry *time.Time
+				if b.TimeStarted != nil {
+					started = &b.TimeStarted.Time
+				}
+				if b.TimeEnded != nil {
+					ended = &b.TimeEnded.Time
+				}
+				if b.TimeExpiryScheduled != nil {
+					expiry = &b.TimeExpiryScheduled.Time
+				}
+
+				var sizeGBs float64
+				if b.DatabaseSizeInGBs != nil {
+					sizeGBs = *b.DatabaseSizeInGBs
+				}
+
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.database.backup", map[string]*llx.RawData{
+					"id":                       llx.StringDataPtr(b.Id),
+					"name":                     llx.StringDataPtr(b.DisplayName),
+					"compartmentID":            llx.StringDataPtr(b.CompartmentId),
+					"databaseId":               llx.StringDataPtr(b.DatabaseId),
+					"availabilityDomain":       llx.StringDataPtr(b.AvailabilityDomain),
+					"type":                     llx.StringData(string(b.Type)),
+					"backupDestinationType":    llx.StringData(string(b.BackupDestinationType)),
+					"databaseSizeInGBs":        llx.FloatData(sizeGBs),
+					"databaseEdition":          llx.StringData(string(b.DatabaseEdition)),
+					"version":                  llx.StringDataPtr(b.Version),
+					"shape":                    llx.StringDataPtr(b.Shape),
+					"isUsingOracleManagedKeys": llx.BoolDataPtr(b.IsUsingOracleManagedKeys),
+					"retentionPeriodInDays":    llx.IntData(intValue(b.RetentionPeriodInDays)),
+					"retentionPeriodInYears":   llx.IntData(intValue(b.RetentionPeriodInYears)),
+					"timeExpiryScheduled":      llx.TimeDataPtr(expiry),
+					"state":                    llx.StringData(string(b.LifecycleState)),
+					"timeStarted":              llx.TimeDataPtr(started),
+					"timeEnded":                llx.TimeDataPtr(ended),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlBackup := mqlInstance.(*mqlOciDatabaseBackup)
+				mqlBackup.cacheKmsKeyId = stringValue(b.KmsKeyId)
+				mqlBackup.cacheVaultId = stringValue(b.VaultId)
+				res = append(res, mqlBackup)
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlOciDatabaseBackupInternal struct {
+	cacheKmsKeyId string
+	cacheVaultId  string
+}
+
+func (o *mqlOciDatabaseBackup) id() (string, error) {
+	return "oci.database.backup/" + o.Id.Data, nil
+}
+
+func (o *mqlOciDatabaseBackup) kmsKey() (*mqlOciKmsKey, error) {
+	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
+		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheKmsKeyId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlOciKmsKey), nil
+}
+
+func (o *mqlOciDatabaseBackup) kmsVault() (*mqlOciKmsVault, error) {
+	if o.cacheVaultId == "" || !isOcid(o.cacheVaultId) {
+		o.KmsVault.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(o.MqlRuntime, "oci.kms.vault", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheVaultId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlOciKmsVault), nil
+}
+
+// Autonomous Database Backups
+
+func (o *mqlOciDatabase) autonomousDatabaseBackups() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	ociResource, err := CreateResource(o.MqlRuntime, "oci", nil)
+	if err != nil {
+		return nil, err
+	}
+	oci := ociResource.(*mqlOci)
+	list := oci.GetRegions()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(o.getAutonomousDatabaseBackups(conn, list.Data), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+// backups on an individual autonomous database returns its backups by
+// filtering the service-wide listing. We rely on the tenancy-wide listing
+// being cached and filter client-side, which avoids fanning out region calls
+// per-database when the parent list is already fetched.
+func (o *mqlOciDatabaseAutonomousDatabase) backups() ([]any, error) {
+	dbObj, err := CreateResource(o.MqlRuntime, "oci.database", nil)
+	if err != nil {
+		return nil, err
+	}
+	db := dbObj.(*mqlOciDatabase)
+	raw := db.GetAutonomousDatabaseBackups()
+	if raw.Error != nil {
+		return nil, raw.Error
+	}
+	dbID := o.Id.Data
+	res := []any{}
+	for _, r := range raw.Data {
+		b := r.(*mqlOciDatabaseAutonomousDatabaseBackup)
+		if b.cacheAutonomousDatabaseId == dbID {
+			res = append(res, b)
+		}
+	}
+	return res, nil
+}
+
+func (o *mqlOciDatabase) getAutonomousDatabaseBackups(conn *connection.OciConnection, regions []any) []*jobpool.Job {
+	ctx := context.Background()
+	tasks := make([]*jobpool.Job, 0)
+	for _, region := range regions {
+		regionResource, ok := region.(*mqlOciRegion)
+		if !ok {
+			return jobErr(errors.New("invalid region type"))
+		}
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling oci autonomous database backups with region %s", regionResource.Id.Data)
+
+			svc, err := conn.DatabaseClient(regionResource.Id.Data)
+			if err != nil {
+				return nil, err
+			}
+
+			var items []database.AutonomousDatabaseBackupSummary
+			var page *string
+			for {
+				response, err := svc.ListAutonomousDatabaseBackups(ctx, database.ListAutonomousDatabaseBackupsRequest{
+					CompartmentId: common.String(conn.TenantID()),
+					Page:          page,
+				})
+				if err != nil {
+					return nil, err
+				}
+				items = append(items, response.Items...)
+				if response.OpcNextPage == nil {
+					break
+				}
+				page = response.OpcNextPage
+			}
+
+			res := make([]any, 0, len(items))
+			for i := range items {
+				b := items[i]
+
+				var started, ended, timeTill *time.Time
+				if b.TimeStarted != nil {
+					started = &b.TimeStarted.Time
+				}
+				if b.TimeEnded != nil {
+					ended = &b.TimeEnded.Time
+				}
+				if b.TimeAvailableTill != nil {
+					timeTill = &b.TimeAvailableTill.Time
+				}
+
+				var dbSizeTBs, sizeTBs float64
+				if b.DatabaseSizeInTBs != nil {
+					dbSizeTBs = float64(*b.DatabaseSizeInTBs)
+				}
+				if b.SizeInTBs != nil {
+					sizeTBs = *b.SizeInTBs
+				}
+
+				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.database.autonomousDatabaseBackup", map[string]*llx.RawData{
+					"id":                    llx.StringDataPtr(b.Id),
+					"name":                  llx.StringDataPtr(b.DisplayName),
+					"compartmentID":         llx.StringDataPtr(b.CompartmentId),
+					"type":                  llx.StringData(string(b.Type)),
+					"isAutomatic":           llx.BoolDataPtr(b.IsAutomatic),
+					"isRestorable":          llx.BoolDataPtr(b.IsRestorable),
+					"retentionPeriodInDays": llx.IntData(intValue(b.RetentionPeriodInDays)),
+					"timeAvailableTill":     llx.TimeDataPtr(timeTill),
+					"databaseSizeInTBs":     llx.FloatData(dbSizeTBs),
+					"sizeInTBs":             llx.FloatData(sizeTBs),
+					"dbVersion":             llx.StringDataPtr(b.DbVersion),
+					"infrastructureType":    llx.StringData(string(b.InfrastructureType)),
+					"state":                 llx.StringData(string(b.LifecycleState)),
+					"timeStarted":           llx.TimeDataPtr(started),
+					"timeEnded":             llx.TimeDataPtr(ended),
+				})
+				if err != nil {
+					return nil, err
+				}
+				mqlBackup := mqlInstance.(*mqlOciDatabaseAutonomousDatabaseBackup)
+				mqlBackup.cacheAutonomousDatabaseId = stringValue(b.AutonomousDatabaseId)
+				mqlBackup.cacheKmsKeyId = stringValue(b.KmsKeyId)
+				mqlBackup.cacheVaultId = stringValue(b.VaultId)
+				res = append(res, mqlBackup)
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+type mqlOciDatabaseAutonomousDatabaseBackupInternal struct {
+	cacheAutonomousDatabaseId string
+	cacheKmsKeyId             string
+	cacheVaultId              string
+}
+
+func (o *mqlOciDatabaseAutonomousDatabaseBackup) id() (string, error) {
+	return "oci.database.autonomousDatabaseBackup/" + o.Id.Data, nil
+}
+
+func (o *mqlOciDatabaseAutonomousDatabaseBackup) autonomousDatabase() (*mqlOciDatabaseAutonomousDatabase, error) {
+	if o.cacheAutonomousDatabaseId == "" {
+		o.AutonomousDatabase.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(o.MqlRuntime, "oci.database.autonomousDatabase", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheAutonomousDatabaseId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlOciDatabaseAutonomousDatabase), nil
+}
+
+func (o *mqlOciDatabaseAutonomousDatabaseBackup) kmsKey() (*mqlOciKmsKey, error) {
+	if o.cacheKmsKeyId == "" || !isOcid(o.cacheKmsKeyId) {
+		o.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheKmsKeyId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlOciKmsKey), nil
+}
+
+func (o *mqlOciDatabaseAutonomousDatabaseBackup) kmsVault() (*mqlOciKmsVault, error) {
+	if o.cacheVaultId == "" || !isOcid(o.cacheVaultId) {
+		o.KmsVault.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	r, err := NewResource(o.MqlRuntime, "oci.kms.vault", map[string]*llx.RawData{
+		"id": llx.StringData(o.cacheVaultId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return r.(*mqlOciKmsVault), nil
+}

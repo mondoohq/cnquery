@@ -418,6 +418,8 @@ private oci.network.vcn @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // VCN flow logs (OCI logs with service=flowlogs whose resource is this VCN)
+  flowLogs() []oci.logging.log
 }
 
 // Oracle Cloud Infrastructure (OCI) network subnet
@@ -452,6 +454,8 @@ private oci.network.subnet @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // Subnet flow logs (OCI logs with service=flowlogs whose resource is this subnet)
+  flowLogs() []oci.logging.log
 }
 
 // Oracle Cloud Infrastructure (OCI) VCN security list (virtual firewall rules)
@@ -614,6 +618,12 @@ private oci.logging.log @defaults("name") {
   retentionDuration int
   // Log configuration (source type, category, resource)
   configuration dict
+  // Log category (e.g., all, write, read — depends on service)
+  category string
+  // Emitting OCI service (e.g., flowlogs, objectstorage, vcn)
+  sourceService string
+  // OCID of the resource emitting the log (e.g., a subnet OCID for flow logs)
+  sourceResource string
   // Creation time
   created time
   // Last modification time
@@ -1432,6 +1442,94 @@ oci.database {
   dbSystems() []oci.database.dbSystem
   // Autonomous databases
   autonomousDatabases() []oci.database.autonomousDatabase
+  // Database backups (VM/BM database backups across all regions)
+  backups() []oci.database.backup
+  // Autonomous database backups across all regions
+  autonomousDatabaseBackups() []oci.database.autonomousDatabaseBackup
+}
+
+// Oracle Cloud Infrastructure (OCI) database backup (for VM/BM databases)
+private oci.database.backup @defaults("name") {
+  // Backup OCID
+  id string
+  // Backup display name
+  name string
+  // Compartment OCID containing the backup
+  compartmentID string
+  // OCID of the source database (not the DB system)
+  databaseId string
+  // Availability domain where the backup is stored
+  availabilityDomain string
+  // Backup type (INCREMENTAL, FULL, VIRTUAL_FULL)
+  type string
+  // Backup destination (OBJECT_STORE, DBRS, AWS_S3)
+  backupDestinationType string
+  // Size of the source database at backup time, in GBs
+  databaseSizeInGBs float
+  // Database edition (STANDARD_EDITION, ENTERPRISE_EDITION, ENTERPRISE_EDITION_HIGH_PERFORMANCE, ENTERPRISE_EDITION_EXTREME_PERFORMANCE, ENTERPRISE_EDITION_DEVELOPER)
+  databaseEdition string
+  // Database version used by the source database
+  version string
+  // Shape of the source database
+  shape string
+  // KMS key used for TDE encryption of the backup
+  kmsKey() oci.kms.key
+  // KMS vault used for TDE encryption
+  kmsVault() oci.kms.vault
+  // Whether Oracle Managed Keys is required to restore the backup
+  isUsingOracleManagedKeys bool
+  // Retention period in days (long-term backups only)
+  retentionPeriodInDays int
+  // Retention period in years (long-term backups only)
+  retentionPeriodInYears int
+  // Scheduled expiration time for long-term backups
+  timeExpiryScheduled time
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED, RESTORING, UPDATING, CANCELING, CANCELED)
+  state string
+  // Backup start time
+  timeStarted time
+  // Backup end time
+  timeEnded time
+}
+
+// Oracle Cloud Infrastructure (OCI) autonomous database backup
+private oci.database.autonomousDatabaseBackup @defaults("name") {
+  // Backup OCID
+  id string
+  // Backup display name
+  name string
+  // Compartment OCID containing the backup
+  compartmentID string
+  // Autonomous database the backup belongs to
+  autonomousDatabase() oci.database.autonomousDatabase
+  // Backup type (AUTOMATIC, MANUAL, LONGTERM)
+  type string
+  // Whether the backup was created automatically
+  isAutomatic bool
+  // Whether the backup can be used to restore the source database
+  isRestorable bool
+  // Retention period in days (long-term backups only)
+  retentionPeriodInDays int
+  // Timestamp until when the backup will be available
+  timeAvailableTill time
+  // Size of the database at backup time, in TBs
+  databaseSizeInTBs float
+  // Backup size in TBs
+  sizeInTBs float
+  // Autonomous database version
+  dbVersion string
+  // Infrastructure type (CLOUD, CLOUD_AT_CUSTOMER)
+  infrastructureType string
+  // KMS key used for encryption
+  kmsKey() oci.kms.key
+  // KMS vault used for encryption
+  kmsVault() oci.kms.vault
+  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, FAILED, UPDATING)
+  state string
+  // Backup start time
+  timeStarted time
+  // Backup end time
+  timeEnded time
 }
 
 // Oracle Cloud Infrastructure (OCI) database system (VM/BM)
@@ -1537,6 +1635,238 @@ private oci.database.autonomousDatabase @defaults("name") {
   // Publicly reachable management and user URLs (sqlDevWebUrl, apexUrl, graphStudioUrl, ordsUrl, mongoDbUrl, machineLearningNotebookUrl, machineLearningUserManagementUrl, databaseTransformsUrl); populated when the database is publicly accessible or when a private endpoint URL is reachable through allowed networks
   connectionUrls dict
   // Lifecycle state (e.g., PROVISIONING, AVAILABLE, STOPPING, STOPPED, STARTING, TERMINATING, TERMINATED, UNAVAILABLE, RESTORE_IN_PROGRESS, RESTORE_FAILED, BACKUP_IN_PROGRESS, SCALE_IN_PROGRESS, AVAILABLE_NEEDS_ATTENTION, UPDATING, MAINTENANCE_IN_PROGRESS, RESTARTING, RECREATING, ROLE_CHANGE_IN_PROGRESS, UPGRADING, INACCESSIBLE, STANDBY)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+  // Backups taken of this autonomous database
+  backups() []oci.database.autonomousDatabaseBackup
+}
+
+// Oracle Cloud Infrastructure (OCI) API Gateway service
+oci.apigateway {
+  // API gateways in the tenancy
+  gateways() []oci.apigateway.gateway
+  // API deployments across all gateways
+  deployments() []oci.apigateway.deployment
+  // API gateway TLS certificates (in the apigateway service, distinct from oci.certificates.certificate)
+  certificates() []oci.apigateway.certificate
+}
+
+// Oracle Cloud Infrastructure (OCI) API gateway (regional network appliance)
+private oci.apigateway.gateway @defaults("name") {
+  // Gateway OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Endpoint type (PUBLIC, PRIVATE)
+  endpointType string
+  // IP addressing mode (IPV4, IPV6, DUAL_STACK)
+  ipMode string
+  // Hostname assigned to the gateway
+  hostname string
+  // Whether a response cache is configured (true for EXTERNAL_RESP_CACHE; false for NONE or unset)
+  hasResponseCache bool
+  // IP addresses assigned to the gateway
+  ipAddresses []string
+  // Subnet the gateway is deployed in
+  subnet() oci.network.subnet
+  // Network Security Groups attached to the gateway
+  networkSecurityGroups() []oci.network.networkSecurityGroup
+  // TLS certificate used by the gateway (from the apigateway certificates service)
+  certificate() oci.apigateway.certificate
+  // OCIDs of CA bundles (from the certificatesmanagement service or the apigateway certificates service) used by the gateway for TLS validation
+  caBundleIds []string
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) API gateway deployment
+private oci.apigateway.deployment @defaults("name pathPrefix") {
+  // Deployment OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Parent gateway
+  gateway() oci.apigateway.gateway
+  // Path prefix on the gateway that this deployment is deployed to
+  pathPrefix string
+  // Endpoint URL to reach this deployment
+  endpoint string
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Authentication policy type (NONE if no authentication policy is configured, otherwise TOKEN_AUTHENTICATION, JWT_AUTHENTICATION, or CUSTOM_AUTHENTICATION)
+  authenticationType() string
+  // Whether anonymous (unauthenticated) access is allowed
+  isAnonymousAccessAllowed() bool
+  // JWT audiences accepted when authenticationType is JWT_AUTHENTICATION
+  jwtAudiences() []string
+  // JWT issuers accepted when authenticationType is JWT_AUTHENTICATION
+  jwtIssuers() []string
+  // Whether client certificate verification is required on mTLS connections
+  mtlsIsVerifiedCertificateRequired() bool
+  // Allowed CNs or SANs for client certificates on mTLS connections
+  mtlsAllowedSans() []string
+  // Allowed origins for CORS (empty if CORS is not configured)
+  corsAllowedOrigins() []string
+  // Whether CORS requests may include credentials
+  corsAllowCredentials() bool
+  // Maximum number of requests per second allowed (0 if rate limiting is not configured)
+  rateLimitPerSecond() int
+  // Rate limiting grouping key (e.g., CLIENT_IP); empty when not configured
+  rateLimitKey() string
+  // Whether dynamic authentication (multiple auth options selected by request) is configured
+  hasDynamicAuthentication() bool
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) API gateway TLS certificate (distinct from oci.certificates.certificate; managed by the apigateway service)
+private oci.apigateway.certificate @defaults("name") {
+  // Certificate OCID
+  id string
+  // Display name
+  name string
+  // Compartment OCID
+  compartmentID string
+  // Subject names secured by the certificate (CN plus SANs)
+  subjectNames []string
+  // Certificate expiration time
+  timeNotValidAfter time
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Last update time
+  timeUpdated time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) Certificates Management service
+oci.certificates {
+  // Managed TLS certificates
+  certificates() []oci.certificates.certificate
+  // Certificate authorities (root or subordinate)
+  certificateAuthorities() []oci.certificates.certificateAuthority
+  // CA bundles (collections of trusted CA certificates)
+  caBundles() []oci.certificates.caBundle
+}
+
+// Oracle Cloud Infrastructure (OCI) managed TLS certificate
+private oci.certificates.certificate @defaults("name") {
+  // Certificate OCID
+  id string
+  // Certificate name
+  name string
+  // Certificate description
+  description string
+  // Compartment OCID
+  compartmentID string
+  // Configuration origin (ISSUED_BY_INTERNAL_CA, MANAGED_EXTERNALLY_ISSUED_BY_INTERNAL_CA, IMPORTED)
+  configType string
+  // Issuing certificate authority (set when configType is ISSUED_BY_INTERNAL_CA or MANAGED_EXTERNALLY_ISSUED_BY_INTERNAL_CA)
+  issuerCertificateAuthority() oci.certificates.certificateAuthority
+  // Subject common name (CN)
+  subject string
+  // Subject alternative names (DNS/IP entries from the current certificate version)
+  sans []string
+  // Start of the certificate's validity period
+  validityNotBefore time
+  // End of the certificate's validity period
+  validityNotAfter time
+  // Key algorithm (RSA2048, RSA4096, ECDSA_P256, ECDSA_P384)
+  keyAlgorithm string
+  // Signature algorithm (e.g., SHA256_WITH_RSA, SHA384_WITH_RSA, SHA512_WITH_RSA, SHA256_WITH_ECDSA, SHA384_WITH_ECDSA, SHA512_WITH_ECDSA)
+  signatureAlgorithm string
+  // Certificate profile type (e.g., TLS_SERVER_OR_CLIENT, TLS_SERVER, TLS_CLIENT, TLS_CODE_SIGN)
+  profileType string
+  // Current certificate version number
+  currentVersion int
+  // Whether auto-renewal is enabled (true when a CERTIFICATE_RENEWAL_RULE is present)
+  autoRenewalEnabled bool
+  // Renewal interval (ISO 8601 duration, e.g., P365D); empty when auto-renewal is not configured
+  renewalInterval string
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) certificate authority
+private oci.certificates.certificateAuthority @defaults("name") {
+  // CA OCID
+  id string
+  // CA name
+  name string
+  // CA description
+  description string
+  // Compartment OCID
+  compartmentID string
+  // CA kind inferred from configType (ROOT for ROOT_CA_*, SUBORDINATE for SUBORDINATE_CA_*)
+  kind string
+  // Configuration origin (ROOT_CA_GENERATED_INTERNALLY, SUBORDINATE_CA_ISSUED_BY_INTERNAL_CA, ROOT_CA_MANAGED_EXTERNALLY, SUBORDINATE_CA_MANAGED_INTERNALLY_ISSUED_BY_EXTERNAL_CA)
+  configType string
+  // Parent CA for subordinate CAs (null for root CAs)
+  issuerCertificateAuthority() oci.certificates.certificateAuthority
+  // Subject common name (CN)
+  subject string
+  // Start of the CA certificate's validity period (from the current version)
+  validityNotBefore time
+  // End of the CA certificate's validity period (from the current version)
+  validityNotAfter time
+  // Signing algorithm used by this CA to sign certificates (e.g., SHA256_WITH_RSA)
+  signingAlgorithm string
+  // KMS key used to encrypt this CA's private material
+  kmsKey() oci.kms.key
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED, PENDING_DELETION, SCHEDULING_DELETION, CANCELLING_DELETION)
+  state string
+  // Creation time
+  created time
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) CA bundle (collection of trusted CA certificates)
+private oci.certificates.caBundle @defaults("name") {
+  // CA bundle OCID
+  id string
+  // CA bundle name
+  name string
+  // CA bundle description
+  description string
+  // Compartment OCID
+  compartmentID string
+  // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
   state string
   // Creation time
   created time

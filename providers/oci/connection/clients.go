@@ -7,8 +7,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/oracle/oci-go-sdk/v65/apigateway"
 	"github.com/oracle/oci-go-sdk/v65/audit"
 	"github.com/oracle/oci-go-sdk/v65/bastion"
+	"github.com/oracle/oci-go-sdk/v65/certificatesmanagement"
 	"github.com/oracle/oci-go-sdk/v65/cloudguard"
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/containerengine"
@@ -332,6 +334,42 @@ func (c *OciConnection) FunctionsManagementClient(region string) (*functions.Fun
 
 func (c *OciConnection) ContainerInstanceClient(region string) (*containerinstances.ContainerInstanceClient, error) {
 	client, err := containerinstances.NewContainerInstanceClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) ApiGatewayClient(region string) (*apigateway.ApiGatewayClient, error) {
+	client, err := apigateway.NewApiGatewayClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) ApiGatewayGatewayClient(region string) (*apigateway.GatewayClient, error) {
+	client, err := apigateway.NewGatewayClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) ApiGatewayDeploymentClient(region string) (*apigateway.DeploymentClient, error) {
+	client, err := apigateway.NewDeploymentClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) CertificatesManagementClient(region string) (*certificatesmanagement.CertificatesManagementClient, error) {
+	client, err := certificatesmanagement.NewCertificatesManagementClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
