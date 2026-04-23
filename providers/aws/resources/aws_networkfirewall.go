@@ -254,6 +254,11 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 	}
 	tags := nfTagsToMap(policyResp.Tags)
 
+	var consumedStatefulDomain int64
+	if policyResp.ConsumedStatefulDomainCapacity != nil {
+		consumedStatefulDomain = int64(*policyResp.ConsumedStatefulDomainCapacity)
+	}
+
 	mqlPolicy, err := CreateResource(runtime, "aws.networkfirewall.policy",
 		map[string]*llx.RawData{
 			"arn":                             llx.StringDataPtr(policyResp.FirewallPolicyArn),
@@ -266,6 +271,7 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 			"statefulDefaultActions":          llx.ArrayData(llx.TArr2Raw(policy.StatefulDefaultActions), "string"),
 			"statefulRuleGroupReferences":     llx.ArrayData(statefulRuleGroupRefs, "dict"),
 			"statefulEngineOptions":           llx.DictData(statefulEngineOpts),
+			"consumedStatefulDomainCapacity":  llx.IntData(consumedStatefulDomain),
 			"tags":                            llx.MapData(tags, "string"),
 		})
 	if err != nil {

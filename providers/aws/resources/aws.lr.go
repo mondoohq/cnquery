@@ -588,6 +588,10 @@ const (
 	ResourceAwsMskReplicatorReplicationInfo                                     string = "aws.msk.replicator.replicationInfo"
 	ResourceAwsMskReplicatorTopicReplication                                    string = "aws.msk.replicator.topicReplication"
 	ResourceAwsMskReplicatorConsumerGroupReplication                            string = "aws.msk.replicator.consumerGroupReplication"
+	ResourceAwsMskReplicatorLogDelivery                                         string = "aws.msk.replicator.logDelivery"
+	ResourceAwsMskReplicatorLogDeliveryCloudwatchLogs                           string = "aws.msk.replicator.logDelivery.cloudwatchLogs"
+	ResourceAwsMskReplicatorLogDeliveryFirehose                                 string = "aws.msk.replicator.logDelivery.firehose"
+	ResourceAwsMskReplicatorLogDeliveryS3                                       string = "aws.msk.replicator.logDelivery.s3"
 	ResourceAwsMq                                                               string = "aws.mq"
 	ResourceAwsMqBroker                                                         string = "aws.mq.broker"
 	ResourceAwsBatch                                                            string = "aws.batch"
@@ -2962,6 +2966,22 @@ func init() {
 			// to override args, implement: initAwsMskReplicatorConsumerGroupReplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsMskReplicatorConsumerGroupReplication,
 		},
+		"aws.msk.replicator.logDelivery": {
+			// to override args, implement: initAwsMskReplicatorLogDelivery(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskReplicatorLogDelivery,
+		},
+		"aws.msk.replicator.logDelivery.cloudwatchLogs": {
+			// to override args, implement: initAwsMskReplicatorLogDeliveryCloudwatchLogs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskReplicatorLogDeliveryCloudwatchLogs,
+		},
+		"aws.msk.replicator.logDelivery.firehose": {
+			// to override args, implement: initAwsMskReplicatorLogDeliveryFirehose(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskReplicatorLogDeliveryFirehose,
+		},
+		"aws.msk.replicator.logDelivery.s3": {
+			// to override args, implement: initAwsMskReplicatorLogDeliveryS3(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMskReplicatorLogDeliveryS3,
+		},
 		"aws.mq": {
 			// to override args, implement: initAwsMq(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsMq,
@@ -4435,6 +4455,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.networkfirewall.policy.statefulEngineOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatefulEngineOptions()).ToDataRes(types.Dict)
+	},
+	"aws.networkfirewall.policy.consumedStatefulDomainCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetConsumedStatefulDomainCapacity()).ToDataRes(types.Int)
 	},
 	"aws.networkfirewall.policy.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -14783,6 +14806,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.clientVpnEndpoint.authenticationOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetAuthenticationOptions()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.ec2.clientVpnEndpoint.transitGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetTransitGateway()).ToDataRes(types.Resource("aws.ec2.transitgateway"))
+	},
+	"aws.ec2.clientVpnEndpoint.transitGatewayAvailabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetTransitGatewayAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
 	"aws.ec2.clientVpnEndpoint.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -19742,6 +19771,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.msk.replicator.kafkaClusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskReplicator).GetKafkaClusters()).ToDataRes(types.Array(types.Resource("aws.msk.replicator.kafkaCluster")))
 	},
+	"aws.msk.replicator.logDelivery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicator).GetLogDelivery()).ToDataRes(types.Resource("aws.msk.replicator.logDelivery"))
+	},
 	"aws.msk.replicator.replicationInfoList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskReplicator).GetReplicationInfoList()).ToDataRes(types.Array(types.Resource("aws.msk.replicator.replicationInfo")))
 	},
@@ -19771,6 +19803,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.msk.replicator.kafkaCluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.msk.replicator.kafkaCluster.apacheKafkaBootstrapBrokers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetApacheKafkaBootstrapBrokers()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.kafkaCluster.authenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetAuthenticationType()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.kafkaCluster.saslScramMechanism": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetSaslScramMechanism()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.kafkaCluster.saslScramSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetSaslScramSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.msk.replicator.kafkaCluster.encryptionInTransitType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetEncryptionInTransitType()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.kafkaCluster.rootCaCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorKafkaCluster).GetRootCaCertificate()).ToDataRes(types.String)
 	},
 	"aws.msk.replicator.replicationInfo.sourceKafkaClusterAlias": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskReplicatorReplicationInfo).GetSourceKafkaClusterAlias()).ToDataRes(types.String)
@@ -19825,6 +19875,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.msk.replicator.consumerGroupReplication.detectAndCopyNewConsumerGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMskReplicatorConsumerGroupReplication).GetDetectAndCopyNewConsumerGroups()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.consumerGroupReplication.offsetSyncMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorConsumerGroupReplication).GetOffsetSyncMode()).ToDataRes(types.String)
+	},
+	"aws.msk.replicator.logDelivery.hasAnyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDelivery).GetHasAnyEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.logDelivery.cloudwatchLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDelivery).GetCloudwatchLogs()).ToDataRes(types.Resource("aws.msk.replicator.logDelivery.cloudwatchLogs"))
+	},
+	"aws.msk.replicator.logDelivery.firehose": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDelivery).GetFirehose()).ToDataRes(types.Resource("aws.msk.replicator.logDelivery.firehose"))
+	},
+	"aws.msk.replicator.logDelivery.s3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDelivery).GetS3()).ToDataRes(types.Resource("aws.msk.replicator.logDelivery.s3"))
+	},
+	"aws.msk.replicator.logDelivery.cloudwatchLogs.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.logDelivery.cloudwatchLogs.logGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs).GetLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.msk.replicator.logDelivery.firehose.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDeliveryFirehose).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.logDelivery.firehose.deliveryStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDeliveryFirehose).GetDeliveryStream()).ToDataRes(types.Resource("aws.kinesis.firehoseDeliveryStream"))
+	},
+	"aws.msk.replicator.logDelivery.s3.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDeliveryS3).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.msk.replicator.logDelivery.s3.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDeliveryS3).GetBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.msk.replicator.logDelivery.s3.prefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMskReplicatorLogDeliveryS3).GetPrefix()).ToDataRes(types.String)
 	},
 	"aws.mq.brokers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMq).GetBrokers()).ToDataRes(types.Array(types.Resource("aws.mq.broker")))
@@ -23641,6 +23727,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.networkfirewall.policy.statefulEngineOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallPolicy).StatefulEngineOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.consumedStatefulDomainCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).ConsumedStatefulDomainCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.policy.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38879,6 +38969,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2ClientVpnEndpoint).AuthenticationOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.clientVpnEndpoint.transitGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).TransitGateway, ok = plugin.RawToTValue[*mqlAwsEc2Transitgateway](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnEndpoint.transitGatewayAvailabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).TransitGatewayAvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.clientVpnEndpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2ClientVpnEndpoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -46107,6 +46205,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMskReplicator).KafkaClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.msk.replicator.logDelivery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicator).LogDelivery, ok = plugin.RawToTValue[*mqlAwsMskReplicatorLogDelivery](v.Value, v.Error)
+		return
+	},
 	"aws.msk.replicator.replicationInfoList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMskReplicator).ReplicationInfoList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -46149,6 +46251,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.msk.replicator.kafkaCluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMskReplicatorKafkaCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.apacheKafkaBootstrapBrokers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).ApacheKafkaBootstrapBrokers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.authenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).AuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.saslScramMechanism": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).SaslScramMechanism, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.saslScramSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).SaslScramSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.encryptionInTransitType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).EncryptionInTransitType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.kafkaCluster.rootCaCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorKafkaCluster).RootCaCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.msk.replicator.replicationInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46233,6 +46359,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.msk.replicator.consumerGroupReplication.detectAndCopyNewConsumerGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMskReplicatorConsumerGroupReplication).DetectAndCopyNewConsumerGroups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.consumerGroupReplication.offsetSyncMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorConsumerGroupReplication).OffsetSyncMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDelivery).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.replicator.logDelivery.hasAnyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDelivery).HasAnyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.cloudwatchLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDelivery).CloudwatchLogs, ok = plugin.RawToTValue[*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.firehose": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDelivery).Firehose, ok = plugin.RawToTValue[*mqlAwsMskReplicatorLogDeliveryFirehose](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.s3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDelivery).S3, ok = plugin.RawToTValue[*mqlAwsMskReplicatorLogDeliveryS3](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.cloudwatchLogs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.replicator.logDelivery.cloudwatchLogs.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.cloudwatchLogs.logGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs).LogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.firehose.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDeliveryFirehose).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.replicator.logDelivery.firehose.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDeliveryFirehose).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.firehose.deliveryStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDeliveryFirehose).DeliveryStream, ok = plugin.RawToTValue[*mqlAwsKinesisFirehoseDeliveryStream](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.s3.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDeliveryS3).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.msk.replicator.logDelivery.s3.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDeliveryS3).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.s3.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDeliveryS3).Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.msk.replicator.logDelivery.s3.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMskReplicatorLogDeliveryS3).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.mq.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54125,6 +54315,7 @@ type mqlAwsNetworkfirewallPolicy struct {
 	StatefulDefaultActions          plugin.TValue[[]any]
 	StatefulRuleGroupReferences     plugin.TValue[[]any]
 	StatefulEngineOptions           plugin.TValue[any]
+	ConsumedStatefulDomainCapacity  plugin.TValue[int64]
 	Tags                            plugin.TValue[map[string]any]
 }
 
@@ -54203,6 +54394,10 @@ func (c *mqlAwsNetworkfirewallPolicy) GetStatefulRuleGroupReferences() *plugin.T
 
 func (c *mqlAwsNetworkfirewallPolicy) GetStatefulEngineOptions() *plugin.TValue[any] {
 	return &c.StatefulEngineOptions
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetConsumedStatefulDomainCapacity() *plugin.TValue[int64] {
+	return &c.ConsumedStatefulDomainCapacity
 }
 
 func (c *mqlAwsNetworkfirewallPolicy) GetTags() *plugin.TValue[map[string]any] {
@@ -94588,27 +94783,29 @@ type mqlAwsEc2ClientVpnEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEc2ClientVpnEndpointInternal
-	Id                       plugin.TValue[string]
-	Arn                      plugin.TValue[string]
-	Region                   plugin.TValue[string]
-	Description              plugin.TValue[string]
-	Status                   plugin.TValue[string]
-	CreatedAt                plugin.TValue[*time.Time]
-	Vpc                      plugin.TValue[*mqlAwsVpc]
-	ServerCertificateArn     plugin.TValue[string]
-	TransportProtocol        plugin.TValue[string]
-	VpnProtocol              plugin.TValue[string]
-	SplitTunnel              plugin.TValue[bool]
-	VpnPort                  plugin.TValue[int64]
-	SelfServicePortalUrl     plugin.TValue[string]
-	DnsServers               plugin.TValue[[]any]
-	SecurityGroups           plugin.TValue[[]any]
-	SessionTimeoutHours      plugin.TValue[int64]
-	ClientConnectOptions     plugin.TValue[any]
-	ClientLoginBannerOptions plugin.TValue[any]
-	ConnectionLogOptions     plugin.TValue[any]
-	AuthenticationOptions    plugin.TValue[[]any]
-	Tags                     plugin.TValue[map[string]any]
+	Id                              plugin.TValue[string]
+	Arn                             plugin.TValue[string]
+	Region                          plugin.TValue[string]
+	Description                     plugin.TValue[string]
+	Status                          plugin.TValue[string]
+	CreatedAt                       plugin.TValue[*time.Time]
+	Vpc                             plugin.TValue[*mqlAwsVpc]
+	ServerCertificateArn            plugin.TValue[string]
+	TransportProtocol               plugin.TValue[string]
+	VpnProtocol                     plugin.TValue[string]
+	SplitTunnel                     plugin.TValue[bool]
+	VpnPort                         plugin.TValue[int64]
+	SelfServicePortalUrl            plugin.TValue[string]
+	DnsServers                      plugin.TValue[[]any]
+	SecurityGroups                  plugin.TValue[[]any]
+	SessionTimeoutHours             plugin.TValue[int64]
+	ClientConnectOptions            plugin.TValue[any]
+	ClientLoginBannerOptions        plugin.TValue[any]
+	ConnectionLogOptions            plugin.TValue[any]
+	AuthenticationOptions           plugin.TValue[[]any]
+	TransitGateway                  plugin.TValue[*mqlAwsEc2Transitgateway]
+	TransitGatewayAvailabilityZones plugin.TValue[[]any]
+	Tags                            plugin.TValue[map[string]any]
 }
 
 // createAwsEc2ClientVpnEndpoint creates a new instance of this resource
@@ -94750,6 +94947,26 @@ func (c *mqlAwsEc2ClientVpnEndpoint) GetConnectionLogOptions() *plugin.TValue[an
 
 func (c *mqlAwsEc2ClientVpnEndpoint) GetAuthenticationOptions() *plugin.TValue[[]any] {
 	return &c.AuthenticationOptions
+}
+
+func (c *mqlAwsEc2ClientVpnEndpoint) GetTransitGateway() *plugin.TValue[*mqlAwsEc2Transitgateway] {
+	return plugin.GetOrCompute[*mqlAwsEc2Transitgateway](&c.TransitGateway, func() (*mqlAwsEc2Transitgateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.clientVpnEndpoint", c.__id, "transitGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Transitgateway), nil
+			}
+		}
+
+		return c.transitGateway()
+	})
+}
+
+func (c *mqlAwsEc2ClientVpnEndpoint) GetTransitGatewayAvailabilityZones() *plugin.TValue[[]any] {
+	return &c.TransitGatewayAvailabilityZones
 }
 
 func (c *mqlAwsEc2ClientVpnEndpoint) GetTags() *plugin.TValue[map[string]any] {
@@ -112396,6 +112613,7 @@ type mqlAwsMskReplicator struct {
 	StateMessage         plugin.TValue[string]
 	ServiceExecutionRole plugin.TValue[*mqlAwsIamRole]
 	KafkaClusters        plugin.TValue[[]any]
+	LogDelivery          plugin.TValue[*mqlAwsMskReplicatorLogDelivery]
 	ReplicationInfoList  plugin.TValue[[]any]
 	IsCrossRegion        plugin.TValue[bool]
 	IsCrossAccount       plugin.TValue[bool]
@@ -112513,6 +112731,22 @@ func (c *mqlAwsMskReplicator) GetKafkaClusters() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsMskReplicator) GetLogDelivery() *plugin.TValue[*mqlAwsMskReplicatorLogDelivery] {
+	return plugin.GetOrCompute[*mqlAwsMskReplicatorLogDelivery](&c.LogDelivery, func() (*mqlAwsMskReplicatorLogDelivery, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator", c.__id, "logDelivery")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskReplicatorLogDelivery), nil
+			}
+		}
+
+		return c.logDelivery()
+	})
+}
+
 func (c *mqlAwsMskReplicator) GetReplicationInfoList() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ReplicationInfoList, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -112546,13 +112780,19 @@ type mqlAwsMskReplicatorKafkaCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsMskReplicatorKafkaClusterInternal
-	AmazonMskClusterArn plugin.TValue[string]
-	KafkaClusterAlias   plugin.TValue[string]
-	SubnetIds           plugin.TValue[[]any]
-	SecurityGroupIds    plugin.TValue[[]any]
-	Cluster             plugin.TValue[*mqlAwsMskCluster]
-	Subnets             plugin.TValue[[]any]
-	SecurityGroups      plugin.TValue[[]any]
+	AmazonMskClusterArn         plugin.TValue[string]
+	KafkaClusterAlias           plugin.TValue[string]
+	SubnetIds                   plugin.TValue[[]any]
+	SecurityGroupIds            plugin.TValue[[]any]
+	Cluster                     plugin.TValue[*mqlAwsMskCluster]
+	Subnets                     plugin.TValue[[]any]
+	SecurityGroups              plugin.TValue[[]any]
+	ApacheKafkaBootstrapBrokers plugin.TValue[string]
+	AuthenticationType          plugin.TValue[string]
+	SaslScramMechanism          plugin.TValue[string]
+	SaslScramSecret             plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	EncryptionInTransitType     plugin.TValue[string]
+	RootCaCertificate           plugin.TValue[string]
 }
 
 // createAwsMskReplicatorKafkaCluster creates a new instance of this resource
@@ -112649,6 +112889,42 @@ func (c *mqlAwsMskReplicatorKafkaCluster) GetSecurityGroups() *plugin.TValue[[]a
 
 		return c.securityGroups()
 	})
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetApacheKafkaBootstrapBrokers() *plugin.TValue[string] {
+	return &c.ApacheKafkaBootstrapBrokers
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetAuthenticationType() *plugin.TValue[string] {
+	return &c.AuthenticationType
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetSaslScramMechanism() *plugin.TValue[string] {
+	return &c.SaslScramMechanism
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetSaslScramSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.SaslScramSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.kafkaCluster", c.__id, "saslScramSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.saslScramSecret()
+	})
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetEncryptionInTransitType() *plugin.TValue[string] {
+	return &c.EncryptionInTransitType
+}
+
+func (c *mqlAwsMskReplicatorKafkaCluster) GetRootCaCertificate() *plugin.TValue[string] {
+	return &c.RootCaCertificate
 }
 
 // mqlAwsMskReplicatorReplicationInfo for the aws.msk.replicator.replicationInfo resource
@@ -112856,6 +113132,7 @@ type mqlAwsMskReplicatorConsumerGroupReplication struct {
 	ConsumerGroupsToExclude         plugin.TValue[[]any]
 	SynchroniseConsumerGroupOffsets plugin.TValue[bool]
 	DetectAndCopyNewConsumerGroups  plugin.TValue[bool]
+	OffsetSyncMode                  plugin.TValue[string]
 }
 
 // createAwsMskReplicatorConsumerGroupReplication creates a new instance of this resource
@@ -112904,6 +113181,293 @@ func (c *mqlAwsMskReplicatorConsumerGroupReplication) GetSynchroniseConsumerGrou
 
 func (c *mqlAwsMskReplicatorConsumerGroupReplication) GetDetectAndCopyNewConsumerGroups() *plugin.TValue[bool] {
 	return &c.DetectAndCopyNewConsumerGroups
+}
+
+func (c *mqlAwsMskReplicatorConsumerGroupReplication) GetOffsetSyncMode() *plugin.TValue[string] {
+	return &c.OffsetSyncMode
+}
+
+// mqlAwsMskReplicatorLogDelivery for the aws.msk.replicator.logDelivery resource
+type mqlAwsMskReplicatorLogDelivery struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskReplicatorLogDeliveryInternal
+	HasAnyEnabled  plugin.TValue[bool]
+	CloudwatchLogs plugin.TValue[*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs]
+	Firehose       plugin.TValue[*mqlAwsMskReplicatorLogDeliveryFirehose]
+	S3             plugin.TValue[*mqlAwsMskReplicatorLogDeliveryS3]
+}
+
+// createAwsMskReplicatorLogDelivery creates a new instance of this resource
+func createAwsMskReplicatorLogDelivery(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskReplicatorLogDelivery{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.replicator.logDelivery", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskReplicatorLogDelivery) MqlName() string {
+	return "aws.msk.replicator.logDelivery"
+}
+
+func (c *mqlAwsMskReplicatorLogDelivery) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskReplicatorLogDelivery) GetHasAnyEnabled() *plugin.TValue[bool] {
+	return &c.HasAnyEnabled
+}
+
+func (c *mqlAwsMskReplicatorLogDelivery) GetCloudwatchLogs() *plugin.TValue[*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs] {
+	return plugin.GetOrCompute[*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs](&c.CloudwatchLogs, func() (*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.logDelivery", c.__id, "cloudwatchLogs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs), nil
+			}
+		}
+
+		return c.cloudwatchLogs()
+	})
+}
+
+func (c *mqlAwsMskReplicatorLogDelivery) GetFirehose() *plugin.TValue[*mqlAwsMskReplicatorLogDeliveryFirehose] {
+	return plugin.GetOrCompute[*mqlAwsMskReplicatorLogDeliveryFirehose](&c.Firehose, func() (*mqlAwsMskReplicatorLogDeliveryFirehose, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.logDelivery", c.__id, "firehose")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskReplicatorLogDeliveryFirehose), nil
+			}
+		}
+
+		return c.firehose()
+	})
+}
+
+func (c *mqlAwsMskReplicatorLogDelivery) GetS3() *plugin.TValue[*mqlAwsMskReplicatorLogDeliveryS3] {
+	return plugin.GetOrCompute[*mqlAwsMskReplicatorLogDeliveryS3](&c.S3, func() (*mqlAwsMskReplicatorLogDeliveryS3, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.logDelivery", c.__id, "s3")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMskReplicatorLogDeliveryS3), nil
+			}
+		}
+
+		return c.s3()
+	})
+}
+
+// mqlAwsMskReplicatorLogDeliveryCloudwatchLogs for the aws.msk.replicator.logDelivery.cloudwatchLogs resource
+type mqlAwsMskReplicatorLogDeliveryCloudwatchLogs struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskReplicatorLogDeliveryCloudwatchLogsInternal
+	Enabled  plugin.TValue[bool]
+	LogGroup plugin.TValue[*mqlAwsCloudwatchLoggroup]
+}
+
+// createAwsMskReplicatorLogDeliveryCloudwatchLogs creates a new instance of this resource
+func createAwsMskReplicatorLogDeliveryCloudwatchLogs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskReplicatorLogDeliveryCloudwatchLogs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.replicator.logDelivery.cloudwatchLogs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryCloudwatchLogs) MqlName() string {
+	return "aws.msk.replicator.logDelivery.cloudwatchLogs"
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryCloudwatchLogs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryCloudwatchLogs) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryCloudwatchLogs) GetLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.LogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.logDelivery.cloudwatchLogs", c.__id, "logGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.logGroup()
+	})
+}
+
+// mqlAwsMskReplicatorLogDeliveryFirehose for the aws.msk.replicator.logDelivery.firehose resource
+type mqlAwsMskReplicatorLogDeliveryFirehose struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskReplicatorLogDeliveryFirehoseInternal
+	Enabled        plugin.TValue[bool]
+	DeliveryStream plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStream]
+}
+
+// createAwsMskReplicatorLogDeliveryFirehose creates a new instance of this resource
+func createAwsMskReplicatorLogDeliveryFirehose(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskReplicatorLogDeliveryFirehose{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.replicator.logDelivery.firehose", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryFirehose) MqlName() string {
+	return "aws.msk.replicator.logDelivery.firehose"
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryFirehose) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryFirehose) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryFirehose) GetDeliveryStream() *plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStream] {
+	return plugin.GetOrCompute[*mqlAwsKinesisFirehoseDeliveryStream](&c.DeliveryStream, func() (*mqlAwsKinesisFirehoseDeliveryStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.logDelivery.firehose", c.__id, "deliveryStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKinesisFirehoseDeliveryStream), nil
+			}
+		}
+
+		return c.deliveryStream()
+	})
+}
+
+// mqlAwsMskReplicatorLogDeliveryS3 for the aws.msk.replicator.logDelivery.s3 resource
+type mqlAwsMskReplicatorLogDeliveryS3 struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMskReplicatorLogDeliveryS3Internal
+	Enabled plugin.TValue[bool]
+	Bucket  plugin.TValue[*mqlAwsS3Bucket]
+	Prefix  plugin.TValue[string]
+}
+
+// createAwsMskReplicatorLogDeliveryS3 creates a new instance of this resource
+func createAwsMskReplicatorLogDeliveryS3(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMskReplicatorLogDeliveryS3{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.msk.replicator.logDelivery.s3", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryS3) MqlName() string {
+	return "aws.msk.replicator.logDelivery.s3"
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryS3) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryS3) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryS3) GetBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.msk.replicator.logDelivery.s3", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
+}
+
+func (c *mqlAwsMskReplicatorLogDeliveryS3) GetPrefix() *plugin.TValue[string] {
+	return &c.Prefix
 }
 
 // mqlAwsMq for the aws.mq resource

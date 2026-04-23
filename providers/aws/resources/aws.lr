@@ -951,6 +951,8 @@ private aws.networkfirewall.policy @defaults("arn name region") {
   statefulRuleGroupReferences []dict
   // Stateful engine options
   statefulEngineOptions dict
+  // Domain-name specifications consumed by stateful-domain rule groups in the policy
+  consumedStatefulDomainCapacity int
   // Tags on the firewall policy
   tags map[string]string
 }
@@ -9330,6 +9332,10 @@ private aws.ec2.clientVpnEndpoint @defaults("id status region") {
   connectionLogOptions dict
   // Authentication options
   authenticationOptions []dict
+  // Transit Gateway the endpoint is attached to (transit-gateway mode only)
+  transitGateway() aws.ec2.transitgateway
+  // Availability Zones the Transit Gateway association spans
+  transitGatewayAvailabilityZones []string
   // Tags on the endpoint
   tags map[string]string
 }
@@ -13278,6 +13284,8 @@ private aws.msk.replicator @defaults("name state region") {
   serviceExecutionRole() aws.iam.role
   // Kafka clusters wired into the replicator (source/target)
   kafkaClusters() []aws.msk.replicator.kafkaCluster
+  // Log delivery configuration for the replicator (null when not configured)
+  logDelivery() aws.msk.replicator.logDelivery
   // Replication flow configurations between source and target clusters
   replicationInfoList() []aws.msk.replicator.replicationInfo
   // Whether source and target clusters live in different regions
@@ -13302,6 +13310,18 @@ private aws.msk.replicator.kafkaCluster @defaults("kafkaClusterAlias amazonMskCl
   subnets() []aws.vpc.subnet
   // Security groups attached to the replicator ENIs
   securityGroups() []aws.ec2.securitygroup
+  // Bootstrap broker string of the external (non-MSK) Apache Kafka cluster, if this is an external target
+  apacheKafkaBootstrapBrokers string
+  // Authentication type for an external Apache Kafka cluster: SASL_SCRAM, or NONE if unauthenticated
+  authenticationType string
+  // SASL/SCRAM mechanism when authenticationType is SASL_SCRAM: SHA256 or SHA512
+  saslScramMechanism string
+  // Secrets Manager secret holding SASL/SCRAM credentials
+  saslScramSecret() aws.secretsmanager.secret
+  // Encryption type in transit to the external Apache Kafka cluster: TLS (absent for MSK clusters)
+  encryptionInTransitType string
+  // PEM-encoded root CA certificate trusted for TLS to the external Apache Kafka cluster
+  rootCaCertificate string
 }
 
 // A source-to-target replication flow
@@ -13350,6 +13370,46 @@ private aws.msk.replicator.consumerGroupReplication @defaults("synchroniseConsum
   synchroniseConsumerGroupOffsets bool
   // Whether new consumer groups are detected and copied
   detectAndCopyNewConsumerGroups bool
+  // Consumer group offset sync mode: LEGACY (syncs when producers write to source) or ENHANCED (syncs regardless of producer location; requires reverse replicator)
+  offsetSyncMode string
+}
+
+// Log delivery configuration for an MSK replicator
+private aws.msk.replicator.logDelivery @defaults("hasAnyEnabled") {
+  // Whether any log delivery destination is enabled
+  hasAnyEnabled bool
+  // CloudWatch Logs destination (null when not configured)
+  cloudwatchLogs() aws.msk.replicator.logDelivery.cloudwatchLogs
+  // Kinesis Firehose destination (null when not configured)
+  firehose() aws.msk.replicator.logDelivery.firehose
+  // S3 destination (null when not configured)
+  s3() aws.msk.replicator.logDelivery.s3
+}
+
+// CloudWatch Logs replicator log destination
+private aws.msk.replicator.logDelivery.cloudwatchLogs @defaults("enabled") {
+  // Whether CloudWatch Logs delivery is enabled
+  enabled bool
+  // CloudWatch log group resource
+  logGroup() aws.cloudwatch.loggroup
+}
+
+// Kinesis Firehose replicator log destination
+private aws.msk.replicator.logDelivery.firehose @defaults("enabled") {
+  // Whether Firehose delivery is enabled
+  enabled bool
+  // Firehose delivery stream
+  deliveryStream() aws.kinesis.firehoseDeliveryStream
+}
+
+// S3 replicator log destination
+private aws.msk.replicator.logDelivery.s3 @defaults("enabled") {
+  // Whether S3 delivery is enabled
+  enabled bool
+  // S3 bucket destination
+  bucket() aws.s3.bucket
+  // Key prefix written into the bucket
+  prefix string
 }
 
 // Amazon MQ

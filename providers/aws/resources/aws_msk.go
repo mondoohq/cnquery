@@ -149,11 +149,37 @@ type mqlAwsMskReplicatorKafkaClusterInternal struct {
 	accountID      string
 	cacheSubnetIds []string
 	cacheMskArn    *string
+	cacheSecretArn *string
 }
 
 type mqlAwsMskReplicatorReplicationInfoInternal struct {
 	sourceArn *string
 	targetArn *string
+}
+
+type mqlAwsMskReplicatorLogDeliveryInternal struct {
+	replicatorArn string
+	region        string
+	accountID     string
+	cacheCW       *kafka_types.ReplicatorCloudWatchLogs
+	cacheFirehose *kafka_types.ReplicatorFirehose
+	cacheS3       *kafka_types.ReplicatorS3
+}
+
+type mqlAwsMskReplicatorLogDeliveryCloudwatchLogsInternal struct {
+	region        string
+	accountID     string
+	cacheLogGroup *string
+}
+
+type mqlAwsMskReplicatorLogDeliveryFirehoseInternal struct {
+	region              string
+	accountID           string
+	cacheDeliveryStream *string
+}
+
+type mqlAwsMskReplicatorLogDeliveryS3Internal struct {
+	cacheBucket *string
 }
 
 // ===== aws.msk =====
@@ -2186,13 +2212,44 @@ func (a *mqlAwsMskReplicator) kafkaClusters() ([]any, error) {
 		for _, s := range sgIdsRaw {
 			sgIds = append(sgIds, s)
 		}
+
+		bootstrapBrokers := ""
+		if kc.ApacheKafkaCluster != nil && kc.ApacheKafkaCluster.BootstrapBrokerString != nil {
+			bootstrapBrokers = *kc.ApacheKafkaCluster.BootstrapBrokerString
+		}
+		authType := ""
+		saslMechanism := ""
+		var secretArnPtr *string
+		if kc.ClientAuthentication != nil {
+			if kc.ClientAuthentication.SaslScram != nil {
+				authType = "SASL_SCRAM"
+				saslMechanism = string(kc.ClientAuthentication.SaslScram.Mechanism)
+				secretArnPtr = kc.ClientAuthentication.SaslScram.SecretArn
+			} else {
+				authType = "NONE"
+			}
+		}
+		encType := ""
+		rootCa := ""
+		if kc.EncryptionInTransit != nil {
+			encType = string(kc.EncryptionInTransit.EncryptionType)
+			if kc.EncryptionInTransit.RootCaCertificate != nil {
+				rootCa = *kc.EncryptionInTransit.RootCaCertificate
+			}
+		}
+
 		resource, err := CreateResource(a.MqlRuntime, "aws.msk.replicator.kafkaCluster",
 			map[string]*llx.RawData{
-				"__id":                llx.StringData(a.Arn.Data + "/cluster/" + alias),
-				"amazonMskClusterArn": llx.StringData(mskArn),
-				"kafkaClusterAlias":   llx.StringData(alias),
-				"subnetIds":           llx.ArrayData(subnetIds, types.String),
-				"securityGroupIds":    llx.ArrayData(sgIds, types.String),
+				"__id":                        llx.StringData(a.Arn.Data + "/cluster/" + alias),
+				"amazonMskClusterArn":         llx.StringData(mskArn),
+				"kafkaClusterAlias":           llx.StringData(alias),
+				"subnetIds":                   llx.ArrayData(subnetIds, types.String),
+				"securityGroupIds":            llx.ArrayData(sgIds, types.String),
+				"apacheKafkaBootstrapBrokers": llx.StringData(bootstrapBrokers),
+				"authenticationType":          llx.StringData(authType),
+				"saslScramMechanism":          llx.StringData(saslMechanism),
+				"encryptionInTransitType":     llx.StringData(encType),
+				"rootCaCertificate":           llx.StringData(rootCa),
 			})
 		if err != nil {
 			return nil, err
@@ -2201,6 +2258,7 @@ func (a *mqlAwsMskReplicator) kafkaClusters() ([]any, error) {
 		mqlKC.region = a.region
 		mqlKC.accountID = a.accountID
 		mqlKC.cacheMskArn = mskArnPtr
+		mqlKC.cacheSecretArn = secretArnPtr
 		mqlKC.cacheSubnetIds = append(mqlKC.cacheSubnetIds, subnetIdsRaw...)
 		sgArns := make([]string, 0, len(sgIdsRaw))
 		for _, sg := range sgIdsRaw {
@@ -2210,6 +2268,19 @@ func (a *mqlAwsMskReplicator) kafkaClusters() ([]any, error) {
 		res = append(res, mqlKC)
 	}
 	return res, nil
+}
+
+func (a *mqlAwsMskReplicatorKafkaCluster) saslScramSecret() (*mqlAwsSecretsmanagerSecret, error) {
+	if a.cacheSecretArn == nil || *a.cacheSecretArn == "" {
+		a.SaslScramSecret.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlSecret, err := NewResource(a.MqlRuntime, "aws.secretsmanager.secret",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheSecretArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlSecret.(*mqlAwsSecretsmanagerSecret), nil
 }
 
 func (a *mqlAwsMskReplicatorKafkaCluster) cluster() (*mqlAwsMskCluster, error) {
@@ -2367,6 +2438,7 @@ func (a *mqlAwsMskReplicator) replicationInfoList() ([]any, error) {
 					"consumerGroupsToExclude":         llx.ArrayData(toExclude, types.String),
 					"synchroniseConsumerGroupOffsets": llx.BoolData(synchronise),
 					"detectAndCopyNewConsumerGroups":  llx.BoolData(detectNew),
+					"offsetSyncMode":                  llx.StringData(string(ri.ConsumerGroupReplication.ConsumerGroupOffsetSyncMode)),
 				})
 			if err != nil {
 				return nil, err
@@ -2464,4 +2536,160 @@ func (a *mqlAwsMskReplicator) isCrossAccount() (bool, error) {
 
 func stringPtr(s string) *string {
 	return &s
+}
+
+func (a *mqlAwsMskReplicator) logDelivery() (*mqlAwsMskReplicatorLogDelivery, error) {
+	d, err := a.fetchDescribe()
+	if err != nil {
+		return nil, err
+	}
+	if d == nil || d.LogDelivery == nil || d.LogDelivery.ReplicatorLogDelivery == nil {
+		a.LogDelivery.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	ld := d.LogDelivery.ReplicatorLogDelivery
+
+	hasAny := false
+	if ld.CloudWatchLogs != nil && ld.CloudWatchLogs.Enabled != nil && *ld.CloudWatchLogs.Enabled {
+		hasAny = true
+	}
+	if ld.Firehose != nil && ld.Firehose.Enabled != nil && *ld.Firehose.Enabled {
+		hasAny = true
+	}
+	if ld.S3 != nil && ld.S3.Enabled != nil && *ld.S3.Enabled {
+		hasAny = true
+	}
+
+	resource, err := CreateResource(a.MqlRuntime, "aws.msk.replicator.logDelivery",
+		map[string]*llx.RawData{
+			"__id":          llx.StringData(a.Arn.Data + "/logDelivery"),
+			"hasAnyEnabled": llx.BoolData(hasAny),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlLD := resource.(*mqlAwsMskReplicatorLogDelivery)
+	mqlLD.replicatorArn = a.Arn.Data
+	mqlLD.region = a.region
+	mqlLD.accountID = a.accountID
+	mqlLD.cacheCW = ld.CloudWatchLogs
+	mqlLD.cacheFirehose = ld.Firehose
+	mqlLD.cacheS3 = ld.S3
+	return mqlLD, nil
+}
+
+func (a *mqlAwsMskReplicatorLogDelivery) cloudwatchLogs() (*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs, error) {
+	if a.cacheCW == nil {
+		a.CloudwatchLogs.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	enabled := false
+	if a.cacheCW.Enabled != nil {
+		enabled = *a.cacheCW.Enabled
+	}
+	resource, err := CreateResource(a.MqlRuntime, "aws.msk.replicator.logDelivery.cloudwatchLogs",
+		map[string]*llx.RawData{
+			"__id":    llx.StringData(a.replicatorArn + "/logDelivery/cloudwatchLogs"),
+			"enabled": llx.BoolData(enabled),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlCW := resource.(*mqlAwsMskReplicatorLogDeliveryCloudwatchLogs)
+	mqlCW.region = a.region
+	mqlCW.accountID = a.accountID
+	mqlCW.cacheLogGroup = a.cacheCW.LogGroup
+	return mqlCW, nil
+}
+
+func (a *mqlAwsMskReplicatorLogDeliveryCloudwatchLogs) logGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	if a.cacheLogGroup == nil || *a.cacheLogGroup == "" {
+		a.LogGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	logGroupArn := fmt.Sprintf("arn:aws:logs:%s:%s:log-group:%s:*", a.region, a.accountID, *a.cacheLogGroup)
+	mqlLG, err := NewResource(a.MqlRuntime, ResourceAwsCloudwatchLoggroup,
+		map[string]*llx.RawData{"arn": llx.StringData(logGroupArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlLG.(*mqlAwsCloudwatchLoggroup), nil
+}
+
+func (a *mqlAwsMskReplicatorLogDelivery) firehose() (*mqlAwsMskReplicatorLogDeliveryFirehose, error) {
+	if a.cacheFirehose == nil {
+		a.Firehose.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	enabled := false
+	if a.cacheFirehose.Enabled != nil {
+		enabled = *a.cacheFirehose.Enabled
+	}
+	resource, err := CreateResource(a.MqlRuntime, "aws.msk.replicator.logDelivery.firehose",
+		map[string]*llx.RawData{
+			"__id":    llx.StringData(a.replicatorArn + "/logDelivery/firehose"),
+			"enabled": llx.BoolData(enabled),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlFH := resource.(*mqlAwsMskReplicatorLogDeliveryFirehose)
+	mqlFH.region = a.region
+	mqlFH.accountID = a.accountID
+	mqlFH.cacheDeliveryStream = a.cacheFirehose.DeliveryStream
+	return mqlFH, nil
+}
+
+func (a *mqlAwsMskReplicatorLogDeliveryFirehose) deliveryStream() (*mqlAwsKinesisFirehoseDeliveryStream, error) {
+	if a.cacheDeliveryStream == nil || *a.cacheDeliveryStream == "" {
+		a.DeliveryStream.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	streamArn := fmt.Sprintf("arn:aws:firehose:%s:%s:deliverystream/%s", a.region, a.accountID, *a.cacheDeliveryStream)
+	mqlFH, err := NewResource(a.MqlRuntime, ResourceAwsKinesisFirehoseDeliveryStream,
+		map[string]*llx.RawData{"arn": llx.StringData(streamArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlFH.(*mqlAwsKinesisFirehoseDeliveryStream), nil
+}
+
+func (a *mqlAwsMskReplicatorLogDelivery) s3() (*mqlAwsMskReplicatorLogDeliveryS3, error) {
+	if a.cacheS3 == nil {
+		a.S3.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	enabled := false
+	if a.cacheS3.Enabled != nil {
+		enabled = *a.cacheS3.Enabled
+	}
+	prefix := ""
+	if a.cacheS3.Prefix != nil {
+		prefix = *a.cacheS3.Prefix
+	}
+	resource, err := CreateResource(a.MqlRuntime, "aws.msk.replicator.logDelivery.s3",
+		map[string]*llx.RawData{
+			"__id":    llx.StringData(a.replicatorArn + "/logDelivery/s3"),
+			"enabled": llx.BoolData(enabled),
+			"prefix":  llx.StringData(prefix),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlS3 := resource.(*mqlAwsMskReplicatorLogDeliveryS3)
+	mqlS3.cacheBucket = a.cacheS3.Bucket
+	return mqlS3, nil
+}
+
+func (a *mqlAwsMskReplicatorLogDeliveryS3) bucket() (*mqlAwsS3Bucket, error) {
+	if a.cacheBucket == nil || *a.cacheBucket == "" {
+		a.Bucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlBucket, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{"name": llx.StringDataPtr(a.cacheBucket)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlBucket.(*mqlAwsS3Bucket), nil
 }

@@ -41,9 +41,10 @@ func (a *mqlAwsEc2ClientVpnEndpoint) id() (string, error) {
 
 type mqlAwsEc2ClientVpnEndpointInternal struct {
 	securityGroupIdHandler
-	cacheVpcId *string
-	region     string
-	accountID  string
+	cacheVpcId            *string
+	cacheTransitGatewayId *string
+	region                string
+	accountID             string
 }
 
 func (a *mqlAwsEc2) clientVpnEndpoints() ([]any, error) {
@@ -111,27 +112,37 @@ func (a *mqlAwsEc2) getClientVpnEndpoints(conn *connection.AwsConnection) []*job
 						sessionTimeout = int64(*ep.SessionTimeoutHours)
 					}
 
+					tgwAZs := []any{}
+					var tgwIdPtr *string
+					if ep.TransitGatewayConfiguration != nil {
+						tgwIdPtr = ep.TransitGatewayConfiguration.TransitGatewayId
+						for _, az := range ep.TransitGatewayConfiguration.AvailabilityZones {
+							tgwAZs = append(tgwAZs, az)
+						}
+					}
+
 					mqlEp, err := CreateResource(a.MqlRuntime, ResourceAwsEc2ClientVpnEndpoint,
 						map[string]*llx.RawData{
-							"id":                       llx.StringData(convert.ToValue(ep.ClientVpnEndpointId)),
-							"arn":                      llx.StringData(fmt.Sprintf(clientVpnEndpointArnPattern, region, conn.AccountId(), convert.ToValue(ep.ClientVpnEndpointId))),
-							"region":                   llx.StringData(region),
-							"description":              llx.StringData(convert.ToValue(ep.Description)),
-							"status":                   llx.StringData(status),
-							"createdAt":                llx.TimeData(parseTimeOrZero(ep.CreationTime)),
-							"serverCertificateArn":     llx.StringData(convert.ToValue(ep.ServerCertificateArn)),
-							"transportProtocol":        llx.StringData(string(ep.TransportProtocol)),
-							"vpnProtocol":              llx.StringData(string(ep.VpnProtocol)),
-							"splitTunnel":              llx.BoolData(convert.ToValue(ep.SplitTunnel)),
-							"vpnPort":                  llx.IntData(vpnPort),
-							"selfServicePortalUrl":     llx.StringData(convert.ToValue(ep.SelfServicePortalUrl)),
-							"dnsServers":               llx.ArrayData(dnsServers, types.String),
-							"sessionTimeoutHours":      llx.IntData(sessionTimeout),
-							"clientConnectOptions":     llx.DictData(clientConnectOpts),
-							"clientLoginBannerOptions": llx.DictData(clientBannerOpts),
-							"connectionLogOptions":     llx.DictData(connectionLogOpts),
-							"authenticationOptions":    llx.ArrayData(authOpts, types.Any),
-							"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(ep.Tags)), types.String),
+							"id":                              llx.StringData(convert.ToValue(ep.ClientVpnEndpointId)),
+							"arn":                             llx.StringData(fmt.Sprintf(clientVpnEndpointArnPattern, region, conn.AccountId(), convert.ToValue(ep.ClientVpnEndpointId))),
+							"region":                          llx.StringData(region),
+							"description":                     llx.StringData(convert.ToValue(ep.Description)),
+							"status":                          llx.StringData(status),
+							"createdAt":                       llx.TimeData(parseTimeOrZero(ep.CreationTime)),
+							"serverCertificateArn":            llx.StringData(convert.ToValue(ep.ServerCertificateArn)),
+							"transportProtocol":               llx.StringData(string(ep.TransportProtocol)),
+							"vpnProtocol":                     llx.StringData(string(ep.VpnProtocol)),
+							"splitTunnel":                     llx.BoolData(convert.ToValue(ep.SplitTunnel)),
+							"vpnPort":                         llx.IntData(vpnPort),
+							"selfServicePortalUrl":            llx.StringData(convert.ToValue(ep.SelfServicePortalUrl)),
+							"dnsServers":                      llx.ArrayData(dnsServers, types.String),
+							"sessionTimeoutHours":             llx.IntData(sessionTimeout),
+							"clientConnectOptions":            llx.DictData(clientConnectOpts),
+							"clientLoginBannerOptions":        llx.DictData(clientBannerOpts),
+							"connectionLogOptions":            llx.DictData(connectionLogOpts),
+							"authenticationOptions":           llx.ArrayData(authOpts, types.Any),
+							"transitGatewayAvailabilityZones": llx.ArrayData(tgwAZs, types.String),
+							"tags":                            llx.MapData(toInterfaceMap(ec2TagsToMap(ep.Tags)), types.String),
 						})
 					if err != nil {
 						return nil, err
@@ -139,6 +150,7 @@ func (a *mqlAwsEc2) getClientVpnEndpoints(conn *connection.AwsConnection) []*job
 
 					mqlCvpn := mqlEp.(*mqlAwsEc2ClientVpnEndpoint)
 					mqlCvpn.cacheVpcId = ep.VpcId
+					mqlCvpn.cacheTransitGatewayId = tgwIdPtr
 					mqlCvpn.region = region
 					mqlCvpn.accountID = conn.AccountId()
 
@@ -176,4 +188,18 @@ func (a *mqlAwsEc2ClientVpnEndpoint) vpc() (*mqlAwsVpc, error) {
 		return nil, err
 	}
 	return mqlVpc.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsEc2ClientVpnEndpoint) transitGateway() (*mqlAwsEc2Transitgateway, error) {
+	if a.cacheTransitGatewayId == nil || *a.cacheTransitGatewayId == "" {
+		a.TransitGateway.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	tgwArn := fmt.Sprintf(transitGatewayArnPattern, a.region, a.accountID, *a.cacheTransitGatewayId)
+	mqlTgw, err := NewResource(a.MqlRuntime, ResourceAwsEc2Transitgateway,
+		map[string]*llx.RawData{"arn": llx.StringData(tgwArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlTgw.(*mqlAwsEc2Transitgateway), nil
 }
