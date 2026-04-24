@@ -15,7 +15,9 @@ jobs:
     # GitHub's approval gate checks the *commit* author, not the workflow
     # actor.  When a bot-authored PR is merged by a human the run's actor
     # is the human, but head_commit.author.name is still the bot.
+    # The head_repository check prevents fork PRs with spoofed author names.
     if: >-
+      github.event.workflow_run.head_repository.full_name == github.repository &&
       contains(fromJSON('["github-actions[bot]","dependabot[bot]"]'),
         github.event.workflow_run.head_commit.author.name)
     steps:
@@ -28,7 +30,7 @@ jobs:
         run: |
           # The 'requested' event fires before the status settles.
           # Poll briefly for GitHub to move the run into action_required.
-          for i in 1 2 3; do
+          for i in 1 2 3 4 5; do
             STATUS=$(gh run view "$RUN_ID" --repo "$REPO" --json status --jq '.status')
             if [ "$STATUS" = "action_required" ]; then
               echo "Approving run $RUN_ID (commit authored by $AUTHOR)"
@@ -38,4 +40,4 @@ jobs:
             echo "Run status is '$STATUS', waiting…"
             sleep 10
           done
-          echo "Run $RUN_ID never entered action_required state — skipping"
+          echo "::warning::Run $RUN_ID never entered action_required state after 50s — skipping"
