@@ -35,6 +35,16 @@ func TestParseJson(t *testing.T) {
 	})
 }
 
+func TestParseIniMissingFile(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        `parse.ini("/etc/security/pwquality.conf").params`,
+			ResultIndex: 0,
+			Expectation: map[string]any{},
+		},
+	})
+}
+
 func TestParseXML(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{

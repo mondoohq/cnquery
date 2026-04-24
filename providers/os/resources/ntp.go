@@ -9,6 +9,7 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	providerresources "go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 )
 
 func initNtpConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -55,7 +56,23 @@ func (s *mqlNtpConf) file() (*mqlFile, error) {
 }
 
 func (s *mqlNtpConf) content(file *mqlFile) (string, error) {
+	if file == nil {
+		return "", nil
+	}
+
 	content := file.GetContent()
+	if content.Error != nil {
+		var notFound providerresources.NotFoundError
+		if errors.As(content.Error, &notFound) {
+			return "", nil
+		}
+		return "", content.Error
+	}
+
+	if content.Data == "" {
+		return "", nil
+	}
+
 	return content.Data, content.Error
 }
 

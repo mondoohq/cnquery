@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/mql/v13/checksums"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	providerresources "go.mondoo.com/mql/v13/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/v13/providers/os/resources/parsers"
 	"go.mondoo.com/mql/v13/providers/os/resources/plist"
 	"go.mondoo.com/mql/v13/utils/xml"
@@ -75,8 +76,24 @@ func (s *mqlParseIni) id() (string, error) {
 }
 
 func (s *mqlParseIni) content(file *mqlFile) (string, error) {
-	c := file.GetContent()
-	return c.Data, c.Error
+	if file == nil {
+		return "", nil
+	}
+
+	content := file.GetContent()
+	if content.Error != nil {
+		var notFound providerresources.NotFoundError
+		if errors.As(content.Error, &notFound) {
+			return "", nil
+		}
+		return "", content.Error
+	}
+
+	if content.Data == "" {
+		return "", nil
+	}
+
+	return content.Data, content.Error
 }
 
 func (s *mqlParseIni) sections(content string, delimiter string) (map[string]any, error) {
