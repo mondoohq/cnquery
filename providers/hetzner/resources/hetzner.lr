@@ -41,7 +41,7 @@ hetzner {
 }
 
 // Hetzner Cloud server (virtual machine)
-hetzner.server @defaults("id name status") {
+private hetzner.server @defaults("id name status") {
   init(id? int)
   // Server ID
   id int
@@ -94,7 +94,7 @@ hetzner.server @defaults("id name status") {
 }
 
 // Hetzner Cloud server type (VM size)
-hetzner.serverType @defaults("id name cores memory") {
+private hetzner.serverType @defaults("id name cores memory") {
   init(id? int)
   // Server type ID
   id int
@@ -119,7 +119,7 @@ hetzner.serverType @defaults("id name cores memory") {
 }
 
 // Hetzner Cloud image (system image, snapshot, backup, or app)
-hetzner.image @defaults("id name type") {
+private hetzner.image @defaults("id name type") {
   init(id? int)
   // Image ID
   id int
@@ -154,7 +154,7 @@ hetzner.image @defaults("id name type") {
 }
 
 // Hetzner Cloud SSH key
-hetzner.sshKey @defaults("id name fingerprint") {
+private hetzner.sshKey @defaults("id name fingerprint") {
   init(id? int)
   // SSH key ID
   id int
@@ -171,7 +171,7 @@ hetzner.sshKey @defaults("id name fingerprint") {
 }
 
 // Hetzner Cloud block storage volume
-hetzner.volume @defaults("id name size") {
+private hetzner.volume @defaults("id name size") {
   init(id? int)
   // Volume ID
   id int
@@ -198,7 +198,7 @@ hetzner.volume @defaults("id name size") {
 }
 
 // Hetzner Cloud network (VPC)
-hetzner.network @defaults("id name ipRange") {
+private hetzner.network @defaults("id name ipRange") {
   init(id? int)
   // Network ID
   id int
@@ -223,7 +223,7 @@ hetzner.network @defaults("id name ipRange") {
 }
 
 // Hetzner Cloud floating IP
-hetzner.floatingIp @defaults("id ip type") {
+private hetzner.floatingIp @defaults("id ip type") {
   init(id? int)
   // Floating IP ID
   id int
@@ -252,7 +252,7 @@ hetzner.floatingIp @defaults("id ip type") {
 }
 
 // Hetzner Cloud primary IP (replaces non-floating server IPs)
-hetzner.primaryIp @defaults("id ip type") {
+private hetzner.primaryIp @defaults("id ip type") {
   init(id? int)
   // Primary IP ID
   id int
@@ -285,7 +285,7 @@ hetzner.primaryIp @defaults("id ip type") {
 }
 
 // Hetzner Cloud load balancer
-hetzner.loadBalancer @defaults("id name") {
+private hetzner.loadBalancer @defaults("id name") {
   init(id? int)
   // Load balancer ID
   id int
@@ -360,7 +360,7 @@ private hetzner.loadBalancer.target @defaults("type") {
 }
 
 // Hetzner Cloud load balancer type
-hetzner.loadBalancerType @defaults("id name") {
+private hetzner.loadBalancerType @defaults("id name") {
   init(id? int)
   // Load balancer type ID
   id int
@@ -381,7 +381,7 @@ hetzner.loadBalancerType @defaults("id name") {
 }
 
 // Hetzner Cloud firewall
-hetzner.firewall @defaults("id name") {
+private hetzner.firewall @defaults("id name") {
   init(id? int)
   // Firewall ID
   id int
@@ -400,7 +400,7 @@ hetzner.firewall @defaults("id name") {
 }
 
 // Hetzner Cloud TLS certificate
-hetzner.certificate @defaults("id name type") {
+private hetzner.certificate @defaults("id name type") {
   init(id? int)
   // Certificate ID
   id int
@@ -427,7 +427,7 @@ hetzner.certificate @defaults("id name type") {
 }
 
 // Hetzner Cloud placement group
-hetzner.placementGroup @defaults("id name type") {
+private hetzner.placementGroup @defaults("id name type") {
   init(id? int)
   // Placement group ID
   id int
@@ -444,7 +444,7 @@ hetzner.placementGroup @defaults("id name type") {
 }
 
 // Hetzner Cloud ISO image
-hetzner.iso @defaults("id name type") {
+private hetzner.iso @defaults("id name type") {
   init(id? int)
   // ISO ID
   id int
@@ -461,7 +461,7 @@ hetzner.iso @defaults("id name type") {
 }
 
 // Hetzner Cloud location (region)
-hetzner.location @defaults("id name city") {
+private hetzner.location @defaults("id name city") {
   init(id? int)
   // Location ID
   id int
@@ -482,7 +482,7 @@ hetzner.location @defaults("id name city") {
 }
 
 // Hetzner Cloud datacenter
-hetzner.datacenter @defaults("id name") {
+private hetzner.datacenter @defaults("id name") {
   init(id? int)
   // Datacenter ID
   id int

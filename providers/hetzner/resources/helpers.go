@@ -104,7 +104,6 @@ func stringMapAny(in map[string]string) map[string]any {
 	return out
 }
 
-
 // dictArrayData wraps a slice of dicts for assignment to a `[]dict` field.
 func dictArrayData(in []any) *llx.RawData {
 	return llx.ArrayData(in, types.Dict)
