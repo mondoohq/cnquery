@@ -4,18 +4,32 @@
 package resources
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	processmgr "go.mondoo.com/mql/v13/providers/os/resources/processes"
 )
 
 type mqlApparmorInternal struct {
 	status  *apparmorStatus
 	fetched bool
 	lock    sync.Mutex
+}
+
+const apparmorProfilesPath = "/sys/kernel/security/apparmor/profiles"
+
+var apparmorJSONCommands = []string{
+	"apparmor_status --json",
+	"aa-status --json",
 }
 
 func (a *mqlApparmor) id() (string, error) {
@@ -45,25 +59,202 @@ func (a *mqlApparmor) fetchStatus() (*apparmorStatus, error) {
 		return a.status, nil
 	}
 
-	o, err := CreateResource(a.MqlRuntime, "command", map[string]*llx.RawData{
-		"command": llx.StringData("apparmor_status --json"),
-	})
+	status, err := a.fetchStatusFromJSON()
+	if err != nil {
+		status, kernelErr := a.fetchStatusFromKernel()
+		if kernelErr != nil {
+			return nil, fmt.Errorf("could not retrieve apparmor status via json or kernel interfaces: %w; fallback failed: %v", err, kernelErr)
+		}
+		a.status = status
+		a.fetched = true
+		return a.status, nil
+	}
+
+	a.status = status
+	a.fetched = true
+	return a.status, nil
+}
+
+func (a *mqlApparmor) fetchStatusFromJSON() (*apparmorStatus, error) {
+	var attempts []string
+
+	for _, command := range apparmorJSONCommands {
+		o, err := CreateResource(a.MqlRuntime, "command", map[string]*llx.RawData{
+			"command": llx.StringData(command),
+		})
+		if err != nil {
+			attempts = append(attempts, command+": "+err.Error())
+			continue
+		}
+
+		cmd := o.(*mqlCommand)
+		exit := cmd.GetExitcode()
+		if exit.Error != nil {
+			attempts = append(attempts, command+": "+exit.Error.Error())
+			continue
+		}
+		if exit.Data != 0 {
+			msg := strings.TrimSpace(cmd.Stderr.Data)
+			if msg == "" {
+				msg = "exit code " + strconv.FormatInt(exit.Data, 10)
+			}
+			attempts = append(attempts, command+": "+msg)
+			continue
+		}
+
+		var status apparmorStatus
+		if err := json.Unmarshal([]byte(cmd.Stdout.Data), &status); err != nil {
+			attempts = append(attempts, command+": "+err.Error())
+			continue
+		}
+
+		return &status, nil
+	}
+
+	if len(attempts) == 0 {
+		return nil, errors.New("could not retrieve apparmor status")
+	}
+	return nil, errors.New(strings.Join(attempts, "; "))
+}
+
+func (a *mqlApparmor) fetchStatusFromKernel() (*apparmorStatus, error) {
+	conn, ok := a.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return nil, errors.New("connection does not support filesystem access")
+	}
+
+	processManager, err := processmgr.ResolveManager(conn)
 	if err != nil {
 		return nil, err
 	}
-	cmd := o.(*mqlCommand)
-	if exit := cmd.GetExitcode(); exit.Data != 0 {
-		return nil, errors.New("could not retrieve apparmor status: " + cmd.Stderr.Data)
-	}
 
-	var status apparmorStatus
-	if err := json.Unmarshal([]byte(cmd.Stdout.Data), &status); err != nil {
+	procs, err := processManager.List()
+	if err != nil {
 		return nil, err
 	}
 
-	a.status = &status
-	a.fetched = true
-	return a.status, nil
+	status := &apparmorStatus{
+		Profiles:  readApparmorProfilesFromFS(conn.FileSystem()),
+		Processes: readApparmorProcessesFromFS(conn.FileSystem(), procs),
+	}
+
+	profilesAvailable, err := afero.Exists(conn.FileSystem(), apparmorProfilesPath)
+	if err != nil {
+		return nil, err
+	}
+	if !profilesAvailable && len(status.Processes) == 0 {
+		return nil, errors.New("AppArmor kernel interfaces unavailable")
+	}
+
+	return status, nil
+}
+
+func readApparmorProfilesFromFS(fs afero.Fs) map[string]string {
+	f, err := fs.Open(apparmorProfilesPath)
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+
+	profiles := map[string]string{}
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		name, mode, ok := parseApparmorProfileLine(scanner.Text())
+		if ok {
+			profiles[name] = mode
+		}
+	}
+	return profiles
+}
+
+func readApparmorProcessesFromFS(fs afero.Fs, procs []*processmgr.OSProcess) map[string][]apparmorProcInfo {
+	processes := map[string][]apparmorProcInfo{}
+	for _, proc := range procs {
+		profile, status, ok := readApparmorCurrentForProcess(fs, proc.Pid)
+		if !ok {
+			continue
+		}
+
+		executable := apparmorProcessExecutable(proc)
+
+		processes[executable] = append(processes[executable], apparmorProcInfo{
+			Profile: profile,
+			PID:     strconv.FormatInt(proc.Pid, 10),
+			Status:  status,
+		})
+	}
+	return processes
+}
+
+func readApparmorCurrentForProcess(fs afero.Fs, pid int64) (profile string, status string, ok bool) {
+	pidStr := strconv.FormatInt(pid, 10)
+	paths := []string{
+		filepath.Join("/proc", pidStr, "attr/apparmor/current"),
+		filepath.Join("/proc", pidStr, "attr/current"),
+	}
+
+	for _, path := range paths {
+		data, err := afero.ReadFile(fs, path)
+		if err != nil {
+			continue
+		}
+
+		profile, status, ok = parseApparmorCurrentLabel(string(data))
+		if ok {
+			return profile, status, true
+		}
+	}
+
+	return "", "", false
+}
+
+func apparmorProcessExecutable(proc *processmgr.OSProcess) string {
+	if proc.Command != "" {
+		fields := strings.Fields(proc.Command)
+		if len(fields) > 0 && strings.Contains(fields[0], "/") {
+			return fields[0]
+		}
+	}
+
+	if proc.Executable != "" {
+		return proc.Executable
+	}
+	if proc.Command != "" {
+		return proc.Command
+	}
+	return strconv.FormatInt(proc.Pid, 10)
+}
+
+func parseApparmorProfileLine(line string) (name string, mode string, ok bool) {
+	return parseApparmorModeLine(line)
+}
+
+func parseApparmorCurrentLabel(content string) (profile string, status string, ok bool) {
+	line := strings.TrimSpace(strings.TrimRight(content, "\x00"))
+	if line == "unconfined" {
+		return "unconfined", "unconfined", true
+	}
+	return parseApparmorModeLine(line)
+}
+
+func parseApparmorModeLine(line string) (name string, mode string, ok bool) {
+	line = strings.TrimSpace(line)
+	if line == "" || !strings.HasSuffix(line, ")") {
+		return "", "", false
+	}
+
+	idx := strings.LastIndex(line, " (")
+	if idx <= 0 {
+		return "", "", false
+	}
+
+	name = strings.TrimSpace(line[:idx])
+	mode = strings.TrimSpace(line[idx+2 : len(line)-1])
+	if name == "" || mode == "" {
+		return "", "", false
+	}
+
+	return name, mode, true
 }
 
 func (a *mqlApparmor) version() (string, error) {
