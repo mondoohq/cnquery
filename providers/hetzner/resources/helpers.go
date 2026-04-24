@@ -59,7 +59,7 @@ func paginate[T any](
 	for {
 		page, resp, err := list(opts)
 		if err != nil {
-			if e := translateHcloudError(err); e == nil {
+			if translateHcloudError(err) == nil {
 				return out, nil
 			}
 			return nil, err
