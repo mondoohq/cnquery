@@ -91,6 +91,27 @@ func labelData(in map[string]string) *llx.RawData {
 	return llx.MapData(labelMap(in), types.String)
 }
 
+// stringMapAny converts a string→string map into the any-valued form that
+// dicts accept (the dict-to-primitive converter rejects nested typed maps).
+func stringMapAny(in map[string]string) map[string]any {
+	if in == nil {
+		return map[string]any{}
+	}
+	out := make(map[string]any, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+// errIDRequired is returned by init functions when invoked without an id.
+// This catches bare-resource queries like `hetzner.certificate` (the user
+// almost certainly meant the list `hetzner.certificates` or wanted to pass
+// an id).
+func errIDRequired(resource string) error {
+	return fmt.Errorf("id required to look up hetzner.%s; use hetzner.%ss for the list", resource, resource)
+}
+
 // dictArrayData wraps a slice of dicts for assignment to a `[]dict` field.
 func dictArrayData(in []any) *llx.RawData {
 	return llx.ArrayData(in, types.Dict)

@@ -116,7 +116,7 @@ func serverPublicNetDict(p hcloud.ServerPublicNet) map[string]any {
 		"ip":      ipString(p.IPv6.IP),
 		"network": ipNetString(p.IPv6.Network),
 		"blocked": p.IPv6.Blocked,
-		"dnsPtr":  p.IPv6.DNSPtr,
+		"dnsPtr":  stringMapAny(p.IPv6.DNSPtr),
 	}
 	return map[string]any{
 		"ipv4":        v4,
@@ -128,7 +128,7 @@ func serverPublicNetDict(p hcloud.ServerPublicNet) map[string]any {
 func initHetznerServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errIDRequired("server")
 	}
 	s, _, err := conn(runtime).Client().Server.GetByID(ctx(), id)
 	if err != nil {

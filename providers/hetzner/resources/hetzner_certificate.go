@@ -74,7 +74,7 @@ func newMqlHetznerCertificate(runtime *plugin.Runtime, cert *hcloud.Certificate)
 func initHetznerCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errIDRequired("certificate")
 	}
 	cert, _, err := conn(runtime).Client().Certificate.GetByID(ctx(), id)
 	if err != nil {

@@ -98,7 +98,7 @@ func newMqlHetznerFirewall(runtime *plugin.Runtime, fw *hcloud.Firewall) (*mqlHe
 func initHetznerFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errIDRequired("firewall")
 	}
 	fw, _, err := conn(runtime).Client().Firewall.GetByID(ctx(), id)
 	if err != nil {
