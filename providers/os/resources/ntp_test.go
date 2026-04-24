@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
 )
 
 func TestResource_NtpConf(t *testing.T) {
@@ -43,5 +44,35 @@ func TestResource_NtpConf(t *testing.T) {
 		assert.Equal(t, []any{
 			"127.127.1.0 stratum 10",
 		}, res[0].Data.Value)
+	})
+
+	t.Run("missing ntp.conf returns empty data", func(t *testing.T) {
+		x.TestSimple(t, []testutils.SimpleTest{
+			{
+				Code:        `ntp.conf("/etc/ntp-does-not-exist.conf").content`,
+				ResultIndex: 0,
+				Expectation: "",
+			},
+			{
+				Code:        `ntp.conf("/etc/ntp-does-not-exist.conf").settings`,
+				ResultIndex: 0,
+				Expectation: []any{},
+			},
+			{
+				Code:        `ntp.conf("/etc/ntp-does-not-exist.conf").servers`,
+				ResultIndex: 0,
+				Expectation: []any{},
+			},
+			{
+				Code:        `ntp.conf("/etc/ntp-does-not-exist.conf").restrict`,
+				ResultIndex: 0,
+				Expectation: []any{},
+			},
+			{
+				Code:        `ntp.conf("/etc/ntp-does-not-exist.conf").fudge`,
+				ResultIndex: 0,
+				Expectation: []any{},
+			},
+		})
 	})
 }
