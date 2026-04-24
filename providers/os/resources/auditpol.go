@@ -24,6 +24,9 @@ func (p *mqlAuditpol) list() ([]any, error) {
 	if out.Error != nil {
 		return nil, fmt.Errorf("could not run auditpol: %w", out.Error)
 	}
+	if exit := cmd.GetExitcode(); exit.Data != 0 {
+		return nil, fmt.Errorf("could not run auditpol: %s", strings.TrimSpace(cmd.Stderr.Data))
+	}
 
 	entries, err := windows.ParseAuditpol(strings.NewReader(out.Data))
 	if err != nil {

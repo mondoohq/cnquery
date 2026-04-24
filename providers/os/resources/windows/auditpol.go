@@ -25,6 +25,10 @@ func ParseAuditpol(r io.Reader) ([]AuditpolEntry, error) {
 	res := []AuditpolEntry{}
 
 	csvReader := csv.NewReader(r)
+	// auditpol prints a plain-text error instead of CSV when it fails (e.g.
+	// non-admin shell). Tolerate variable-width rows so such output produces an
+	// empty result rather than poisoning FieldsPerRecord from the first record.
+	csvReader.FieldsPerRecord = -1
 	for {
 		record, err := csvReader.Read()
 		if err == io.EOF {
@@ -32,6 +36,10 @@ func ParseAuditpol(r io.Reader) ([]AuditpolEntry, error) {
 		}
 		if err != nil {
 			return nil, err
+		}
+
+		if len(record) < 6 {
+			continue
 		}
 
 		guid := strings.TrimSpace(record[3])
