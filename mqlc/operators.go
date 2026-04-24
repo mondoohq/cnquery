@@ -18,32 +18,31 @@ var operatorsCompilers map[string]fieldCompiler
 
 func init() {
 	operatorsCompilers = map[string]fieldCompiler{
-		"==":        compileComparable,
-		"=~":        compileComparable,
-		"!=":        compileComparable,
-		"!~":        compileComparable,
-		">=":        compileComparable,
-		">":         compileComparable,
-		"<=":        compileComparable,
-		"<":         compileComparable,
-		"+":         compileTransformation,
-		"-":         compileTransformation,
-		"*":         compileTransformation,
-		"/":         compileTransformation,
-		"%":         nil,
-		"=":         compileAssignment,
-		"||":        compileComparable,
-		"&&":        compileComparable,
-		"{}":        compileBlock,
-		"if":        compileIf,
-		"else":      compileElse,
-		"available": compileAvailable,
-		"expect":    compileExpect,
-		"score":     compileScore,
-		"typeof":    compileTypeof,
-		"switch":    compileSwitch,
-		"Never":     compileNever,
-		"empty":     compileEmpty,
+		"==":     compileComparable,
+		"=~":     compileComparable,
+		"!=":     compileComparable,
+		"!~":     compileComparable,
+		">=":     compileComparable,
+		">":      compileComparable,
+		"<=":     compileComparable,
+		"<":      compileComparable,
+		"+":      compileTransformation,
+		"-":      compileTransformation,
+		"*":      compileTransformation,
+		"/":      compileTransformation,
+		"%":      nil,
+		"=":      compileAssignment,
+		"||":     compileComparable,
+		"&&":     compileComparable,
+		"{}":     compileBlock,
+		"if":     compileIf,
+		"else":   compileElse,
+		"expect": compileExpect,
+		"score":  compileScore,
+		"typeof": compileTypeof,
+		"switch": compileSwitch,
+		"Never":  compileNever,
+		"empty":  compileEmpty,
 	}
 }
 
@@ -447,33 +446,6 @@ func compileExpect(c *compiler, id string, call *parser.Call) (types.Type, error
 	c.block.Entrypoints = append(c.block.Entrypoints, c.tailRef())
 
 	return typ, nil
-}
-
-func compileAvailable(c *compiler, id string, call *parser.Call) (types.Type, error) {
-	if call == nil || len(call.Function) < 1 {
-		return types.Nil, errors.New("missing parameter for '" + id + "', it requires 1")
-	}
-
-	arg := call.Function[0]
-	if arg == nil || arg.Value == nil || arg.Value.Operand == nil || arg.Value.Operand.Value == nil {
-		return types.Nil, errors.New("failed to get parameter for '" + id + "'")
-	}
-
-	argValue, err := c.compileExpression(arg.Value)
-	if err != nil {
-		return types.Nil, err
-	}
-
-	c.addChunk(&llx.Chunk{
-		Call: llx.Chunk_FUNCTION,
-		Id:   "available",
-		Function: &llx.Function{
-			Type: string(types.Bool),
-			Args: []*llx.Primitive{argValue},
-		},
-	})
-
-	return types.Bool, nil
 }
 
 func compileScore(c *compiler, id string, call *parser.Call) (types.Type, error) {

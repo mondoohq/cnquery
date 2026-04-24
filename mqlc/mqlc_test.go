@@ -1718,20 +1718,6 @@ func TestCompiler_EmbeddedResource_ImplicitResource_List(t *testing.T) {
 	})
 }
 
-func TestCompiler_AvailableSimplest(t *testing.T) {
-	compileT(t, "available(true)", func(res *llx.CodeBundle) {
-		f := res.CodeV2.Blocks[0].Chunks[0]
-		assert.Equal(t, llx.Chunk_FUNCTION, f.Call)
-		assert.Equal(t, "available", f.Id)
-		assert.Equal(t, []uint64{(1 << 32) | 1}, res.CodeV2.Entrypoints())
-		assert.Equal(t, &llx.Function{
-			Type:    string(types.Bool),
-			Binding: 0,
-			Args:    []*llx.Primitive{llx.BoolPrimitive(true)},
-		}, f.Function)
-	})
-}
-
 func TestCompiler_ExpectSimplest(t *testing.T) {
 	compileT(t, "expect(true)", func(res *llx.CodeBundle) {
 		f := res.CodeV2.Blocks[0].Chunks[0]

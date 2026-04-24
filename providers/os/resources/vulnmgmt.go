@@ -18,13 +18,14 @@ import (
 )
 
 type mqlVulnmgmtInternal struct {
-	gqlClient *gql.MondooClient
+	gqlClient         *gql.MondooClient
+	warnedUnavailable bool
 }
 
 func (v *mqlVulnmgmt) lastAssessment() (*time.Time, error) {
 	mcc := v.MqlRuntime.Upstream
 	if mcc == nil || mcc.ApiEndpoint == "" {
-		return nil, resources.MissingUpstreamError{}
+		return v.setUnavailableLastAssessment(resources.MissingUpstreamError{})
 	}
 
 	var mondooClient *gql.MondooClient
@@ -41,16 +42,16 @@ func (v *mqlVulnmgmt) lastAssessment() (*time.Time, error) {
 	}
 
 	if v.MqlRuntime.Upstream.AssetMrn == "" {
-		return nil, errors.New("no asset mrn available")
+		return v.setUnavailableLastAssessment(errors.New("no asset mrn available"))
 	}
 	lastUpdate, err := mondooClient.LastAssessment(v.MqlRuntime.Upstream.AssetMrn)
 	if err != nil {
-		return nil, err
+		return v.setUnavailableLastAssessment(err)
 	}
 
 	log.Debug().Str("time", lastUpdate).Msg("search for package last update")
 	if lastUpdate == "" {
-		return nil, errors.New("no update time available")
+		return v.setUnavailableLastAssessment(errors.New("no update time available"))
 	}
 
 	var lastUpdateTime *time.Time
@@ -72,6 +73,29 @@ func (v *mqlVulnmgmt) cves() ([]any, error) {
 	// we ignore the return value because everything is set in populateData
 	// `plugin.StateIsSet` is used to indicate that the data is available
 	return nil, v.populateData()
+}
+
+func (v *mqlVulnmgmt) warnUnavailable(err error) {
+	if v.warnedUnavailable {
+		return
+	}
+
+	v.warnedUnavailable = true
+	log.Warn().Err(err).Msg("vulnmgmt unavailable, returning empty results")
+}
+
+func (v *mqlVulnmgmt) setUnavailableData(err error) {
+	v.warnUnavailable(err)
+	v.Advisories = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+	v.Cves = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+	v.Packages = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+	v.Stats = plugin.TValue[*mqlAuditCvss]{State: plugin.StateIsSet | plugin.StateIsNull}
+}
+
+func (v *mqlVulnmgmt) setUnavailableLastAssessment(err error) (*time.Time, error) {
+	v.warnUnavailable(err)
+	v.LastAssessment = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
+	return nil, nil
 }
 
 func (v *mqlVulnmgmt) advisories() ([]any, error) {
@@ -98,7 +122,8 @@ func (v *mqlVulnmgmt) stats() (*mqlAuditCvss, error) {
 func (v *mqlVulnmgmt) populateData() error {
 	vulnReport, err := v.getReport()
 	if err != nil {
-		return err
+		v.setUnavailableData(err)
+		return nil
 	}
 
 	mqlVulAdvisories := make([]any, len(vulnReport.Advisories))
