@@ -27,6 +27,23 @@ func newFile(runtime *plugin.Runtime, path string) (*mqlFile, error) {
 	return file, nil
 }
 
+func fileContentOrEmpty(file *mqlFile) (string, error) {
+	if file == nil {
+		return "", nil
+	}
+
+	content := file.GetContent()
+	if content.Error != nil {
+		var notFound resources.NotFoundError
+		if errors.As(content.Error, &notFound) {
+			return "", nil
+		}
+		return "", content.Error
+	}
+
+	return content.Data, nil
+}
+
 type mqlFileInternal struct {
 	statInfo *shared.FileInfoDetails
 }
