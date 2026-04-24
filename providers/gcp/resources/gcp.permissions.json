@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.11.1",
-  "generated_at": "2026-04-23T14:37:51-07:00",
+  "generated_at": "2026-04-23T16:33:49-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -24,6 +24,8 @@
     "backupdr.bvdataSources.list",
     "backupdr.managementServers.list",
     "batch.jobs.list",
+    "bigquery.connections.list",
+    "bigquery.reservations.list",
     "bigtable.appProfiles.list",
     "binaryauthorization.attestors.list",
     "binaryauthorization.policy.get",
@@ -41,6 +43,7 @@
     "cloudkms.locations.list",
     "cloudkms.retiredResources.list",
     "cloudscheduler.jobs.list",
+    "cloudsql.backupRuns.list",
     "cloudsql.databases.list",
     "cloudsql.instances.list",
     "cloudsql.sslCerts.list",
@@ -296,6 +299,18 @@
       "source_file": "batch.go"
     },
     {
+      "permission": "bigquery.connections.list",
+      "service": "bigquery",
+      "action": "ListConnections",
+      "source_file": "bigquery_connection.go"
+    },
+    {
+      "permission": "bigquery.reservations.list",
+      "service": "bigquery",
+      "action": "ListReservations",
+      "source_file": "bigquery_reservation.go"
+    },
+    {
       "permission": "bigtable.appProfiles.list",
       "service": "bigtable",
       "action": "ListAppProfiles",
@@ -402,6 +417,12 @@
       "service": "cloudscheduler",
       "action": "ListJobs",
       "source_file": "cloudscheduler.go"
+    },
+    {
+      "permission": "cloudsql.backupRuns.list",
+      "service": "cloudsql",
+      "action": "BackupRuns.List",
+      "source_file": "sql.go"
     },
     {
       "permission": "cloudsql.databases.list",
@@ -1037,7 +1058,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.List",
+      "action": "Folders.Search",
       "source_file": "folder.go",
       "scope": "org"
     },

@@ -869,3 +869,100 @@ func (g *mqlGcpProjectSqlServiceInstanceSslCert) id() (string, error) {
 	}
 	return fmt.Sprintf("gcp.project/%s/sqlService.instance/%s/sslCert/%s", g.ProjectId.Data, g.InstanceName.Data, g.Sha1Fingerprint.Data), nil
 }
+
+func (g *mqlGcpProjectSqlServiceInstance) backupRuns() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	instanceName := g.Name.Data
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, sqladmin.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	sqladminSvc, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	req := sqladminSvc.BackupRuns.List(projectId, instanceName)
+	if err := req.Pages(ctx, func(page *sqladmin.BackupRunsListResponse) error {
+		for _, run := range page.Items {
+			var encCfg map[string]any
+			if run.DiskEncryptionConfiguration != nil {
+				encCfg, err = convert.JsonToDict(run.DiskEncryptionConfiguration)
+				if err != nil {
+					return err
+				}
+			}
+			var encStatus map[string]any
+			if run.DiskEncryptionStatus != nil {
+				encStatus, err = convert.JsonToDict(run.DiskEncryptionStatus)
+				if err != nil {
+					return err
+				}
+			}
+			var runErr map[string]any
+			if run.Error != nil {
+				runErr, err = convert.JsonToDict(run.Error)
+				if err != nil {
+					return err
+				}
+			}
+
+			mqlRun, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.backupRun", map[string]*llx.RawData{
+				"projectId":                   llx.StringData(projectId),
+				"instanceName":                llx.StringData(instanceName),
+				"id":                          llx.StringData(strconv.FormatInt(run.Id, 10)),
+				"backupKind":                  llx.StringData(run.BackupKind),
+				"databaseVersion":             llx.StringData(run.DatabaseVersion),
+				"description":                 llx.StringData(run.Description),
+				"diskEncryptionConfiguration": llx.DictData(encCfg),
+				"diskEncryptionStatus":        llx.DictData(encStatus),
+				"endTime":                     llx.TimeDataPtr(parseTime(run.EndTime)),
+				"enqueuedTime":                llx.TimeDataPtr(parseTime(run.EnqueuedTime)),
+				"error":                       llx.DictData(runErr),
+				"location":                    llx.StringData(run.Location),
+				"selfLink":                    llx.StringData(run.SelfLink),
+				"startTime":                   llx.TimeDataPtr(parseTime(run.StartTime)),
+				"status":                      llx.StringData(run.Status),
+				"timeZone":                    llx.StringData(run.TimeZone),
+				"type":                        llx.StringData(run.Type),
+				"windowStartTime":             llx.TimeDataPtr(parseTime(run.WindowStartTime)),
+				"maxChargeableBytes":          llx.IntData(run.MaxChargeableBytes),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlRun)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectSqlServiceBackupRun) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	if g.InstanceName.Error != nil {
+		return "", g.InstanceName.Error
+	}
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/sqlService.instance/%s/backupRun/%s", g.ProjectId.Data, g.InstanceName.Data, g.Id.Data), nil
+}

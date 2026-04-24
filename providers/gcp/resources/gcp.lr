@@ -1677,6 +1677,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   users() []gcp.project.sqlService.instance.user
   // List of SSL/TLS certificates for the current SQL instance
   sslCerts() []gcp.project.sqlService.instance.sslCert
+  // List of backup runs for the current SQL instance
+  backupRuns() []gcp.project.sqlService.backupRun
   // Replica configuration (failoverTarget, cascadableReplica, mysqlReplicaConfiguration)
   replicaConfiguration dict
   // Whether the instance satisfies Google's Protected Zone Integration requirements
@@ -1741,6 +1743,48 @@ private gcp.project.sqlService.instance.user @defaults("name type host") {
   dualPasswordType string
   // Password validation policy
   passwordPolicy dict
+}
+
+// Google Cloud (GCP) SQL backup run
+private gcp.project.sqlService.backupRun @defaults("id status type startTime") {
+  // Project ID
+  projectId string
+  // Name of the database instance
+  instanceName string
+  // Identifier for this backup run (unique per instance)
+  id string
+  // The type of backup kind (SNAPSHOT or PHYSICAL)
+  backupKind string
+  // Instance database version at the time this backup was made
+  databaseVersion string
+  // Description of the run (on-demand backups only)
+  description string
+  // Backup-specific encryption configuration
+  diskEncryptionConfiguration dict
+  // Backup-specific encryption status
+  diskEncryptionStatus dict
+  // Time the backup operation completed
+  endTime time
+  // Time the run was enqueued
+  enqueuedTime time
+  // Error information if the run failed
+  error dict
+  // Location where the backup is stored
+  location string
+  // URI of this resource (self link)
+  selfLink string
+  // Time the backup operation actually started
+  startTime time
+  // Status of this run (ENQUEUED, RUNNING, FAILED, SUCCESSFUL, SKIPPED, DELETED, ...)
+  status string
+  // Backup time zone (SQL Server only)
+  timeZone string
+  // Type of this run (AUTOMATED, ON_DEMAND, or FINAL)
+  type string
+  // Start of the backup window during which this backup was attempted
+  windowStartTime time
+  // Maximum chargeable bytes for the backup
+  maxChargeableBytes int
 }
 
 // Google Cloud (GCP) SQL instance SSL/TLS certificate
@@ -1941,6 +1985,10 @@ private gcp.project.bigqueryService @defaults("projectId") {
   projectId string
   // List of BigQuery datasets
   datasets() []gcp.project.bigqueryService.dataset
+  // List of BigQuery connections across the dataset locations of this project
+  connections() []gcp.project.bigqueryService.connection
+  // List of BigQuery reservations across the dataset locations of this project
+  reservations() []gcp.project.bigqueryService.reservation
 }
 
 // Google Cloud (GCP) BigQuery dataset
@@ -2109,6 +2157,60 @@ private gcp.project.bigqueryService.routine @defaults("id") {
   type string
   // The body of the routine
   body string
+}
+
+// Google Cloud (GCP) BigQuery connection to an external data source
+private gcp.project.bigqueryService.connection @defaults("name friendlyName type") {
+  // Full resource name of the connection: projects/{project}/locations/{location}/connections/{id}
+  name string
+  // Project ID
+  projectId string
+  // Location (region or multi-region) of the connection
+  location string
+  // User-provided display name
+  friendlyName string
+  // User-provided description
+  description string
+  // Underlying connection type (CLOUD_SQL, AWS, AZURE, CLOUD_SPANNER, CLOUD_RESOURCE, SPARK, SALESFORCE_DATA_CLOUD, or UNKNOWN)
+  type string
+  // Type-specific properties (e.g., for CLOUD_SQL, AWS, AZURE connections)
+  properties dict
+  // Creation timestamp
+  created time
+  // Last modified timestamp
+  modified time
+  // Whether a credential is configured for this connection
+  hasCredential bool
+}
+
+// Google Cloud (GCP) BigQuery slot reservation
+private gcp.project.bigqueryService.reservation @defaults("name slotCapacity edition") {
+  // Full resource name of the reservation: projects/{project}/locations/{location}/reservations/{id}
+  name string
+  // Project ID
+  projectId string
+  // Location (region or multi-region) of the reservation
+  location string
+  // Baseline slots available to this reservation
+  slotCapacity int
+  // If true, reservation will not use idle slots from sibling reservations
+  ignoreIdleSlots bool
+  // Autoscale configuration
+  autoscale dict
+  // Soft upper bound on the number of concurrent jobs in this reservation (0 = system-managed)
+  concurrency int
+  // Edition of the reservation (STANDARD, ENTERPRISE, ENTERPRISE_PLUS, ...)
+  edition string
+  // Current location of the reservation's primary replica (managed DR)
+  primaryLocation string
+  // Current location of the reservation's secondary replica (managed DR)
+  secondaryLocation string
+  // Location where the reservation was originally created
+  originalPrimaryLocation string
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
 }
 
 // Google Cloud (GCP) DNS

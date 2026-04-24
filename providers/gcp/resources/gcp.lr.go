@@ -65,6 +65,7 @@ const (
 	ResourceGcpProjectSqlServiceInstance                                               string = "gcp.project.sqlService.instance"
 	ResourceGcpProjectSqlServiceInstanceDatabase                                       string = "gcp.project.sqlService.instance.database"
 	ResourceGcpProjectSqlServiceInstanceUser                                           string = "gcp.project.sqlService.instance.user"
+	ResourceGcpProjectSqlServiceBackupRun                                              string = "gcp.project.sqlService.backupRun"
 	ResourceGcpProjectSqlServiceInstanceSslCert                                        string = "gcp.project.sqlService.instance.sslCert"
 	ResourceGcpProjectSqlServiceInstanceIpMapping                                      string = "gcp.project.sqlService.instance.ipMapping"
 	ResourceGcpProjectSqlServiceInstanceSettings                                       string = "gcp.project.sqlService.instance.settings"
@@ -80,6 +81,8 @@ const (
 	ResourceGcpProjectBigqueryServiceTable                                             string = "gcp.project.bigqueryService.table"
 	ResourceGcpProjectBigqueryServiceModel                                             string = "gcp.project.bigqueryService.model"
 	ResourceGcpProjectBigqueryServiceRoutine                                           string = "gcp.project.bigqueryService.routine"
+	ResourceGcpProjectBigqueryServiceConnection                                        string = "gcp.project.bigqueryService.connection"
+	ResourceGcpProjectBigqueryServiceReservation                                       string = "gcp.project.bigqueryService.reservation"
 	ResourceGcpProjectDnsService                                                       string = "gcp.project.dnsService"
 	ResourceGcpProjectDnsServiceManagedzone                                            string = "gcp.project.dnsService.managedzone"
 	ResourceGcpProjectDnsServiceRecordset                                              string = "gcp.project.dnsService.recordset"
@@ -539,6 +542,10 @@ func init() {
 			// to override args, implement: initGcpProjectSqlServiceInstanceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectSqlServiceInstanceUser,
 		},
+		"gcp.project.sqlService.backupRun": {
+			// to override args, implement: initGcpProjectSqlServiceBackupRun(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectSqlServiceBackupRun,
+		},
 		"gcp.project.sqlService.instance.sslCert": {
 			// to override args, implement: initGcpProjectSqlServiceInstanceSslCert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectSqlServiceInstanceSslCert,
@@ -598,6 +605,14 @@ func init() {
 		"gcp.project.bigqueryService.routine": {
 			// to override args, implement: initGcpProjectBigqueryServiceRoutine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectBigqueryServiceRoutine,
+		},
+		"gcp.project.bigqueryService.connection": {
+			// to override args, implement: initGcpProjectBigqueryServiceConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBigqueryServiceConnection,
+		},
+		"gcp.project.bigqueryService.reservation": {
+			// to override args, implement: initGcpProjectBigqueryServiceReservation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBigqueryServiceReservation,
 		},
 		"gcp.project.dnsService": {
 			Init:   initGcpProjectDnsService,
@@ -3849,6 +3864,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.sslCerts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetSslCerts()).ToDataRes(types.Array(types.Resource("gcp.project.sqlService.instance.sslCert")))
 	},
+	"gcp.project.sqlService.instance.backupRuns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetBackupRuns()).ToDataRes(types.Array(types.Resource("gcp.project.sqlService.backupRun")))
+	},
 	"gcp.project.sqlService.instance.replicaConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetReplicaConfiguration()).ToDataRes(types.Dict)
 	},
@@ -3932,6 +3950,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.instance.user.passwordPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceUser).GetPasswordPolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.backupRun.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.backupKind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetBackupKind()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.databaseVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetDatabaseVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.diskEncryptionConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetDiskEncryptionConfiguration()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.backupRun.diskEncryptionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetDiskEncryptionStatus()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.backupRun.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetEndTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.sqlService.backupRun.enqueuedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetEnqueuedTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.sqlService.backupRun.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetError()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.backupRun.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.selfLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetSelfLink()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetStartTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.sqlService.backupRun.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.timeZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetTimeZone()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.sqlService.backupRun.windowStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetWindowStartTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.sqlService.backupRun.maxChargeableBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceBackupRun).GetMaxChargeableBytes()).ToDataRes(types.Int)
 	},
 	"gcp.project.sqlService.instance.sslCert.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSslCert).GetProjectId()).ToDataRes(types.String)
@@ -4173,6 +4248,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.bigqueryService.datasets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryService).GetDatasets()).ToDataRes(types.Array(types.Resource("gcp.project.bigqueryService.dataset")))
 	},
+	"gcp.project.bigqueryService.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryService).GetConnections()).ToDataRes(types.Array(types.Resource("gcp.project.bigqueryService.connection")))
+	},
+	"gcp.project.bigqueryService.reservations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryService).GetReservations()).ToDataRes(types.Array(types.Resource("gcp.project.bigqueryService.reservation")))
+	},
 	"gcp.project.bigqueryService.dataset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetId()).ToDataRes(types.String)
 	},
@@ -4394,6 +4475,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.bigqueryService.routine.body": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceRoutine).GetBody()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceConnection).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.connection.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceConnection).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.connection.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceConnection).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.connection.friendlyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceConnection).GetFriendlyName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.connection.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceConnection).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.connection.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceConnection).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.connection.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceConnection).GetProperties()).ToDataRes(types.Dict)
+	},
+	"gcp.project.bigqueryService.connection.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceConnection).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.bigqueryService.connection.modified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceConnection).GetModified()).ToDataRes(types.Time)
+	},
+	"gcp.project.bigqueryService.connection.hasCredential": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceConnection).GetHasCredential()).ToDataRes(types.Bool)
+	},
+	"gcp.project.bigqueryService.reservation.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.reservation.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.reservation.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.reservation.slotCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetSlotCapacity()).ToDataRes(types.Int)
+	},
+	"gcp.project.bigqueryService.reservation.ignoreIdleSlots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetIgnoreIdleSlots()).ToDataRes(types.Bool)
+	},
+	"gcp.project.bigqueryService.reservation.autoscale": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetAutoscale()).ToDataRes(types.Dict)
+	},
+	"gcp.project.bigqueryService.reservation.concurrency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetConcurrency()).ToDataRes(types.Int)
+	},
+	"gcp.project.bigqueryService.reservation.edition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetEdition()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.reservation.primaryLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetPrimaryLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.reservation.secondaryLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetSecondaryLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.reservation.originalPrimaryLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetOriginalPrimaryLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.reservation.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.bigqueryService.reservation.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceReservation).GetUpdated()).ToDataRes(types.Time)
 	},
 	"gcp.project.dnsService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsService).GetProjectId()).ToDataRes(types.String)
@@ -14342,6 +14492,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstance).SslCerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.sqlService.instance.backupRuns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).BackupRuns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.sqlService.instance.replicaConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).ReplicaConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -14460,6 +14614,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sqlService.instance.user.passwordPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceUser).PasswordPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.sqlService.backupRun.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.backupKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).BackupKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.databaseVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).DatabaseVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.diskEncryptionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).DiskEncryptionConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.diskEncryptionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).DiskEncryptionStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.enqueuedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).EnqueuedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).Error, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.timeZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).TimeZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.windowStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).WindowStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.sqlService.backupRun.maxChargeableBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceBackupRun).MaxChargeableBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"gcp.project.sqlService.instance.sslCert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14822,6 +15056,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectBigqueryService).Datasets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.bigqueryService.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryService).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryService).Reservations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.bigqueryService.dataset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceDataset).__id, ok = v.Value.(string)
 		return
@@ -15136,6 +15378,106 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.bigqueryService.routine.body": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceRoutine).Body, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.bigqueryService.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.connection.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.connection.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.connection.friendlyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).FriendlyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.connection.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.connection.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.connection.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.connection.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.connection.modified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).Modified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.connection.hasCredential": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceConnection).HasCredential, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.slotCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).SlotCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.ignoreIdleSlots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).IgnoreIdleSlots, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.autoscale": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).Autoscale, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.concurrency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).Concurrency, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.edition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).Edition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.primaryLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).PrimaryLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.secondaryLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).SecondaryLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.originalPrimaryLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).OriginalPrimaryLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.reservation.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceReservation).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.dnsService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32568,6 +32910,7 @@ type mqlGcpProjectSqlServiceInstance struct {
 	Databases                                  plugin.TValue[[]any]
 	Users                                      plugin.TValue[[]any]
 	SslCerts                                   plugin.TValue[[]any]
+	BackupRuns                                 plugin.TValue[[]any]
 	ReplicaConfiguration                       plugin.TValue[any]
 	SatisfiesPzi                               plugin.TValue[bool]
 	SatisfiesPzs                               plugin.TValue[bool]
@@ -32769,6 +33112,22 @@ func (c *mqlGcpProjectSqlServiceInstance) GetSslCerts() *plugin.TValue[[]any] {
 		}
 
 		return c.sslCerts()
+	})
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetBackupRuns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BackupRuns, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.sqlService.instance", c.__id, "backupRuns")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backupRuns()
 	})
 }
 
@@ -32997,6 +33356,145 @@ func (c *mqlGcpProjectSqlServiceInstanceUser) GetDualPasswordType() *plugin.TVal
 
 func (c *mqlGcpProjectSqlServiceInstanceUser) GetPasswordPolicy() *plugin.TValue[any] {
 	return &c.PasswordPolicy
+}
+
+// mqlGcpProjectSqlServiceBackupRun for the gcp.project.sqlService.backupRun resource
+type mqlGcpProjectSqlServiceBackupRun struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectSqlServiceBackupRunInternal it will be used here
+	ProjectId                   plugin.TValue[string]
+	InstanceName                plugin.TValue[string]
+	Id                          plugin.TValue[string]
+	BackupKind                  plugin.TValue[string]
+	DatabaseVersion             plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	DiskEncryptionConfiguration plugin.TValue[any]
+	DiskEncryptionStatus        plugin.TValue[any]
+	EndTime                     plugin.TValue[*time.Time]
+	EnqueuedTime                plugin.TValue[*time.Time]
+	Error                       plugin.TValue[any]
+	Location                    plugin.TValue[string]
+	SelfLink                    plugin.TValue[string]
+	StartTime                   plugin.TValue[*time.Time]
+	Status                      plugin.TValue[string]
+	TimeZone                    plugin.TValue[string]
+	Type                        plugin.TValue[string]
+	WindowStartTime             plugin.TValue[*time.Time]
+	MaxChargeableBytes          plugin.TValue[int64]
+}
+
+// createGcpProjectSqlServiceBackupRun creates a new instance of this resource
+func createGcpProjectSqlServiceBackupRun(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectSqlServiceBackupRun{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.sqlService.backupRun", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) MqlName() string {
+	return "gcp.project.sqlService.backupRun"
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetBackupKind() *plugin.TValue[string] {
+	return &c.BackupKind
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetDatabaseVersion() *plugin.TValue[string] {
+	return &c.DatabaseVersion
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetDiskEncryptionConfiguration() *plugin.TValue[any] {
+	return &c.DiskEncryptionConfiguration
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetDiskEncryptionStatus() *plugin.TValue[any] {
+	return &c.DiskEncryptionStatus
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetEnqueuedTime() *plugin.TValue[*time.Time] {
+	return &c.EnqueuedTime
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetError() *plugin.TValue[any] {
+	return &c.Error
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetSelfLink() *plugin.TValue[string] {
+	return &c.SelfLink
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetTimeZone() *plugin.TValue[string] {
+	return &c.TimeZone
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetWindowStartTime() *plugin.TValue[*time.Time] {
+	return &c.WindowStartTime
+}
+
+func (c *mqlGcpProjectSqlServiceBackupRun) GetMaxChargeableBytes() *plugin.TValue[int64] {
+	return &c.MaxChargeableBytes
 }
 
 // mqlGcpProjectSqlServiceInstanceSslCert for the gcp.project.sqlService.instance.sslCert resource
@@ -33790,8 +34288,10 @@ type mqlGcpProjectBigqueryService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectBigqueryServiceInternal
-	ProjectId plugin.TValue[string]
-	Datasets  plugin.TValue[[]any]
+	ProjectId    plugin.TValue[string]
+	Datasets     plugin.TValue[[]any]
+	Connections  plugin.TValue[[]any]
+	Reservations plugin.TValue[[]any]
 }
 
 // createGcpProjectBigqueryService creates a new instance of this resource
@@ -33848,6 +34348,38 @@ func (c *mqlGcpProjectBigqueryService) GetDatasets() *plugin.TValue[[]any] {
 		}
 
 		return c.datasets()
+	})
+}
+
+func (c *mqlGcpProjectBigqueryService) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigqueryService", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
+func (c *mqlGcpProjectBigqueryService) GetReservations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Reservations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigqueryService", c.__id, "reservations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.reservations()
 	})
 }
 
@@ -34475,6 +35007,209 @@ func (c *mqlGcpProjectBigqueryServiceRoutine) GetType() *plugin.TValue[string] {
 
 func (c *mqlGcpProjectBigqueryServiceRoutine) GetBody() *plugin.TValue[string] {
 	return &c.Body
+}
+
+// mqlGcpProjectBigqueryServiceConnection for the gcp.project.bigqueryService.connection resource
+type mqlGcpProjectBigqueryServiceConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectBigqueryServiceConnectionInternal it will be used here
+	Name          plugin.TValue[string]
+	ProjectId     plugin.TValue[string]
+	Location      plugin.TValue[string]
+	FriendlyName  plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Properties    plugin.TValue[any]
+	Created       plugin.TValue[*time.Time]
+	Modified      plugin.TValue[*time.Time]
+	HasCredential plugin.TValue[bool]
+}
+
+// createGcpProjectBigqueryServiceConnection creates a new instance of this resource
+func createGcpProjectBigqueryServiceConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBigqueryServiceConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.bigqueryService.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) MqlName() string {
+	return "gcp.project.bigqueryService.connection"
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) GetFriendlyName() *plugin.TValue[string] {
+	return &c.FriendlyName
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) GetModified() *plugin.TValue[*time.Time] {
+	return &c.Modified
+}
+
+func (c *mqlGcpProjectBigqueryServiceConnection) GetHasCredential() *plugin.TValue[bool] {
+	return &c.HasCredential
+}
+
+// mqlGcpProjectBigqueryServiceReservation for the gcp.project.bigqueryService.reservation resource
+type mqlGcpProjectBigqueryServiceReservation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectBigqueryServiceReservationInternal it will be used here
+	Name                    plugin.TValue[string]
+	ProjectId               plugin.TValue[string]
+	Location                plugin.TValue[string]
+	SlotCapacity            plugin.TValue[int64]
+	IgnoreIdleSlots         plugin.TValue[bool]
+	Autoscale               plugin.TValue[any]
+	Concurrency             plugin.TValue[int64]
+	Edition                 plugin.TValue[string]
+	PrimaryLocation         plugin.TValue[string]
+	SecondaryLocation       plugin.TValue[string]
+	OriginalPrimaryLocation plugin.TValue[string]
+	Created                 plugin.TValue[*time.Time]
+	Updated                 plugin.TValue[*time.Time]
+}
+
+// createGcpProjectBigqueryServiceReservation creates a new instance of this resource
+func createGcpProjectBigqueryServiceReservation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBigqueryServiceReservation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.bigqueryService.reservation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) MqlName() string {
+	return "gcp.project.bigqueryService.reservation"
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetSlotCapacity() *plugin.TValue[int64] {
+	return &c.SlotCapacity
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetIgnoreIdleSlots() *plugin.TValue[bool] {
+	return &c.IgnoreIdleSlots
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetAutoscale() *plugin.TValue[any] {
+	return &c.Autoscale
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetConcurrency() *plugin.TValue[int64] {
+	return &c.Concurrency
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetEdition() *plugin.TValue[string] {
+	return &c.Edition
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetPrimaryLocation() *plugin.TValue[string] {
+	return &c.PrimaryLocation
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetSecondaryLocation() *plugin.TValue[string] {
+	return &c.SecondaryLocation
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetOriginalPrimaryLocation() *plugin.TValue[string] {
+	return &c.OriginalPrimaryLocation
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectBigqueryServiceReservation) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
 }
 
 // mqlGcpProjectDnsService for the gcp.project.dnsService resource
