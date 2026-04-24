@@ -103,6 +103,37 @@ func TestCreateAssetResourceArgs(t *testing.T) {
 		assert.Equal(t, types.Map(types.String, types.String), result["labels"].Type)
 	})
 
+	t.Run("nil platform does not panic", func(t *testing.T) {
+		asset := &inventory.Asset{
+			Name:        "no-platform-asset",
+			PlatformIds: []string{"platform-id-1"},
+			Labels:      map[string]string{"env": "prod"},
+			Platform:    nil,
+		}
+
+		result := CreateAssetResourceArgs(asset)
+		require.NotNil(t, result)
+
+		// Platform-derived fields should be their zero values.
+		assert.Equal(t, "", result["platform"].Value)
+		assert.Equal(t, "", result["kind"].Value)
+		assert.Equal(t, "", result["runtime"].Value)
+		assert.Equal(t, "", result["version"].Value)
+		assert.Equal(t, "", result["arch"].Value)
+		assert.Equal(t, "", result["title"].Value)
+		assert.Equal(t, "", result["build"].Value)
+
+		// Asset-level fields should still populate.
+		assert.Equal(t, "no-platform-asset", result["name"].Value)
+		ids := result["ids"].Value.([]any)
+		assert.Len(t, ids, 1)
+		assert.Equal(t, "platform-id-1", ids[0])
+
+		// Labels should contain the asset labels even without a platform.
+		labels := result["labels"].Value.(map[string]any)
+		assert.Equal(t, "prod", labels["env"])
+	})
+
 	t.Run("platform labels override asset labels for backwards compatibility", func(t *testing.T) {
 		asset := &inventory.Asset{
 			Name:   "override-test",
