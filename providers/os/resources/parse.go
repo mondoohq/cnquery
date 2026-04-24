@@ -125,11 +125,157 @@ func (s *mqlParseJson) params(content string) (any, error) {
 		return nil, nil
 	}
 
+	return parseJSONContent(content)
+}
+
+func parseJSONContent(content string) (any, error) {
 	var res any
 	if err := json.Unmarshal([]byte(content), &res); err != nil {
-		return nil, err
+		sanitized, changed := sanitizeJSONStructuralNoise(content)
+		if !changed {
+			return nil, err
+		}
+
+		if sanitizeErr := json.Unmarshal([]byte(sanitized), &res); sanitizeErr != nil {
+			return nil, fmt.Errorf("failed to parse JSON: %w; sanitized parse failed: %v", err, sanitizeErr)
+		}
+		return res, nil
 	}
 	return res, nil
+}
+
+func sanitizeJSONStructuralNoise(content string) (string, bool) {
+	var (
+		builder strings.Builder
+		stack   []byte
+		changed bool
+		lastSig byte
+	)
+
+	builder.Grow(len(content))
+
+	inString := false
+	escaped := false
+
+	recomputeLastSig := func() {
+		lastSig = 0
+		out := builder.String()
+		for i := len(out) - 1; i >= 0; i-- {
+			switch out[i] {
+			case ' ', '\t', '\n', '\r':
+				continue
+			default:
+				lastSig = out[i]
+				return
+			}
+		}
+	}
+
+	trimTrailingComma := func() {
+		out := builder.String()
+		end := len(out)
+		for end > 0 {
+			switch out[end-1] {
+			case ' ', '\t', '\n', '\r':
+				end--
+			case ',':
+				builder.Reset()
+				builder.WriteString(out[:end-1])
+				recomputeLastSig()
+				return
+			default:
+				return
+			}
+		}
+	}
+
+	for i := 0; i < len(content); i++ {
+		ch := content[i]
+		if inString {
+			builder.WriteByte(ch)
+			if escaped {
+				escaped = false
+				continue
+			}
+			switch ch {
+			case '\\':
+				escaped = true
+			case '"':
+				inString = false
+				lastSig = '"'
+			}
+			continue
+		}
+
+		switch ch {
+		case '"':
+			inString = true
+			builder.WriteByte(ch)
+		case ' ', '\t', '\n', '\r':
+			builder.WriteByte(ch)
+		case '{', '[':
+			stack = append(stack, ch)
+			builder.WriteByte(ch)
+			lastSig = ch
+		case ',':
+			next := nextSignificantJSONByte(content, i+1)
+			if lastSig == '{' || lastSig == '[' || lastSig == ',' || lastSig == ':' || next == '}' || next == ']' {
+				changed = true
+				continue
+			}
+			builder.WriteByte(ch)
+			lastSig = ch
+		case '}':
+			if len(stack) == 0 {
+				changed = true
+				continue
+			}
+			if stack[len(stack)-1] == '[' {
+				changed = true
+				continue
+			}
+			if lastSig == ',' {
+				trimTrailingComma()
+				changed = true
+			}
+			stack = stack[:len(stack)-1]
+			builder.WriteByte(ch)
+			lastSig = ch
+		case ']':
+			if len(stack) == 0 {
+				changed = true
+				continue
+			}
+			if stack[len(stack)-1] == '{' {
+				changed = true
+				continue
+			}
+			if lastSig == ',' {
+				trimTrailingComma()
+				changed = true
+			}
+			stack = stack[:len(stack)-1]
+			builder.WriteByte(ch)
+			lastSig = ch
+		default:
+			builder.WriteByte(ch)
+			lastSig = ch
+		}
+	}
+
+	return builder.String(), changed
+}
+
+func nextSignificantJSONByte(content string, start int) byte {
+	for i := start; i < len(content); i++ {
+		switch content[i] {
+		case ' ', '\t', '\n', '\r':
+			continue
+		default:
+			return content[i]
+		}
+	}
+	return 0
 }
 
 func initParseXml(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
