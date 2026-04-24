@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path/filepath"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -189,8 +189,8 @@ func readApparmorProcessesFromFS(fs afero.Fs, procs []*processmgr.OSProcess) map
 func readApparmorCurrentForProcess(fs afero.Fs, pid int64) (profile string, status string, ok bool) {
 	pidStr := strconv.FormatInt(pid, 10)
 	paths := []string{
-		filepath.Join("/proc", pidStr, "attr/apparmor/current"),
-		filepath.Join("/proc", pidStr, "attr/current"),
+		path.Join("/proc", pidStr, "attr/apparmor/current"),
+		path.Join("/proc", pidStr, "attr/current"),
 	}
 
 	for _, path := range paths {

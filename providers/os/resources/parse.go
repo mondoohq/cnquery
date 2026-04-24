@@ -146,42 +146,45 @@ func parseJSONContent(content string) (any, error) {
 
 func sanitizeJSONStructuralNoise(content string) (string, bool) {
 	var (
-		builder strings.Builder
-		stack   []byte
-		changed bool
-		lastSig byte
+		out        = make([]byte, 0, len(content))
+		stack      []byte
+		changed    bool
+		lastSig    byte
+		lastSigPos = -1
 	)
-
-	builder.Grow(len(content))
 
 	inString := false
 	escaped := false
 
-	recomputeLastSig := func() {
-		lastSig = 0
-		out := builder.String()
-		for i := len(out) - 1; i >= 0; i-- {
-			switch out[i] {
-			case ' ', '\t', '\n', '\r':
-				continue
-			default:
-				lastSig = out[i]
-				return
-			}
-		}
+	setLastSig := func(ch byte) {
+		lastSig = ch
+		lastSigPos = len(out) - 1
 	}
 
 	trimTrailingComma := func() {
-		out := builder.String()
 		end := len(out)
 		for end > 0 {
 			switch out[end-1] {
 			case ' ', '\t', '\n', '\r':
 				end--
 			case ',':
-				builder.Reset()
-				builder.WriteString(out[:end-1])
-				recomputeLastSig()
+				commaPos := lastSigPos
+				if commaPos < 0 || commaPos >= len(out) {
+					commaPos = end - 1
+				}
+				out = out[:commaPos]
+				lastSig = 0
+				lastSigPos = -1
+				for i := commaPos - 1; i >= 0; i-- {
+					switch out[i] {
+					case ' ', '\t', '\n', '\r':
+						continue
+					default:
+						lastSig = out[i]
+						lastSigPos = i
+						return
+					}
+				}
 				return
 			default:
 				return
@@ -192,7 +195,7 @@ func sanitizeJSONStructuralNoise(content string) (string, bool) {
 	for i := 0; i < len(content); i++ {
 		ch := content[i]
 		if inString {
-			builder.WriteByte(ch)
+			out = append(out, ch)
 			if escaped {
 				escaped = false
 				continue
@@ -202,7 +205,7 @@ func sanitizeJSONStructuralNoise(content string) (string, bool) {
 				escaped = true
 			case '"':
 				inString = false
-				lastSig = '"'
+				setLastSig(ch)
 			}
 			continue
 		}
@@ -210,21 +213,21 @@ func sanitizeJSONStructuralNoise(content string) (string, bool) {
 		switch ch {
 		case '"':
 			inString = true
-			builder.WriteByte(ch)
+			out = append(out, ch)
 		case ' ', '\t', '\n', '\r':
-			builder.WriteByte(ch)
+			out = append(out, ch)
 		case '{', '[':
 			stack = append(stack, ch)
-			builder.WriteByte(ch)
-			lastSig = ch
+			out = append(out, ch)
+			setLastSig(ch)
 		case ',':
 			next := nextSignificantJSONByte(content, i+1)
 			if lastSig == '{' || lastSig == '[' || lastSig == ',' || lastSig == ':' || next == '}' || next == ']' {
 				changed = true
 				continue
 			}
-			builder.WriteByte(ch)
-			lastSig = ch
+			out = append(out, ch)
+			setLastSig(ch)
 		case '}':
 			if len(stack) == 0 {
 				changed = true
@@ -239,8 +242,8 @@ func sanitizeJSONStructuralNoise(content string) (string, bool) {
 				changed = true
 			}
 			stack = stack[:len(stack)-1]
-			builder.WriteByte(ch)
-			lastSig = ch
+			out = append(out, ch)
+			setLastSig(ch)
 		case ']':
 			if len(stack) == 0 {
 				changed = true
@@ -255,15 +258,15 @@ func sanitizeJSONStructuralNoise(content string) (string, bool) {
 				changed = true
 			}
 			stack = stack[:len(stack)-1]
-			builder.WriteByte(ch)
-			lastSig = ch
+			out = append(out, ch)
+			setLastSig(ch)
 		default:
-			builder.WriteByte(ch)
-			lastSig = ch
+			out = append(out, ch)
+			setLastSig(ch)
 		}
 	}
 
-	return builder.String(), changed
+	return string(out), changed
 }
 
 func nextSignificantJSONByte(content string, start int) byte {
