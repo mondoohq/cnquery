@@ -88,3 +88,8 @@ Features:
   idx: 15
   start: v13.x
   status: new
+- id: ExchangeTokenForToken
+  desc: "When exchanging an external identity token with upstream (WIF), request a bearer token response (response_type=TOKEN) in place of certificate-based service-account credentials."
+  idx: 16
+  start: v13.x
+  status: new

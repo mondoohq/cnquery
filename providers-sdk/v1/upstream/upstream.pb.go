@@ -898,7 +898,10 @@ type ExchangeExternalTokenRequest struct {
 	// Audience for the service account
 	Audience string `protobuf:"bytes,2,opt,name=audience,proto3" json:"audience,omitempty"`
 	// Token provided by the external identity provider to exchange
-	JwtToken      string `protobuf:"bytes,3,opt,name=jwt_token,json=jwtToken,proto3" json:"jwt_token,omitempty"`
+	JwtToken string `protobuf:"bytes,3,opt,name=jwt_token,json=jwtToken,proto3" json:"jwt_token,omitempty"`
+	// Optional. When set to "TOKEN", the server returns a short-lived bearer
+	// token inside base64_credential instead of service-account credentials.
+	ResponseType  string `protobuf:"bytes,4,opt,name=response_type,json=responseType,proto3" json:"response_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -950,6 +953,13 @@ func (x *ExchangeExternalTokenRequest) GetAudience() string {
 func (x *ExchangeExternalTokenRequest) GetJwtToken() string {
 	if x != nil {
 		return x.JwtToken
+	}
+	return ""
+}
+
+func (x *ExchangeExternalTokenRequest) GetResponseType() string {
+	if x != nil {
+		return x.ResponseType
 	}
 	return ""
 }
@@ -1075,12 +1085,13 @@ const file_upstream_proto_rawDesc = "" +
 	"\fSshSignature\x12\x10\n" +
 	"\x03alg\x18\x01 \x01(\tR\x03alg\x12\x10\n" +
 	"\x03kid\x18\x02 \x01(\tR\x03kid\x12\x10\n" +
-	"\x03sig\x18\x03 \x01(\tR\x03sig\"v\n" +
+	"\x03sig\x18\x03 \x01(\tR\x03sig\"\x9b\x01\n" +
 	"\x1cExchangeExternalTokenRequest\x12\x1d\n" +
 	"\n" +
 	"issuer_uri\x18\x01 \x01(\tR\tissuerUri\x12\x1a\n" +
 	"\baudience\x18\x02 \x01(\tR\baudience\x12\x1b\n" +
-	"\tjwt_token\x18\x03 \x01(\tR\bjwtToken\"L\n" +
+	"\tjwt_token\x18\x03 \x01(\tR\bjwtToken\x12#\n" +
+	"\rresponse_type\x18\x04 \x01(\tR\fresponseType\"L\n" +
 	"\x1dExchangeExternalTokenResponse\x12+\n" +
 	"\x11base64_credential\x18\x01 \x01(\tR\x10base64Credential2\x86\x03\n" +
 	"\fAgentManager\x12x\n" +

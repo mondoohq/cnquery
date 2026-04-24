@@ -58,7 +58,7 @@ func ExchangeSSHKey(apiEndpoint string, identityMrn string, resourceMrn string) 
 	}, nil
 }
 
-func ExchangeExternalToken(apiEndpoint, audience, issuerURI, jwtToken string) (*ServiceAccountCredentials, error) {
+func ExchangeExternalToken(apiEndpoint, audience, issuerURI, jwtToken string, tokenResponse bool) (*ServiceAccountCredentials, error) {
 	if jwtToken == "" {
 		// Try to fetch the token from an environment variable
 		jwtToken = os.Getenv("JWT_TOKEN")
@@ -93,6 +93,9 @@ func ExchangeExternalToken(apiEndpoint, audience, issuerURI, jwtToken string) (*
 		IssuerUri: issuerURI,
 		JwtToken:  jwtToken,
 	}
+	if tokenResponse {
+		request.ResponseType = "TOKEN"
+	}
 	resp, err := stsClient.ExchangeExternalToken(context.Background(), request)
 	if err != nil {
 		return nil, err
@@ -102,6 +105,25 @@ func ExchangeExternalToken(apiEndpoint, audience, issuerURI, jwtToken string) (*
 	credBytes, err := base64.StdEncoding.DecodeString(resp.Base64Credential)
 	if err != nil {
 		return nil, err
+	}
+
+	if tokenResponse {
+		var tokenCreds struct {
+			Mrn         string `json:"mrn"`
+			SpaceMrn    string `json:"space_mrn"`
+			Token       string `json:"token"`
+			ApiEndpoint string `json:"api_endpoint"`
+		}
+		if err := json.Unmarshal(credBytes, &tokenCreds); err != nil {
+			return nil, err
+		}
+		return &ServiceAccountCredentials{
+			Mrn:         tokenCreds.Mrn,
+			ParentMrn:   tokenCreds.SpaceMrn,
+			ScopeMrn:    tokenCreds.SpaceMrn,
+			Token:       tokenCreds.Token,
+			ApiEndpoint: tokenCreds.ApiEndpoint,
+		}, nil
 	}
 
 	// First unmarshal to a temporary structure to handle the field name mismatch

@@ -87,27 +87,33 @@ const (
 	// status: new
 	BiosUUIDAsID Feature = 15
 
+	// When exchanging an external identity token with upstream (WIF), request a bearer token response (response_type=TOKEN) in place of certificate-based service-account credentials.
+	// start:  v13.x
+	// status: new
+	ExchangeTokenForToken Feature = 16
+
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 16
+	MAX_FEATURES byte = 17
 )
 
 var FeaturesValue = map[string]Feature{
-	"MassQueries":          MassQueries,
-	"PiperCode":            PiperCode,
-	"BoolAssertions":       BoolAssertions,
-	"K8sNodeDiscovery":     K8sNodeDiscovery,
-	"MQLAssetContext":      MQLAssetContext,
-	"ErrorsAsFailures":     ErrorsAsFailures,
-	"StoreResourcesData":   StoreResourcesData,
-	"FineGrainedAssets":    FineGrainedAssets,
-	"SerialNumberAsID":     SerialNumberAsID,
-	"ForceShellCompletion": ForceShellCompletion,
-	"ResourceContext":      ResourceContext,
-	"FailIfNoEntryPoints":  FailIfNoEntryPoints,
-	"UploadResultsV2":      UploadResultsV2,
-	"AutoUpdateEngine":     AutoUpdateEngine,
-	"BiosUUIDAsID":         BiosUUIDAsID,
+	"MassQueries":           MassQueries,
+	"PiperCode":             PiperCode,
+	"BoolAssertions":        BoolAssertions,
+	"K8sNodeDiscovery":      K8sNodeDiscovery,
+	"MQLAssetContext":       MQLAssetContext,
+	"ErrorsAsFailures":      ErrorsAsFailures,
+	"StoreResourcesData":    StoreResourcesData,
+	"FineGrainedAssets":     FineGrainedAssets,
+	"SerialNumberAsID":      SerialNumberAsID,
+	"ForceShellCompletion":  ForceShellCompletion,
+	"ResourceContext":       ResourceContext,
+	"FailIfNoEntryPoints":   FailIfNoEntryPoints,
+	"UploadResultsV2":       UploadResultsV2,
+	"AutoUpdateEngine":      AutoUpdateEngine,
+	"BiosUUIDAsID":          BiosUUIDAsID,
+	"ExchangeTokenForToken": ExchangeTokenForToken,
 }
 
 // DefaultFeatures are a set of default flags that are active
@@ -124,4 +130,5 @@ var AvailableFeatures = Features{
 	byte(UploadResultsV2),
 	byte(AutoUpdateEngine),
 	byte(BiosUUIDAsID),
+	byte(ExchangeTokenForToken),
 }

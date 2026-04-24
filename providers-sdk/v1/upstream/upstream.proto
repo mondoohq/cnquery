@@ -135,6 +135,9 @@ message ExchangeExternalTokenRequest {
   string audience = 2;
   // Token provided by the external identity provider to exchange
   string jwt_token = 3;
+  // Optional. When set to "TOKEN", the server returns a short-lived bearer
+  // token inside base64_credential instead of service-account credentials.
+  string response_type = 4;
 }
 
 message ExchangeExternalTokenResponse {

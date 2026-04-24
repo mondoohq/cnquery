@@ -369,7 +369,8 @@ func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials 
 		case AUTH_METHOD_WIF:
 			log.Info().Msg("using wif authentication method, generate temporary credentials")
 
-			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, c.IssuerURI, c.JWTToken)
+			tokenResponse := c.GetFeatures().IsActive(mql.ExchangeTokenForToken)
+			serviceAccount, err := upstream.ExchangeExternalToken(c.UpstreamApiEndpoint(), c.Audience, c.IssuerURI, c.JWTToken, tokenResponse)
 			if err != nil {
 				log.Error().Err(err).Msg("could not exchange external (wif) token")
 				return nil
