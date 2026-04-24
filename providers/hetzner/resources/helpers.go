@@ -104,13 +104,6 @@ func stringMapAny(in map[string]string) map[string]any {
 	return out
 }
 
-// errIDRequired is returned by init functions when invoked without an id.
-// This catches bare-resource queries like `hetzner.certificate` (the user
-// almost certainly meant the list `hetzner.certificates` or wanted to pass
-// an id).
-func errIDRequired(resource string) error {
-	return fmt.Errorf("id required to look up hetzner.%s; use hetzner.%ss for the list", resource, resource)
-}
 
 // dictArrayData wraps a slice of dicts for assignment to a `[]dict` field.
 func dictArrayData(in []any) *llx.RawData {

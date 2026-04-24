@@ -128,7 +128,7 @@ func serverPublicNetDict(p hcloud.ServerPublicNet) map[string]any {
 func initHetznerServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
-		return nil, nil, errIDRequired("server")
+		return args, nil, nil
 	}
 	s, _, err := conn(runtime).Client().Server.GetByID(ctx(), id)
 	if err != nil {

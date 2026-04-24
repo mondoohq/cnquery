@@ -69,7 +69,7 @@ func newMqlHetznerFloatingIp(runtime *plugin.Runtime, f *hcloud.FloatingIP) (*mq
 func initHetznerFloatingIp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
-		return nil, nil, errIDRequired("floatingIp")
+		return args, nil, nil
 	}
 	f, _, err := conn(runtime).Client().FloatingIP.GetByID(ctx(), id)
 	if err != nil {

@@ -92,7 +92,7 @@ func newMqlHetznerLoadBalancer(runtime *plugin.Runtime, lb *hcloud.LoadBalancer)
 func initHetznerLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
-		return nil, nil, errIDRequired("loadBalancer")
+		return args, nil, nil
 	}
 	lb, _, err := conn(runtime).Client().LoadBalancer.GetByID(ctx(), id)
 	if err != nil {

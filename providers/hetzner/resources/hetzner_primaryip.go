@@ -73,7 +73,7 @@ func newMqlHetznerPrimaryIp(runtime *plugin.Runtime, p *hcloud.PrimaryIP) (*mqlH
 func initHetznerPrimaryIp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
-		return nil, nil, errIDRequired("primaryIp")
+		return args, nil, nil
 	}
 	p, _, err := conn(runtime).Client().PrimaryIP.GetByID(ctx(), id)
 	if err != nil {

@@ -57,7 +57,7 @@ func newMqlHetznerServerType(runtime *plugin.Runtime, t *hcloud.ServerType) (*mq
 func initHetznerServerType(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	id, ok := idArg(args, "id")
 	if !ok {
-		return nil, nil, errIDRequired("serverType")
+		return args, nil, nil
 	}
 	t, _, err := conn(runtime).Client().ServerType.GetByID(ctx(), id)
 	if err != nil {
