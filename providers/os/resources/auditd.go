@@ -157,6 +157,12 @@ func (s *mqlAuditdRules) path() (string, error) {
 	return defaultAuditdRules, nil
 }
 
+func (s *mqlAuditdRules) setEmptyRules() {
+	s.Controls = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+	s.Files = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+	s.Syscalls = plugin.TValue[[]any]{Data: []any{}, State: plugin.StateIsSet}
+}
+
 func (s *mqlAuditdRules) load(path string) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -166,6 +172,23 @@ func (s *mqlAuditdRules) load(path string) error {
 
 	if path == "" {
 		return errors.New("the path must be non-empty to parse auditd rules")
+	}
+
+	raw, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(path),
+	})
+	if err != nil {
+		return err
+	}
+	f := raw.(*mqlFile)
+	exists := f.GetExists()
+	if exists.Error != nil {
+		return exists.Error
+	}
+	if !exists.Data {
+		s.setEmptyRules()
+		s.loaded = true
+		return nil
 	}
 
 	files, err := getSortedPathFiles(s.MqlRuntime, path)
