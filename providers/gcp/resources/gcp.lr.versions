@@ -2134,6 +2134,7 @@ gcp.project.firestoreService.database.locationId 11.3.1
 gcp.project.firestoreService.database.name 11.3.1
 gcp.project.firestoreService.database.pointInTimeRecoveryEnablement 11.3.1
 gcp.project.firestoreService.database.projectId 11.3.1
+gcp.project.firestoreService.database.tags 13.11.2
 gcp.project.firestoreService.database.type 11.3.1
 gcp.project.firestoreService.database.uid 11.3.1
 gcp.project.firestoreService.database.updatedAt 11.3.1

@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
@@ -171,6 +172,7 @@ func (g *mqlGcpProjectFirestoreService) databases() ([]any, error) {
 			"appEngineIntegrationMode":      llx.StringData(db.AppEngineIntegrationMode.String()),
 			"pointInTimeRecoveryEnablement": llx.StringData(db.PointInTimeRecoveryEnablement.String()),
 			"deleteProtectionState":         llx.StringData(db.DeleteProtectionState.String()),
+			"tags":                          llx.MapData(convert.MapToInterfaceMap(db.Tags), types.String),
 			"cmekConfig":                    llx.DictData(cmekConfig),
 			"versionRetentionPeriod":        llx.StringData(versionRetentionPeriod),
 			"earliestVersionTime":           earliestVersionTime,

@@ -4333,6 +4333,8 @@ private gcp.project.firestoreService.database @defaults("name") {
   pointInTimeRecoveryEnablement string
   // Delete protection state
   deleteProtectionState string
+  // Resource Manager tag keys/values bound to this database
+  tags map[string]string
   // Customer-managed encryption key configuration
   cmekConfig dict
   // Version retention period

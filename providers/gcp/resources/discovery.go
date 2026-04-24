@@ -1189,6 +1189,9 @@ func discoverProject(conn *connection.GcpConnection, gcpProject *mqlGcpProject, 
 					Family:                []string{"google"},
 					TechnologyUrlSegments: connection.ResourceTechnologyUrl("firestore", gcpProject.Id.Data, location, "database", dbName),
 				},
+				// Firestore's adminpb.Database has Tags but no Labels field;
+				// emit an empty map for consistency with other GCP assets.
+				Labels:      map[string]string{},
 				Connections: []*inventory.Config{conn.Conf.Clone(inventory.WithoutDiscovery(), inventory.WithParentConnectionId(conn.Conf.Id))},
 			})
 		}

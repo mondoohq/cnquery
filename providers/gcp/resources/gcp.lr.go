@@ -1032,7 +1032,7 @@ func init() {
 			Create: createGcpProjectFirestoreService,
 		},
 		"gcp.project.firestoreService.database": {
-			// to override args, implement: initGcpProjectFirestoreServiceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectFirestoreServiceDatabase,
 			Create: createGcpProjectFirestoreServiceDatabase,
 		},
 		"gcp.project.firestoreService.database.index": {
@@ -1048,7 +1048,7 @@ func init() {
 			Create: createGcpProjectSpannerService,
 		},
 		"gcp.project.spannerService.instance": {
-			// to override args, implement: initGcpProjectSpannerServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectSpannerServiceInstance,
 			Create: createGcpProjectSpannerServiceInstance,
 		},
 		"gcp.project.spannerService.instance.database": {
@@ -1080,7 +1080,7 @@ func init() {
 			Create: createGcpProjectBigtableService,
 		},
 		"gcp.project.bigtableService.instance": {
-			// to override args, implement: initGcpProjectBigtableServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectBigtableServiceInstance,
 			Create: createGcpProjectBigtableServiceInstance,
 		},
 		"gcp.project.bigtableService.cluster": {
@@ -7070,6 +7070,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.firestoreService.database.deleteProtectionState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetDeleteProtectionState()).ToDataRes(types.String)
+	},
+	"gcp.project.firestoreService.database.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.firestoreService.database.cmekConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectFirestoreServiceDatabase).GetCmekConfig()).ToDataRes(types.Dict)
@@ -19137,6 +19140,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.firestoreService.database.deleteProtectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectFirestoreServiceDatabase).DeleteProtectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.firestoreService.database.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectFirestoreServiceDatabase).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.firestoreService.database.cmekConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44402,6 +44409,7 @@ type mqlGcpProjectFirestoreServiceDatabase struct {
 	AppEngineIntegrationMode      plugin.TValue[string]
 	PointInTimeRecoveryEnablement plugin.TValue[string]
 	DeleteProtectionState         plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
 	CmekConfig                    plugin.TValue[any]
 	VersionRetentionPeriod        plugin.TValue[string]
 	EarliestVersionTime           plugin.TValue[*time.Time]
@@ -44483,6 +44491,10 @@ func (c *mqlGcpProjectFirestoreServiceDatabase) GetPointInTimeRecoveryEnablement
 
 func (c *mqlGcpProjectFirestoreServiceDatabase) GetDeleteProtectionState() *plugin.TValue[string] {
 	return &c.DeleteProtectionState
+}
+
+func (c *mqlGcpProjectFirestoreServiceDatabase) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 func (c *mqlGcpProjectFirestoreServiceDatabase) GetCmekConfig() *plugin.TValue[any] {
