@@ -91,6 +91,7 @@ corosync
 cowlib
 cpe
 CPWn
+cpx
 crowdstrike
 cryptokey
 ctx
@@ -163,6 +164,7 @@ fortios
 fqdns
 frontdoor
 frontmatter
+fsn
 ftps
 fumadocs
 functionapp
@@ -187,7 +189,9 @@ HBFNV
 HCMCLOUD
 headerorder
 hec
+hetzner
 hexpm
+hil
 Hns
 horizontalpodautoscaler
 hostedzone
@@ -216,7 +220,7 @@ iothread
 ipc
 ipsetforwardedipconfig
 ipsetreferencestatement
-ISOs
+isos
 issuewild
 istio
 jamf

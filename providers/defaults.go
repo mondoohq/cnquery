@@ -291,6 +291,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"hetzner": {
+		Provider: &plugin.Provider{
+			Name:            "hetzner",
+			ID:              "go.mondoo.com/mql/providers/hetzner",
+			ConnectionTypes: []string{"hetzner"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "hetzner",
+					Use:   "hetzner",
+					Short: "a Hetzner Cloud project",
+				},
+			},
+		},
+	},
+
 	"ipinfo": {
 		Provider: &plugin.Provider{
 			Name:            "ipinfo",

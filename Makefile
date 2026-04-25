@@ -213,6 +213,7 @@ PROVIDERS := \
 	grafana \
 	google-workspace \
 	helm \
+	hetzner \
 	ipinfo \
 	ipmi \
 	k8s \

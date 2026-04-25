@@ -1,0 +1,551 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/hetzner"
+option go_package = "go.mondoo.com/mql/v13/providers/hetzner/resources"
+
+// Hetzner Cloud project
+hetzner {
+  // Cloud servers (virtual machines)
+  servers() []hetzner.server
+  // Server types (VM sizes)
+  serverTypes() []hetzner.serverType
+  // OS images and snapshots
+  images() []hetzner.image
+  // SSH keys
+  sshKeys() []hetzner.sshKey
+  // Block storage volumes
+  volumes() []hetzner.volume
+  // Networks (VPCs)
+  networks() []hetzner.network
+  // Floating IPs
+  floatingIps() []hetzner.floatingIp
+  // Primary IPs
+  primaryIps() []hetzner.primaryIp
+  // Load balancers
+  loadBalancers() []hetzner.loadBalancer
+  // Load balancer types
+  loadBalancerTypes() []hetzner.loadBalancerType
+  // Firewalls
+  firewalls() []hetzner.firewall
+  // TLS certificates
+  certificates() []hetzner.certificate
+  // Placement groups
+  placementGroups() []hetzner.placementGroup
+  // ISOs available for boot
+  isos() []hetzner.iso
+  // Locations (Hetzner regions)
+  locations() []hetzner.location
+  // Datacenters within locations
+  datacenters() []hetzner.datacenter
+}
+
+// Hetzner Cloud server (virtual machine)
+private hetzner.server @defaults("id name status") {
+  init(id? int)
+  // Server ID
+  id int
+  // Server name
+  name string
+  // Status (running, off, starting, stopping, initializing, migrating, rebuilding, deleting, unknown)
+  status string
+  // Creation timestamp
+  created time
+  // Server type (VM size)
+  serverType() hetzner.serverType
+  // Datacenter the server runs in
+  datacenter() hetzner.datacenter
+  // Location of the datacenter
+  location() hetzner.location
+  // Image the server was created from (nullable)
+  image() hetzner.image
+  // Private network attachments
+  privateNet() []hetzner.server.privateNet
+  // Volumes attached to the server
+  volumes() []hetzner.volume
+  // Floating IPs assigned to the server
+  floatingIps() []hetzner.floatingIp
+  // Primary IPv4 address (nullable)
+  primaryIpv4() hetzner.primaryIp
+  // Primary IPv6 address (nullable)
+  primaryIpv6() hetzner.primaryIp
+  // Firewalls applied to the server
+  firewalls() []hetzner.firewall
+  // Load balancers attached to the server
+  loadBalancers() []hetzner.loadBalancer
+  // Backup window (e.g., "22-02"); empty if backups disabled
+  backupWindow string
+  // Whether rescue mode is enabled
+  rescueEnabled bool
+  // Whether the server is locked (Hetzner-side lock)
+  locked bool
+  // Included monthly traffic (bytes)
+  includedTraffic int
+  // Outgoing traffic for the current billing period (bytes)
+  outgoingTraffic int
+  // Ingoing traffic for the current billing period (bytes)
+  ingoingTraffic int
+  // Placement group (nullable)
+  placementGroup() hetzner.placementGroup
+  // ISO attached to the server (nullable)
+  iso() hetzner.iso
+  // Labels
+  labels map[string]string
+  // Resource protection (delete, rebuild)
+  protection dict
+}
+
+// Hetzner Cloud server private network attachment
+private hetzner.server.privateNet @defaults("ip macAddress") {
+  // Parent server ID (composite key with networkId)
+  serverId int
+  // Attached network ID (composite key)
+  networkId int
+  // Attached network (typed reference)
+  network() hetzner.network
+  // IP address on the network
+  ip string
+  // Alias IPs on the network
+  aliasIps []string
+  // MAC address of the network interface
+  macAddress string
+}
+
+// Hetzner Cloud server type (VM size)
+private hetzner.serverType @defaults("id name cores memory") {
+  init(id? int)
+  // Server type ID
+  id int
+  // Slug name (cx11, cpx21, ...)
+  name string
+  // Human-readable description
+  description string
+  // Number of CPU cores
+  cores int
+  // Memory in GB
+  memory float
+  // Disk size in GB
+  disk int
+  // Storage type (local, network)
+  storageType string
+  // CPU type (shared, dedicated)
+  cpuType string
+  // Architecture (x86, arm)
+  architecture string
+  // Whether the server type is deprecated
+  deprecated bool
+  // Per-location availability and deprecation info
+  locations() []hetzner.serverType.location
+}
+
+// Hetzner Cloud server type availability in a single location
+private hetzner.serverType.location @defaults("available recommended") {
+  // Parent server type ID (composite key with locationId)
+  serverTypeId int
+  // Location ID (composite key)
+  locationId int
+  // Location (typed reference)
+  location() hetzner.location
+  // Whether new servers of this type can be created in this location
+  available bool
+  // Whether Hetzner recommends this server type in this location
+  recommended bool
+  // Deprecation info {announced, unavailableAfter}; empty if not deprecated
+  deprecation dict
+}
+
+// Hetzner Cloud image (system image, snapshot, backup, or app)
+private hetzner.image @defaults("id name type") {
+  init(id? int)
+  // Image ID
+  id int
+  // Image type (system, snapshot, backup, app)
+  type string
+  // Image status (available, creating, unavailable)
+  status string
+  // Name (slug for system images, e.g., ubuntu-22.04)
+  name string
+  // Description
+  description string
+  // Image data size in GB (snapshots/backups)
+  imageSize float
+  // Disk size in GB
+  diskSize float
+  // Creation timestamp
+  created time
+  // OS flavor (ubuntu, debian, centos, ...)
+  osFlavor string
+  // OS version
+  osVersion string
+  // Whether rapid deploy is supported
+  rapidDeploy bool
+  // Resource protection (delete)
+  protection dict
+  // Deprecation timestamp (nullable)
+  deprecated time
+  // Labels
+  labels map[string]string
+  // Bound server (nullable, for snapshots/backups)
+  boundServer() hetzner.server
+  // Server the image was created from (nullable, for snapshots/backups)
+  createdFrom() hetzner.server
+}
+
+// Hetzner Cloud SSH key
+private hetzner.sshKey @defaults("id name fingerprint") {
+  init(id? int)
+  // SSH key ID
+  id int
+  // Key name
+  name string
+  // SHA256 fingerprint
+  fingerprint string
+  // Public key content
+  publicKey string
+  // Creation timestamp
+  created time
+  // Labels
+  labels map[string]string
+}
+
+// Hetzner Cloud block storage volume
+private hetzner.volume @defaults("id name size") {
+  init(id? int)
+  // Volume ID
+  id int
+  // Volume name
+  name string
+  // Size in GB
+  size int
+  // Status (creating, available)
+  status string
+  // Creation timestamp
+  created time
+  // Linux device path (e.g., /dev/disk/by-id/scsi-0HC_Volume_...)
+  linuxDevice string
+  // Location of the volume
+  location() hetzner.location
+  // Server the volume is attached to (nullable)
+  server() hetzner.server
+  // Filesystem format (ext4, xfs, "")
+  format string
+  // Resource protection (delete)
+  protection dict
+  // Labels
+  labels map[string]string
+}
+
+// Hetzner Cloud network (VPC)
+private hetzner.network @defaults("id name ipRange") {
+  init(id? int)
+  // Network ID
+  id int
+  // Network name
+  name string
+  // IP range in CIDR notation
+  ipRange string
+  // Creation timestamp
+  created time
+  // Subnets [{type, ipRange, networkZone, gateway}]
+  subnets []dict
+  // Routes [{destination, gateway}]
+  routes []dict
+  // Servers attached to this network
+  servers() []hetzner.server
+  // Whether routes are exposed to vSwitch
+  exposeRoutesToVswitch bool
+  // Resource protection (delete)
+  protection dict
+  // Labels
+  labels map[string]string
+}
+
+// Hetzner Cloud floating IP
+private hetzner.floatingIp @defaults("id ip type") {
+  init(id? int)
+  // Floating IP ID
+  id int
+  // Type (ipv4, ipv6)
+  type string
+  // IP address (or CIDR for IPv6)
+  ip string
+  // Name
+  name string
+  // Description
+  description string
+  // Whether the IP is blocked
+  blocked bool
+  // Home location
+  homeLocation() hetzner.location
+  // Server the IP is assigned to (nullable)
+  server() hetzner.server
+  // Reverse DNS entries [{ip, dnsPtr}]
+  dnsPtr []dict
+  // Resource protection (delete)
+  protection dict
+  // Labels
+  labels map[string]string
+  // Creation timestamp
+  created time
+}
+
+// Hetzner Cloud primary IP (replaces non-floating server IPs)
+private hetzner.primaryIp @defaults("id ip type") {
+  init(id? int)
+  // Primary IP ID
+  id int
+  // Type (ipv4, ipv6)
+  type string
+  // IP address (or CIDR for IPv6)
+  ip string
+  // Name
+  name string
+  // Assignee type (server)
+  assigneeType string
+  // ID of the assigned resource (0 if unassigned)
+  assigneeId int
+  // Whether to auto-delete when the assigned resource is deleted
+  autoDelete bool
+  // Whether the IP is blocked
+  blocked bool
+  // Datacenter the IP belongs to
+  datacenter() hetzner.datacenter
+  // Server the IP is assigned to (nullable)
+  server() hetzner.server
+  // Reverse DNS entries [{ip, dnsPtr}]
+  dnsPtr []dict
+  // Resource protection (delete)
+  protection dict
+  // Labels
+  labels map[string]string
+  // Creation timestamp
+  created time
+}
+
+// Hetzner Cloud load balancer
+private hetzner.loadBalancer @defaults("id name") {
+  init(id? int)
+  // Load balancer ID
+  id int
+  // Name
+  name string
+  // Public network configuration {enabled, ipv4, ipv6}
+  publicNet dict
+  // Private network attachments
+  privateNet() []hetzner.loadBalancer.privateNet
+  // Location
+  location() hetzner.location
+  // Load balancer type
+  loadBalancerType() hetzner.loadBalancerType
+  // Algorithm (round_robin, least_connections)
+  algorithm string
+  // Forwarding services
+  services() []hetzner.loadBalancer.service
+  // Targets behind the load balancer
+  targets() []hetzner.loadBalancer.target
+  // Resource protection (delete)
+  protection dict
+  // Labels
+  labels map[string]string
+  // Creation timestamp
+  created time
+  // Included monthly traffic (bytes)
+  includedTraffic int
+  // Outgoing traffic for the current period (bytes)
+  outgoingTraffic int
+  // Ingoing traffic for the current period (bytes)
+  ingoingTraffic int
+}
+
+// Hetzner Cloud load balancer private network attachment
+private hetzner.loadBalancer.privateNet @defaults("ip") {
+  // Parent load balancer ID (composite key with networkId)
+  loadBalancerId int
+  // Attached network ID (composite key)
+  networkId int
+  // Attached network (typed reference)
+  network() hetzner.network
+  // IP address on the network
+  ip string
+}
+
+// Load balancer service definition
+private hetzner.loadBalancer.service @defaults("protocol listenPort") {
+  // Parent load balancer ID
+  loadBalancerId int
+  // Protocol (tcp, http, https)
+  protocol string
+  // Listen port
+  listenPort int
+  // Destination port on targets
+  destinationPort int
+  // Whether PROXY protocol is enabled
+  proxyProtocol bool
+  // Health check configuration
+  healthCheck dict
+  // HTTP-specific options (sticky sessions, redirect_http, certificates)
+  http dict
+  // TLS certificates attached to this service
+  certificates() []hetzner.certificate
+}
+
+// Load balancer target
+private hetzner.loadBalancer.target @defaults("type") {
+  // Parent load balancer ID
+  loadBalancerId int
+  // Target type (server, label_selector, ip)
+  type string
+  // Health status of the target [{listenPort, status}]
+  healthStatus []dict
+  // Whether to route traffic to the target's private IP
+  usePrivateIp bool
+  // Server target (nullable, only for type=server)
+  server() hetzner.server
+  // Label selector (only for type=label_selector)
+  labelSelector string
+  // IP address (only for type=ip)
+  ip string
+}
+
+// Hetzner Cloud load balancer type
+private hetzner.loadBalancerType @defaults("id name") {
+  init(id? int)
+  // Load balancer type ID
+  id int
+  // Slug name (lb11, lb21, lb31)
+  name string
+  // Description
+  description string
+  // Maximum connections
+  maxConnections int
+  // Maximum services
+  maxServices int
+  // Maximum targets
+  maxTargets int
+  // Maximum assigned certificates
+  maxAssignedCertificates int
+  // Deprecation timestamp (nullable)
+  deprecated time
+}
+
+// Hetzner Cloud firewall
+private hetzner.firewall @defaults("id name") {
+  init(id? int)
+  // Firewall ID
+  id int
+  // Firewall name
+  name string
+  // Creation timestamp
+  created time
+  // Firewall rules [{direction, protocol, port, sourceIps, destinationIps, description}]
+  rules []dict
+  // Servers the firewall is directly applied to (type=server entries)
+  servers() []hetzner.server
+  // Label selectors the firewall is applied to (type=label_selector entries)
+  labelSelectors []string
+  // Labels
+  labels map[string]string
+}
+
+// Hetzner Cloud TLS certificate
+private hetzner.certificate @defaults("id name type") {
+  init(id? int)
+  // Certificate ID
+  id int
+  // Certificate name
+  name string
+  // Type (uploaded, managed)
+  type string
+  // SHA256 fingerprint
+  fingerprint string
+  // Validity start
+  notValidBefore time
+  // Validity end
+  notValidAfter time
+  // DNS names covered by the certificate
+  domainNames []string
+  // Status of managed certificates {issuance, renewal, error}
+  status dict
+  // Creation timestamp
+  created time
+  // Servers using this certificate (type=server entries in usedBy)
+  servers() []hetzner.server
+  // Load balancers using this certificate (type=load_balancer entries in usedBy)
+  loadBalancers() []hetzner.loadBalancer
+  // Labels
+  labels map[string]string
+}
+
+// Hetzner Cloud placement group
+private hetzner.placementGroup @defaults("id name type") {
+  init(id? int)
+  // Placement group ID
+  id int
+  // Name
+  name string
+  // Type (spread)
+  type string
+  // Creation timestamp
+  created time
+  // Servers in the placement group
+  servers() []hetzner.server
+  // Labels
+  labels map[string]string
+}
+
+// Hetzner Cloud ISO image
+private hetzner.iso @defaults("id name type") {
+  init(id? int)
+  // ISO ID
+  id int
+  // ISO name
+  name string
+  // Description
+  description string
+  // Type (public, private)
+  type string
+  // Deprecation info {announced, unavailableAfter}
+  deprecation dict
+  // Architecture (x86, arm)
+  architecture string
+}
+
+// Hetzner Cloud location (region)
+private hetzner.location @defaults("id name city") {
+  init(id? int)
+  // Location ID
+  id int
+  // Slug name (fsn1, nbg1, hel1, ash, hil)
+  name string
+  // Description
+  description string
+  // Country code (DE, FI, US)
+  country string
+  // City
+  city string
+  // Latitude
+  latitude float
+  // Longitude
+  longitude float
+  // Network zone (eu-central, us-east, us-west)
+  networkZone string
+}
+
+// Hetzner Cloud datacenter
+private hetzner.datacenter @defaults("id name") {
+  init(id? int)
+  // Datacenter ID
+  id int
+  // Slug name (e.g., fsn1-dc14)
+  name string
+  // Description
+  description string
+  // Location of the datacenter
+  location() hetzner.location
+  // Server types supported in this datacenter
+  supportedServerTypes() []hetzner.serverType
+  // Server types currently available for new servers in this datacenter
+  availableServerTypes() []hetzner.serverType
+  // Server types available for migration into this datacenter
+  serverTypesAvailableForMigration() []hetzner.serverType
+}
