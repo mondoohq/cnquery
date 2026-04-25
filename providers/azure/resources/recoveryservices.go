@@ -231,6 +231,16 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) securitySettings() (*
 		immutabilityState = string(*ss.ImmutabilitySettings.State)
 	}
 
+	var multiUserAuthorization string
+	if ss.MultiUserAuthorization != nil {
+		multiUserAuthorization = string(*ss.MultiUserAuthorization)
+	}
+
+	var sourceScanConfigurationState string
+	if ss.SourceScanConfiguration != nil && ss.SourceScanConfiguration.State != nil {
+		sourceScanConfigurationState = string(*ss.SourceScanConfiguration.State)
+	}
+
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings,
 		map[string]*llx.RawData{
 			"id":                              llx.StringData(a.Id.Data + "/securitySettings"),
@@ -238,6 +248,8 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) securitySettings() (*
 			"softDeleteRetentionPeriodInDays": llx.IntData(softDeleteRetentionPeriodInDays),
 			"enhancedSecurityState":           llx.StringData(enhancedSecurityState),
 			"immutabilityState":               llx.StringData(immutabilityState),
+			"multiUserAuthorization":          llx.StringData(multiUserAuthorization),
+			"sourceScanConfigurationState":    llx.StringData(sourceScanConfigurationState),
 		})
 	if err != nil {
 		return nil, err

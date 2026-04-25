@@ -29,6 +29,10 @@ type mqlAzureSubscriptionContainerRegistryServiceRegistryTokenInternal struct {
 	cacheScopeMapID string
 }
 
+type mqlAzureSubscriptionContainerRegistryServiceRegistryCacheRuleInternal struct {
+	cacheCredentialSetResourceID string
+}
+
 func (a *mqlAzureSubscriptionContainerRegistryService) id() (string, error) {
 	return "azure.subscription.containerRegistryService/" + a.SubscriptionId.Data, nil
 }
@@ -166,6 +170,11 @@ func createRegistryResource(runtime *plugin.Runtime, reg *armcontainerregistry.R
 		provisioningState = string(*props.ProvisioningState)
 	}
 
+	var roleAssignmentMode string
+	if props.RoleAssignmentMode != nil {
+		roleAssignmentMode = string(*props.RoleAssignmentMode)
+	}
+
 	var creationDate *llx.RawData
 	if props.CreationDate != nil {
 		creationDate = llx.TimeDataPtr(props.CreationDate)
@@ -175,21 +184,24 @@ func createRegistryResource(runtime *plugin.Runtime, reg *armcontainerregistry.R
 
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionContainerRegistryServiceRegistry,
 		map[string]*llx.RawData{
-			"id":                       llx.StringDataPtr(reg.ID),
-			"name":                     llx.StringDataPtr(reg.Name),
-			"location":                 llx.StringDataPtr(reg.Location),
-			"type":                     llx.StringDataPtr(reg.Type),
-			"tags":                     llx.MapData(convert.PtrMapStrToInterface(reg.Tags), types.String),
-			"skuName":                  llx.StringData(skuName),
-			"identity":                 llx.DictData(identity),
-			"adminUserEnabled":         llx.BoolDataPtr(props.AdminUserEnabled),
-			"publicNetworkAccess":      llx.StringData(publicNetworkAccess),
-			"networkRuleBypassOptions": llx.StringData(networkRuleBypassOptions),
-			"zoneRedundancy":           llx.StringData(zoneRedundancy),
-			"dataEndpointEnabled":      llx.BoolDataPtr(props.DataEndpointEnabled),
-			"loginServer":              llx.StringDataPtr(props.LoginServer),
-			"creationDate":             creationDate,
-			"provisioningState":        llx.StringData(provisioningState),
+			"id":                               llx.StringDataPtr(reg.ID),
+			"name":                             llx.StringDataPtr(reg.Name),
+			"location":                         llx.StringDataPtr(reg.Location),
+			"type":                             llx.StringDataPtr(reg.Type),
+			"tags":                             llx.MapData(convert.PtrMapStrToInterface(reg.Tags), types.String),
+			"skuName":                          llx.StringData(skuName),
+			"identity":                         llx.DictData(identity),
+			"adminUserEnabled":                 llx.BoolDataPtr(props.AdminUserEnabled),
+			"anonymousPullEnabled":             llx.BoolDataPtr(props.AnonymousPullEnabled),
+			"networkRuleBypassAllowedForTasks": llx.BoolDataPtr(props.NetworkRuleBypassAllowedForTasks),
+			"roleAssignmentMode":               llx.StringData(roleAssignmentMode),
+			"publicNetworkAccess":              llx.StringData(publicNetworkAccess),
+			"networkRuleBypassOptions":         llx.StringData(networkRuleBypassOptions),
+			"zoneRedundancy":                   llx.StringData(zoneRedundancy),
+			"dataEndpointEnabled":              llx.BoolDataPtr(props.DataEndpointEnabled),
+			"loginServer":                      llx.StringDataPtr(props.LoginServer),
+			"creationDate":                     creationDate,
+			"provisioningState":                llx.StringData(provisioningState),
 		})
 	if err != nil {
 		return nil, err
@@ -316,15 +328,21 @@ func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) policies() (*mqlA
 		exportEnabled = string(*p.ExportPolicy.Status) == "enabled"
 	}
 
+	var aadAsArmEnabled bool
+	if p.AzureADAuthenticationAsArmPolicy != nil && p.AzureADAuthenticationAsArmPolicy.Status != nil {
+		aadAsArmEnabled = string(*p.AzureADAuthenticationAsArmPolicy.Status) == string(armcontainerregistry.AzureADAuthenticationAsArmPolicyStatusEnabled)
+	}
+
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionContainerRegistryServiceRegistryPolicies,
 		map[string]*llx.RawData{
-			"id":                      llx.StringData(a.Id.Data + "/policies"),
-			"trustPolicyEnabled":      llx.BoolData(trustEnabled),
-			"trustPolicyType":         llx.StringData(trustType),
-			"retentionPolicyEnabled":  llx.BoolData(retentionEnabled),
-			"retentionPolicyDays":     llx.IntData(retentionDays),
-			"quarantinePolicyEnabled": llx.BoolData(quarantineEnabled),
-			"exportPolicyEnabled":     llx.BoolData(exportEnabled),
+			"id":                                      llx.StringData(a.Id.Data + "/policies"),
+			"trustPolicyEnabled":                      llx.BoolData(trustEnabled),
+			"trustPolicyType":                         llx.StringData(trustType),
+			"retentionPolicyEnabled":                  llx.BoolData(retentionEnabled),
+			"retentionPolicyDays":                     llx.IntData(retentionDays),
+			"quarantinePolicyEnabled":                 llx.BoolData(quarantineEnabled),
+			"exportPolicyEnabled":                     llx.BoolData(exportEnabled),
+			"azureADAuthenticationAsArmPolicyEnabled": llx.BoolData(aadAsArmEnabled),
 		})
 	if err != nil {
 		return nil, err
@@ -893,4 +911,413 @@ func (a *mqlAzureSubscriptionContainerRegistryServiceRegistryToken) scopeMap() (
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionContainerRegistryServiceRegistryScopeMap), nil
+}
+
+// cacheRules fetches all pull-through cache rules for the registry.
+func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) cacheRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	registryName, err := resourceID.Component("registries")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armcontainerregistry.NewCacheRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(resourceID.ResourceGroup, registryName, nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, cr := range page.Value {
+			if cr == nil {
+				continue
+			}
+
+			var sourceRepo, targetRepo, credSetID, provisioningState string
+			var creationDate *llx.RawData
+			if cr.Properties != nil {
+				if cr.Properties.SourceRepository != nil {
+					sourceRepo = *cr.Properties.SourceRepository
+				}
+				if cr.Properties.TargetRepository != nil {
+					targetRepo = *cr.Properties.TargetRepository
+				}
+				if cr.Properties.CredentialSetResourceID != nil {
+					credSetID = *cr.Properties.CredentialSetResourceID
+				}
+				if cr.Properties.ProvisioningState != nil {
+					provisioningState = string(*cr.Properties.ProvisioningState)
+				}
+				if cr.Properties.CreationDate != nil {
+					creationDate = llx.TimeDataPtr(cr.Properties.CreationDate)
+				}
+			}
+			if creationDate == nil {
+				creationDate = llx.NilData
+			}
+
+			mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionContainerRegistryServiceRegistryCacheRule,
+				map[string]*llx.RawData{
+					"id":                      llx.StringDataPtr(cr.ID),
+					"name":                    llx.StringDataPtr(cr.Name),
+					"type":                    llx.StringDataPtr(cr.Type),
+					"sourceRepository":        llx.StringData(sourceRepo),
+					"targetRepository":        llx.StringData(targetRepo),
+					"credentialSetResourceId": llx.StringData(credSetID),
+					"creationDate":            creationDate,
+					"provisioningState":       llx.StringData(provisioningState),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlCr := mqlRes.(*mqlAzureSubscriptionContainerRegistryServiceRegistryCacheRule)
+			mqlCr.cacheCredentialSetResourceID = credSetID
+			res = append(res, mqlCr)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionContainerRegistryServiceRegistryCacheRule) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// credentialSet returns a typed reference to the credential set used by this cache rule.
+func (a *mqlAzureSubscriptionContainerRegistryServiceRegistryCacheRule) credentialSet() (*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet, error) {
+	if a.cacheCredentialSetResourceID == "" {
+		a.CredentialSet.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet,
+		map[string]*llx.RawData{
+			"id": llx.StringData(a.cacheCredentialSetResourceID),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet), nil
+}
+
+// credentialSets fetches all credential sets for the registry.
+func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) credentialSets() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	registryName, err := resourceID.Component("registries")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armcontainerregistry.NewCredentialSetsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(resourceID.ResourceGroup, registryName, nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, cs := range page.Value {
+			if cs == nil {
+				continue
+			}
+			mqlCs, err := createCredentialSetResource(a.MqlRuntime, cs)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlCs)
+		}
+	}
+	return res, nil
+}
+
+func createCredentialSetResource(runtime *plugin.Runtime, cs *armcontainerregistry.CredentialSet) (*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet, error) {
+	identity, err := convert.JsonToDict(cs.Identity)
+	if err != nil {
+		return nil, err
+	}
+
+	var loginServer, provisioningState string
+	var creationDate *llx.RawData
+	var authCredentials []any
+	if cs.Properties != nil {
+		if cs.Properties.LoginServer != nil {
+			loginServer = *cs.Properties.LoginServer
+		}
+		if cs.Properties.ProvisioningState != nil {
+			provisioningState = string(*cs.Properties.ProvisioningState)
+		}
+		if cs.Properties.CreationDate != nil {
+			creationDate = llx.TimeDataPtr(cs.Properties.CreationDate)
+		}
+		for _, ac := range cs.Properties.AuthCredentials {
+			if ac == nil {
+				continue
+			}
+			d, err := convert.JsonToDict(ac)
+			if err != nil {
+				return nil, err
+			}
+			authCredentials = append(authCredentials, d)
+		}
+	}
+	if creationDate == nil {
+		creationDate = llx.NilData
+	}
+
+	res, err := CreateResource(runtime, ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet,
+		map[string]*llx.RawData{
+			"id":                llx.StringDataPtr(cs.ID),
+			"name":              llx.StringDataPtr(cs.Name),
+			"type":              llx.StringDataPtr(cs.Type),
+			"loginServer":       llx.StringData(loginServer),
+			"identity":          llx.DictData(identity),
+			"authCredentials":   llx.ArrayData(authCredentials, types.Dict),
+			"creationDate":      creationDate,
+			"provisioningState": llx.StringData(provisioningState),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet), nil
+}
+
+func (a *mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// initAzureSubscriptionContainerRegistryServiceRegistryCredentialSet fetches a credential set
+// by ID for cross-ref resolution from cacheRule.credentialSet().
+func initAzureSubscriptionContainerRegistryServiceRegistryCredentialSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	idRaw, ok := args["id"]
+	if !ok || idRaw == nil {
+		return args, nil, nil
+	}
+	id, ok := idRaw.Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	registryName, err := resourceID.Component("registries")
+	if err != nil {
+		return nil, nil, err
+	}
+	credSetName, err := resourceID.Component("credentialSets")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	client, err := armcontainerregistry.NewCredentialSetsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := client.Get(ctx, resourceID.ResourceGroup, registryName, credSetName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	mqlCs, err := createCredentialSetResource(runtime, &resp.CredentialSet)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlCs, nil
+}
+
+// connectedRegistries fetches all connected (edge/on-prem) registries that mirror this registry.
+func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) connectedRegistries() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	registryName, err := resourceID.Component("registries")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armcontainerregistry.NewConnectedRegistriesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(resourceID.ResourceGroup, registryName, nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, cr := range page.Value {
+			if cr == nil {
+				continue
+			}
+
+			args := map[string]*llx.RawData{
+				"id":   llx.StringDataPtr(cr.ID),
+				"name": llx.StringDataPtr(cr.Name),
+				"type": llx.StringDataPtr(cr.Type),
+			}
+
+			var clientTokenIDs []any
+			var notifications []any
+			args["mode"] = llx.StringData("")
+			args["connectionState"] = llx.StringData("")
+			args["activationStatus"] = llx.StringData("")
+			args["version"] = llx.StringData("")
+			args["lastActivityTime"] = llx.NilData
+			args["auditLogStatus"] = llx.StringData("")
+			args["logLevel"] = llx.StringData("")
+			args["loginServerHost"] = llx.StringData("")
+			args["tlsStatus"] = llx.StringData("")
+			args["garbageCollectionEnabled"] = llx.BoolData(false)
+			args["garbageCollectionSchedule"] = llx.StringData("")
+			args["parentId"] = llx.StringData("")
+			args["syncTokenId"] = llx.StringData("")
+			args["syncSchedule"] = llx.StringData("")
+			args["syncWindow"] = llx.StringData("")
+			args["syncLastSyncTime"] = llx.NilData
+			args["syncMessageTtl"] = llx.StringData("")
+			args["provisioningState"] = llx.StringData("")
+
+			if props := cr.Properties; props != nil {
+				if props.Mode != nil {
+					args["mode"] = llx.StringData(string(*props.Mode))
+				}
+				if props.ConnectionState != nil {
+					args["connectionState"] = llx.StringData(string(*props.ConnectionState))
+				}
+				if props.Version != nil {
+					args["version"] = llx.StringDataPtr(props.Version)
+				}
+				if props.LastActivityTime != nil {
+					args["lastActivityTime"] = llx.TimeDataPtr(props.LastActivityTime)
+				}
+				if props.ProvisioningState != nil {
+					args["provisioningState"] = llx.StringData(string(*props.ProvisioningState))
+				}
+				if props.Activation != nil && props.Activation.Status != nil {
+					args["activationStatus"] = llx.StringData(string(*props.Activation.Status))
+				}
+				if props.Logging != nil {
+					if props.Logging.AuditLogStatus != nil {
+						args["auditLogStatus"] = llx.StringData(string(*props.Logging.AuditLogStatus))
+					}
+					if props.Logging.LogLevel != nil {
+						args["logLevel"] = llx.StringData(string(*props.Logging.LogLevel))
+					}
+				}
+				if props.LoginServer != nil {
+					if props.LoginServer.Host != nil {
+						args["loginServerHost"] = llx.StringDataPtr(props.LoginServer.Host)
+					}
+					if props.LoginServer.TLS != nil && props.LoginServer.TLS.Status != nil {
+						args["tlsStatus"] = llx.StringData(string(*props.LoginServer.TLS.Status))
+					}
+				}
+				if props.GarbageCollection != nil {
+					if props.GarbageCollection.Enabled != nil {
+						args["garbageCollectionEnabled"] = llx.BoolDataPtr(props.GarbageCollection.Enabled)
+					}
+					if props.GarbageCollection.Schedule != nil {
+						args["garbageCollectionSchedule"] = llx.StringDataPtr(props.GarbageCollection.Schedule)
+					}
+				}
+				if props.Parent != nil {
+					if props.Parent.ID != nil {
+						args["parentId"] = llx.StringDataPtr(props.Parent.ID)
+					}
+					if sp := props.Parent.SyncProperties; sp != nil {
+						if sp.TokenID != nil {
+							args["syncTokenId"] = llx.StringDataPtr(sp.TokenID)
+						}
+						if sp.Schedule != nil {
+							args["syncSchedule"] = llx.StringDataPtr(sp.Schedule)
+						}
+						if sp.SyncWindow != nil {
+							args["syncWindow"] = llx.StringDataPtr(sp.SyncWindow)
+						}
+						if sp.LastSyncTime != nil {
+							args["syncLastSyncTime"] = llx.TimeDataPtr(sp.LastSyncTime)
+						}
+						if sp.MessageTTL != nil {
+							args["syncMessageTtl"] = llx.StringDataPtr(sp.MessageTTL)
+						}
+					}
+				}
+				for _, t := range props.ClientTokenIDs {
+					if t != nil {
+						clientTokenIDs = append(clientTokenIDs, *t)
+					}
+				}
+				for _, n := range props.NotificationsList {
+					if n != nil {
+						notifications = append(notifications, *n)
+					}
+				}
+			}
+			args["clientTokenIds"] = llx.ArrayData(clientTokenIDs, types.String)
+			args["notificationsList"] = llx.ArrayData(notifications, types.String)
+
+			mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionContainerRegistryServiceRegistryConnectedRegistry, args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRes)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionContainerRegistryServiceRegistryConnectedRegistry) id() (string, error) {
+	return a.Id.Data, nil
 }

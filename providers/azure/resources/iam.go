@@ -337,3 +337,156 @@ func (a *mqlAzureSubscriptionManagedIdentity) roleAssignments() ([]any, error) {
 	// NOTE: this should never be called since we assign roles during the managed identities query
 	return nil, errors.New("could not fetch role assignments for managed identities")
 }
+
+func (a *mqlAzureSubscriptionAuthorizationServiceDenyAssignment) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// denyAssignments lists subscription-scoped read-only deny rules. Includes managed-app deny
+// assignments and any custom deny rules. Required for "no Owner can delete X" verification.
+func (a *mqlAzureSubscriptionAuthorizationService) denyAssignments() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	subId := a.SubscriptionId.Data
+
+	client, err := authorization.NewDenyAssignmentsClient(subId, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, da := range page.Value {
+			if da == nil {
+				continue
+			}
+			var denyName, description, scope string
+			var doNotApplyToChild, isSystemProtected bool
+			var perms, principals, excludePrincipals []any
+			if p := da.Properties; p != nil {
+				if p.DenyAssignmentName != nil {
+					denyName = *p.DenyAssignmentName
+				}
+				if p.Description != nil {
+					description = *p.Description
+				}
+				if p.Scope != nil {
+					scope = *p.Scope
+				}
+				if p.DoNotApplyToChildScopes != nil {
+					doNotApplyToChild = *p.DoNotApplyToChildScopes
+				}
+				if p.IsSystemProtected != nil {
+					isSystemProtected = *p.IsSystemProtected
+				}
+				for _, pm := range p.Permissions {
+					if pm == nil {
+						continue
+					}
+					if d, err := convert.JsonToDict(pm); err == nil {
+						perms = append(perms, d)
+					}
+				}
+				for _, pr := range p.Principals {
+					if pr == nil {
+						continue
+					}
+					if d, err := convert.JsonToDict(pr); err == nil {
+						principals = append(principals, d)
+					}
+				}
+				for _, pr := range p.ExcludePrincipals {
+					if pr == nil {
+						continue
+					}
+					if d, err := convert.JsonToDict(pr); err == nil {
+						excludePrincipals = append(excludePrincipals, d)
+					}
+				}
+			}
+
+			mqlDa, err := CreateResource(a.MqlRuntime, "azure.subscription.authorizationService.denyAssignment",
+				map[string]*llx.RawData{
+					"id":                      llx.StringDataPtr(da.ID),
+					"name":                    llx.StringDataPtr(da.Name),
+					"type":                    llx.StringDataPtr(da.Type),
+					"denyAssignmentName":      llx.StringData(denyName),
+					"description":             llx.StringData(description),
+					"doNotApplyToChildScopes": llx.BoolData(doNotApplyToChild),
+					"isSystemProtected":       llx.BoolData(isSystemProtected),
+					"scope":                   llx.StringData(scope),
+					"permissions":             llx.ArrayData(perms, types.Dict),
+					"principals":              llx.ArrayData(principals, types.Dict),
+					"excludePrincipals":       llx.ArrayData(excludePrincipals, types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDa)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionAuthorizationServiceClassicAdministrator) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// classicAdministrators lists legacy ASM co-admins / service admins on the subscription.
+// CIS 1.21 requires this to be empty. Distinct from RBAC role assignments.
+func (a *mqlAzureSubscriptionAuthorizationService) classicAdministrators() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	subId := a.SubscriptionId.Data
+
+	client, err := authorization.NewClassicAdministratorsClient(subId, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ca := range page.Value {
+			if ca == nil {
+				continue
+			}
+			var emailAddress, role string
+			if ca.Properties != nil {
+				if ca.Properties.EmailAddress != nil {
+					emailAddress = *ca.Properties.EmailAddress
+				}
+				if ca.Properties.Role != nil {
+					role = *ca.Properties.Role
+				}
+			}
+
+			mqlCa, err := CreateResource(a.MqlRuntime, "azure.subscription.authorizationService.classicAdministrator",
+				map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(ca.ID),
+					"name":         llx.StringDataPtr(ca.Name),
+					"type":         llx.StringDataPtr(ca.Type),
+					"emailAddress": llx.StringData(emailAddress),
+					"role":         llx.StringData(role),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlCa)
+		}
+	}
+	return res, nil
+}

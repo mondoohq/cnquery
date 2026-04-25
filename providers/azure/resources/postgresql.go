@@ -631,3 +631,33 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) geoBackupEncryptio
 	}
 	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheGeoBackupKeyURI)
 }
+
+// threatProtectionState fetches the Microsoft Defender for Cloud Advanced Threat Protection state.
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) threatProtectionState() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return "", err
+	}
+	server, err := resourceID.Component("flexibleServers")
+	if err != nil {
+		return "", err
+	}
+
+	client, err := flexible.NewAdvancedThreatProtectionSettingsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.Get(ctx, resourceID.ResourceGroup, server, flexible.ThreatProtectionNameDefault, nil)
+	if err != nil {
+		return "", err
+	}
+	if resp.Properties == nil || resp.Properties.State == nil {
+		return "", nil
+	}
+	return string(*resp.Properties.State), nil
+}

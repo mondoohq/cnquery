@@ -215,7 +215,7 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfile) customDomains() ([]any, er
 				continue
 			}
 
-			var hostName, validationState, provisioningState string
+			var hostName, validationState, provisioningState, tlsMinimumVersion, tlsCertificateType string
 			if cd.Properties != nil {
 				if cd.Properties.HostName != nil {
 					hostName = *cd.Properties.HostName
@@ -226,14 +226,24 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfile) customDomains() ([]any, er
 				if cd.Properties.ProvisioningState != nil {
 					provisioningState = string(*cd.Properties.ProvisioningState)
 				}
+				if cd.Properties.TLSSettings != nil {
+					if cd.Properties.TLSSettings.MinimumTLSVersion != nil {
+						tlsMinimumVersion = string(*cd.Properties.TLSSettings.MinimumTLSVersion)
+					}
+					if cd.Properties.TLSSettings.CertificateType != nil {
+						tlsCertificateType = string(*cd.Properties.TLSSettings.CertificateType)
+					}
+				}
 			}
 
 			mqlCd, err := CreateResource(a.MqlRuntime, "azure.subscription.frontDoorService.profile.customDomain", map[string]*llx.RawData{
-				"id":                llx.StringDataPtr(cd.ID),
-				"name":              llx.StringDataPtr(cd.Name),
-				"hostName":          llx.StringData(hostName),
-				"validationState":   llx.StringData(validationState),
-				"provisioningState": llx.StringData(provisioningState),
+				"id":                 llx.StringDataPtr(cd.ID),
+				"name":               llx.StringDataPtr(cd.Name),
+				"hostName":           llx.StringData(hostName),
+				"validationState":    llx.StringData(validationState),
+				"provisioningState":  llx.StringData(provisioningState),
+				"tlsMinimumVersion":  llx.StringData(tlsMinimumVersion),
+				"tlsCertificateType": llx.StringData(tlsCertificateType),
 			})
 			if err != nil {
 				return nil, err
@@ -398,5 +408,103 @@ func (a *mqlAzureSubscriptionFrontDoorServiceProfileOriginGroup) origins() ([]an
 		}
 	}
 
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionFrontDoorServiceProfileEndpointRoute) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// routes fetches the routes for a Front Door endpoint.
+func (a *mqlAzureSubscriptionFrontDoorServiceProfileEndpoint) routes() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	profileName, err := resourceID.Component("profiles")
+	if err != nil {
+		return nil, err
+	}
+	endpointName, err := resourceID.Component("afdEndpoints")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armcdn.NewRoutesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListByEndpointPager(resourceID.ResourceGroup, profileName, endpointName, nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, rt := range page.Value {
+			if rt == nil {
+				continue
+			}
+			var httpsRedirect, forwardingProtocol, linkToDefault, enabledState, originPath, originGroupId, provisioningState string
+			var supportedProtocols, patternsToMatch []any
+			if rt.Properties != nil {
+				if rt.Properties.HTTPSRedirect != nil {
+					httpsRedirect = string(*rt.Properties.HTTPSRedirect)
+				}
+				if rt.Properties.ForwardingProtocol != nil {
+					forwardingProtocol = string(*rt.Properties.ForwardingProtocol)
+				}
+				if rt.Properties.LinkToDefaultDomain != nil {
+					linkToDefault = string(*rt.Properties.LinkToDefaultDomain)
+				}
+				if rt.Properties.EnabledState != nil {
+					enabledState = string(*rt.Properties.EnabledState)
+				}
+				if rt.Properties.OriginPath != nil {
+					originPath = *rt.Properties.OriginPath
+				}
+				if rt.Properties.OriginGroup != nil && rt.Properties.OriginGroup.ID != nil {
+					originGroupId = *rt.Properties.OriginGroup.ID
+				}
+				if rt.Properties.ProvisioningState != nil {
+					provisioningState = string(*rt.Properties.ProvisioningState)
+				}
+				for _, p := range rt.Properties.SupportedProtocols {
+					if p != nil {
+						supportedProtocols = append(supportedProtocols, string(*p))
+					}
+				}
+				for _, p := range rt.Properties.PatternsToMatch {
+					if p != nil {
+						patternsToMatch = append(patternsToMatch, *p)
+					}
+				}
+			}
+			mqlRt, err := CreateResource(a.MqlRuntime, "azure.subscription.frontDoorService.profile.endpoint.route", map[string]*llx.RawData{
+				"id":                  llx.StringDataPtr(rt.ID),
+				"name":                llx.StringDataPtr(rt.Name),
+				"type":                llx.StringDataPtr(rt.Type),
+				"httpsRedirect":       llx.StringData(httpsRedirect),
+				"forwardingProtocol":  llx.StringData(forwardingProtocol),
+				"linkToDefaultDomain": llx.StringData(linkToDefault),
+				"enabledState":        llx.StringData(enabledState),
+				"supportedProtocols":  llx.ArrayData(supportedProtocols, types.String),
+				"patternsToMatch":     llx.ArrayData(patternsToMatch, types.String),
+				"originPath":          llx.StringData(originPath),
+				"originGroupId":       llx.StringData(originGroupId),
+				"provisioningState":   llx.StringData(provisioningState),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRt)
+		}
+	}
 	return res, nil
 }

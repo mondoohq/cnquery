@@ -218,6 +218,16 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   provisioningState string
   // When the VM was created
   timeCreated time
+  // SSH public keys configured on the Linux VM (key path + key data); empty for Windows or password-auth VMs
+  sshPublicKeys []dict
+  // Whether password authentication is disabled for SSH on the Linux VM
+  disablePasswordAuthentication bool
+  // Whether the VM agent is provisioned (Linux/Windows)
+  provisionVMAgent bool
+  // Whether automatic OS upgrades by the platform are enabled (WindowsConfiguration.EnableAutomaticUpdates)
+  enableAutomaticUpdates bool
+  // Patch mode for the OS ("Manual", "AutomaticByOS", "AutomaticByPlatform", "ImageDefault")
+  patchMode string
 }
 
 // Azure compute disk resource
@@ -439,7 +449,7 @@ private azure.subscription.databricksService {
 }
 
 // Azure Databricks workspace
-azure.subscription.databricksService.workspace @defaults("id name location") {
+azure.subscription.databricksService.workspace @defaults("id name location publicNetworkAccess") {
   // Workspace ID
   id string
   // Workspace name
@@ -454,6 +464,40 @@ azure.subscription.databricksService.workspace @defaults("id name location") {
   properties dict
   // Workspace SKU
   sku dict
+  // Public network access setting ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Whether public IPs are disabled on cluster nodes (Secure Cluster Connectivity / VNet injection)
+  enableNoPublicIp bool
+  // Whether double encryption (platform-managed key on top of CMK) is enabled for the DBFS root
+  requireInfrastructureEncryption bool
+  // ARM resource ID of the custom VNet the workspace is injected into (empty if using a managed VNet)
+  customVirtualNetworkId string
+  // Required NSG rules mode ("AllRules", "NoAzureDatabricksRules", or "NoAzureServiceRules")
+  requiredNsgRules string
+  // ARM resource ID of the managed disk encryption set used for managed disks
+  diskEncryptionSetId string
+  // Managed resource group ARM resource ID
+  managedResourceGroupId string
+  // Provisioning state
+  provisioningState string
+  // Databricks control-plane workspace identifier
+  workspaceId string
+  // CMK key source for managed disks ("Default" or "Microsoft.Keyvault")
+  managedDiskKeySource string
+  // Key Vault URI for the managed-disk CMK (empty if platform-managed)
+  managedDiskKeyVaultUri string
+  // Managed-disk CMK key name
+  managedDiskKeyName string
+  // Managed-disk CMK key version
+  managedDiskKeyVersion string
+  // CMK key source for managed services ("Default" or "Microsoft.Keyvault")
+  managedServicesKeySource string
+  // Key Vault URI for the managed-services CMK (empty if platform-managed)
+  managedServicesKeyVaultUri string
+  // Managed-services CMK key name
+  managedServicesKeyName string
+  // Managed-services CMK key version
+  managedServicesKeyVersion string
 }
 
 // Azure network
@@ -956,6 +1000,10 @@ azure.subscription.networkService.virtualNetwork.peering @defaults("id name peer
   provisioningState string
   // The remote virtual network reference ID
   remoteVirtualNetworkId string
+  // Whether traffic between the two VNets is encrypted (Azure global VNet peering encryption)
+  remoteVirtualNetworkEncryptionEnabled bool
+  // Encryption enforcement for the remote VNet ("AllowUnencrypted" or "DropUnencrypted")
+  remoteVirtualNetworkEncryptionEnforcement string
 }
 
 // Azure Virtual Network (VNet) DHCP options
@@ -1136,6 +1184,8 @@ azure.subscription.networkService.interface @defaults("name location properties.
   ipConfigurations []dict
   // Network interface compute vm
   vm() azure.subscription.computeService.vm
+  // Effective NSG rules merged across NSG-on-NIC, ASGs, and NSG-on-subnet (computed via BeginGetEffectiveNetworkSecurityGroup)
+  effectiveSecurityRules() []dict
 }
 
 // Azure network IP address
@@ -1374,6 +1424,8 @@ private azure.subscription.networkService.privateEndpoint @defaults("id name loc
   privateLinkServiceConnections []azure.subscription.networkService.privateEndpoint.serviceconnection
   // Manually approved private link service connections
   manualPrivateLinkServiceConnections []azure.subscription.networkService.privateEndpoint.serviceconnection
+  // Private DNS zone groups attached to this PE (each entry: { name, privateDnsZoneIds, recordSets })
+  privateDnsZoneGroups() []dict
 }
 
 // Azure network private endpoint service connection
@@ -1512,6 +1564,18 @@ private azure.subscription.storageService.account @defaults("id name location") 
   encryptionKeySource() string
   // Key Vault key used for customer-managed encryption (null if platform-managed)
   encryptionKey() azure.subscription.keyVaultService.key
+  // Allowed copy scope for the storage account ("PrivateLink", "AAD", or empty for unrestricted)
+  allowedCopyScope string
+  // Whether infrastructure (double) encryption is required at rest
+  requireInfrastructureEncryption bool
+  // Per-service encryption KeyType ({"blob","file","queue","table"}; values "Account" or "Service")
+  serviceKeyTypes map[string]string
+  // SAS expiration policy: max validity period (days.HH:MM:SS) and action ("Log" or "Block")
+  sasExpirationPeriod string
+  // SAS expiration policy action ("Log" or "Block"); empty if no policy is set
+  sasExpirationAction string
+  // Account access-key expiration period (days)
+  keyExpirationPeriodInDays int
   // Storage account containers
   containers() []azure.subscription.storageService.account.container
   // Storage account queue properties
@@ -1528,6 +1592,36 @@ private azure.subscription.storageService.account @defaults("id name location") 
   encryptionScopes() []azure.subscription.storageService.account.encryptionScope
   // Storage account lifecycle management policy
   managementPolicy() azure.subscription.storageService.account.managementPolicy
+  // Local users (SFTP/SSH) configured on the storage account
+  localUsers() []azure.subscription.storageService.account.localUser
+}
+
+// Local user configured on a storage account for SFTP/SSH access
+private azure.subscription.storageService.account.localUser @defaults("id name hasSshPassword hasSshKey hasSharedKey") {
+  // Local user resource ID
+  id string
+  // Local user name (used as SFTP username)
+  name string
+  // Resource type
+  type string
+  // Whether ACL authorization is allowed for this user
+  allowAclAuthorization bool
+  // Whether SSH key authentication exists
+  hasSshKey bool
+  // Whether SSH password authentication exists
+  hasSshPassword bool
+  // Whether shared-key access exists
+  hasSharedKey bool
+  // Whether the user is enabled for NFSv3 access
+  isNFSv3Enabled bool
+  // Optional home directory (constrains the file system path the user sees)
+  homeDirectory string
+  // Permission scopes (each: { permissions, service, resourceName })
+  permissionScopes []dict
+  // Numeric POSIX user ID
+  userId int
+  // Numeric POSIX group ID
+  groupId int
 }
 
 // Azure Storage account data protection
@@ -1724,6 +1818,18 @@ private azure.subscription.storageService.account.container @defaults("id name")
   hasImmutabilityPolicy bool
   // Whether the container has a legal hold
   hasLegalHold bool
+  // ImmutabilityPolicy state ("Locked" or "Unlocked"); empty if no policy
+  immutabilityPolicyState string
+  // Time-based retention period (days) configured on the immutability policy
+  immutabilityPeriodInDays int
+  // Whether append-blob writes are permitted while immutability is enforced
+  immutabilityPolicyAllowProtectedAppendWrites bool
+  // Whether append/block-blob writes are permitted while immutability is enforced
+  immutabilityPolicyAllowProtectedAppendWritesAll bool
+  // Whether object-level (per-blob) immutability with versioning is enabled
+  objectLevelImmutabilityEnabled bool
+  // Legal-hold tags currently set on the container ({tag, objectIdentifier, tenantId, upn, timestamp})
+  legalHoldTags []dict
   // Default encryption scope for the container
   defaultEncryptionScope string
   // Whether encryption scope override is denied
@@ -1844,6 +1950,8 @@ azure.subscription.webService.appsite @defaults("id name location") {
   endToEndEncryptionEnabled bool
   // Whether SSH access is enabled on the app
   sshEnabled bool
+  // ARM resource ID of the user-assigned identity used to fetch Key Vault references in app settings (empty when system-assigned identity is used)
+  keyVaultReferenceIdentity string
   // Whether public network access is enabled ("Enabled" or "Disabled")
   publicNetworkAccess string
   // IP address mode for the app ("IPv4", "IPv4AndIPv6", "IPv6")
@@ -2459,6 +2567,8 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   backupRetentionDays int
   // Whether geo-redundant backup is enabled
   geoRedundantBackup string
+  // Microsoft Defender for Cloud advanced threat protection state ("Enabled", "Disabled", or "New")
+  threatProtectionState() string
 }
 
 // Azure Database for PostgreSQL server
@@ -3029,6 +3139,8 @@ private azure.subscription.monitorService {
   activityLog() azure.subscription.monitorService.activityLog
   // Log Analytics workspaces
   workspaces() []azure.subscription.monitorService.workspace
+  // Log Analytics QueryPacks (saved KQL query collections)
+  queryPacks() []azure.subscription.monitorService.queryPack
 }
 
 // Azure Monitor activity log
@@ -3689,6 +3801,50 @@ private azure.subscription.authorizationService {
   roleAssignments() []azure.subscription.authorizationService.roleAssignment
   // Managed identities
   managedIdentities() []azure.subscription.managedIdentity
+  // Deny assignments — read-only deny rules that block actions even for owners (e.g., managed-app deny on resources)
+  denyAssignments() []azure.subscription.authorizationService.denyAssignment
+  // Classic (ASM) co-administrators — legacy admin grants that should normally be zero
+  classicAdministrators() []azure.subscription.authorizationService.classicAdministrator
+}
+
+// Deny assignment in an Azure subscription
+private azure.subscription.authorizationService.denyAssignment @defaults("name doNotApplyToChildScopes type") {
+  // Deny assignment ID
+  id string
+  // Deny assignment name
+  name string
+  // Resource type
+  type string
+  // Display name shown in the portal
+  denyAssignmentName string
+  // Description of the deny assignment
+  description string
+  // Whether the deny rule does not apply to child scopes
+  doNotApplyToChildScopes bool
+  // Whether the deny rule is system-protected (cannot be removed by users)
+  isSystemProtected bool
+  // Scope of the deny assignment (subscription/resource group/resource)
+  scope string
+  // Permissions denied (each: { actions, dataActions, notActions, notDataActions, condition })
+  permissions []dict
+  // Principals subject to the deny ([{principalId, principalType}])
+  principals []dict
+  // Principals excluded from the deny ([{principalId, principalType}])
+  excludePrincipals []dict
+}
+
+// Classic (ASM) administrator — legacy co-admin / service admin grants
+private azure.subscription.authorizationService.classicAdministrator @defaults("emailAddress role") {
+  // Classic administrator ID
+  id string
+  // Resource name (typically the email)
+  name string
+  // Resource type
+  type string
+  // Email of the classic administrator
+  emailAddress string
+  // Role granted ("ServiceAdministrator", "CoAdministrator", "AccountAdministrator")
+  role string
 }
 
 // Azure role definition
@@ -3993,8 +4149,50 @@ private azure.subscription.policy.assignment @defaults("name enforcementMode") {
 private azure.subscription.iotService {
   // Subscription identifier
   subscriptionId string
-  // List of IoT hubs in the subscription
+  // **Deprecated:** prefer `iotHubs()` for typed field access. Retained for backward compatibility.
   hubs() []dict
+  // Typed IoT hubs in the subscription
+  iotHubs() []azure.subscription.iotService.iotHub
+}
+
+// Azure IoT hub
+private azure.subscription.iotService.iotHub @defaults("id name location") {
+  // IoT hub resource ID
+  id string
+  // IoT hub name
+  name string
+  // Resource type
+  type string
+  // Location
+  location string
+  // Tags
+  tags map[string]string
+  // SKU details
+  sku dict
+  // Provisioning state
+  provisioningState string
+  // Hub state
+  state string
+  // Hostname (FQDN)
+  hostName string
+  // Whether SAS-based local authentication is disabled (Hub-scoped SAS keys cannot authenticate)
+  disableLocalAuth bool
+  // Whether device-scoped SAS keys are disabled
+  disableDeviceSAS bool
+  // Whether module-scoped SAS keys are disabled
+  disableModuleSAS bool
+  // Minimum TLS version (e.g. "1.2")
+  minTlsVersion string
+  // Public network access ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Whether egress is restricted to AllowedFqdnList
+  restrictOutboundNetworkAccess bool
+  // Allowed FQDNs for egress when restrictOutboundNetworkAccess is true
+  allowedFqdnList []string
+  // Whether data residency is enabled (disables disaster recovery)
+  enableDataResidency bool
+  // Network rule set: defaultAction, applyToBuiltInEventHubEndpoint, ipRules
+  networkRuleSet dict
 }
 
 // Azure Cache for Redis
@@ -4213,6 +4411,12 @@ azure.subscription.containerRegistryService.registry @defaults("id name location
   identity dict
   // Whether admin user is enabled
   adminUserEnabled bool
+  // Whether registry-wide pull from unauthenticated clients is enabled
+  anonymousPullEnabled bool
+  // Whether ACR Tasks are allowed to bypass the network rules ("True"/"False" semantics surfaced as a bool)
+  networkRuleBypassAllowedForTasks bool
+  // Registry role assignment mode ("AbacRepositoryPermissions" or "LegacyRegistryPermissions")
+  roleAssignmentMode string
   // Public network access setting ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Network rule bypass options ("AzureServices" or "None")
@@ -4243,6 +4447,12 @@ azure.subscription.containerRegistryService.registry @defaults("id name location
   scopeMaps() []azure.subscription.containerRegistryService.registry.scopeMap
   // Repository-scoped access tokens
   tokens() []azure.subscription.containerRegistryService.registry.token
+  // Pull-through cache rules from upstream registries
+  cacheRules() []azure.subscription.containerRegistryService.registry.cacheRule
+  // Credential sets referenced by cache rules (Key Vault-backed upstream credentials)
+  credentialSets() []azure.subscription.containerRegistryService.registry.credentialSet
+  // Connected (edge/on-prem) registries that mirror this registry
+  connectedRegistries() []azure.subscription.containerRegistryService.registry.connectedRegistry
 }
 
 // Network rule set for an Azure Container Registry
@@ -4281,6 +4491,8 @@ private azure.subscription.containerRegistryService.registry.policies @defaults(
   quarantinePolicyEnabled bool
   // Whether export policy is enabled
   exportPolicyEnabled bool
+  // Whether the AAD-as-ARM authentication policy is enabled (rejects ACR-audience tokens; requires ARM-audience tokens)
+  azureADAuthenticationAsArmPolicyEnabled bool
 }
 
 // Encryption configuration for an Azure Container Registry
@@ -4379,6 +4591,98 @@ private azure.subscription.containerRegistryService.registry.token @defaults("id
   certificates []dict
 }
 
+// Pull-through cache rule for an Azure Container Registry
+private azure.subscription.containerRegistryService.registry.cacheRule @defaults("id name sourceRepository targetRepository") {
+  // Cache rule resource ID
+  id string
+  // Cache rule name
+  name string
+  // Resource type
+  type string
+  // Source repository pulled from upstream
+  sourceRepository string
+  // Target repository in this registry
+  targetRepository string
+  // ARM resource ID of the credential set associated with the cache rule
+  credentialSetResourceId string
+  // Typed reference to the credential set used by this cache rule
+  credentialSet() azure.subscription.containerRegistryService.registry.credentialSet
+  // Cache rule creation date
+  creationDate time
+  // Provisioning state
+  provisioningState string
+}
+
+// Credential set referenced by cache rules in an Azure Container Registry
+private azure.subscription.containerRegistryService.registry.credentialSet @defaults("id name loginServer") {
+  // Credential set resource ID
+  id string
+  // Credential set name
+  name string
+  // Resource type
+  type string
+  // The upstream login server the credentials apply to (e.g. "docker.io")
+  loginServer string
+  // Identity used to access the Key Vault holding the secrets
+  identity dict
+  // Authentication credentials (Key Vault secret URIs for username/password)
+  authCredentials []dict
+  // Credential set creation date
+  creationDate time
+  // Provisioning state
+  provisioningState string
+}
+
+// Connected (edge/on-prem) registry that mirrors an Azure Container Registry
+private azure.subscription.containerRegistryService.registry.connectedRegistry @defaults("id name mode connectionState") {
+  // Connected registry resource ID
+  id string
+  // Connected registry name
+  name string
+  // Resource type
+  type string
+  // Permission mode of the connected registry ("Mirror", "ReadOnly", "ReadWrite", or "Registry")
+  mode string
+  // Current connection state ("Online", "Offline", "Syncing", or "Unhealthy")
+  connectionState string
+  // Activation status ("Active" or "Inactive")
+  activationStatus string
+  // ACR runtime version on the connected registry
+  version string
+  // Last activity time
+  lastActivityTime time
+  // Audit log status ("Enabled" or "Disabled")
+  auditLogStatus string
+  // Verbosity of logs persisted on the connected registry ("Debug", "Information", "Warning", "Error", or "None")
+  logLevel string
+  // Login server hostname (FQDN or IP) for the connected registry
+  loginServerHost string
+  // Login server TLS status ("Enabled" or "Disabled")
+  tlsStatus string
+  // Whether garbage collection is enabled
+  garbageCollectionEnabled bool
+  // Cron schedule for garbage collection
+  garbageCollectionSchedule string
+  // ARM resource ID of the parent registry/connected-registry
+  parentId string
+  // ARM resource ID of the ACR token used to authenticate sync to the parent
+  syncTokenId string
+  // Cron schedule for parent sync
+  syncSchedule string
+  // Sync window duration (ISO 8601, e.g. "PT3H")
+  syncWindow string
+  // Last successful sync time
+  syncLastSyncTime time
+  // Sync message TTL (ISO 8601 duration)
+  syncMessageTtl string
+  // ACR token resource IDs used to authenticate clients connecting to this registry
+  clientTokenIds []string
+  // Notification subscriptions
+  notificationsList []string
+  // Provisioning state
+  provisioningState string
+}
+
 // Azure Log Analytics workspace
 azure.subscription.monitorService.workspace @defaults("id name location skuName") {
   // Workspace resource ID
@@ -4411,16 +4715,28 @@ azure.subscription.monitorService.workspace @defaults("id name location skuName"
   provisioningState string
   // Workspace GUID
   customerId string
+  // Managed identity configuration (type, principalId, tenantId, userAssignedIdentities)
+  identity dict
+  // ARM resource ID of the default Data Collection Rule for this workspace
+  defaultDataCollectionRuleResourceId string
   // Daily data volume capping
   capping() azure.subscription.monitorService.workspace.capping
   // Workspace feature flags
   features() azure.subscription.monitorService.workspace.features
+  // Workspace replication configuration
+  replication() azure.subscription.monitorService.workspace.replication
+  // Workspace failover state
+  failover() azure.subscription.monitorService.workspace.failover
   // Data export rules
   dataExports() []azure.subscription.monitorService.workspace.dataExport
   // Linked services
   linkedServices() []azure.subscription.monitorService.workspace.linkedService
   // Private link scoped resources
   privateLinkScopedResources() []dict
+  // Workspace tables (per-table plan/retention)
+  tables() []azure.subscription.monitorService.workspace.table
+  // Network Security Perimeter configurations
+  networkSecurityPerimeterConfigurations() []azure.subscription.monitorService.workspace.nspConfiguration
 }
 
 // Daily data volume capping for a Log Analytics workspace
@@ -4449,6 +4765,10 @@ private azure.subscription.monitorService.workspace.features @defaults("disableL
   immediatePurgeDataOn30Days bool
   // Dedicated cluster resource ID
   clusterResourceId string
+  // Whether the workspace is restricted to Sentinel's unified billing model
+  unifiedSentinelBillingOnly bool
+  // List of associations indicating Microsoft Defender for Cloud, Sentinel, etc. attachments
+  associations []string
 }
 
 // Data export rule for a Log Analytics workspace
@@ -4485,6 +4805,148 @@ private azure.subscription.monitorService.workspace.linkedService @defaults("id 
   writeAccessResourceId string
   // Provisioning state
   provisioningState string
+}
+
+// Replication configuration for a Log Analytics workspace
+private azure.subscription.monitorService.workspace.replication @defaults("enabled location provisioningState") {
+  // Replication identifier
+  id string
+  // Whether replication is enabled
+  enabled bool
+  // Location of the replica
+  location string
+  // Last time replication was enabled
+  createdDate time
+  // Last time replication configuration was updated
+  lastModifiedDate time
+  // Replication provisioning state
+  provisioningState string
+}
+
+// Failover state for a Log Analytics workspace
+private azure.subscription.monitorService.workspace.failover @defaults("state") {
+  // Failover identifier
+  id string
+  // Failover state ("Active", "Inactive", "Activating", "Deactivating", "Failed")
+  state string
+  // Last time the failover state was updated
+  lastModifiedDate time
+}
+
+// Table within a Log Analytics workspace
+private azure.subscription.monitorService.workspace.table @defaults("name plan retentionInDays totalRetentionInDays") {
+  // Table resource ID
+  id string
+  // Table name
+  name string
+  // Resource type
+  type string
+  // Ingestion/billing plan ("Analytics", "Basic", or "Auxiliary")
+  plan string
+  // Active retention in days (-1 means "use workspace default")
+  retentionInDays int
+  // Total retention in days including archive (-1 means "default to retentionInDays")
+  totalRetentionInDays int
+  // Long-term archive retention in days (totalRetentionInDays - retentionInDays)
+  archiveRetentionInDays int
+  // Whether retentionInDays is inherited from the workspace default
+  retentionInDaysAsDefault bool
+  // Whether totalRetentionInDays is inherited from the workspace default
+  totalRetentionInDaysAsDefault bool
+  // Timestamp when the table plan was last modified
+  lastPlanModifiedDate string
+  // Provisioning state
+  provisioningState string
+  // Table schema (columns, description, source, categories)
+  schema dict
+  // Restored logs configuration if the table was created via restore
+  restoredLogs dict
+  // Search results configuration if the table was created from a search job
+  searchResults dict
+  // Search job execution statistics
+  resultStatistics dict
+}
+
+// Network Security Perimeter configuration for a Log Analytics workspace
+private azure.subscription.monitorService.workspace.nspConfiguration @defaults("id name provisioningState") {
+  // NSP configuration resource ID
+  id string
+  // NSP configuration name
+  name string
+  // Resource type
+  type string
+  // Provisioning state of the NSP configuration
+  provisioningState string
+  // ARM resource ID of the network security perimeter
+  perimeterId string
+  // Location of the network security perimeter
+  perimeterLocation string
+  // Universal unique ID of the network security perimeter
+  perimeterGuid string
+  // Profile name on the perimeter
+  profileName string
+  // Current access rules version
+  accessRulesVersion int
+  // Current diagnostic settings version
+  diagnosticSettingsVersion int
+  // Log categories enabled on the profile
+  enabledLogCategories []string
+  // Access rules attached to the profile (inbound/outbound, address prefixes, FQDNs, subscriptions)
+  accessRules []dict
+  // Resource association name
+  associationName string
+  // Resource association access mode ("Audit", "Enforced", or "Learning")
+  associationAccessMode string
+  // Provisioning issues, if any
+  provisioningIssues []dict
+}
+
+// Log Analytics QueryPack
+azure.subscription.monitorService.queryPack @defaults("id name location queryPackId") {
+  // QueryPack resource ID
+  id string
+  // QueryPack name
+  name string
+  // QueryPack location
+  location string
+  // Resource type
+  type string
+  // QueryPack tags
+  tags map[string]string
+  // Unique ID of the QueryPack (immutable)
+  queryPackId string
+  // Provisioning state
+  provisioningState string
+  // QueryPack creation time
+  timeCreated time
+  // QueryPack last modified time
+  timeModified time
+  // Saved KQL queries in this QueryPack
+  queries() []azure.subscription.monitorService.queryPack.query
+}
+
+// Saved KQL query in a Log Analytics QueryPack
+private azure.subscription.monitorService.queryPack.query @defaults("id name displayName") {
+  // Query resource ID
+  id string
+  // Query name
+  name string
+  // Resource type
+  type string
+  // Display name shown in the QueryPack
+  displayName string
+  // Description of the query
+  description string
+  // Query body (KQL)
+  body string
+  // Object ID of the query author
+  author string
+  // Query creation time
+  timeCreated time
+  // Query last modified time
+  timeModified time
+  // Tags associated with the query
+  tags dict
 }
 
 // Azure Recovery Services
@@ -4542,7 +5004,7 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
 }
 
 // Security settings for a Recovery Services vault
-private azure.subscription.recoveryServicesService.vault.securitySettings @defaults("softDeleteState immutabilityState") {
+private azure.subscription.recoveryServicesService.vault.securitySettings @defaults("softDeleteState immutabilityState multiUserAuthorization") {
   // Security settings identifier
   id string
   // Soft delete state ("Enabled" or "Disabled")
@@ -4553,6 +5015,10 @@ private azure.subscription.recoveryServicesService.vault.securitySettings @defau
   enhancedSecurityState string
   // Immutability state ("Locked" or "Unlocked")
   immutabilityState string
+  // Multi-User Authorization state ("Enabled", "Disabled", or "Invalid"); Enabled requires a Resource Guard for destructive ops
+  multiUserAuthorization string
+  // Source-scan configuration state ("Enabled" or "Disabled") for backup item discovery
+  sourceScanConfigurationState string
 }
 
 // Encryption settings for a Recovery Services vault
@@ -4717,6 +5183,16 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   disableLocalAuth bool
   // Whether the namespace is zone-redundant
   zoneRedundant bool
+  // Provisioning state
+  provisioningState string
+  // CMK key source ("Microsoft.KeyVault" when CMK is configured; empty for platform-managed)
+  cmkKeySource string
+  // Whether double encryption (infrastructure layer + CMK) is enabled
+  requireInfrastructureEncryption bool
+  // Customer-managed encryption keys (Key Vault references) configured for this namespace
+  cmkKeys []dict
+  // Network rule set: default action ("Allow"/"Deny"), public network access, IP/VNet rules, and trusted-service access
+  networkRuleSet() dict
   // Queues in this namespace
   queues() []azure.subscription.serviceBusService.namespace.queue
   // Topics in this namespace
@@ -4835,6 +5311,14 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   publicNetworkAccess string
   // Whether the namespace is zone-redundant
   zoneRedundant bool
+  // CMK key source ("Microsoft.KeyVault" when CMK is configured; empty for platform-managed)
+  cmkKeySource string
+  // Whether double encryption (infrastructure layer + CMK) is enabled
+  requireInfrastructureEncryption bool
+  // Customer-managed encryption keys (Key Vault references) configured for this namespace
+  cmkKeys []dict
+  // Network rule set: default action ("Allow"/"Deny"), public network access, IP/VNet rules, trusted-service access
+  networkRuleSet() dict
   // Event Hubs in this namespace
   eventHubs() []azure.subscription.eventHubService.namespace.eventHub
 }
@@ -5003,6 +5487,36 @@ private azure.subscription.frontDoorService.profile.endpoint @defaults("id name 
   enabledState string
   // Provisioning state
   provisioningState string
+  // Routes attached to this endpoint
+  routes() []azure.subscription.frontDoorService.profile.endpoint.route
+}
+
+// Azure Front Door / CDN route attached to an endpoint
+private azure.subscription.frontDoorService.profile.endpoint.route @defaults("id name httpsRedirect supportedProtocols") {
+  // Route resource ID
+  id string
+  // Route name
+  name string
+  // Resource type
+  type string
+  // Whether HTTP traffic is automatically redirected to HTTPS ("Enabled" or "Disabled")
+  httpsRedirect string
+  // Forwarding protocol to origin ("HttpOnly", "HttpsOnly", or "MatchRequest")
+  forwardingProtocol string
+  // Whether the route is linked to the default endpoint domain ("Enabled" or "Disabled")
+  linkToDefaultDomain string
+  // Route enabled state ("Enabled" or "Disabled")
+  enabledState string
+  // Protocols accepted by the route ("Http", "Https")
+  supportedProtocols []string
+  // URL patterns matched by the route
+  patternsToMatch []string
+  // Origin path on the backend
+  originPath string
+  // ARM resource ID of the origin group
+  originGroupId string
+  // Provisioning state
+  provisioningState string
 }
 
 // Azure Front Door / CDN custom domain
@@ -5017,6 +5531,10 @@ private azure.subscription.frontDoorService.profile.customDomain @defaults("id n
   validationState string
   // Provisioning state
   provisioningState string
+  // Minimum TLS version configured for HTTPS on this domain ("TLS10", "TLS12", or empty if not set)
+  tlsMinimumVersion string
+  // Certificate source ("CustomerCertificate", "ManagedCertificate", or "AzureFirstPartyManagedCertificate")
+  tlsCertificateType string
 }
 
 // Azure Front Door / CDN origin group

@@ -22,6 +22,8 @@ type mqlAzureSubscriptionMonitorServiceWorkspaceInternal struct {
 	cacheCapping                    *armoperationalinsights.WorkspaceCapping
 	cacheFeatures                   *armoperationalinsights.WorkspaceFeatures
 	cachePrivateLinkScopedResources []*armoperationalinsights.PrivateLinkScopedResource
+	cacheReplication                *armoperationalinsights.WorkspaceReplicationProperties
+	cacheFailover                   *armoperationalinsights.WorkspaceFailoverProperties
 }
 
 type mqlAzureSubscriptionMonitorServiceApplicationInsightInternal struct {
@@ -119,23 +121,30 @@ func createWorkspaceResource(runtime *plugin.Runtime, ws *armoperationalinsights
 		provisioningState = string(*props.ProvisioningState)
 	}
 
+	identity, err := convert.JsonToDict(ws.Identity)
+	if err != nil {
+		return nil, err
+	}
+
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionMonitorServiceWorkspace,
 		map[string]*llx.RawData{
-			"id":                              llx.StringDataPtr(ws.ID),
-			"name":                            llx.StringDataPtr(ws.Name),
-			"location":                        llx.StringDataPtr(ws.Location),
-			"type":                            llx.StringDataPtr(ws.Type),
-			"tags":                            llx.MapData(convert.PtrMapStrToInterface(ws.Tags), types.String),
-			"skuName":                         llx.StringData(skuName),
-			"skuCapacityReservationLevel":     llx.IntData(skuCapacityReservationLevel),
-			"retentionInDays":                 llx.IntData(retentionInDays),
-			"publicNetworkAccessForIngestion": llx.StringData(publicNetworkAccessForIngestion),
-			"publicNetworkAccessForQuery":     llx.StringData(publicNetworkAccessForQuery),
-			"forceCmkForQuery":                llx.BoolDataPtr(props.ForceCmkForQuery),
-			"createdDate":                     llx.TimeDataPtr(props.CreatedDate),
-			"modifiedDate":                    llx.TimeDataPtr(props.ModifiedDate),
-			"provisioningState":               llx.StringData(provisioningState),
-			"customerId":                      llx.StringDataPtr(props.CustomerID),
+			"id":                                  llx.StringDataPtr(ws.ID),
+			"name":                                llx.StringDataPtr(ws.Name),
+			"location":                            llx.StringDataPtr(ws.Location),
+			"type":                                llx.StringDataPtr(ws.Type),
+			"tags":                                llx.MapData(convert.PtrMapStrToInterface(ws.Tags), types.String),
+			"skuName":                             llx.StringData(skuName),
+			"skuCapacityReservationLevel":         llx.IntData(skuCapacityReservationLevel),
+			"retentionInDays":                     llx.IntData(retentionInDays),
+			"publicNetworkAccessForIngestion":     llx.StringData(publicNetworkAccessForIngestion),
+			"publicNetworkAccessForQuery":         llx.StringData(publicNetworkAccessForQuery),
+			"forceCmkForQuery":                    llx.BoolDataPtr(props.ForceCmkForQuery),
+			"createdDate":                         llx.TimeDataPtr(props.CreatedDate),
+			"modifiedDate":                        llx.TimeDataPtr(props.ModifiedDate),
+			"provisioningState":                   llx.StringData(provisioningState),
+			"customerId":                          llx.StringDataPtr(props.CustomerID),
+			"identity":                            llx.DictData(identity),
+			"defaultDataCollectionRuleResourceId": llx.StringDataPtr(props.DefaultDataCollectionRuleResourceID),
 		})
 	if err != nil {
 		return nil, err
@@ -145,6 +154,8 @@ func createWorkspaceResource(runtime *plugin.Runtime, ws *armoperationalinsights
 	mqlWs.cacheCapping = props.WorkspaceCapping
 	mqlWs.cacheFeatures = props.Features
 	mqlWs.cachePrivateLinkScopedResources = props.PrivateLinkScopedResources
+	mqlWs.cacheReplication = props.Replication
+	mqlWs.cacheFailover = props.Failover
 
 	return mqlWs, nil
 }
@@ -241,6 +252,13 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) features() (*mqlAzureSubsc
 		return nil, nil
 	}
 
+	var associations []any
+	for _, assoc := range feat.Associations {
+		if assoc != nil {
+			associations = append(associations, *assoc)
+		}
+	}
+
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionMonitorServiceWorkspaceFeatures,
 		map[string]*llx.RawData{
 			"id":               llx.StringData(a.Id.Data + "/features"),
@@ -249,6 +267,8 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspace) features() (*mqlAzureSubsc
 			"enableLogAccessUsingOnlyResourcePermissions": llx.BoolDataPtr(feat.EnableLogAccessUsingOnlyResourcePermissions),
 			"immediatePurgeDataOn30Days":                  llx.BoolDataPtr(feat.ImmediatePurgeDataOn30Days),
 			"clusterResourceId":                           llx.StringDataPtr(feat.ClusterResourceID),
+			"unifiedSentinelBillingOnly":                  llx.BoolDataPtr(feat.UnifiedSentinelBillingOnly),
+			"associations":                                llx.ArrayData(associations, types.String),
 		})
 	if err != nil {
 		return nil, err
@@ -425,6 +445,330 @@ func (a *mqlAzureSubscriptionMonitorServiceWorkspaceLinkedService) id() (string,
 	return a.Id.Data, nil
 }
 
+// replication builds the replication sub-resource from cached data.
+func (a *mqlAzureSubscriptionMonitorServiceWorkspace) replication() (*mqlAzureSubscriptionMonitorServiceWorkspaceReplication, error) {
+	repl := a.cacheReplication
+	if repl == nil {
+		a.Replication.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	var location, provisioningState string
+	if repl.Location != nil {
+		location = *repl.Location
+	}
+	if repl.ProvisioningState != nil {
+		provisioningState = string(*repl.ProvisioningState)
+	}
+
+	createdDate := llx.NilData
+	if repl.CreatedDate != nil {
+		createdDate = llx.TimeDataPtr(repl.CreatedDate)
+	}
+	lastModifiedDate := llx.NilData
+	if repl.LastModifiedDate != nil {
+		lastModifiedDate = llx.TimeDataPtr(repl.LastModifiedDate)
+	}
+
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionMonitorServiceWorkspaceReplication,
+		map[string]*llx.RawData{
+			"id":                llx.StringData(a.Id.Data + "/replication"),
+			"enabled":           llx.BoolDataPtr(repl.Enabled),
+			"location":          llx.StringData(location),
+			"createdDate":       createdDate,
+			"lastModifiedDate":  lastModifiedDate,
+			"provisioningState": llx.StringData(provisioningState),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionMonitorServiceWorkspaceReplication), nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceWorkspaceReplication) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// failover builds the failover sub-resource from cached data.
+func (a *mqlAzureSubscriptionMonitorServiceWorkspace) failover() (*mqlAzureSubscriptionMonitorServiceWorkspaceFailover, error) {
+	fo := a.cacheFailover
+	if fo == nil {
+		a.Failover.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	var state string
+	if fo.State != nil {
+		state = string(*fo.State)
+	}
+	lastModifiedDate := llx.NilData
+	if fo.LastModifiedDate != nil {
+		lastModifiedDate = llx.TimeDataPtr(fo.LastModifiedDate)
+	}
+
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionMonitorServiceWorkspaceFailover,
+		map[string]*llx.RawData{
+			"id":               llx.StringData(a.Id.Data + "/failover"),
+			"state":            llx.StringData(state),
+			"lastModifiedDate": lastModifiedDate,
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionMonitorServiceWorkspaceFailover), nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceWorkspaceFailover) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// tables fetches all tables for the workspace.
+func (a *mqlAzureSubscriptionMonitorServiceWorkspace) tables() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	workspaceName, err := resourceID.Component("workspaces")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armoperationalinsights.NewTablesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListByWorkspacePager(resourceID.ResourceGroup, workspaceName, nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, t := range page.Value {
+			if t == nil {
+				continue
+			}
+
+			var plan, lastPlanModifiedDate, provisioningState string
+			var retentionInDays, totalRetentionInDays, archiveRetentionInDays int64
+			var retentionInDaysAsDefault, totalRetentionInDaysAsDefault bool
+			var schema, restoredLogs, searchResults, resultStatistics any
+			if t.Properties != nil {
+				if t.Properties.Plan != nil {
+					plan = string(*t.Properties.Plan)
+				}
+				if t.Properties.LastPlanModifiedDate != nil {
+					lastPlanModifiedDate = *t.Properties.LastPlanModifiedDate
+				}
+				if t.Properties.ProvisioningState != nil {
+					provisioningState = string(*t.Properties.ProvisioningState)
+				}
+				if t.Properties.RetentionInDays != nil {
+					retentionInDays = int64(*t.Properties.RetentionInDays)
+				}
+				if t.Properties.TotalRetentionInDays != nil {
+					totalRetentionInDays = int64(*t.Properties.TotalRetentionInDays)
+				}
+				if t.Properties.ArchiveRetentionInDays != nil {
+					archiveRetentionInDays = int64(*t.Properties.ArchiveRetentionInDays)
+				}
+				if t.Properties.RetentionInDaysAsDefault != nil {
+					retentionInDaysAsDefault = *t.Properties.RetentionInDaysAsDefault
+				}
+				if t.Properties.TotalRetentionInDaysAsDefault != nil {
+					totalRetentionInDaysAsDefault = *t.Properties.TotalRetentionInDaysAsDefault
+				}
+				if t.Properties.Schema != nil {
+					if d, err := convert.JsonToDict(t.Properties.Schema); err == nil {
+						schema = d
+					}
+				}
+				if t.Properties.RestoredLogs != nil {
+					if d, err := convert.JsonToDict(t.Properties.RestoredLogs); err == nil {
+						restoredLogs = d
+					}
+				}
+				if t.Properties.SearchResults != nil {
+					if d, err := convert.JsonToDict(t.Properties.SearchResults); err == nil {
+						searchResults = d
+					}
+				}
+				if t.Properties.ResultStatistics != nil {
+					if d, err := convert.JsonToDict(t.Properties.ResultStatistics); err == nil {
+						resultStatistics = d
+					}
+				}
+			}
+
+			mqlT, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionMonitorServiceWorkspaceTable,
+				map[string]*llx.RawData{
+					"id":                            llx.StringDataPtr(t.ID),
+					"name":                          llx.StringDataPtr(t.Name),
+					"type":                          llx.StringDataPtr(t.Type),
+					"plan":                          llx.StringData(plan),
+					"retentionInDays":               llx.IntData(retentionInDays),
+					"totalRetentionInDays":          llx.IntData(totalRetentionInDays),
+					"archiveRetentionInDays":        llx.IntData(archiveRetentionInDays),
+					"retentionInDaysAsDefault":      llx.BoolData(retentionInDaysAsDefault),
+					"totalRetentionInDaysAsDefault": llx.BoolData(totalRetentionInDaysAsDefault),
+					"lastPlanModifiedDate":          llx.StringData(lastPlanModifiedDate),
+					"provisioningState":             llx.StringData(provisioningState),
+					"schema":                        llx.DictData(schema),
+					"restoredLogs":                  llx.DictData(restoredLogs),
+					"searchResults":                 llx.DictData(searchResults),
+					"resultStatistics":              llx.DictData(resultStatistics),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlT)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceWorkspaceTable) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// networkSecurityPerimeterConfigurations fetches all NSP configurations for the workspace.
+func (a *mqlAzureSubscriptionMonitorServiceWorkspace) networkSecurityPerimeterConfigurations() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	workspaceName, err := resourceID.Component("workspaces")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armoperationalinsights.NewWorkspacesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListNSPPager(resourceID.ResourceGroup, workspaceName, nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, nsp := range page.Value {
+			if nsp == nil {
+				continue
+			}
+
+			args := map[string]*llx.RawData{
+				"id":                        llx.StringDataPtr(nsp.ID),
+				"name":                      llx.StringDataPtr(nsp.Name),
+				"type":                      llx.StringDataPtr(nsp.Type),
+				"provisioningState":         llx.StringData(""),
+				"perimeterId":               llx.StringData(""),
+				"perimeterLocation":         llx.StringData(""),
+				"perimeterGuid":             llx.StringData(""),
+				"profileName":               llx.StringData(""),
+				"accessRulesVersion":        llx.IntData(0),
+				"diagnosticSettingsVersion": llx.IntData(0),
+				"enabledLogCategories":      llx.ArrayData(nil, types.String),
+				"accessRules":               llx.ArrayData(nil, types.Dict),
+				"associationName":           llx.StringData(""),
+				"associationAccessMode":     llx.StringData(""),
+				"provisioningIssues":        llx.ArrayData(nil, types.Dict),
+			}
+
+			if props := nsp.Properties; props != nil {
+				if props.ProvisioningState != nil {
+					args["provisioningState"] = llx.StringData(string(*props.ProvisioningState))
+				}
+				if props.NetworkSecurityPerimeter != nil {
+					if props.NetworkSecurityPerimeter.ID != nil {
+						args["perimeterId"] = llx.StringDataPtr(props.NetworkSecurityPerimeter.ID)
+					}
+					if props.NetworkSecurityPerimeter.Location != nil {
+						args["perimeterLocation"] = llx.StringDataPtr(props.NetworkSecurityPerimeter.Location)
+					}
+					if props.NetworkSecurityPerimeter.PerimeterGUID != nil {
+						args["perimeterGuid"] = llx.StringDataPtr(props.NetworkSecurityPerimeter.PerimeterGUID)
+					}
+				}
+				if props.Profile != nil {
+					if props.Profile.Name != nil {
+						args["profileName"] = llx.StringDataPtr(props.Profile.Name)
+					}
+					if props.Profile.AccessRulesVersion != nil {
+						args["accessRulesVersion"] = llx.IntData(int64(*props.Profile.AccessRulesVersion))
+					}
+					if props.Profile.DiagnosticSettingsVersion != nil {
+						args["diagnosticSettingsVersion"] = llx.IntData(int64(*props.Profile.DiagnosticSettingsVersion))
+					}
+					var logCats []any
+					for _, lc := range props.Profile.EnabledLogCategories {
+						if lc != nil {
+							logCats = append(logCats, *lc)
+						}
+					}
+					args["enabledLogCategories"] = llx.ArrayData(logCats, types.String)
+					var rules []any
+					for _, rule := range props.Profile.AccessRules {
+						if rule == nil {
+							continue
+						}
+						if d, err := convert.JsonToDict(rule); err == nil {
+							rules = append(rules, d)
+						}
+					}
+					args["accessRules"] = llx.ArrayData(rules, types.Dict)
+				}
+				if props.ResourceAssociation != nil {
+					if props.ResourceAssociation.Name != nil {
+						args["associationName"] = llx.StringDataPtr(props.ResourceAssociation.Name)
+					}
+					if props.ResourceAssociation.AccessMode != nil {
+						args["associationAccessMode"] = llx.StringData(string(*props.ResourceAssociation.AccessMode))
+					}
+				}
+				var issues []any
+				for _, iss := range props.ProvisioningIssues {
+					if iss == nil {
+						continue
+					}
+					if d, err := convert.JsonToDict(iss); err == nil {
+						issues = append(issues, d)
+					}
+				}
+				args["provisioningIssues"] = llx.ArrayData(issues, types.Dict)
+			}
+
+			mqlNsp, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionMonitorServiceWorkspaceNspConfiguration, args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlNsp)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceWorkspaceNspConfiguration) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 // workspace returns a typed reference to the Log Analytics workspace from an Application Insight.
 func (a *mqlAzureSubscriptionMonitorServiceApplicationInsight) workspace() (*mqlAzureSubscriptionMonitorServiceWorkspace, error) {
 	if a.cacheWorkspaceResourceId == "" {
@@ -440,4 +784,174 @@ func (a *mqlAzureSubscriptionMonitorServiceApplicationInsight) workspace() (*mql
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionMonitorServiceWorkspace), nil
+}
+
+// queryPacks fetches all Log Analytics QueryPacks in the subscription.
+func (a *mqlAzureSubscriptionMonitorService) queryPacks() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := armoperationalinsights.NewQueryPacksClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, qp := range page.Value {
+			if qp == nil {
+				continue
+			}
+
+			var queryPackId, provisioningState string
+			var timeCreated, timeModified *llx.RawData
+			if qp.Properties != nil {
+				if qp.Properties.QueryPackID != nil {
+					queryPackId = *qp.Properties.QueryPackID
+				}
+				if qp.Properties.ProvisioningState != nil {
+					provisioningState = *qp.Properties.ProvisioningState
+				}
+				if qp.Properties.TimeCreated != nil {
+					timeCreated = llx.TimeDataPtr(qp.Properties.TimeCreated)
+				}
+				if qp.Properties.TimeModified != nil {
+					timeModified = llx.TimeDataPtr(qp.Properties.TimeModified)
+				}
+			}
+			if timeCreated == nil {
+				timeCreated = llx.NilData
+			}
+			if timeModified == nil {
+				timeModified = llx.NilData
+			}
+
+			mqlQp, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionMonitorServiceQueryPack,
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(qp.ID),
+					"name":              llx.StringDataPtr(qp.Name),
+					"location":          llx.StringDataPtr(qp.Location),
+					"type":              llx.StringDataPtr(qp.Type),
+					"tags":              llx.MapData(convert.PtrMapStrToInterface(qp.Tags), types.String),
+					"queryPackId":       llx.StringData(queryPackId),
+					"provisioningState": llx.StringData(provisioningState),
+					"timeCreated":       timeCreated,
+					"timeModified":      timeModified,
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlQp)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceQueryPack) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+// queries fetches all saved KQL queries within a QueryPack.
+func (a *mqlAzureSubscriptionMonitorServiceQueryPack) queries() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	id := a.Id.Data
+
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	queryPackName, err := resourceID.Component("queryPacks")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armoperationalinsights.NewQueriesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(resourceID.ResourceGroup, queryPackName, nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, q := range page.Value {
+			if q == nil {
+				continue
+			}
+
+			var displayName, description, body, author string
+			var timeCreated, timeModified *llx.RawData
+			var tagsDict any
+			if q.Properties != nil {
+				if q.Properties.DisplayName != nil {
+					displayName = *q.Properties.DisplayName
+				}
+				if q.Properties.Description != nil {
+					description = *q.Properties.Description
+				}
+				if q.Properties.Body != nil {
+					body = *q.Properties.Body
+				}
+				if q.Properties.Author != nil {
+					author = *q.Properties.Author
+				}
+				if q.Properties.TimeCreated != nil {
+					timeCreated = llx.TimeDataPtr(q.Properties.TimeCreated)
+				}
+				if q.Properties.TimeModified != nil {
+					timeModified = llx.TimeDataPtr(q.Properties.TimeModified)
+				}
+				if len(q.Properties.Tags) > 0 {
+					if d, err := convert.JsonToDict(q.Properties.Tags); err == nil {
+						tagsDict = d
+					}
+				}
+			}
+			if timeCreated == nil {
+				timeCreated = llx.NilData
+			}
+			if timeModified == nil {
+				timeModified = llx.NilData
+			}
+
+			mqlQ, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionMonitorServiceQueryPackQuery,
+				map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(q.ID),
+					"name":         llx.StringDataPtr(q.Name),
+					"type":         llx.StringDataPtr(q.Type),
+					"displayName":  llx.StringData(displayName),
+					"description":  llx.StringData(description),
+					"body":         llx.StringData(body),
+					"author":       llx.StringData(author),
+					"timeCreated":  timeCreated,
+					"timeModified": timeModified,
+					"tags":         llx.DictData(tagsDict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlQ)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceQueryPackQuery) id() (string, error) {
+	return a.Id.Data, nil
 }

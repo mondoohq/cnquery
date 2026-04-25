@@ -102,14 +102,54 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 			var computerName, adminUsername, licenseType *string
 			var vmId, provisioningState *string
 			var timeCreated *time.Time
+			var disablePasswordAuth, provisionVMAgent, enableAutomaticUpdates bool
+			var patchMode string
+			var sshPublicKeys []any
 			if vm.Properties != nil {
 				licenseType = vm.Properties.LicenseType
 				vmId = vm.Properties.VMID
 				provisioningState = vm.Properties.ProvisioningState
 				timeCreated = vm.Properties.TimeCreated
-				if vm.Properties.OSProfile != nil {
-					computerName = vm.Properties.OSProfile.ComputerName
-					adminUsername = vm.Properties.OSProfile.AdminUsername
+				if osp := vm.Properties.OSProfile; osp != nil {
+					computerName = osp.ComputerName
+					adminUsername = osp.AdminUsername
+					if lc := osp.LinuxConfiguration; lc != nil {
+						if lc.DisablePasswordAuthentication != nil {
+							disablePasswordAuth = *lc.DisablePasswordAuthentication
+						}
+						if lc.ProvisionVMAgent != nil {
+							provisionVMAgent = *lc.ProvisionVMAgent
+						}
+						if lc.SSH != nil {
+							for _, k := range lc.SSH.PublicKeys {
+								if k == nil {
+									continue
+								}
+								entry := map[string]any{}
+								if k.Path != nil {
+									entry["path"] = *k.Path
+								}
+								if k.KeyData != nil {
+									entry["keyData"] = *k.KeyData
+								}
+								sshPublicKeys = append(sshPublicKeys, entry)
+							}
+						}
+						if lc.PatchSettings != nil && lc.PatchSettings.PatchMode != nil {
+							patchMode = string(*lc.PatchSettings.PatchMode)
+						}
+					}
+					if wc := osp.WindowsConfiguration; wc != nil {
+						if wc.ProvisionVMAgent != nil {
+							provisionVMAgent = *wc.ProvisionVMAgent
+						}
+						if wc.EnableAutomaticUpdates != nil {
+							enableAutomaticUpdates = *wc.EnableAutomaticUpdates
+						}
+						if wc.PatchSettings != nil && wc.PatchSettings.PatchMode != nil {
+							patchMode = string(*wc.PatchSettings.PatchMode)
+						}
+					}
 				}
 			}
 
@@ -120,25 +160,30 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 			}
 			mqlAzureVm, err := CreateResource(a.MqlRuntime, "azure.subscription.computeService.vm",
 				map[string]*llx.RawData{
-					"id":                llx.StringDataPtr(id),
-					"name":              llx.StringDataPtr(vm.Name),
-					"location":          llx.StringDataPtr(vm.Location),
-					"zones":             llx.ArrayData(convert.SliceStrPtrToInterface(vm.Zones), types.String),
-					"tags":              llx.MapData(convert.PtrMapStrToInterface(vm.Tags), types.String),
-					"type":              llx.StringDataPtr(vm.Type),
-					"properties":        llx.DictData(properties),
-					"encryptionAtHost":  llx.BoolDataPtr(encryptionAtHost),
-					"securityType":      llx.StringDataPtr(securityType),
-					"secureBootEnabled": llx.BoolDataPtr(secureBootEnabled),
-					"vtpmEnabled":       llx.BoolDataPtr(vtpmEnabled),
-					"proxyAgentEnabled": llx.BoolDataPtr(proxyAgentEnabled),
-					"computerName":      llx.StringDataPtr(computerName),
-					"adminUsername":     llx.StringDataPtr(adminUsername),
-					"licenseType":       llx.StringDataPtr(licenseType),
-					"managedBy":         llx.StringDataPtr(vm.ManagedBy),
-					"vmId":              llx.StringDataPtr(vmId),
-					"provisioningState": llx.StringDataPtr(provisioningState),
-					"timeCreated":       llx.TimeDataPtr(timeCreated),
+					"id":                            llx.StringDataPtr(id),
+					"name":                          llx.StringDataPtr(vm.Name),
+					"location":                      llx.StringDataPtr(vm.Location),
+					"zones":                         llx.ArrayData(convert.SliceStrPtrToInterface(vm.Zones), types.String),
+					"tags":                          llx.MapData(convert.PtrMapStrToInterface(vm.Tags), types.String),
+					"type":                          llx.StringDataPtr(vm.Type),
+					"properties":                    llx.DictData(properties),
+					"encryptionAtHost":              llx.BoolDataPtr(encryptionAtHost),
+					"securityType":                  llx.StringDataPtr(securityType),
+					"secureBootEnabled":             llx.BoolDataPtr(secureBootEnabled),
+					"vtpmEnabled":                   llx.BoolDataPtr(vtpmEnabled),
+					"proxyAgentEnabled":             llx.BoolDataPtr(proxyAgentEnabled),
+					"computerName":                  llx.StringDataPtr(computerName),
+					"adminUsername":                 llx.StringDataPtr(adminUsername),
+					"licenseType":                   llx.StringDataPtr(licenseType),
+					"managedBy":                     llx.StringDataPtr(vm.ManagedBy),
+					"vmId":                          llx.StringDataPtr(vmId),
+					"provisioningState":             llx.StringDataPtr(provisioningState),
+					"timeCreated":                   llx.TimeDataPtr(timeCreated),
+					"sshPublicKeys":                 llx.ArrayData(sshPublicKeys, types.Dict),
+					"disablePasswordAuthentication": llx.BoolData(disablePasswordAuth),
+					"provisionVMAgent":              llx.BoolData(provisionVMAgent),
+					"enableAutomaticUpdates":        llx.BoolData(enableAutomaticUpdates),
+					"patchMode":                     llx.StringData(patchMode),
 				})
 			if err != nil {
 				return nil, err

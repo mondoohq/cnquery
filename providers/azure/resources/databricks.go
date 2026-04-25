@@ -95,14 +95,117 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		}
 	}
 
+	var publicNetworkAccess, requiredNsgRules, diskEncryptionSetId, managedResourceGroupId, provisioningState, workspaceId string
+	var enableNoPublicIp, requireInfraEnc bool
+	var customVnetId string
+	var managedDiskKeySource, managedDiskKeyVaultUri, managedDiskKeyName, managedDiskKeyVersion string
+	var managedServicesKeySource, managedServicesKeyVaultUri, managedServicesKeyName, managedServicesKeyVersion string
+
+	if props := workspace.Properties; props != nil {
+		if props.PublicNetworkAccess != nil {
+			publicNetworkAccess = string(*props.PublicNetworkAccess)
+		}
+		if props.RequiredNsgRules != nil {
+			requiredNsgRules = string(*props.RequiredNsgRules)
+		}
+		if props.DiskEncryptionSetID != nil {
+			diskEncryptionSetId = *props.DiskEncryptionSetID
+		}
+		if props.ManagedResourceGroupID != nil {
+			managedResourceGroupId = *props.ManagedResourceGroupID
+		}
+		if props.ProvisioningState != nil {
+			provisioningState = string(*props.ProvisioningState)
+		}
+		if props.WorkspaceID != nil {
+			workspaceId = *props.WorkspaceID
+		}
+
+		if p := props.Parameters; p != nil {
+			if p.EnableNoPublicIP != nil && p.EnableNoPublicIP.Value != nil {
+				enableNoPublicIp = *p.EnableNoPublicIP.Value
+			}
+			if p.RequireInfrastructureEncryption != nil && p.RequireInfrastructureEncryption.Value != nil {
+				requireInfraEnc = *p.RequireInfrastructureEncryption.Value
+			}
+			if p.CustomVirtualNetworkID != nil && p.CustomVirtualNetworkID.Value != nil {
+				customVnetId = *p.CustomVirtualNetworkID.Value
+			}
+			if p.Encryption != nil && p.Encryption.Value != nil {
+				if p.Encryption.Value.KeySource != nil {
+					managedDiskKeySource = string(*p.Encryption.Value.KeySource)
+				}
+				if p.Encryption.Value.KeyVaultURI != nil {
+					managedDiskKeyVaultUri = *p.Encryption.Value.KeyVaultURI
+				}
+				if p.Encryption.Value.KeyName != nil {
+					managedDiskKeyName = *p.Encryption.Value.KeyName
+				}
+				if p.Encryption.Value.KeyVersion != nil {
+					managedDiskKeyVersion = *p.Encryption.Value.KeyVersion
+				}
+			}
+		}
+
+		if enc := props.Encryption; enc != nil && enc.Entities != nil {
+			if md := enc.Entities.ManagedDisk; md != nil && md.KeyVaultProperties != nil {
+				if md.KeySource != nil {
+					managedDiskKeySource = string(*md.KeySource)
+				}
+				if md.KeyVaultProperties.KeyVaultURI != nil {
+					managedDiskKeyVaultUri = *md.KeyVaultProperties.KeyVaultURI
+				}
+				if md.KeyVaultProperties.KeyName != nil {
+					managedDiskKeyName = *md.KeyVaultProperties.KeyName
+				}
+				if md.KeyVaultProperties.KeyVersion != nil {
+					managedDiskKeyVersion = *md.KeyVaultProperties.KeyVersion
+				}
+			}
+			if ms := enc.Entities.ManagedServices; ms != nil {
+				if ms.KeySource != nil {
+					managedServicesKeySource = string(*ms.KeySource)
+				}
+				if ms.KeyVaultProperties != nil {
+					if ms.KeyVaultProperties.KeyVaultURI != nil {
+						managedServicesKeyVaultUri = *ms.KeyVaultProperties.KeyVaultURI
+					}
+					if ms.KeyVaultProperties.KeyName != nil {
+						managedServicesKeyName = *ms.KeyVaultProperties.KeyName
+					}
+					if ms.KeyVaultProperties.KeyVersion != nil {
+						managedServicesKeyVersion = *ms.KeyVaultProperties.KeyVersion
+					}
+				}
+			}
+		}
+	}
+
 	res, err := CreateResource(runtime, ResourceAzureSubscriptionDatabricksServiceWorkspace, map[string]*llx.RawData{
-		"id":         llx.StringDataPtr(workspace.ID),
-		"name":       llx.StringDataPtr(workspace.Name),
-		"location":   llx.StringDataPtr(workspace.Location),
-		"tags":       llx.MapData(convert.PtrMapStrToInterface(workspace.Tags), types.String),
-		"type":       llx.StringDataPtr(workspace.Type),
-		"properties": propertiesData,
-		"sku":        skuData,
+		"id":                              llx.StringDataPtr(workspace.ID),
+		"name":                            llx.StringDataPtr(workspace.Name),
+		"location":                        llx.StringDataPtr(workspace.Location),
+		"tags":                            llx.MapData(convert.PtrMapStrToInterface(workspace.Tags), types.String),
+		"type":                            llx.StringDataPtr(workspace.Type),
+		"properties":                      propertiesData,
+		"sku":                             skuData,
+		"publicNetworkAccess":             llx.StringData(publicNetworkAccess),
+		"enableNoPublicIp":                llx.BoolData(enableNoPublicIp),
+		"requireInfrastructureEncryption": llx.BoolData(requireInfraEnc),
+		"customVirtualNetworkId":          llx.StringData(customVnetId),
+		"requiredNsgRules":                llx.StringData(requiredNsgRules),
+		"diskEncryptionSetId":             llx.StringData(diskEncryptionSetId),
+		"managedResourceGroupId":          llx.StringData(managedResourceGroupId),
+		"provisioningState":               llx.StringData(provisioningState),
+		"workspaceId":                     llx.StringData(workspaceId),
+		"managedDiskKeySource":            llx.StringData(managedDiskKeySource),
+		"managedDiskKeyVaultUri":          llx.StringData(managedDiskKeyVaultUri),
+		"managedDiskKeyName":              llx.StringData(managedDiskKeyName),
+		"managedDiskKeyVersion":           llx.StringData(managedDiskKeyVersion),
+		"managedServicesKeySource":        llx.StringData(managedServicesKeySource),
+		"managedServicesKeyVaultUri":      llx.StringData(managedServicesKeyVaultUri),
+		"managedServicesKeyName":          llx.StringData(managedServicesKeyName),
+		"managedServicesKeyVersion":       llx.StringData(managedServicesKeyVersion),
 	})
 	if err != nil {
 		return nil, err

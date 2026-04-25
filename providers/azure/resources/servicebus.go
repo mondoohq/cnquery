@@ -80,8 +80,9 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				return nil, err
 			}
 
-			var status, serviceBusEndpoint string
-			var disableLocalAuth, zoneRedundant bool
+			var status, serviceBusEndpoint, provisioningState, cmkKeySource string
+			var disableLocalAuth, zoneRedundant, requireInfraEnc bool
+			var cmkKeys []any
 			if ns.Properties != nil {
 				if ns.Properties.Status != nil {
 					status = *ns.Properties.Status
@@ -95,18 +96,41 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				if ns.Properties.ZoneRedundant != nil {
 					zoneRedundant = *ns.Properties.ZoneRedundant
 				}
+				if ns.Properties.ProvisioningState != nil {
+					provisioningState = *ns.Properties.ProvisioningState
+				}
+				if enc := ns.Properties.Encryption; enc != nil {
+					if enc.KeySource != nil {
+						cmkKeySource = *enc.KeySource
+					}
+					if enc.RequireInfrastructureEncryption != nil {
+						requireInfraEnc = *enc.RequireInfrastructureEncryption
+					}
+					for _, kvp := range enc.KeyVaultProperties {
+						if kvp == nil {
+							continue
+						}
+						if d, err := convert.JsonToDict(kvp); err == nil {
+							cmkKeys = append(cmkKeys, d)
+						}
+					}
+				}
 			}
 
 			mqlNs, err := CreateResource(a.MqlRuntime, "azure.subscription.serviceBusService.namespace", map[string]*llx.RawData{
-				"id":                 llx.StringDataPtr(ns.ID),
-				"name":               llx.StringDataPtr(ns.Name),
-				"location":           llx.StringDataPtr(ns.Location),
-				"tags":               llx.MapData(convert.PtrMapStrToInterface(ns.Tags), types.String),
-				"sku":                llx.DictData(sku),
-				"status":             llx.StringData(status),
-				"serviceBusEndpoint": llx.StringData(serviceBusEndpoint),
-				"disableLocalAuth":   llx.BoolData(disableLocalAuth),
-				"zoneRedundant":      llx.BoolData(zoneRedundant),
+				"id":                              llx.StringDataPtr(ns.ID),
+				"name":                            llx.StringDataPtr(ns.Name),
+				"location":                        llx.StringDataPtr(ns.Location),
+				"tags":                            llx.MapData(convert.PtrMapStrToInterface(ns.Tags), types.String),
+				"sku":                             llx.DictData(sku),
+				"status":                          llx.StringData(status),
+				"serviceBusEndpoint":              llx.StringData(serviceBusEndpoint),
+				"disableLocalAuth":                llx.BoolData(disableLocalAuth),
+				"zoneRedundant":                   llx.BoolData(zoneRedundant),
+				"provisioningState":               llx.StringData(provisioningState),
+				"cmkKeySource":                    llx.StringData(cmkKeySource),
+				"requireInfrastructureEncryption": llx.BoolData(requireInfraEnc),
+				"cmkKeys":                         llx.ArrayData(cmkKeys, types.Dict),
 			})
 			if err != nil {
 				return nil, err
@@ -382,4 +406,36 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespaceTopic) subscriptions() ([
 	}
 
 	return res, nil
+}
+
+// networkRuleSet fetches the namespace-level network rule set (default action, public network access,
+// IP rules, virtual-network rules, trusted-service-access).
+func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRuleSet() (any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	namespace, err := resourceID.Component("namespaces")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armservicebus.NewNamespacesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetNetworkRuleSet(ctx, resourceID.ResourceGroup, namespace, nil)
+	if err != nil {
+		return nil, err
+	}
+	if resp.NetworkRuleSet.Properties == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(resp.NetworkRuleSet.Properties)
 }

@@ -269,6 +269,54 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) vm() (*mqlAzureSubscriptio
 	return res.(*mqlAzureSubscriptionComputeServiceVm), nil
 }
 
+// effectiveSecurityRules computes the merged NSG rules effective on this NIC
+// (NSG attached to NIC + ASG + NSG attached to subnet). Lazily called per NIC.
+func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	nicName, err := resourceID.Component("networkInterfaces")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := network.NewInterfacesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	poller, err := client.BeginListEffectiveNetworkSecurityGroups(ctx, resourceID.ResourceGroup, nicName, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := poller.PollUntilDone(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	for _, ensg := range resp.Value {
+		if ensg == nil {
+			continue
+		}
+		for _, rule := range ensg.EffectiveSecurityRules {
+			if rule == nil {
+				continue
+			}
+			if d, err := convert.JsonToDict(rule); err == nil {
+				res = append(res, d)
+			}
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -1067,18 +1115,30 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) peerings() ([]any, er
 			if p.Properties.RemoteVirtualNetwork != nil && p.Properties.RemoteVirtualNetwork.ID != nil {
 				remoteVnetId = *p.Properties.RemoteVirtualNetwork.ID
 			}
+			var remoteEncEnabled bool
+			var remoteEncEnforcement string
+			if p.Properties.RemoteVirtualNetworkEncryption != nil {
+				if p.Properties.RemoteVirtualNetworkEncryption.Enabled != nil {
+					remoteEncEnabled = *p.Properties.RemoteVirtualNetworkEncryption.Enabled
+				}
+				if p.Properties.RemoteVirtualNetworkEncryption.Enforcement != nil {
+					remoteEncEnforcement = string(*p.Properties.RemoteVirtualNetworkEncryption.Enforcement)
+				}
+			}
 			mqlPeering, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetwork.peering",
 				map[string]*llx.RawData{
-					"id":                        llx.StringDataPtr(p.ID),
-					"name":                      llx.StringDataPtr(p.Name),
-					"allowForwardedTraffic":     llx.BoolDataPtr(p.Properties.AllowForwardedTraffic),
-					"allowGatewayTransit":       llx.BoolDataPtr(p.Properties.AllowGatewayTransit),
-					"allowVirtualNetworkAccess": llx.BoolDataPtr(p.Properties.AllowVirtualNetworkAccess),
-					"useRemoteGateways":         llx.BoolDataPtr(p.Properties.UseRemoteGateways),
-					"peeringState":              llx.StringDataPtr((*string)(p.Properties.PeeringState)),
-					"peeringSyncLevel":          llx.StringDataPtr((*string)(p.Properties.PeeringSyncLevel)),
-					"provisioningState":         llx.StringDataPtr((*string)(p.Properties.ProvisioningState)),
-					"remoteVirtualNetworkId":    llx.StringData(remoteVnetId),
+					"id":                                    llx.StringDataPtr(p.ID),
+					"name":                                  llx.StringDataPtr(p.Name),
+					"allowForwardedTraffic":                 llx.BoolDataPtr(p.Properties.AllowForwardedTraffic),
+					"allowGatewayTransit":                   llx.BoolDataPtr(p.Properties.AllowGatewayTransit),
+					"allowVirtualNetworkAccess":             llx.BoolDataPtr(p.Properties.AllowVirtualNetworkAccess),
+					"useRemoteGateways":                     llx.BoolDataPtr(p.Properties.UseRemoteGateways),
+					"peeringState":                          llx.StringDataPtr((*string)(p.Properties.PeeringState)),
+					"peeringSyncLevel":                      llx.StringDataPtr((*string)(p.Properties.PeeringSyncLevel)),
+					"provisioningState":                     llx.StringDataPtr((*string)(p.Properties.ProvisioningState)),
+					"remoteVirtualNetworkId":                llx.StringData(remoteVnetId),
+					"remoteVirtualNetworkEncryptionEnabled": llx.BoolData(remoteEncEnabled),
+					"remoteVirtualNetworkEncryptionEnforcement": llx.StringData(remoteEncEnforcement),
 				})
 			if err != nil {
 				return nil, err
@@ -1508,6 +1568,78 @@ func (a *mqlAzureSubscriptionNetworkService) privateEndpoints() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// privateDnsZoneGroups fetches the Private DNS Zone Groups attached to this PE.
+// Each group lists which Private DNS zones records will be auto-registered into.
+func (a *mqlAzureSubscriptionNetworkServicePrivateEndpoint) privateDnsZoneGroups() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	peName, err := resourceID.Component("privateEndpoints")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := network.NewPrivateDNSZoneGroupsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(peName, resourceID.ResourceGroup, nil)
+	var res []any
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, g := range page.Value {
+			if g == nil {
+				continue
+			}
+			entry := map[string]any{
+				"id":   llxStrOr(g.ID, ""),
+				"name": llxStrOr(g.Name, ""),
+			}
+			if g.Properties != nil {
+				var zoneIds []any
+				var configs []any
+				for _, c := range g.Properties.PrivateDNSZoneConfigs {
+					if c == nil {
+						continue
+					}
+					ce := map[string]any{
+						"name": llxStrOr(c.Name, ""),
+					}
+					if c.Properties != nil && c.Properties.PrivateDNSZoneID != nil {
+						ce["privateDnsZoneId"] = *c.Properties.PrivateDNSZoneID
+						zoneIds = append(zoneIds, *c.Properties.PrivateDNSZoneID)
+					}
+					configs = append(configs, ce)
+				}
+				entry["privateDnsZoneIds"] = zoneIds
+				entry["configs"] = configs
+				if g.Properties.ProvisioningState != nil {
+					entry["provisioningState"] = string(*g.Properties.ProvisioningState)
+				}
+			}
+			res = append(res, entry)
+		}
+	}
+	return res, nil
+}
+
+func llxStrOr(s *string, def string) string {
+	if s == nil {
+		return def
+	}
+	return *s
 }
 
 func privateLinkServiceConnectionToMql(runtime *plugin.Runtime, c *network.PrivateLinkServiceConnection) (*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection, error) {
