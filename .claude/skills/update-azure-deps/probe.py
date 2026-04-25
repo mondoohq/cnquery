@@ -143,18 +143,11 @@ def probe_one(full_path: str, current_ver: str):
 
     stable_highest = None
     beta_highest = None
-    consecutive_missing = 0
     for n in range(current_major + 1, current_major + 1 + PROBE_MAJOR_RANGE):
         latest_any, latest_stbl = probe_major(f"{base}/v{n}")
         if latest_any is None:
-            # Major doesn't exist. Azure SDK majors are sequential, so a single
-            # missing major usually means we've gone past the latest. Stop after
-            # one miss to avoid burning network on guaranteed-404 lookups.
-            consecutive_missing += 1
-            if consecutive_missing >= 1:
-                break
-            continue
-        consecutive_missing = 0
+            # Azure SDK majors are sequential — first 404 means we've gone past the latest.
+            break
         if latest_stbl:
             stable_highest = (n, latest_stbl)
         elif not is_stable(latest_any):
