@@ -12,8 +12,8 @@ import (
 )
 
 type mqlHetznerImageInternal struct {
-	cacheBoundServer *hcloud.Server
-	cacheCreatedFrom *hcloud.Server
+	cacheBoundServerID int64
+	cacheCreatedFromID int64
 }
 
 func (r *mqlHetznerImage) id() (string, error) {
@@ -61,8 +61,12 @@ func newMqlHetznerImage(runtime *plugin.Runtime, img *hcloud.Image) (*mqlHetzner
 		return nil, err
 	}
 	m := res.(*mqlHetznerImage)
-	m.cacheBoundServer = img.BoundTo
-	m.cacheCreatedFrom = img.CreatedFrom
+	if img.BoundTo != nil {
+		m.cacheBoundServerID = img.BoundTo.ID
+	}
+	if img.CreatedFrom != nil {
+		m.cacheCreatedFromID = img.CreatedFrom.ID
+	}
 	return m, nil
 }
 
@@ -83,13 +87,27 @@ func initHetznerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 }
 
 func (m *mqlHetznerImage) boundServer() (*mqlHetznerServer, error) {
-	return resolveTypedResource(&m.BoundServer, m.cacheBoundServer, func(s *hcloud.Server) (*mqlHetznerServer, error) {
-		return newMqlHetznerServer(m.MqlRuntime, s)
-	})
+	return serverRefByID(m.MqlRuntime, &m.BoundServer, m.cacheBoundServerID)
 }
 
 func (m *mqlHetznerImage) createdFrom() (*mqlHetznerServer, error) {
-	return resolveTypedResource(&m.CreatedFrom, m.cacheCreatedFrom, func(s *hcloud.Server) (*mqlHetznerServer, error) {
-		return newMqlHetznerServer(m.MqlRuntime, s)
+	return serverRefByID(m.MqlRuntime, &m.CreatedFrom, m.cacheCreatedFromID)
+}
+
+// serverRefByID resolves a single typed server reference via NewResource so
+// the runtime fetches a full server (via init) on first access. Avoids
+// cache-poisoning a server entry with a partial stub from a parent API
+// response that only carries (ID, Name).
+func serverRefByID(runtime *plugin.Runtime, field *plugin.TValue[*mqlHetznerServer], id int64) (*mqlHetznerServer, error) {
+	if id == 0 {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ref, err := NewResource(runtime, "hetzner.server", map[string]*llx.RawData{
+		"id": llx.IntData(id),
 	})
+	if err != nil {
+		return nil, err
+	}
+	return ref.(*mqlHetznerServer), nil
 }

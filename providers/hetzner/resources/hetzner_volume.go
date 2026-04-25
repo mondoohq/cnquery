@@ -13,7 +13,7 @@ import (
 
 type mqlHetznerVolumeInternal struct {
 	cacheLocation *hcloud.Location
-	cacheServer   *hcloud.Server
+	cacheServerID int64
 }
 
 func (r *mqlHetznerVolume) id() (string, error) {
@@ -61,7 +61,9 @@ func newMqlHetznerVolume(runtime *plugin.Runtime, v *hcloud.Volume) (*mqlHetzner
 	}
 	m := res.(*mqlHetznerVolume)
 	m.cacheLocation = v.Location
-	m.cacheServer = v.Server
+	if v.Server != nil {
+		m.cacheServerID = v.Server.ID
+	}
 	return m, nil
 }
 
@@ -88,7 +90,5 @@ func (m *mqlHetznerVolume) location() (*mqlHetznerLocation, error) {
 }
 
 func (m *mqlHetznerVolume) server() (*mqlHetznerServer, error) {
-	return resolveTypedResource(&m.Server, m.cacheServer, func(s *hcloud.Server) (*mqlHetznerServer, error) {
-		return newMqlHetznerServer(m.MqlRuntime, s)
-	})
+	return serverRefByID(m.MqlRuntime, &m.Server, m.cacheServerID)
 }
