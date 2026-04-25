@@ -1,6 +1,7 @@
 aad
 accesscontextmanager
 ACCOUNTADMIN
+ACR
 actioncable
 actionpack
 activedirectory
@@ -23,6 +24,7 @@ armoperationalinsights
 arp
 artifactregistry
 asdk
+ASGs
 aspnet
 atlassian
 auditlog
@@ -80,7 +82,7 @@ cloudflareaccess
 Clusterwide
 cmdline
 cmek
-Cmk
+cmk
 cmnd
 cname
 CNs
@@ -107,6 +109,7 @@ databricks
 datapath
 datasource
 DATAUSER
+DBFS
 DBRS
 ddl
 ddos
@@ -247,6 +250,7 @@ keyspace
 kilocode
 kiro
 kolide
+KQL
 kqueue
 krbtgt
 kts
@@ -317,6 +321,7 @@ networkinterface
 newpath
 Newtonsoft
 nexthop
+NFSv
 nft
 NINEl
 nio
@@ -330,6 +335,7 @@ nokeys
 notebookinstancedetails
 nproc
 nsg
+nsp
 nsrecord
 nss
 nullgroup
@@ -420,7 +426,7 @@ rtsp
 rulegroup
 rulegroupreferencestatement
 saas
-Sas
+sas
 sasl
 sbfm
 sbom
@@ -497,6 +503,7 @@ uefi
 UNAVAIL
 unifi
 Uocm
+upn
 uptycs
 URkuh
 usb

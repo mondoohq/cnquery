@@ -1291,10 +1291,15 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) localUsers() ([]any, error) 
 	}
 
 	pager := client.NewListPager(resourceID.ResourceGroup, account, nil)
-	var res []any
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusForbidden || isFeatureNotSupportedForAccountError(err)) {
+				log.Warn().Err(err).Msg("could not list storage local users due to access denied or feature not supported")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, lu := range page.Value {

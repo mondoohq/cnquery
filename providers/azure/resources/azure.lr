@@ -1570,7 +1570,7 @@ private azure.subscription.storageService.account @defaults("id name location") 
   requireInfrastructureEncryption bool
   // Per-service encryption KeyType ({"blob","file","queue","table"}; values "Account" or "Service")
   serviceKeyTypes map[string]string
-  // SAS expiration policy: max validity period (days.HH:MM:SS) and action ("Log" or "Block")
+  // SAS expiration policy: max validity period (days.HH:MM:SS)
   sasExpirationPeriod string
   // SAS expiration policy action ("Log" or "Block"); empty if no policy is set
   sasExpirationAction string
