@@ -77,6 +77,8 @@ cloud.google.com/go/datacatalog v1.29.0 h1:K5zBLN4YLAPyzFt/IzAE/OhKmQUHSfzMflCB7
 cloud.google.com/go/datacatalog v1.29.0/go.mod h1:MP8V3kNuESnwMk4mB6zdWmw/4KQ5xZ8dyUNVsggqN5I=
 cloud.google.com/go/datastore v1.0.0/go.mod h1:LXYbyblFSglQ5pkeyhO+Qmw7ukd3C+pD7TKLgZqpHYE=
 cloud.google.com/go/datastore v1.1.0/go.mod h1:umbIZjpQpHh4hmRpGhH4tLFup+FVzqBi1b3c64qFpCk=
+cloud.google.com/go/datastream v1.18.0 h1:oAlCDBb71E8aWEaaHctTaJqUWtTJ4d7fsWjo2gwMz9o=
+cloud.google.com/go/datastream v1.18.0/go.mod h1:uoWTtfP20W8MXuV2DPcl5zqnVsxQ9QEmmBHX858oYTQ=
 cloud.google.com/go/deploy v1.30.0 h1:gprUC11589FPGXFD8dB2qOneceAzOV6ZqtvWceIpyOM=
 cloud.google.com/go/deploy v1.30.0/go.mod h1:lUG7maG/NkoTXmQ8G1mtcVymnbizfDJh6ER7vljVa/U=
 cloud.google.com/go/dlp v1.32.0 h1:idIs7hz0IVBEzraaV1TkKydpg7Ou+E+mRs+FOl6b5pQ=
@@ -106,6 +108,10 @@ cloud.google.com/go/logging v1.16.0 h1:MMNgYRvZ/pEwiNSkcoJTKWfAbAJDqCqAMJiarZx+/
 cloud.google.com/go/logging v1.16.0/go.mod h1:ZGKnpBaURITh+g/uom2VhbiFoFWvejcrHPDhxFtU/gI=
 cloud.google.com/go/longrunning v0.11.0 h1:fE4XVLJQj+gRnw1HrbDyQXXgC0aiqY3wxP7DDU4cWk0=
 cloud.google.com/go/longrunning v0.11.0/go.mod h1:8nqFBPOO1U/XkhWl0I19AMZEphrHi73VNABIpKYaTwM=
+cloud.google.com/go/memcache v1.14.0 h1:g2KUZ9DLNmQ4Er1XJPaPts2zj+sFnjkGg7Oj+zdtq5E=
+cloud.google.com/go/memcache v1.14.0/go.mod h1:y/rXhJiieCF742K958dY29fSfM+Y3wh2thRmWspU2Dg=
+cloud.google.com/go/memorystore v0.7.0 h1:JRDhfW9CCjIRjiKZ2D/YZYS6y3jmGBS7iOdxHzC8+pU=
+cloud.google.com/go/memorystore v0.7.0/go.mod h1:fgbTd26uERz7dvH5KklyXU9/pcNdMtjNKfEZZ6slRLA=
 cloud.google.com/go/modelarmor v0.9.0 h1:kQc/Clbq0lWXlrxBEgSgHB6SNPqBfEdkPjMl0sv7gQ0=
 cloud.google.com/go/modelarmor v0.9.0/go.mod h1:nrgM9UlxJvFE5NcE6NN/OJ8vI1LuJih27Hg8wq38mGQ=
 cloud.google.com/go/monitoring v1.27.0 h1:BhYwMqao+e5Nn7JtWMM9m6zRtKtVUK6kJWMizXChkLU=

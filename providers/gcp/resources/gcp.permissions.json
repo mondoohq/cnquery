@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.11.1",
-  "generated_at": "2026-04-23T16:33:49-07:00",
+  "generated_at": "2026-04-24T22:26:35-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -104,6 +104,12 @@
     "datastore.backupSchedules.list",
     "datastore.databases.list",
     "datastore.indexes.list",
+    "datastream.connectionProfiles.get",
+    "datastream.connectionProfiles.list",
+    "datastream.privateConnections.get",
+    "datastream.privateConnections.list",
+    "datastream.routes.list",
+    "datastream.streams.list",
     "dlp.deidentifyTemplates.list",
     "dlp.inspectTemplates.list",
     "dlp.jobTriggers.list",
@@ -127,6 +133,12 @@
     "logging.buckets.list",
     "logging.exclusions.list",
     "logging.views.list",
+    "memcache.instances.list",
+    "memorystore.backupCollections.get",
+    "memorystore.backupCollections.list",
+    "memorystore.backups.list",
+    "memorystore.instances.get",
+    "memorystore.instances.list",
     "modelarmor.floorSettings.get",
     "modelarmor.templates.list",
     "monitoring.alertPolicies.list",
@@ -803,6 +815,42 @@
       "source_file": "firestore.go"
     },
     {
+      "permission": "datastream.connectionProfiles.get",
+      "service": "datastream",
+      "action": "GetConnectionProfile",
+      "source_file": "datastream.go"
+    },
+    {
+      "permission": "datastream.connectionProfiles.list",
+      "service": "datastream",
+      "action": "ListConnectionProfiles",
+      "source_file": "datastream.go"
+    },
+    {
+      "permission": "datastream.privateConnections.get",
+      "service": "datastream",
+      "action": "GetPrivateConnection",
+      "source_file": "datastream.go"
+    },
+    {
+      "permission": "datastream.privateConnections.list",
+      "service": "datastream",
+      "action": "ListPrivateConnections",
+      "source_file": "datastream.go"
+    },
+    {
+      "permission": "datastream.routes.list",
+      "service": "datastream",
+      "action": "ListRoutes",
+      "source_file": "datastream.go"
+    },
+    {
+      "permission": "datastream.streams.list",
+      "service": "datastream",
+      "action": "ListStreams",
+      "source_file": "datastream.go"
+    },
+    {
       "permission": "dlp.deidentifyTemplates.list",
       "service": "dlp",
       "action": "ListDeidentifyTemplates",
@@ -939,6 +987,42 @@
       "service": "logging",
       "action": "Views.List",
       "source_file": "logging.go"
+    },
+    {
+      "permission": "memcache.instances.list",
+      "service": "memcache",
+      "action": "ListInstances",
+      "source_file": "memcache.go"
+    },
+    {
+      "permission": "memorystore.backupCollections.get",
+      "service": "memorystore",
+      "action": "GetBackupCollection",
+      "source_file": "memorystore.go"
+    },
+    {
+      "permission": "memorystore.backupCollections.list",
+      "service": "memorystore",
+      "action": "ListBackupCollections",
+      "source_file": "memorystore.go"
+    },
+    {
+      "permission": "memorystore.backups.list",
+      "service": "memorystore",
+      "action": "ListBackups",
+      "source_file": "memorystore.go"
+    },
+    {
+      "permission": "memorystore.instances.get",
+      "service": "memorystore",
+      "action": "GetInstance",
+      "source_file": "memorystore.go"
+    },
+    {
+      "permission": "memorystore.instances.list",
+      "service": "memorystore",
+      "action": "ListInstances",
+      "source_file": "memorystore.go"
     },
     {
       "permission": "modelarmor.floorSettings.get",
@@ -1098,7 +1182,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.List",
+      "action": "Projects.Search",
       "source_file": "project.go",
       "scope": "org"
     },

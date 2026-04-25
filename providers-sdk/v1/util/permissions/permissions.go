@@ -1008,6 +1008,14 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// own entries if added.
 		"Activities.Query": "policyanalyzer.serviceAccountLastAuthenticationActivities.query",
 	},
+	"datastream": {
+		"GetConnectionProfile": "datastream.connectionProfiles.get",
+		"GetPrivateConnection": "datastream.privateConnections.get",
+	},
+	"memorystore": {
+		"GetInstance":         "memorystore.instances.get",
+		"GetBackupCollection": "memorystore.backupCollections.get",
+	},
 }
 
 // gcpOrgLevelPermissions are permissions that only apply at the organization

@@ -19,6 +19,7 @@ require (
 	cloud.google.com/go/compute v1.60.0
 	cloud.google.com/go/container v1.49.0
 	cloud.google.com/go/containeranalysis v0.17.0
+	cloud.google.com/go/datastream v1.18.0
 	cloud.google.com/go/deploy v1.30.0
 	cloud.google.com/go/dlp v1.32.0
 	cloud.google.com/go/eventarc v1.21.0
@@ -32,6 +33,8 @@ require (
 	cloud.google.com/go/kms v1.29.0
 	cloud.google.com/go/logging v1.16.0
 	cloud.google.com/go/longrunning v0.11.0
+	cloud.google.com/go/memcache v1.14.0
+	cloud.google.com/go/memorystore v0.7.0
 	cloud.google.com/go/modelarmor v0.9.0
 	cloud.google.com/go/monitoring v1.27.0
 	cloud.google.com/go/orgpolicy v1.18.0

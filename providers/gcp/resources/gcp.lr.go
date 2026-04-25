@@ -340,6 +340,25 @@ const (
 	ResourceGcpProjectSourceRepositoriesService                                        string = "gcp.project.sourceRepositoriesService"
 	ResourceGcpProjectSourceRepositoriesServiceRepo                                    string = "gcp.project.sourceRepositoriesService.repo"
 	ResourceGcpProjectSourceRepositoriesServiceRepoMirrorConfig                        string = "gcp.project.sourceRepositoriesService.repo.mirrorConfig"
+	ResourceGcpProjectMemcacheService                                                  string = "gcp.project.memcacheService"
+	ResourceGcpProjectMemcacheServiceInstance                                          string = "gcp.project.memcacheService.instance"
+	ResourceGcpProjectMemcacheServiceInstanceNode                                      string = "gcp.project.memcacheService.instance.node"
+	ResourceGcpProjectMemcacheServiceInstanceParameters                                string = "gcp.project.memcacheService.instance.parameters"
+	ResourceGcpProjectMemcacheServiceInstanceNodeParameters                            string = "gcp.project.memcacheService.instance.node.parameters"
+	ResourceGcpProjectDatastreamService                                                string = "gcp.project.datastreamService"
+	ResourceGcpProjectDatastreamServiceStream                                          string = "gcp.project.datastreamService.stream"
+	ResourceGcpProjectDatastreamServiceStreamError                                     string = "gcp.project.datastreamService.stream.error"
+	ResourceGcpProjectDatastreamServiceConnectionProfile                               string = "gcp.project.datastreamService.connectionProfile"
+	ResourceGcpProjectDatastreamServicePrivateConnection                               string = "gcp.project.datastreamService.privateConnection"
+	ResourceGcpProjectDatastreamServiceRoute                                           string = "gcp.project.datastreamService.route"
+	ResourceGcpProjectMemorystoreService                                               string = "gcp.project.memorystoreService"
+	ResourceGcpProjectMemorystoreServiceInstance                                       string = "gcp.project.memorystoreService.instance"
+	ResourceGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint                      string = "gcp.project.memorystoreService.instance.discoveryEndpoint"
+	ResourceGcpProjectMemorystoreServiceInstancePscAutoConnection                      string = "gcp.project.memorystoreService.instance.pscAutoConnection"
+	ResourceGcpProjectMemorystoreServiceInstancePscAttachmentDetail                    string = "gcp.project.memorystoreService.instance.pscAttachmentDetail"
+	ResourceGcpProjectMemorystoreServiceBackupCollection                               string = "gcp.project.memorystoreService.backupCollection"
+	ResourceGcpProjectMemorystoreServiceBackup                                         string = "gcp.project.memorystoreService.backup"
+	ResourceGcpProjectMemorystoreServiceBackupBackupFile                               string = "gcp.project.memorystoreService.backup.backupFile"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1642,6 +1661,82 @@ func init() {
 			// to override args, implement: initGcpProjectSourceRepositoriesServiceRepoMirrorConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectSourceRepositoriesServiceRepoMirrorConfig,
 		},
+		"gcp.project.memcacheService": {
+			Init:   initGcpProjectMemcacheService,
+			Create: createGcpProjectMemcacheService,
+		},
+		"gcp.project.memcacheService.instance": {
+			// to override args, implement: initGcpProjectMemcacheServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemcacheServiceInstance,
+		},
+		"gcp.project.memcacheService.instance.node": {
+			// to override args, implement: initGcpProjectMemcacheServiceInstanceNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemcacheServiceInstanceNode,
+		},
+		"gcp.project.memcacheService.instance.parameters": {
+			// to override args, implement: initGcpProjectMemcacheServiceInstanceParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemcacheServiceInstanceParameters,
+		},
+		"gcp.project.memcacheService.instance.node.parameters": {
+			// to override args, implement: initGcpProjectMemcacheServiceInstanceNodeParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemcacheServiceInstanceNodeParameters,
+		},
+		"gcp.project.datastreamService": {
+			Init:   initGcpProjectDatastreamService,
+			Create: createGcpProjectDatastreamService,
+		},
+		"gcp.project.datastreamService.stream": {
+			// to override args, implement: initGcpProjectDatastreamServiceStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDatastreamServiceStream,
+		},
+		"gcp.project.datastreamService.stream.error": {
+			// to override args, implement: initGcpProjectDatastreamServiceStreamError(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDatastreamServiceStreamError,
+		},
+		"gcp.project.datastreamService.connectionProfile": {
+			Init:   initGcpProjectDatastreamServiceConnectionProfile,
+			Create: createGcpProjectDatastreamServiceConnectionProfile,
+		},
+		"gcp.project.datastreamService.privateConnection": {
+			Init:   initGcpProjectDatastreamServicePrivateConnection,
+			Create: createGcpProjectDatastreamServicePrivateConnection,
+		},
+		"gcp.project.datastreamService.route": {
+			// to override args, implement: initGcpProjectDatastreamServiceRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDatastreamServiceRoute,
+		},
+		"gcp.project.memorystoreService": {
+			Init:   initGcpProjectMemorystoreService,
+			Create: createGcpProjectMemorystoreService,
+		},
+		"gcp.project.memorystoreService.instance": {
+			Init:   initGcpProjectMemorystoreServiceInstance,
+			Create: createGcpProjectMemorystoreServiceInstance,
+		},
+		"gcp.project.memorystoreService.instance.discoveryEndpoint": {
+			// to override args, implement: initGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint,
+		},
+		"gcp.project.memorystoreService.instance.pscAutoConnection": {
+			// to override args, implement: initGcpProjectMemorystoreServiceInstancePscAutoConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemorystoreServiceInstancePscAutoConnection,
+		},
+		"gcp.project.memorystoreService.instance.pscAttachmentDetail": {
+			// to override args, implement: initGcpProjectMemorystoreServiceInstancePscAttachmentDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemorystoreServiceInstancePscAttachmentDetail,
+		},
+		"gcp.project.memorystoreService.backupCollection": {
+			Init:   initGcpProjectMemorystoreServiceBackupCollection,
+			Create: createGcpProjectMemorystoreServiceBackupCollection,
+		},
+		"gcp.project.memorystoreService.backup": {
+			// to override args, implement: initGcpProjectMemorystoreServiceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemorystoreServiceBackup,
+		},
+		"gcp.project.memorystoreService.backup.backupFile": {
+			// to override args, implement: initGcpProjectMemorystoreServiceBackupBackupFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectMemorystoreServiceBackupBackupFile,
+		},
 	}
 }
 
@@ -2378,6 +2473,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sourceRepositories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetSourceRepositories()).ToDataRes(types.Resource("gcp.project.sourceRepositoriesService"))
+	},
+	"gcp.project.memcache": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetMemcache()).ToDataRes(types.Resource("gcp.project.memcacheService"))
+	},
+	"gcp.project.datastream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetDatastream()).ToDataRes(types.Resource("gcp.project.datastreamService"))
+	},
+	"gcp.project.memorystore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetMemorystore()).ToDataRes(types.Resource("gcp.project.memorystoreService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -11424,6 +11528,588 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sourceRepositoriesService.repo.mirrorConfig.webhookId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).GetWebhookId()).ToDataRes(types.String)
 	},
+	"gcp.project.memcacheService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheService).GetInstances()).ToDataRes(types.Array(types.Resource("gcp.project.memcacheService.instance")))
+	},
+	"gcp.project.memcacheService.instance.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.memcacheService.instance.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.memcacheService.instance.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.memcacheService.instance.nodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetNodeCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.memcacheService.instance.nodeCpuCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetNodeCpuCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.memcacheService.instance.nodeMemorySizeMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetNodeMemorySizeMb()).ToDataRes(types.Int)
+	},
+	"gcp.project.memcacheService.instance.memcacheVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetMemcacheVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.memcacheFullVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetMemcacheFullVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetParameters()).ToDataRes(types.Resource("gcp.project.memcacheService.instance.parameters"))
+	},
+	"gcp.project.memcacheService.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.discoveryEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetDiscoveryEndpoint()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.instanceMessages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetInstanceMessages()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.memcacheService.instance.maintenancePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetMaintenancePolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memcacheService.instance.maintenanceSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetMaintenanceSchedule()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memcacheService.instance.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.memcacheService.instance.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.memcacheService.instance.nodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstance).GetNodes()).ToDataRes(types.Array(types.Resource("gcp.project.memcacheService.instance.node")))
+	},
+	"gcp.project.memcacheService.instance.node.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNode).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.node.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNode).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.node.nodeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNode).GetNodeId()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.node.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNode).GetZone()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.node.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNode).GetHost()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.node.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNode).GetPort()).ToDataRes(types.Int)
+	},
+	"gcp.project.memcacheService.instance.node.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNode).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.node.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNode).GetParameters()).ToDataRes(types.Resource("gcp.project.memcacheService.instance.node.parameters"))
+	},
+	"gcp.project.memcacheService.instance.parameters.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceParameters).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.parameters.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceParameters).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.parameters.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceParameters).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.parameters.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceParameters).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.memcacheService.instance.node.parameters.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.node.parameters.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.node.parameters.nodeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).GetNodeId()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.node.parameters.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.memcacheService.instance.node.parameters.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.datastreamService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.streams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamService).GetStreams()).ToDataRes(types.Array(types.Resource("gcp.project.datastreamService.stream")))
+	},
+	"gcp.project.datastreamService.connectionProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamService).GetConnectionProfiles()).ToDataRes(types.Array(types.Resource("gcp.project.datastreamService.connectionProfile")))
+	},
+	"gcp.project.datastreamService.privateConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamService).GetPrivateConnections()).ToDataRes(types.Array(types.Resource("gcp.project.datastreamService.privateConnection")))
+	},
+	"gcp.project.datastreamService.stream.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.stream.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.stream.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.stream.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.datastreamService.stream.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.stream.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.datastreamService.stream.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetSource()).ToDataRes(types.Resource("gcp.project.datastreamService.connectionProfile"))
+	},
+	"gcp.project.datastreamService.stream.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetDestination()).ToDataRes(types.Resource("gcp.project.datastreamService.connectionProfile"))
+	},
+	"gcp.project.datastreamService.stream.sourceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetSourceConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.datastreamService.stream.destinationConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetDestinationConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.datastreamService.stream.backfillStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetBackfillStrategy()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.stream.errors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetErrors()).ToDataRes(types.Array(types.Resource("gcp.project.datastreamService.stream.error")))
+	},
+	"gcp.project.datastreamService.stream.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetSatisfiesPzi()).ToDataRes(types.Bool)
+	},
+	"gcp.project.datastreamService.stream.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetSatisfiesPzs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.datastreamService.stream.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.datastreamService.stream.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStream).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.datastreamService.stream.error.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStreamError).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.stream.error.streamName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStreamError).GetStreamName()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.stream.error.errorUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStreamError).GetErrorUuid()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.stream.error.reason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStreamError).GetReason()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.stream.error.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStreamError).GetMessage()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.stream.error.errorTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStreamError).GetErrorTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.datastreamService.stream.error.details": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceStreamError).GetDetails()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.datastreamService.connectionProfile.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.connectionProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.connectionProfile.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.connectionProfile.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.datastreamService.connectionProfile.profileType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetProfileType()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.connectionProfile.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetProfile()).ToDataRes(types.Dict)
+	},
+	"gcp.project.datastreamService.connectionProfile.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetBucket()).ToDataRes(types.Resource("gcp.project.storageService.bucket"))
+	},
+	"gcp.project.datastreamService.connectionProfile.connectivityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetConnectivityType()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.connectionProfile.connectivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetConnectivity()).ToDataRes(types.Dict)
+	},
+	"gcp.project.datastreamService.connectionProfile.privateConnection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetPrivateConnection()).ToDataRes(types.Resource("gcp.project.datastreamService.privateConnection"))
+	},
+	"gcp.project.datastreamService.connectionProfile.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetSatisfiesPzi()).ToDataRes(types.Bool)
+	},
+	"gcp.project.datastreamService.connectionProfile.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetSatisfiesPzs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.datastreamService.connectionProfile.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.datastreamService.connectionProfile.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceConnectionProfile).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.datastreamService.privateConnection.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.privateConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.privateConnection.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.privateConnection.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.datastreamService.privateConnection.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.privateConnection.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetError()).ToDataRes(types.Dict)
+	},
+	"gcp.project.datastreamService.privateConnection.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.datastreamService.privateConnection.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetSubnet()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.privateConnection.routes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetRoutes()).ToDataRes(types.Array(types.Resource("gcp.project.datastreamService.route")))
+	},
+	"gcp.project.datastreamService.privateConnection.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.datastreamService.privateConnection.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServicePrivateConnection).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.datastreamService.route.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceRoute).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.route.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceRoute).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.route.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceRoute).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.route.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceRoute).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.datastreamService.route.privateConnectionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceRoute).GetPrivateConnectionName()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.route.destinationAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceRoute).GetDestinationAddress()).ToDataRes(types.String)
+	},
+	"gcp.project.datastreamService.route.destinationPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceRoute).GetDestinationPort()).ToDataRes(types.Int)
+	},
+	"gcp.project.datastreamService.route.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceRoute).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.datastreamService.route.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDatastreamServiceRoute).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.memorystoreService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreService).GetInstances()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.instance")))
+	},
+	"gcp.project.memorystoreService.backupCollections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreService).GetBackupCollections()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.backupCollection")))
+	},
+	"gcp.project.memorystoreService.instance.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.memorystoreService.instance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.stateInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetStateInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memorystoreService.instance.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetMode()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetNodeType()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.replicaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetReplicaCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.instance.shardCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetShardCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.instance.nodeSizeGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetNodeSizeGb()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.instance.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.engineConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetEngineConfigs()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.memorystoreService.instance.authorizationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetAuthorizationMode()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.serverCaMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetServerCaMode()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.serverCaPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetServerCaPool()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.transitEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetTransitEncryptionMode()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.memorystoreService.instance.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetEncryptionInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memorystoreService.instance.persistenceConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetPersistenceConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memorystoreService.instance.maintenancePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetMaintenancePolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memorystoreService.instance.maintenanceSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetMaintenanceSchedule()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memorystoreService.instance.maintenanceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetMaintenanceVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.effectiveMaintenanceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetEffectiveMaintenanceVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.availableMaintenanceVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetAvailableMaintenanceVersions()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.memorystoreService.instance.deletionProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetDeletionProtectionEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.memorystoreService.instance.allowFewerZonesDeployment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetAllowFewerZonesDeployment()).ToDataRes(types.Bool)
+	},
+	"gcp.project.memorystoreService.instance.zoneDistributionConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetZoneDistributionConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memorystoreService.instance.crossInstanceReplicationConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetCrossInstanceReplicationConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memorystoreService.instance.automatedBackupConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetAutomatedBackupConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memorystoreService.instance.backupCollection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetBackupCollection()).ToDataRes(types.Resource("gcp.project.memorystoreService.backupCollection"))
+	},
+	"gcp.project.memorystoreService.instance.satisfiesPzi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetSatisfiesPzi()).ToDataRes(types.Bool)
+	},
+	"gcp.project.memorystoreService.instance.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetSatisfiesPzs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetDiscoveryEndpoints()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.instance.discoveryEndpoint")))
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetPscAutoConnections()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.instance.pscAutoConnection")))
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetPscAttachmentDetails()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.instance.pscAttachmentDetail")))
+	},
+	"gcp.project.memorystoreService.instance.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetEndpoints()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memorystoreService.instance.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.memorystoreService.instance.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).GetAddress()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).GetPort()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.pscConnectionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetPscConnectionId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetIpAddress()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetPort()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.consumerProjectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetConsumerProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.serviceAttachment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetServiceAttachment()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.forwardingRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetForwardingRule()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.connectionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetConnectionType()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.pscConnectionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetPscConnectionStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetail.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetail.instanceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).GetInstanceName()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetail.serviceAttachment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).GetServiceAttachment()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetail.connectionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).GetConnectionType()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backupCollection.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backupCollection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backupCollection.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backupCollection.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetInstance()).ToDataRes(types.Resource("gcp.project.memorystoreService.instance"))
+	},
+	"gcp.project.memorystoreService.backupCollection.instanceUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetInstanceUid()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backupCollection.totalBackupCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetTotalBackupCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.backupCollection.totalBackupSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetTotalBackupSizeBytes()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.backupCollection.lastBackupTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetLastBackupTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.memorystoreService.backupCollection.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.memorystoreService.backupCollection.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.memorystoreService.backupCollection.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupCollection).GetBackups()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.backup")))
+	},
+	"gcp.project.memorystoreService.backup.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetInstance()).ToDataRes(types.Resource("gcp.project.memorystoreService.instance"))
+	},
+	"gcp.project.memorystoreService.backup.instanceUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetInstanceUid()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.nodeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetNodeType()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.replicaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetReplicaCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.backup.shardCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetShardCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.backup.totalSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetTotalSizeBytes()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.backup.backupType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetBackupType()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetEncryptionInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.memorystoreService.backup.backupFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetBackupFiles()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.backup.backupFile")))
+	},
+	"gcp.project.memorystoreService.backup.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.memorystoreService.backup.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackup).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.memorystoreService.backup.backupFile.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.backupFile.backupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).GetBackupName()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.backupFile.fileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).GetFileName()).ToDataRes(types.String)
+	},
+	"gcp.project.memorystoreService.backup.backupFile.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"gcp.project.memorystoreService.backup.backupFile.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).GetCreateTime()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -12386,6 +13072,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.sourceRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).SourceRepositories, ok = plugin.RawToTValue[*mqlGcpProjectSourceRepositoriesService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcache": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Memcache, ok = plugin.RawToTValue[*mqlGcpProjectMemcacheService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Datastream, ok = plugin.RawToTValue[*mqlGcpProjectDatastreamService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Memorystore, ok = plugin.RawToTValue[*mqlGcpProjectMemorystoreService](v.Value, v.Error)
 		return
 	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25680,6 +26378,858 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig).WebhookId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.memcacheService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memcacheService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheService).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memcacheService.instance.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.nodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).NodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.nodeCpuCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).NodeCpuCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.nodeMemorySizeMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).NodeMemorySizeMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.memcacheVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).MemcacheVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.memcacheFullVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).MemcacheFullVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).Parameters, ok = plugin.RawToTValue[*mqlGcpProjectMemcacheServiceInstanceParameters](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.discoveryEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).DiscoveryEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.instanceMessages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).InstanceMessages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.maintenancePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).MaintenancePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.maintenanceSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).MaintenanceSchedule, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstance).Nodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNode).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNode).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNode).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.nodeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNode).NodeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNode).Zone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNode).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNode).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNode).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNode).Parameters, ok = plugin.RawToTValue[*mqlGcpProjectMemcacheServiceInstanceNodeParameters](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.parameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memcacheService.instance.parameters.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceParameters).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.parameters.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceParameters).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.parameters.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceParameters).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.parameters.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceParameters).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.parameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.parameters.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.parameters.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.parameters.nodeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).NodeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.parameters.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memcacheService.instance.node.parameters.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemcacheServiceInstanceNodeParameters).Params, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.datastreamService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.streams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamService).Streams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamService).ConnectionProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamService).PrivateConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.datastreamService.stream.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).Source, ok = plugin.RawToTValue[*mqlGcpProjectDatastreamServiceConnectionProfile](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).Destination, ok = plugin.RawToTValue[*mqlGcpProjectDatastreamServiceConnectionProfile](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.sourceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).SourceConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.destinationConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).DestinationConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.backfillStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).BackfillStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.errors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.satisfiesPzi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStream).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.error.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStreamError).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.datastreamService.stream.error.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStreamError).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.error.streamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStreamError).StreamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.error.errorUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStreamError).ErrorUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.error.reason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStreamError).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.error.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStreamError).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.error.errorTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStreamError).ErrorTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.stream.error.details": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceStreamError).Details, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.profileType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).ProfileType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).Profile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).Bucket, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucket](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.connectivityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).ConnectivityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.connectivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).Connectivity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.privateConnection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).PrivateConnection, ok = plugin.RawToTValue[*mqlGcpProjectDatastreamServicePrivateConnection](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.satisfiesPzi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.connectionProfile.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceConnectionProfile).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).Error, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).Subnet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).Routes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.privateConnection.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServicePrivateConnection).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.route.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceRoute).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.datastreamService.route.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceRoute).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.route.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceRoute).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.route.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceRoute).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.route.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceRoute).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.route.privateConnectionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceRoute).PrivateConnectionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.route.destinationAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceRoute).DestinationAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.route.destinationPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceRoute).DestinationPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.route.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceRoute).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.datastreamService.route.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDatastreamServiceRoute).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memorystoreService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreService).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreService).BackupCollections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memorystoreService.instance.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.stateInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).StateInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.replicaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).ReplicaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.shardCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).ShardCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.nodeSizeGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).NodeSizeGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.engineConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).EngineConfigs, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.authorizationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).AuthorizationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.serverCaMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).ServerCaMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.serverCaPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).ServerCaPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.transitEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).TransitEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.encryptionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).EncryptionInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.persistenceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).PersistenceConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.maintenancePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).MaintenancePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.maintenanceSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).MaintenanceSchedule, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.maintenanceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).MaintenanceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.effectiveMaintenanceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).EffectiveMaintenanceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.availableMaintenanceVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).AvailableMaintenanceVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.deletionProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).DeletionProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.allowFewerZonesDeployment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).AllowFewerZonesDeployment, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.zoneDistributionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).ZoneDistributionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.crossInstanceReplicationConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).CrossInstanceReplicationConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.automatedBackupConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).AutomatedBackupConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.backupCollection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).BackupCollection, ok = plugin.RawToTValue[*mqlGcpProjectMemorystoreServiceBackupCollection](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.satisfiesPzi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).SatisfiesPzi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.satisfiesPzs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).DiscoveryEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).PscAutoConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).PscAttachmentDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).Endpoints, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstance).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.discoveryEndpoint.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.pscConnectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).PscConnectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.consumerProjectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).ConsumerProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.serviceAttachment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).ServiceAttachment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.forwardingRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).ForwardingRule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.connectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).ConnectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAutoConnection.pscConnectionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).PscConnectionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetail.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetail.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetail.serviceAttachment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).ServiceAttachment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.instance.pscAttachmentDetail.connectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).ConnectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).Instance, ok = plugin.RawToTValue[*mqlGcpProjectMemorystoreServiceInstance](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.instanceUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).InstanceUid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.totalBackupCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).TotalBackupCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.totalBackupSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).TotalBackupSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.lastBackupTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).LastBackupTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backupCollection.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupCollection).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memorystoreService.backup.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).Instance, ok = plugin.RawToTValue[*mqlGcpProjectMemorystoreServiceInstance](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.instanceUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).InstanceUid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.nodeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).NodeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.replicaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).ReplicaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.shardCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).ShardCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.totalSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).TotalSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.backupType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).BackupType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.encryptionInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).EncryptionInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.backupFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).BackupFiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackup).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.backupFile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.memorystoreService.backup.backupFile.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.backupFile.backupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).BackupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.backupFile.fileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).FileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.backupFile.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.memorystoreService.backup.backupFile.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -27503,6 +29053,9 @@ type mqlGcpProject struct {
 	CloudBuild             plugin.TValue[*mqlGcpProjectCloudBuildService]
 	Iap                    plugin.TValue[*mqlGcpProjectIapService]
 	SourceRepositories     plugin.TValue[*mqlGcpProjectSourceRepositoriesService]
+	Memcache               plugin.TValue[*mqlGcpProjectMemcacheService]
+	Datastream             plugin.TValue[*mqlGcpProjectDatastreamService]
+	Memorystore            plugin.TValue[*mqlGcpProjectMemorystoreService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -28423,6 +29976,54 @@ func (c *mqlGcpProject) GetSourceRepositories() *plugin.TValue[*mqlGcpProjectSou
 		}
 
 		return c.sourceRepositories()
+	})
+}
+
+func (c *mqlGcpProject) GetMemcache() *plugin.TValue[*mqlGcpProjectMemcacheService] {
+	return plugin.GetOrCompute[*mqlGcpProjectMemcacheService](&c.Memcache, func() (*mqlGcpProjectMemcacheService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "memcache")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectMemcacheService), nil
+			}
+		}
+
+		return c.memcache()
+	})
+}
+
+func (c *mqlGcpProject) GetDatastream() *plugin.TValue[*mqlGcpProjectDatastreamService] {
+	return plugin.GetOrCompute[*mqlGcpProjectDatastreamService](&c.Datastream, func() (*mqlGcpProjectDatastreamService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "datastream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDatastreamService), nil
+			}
+		}
+
+		return c.datastream()
+	})
+}
+
+func (c *mqlGcpProject) GetMemorystore() *plugin.TValue[*mqlGcpProjectMemorystoreService] {
+	return plugin.GetOrCompute[*mqlGcpProjectMemorystoreService](&c.Memorystore, func() (*mqlGcpProjectMemorystoreService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "memorystore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectMemorystoreService), nil
+			}
+		}
+
+		return c.memorystore()
 	})
 }
 
@@ -59864,4 +61465,2074 @@ func (c *mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig) GetDeployKeyId(
 
 func (c *mqlGcpProjectSourceRepositoriesServiceRepoMirrorConfig) GetWebhookId() *plugin.TValue[string] {
 	return &c.WebhookId
+}
+
+// mqlGcpProjectMemcacheService for the gcp.project.memcacheService resource
+type mqlGcpProjectMemcacheService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMemcacheServiceInternal it will be used here
+	ProjectId plugin.TValue[string]
+	Instances plugin.TValue[[]any]
+}
+
+// createGcpProjectMemcacheService creates a new instance of this resource
+func createGcpProjectMemcacheService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemcacheService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memcacheService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemcacheService) MqlName() string {
+	return "gcp.project.memcacheService"
+}
+
+func (c *mqlGcpProjectMemcacheService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemcacheService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemcacheService) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memcacheService", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+// mqlGcpProjectMemcacheServiceInstance for the gcp.project.memcacheService.instance resource
+type mqlGcpProjectMemcacheServiceInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectMemcacheServiceInstanceInternal
+	ProjectId           plugin.TValue[string]
+	Name                plugin.TValue[string]
+	DisplayName         plugin.TValue[string]
+	Labels              plugin.TValue[map[string]any]
+	Network             plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	Zones               plugin.TValue[[]any]
+	NodeCount           plugin.TValue[int64]
+	NodeCpuCount        plugin.TValue[int64]
+	NodeMemorySizeMb    plugin.TValue[int64]
+	MemcacheVersion     plugin.TValue[string]
+	MemcacheFullVersion plugin.TValue[string]
+	Parameters          plugin.TValue[*mqlGcpProjectMemcacheServiceInstanceParameters]
+	State               plugin.TValue[string]
+	DiscoveryEndpoint   plugin.TValue[string]
+	InstanceMessages    plugin.TValue[[]any]
+	MaintenancePolicy   plugin.TValue[any]
+	MaintenanceSchedule plugin.TValue[any]
+	CreateTime          plugin.TValue[*time.Time]
+	UpdateTime          plugin.TValue[*time.Time]
+	Nodes               plugin.TValue[[]any]
+}
+
+// createGcpProjectMemcacheServiceInstance creates a new instance of this resource
+func createGcpProjectMemcacheServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemcacheServiceInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memcacheService.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) MqlName() string {
+	return "gcp.project.memcacheService.instance"
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memcacheService.instance", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetZones() *plugin.TValue[[]any] {
+	return &c.Zones
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetNodeCount() *plugin.TValue[int64] {
+	return &c.NodeCount
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetNodeCpuCount() *plugin.TValue[int64] {
+	return &c.NodeCpuCount
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetNodeMemorySizeMb() *plugin.TValue[int64] {
+	return &c.NodeMemorySizeMb
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetMemcacheVersion() *plugin.TValue[string] {
+	return &c.MemcacheVersion
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetMemcacheFullVersion() *plugin.TValue[string] {
+	return &c.MemcacheFullVersion
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetParameters() *plugin.TValue[*mqlGcpProjectMemcacheServiceInstanceParameters] {
+	return &c.Parameters
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetDiscoveryEndpoint() *plugin.TValue[string] {
+	return &c.DiscoveryEndpoint
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetInstanceMessages() *plugin.TValue[[]any] {
+	return &c.InstanceMessages
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetMaintenancePolicy() *plugin.TValue[any] {
+	return &c.MaintenancePolicy
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetMaintenanceSchedule() *plugin.TValue[any] {
+	return &c.MaintenanceSchedule
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstance) GetNodes() *plugin.TValue[[]any] {
+	return &c.Nodes
+}
+
+// mqlGcpProjectMemcacheServiceInstanceNode for the gcp.project.memcacheService.instance.node resource
+type mqlGcpProjectMemcacheServiceInstanceNode struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMemcacheServiceInstanceNodeInternal it will be used here
+	ProjectId    plugin.TValue[string]
+	InstanceName plugin.TValue[string]
+	NodeId       plugin.TValue[string]
+	Zone         plugin.TValue[string]
+	Host         plugin.TValue[string]
+	Port         plugin.TValue[int64]
+	State        plugin.TValue[string]
+	Parameters   plugin.TValue[*mqlGcpProjectMemcacheServiceInstanceNodeParameters]
+}
+
+// createGcpProjectMemcacheServiceInstanceNode creates a new instance of this resource
+func createGcpProjectMemcacheServiceInstanceNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemcacheServiceInstanceNode{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memcacheService.instance.node", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNode) MqlName() string {
+	return "gcp.project.memcacheService.instance.node"
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNode) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNode) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNode) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNode) GetNodeId() *plugin.TValue[string] {
+	return &c.NodeId
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNode) GetZone() *plugin.TValue[string] {
+	return &c.Zone
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNode) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNode) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNode) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNode) GetParameters() *plugin.TValue[*mqlGcpProjectMemcacheServiceInstanceNodeParameters] {
+	return &c.Parameters
+}
+
+// mqlGcpProjectMemcacheServiceInstanceParameters for the gcp.project.memcacheService.instance.parameters resource
+type mqlGcpProjectMemcacheServiceInstanceParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMemcacheServiceInstanceParametersInternal it will be used here
+	ProjectId    plugin.TValue[string]
+	InstanceName plugin.TValue[string]
+	Id           plugin.TValue[string]
+	Params       plugin.TValue[map[string]any]
+}
+
+// createGcpProjectMemcacheServiceInstanceParameters creates a new instance of this resource
+func createGcpProjectMemcacheServiceInstanceParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemcacheServiceInstanceParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memcacheService.instance.parameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceParameters) MqlName() string {
+	return "gcp.project.memcacheService.instance.parameters"
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceParameters) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceParameters) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceParameters) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceParameters) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlGcpProjectMemcacheServiceInstanceNodeParameters for the gcp.project.memcacheService.instance.node.parameters resource
+type mqlGcpProjectMemcacheServiceInstanceNodeParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMemcacheServiceInstanceNodeParametersInternal it will be used here
+	ProjectId    plugin.TValue[string]
+	InstanceName plugin.TValue[string]
+	NodeId       plugin.TValue[string]
+	Id           plugin.TValue[string]
+	Params       plugin.TValue[map[string]any]
+}
+
+// createGcpProjectMemcacheServiceInstanceNodeParameters creates a new instance of this resource
+func createGcpProjectMemcacheServiceInstanceNodeParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemcacheServiceInstanceNodeParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memcacheService.instance.node.parameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNodeParameters) MqlName() string {
+	return "gcp.project.memcacheService.instance.node.parameters"
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNodeParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNodeParameters) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNodeParameters) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNodeParameters) GetNodeId() *plugin.TValue[string] {
+	return &c.NodeId
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNodeParameters) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectMemcacheServiceInstanceNodeParameters) GetParams() *plugin.TValue[map[string]any] {
+	return &c.Params
+}
+
+// mqlGcpProjectDatastreamService for the gcp.project.datastreamService resource
+type mqlGcpProjectDatastreamService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDatastreamServiceInternal it will be used here
+	ProjectId          plugin.TValue[string]
+	Streams            plugin.TValue[[]any]
+	ConnectionProfiles plugin.TValue[[]any]
+	PrivateConnections plugin.TValue[[]any]
+}
+
+// createGcpProjectDatastreamService creates a new instance of this resource
+func createGcpProjectDatastreamService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDatastreamService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.datastreamService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDatastreamService) MqlName() string {
+	return "gcp.project.datastreamService"
+}
+
+func (c *mqlGcpProjectDatastreamService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDatastreamService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDatastreamService) GetStreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Streams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.datastreamService", c.__id, "streams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.streams()
+	})
+}
+
+func (c *mqlGcpProjectDatastreamService) GetConnectionProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConnectionProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.datastreamService", c.__id, "connectionProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connectionProfiles()
+	})
+}
+
+func (c *mqlGcpProjectDatastreamService) GetPrivateConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.datastreamService", c.__id, "privateConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateConnections()
+	})
+}
+
+// mqlGcpProjectDatastreamServiceStream for the gcp.project.datastreamService.stream resource
+type mqlGcpProjectDatastreamServiceStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectDatastreamServiceStreamInternal
+	ProjectId         plugin.TValue[string]
+	Name              plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	Labels            plugin.TValue[map[string]any]
+	State             plugin.TValue[string]
+	KmsKey            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	Source            plugin.TValue[*mqlGcpProjectDatastreamServiceConnectionProfile]
+	Destination       plugin.TValue[*mqlGcpProjectDatastreamServiceConnectionProfile]
+	SourceConfig      plugin.TValue[any]
+	DestinationConfig plugin.TValue[any]
+	BackfillStrategy  plugin.TValue[string]
+	Errors            plugin.TValue[[]any]
+	SatisfiesPzi      plugin.TValue[bool]
+	SatisfiesPzs      plugin.TValue[bool]
+	CreateTime        plugin.TValue[*time.Time]
+	UpdateTime        plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDatastreamServiceStream creates a new instance of this resource
+func createGcpProjectDatastreamServiceStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDatastreamServiceStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.datastreamService.stream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) MqlName() string {
+	return "gcp.project.datastreamService.stream"
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.datastreamService.stream", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetSource() *plugin.TValue[*mqlGcpProjectDatastreamServiceConnectionProfile] {
+	return plugin.GetOrCompute[*mqlGcpProjectDatastreamServiceConnectionProfile](&c.Source, func() (*mqlGcpProjectDatastreamServiceConnectionProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.datastreamService.stream", c.__id, "source")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDatastreamServiceConnectionProfile), nil
+			}
+		}
+
+		return c.source()
+	})
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetDestination() *plugin.TValue[*mqlGcpProjectDatastreamServiceConnectionProfile] {
+	return plugin.GetOrCompute[*mqlGcpProjectDatastreamServiceConnectionProfile](&c.Destination, func() (*mqlGcpProjectDatastreamServiceConnectionProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.datastreamService.stream", c.__id, "destination")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDatastreamServiceConnectionProfile), nil
+			}
+		}
+
+		return c.destination()
+	})
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetSourceConfig() *plugin.TValue[any] {
+	return &c.SourceConfig
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetDestinationConfig() *plugin.TValue[any] {
+	return &c.DestinationConfig
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetBackfillStrategy() *plugin.TValue[string] {
+	return &c.BackfillStrategy
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetErrors() *plugin.TValue[[]any] {
+	return &c.Errors
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetSatisfiesPzi() *plugin.TValue[bool] {
+	return &c.SatisfiesPzi
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetSatisfiesPzs() *plugin.TValue[bool] {
+	return &c.SatisfiesPzs
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectDatastreamServiceStream) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectDatastreamServiceStreamError for the gcp.project.datastreamService.stream.error resource
+type mqlGcpProjectDatastreamServiceStreamError struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDatastreamServiceStreamErrorInternal it will be used here
+	ProjectId  plugin.TValue[string]
+	StreamName plugin.TValue[string]
+	ErrorUuid  plugin.TValue[string]
+	Reason     plugin.TValue[string]
+	Message    plugin.TValue[string]
+	ErrorTime  plugin.TValue[*time.Time]
+	Details    plugin.TValue[map[string]any]
+}
+
+// createGcpProjectDatastreamServiceStreamError creates a new instance of this resource
+func createGcpProjectDatastreamServiceStreamError(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDatastreamServiceStreamError{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.datastreamService.stream.error", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDatastreamServiceStreamError) MqlName() string {
+	return "gcp.project.datastreamService.stream.error"
+}
+
+func (c *mqlGcpProjectDatastreamServiceStreamError) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDatastreamServiceStreamError) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDatastreamServiceStreamError) GetStreamName() *plugin.TValue[string] {
+	return &c.StreamName
+}
+
+func (c *mqlGcpProjectDatastreamServiceStreamError) GetErrorUuid() *plugin.TValue[string] {
+	return &c.ErrorUuid
+}
+
+func (c *mqlGcpProjectDatastreamServiceStreamError) GetReason() *plugin.TValue[string] {
+	return &c.Reason
+}
+
+func (c *mqlGcpProjectDatastreamServiceStreamError) GetMessage() *plugin.TValue[string] {
+	return &c.Message
+}
+
+func (c *mqlGcpProjectDatastreamServiceStreamError) GetErrorTime() *plugin.TValue[*time.Time] {
+	return &c.ErrorTime
+}
+
+func (c *mqlGcpProjectDatastreamServiceStreamError) GetDetails() *plugin.TValue[map[string]any] {
+	return &c.Details
+}
+
+// mqlGcpProjectDatastreamServiceConnectionProfile for the gcp.project.datastreamService.connectionProfile resource
+type mqlGcpProjectDatastreamServiceConnectionProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectDatastreamServiceConnectionProfileInternal
+	ProjectId         plugin.TValue[string]
+	Name              plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	Labels            plugin.TValue[map[string]any]
+	ProfileType       plugin.TValue[string]
+	Profile           plugin.TValue[any]
+	Bucket            plugin.TValue[*mqlGcpProjectStorageServiceBucket]
+	ConnectivityType  plugin.TValue[string]
+	Connectivity      plugin.TValue[any]
+	PrivateConnection plugin.TValue[*mqlGcpProjectDatastreamServicePrivateConnection]
+	SatisfiesPzi      plugin.TValue[bool]
+	SatisfiesPzs      plugin.TValue[bool]
+	CreateTime        plugin.TValue[*time.Time]
+	UpdateTime        plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDatastreamServiceConnectionProfile creates a new instance of this resource
+func createGcpProjectDatastreamServiceConnectionProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDatastreamServiceConnectionProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.datastreamService.connectionProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) MqlName() string {
+	return "gcp.project.datastreamService.connectionProfile"
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetProfileType() *plugin.TValue[string] {
+	return &c.ProfileType
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetProfile() *plugin.TValue[any] {
+	return &c.Profile
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetBucket() *plugin.TValue[*mqlGcpProjectStorageServiceBucket] {
+	return plugin.GetOrCompute[*mqlGcpProjectStorageServiceBucket](&c.Bucket, func() (*mqlGcpProjectStorageServiceBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.datastreamService.connectionProfile", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectStorageServiceBucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetConnectivityType() *plugin.TValue[string] {
+	return &c.ConnectivityType
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetConnectivity() *plugin.TValue[any] {
+	return &c.Connectivity
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetPrivateConnection() *plugin.TValue[*mqlGcpProjectDatastreamServicePrivateConnection] {
+	return plugin.GetOrCompute[*mqlGcpProjectDatastreamServicePrivateConnection](&c.PrivateConnection, func() (*mqlGcpProjectDatastreamServicePrivateConnection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.datastreamService.connectionProfile", c.__id, "privateConnection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDatastreamServicePrivateConnection), nil
+			}
+		}
+
+		return c.privateConnection()
+	})
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetSatisfiesPzi() *plugin.TValue[bool] {
+	return &c.SatisfiesPzi
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetSatisfiesPzs() *plugin.TValue[bool] {
+	return &c.SatisfiesPzs
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectDatastreamServiceConnectionProfile) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectDatastreamServicePrivateConnection for the gcp.project.datastreamService.privateConnection resource
+type mqlGcpProjectDatastreamServicePrivateConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectDatastreamServicePrivateConnectionInternal
+	ProjectId   plugin.TValue[string]
+	Name        plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Labels      plugin.TValue[map[string]any]
+	State       plugin.TValue[string]
+	Error       plugin.TValue[any]
+	Network     plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	Subnet      plugin.TValue[string]
+	Routes      plugin.TValue[[]any]
+	CreateTime  plugin.TValue[*time.Time]
+	UpdateTime  plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDatastreamServicePrivateConnection creates a new instance of this resource
+func createGcpProjectDatastreamServicePrivateConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDatastreamServicePrivateConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.datastreamService.privateConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) MqlName() string {
+	return "gcp.project.datastreamService.privateConnection"
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetError() *plugin.TValue[any] {
+	return &c.Error
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.datastreamService.privateConnection", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetSubnet() *plugin.TValue[string] {
+	return &c.Subnet
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Routes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.datastreamService.privateConnection", c.__id, "routes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routes()
+	})
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectDatastreamServicePrivateConnection) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectDatastreamServiceRoute for the gcp.project.datastreamService.route resource
+type mqlGcpProjectDatastreamServiceRoute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDatastreamServiceRouteInternal it will be used here
+	ProjectId             plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	Labels                plugin.TValue[map[string]any]
+	PrivateConnectionName plugin.TValue[string]
+	DestinationAddress    plugin.TValue[string]
+	DestinationPort       plugin.TValue[int64]
+	CreateTime            plugin.TValue[*time.Time]
+	UpdateTime            plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDatastreamServiceRoute creates a new instance of this resource
+func createGcpProjectDatastreamServiceRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDatastreamServiceRoute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.datastreamService.route", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) MqlName() string {
+	return "gcp.project.datastreamService.route"
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) GetPrivateConnectionName() *plugin.TValue[string] {
+	return &c.PrivateConnectionName
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) GetDestinationAddress() *plugin.TValue[string] {
+	return &c.DestinationAddress
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) GetDestinationPort() *plugin.TValue[int64] {
+	return &c.DestinationPort
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectDatastreamServiceRoute) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectMemorystoreService for the gcp.project.memorystoreService resource
+type mqlGcpProjectMemorystoreService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMemorystoreServiceInternal it will be used here
+	ProjectId         plugin.TValue[string]
+	Instances         plugin.TValue[[]any]
+	BackupCollections plugin.TValue[[]any]
+}
+
+// createGcpProjectMemorystoreService creates a new instance of this resource
+func createGcpProjectMemorystoreService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemorystoreService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemorystoreService) MqlName() string {
+	return "gcp.project.memorystoreService"
+}
+
+func (c *mqlGcpProjectMemorystoreService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemorystoreService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreService) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+func (c *mqlGcpProjectMemorystoreService) GetBackupCollections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BackupCollections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService", c.__id, "backupCollections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backupCollections()
+	})
+}
+
+// mqlGcpProjectMemorystoreServiceInstance for the gcp.project.memorystoreService.instance resource
+type mqlGcpProjectMemorystoreServiceInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectMemorystoreServiceInstanceInternal
+	ProjectId                      plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Uid                            plugin.TValue[string]
+	Labels                         plugin.TValue[map[string]any]
+	State                          plugin.TValue[string]
+	StateInfo                      plugin.TValue[any]
+	Mode                           plugin.TValue[string]
+	NodeType                       plugin.TValue[string]
+	ReplicaCount                   plugin.TValue[int64]
+	ShardCount                     plugin.TValue[int64]
+	NodeSizeGb                     plugin.TValue[int64]
+	EngineVersion                  plugin.TValue[string]
+	EngineConfigs                  plugin.TValue[map[string]any]
+	AuthorizationMode              plugin.TValue[string]
+	ServerCaMode                   plugin.TValue[string]
+	ServerCaPool                   plugin.TValue[string]
+	TransitEncryptionMode          plugin.TValue[string]
+	KmsKey                         plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	EncryptionInfo                 plugin.TValue[any]
+	PersistenceConfig              plugin.TValue[any]
+	MaintenancePolicy              plugin.TValue[any]
+	MaintenanceSchedule            plugin.TValue[any]
+	MaintenanceVersion             plugin.TValue[string]
+	EffectiveMaintenanceVersion    plugin.TValue[string]
+	AvailableMaintenanceVersions   plugin.TValue[[]any]
+	DeletionProtectionEnabled      plugin.TValue[bool]
+	AllowFewerZonesDeployment      plugin.TValue[bool]
+	ZoneDistributionConfig         plugin.TValue[any]
+	CrossInstanceReplicationConfig plugin.TValue[any]
+	AutomatedBackupConfig          plugin.TValue[any]
+	BackupCollection               plugin.TValue[*mqlGcpProjectMemorystoreServiceBackupCollection]
+	SatisfiesPzi                   plugin.TValue[bool]
+	SatisfiesPzs                   plugin.TValue[bool]
+	DiscoveryEndpoints             plugin.TValue[[]any]
+	PscAutoConnections             plugin.TValue[[]any]
+	PscAttachmentDetails           plugin.TValue[[]any]
+	Endpoints                      plugin.TValue[any]
+	CreateTime                     plugin.TValue[*time.Time]
+	UpdateTime                     plugin.TValue[*time.Time]
+}
+
+// createGcpProjectMemorystoreServiceInstance creates a new instance of this resource
+func createGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemorystoreServiceInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) MqlName() string {
+	return "gcp.project.memorystoreService.instance"
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetStateInfo() *plugin.TValue[any] {
+	return &c.StateInfo
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetReplicaCount() *plugin.TValue[int64] {
+	return &c.ReplicaCount
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetShardCount() *plugin.TValue[int64] {
+	return &c.ShardCount
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetNodeSizeGb() *plugin.TValue[int64] {
+	return &c.NodeSizeGb
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetEngineConfigs() *plugin.TValue[map[string]any] {
+	return &c.EngineConfigs
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetAuthorizationMode() *plugin.TValue[string] {
+	return &c.AuthorizationMode
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetServerCaMode() *plugin.TValue[string] {
+	return &c.ServerCaMode
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetServerCaPool() *plugin.TValue[string] {
+	return &c.ServerCaPool
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetTransitEncryptionMode() *plugin.TValue[string] {
+	return &c.TransitEncryptionMode
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.instance", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetEncryptionInfo() *plugin.TValue[any] {
+	return &c.EncryptionInfo
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetPersistenceConfig() *plugin.TValue[any] {
+	return &c.PersistenceConfig
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetMaintenancePolicy() *plugin.TValue[any] {
+	return &c.MaintenancePolicy
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetMaintenanceSchedule() *plugin.TValue[any] {
+	return &c.MaintenanceSchedule
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetMaintenanceVersion() *plugin.TValue[string] {
+	return &c.MaintenanceVersion
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetEffectiveMaintenanceVersion() *plugin.TValue[string] {
+	return &c.EffectiveMaintenanceVersion
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetAvailableMaintenanceVersions() *plugin.TValue[[]any] {
+	return &c.AvailableMaintenanceVersions
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetDeletionProtectionEnabled() *plugin.TValue[bool] {
+	return &c.DeletionProtectionEnabled
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetAllowFewerZonesDeployment() *plugin.TValue[bool] {
+	return &c.AllowFewerZonesDeployment
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetZoneDistributionConfig() *plugin.TValue[any] {
+	return &c.ZoneDistributionConfig
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetCrossInstanceReplicationConfig() *plugin.TValue[any] {
+	return &c.CrossInstanceReplicationConfig
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetAutomatedBackupConfig() *plugin.TValue[any] {
+	return &c.AutomatedBackupConfig
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetBackupCollection() *plugin.TValue[*mqlGcpProjectMemorystoreServiceBackupCollection] {
+	return plugin.GetOrCompute[*mqlGcpProjectMemorystoreServiceBackupCollection](&c.BackupCollection, func() (*mqlGcpProjectMemorystoreServiceBackupCollection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.instance", c.__id, "backupCollection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectMemorystoreServiceBackupCollection), nil
+			}
+		}
+
+		return c.backupCollection()
+	})
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetSatisfiesPzi() *plugin.TValue[bool] {
+	return &c.SatisfiesPzi
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetSatisfiesPzs() *plugin.TValue[bool] {
+	return &c.SatisfiesPzs
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetDiscoveryEndpoints() *plugin.TValue[[]any] {
+	return &c.DiscoveryEndpoints
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetPscAutoConnections() *plugin.TValue[[]any] {
+	return &c.PscAutoConnections
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetPscAttachmentDetails() *plugin.TValue[[]any] {
+	return &c.PscAttachmentDetails
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetEndpoints() *plugin.TValue[any] {
+	return &c.Endpoints
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint for the gcp.project.memorystoreService.instance.discoveryEndpoint resource
+type mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpointInternal
+	ProjectId    plugin.TValue[string]
+	InstanceName plugin.TValue[string]
+	Address      plugin.TValue[string]
+	Port         plugin.TValue[int64]
+	Network      plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+}
+
+// createGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint creates a new instance of this resource
+func createGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.instance.discoveryEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) MqlName() string {
+	return "gcp.project.memorystoreService.instance.discoveryEndpoint"
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.instance.discoveryEndpoint", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+// mqlGcpProjectMemorystoreServiceInstancePscAutoConnection for the gcp.project.memorystoreService.instance.pscAutoConnection resource
+type mqlGcpProjectMemorystoreServiceInstancePscAutoConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectMemorystoreServiceInstancePscAutoConnectionInternal
+	ProjectId           plugin.TValue[string]
+	InstanceName        plugin.TValue[string]
+	PscConnectionId     plugin.TValue[string]
+	IpAddress           plugin.TValue[string]
+	Port                plugin.TValue[int64]
+	Network             plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	ConsumerProjectId   plugin.TValue[string]
+	ServiceAttachment   plugin.TValue[string]
+	ForwardingRule      plugin.TValue[string]
+	ConnectionType      plugin.TValue[string]
+	PscConnectionStatus plugin.TValue[string]
+}
+
+// createGcpProjectMemorystoreServiceInstancePscAutoConnection creates a new instance of this resource
+func createGcpProjectMemorystoreServiceInstancePscAutoConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemorystoreServiceInstancePscAutoConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.instance.pscAutoConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) MqlName() string {
+	return "gcp.project.memorystoreService.instance.pscAutoConnection"
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetPscConnectionId() *plugin.TValue[string] {
+	return &c.PscConnectionId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.instance.pscAutoConnection", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetConsumerProjectId() *plugin.TValue[string] {
+	return &c.ConsumerProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetServiceAttachment() *plugin.TValue[string] {
+	return &c.ServiceAttachment
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetForwardingRule() *plugin.TValue[string] {
+	return &c.ForwardingRule
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetConnectionType() *plugin.TValue[string] {
+	return &c.ConnectionType
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetPscConnectionStatus() *plugin.TValue[string] {
+	return &c.PscConnectionStatus
+}
+
+// mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail for the gcp.project.memorystoreService.instance.pscAttachmentDetail resource
+type mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetailInternal it will be used here
+	ProjectId         plugin.TValue[string]
+	InstanceName      plugin.TValue[string]
+	ServiceAttachment plugin.TValue[string]
+	ConnectionType    plugin.TValue[string]
+}
+
+// createGcpProjectMemorystoreServiceInstancePscAttachmentDetail creates a new instance of this resource
+func createGcpProjectMemorystoreServiceInstancePscAttachmentDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.instance.pscAttachmentDetail", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail) MqlName() string {
+	return "gcp.project.memorystoreService.instance.pscAttachmentDetail"
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail) GetInstanceName() *plugin.TValue[string] {
+	return &c.InstanceName
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail) GetServiceAttachment() *plugin.TValue[string] {
+	return &c.ServiceAttachment
+}
+
+func (c *mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail) GetConnectionType() *plugin.TValue[string] {
+	return &c.ConnectionType
+}
+
+// mqlGcpProjectMemorystoreServiceBackupCollection for the gcp.project.memorystoreService.backupCollection resource
+type mqlGcpProjectMemorystoreServiceBackupCollection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectMemorystoreServiceBackupCollectionInternal
+	ProjectId            plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Uid                  plugin.TValue[string]
+	Instance             plugin.TValue[*mqlGcpProjectMemorystoreServiceInstance]
+	InstanceUid          plugin.TValue[string]
+	TotalBackupCount     plugin.TValue[int64]
+	TotalBackupSizeBytes plugin.TValue[int64]
+	LastBackupTime       plugin.TValue[*time.Time]
+	KmsKey               plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	CreateTime           plugin.TValue[*time.Time]
+	Backups              plugin.TValue[[]any]
+}
+
+// createGcpProjectMemorystoreServiceBackupCollection creates a new instance of this resource
+func createGcpProjectMemorystoreServiceBackupCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemorystoreServiceBackupCollection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.backupCollection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) MqlName() string {
+	return "gcp.project.memorystoreService.backupCollection"
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetInstance() *plugin.TValue[*mqlGcpProjectMemorystoreServiceInstance] {
+	return plugin.GetOrCompute[*mqlGcpProjectMemorystoreServiceInstance](&c.Instance, func() (*mqlGcpProjectMemorystoreServiceInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.backupCollection", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectMemorystoreServiceInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetInstanceUid() *plugin.TValue[string] {
+	return &c.InstanceUid
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetTotalBackupCount() *plugin.TValue[int64] {
+	return &c.TotalBackupCount
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetTotalBackupSizeBytes() *plugin.TValue[int64] {
+	return &c.TotalBackupSizeBytes
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetLastBackupTime() *plugin.TValue[*time.Time] {
+	return &c.LastBackupTime
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.backupCollection", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupCollection) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.backupCollection", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+// mqlGcpProjectMemorystoreServiceBackup for the gcp.project.memorystoreService.backup resource
+type mqlGcpProjectMemorystoreServiceBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectMemorystoreServiceBackupInternal
+	ProjectId      plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Uid            plugin.TValue[string]
+	Instance       plugin.TValue[*mqlGcpProjectMemorystoreServiceInstance]
+	InstanceUid    plugin.TValue[string]
+	EngineVersion  plugin.TValue[string]
+	NodeType       plugin.TValue[string]
+	ReplicaCount   plugin.TValue[int64]
+	ShardCount     plugin.TValue[int64]
+	TotalSizeBytes plugin.TValue[int64]
+	BackupType     plugin.TValue[string]
+	State          plugin.TValue[string]
+	EncryptionInfo plugin.TValue[any]
+	BackupFiles    plugin.TValue[[]any]
+	CreateTime     plugin.TValue[*time.Time]
+	ExpireTime     plugin.TValue[*time.Time]
+}
+
+// createGcpProjectMemorystoreServiceBackup creates a new instance of this resource
+func createGcpProjectMemorystoreServiceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemorystoreServiceBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) MqlName() string {
+	return "gcp.project.memorystoreService.backup"
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetInstance() *plugin.TValue[*mqlGcpProjectMemorystoreServiceInstance] {
+	return plugin.GetOrCompute[*mqlGcpProjectMemorystoreServiceInstance](&c.Instance, func() (*mqlGcpProjectMemorystoreServiceInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.backup", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectMemorystoreServiceInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetInstanceUid() *plugin.TValue[string] {
+	return &c.InstanceUid
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetNodeType() *plugin.TValue[string] {
+	return &c.NodeType
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetReplicaCount() *plugin.TValue[int64] {
+	return &c.ReplicaCount
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetShardCount() *plugin.TValue[int64] {
+	return &c.ShardCount
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetTotalSizeBytes() *plugin.TValue[int64] {
+	return &c.TotalSizeBytes
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetBackupType() *plugin.TValue[string] {
+	return &c.BackupType
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetEncryptionInfo() *plugin.TValue[any] {
+	return &c.EncryptionInfo
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetBackupFiles() *plugin.TValue[[]any] {
+	return &c.BackupFiles
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackup) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+// mqlGcpProjectMemorystoreServiceBackupBackupFile for the gcp.project.memorystoreService.backup.backupFile resource
+type mqlGcpProjectMemorystoreServiceBackupBackupFile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectMemorystoreServiceBackupBackupFileInternal it will be used here
+	ProjectId  plugin.TValue[string]
+	BackupName plugin.TValue[string]
+	FileName   plugin.TValue[string]
+	SizeBytes  plugin.TValue[int64]
+	CreateTime plugin.TValue[*time.Time]
+}
+
+// createGcpProjectMemorystoreServiceBackupBackupFile creates a new instance of this resource
+func createGcpProjectMemorystoreServiceBackupBackupFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectMemorystoreServiceBackupBackupFile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.backup.backupFile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupBackupFile) MqlName() string {
+	return "gcp.project.memorystoreService.backup.backupFile"
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupBackupFile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupBackupFile) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupBackupFile) GetBackupName() *plugin.TValue[string] {
+	return &c.BackupName
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupBackupFile) GetFileName() *plugin.TValue[string] {
+	return &c.FileName
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupBackupFile) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlGcpProjectMemorystoreServiceBackupBackupFile) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
 }

@@ -16,6 +16,7 @@ alamofire
 alloydb
 alpn
 antispam
+aof
 apparmor
 appslot
 armcontainerregistry
@@ -108,6 +109,7 @@ dast
 databricks
 datapath
 datasource
+datastream
 DATAUSER
 DBFS
 DBRS
@@ -288,6 +290,7 @@ mcp
 mcr
 meid
 memorydb
+memorystore
 messagestoragepolicy
 metageneration
 mfs
@@ -347,6 +350,7 @@ Odr
 oid
 oidc
 ondemand
+oneof
 ontap
 opcplc
 openai

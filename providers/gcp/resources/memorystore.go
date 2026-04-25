@@ -1,0 +1,770 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	memorystore "cloud.google.com/go/memorystore/apiv1"
+	"cloud.google.com/go/memorystore/apiv1/memorystorepb"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
+)
+
+func (g *mqlGcpProject) memorystore() (*mqlGcpProjectMemorystoreService, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.memorystoreService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectMemorystoreService), nil
+}
+
+func initGcpProjectMemorystoreService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	args["projectId"] = llx.StringData(conn.ResourceID())
+	return args, nil, nil
+}
+
+func (g *mqlGcpProjectMemorystoreService) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/memorystoreService", g.ProjectId.Data), nil
+}
+
+// =====================
+// Instance
+// =====================
+
+func (g *mqlGcpProjectMemorystoreServiceInstance) id() (string, error) {
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return g.Name.Data, nil
+}
+
+type mqlGcpProjectMemorystoreServiceInstanceInternal struct {
+	cacheKmsKey           string
+	cacheBackupCollection string
+}
+
+func (g *mqlGcpProjectMemorystoreServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKey == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKey)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectMemorystoreServiceInstance) backupCollection() (*mqlGcpProjectMemorystoreServiceBackupCollection, error) {
+	if g.cacheBackupCollection == "" {
+		g.BackupCollection.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.memorystoreService.backupCollection",
+		map[string]*llx.RawData{"name": llx.StringData(g.cacheBackupCollection)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectMemorystoreServiceBackupCollection), nil
+}
+
+func (g *mqlGcpProjectMemorystoreService) instances() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(memorystore.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListInstances(ctx, &memorystorepb.ListInstancesRequest{
+		Parent: fmt.Sprintf("projects/%s/locations/-", projectId),
+	})
+
+	var res []any
+	for {
+		inst, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		mqlInst, err := mqlMemorystoreInstanceFromProto(g.MqlRuntime, projectId, inst)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInst)
+	}
+
+	return res, nil
+}
+
+func mqlMemorystoreInstanceFromProto(runtime *plugin.Runtime, projectId string, inst *memorystorepb.Instance) (*mqlGcpProjectMemorystoreServiceInstance, error) {
+	stateInfo, err := protoToDict(inst.StateInfo)
+	if err != nil {
+		return nil, err
+	}
+	persistenceConfig, err := protoToDict(inst.PersistenceConfig)
+	if err != nil {
+		return nil, err
+	}
+	maintenancePolicy, err := protoToDict(inst.MaintenancePolicy)
+	if err != nil {
+		return nil, err
+	}
+	maintenanceSchedule, err := protoToDict(inst.MaintenanceSchedule)
+	if err != nil {
+		return nil, err
+	}
+	encryptionInfo, err := protoToDict(inst.EncryptionInfo)
+	if err != nil {
+		return nil, err
+	}
+	zoneDistConfig, err := protoToDict(inst.ZoneDistributionConfig)
+	if err != nil {
+		return nil, err
+	}
+	crossRepl, err := protoToDict(inst.CrossInstanceReplicationConfig)
+	if err != nil {
+		return nil, err
+	}
+	autoBackup, err := protoToDict(inst.AutomatedBackupConfig)
+	if err != nil {
+		return nil, err
+	}
+	endpoints := make([]any, 0, len(inst.Endpoints))
+	for _, ep := range inst.Endpoints {
+		d, err := protoToDict(ep)
+		if err != nil {
+			return nil, err
+		}
+		endpoints = append(endpoints, d)
+	}
+
+	var nodeSizeGb int64
+	if inst.NodeConfig != nil {
+		nodeSizeGb = int64(inst.NodeConfig.SizeGb)
+	}
+
+	var replicaCount int64
+	if inst.ReplicaCount != nil {
+		replicaCount = int64(*inst.ReplicaCount)
+	}
+	var deletionProtection bool
+	if inst.DeletionProtectionEnabled != nil {
+		deletionProtection = *inst.DeletionProtectionEnabled
+	}
+
+	kmsKey := ""
+	if inst.KmsKey != nil {
+		kmsKey = *inst.KmsKey
+	}
+	backupCollection := ""
+	if inst.BackupCollection != nil {
+		backupCollection = *inst.BackupCollection
+	}
+	serverCaPool := ""
+	if inst.ServerCaPool != nil {
+		serverCaPool = *inst.ServerCaPool
+	}
+	serverCaMode := ""
+	if inst.ServerCaMode != nil {
+		serverCaMode = inst.ServerCaMode.String()
+	}
+
+	disc, err := buildMemorystoreDiscoveryEndpoints(runtime, projectId, inst.Name, inst.DiscoveryEndpoints)
+	if err != nil {
+		return nil, err
+	}
+	pscAuto, err := buildMemorystorePscAutoConnections(runtime, projectId, inst.Name, inst.PscAutoConnections)
+	if err != nil {
+		return nil, err
+	}
+	pscAttach, err := buildMemorystorePscAttachmentDetails(runtime, projectId, inst.Name, inst.PscAttachmentDetails)
+	if err != nil {
+		return nil, err
+	}
+
+	var createTime, updateTime *llx.RawData
+	if inst.CreateTime != nil {
+		createTime = llx.TimeData(inst.CreateTime.AsTime())
+	} else {
+		createTime = llx.NilData
+	}
+	if inst.UpdateTime != nil {
+		updateTime = llx.TimeData(inst.UpdateTime.AsTime())
+	} else {
+		updateTime = llx.NilData
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.memorystoreService.instance", map[string]*llx.RawData{
+		"projectId":                      llx.StringData(projectId),
+		"name":                           llx.StringData(inst.Name),
+		"uid":                            llx.StringData(inst.Uid),
+		"labels":                         llx.MapData(convert.MapToInterfaceMap(inst.Labels), types.String),
+		"state":                          llx.StringData(inst.State.String()),
+		"stateInfo":                      llx.DictData(stateInfo),
+		"mode":                           llx.StringData(inst.Mode.String()),
+		"nodeType":                       llx.StringData(inst.NodeType.String()),
+		"replicaCount":                   llx.IntData(replicaCount),
+		"shardCount":                     llx.IntData(int64(inst.ShardCount)),
+		"nodeSizeGb":                     llx.IntData(nodeSizeGb),
+		"engineVersion":                  llx.StringData(inst.EngineVersion),
+		"engineConfigs":                  llx.MapData(convert.MapToInterfaceMap(inst.EngineConfigs), types.String),
+		"authorizationMode":              llx.StringData(inst.AuthorizationMode.String()),
+		"serverCaMode":                   llx.StringData(serverCaMode),
+		"serverCaPool":                   llx.StringData(serverCaPool),
+		"transitEncryptionMode":          llx.StringData(inst.TransitEncryptionMode.String()),
+		"encryptionInfo":                 llx.DictData(encryptionInfo),
+		"persistenceConfig":              llx.DictData(persistenceConfig),
+		"maintenancePolicy":              llx.DictData(maintenancePolicy),
+		"maintenanceSchedule":            llx.DictData(maintenanceSchedule),
+		"maintenanceVersion":             llx.StringDataPtr(inst.MaintenanceVersion),
+		"effectiveMaintenanceVersion":    llx.StringDataPtr(inst.EffectiveMaintenanceVersion),
+		"availableMaintenanceVersions":   llx.ArrayData(convert.SliceAnyToInterface(inst.AvailableMaintenanceVersions), types.String),
+		"deletionProtectionEnabled":      llx.BoolData(deletionProtection),
+		"allowFewerZonesDeployment":      llx.BoolData(inst.AllowFewerZonesDeployment),
+		"zoneDistributionConfig":         llx.DictData(zoneDistConfig),
+		"crossInstanceReplicationConfig": llx.DictData(crossRepl),
+		"automatedBackupConfig":          llx.DictData(autoBackup),
+		"satisfiesPzi":                   llx.BoolDataPtr(inst.SatisfiesPzi),
+		"satisfiesPzs":                   llx.BoolDataPtr(inst.SatisfiesPzs),
+		"discoveryEndpoints":             llx.ArrayData(disc, types.Resource("gcp.project.memorystoreService.instance.discoveryEndpoint")),
+		"pscAutoConnections":             llx.ArrayData(pscAuto, types.Resource("gcp.project.memorystoreService.instance.pscAutoConnection")),
+		"pscAttachmentDetails":           llx.ArrayData(pscAttach, types.Resource("gcp.project.memorystoreService.instance.pscAttachmentDetail")),
+		"endpoints":                      llx.DictData(endpoints),
+		"createTime":                     createTime,
+		"updateTime":                     updateTime,
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlInst := res.(*mqlGcpProjectMemorystoreServiceInstance)
+	mqlInst.cacheKmsKey = kmsKey
+	mqlInst.cacheBackupCollection = backupCollection
+	return mqlInst, nil
+}
+
+func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(memorystore.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	inst, err := client.GetInstance(ctx, &memorystorepb.GetInstanceRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := mqlMemorystoreInstanceFromProto(runtime, conn.ResourceID(), inst)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
+// =====================
+// DiscoveryEndpoint
+// =====================
+
+func (g *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) id() (string, error) {
+	if g.InstanceName.Error != nil {
+		return "", g.InstanceName.Error
+	}
+	return fmt.Sprintf("%s/discoveryEndpoints/%s:%d", g.InstanceName.Data, g.Address.Data, g.Port.Data), nil
+}
+
+type mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpointInternal struct {
+	cacheNetwork string
+}
+
+func (g *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.cacheNetwork == "" {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return getNetworkByUrl(g.cacheNetwork, g.MqlRuntime)
+}
+
+func buildMemorystoreDiscoveryEndpoints(runtime *plugin.Runtime, projectId, instanceName string, eps []*memorystorepb.DiscoveryEndpoint) ([]any, error) {
+	res := make([]any, 0, len(eps))
+	for _, ep := range eps {
+		if ep == nil {
+			continue
+		}
+		mqlEp, err := CreateResource(runtime, "gcp.project.memorystoreService.instance.discoveryEndpoint", map[string]*llx.RawData{
+			"projectId":    llx.StringData(projectId),
+			"instanceName": llx.StringData(instanceName),
+			"address":      llx.StringData(ep.Address),
+			"port":         llx.IntData(int64(ep.Port)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		obj := mqlEp.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint)
+		obj.cacheNetwork = ep.Network
+		res = append(res, obj)
+	}
+	return res, nil
+}
+
+// =====================
+// PscAutoConnection
+// =====================
+
+func (g *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) id() (string, error) {
+	if g.InstanceName.Error != nil {
+		return "", g.InstanceName.Error
+	}
+	if g.PscConnectionId.Error != nil {
+		return "", g.PscConnectionId.Error
+	}
+	return fmt.Sprintf("%s/pscAutoConnections/%s", g.InstanceName.Data, g.PscConnectionId.Data), nil
+}
+
+type mqlGcpProjectMemorystoreServiceInstancePscAutoConnectionInternal struct {
+	cacheNetwork string
+}
+
+func (g *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) network() (*mqlGcpProjectComputeServiceNetwork, error) {
+	if g.cacheNetwork == "" {
+		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return getNetworkByUrl(g.cacheNetwork, g.MqlRuntime)
+}
+
+// memorystorePscAutoConnectionPort returns the exposed port carried by a
+// PscAutoConnection's `ports` oneof, or 0 if unset.
+func memorystorePscAutoConnectionPort(c *memorystorepb.PscAutoConnection) int64 {
+	if c == nil {
+		return 0
+	}
+	if pp, ok := c.Ports.(*memorystorepb.PscAutoConnection_Port); ok && pp != nil {
+		return int64(pp.Port)
+	}
+	return 0
+}
+
+func buildMemorystorePscAutoConnections(runtime *plugin.Runtime, projectId, instanceName string, conns []*memorystorepb.PscAutoConnection) ([]any, error) {
+	res := make([]any, 0, len(conns))
+	for _, c := range conns {
+		if c == nil {
+			continue
+		}
+		port := memorystorePscAutoConnectionPort(c)
+		mqlConn, err := CreateResource(runtime, "gcp.project.memorystoreService.instance.pscAutoConnection", map[string]*llx.RawData{
+			"projectId":           llx.StringData(projectId),
+			"instanceName":        llx.StringData(instanceName),
+			"pscConnectionId":     llx.StringData(c.PscConnectionId),
+			"ipAddress":           llx.StringData(c.IpAddress),
+			"port":                llx.IntData(port),
+			"consumerProjectId":   llx.StringData(c.ProjectId),
+			"serviceAttachment":   llx.StringData(c.ServiceAttachment),
+			"forwardingRule":      llx.StringData(c.ForwardingRule),
+			"connectionType":      llx.StringData(c.ConnectionType.String()),
+			"pscConnectionStatus": llx.StringData(c.PscConnectionStatus.String()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		obj := mqlConn.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection)
+		obj.cacheNetwork = c.Network
+		res = append(res, obj)
+	}
+	return res, nil
+}
+
+// =====================
+// PscAttachmentDetail
+// =====================
+
+func (g *mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail) id() (string, error) {
+	if g.InstanceName.Error != nil {
+		return "", g.InstanceName.Error
+	}
+	if g.ServiceAttachment.Error != nil {
+		return "", g.ServiceAttachment.Error
+	}
+	return fmt.Sprintf("%s/pscAttachmentDetails/%s", g.InstanceName.Data, g.ServiceAttachment.Data), nil
+}
+
+func buildMemorystorePscAttachmentDetails(runtime *plugin.Runtime, projectId, instanceName string, details []*memorystorepb.PscAttachmentDetail) ([]any, error) {
+	res := make([]any, 0, len(details))
+	for _, d := range details {
+		if d == nil {
+			continue
+		}
+		mqlDetail, err := CreateResource(runtime, "gcp.project.memorystoreService.instance.pscAttachmentDetail", map[string]*llx.RawData{
+			"projectId":         llx.StringData(projectId),
+			"instanceName":      llx.StringData(instanceName),
+			"serviceAttachment": llx.StringData(d.ServiceAttachment),
+			"connectionType":    llx.StringData(d.ConnectionType.String()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlDetail)
+	}
+	return res, nil
+}
+
+// =====================
+// BackupCollection
+// =====================
+
+func (g *mqlGcpProjectMemorystoreServiceBackupCollection) id() (string, error) {
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return g.Name.Data, nil
+}
+
+type mqlGcpProjectMemorystoreServiceBackupCollectionInternal struct {
+	cacheInstance string
+	cacheKmsKey   string
+}
+
+func (g *mqlGcpProjectMemorystoreServiceBackupCollection) instance() (*mqlGcpProjectMemorystoreServiceInstance, error) {
+	if g.cacheInstance == "" {
+		g.Instance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.memorystoreService.instance",
+		map[string]*llx.RawData{"name": llx.StringData(g.cacheInstance)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectMemorystoreServiceInstance), nil
+}
+
+func (g *mqlGcpProjectMemorystoreServiceBackupCollection) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKey == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKey)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectMemorystoreService) backupCollections() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(memorystore.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListBackupCollections(ctx, &memorystorepb.ListBackupCollectionsRequest{
+		Parent: fmt.Sprintf("projects/%s/locations/-", projectId),
+	})
+
+	var res []any
+	for {
+		bc, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		mqlBc, err := mqlMemorystoreBackupCollectionFromProto(g.MqlRuntime, projectId, bc)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBc)
+	}
+
+	return res, nil
+}
+
+func mqlMemorystoreBackupCollectionFromProto(runtime *plugin.Runtime, projectId string, bc *memorystorepb.BackupCollection) (*mqlGcpProjectMemorystoreServiceBackupCollection, error) {
+	var createTime, lastBackupTime *llx.RawData
+	if bc.CreateTime != nil {
+		createTime = llx.TimeData(bc.CreateTime.AsTime())
+	} else {
+		createTime = llx.NilData
+	}
+	if bc.LastBackupTime != nil {
+		lastBackupTime = llx.TimeData(bc.LastBackupTime.AsTime())
+	} else {
+		lastBackupTime = llx.NilData
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.memorystoreService.backupCollection", map[string]*llx.RawData{
+		"projectId":            llx.StringData(projectId),
+		"name":                 llx.StringData(bc.Name),
+		"uid":                  llx.StringData(bc.Uid),
+		"instanceUid":          llx.StringData(bc.InstanceUid),
+		"totalBackupCount":     llx.IntData(bc.TotalBackupCount),
+		"totalBackupSizeBytes": llx.IntData(bc.TotalBackupSizeBytes),
+		"lastBackupTime":       lastBackupTime,
+		"createTime":           createTime,
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlBc := res.(*mqlGcpProjectMemorystoreServiceBackupCollection)
+	mqlBc.cacheInstance = bc.Instance
+	mqlBc.cacheKmsKey = bc.KmsKey
+	return mqlBc, nil
+}
+
+func initGcpProjectMemorystoreServiceBackupCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	nameRaw := args["name"]
+	if nameRaw == nil {
+		return args, nil, nil
+	}
+	name := nameRaw.Value.(string)
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(memorystore.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	bc, err := client.GetBackupCollection(ctx, &memorystorepb.GetBackupCollectionRequest{Name: name})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := mqlMemorystoreBackupCollectionFromProto(runtime, conn.ResourceID(), bc)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
+// =====================
+// Backup
+// =====================
+
+func (g *mqlGcpProjectMemorystoreServiceBackup) id() (string, error) {
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return g.Name.Data, nil
+}
+
+type mqlGcpProjectMemorystoreServiceBackupInternal struct {
+	cacheInstance string
+}
+
+func (g *mqlGcpProjectMemorystoreServiceBackup) instance() (*mqlGcpProjectMemorystoreServiceInstance, error) {
+	if g.cacheInstance == "" {
+		g.Instance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.memorystoreService.instance",
+		map[string]*llx.RawData{"name": llx.StringData(g.cacheInstance)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectMemorystoreServiceInstance), nil
+}
+
+func (g *mqlGcpProjectMemorystoreServiceBackupCollection) backups() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	parent := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(memorystore.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := memorystore.NewRESTClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	it := client.ListBackups(ctx, &memorystorepb.ListBackupsRequest{
+		Parent: parent,
+	})
+
+	var res []any
+	for {
+		backup, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		encryptionInfo, err := protoToDict(backup.EncryptionInfo)
+		if err != nil {
+			return nil, err
+		}
+		backupFiles, err := buildMemorystoreBackupFiles(g.MqlRuntime, projectId, backup.Name, backup.BackupFiles)
+		if err != nil {
+			return nil, err
+		}
+
+		var createTime, expireTime *llx.RawData
+		if backup.CreateTime != nil {
+			createTime = llx.TimeData(backup.CreateTime.AsTime())
+		} else {
+			createTime = llx.NilData
+		}
+		if backup.ExpireTime != nil {
+			expireTime = llx.TimeData(backup.ExpireTime.AsTime())
+		} else {
+			expireTime = llx.NilData
+		}
+
+		mqlBackup, err := CreateResource(g.MqlRuntime, "gcp.project.memorystoreService.backup", map[string]*llx.RawData{
+			"projectId":      llx.StringData(projectId),
+			"name":           llx.StringData(backup.Name),
+			"uid":            llx.StringData(backup.Uid),
+			"instanceUid":    llx.StringData(backup.InstanceUid),
+			"engineVersion":  llx.StringData(backup.EngineVersion),
+			"nodeType":       llx.StringData(backup.NodeType.String()),
+			"replicaCount":   llx.IntData(int64(backup.ReplicaCount)),
+			"shardCount":     llx.IntData(int64(backup.ShardCount)),
+			"totalSizeBytes": llx.IntData(backup.TotalSizeBytes),
+			"backupType":     llx.StringData(backup.BackupType.String()),
+			"state":          llx.StringData(backup.State.String()),
+			"encryptionInfo": llx.DictData(encryptionInfo),
+			"backupFiles":    llx.ArrayData(backupFiles, types.Resource("gcp.project.memorystoreService.backup.backupFile")),
+			"createTime":     createTime,
+			"expireTime":     expireTime,
+		})
+		if err != nil {
+			return nil, err
+		}
+		obj := mqlBackup.(*mqlGcpProjectMemorystoreServiceBackup)
+		obj.cacheInstance = backup.Instance
+		res = append(res, obj)
+	}
+
+	return res, nil
+}
+
+// =====================
+// BackupFile
+// =====================
+
+func (g *mqlGcpProjectMemorystoreServiceBackupBackupFile) id() (string, error) {
+	if g.BackupName.Error != nil {
+		return "", g.BackupName.Error
+	}
+	if g.FileName.Error != nil {
+		return "", g.FileName.Error
+	}
+	return fmt.Sprintf("%s/backupFiles/%s", g.BackupName.Data, g.FileName.Data), nil
+}
+
+func buildMemorystoreBackupFiles(runtime *plugin.Runtime, projectId, backupName string, files []*memorystorepb.BackupFile) ([]any, error) {
+	res := make([]any, 0, len(files))
+	for _, f := range files {
+		if f == nil {
+			continue
+		}
+		var createTime *llx.RawData
+		if f.CreateTime != nil {
+			createTime = llx.TimeData(f.CreateTime.AsTime())
+		} else {
+			createTime = llx.NilData
+		}
+		mqlFile, err := CreateResource(runtime, "gcp.project.memorystoreService.backup.backupFile", map[string]*llx.RawData{
+			"projectId":  llx.StringData(projectId),
+			"backupName": llx.StringData(backupName),
+			"fileName":   llx.StringData(f.FileName),
+			"sizeBytes":  llx.IntData(f.SizeBytes),
+			"createTime": createTime,
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFile)
+	}
+	return res, nil
+}

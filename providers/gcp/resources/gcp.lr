@@ -27,6 +27,9 @@ alias gcp.artifactregistry = gcp.project.artifactRegistryService
 alias gcp.backupdr = gcp.project.backupdrService
 alias gcp.vertexai = gcp.project.vertexaiService
 alias gcp.modelarmor = gcp.project.modelArmorService
+alias gcp.memcache = gcp.project.memcacheService
+alias gcp.datastream = gcp.project.datastreamService
+alias gcp.memorystore = gcp.project.memorystoreService
 
 // Google Cloud (GCP) organization
 gcp.organization @defaults("name") {
@@ -535,6 +538,12 @@ gcp.project @defaults("name number") {
   iap() gcp.project.iapService
   // GCP Cloud Source Repositories resources
   sourceRepositories() gcp.project.sourceRepositoriesService
+  // GCP Memorystore for Memcached resources
+  memcache() gcp.project.memcacheService
+  // GCP Datastream resources
+  datastream() gcp.project.datastreamService
+  // GCP Memorystore (unified Valkey/Redis) resources
+  memorystore() gcp.project.memorystoreService
 }
 
 // Google Cloud (GCP) service
@@ -7865,4 +7874,468 @@ private gcp.project.sourceRepositoriesService.repo.mirrorConfig @defaults("url")
   deployKeyId string
   // Webhook ID for push notifications
   webhookId string
+}
+
+// Google Cloud (GCP) Memorystore for Memcached
+private gcp.project.memcacheService {
+  // Project ID
+  projectId string
+  // List of Memcached instances in the project
+  instances() []gcp.project.memcacheService.instance
+}
+
+// Google Cloud (GCP) Memcached instance
+private gcp.project.memcacheService.instance @defaults("name state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/P/locations/L/instances/I)
+  name string
+  // User-provided display name
+  displayName string
+  // Resource labels
+  labels map[string]string
+  // Authorized VPC network
+  network() gcp.project.computeService.network
+  // Zones in which Memcached nodes are placed
+  zones []string
+  // Number of nodes in the instance
+  nodeCount int
+  // Per-node CPU count
+  nodeCpuCount int
+  // Per-node memory size in MiB
+  nodeMemorySizeMb int
+  // Memcached major version
+  memcacheVersion string
+  // Memcached full version string
+  memcacheFullVersion string
+  // Effective Memcached parameter set
+  parameters gcp.project.memcacheService.instance.parameters
+  // Current state of the instance
+  state string
+  // Endpoint for Memcached Auto Discovery
+  discoveryEndpoint string
+  // Instance-level annotation messages (each: code, message)
+  instanceMessages []dict
+  // Maintenance policy of the instance
+  maintenancePolicy dict
+  // Upcoming or last maintenance schedule
+  maintenanceSchedule dict
+  // Creation time
+  createTime time
+  // Last update time
+  updateTime time
+  // Memcached nodes in the instance
+  nodes []gcp.project.memcacheService.instance.node
+}
+
+// Google Cloud (GCP) Memcached node
+private gcp.project.memcacheService.instance.node @defaults("nodeId zone state") {
+  // Project ID
+  projectId string
+  // Parent instance resource name
+  instanceName string
+  // Stable node identifier (e.g. node-a-1)
+  nodeId string
+  // Zone where this node is located
+  zone string
+  // Hostname or IP for this node
+  host string
+  // Port for this node
+  port int
+  // Current state of the node
+  state string
+  // Effective Memcached parameter set for this node
+  parameters gcp.project.memcacheService.instance.node.parameters
+}
+
+// Google Cloud (GCP) Memcached parameter set
+private gcp.project.memcacheService.instance.parameters @defaults("id") {
+  // Project ID
+  projectId string
+  // Parent instance resource name
+  instanceName string
+  // Parameter set identifier
+  id string
+  // Parameter values
+  params map[string]string
+}
+
+// Google Cloud (GCP) Memcached node parameter set
+private gcp.project.memcacheService.instance.node.parameters @defaults("id") {
+  // Project ID
+  projectId string
+  // Parent instance resource name
+  instanceName string
+  // Parent node identifier
+  nodeId string
+  // Parameter set identifier
+  id string
+  // Parameter values
+  params map[string]string
+}
+
+// Google Cloud (GCP) Datastream
+private gcp.project.datastreamService {
+  // Project ID
+  projectId string
+  // List of Datastream streams in the project
+  streams() []gcp.project.datastreamService.stream
+  // List of Datastream connection profiles in the project
+  connectionProfiles() []gcp.project.datastreamService.connectionProfile
+  // List of Datastream private connections in the project
+  privateConnections() []gcp.project.datastreamService.privateConnection
+}
+
+// Google Cloud (GCP) Datastream stream
+private gcp.project.datastreamService.stream @defaults("name state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/P/locations/L/streams/S)
+  name string
+  // User-provided display name
+  displayName string
+  // Resource labels
+  labels map[string]string
+  // Current state of the stream
+  state string
+  // Customer-managed KMS key (CMEK) used to encrypt the stream
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Source connection profile
+  source() gcp.project.datastreamService.connectionProfile
+  // Destination connection profile
+  destination() gcp.project.datastreamService.connectionProfile
+  // Source configuration variant (oneof: mysqlSourceConfig | postgresqlSourceConfig | oracleSourceConfig | sqlServerSourceConfig | mongodbSourceConfig | salesforceSourceConfig)
+  sourceConfig dict
+  // Destination configuration variant (oneof: bigqueryDestinationConfig | gcsDestinationConfig)
+  destinationConfig dict
+  // Backfill strategy: "all" (auto-backfill all objects) or "none" (manual)
+  backfillStrategy string
+  // Errors raised by the stream
+  errors []gcp.project.datastreamService.stream.error
+  // Whether the resource satisfies PZI
+  satisfiesPzi bool
+  // Whether the resource satisfies PZS
+  satisfiesPzs bool
+  // Creation time
+  createTime time
+  // Last update time
+  updateTime time
+}
+
+// Google Cloud (GCP) Datastream stream error
+private gcp.project.datastreamService.stream.error @defaults("errorUuid reason") {
+  // Project ID
+  projectId string
+  // Parent stream resource name
+  streamName string
+  // Unique error identifier
+  errorUuid string
+  // Error reason code
+  reason string
+  // Human-readable error message
+  message string
+  // Time the error occurred
+  errorTime time
+  // Additional details about the error
+  details map[string]string
+}
+
+// Google Cloud (GCP) Datastream connection profile
+private gcp.project.datastreamService.connectionProfile @defaults("name profileType") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/P/locations/L/connectionProfiles/C)
+  name string
+  // User-provided display name
+  displayName string
+  // Resource labels
+  labels map[string]string
+  // Profile type: mysql | postgresql | oracle | sqlserver | mongodb | bigquery | gcs | salesforce
+  profileType string
+  // Profile-specific configuration (variant determined by profileType)
+  profile dict
+  // Resolved GCS bucket (only when profileType == "gcs")
+  bucket() gcp.project.storageService.bucket
+  // Connectivity type: forwardSsh | privateConnectivity | staticServiceIp
+  connectivityType string
+  // Connectivity-specific configuration (variant determined by connectivityType)
+  connectivity dict
+  // Resolved private connection (only when connectivityType == "privateConnectivity")
+  privateConnection() gcp.project.datastreamService.privateConnection
+  // Whether the resource satisfies PZI
+  satisfiesPzi bool
+  // Whether the resource satisfies PZS
+  satisfiesPzs bool
+  // Creation time
+  createTime time
+  // Last update time
+  updateTime time
+}
+
+// Google Cloud (GCP) Datastream private connection (VPC peering for source connectivity)
+private gcp.project.datastreamService.privateConnection @defaults("name state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/P/locations/L/privateConnections/P)
+  name string
+  // User-provided display name
+  displayName string
+  // Resource labels
+  labels map[string]string
+  // Current state of the private connection
+  state string
+  // Last error (reason, message, errorTime, details)
+  error dict
+  // Peered VPC network
+  network() gcp.project.computeService.network
+  // CIDR subnet used for the peered network
+  subnet string
+  // Routes inside this private connection
+  routes() []gcp.project.datastreamService.route
+  // Creation time
+  createTime time
+  // Last update time
+  updateTime time
+}
+
+// Google Cloud (GCP) Datastream route inside a private connection
+private gcp.project.datastreamService.route @defaults("name destinationAddress") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/P/locations/L/privateConnections/P/routes/R)
+  name string
+  // User-provided display name
+  displayName string
+  // Resource labels
+  labels map[string]string
+  // Parent private connection resource name
+  privateConnectionName string
+  // Destination address (host or IP)
+  destinationAddress string
+  // Destination port (0 if not specified)
+  destinationPort int
+  // Creation time
+  createTime time
+  // Last update time
+  updateTime time
+}
+
+// Google Cloud (GCP) Memorystore (unified Valkey/Redis)
+private gcp.project.memorystoreService {
+  // Project ID
+  projectId string
+  // List of Memorystore instances in the project
+  instances() []gcp.project.memorystoreService.instance
+  // List of Memorystore backup collections in the project
+  backupCollections() []gcp.project.memorystoreService.backupCollection
+}
+
+// Google Cloud (GCP) Memorystore instance (Valkey or Redis)
+private gcp.project.memorystoreService.instance @defaults("name state mode") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/P/locations/L/instances/I)
+  name string
+  // System-assigned unique identifier
+  uid string
+  // Resource labels
+  labels map[string]string
+  // Current state of the instance
+  state string
+  // Additional state info (info, updateInfo)
+  stateInfo dict
+  // Deployment mode: STANDALONE | CLUSTER | CLUSTER_DISABLED
+  mode string
+  // Hardware node type
+  nodeType string
+  // Number of replica nodes per shard
+  replicaCount int
+  // Number of shards
+  shardCount int
+  // Per-node memory size in GiB
+  nodeSizeGb int
+  // Engine version (e.g. valkey-7.5, redis-7.2)
+  engineVersion string
+  // Engine config parameters (e.g. maxmemory-policy)
+  engineConfigs map[string]string
+  // Authorization mode: AUTH_DISABLED | IAM_AUTH
+  authorizationMode string
+  // Server CA certificate authority mode
+  serverCaMode string
+  // Server CA pool resource name
+  serverCaPool string
+  // In-transit encryption mode: TRANSIT_ENCRYPTION_DISABLED | SERVER_AUTHENTICATION
+  transitEncryptionMode string
+  // Customer-managed KMS key (CMEK)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Encryption info (encryptionType, kmsKeyVersions, kmsKeyPrimaryState, lastUpdateTime)
+  encryptionInfo dict
+  // Persistence configuration (mode + rdbConfig | aofConfig)
+  persistenceConfig dict
+  // Maintenance policy (weeklyMaintenanceWindow)
+  maintenancePolicy dict
+  // Upcoming or last maintenance schedule
+  maintenanceSchedule dict
+  // Maintenance version
+  maintenanceVersion string
+  // Currently effective maintenance version
+  effectiveMaintenanceVersion string
+  // Available maintenance versions to upgrade to
+  availableMaintenanceVersions []string
+  // Whether deletion protection is enabled
+  deletionProtectionEnabled bool
+  // Whether deployment with fewer zones than requested is allowed
+  allowFewerZonesDeployment bool
+  // Zone distribution configuration (mode, zone)
+  zoneDistributionConfig dict
+  // Cross-instance replication configuration
+  crossInstanceReplicationConfig dict
+  // Automated backup configuration (automatedBackupMode, retention, fixedFrequencySchedule)
+  automatedBackupConfig dict
+  // Backup collection associated with this instance
+  backupCollection() gcp.project.memorystoreService.backupCollection
+  // Whether the resource satisfies PZI
+  satisfiesPzi bool
+  // Whether the resource satisfies PZS
+  satisfiesPzs bool
+  // Discovery endpoints exposed by the instance
+  discoveryEndpoints []gcp.project.memorystoreService.instance.discoveryEndpoint
+  // Auto-established Private Service Connect connections
+  pscAutoConnections []gcp.project.memorystoreService.instance.pscAutoConnection
+  // Per-endpoint PSC attachment details
+  pscAttachmentDetails []gcp.project.memorystoreService.instance.pscAttachmentDetail
+  // Instance access endpoints (each contains a list of connections)
+  endpoints dict
+  // Creation time
+  createTime time
+  // Last update time
+  updateTime time
+}
+
+// Google Cloud (GCP) Memorystore instance discovery endpoint
+private gcp.project.memorystoreService.instance.discoveryEndpoint @defaults("address port") {
+  // Project ID
+  projectId string
+  // Parent instance resource name
+  instanceName string
+  // IP or hostname of the endpoint
+  address string
+  // Port of the endpoint
+  port int
+  // VPC network the endpoint is attached to
+  network() gcp.project.computeService.network
+}
+
+// Google Cloud (GCP) Memorystore instance PSC auto-connection
+private gcp.project.memorystoreService.instance.pscAutoConnection @defaults("pscConnectionId ipAddress") {
+  // Project ID
+  projectId string
+  // Parent instance resource name
+  instanceName string
+  // PSC connection identifier
+  pscConnectionId string
+  // Reserved IP address
+  ipAddress string
+  // Exposed endpoint port (Primary/Reader/Discovery)
+  port int
+  // Consumer VPC network
+  network() gcp.project.computeService.network
+  // Consumer project ID
+  consumerProjectId string
+  // Service attachment resource name
+  serviceAttachment string
+  // Forwarding rule resource name
+  forwardingRule string
+  // Connection type: PRIVATE_SERVICE_CONNECT | PUBLIC_ENDPOINT
+  connectionType string
+  // PSC connection status: ACTIVE | INACTIVE | FAILED
+  pscConnectionStatus string
+}
+
+// Google Cloud (GCP) Memorystore instance PSC attachment detail
+private gcp.project.memorystoreService.instance.pscAttachmentDetail @defaults("serviceAttachment") {
+  // Project ID
+  projectId string
+  // Parent instance resource name
+  instanceName string
+  // Service attachment resource name
+  serviceAttachment string
+  // Connection type: PRIVATE_SERVICE_CONNECT | PUBLIC_ENDPOINT
+  connectionType string
+}
+
+// Google Cloud (GCP) Memorystore backup collection
+private gcp.project.memorystoreService.backupCollection @defaults("name") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/P/locations/L/backupCollections/B)
+  name string
+  // System-assigned unique identifier
+  uid string
+  // Source instance resource name
+  instance() gcp.project.memorystoreService.instance
+  // Source instance UID
+  instanceUid string
+  // Total number of backups in this collection
+  totalBackupCount int
+  // Total stored bytes for backups in this collection
+  totalBackupSizeBytes int
+  // Last backup time
+  lastBackupTime time
+  // Customer-managed KMS key (CMEK) used to encrypt backups
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Creation time
+  createTime time
+  // Backups within this collection
+  backups() []gcp.project.memorystoreService.backup
+}
+
+// Google Cloud (GCP) Memorystore backup
+private gcp.project.memorystoreService.backup @defaults("name state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/P/locations/L/backupCollections/B/backups/X)
+  name string
+  // System-assigned unique identifier
+  uid string
+  // Source instance resource name
+  instance() gcp.project.memorystoreService.instance
+  // Source instance UID
+  instanceUid string
+  // Engine version at backup time (e.g. valkey-7.5)
+  engineVersion string
+  // Node type at backup time
+  nodeType string
+  // Replica count at backup time
+  replicaCount int
+  // Shard count at backup time
+  shardCount int
+  // Total backup size in bytes
+  totalSizeBytes int
+  // Backup type: ON_DEMAND | AUTOMATED
+  backupType string
+  // Current state of the backup
+  state string
+  // Encryption info dict (encryptionType, kmsKeyVersions, kmsKeyPrimaryState)
+  encryptionInfo dict
+  // Component backup files
+  backupFiles []gcp.project.memorystoreService.backup.backupFile
+  // Creation time
+  createTime time
+  // Expiration time
+  expireTime time
+}
+
+// Google Cloud (GCP) Memorystore backup file
+private gcp.project.memorystoreService.backup.backupFile @defaults("fileName sizeBytes") {
+  // Project ID
+  projectId string
+  // Parent backup resource name
+  backupName string
+  // File name within the backup
+  fileName string
+  // File size in bytes
+  sizeBytes int
+  // File creation time
+  createTime time
 }
