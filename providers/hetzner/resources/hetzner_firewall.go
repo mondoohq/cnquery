@@ -64,28 +64,25 @@ func newMqlHetznerFirewall(runtime *plugin.Runtime, fw *hcloud.Firewall) (*mqlHe
 		rules = append(rules, entry)
 	}
 
-	appliedTo := make([]any, 0, len(fw.AppliedTo))
 	var serverIDs []int64
+	var labelSelectors []string
 	for _, a := range fw.AppliedTo {
-		entry := map[string]any{"type": string(a.Type)}
 		if a.Server != nil {
-			entry["serverId"] = a.Server.ID
 			serverIDs = append(serverIDs, a.Server.ID)
 		}
 		if a.LabelSelector != nil {
-			entry["labelSelector"] = a.LabelSelector.Selector
+			labelSelectors = append(labelSelectors, a.LabelSelector.Selector)
 		}
-		appliedTo = append(appliedTo, entry)
 	}
 
 	res, err := CreateResource(runtime, "hetzner.firewall", map[string]*llx.RawData{
-		"__id":      llx.StringData(fmt.Sprintf("hetzner.firewall/%d", fw.ID)),
-		"id":        llx.IntData(fw.ID),
-		"name":      llx.StringData(fw.Name),
-		"created":   llx.TimeDataPtr(timePtr(fw.Created)),
-		"rules":     dictArrayData(rules),
-		"appliedTo": dictArrayData(appliedTo),
-		"labels":    labelData(fw.Labels),
+		"__id":           llx.StringData(fmt.Sprintf("hetzner.firewall/%d", fw.ID)),
+		"id":             llx.IntData(fw.ID),
+		"name":           llx.StringData(fw.Name),
+		"created":        llx.TimeDataPtr(timePtr(fw.Created)),
+		"rules":          dictArrayData(rules),
+		"labelSelectors": stringArrayData(labelSelectors),
+		"labels":         labelData(fw.Labels),
 	})
 	if err != nil {
 		return nil, err

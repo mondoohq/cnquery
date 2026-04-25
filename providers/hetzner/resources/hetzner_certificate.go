@@ -11,6 +11,11 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
+type mqlHetznerCertificateInternal struct {
+	cacheServerIDs       []int64
+	cacheLoadBalancerIDs []int64
+}
+
 func (r *mqlHetznerCertificate) id() (string, error) {
 	return fmt.Sprintf("hetzner.certificate/%d", r.Id.Data), nil
 }
@@ -43,12 +48,14 @@ func newMqlHetznerCertificate(runtime *plugin.Runtime, cert *hcloud.Certificate)
 			status["error"] = cert.Status.Error.Error()
 		}
 	}
-	usedBy := make([]any, 0, len(cert.UsedBy))
+	var serverIDs, lbIDs []int64
 	for _, ref := range cert.UsedBy {
-		usedBy = append(usedBy, map[string]any{
-			"type": string(ref.Type),
-			"id":   ref.ID,
-		})
+		switch string(ref.Type) {
+		case "server":
+			serverIDs = append(serverIDs, ref.ID)
+		case "load_balancer":
+			lbIDs = append(lbIDs, ref.ID)
+		}
 	}
 
 	res, err := CreateResource(runtime, "hetzner.certificate", map[string]*llx.RawData{
@@ -62,13 +69,43 @@ func newMqlHetznerCertificate(runtime *plugin.Runtime, cert *hcloud.Certificate)
 		"domainNames":    stringArrayData(cert.DomainNames),
 		"status":         llx.DictData(status),
 		"created":        llx.TimeDataPtr(timePtr(cert.Created)),
-		"usedBy":         dictArrayData(usedBy),
 		"labels":         labelData(cert.Labels),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHetznerCertificate), nil
+	m := res.(*mqlHetznerCertificate)
+	m.cacheServerIDs = serverIDs
+	m.cacheLoadBalancerIDs = lbIDs
+	return m, nil
+}
+
+func (m *mqlHetznerCertificate) servers() ([]any, error) {
+	out := make([]any, 0, len(m.cacheServerIDs))
+	for _, id := range m.cacheServerIDs {
+		ref, err := NewResource(m.MqlRuntime, "hetzner.server", map[string]*llx.RawData{
+			"id": llx.IntData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, ref)
+	}
+	return out, nil
+}
+
+func (m *mqlHetznerCertificate) loadBalancers() ([]any, error) {
+	out := make([]any, 0, len(m.cacheLoadBalancerIDs))
+	for _, id := range m.cacheLoadBalancerIDs {
+		ref, err := NewResource(m.MqlRuntime, "hetzner.loadBalancer", map[string]*llx.RawData{
+			"id": llx.IntData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, ref)
+	}
+	return out, nil
 }
 
 func initHetznerCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

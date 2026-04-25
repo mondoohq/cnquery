@@ -13,6 +13,7 @@ import (
 
 type mqlHetznerImageInternal struct {
 	cacheBoundServer *hcloud.Server
+	cacheCreatedFrom *hcloud.Server
 }
 
 func (r *mqlHetznerImage) id() (string, error) {
@@ -61,6 +62,7 @@ func newMqlHetznerImage(runtime *plugin.Runtime, img *hcloud.Image) (*mqlHetzner
 	}
 	m := res.(*mqlHetznerImage)
 	m.cacheBoundServer = img.BoundTo
+	m.cacheCreatedFrom = img.CreatedFrom
 	return m, nil
 }
 
@@ -82,6 +84,12 @@ func initHetznerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 
 func (m *mqlHetznerImage) boundServer() (*mqlHetznerServer, error) {
 	return resolveTypedResource(&m.BoundServer, m.cacheBoundServer, func(s *hcloud.Server) (*mqlHetznerServer, error) {
+		return newMqlHetznerServer(m.MqlRuntime, s)
+	})
+}
+
+func (m *mqlHetznerImage) createdFrom() (*mqlHetznerServer, error) {
+	return resolveTypedResource(&m.CreatedFrom, m.cacheCreatedFrom, func(s *hcloud.Server) (*mqlHetznerServer, error) {
 		return newMqlHetznerServer(m.MqlRuntime, s)
 	})
 }

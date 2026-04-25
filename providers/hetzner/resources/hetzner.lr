@@ -59,8 +59,6 @@ private hetzner.server @defaults("id name status") {
   location() hetzner.location
   // Image the server was created from (nullable)
   image() hetzner.image
-  // Public network attachment {ipv4, ipv6, floatingIps}
-  publicNet dict
   // Private network attachments
   privateNet() []hetzner.server.privateNet
   // Volumes attached to the server
@@ -71,6 +69,10 @@ private hetzner.server @defaults("id name status") {
   primaryIpv4() hetzner.primaryIp
   // Primary IPv6 address (nullable)
   primaryIpv6() hetzner.primaryIp
+  // Firewalls applied to the server
+  firewalls() []hetzner.firewall
+  // Load balancers attached to the server
+  loadBalancers() []hetzner.loadBalancer
   // Backup window (e.g., "22-02"); empty if backups disabled
   backupWindow string
   // Whether rescue mode is enabled
@@ -132,6 +134,24 @@ private hetzner.serverType @defaults("id name cores memory") {
   architecture string
   // Whether the server type is deprecated
   deprecated bool
+  // Per-location availability and deprecation info
+  locations() []hetzner.serverType.location
+}
+
+// Hetzner Cloud server type availability in a single location
+private hetzner.serverType.location @defaults("available recommended") {
+  // Parent server type ID (composite key with locationId)
+  serverTypeId int
+  // Location ID (composite key)
+  locationId int
+  // Location (typed reference)
+  location() hetzner.location
+  // Whether new servers of this type can be created in this location
+  available bool
+  // Whether Hetzner recommends this server type in this location
+  recommended bool
+  // Deprecation info {announced, unavailableAfter}; empty if not deprecated
+  deprecation dict
 }
 
 // Hetzner Cloud image (system image, snapshot, backup, or app)
@@ -167,6 +187,8 @@ private hetzner.image @defaults("id name type") {
   labels map[string]string
   // Bound server (nullable, for snapshots/backups)
   boundServer() hetzner.server
+  // Server the image was created from (nullable, for snapshots/backups)
+  createdFrom() hetzner.server
 }
 
 // Hetzner Cloud SSH key
@@ -417,10 +439,10 @@ private hetzner.firewall @defaults("id name") {
   created time
   // Firewall rules [{direction, protocol, port, sourceIps, destinationIps, description}]
   rules []dict
-  // Resources the firewall is applied to [{type, server, labelSelector}]
-  appliedTo []dict
-  // Servers the firewall is applied to (typed refs derived from appliedTo entries of type=server)
+  // Servers the firewall is directly applied to (type=server entries)
   servers() []hetzner.server
+  // Label selectors the firewall is applied to (type=label_selector entries)
+  labelSelectors []string
   // Labels
   labels map[string]string
 }
@@ -446,8 +468,10 @@ private hetzner.certificate @defaults("id name type") {
   status dict
   // Creation timestamp
   created time
-  // Resources using the certificate [{type, id}]
-  usedBy []dict
+  // Servers using this certificate (type=server entries in usedBy)
+  servers() []hetzner.server
+  // Load balancers using this certificate (type=load_balancer entries in usedBy)
+  loadBalancers() []hetzner.loadBalancer
   // Labels
   labels map[string]string
 }

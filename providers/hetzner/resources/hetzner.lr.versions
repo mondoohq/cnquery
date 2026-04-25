@@ -8,12 +8,13 @@ hetzner.certificate.domainNames 13.0.1
 hetzner.certificate.fingerprint 13.0.1
 hetzner.certificate.id 13.0.1
 hetzner.certificate.labels 13.0.1
+hetzner.certificate.loadBalancers 13.0.1
 hetzner.certificate.name 13.0.1
 hetzner.certificate.notValidAfter 13.0.1
 hetzner.certificate.notValidBefore 13.0.1
+hetzner.certificate.servers 13.0.1
 hetzner.certificate.status 13.0.1
 hetzner.certificate.type 13.0.1
-hetzner.certificate.usedBy 13.0.1
 hetzner.certificates 13.0.1
 hetzner.datacenter 13.0.1
 hetzner.datacenter.availableServerTypes 13.0.1
@@ -25,9 +26,9 @@ hetzner.datacenter.serverTypesAvailableForMigration 13.0.1
 hetzner.datacenter.supportedServerTypes 13.0.1
 hetzner.datacenters 13.0.1
 hetzner.firewall 13.0.1
-hetzner.firewall.appliedTo 13.0.1
 hetzner.firewall.created 13.0.1
 hetzner.firewall.id 13.0.1
+hetzner.firewall.labelSelectors 13.0.1
 hetzner.firewall.labels 13.0.1
 hetzner.firewall.name 13.0.1
 hetzner.firewall.rules 13.0.1
@@ -50,6 +51,7 @@ hetzner.floatingIps 13.0.1
 hetzner.image 13.0.1
 hetzner.image.boundServer 13.0.1
 hetzner.image.created 13.0.1
+hetzner.image.createdFrom 13.0.1
 hetzner.image.deprecated 13.0.1
 hetzner.image.description 13.0.1
 hetzner.image.diskSize 13.0.1
@@ -170,6 +172,7 @@ hetzner.server 13.0.1
 hetzner.server.backupWindow 13.0.1
 hetzner.server.created 13.0.1
 hetzner.server.datacenter 13.0.1
+hetzner.server.firewalls 13.0.1
 hetzner.server.floatingIps 13.0.1
 hetzner.server.id 13.0.1
 hetzner.server.image 13.0.1
@@ -177,6 +180,7 @@ hetzner.server.includedTraffic 13.0.1
 hetzner.server.ingoingTraffic 13.0.1
 hetzner.server.iso 13.0.1
 hetzner.server.labels 13.0.1
+hetzner.server.loadBalancers 13.0.1
 hetzner.server.location 13.0.1
 hetzner.server.locked 13.0.1
 hetzner.server.name 13.0.1
@@ -192,7 +196,6 @@ hetzner.server.privateNet.network 13.0.1
 hetzner.server.privateNet.networkId 13.0.1
 hetzner.server.privateNet.serverId 13.0.1
 hetzner.server.protection 13.0.1
-hetzner.server.publicNet 13.0.1
 hetzner.server.rescueEnabled 13.0.1
 hetzner.server.serverType 13.0.1
 hetzner.server.status 13.0.1
@@ -205,6 +208,14 @@ hetzner.serverType.deprecated 13.0.1
 hetzner.serverType.description 13.0.1
 hetzner.serverType.disk 13.0.1
 hetzner.serverType.id 13.0.1
+hetzner.serverType.location 13.0.1
+hetzner.serverType.location.available 13.0.1
+hetzner.serverType.location.deprecation 13.0.1
+hetzner.serverType.location.location 13.0.1
+hetzner.serverType.location.locationId 13.0.1
+hetzner.serverType.location.recommended 13.0.1
+hetzner.serverType.location.serverTypeId 13.0.1
+hetzner.serverType.locations 13.0.1
 hetzner.serverType.memory 13.0.1
 hetzner.serverType.name 13.0.1
 hetzner.serverType.storageType 13.0.1

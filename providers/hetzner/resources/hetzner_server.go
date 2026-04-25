@@ -24,6 +24,8 @@ type mqlHetznerServerInternal struct {
 	cachePlacementGroup *hcloud.PlacementGroup
 	cacheISO            *hcloud.ISO
 	cachePrivateNet     []hcloud.ServerPrivateNet
+	cacheFirewallIDs    []int64
+	cacheLoadBalancers  []*hcloud.LoadBalancer
 }
 
 func (r *mqlHetznerServer) id() (string, error) {
@@ -50,15 +52,12 @@ func (h *mqlHetzner) servers() ([]any, error) {
 }
 
 func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetznerServer, error) {
-	publicNet := serverPublicNetDict(s.PublicNet)
-
 	res, err := CreateResource(runtime, "hetzner.server", map[string]*llx.RawData{
 		"__id":            llx.StringData(fmt.Sprintf("hetzner.server/%d", s.ID)),
 		"id":              llx.IntData(s.ID),
 		"name":            llx.StringData(s.Name),
 		"status":          llx.StringData(string(s.Status)),
 		"created":         llx.TimeDataPtr(timePtr(s.Created)),
-		"publicNet":       llx.DictData(publicNet),
 		"backupWindow":    llx.StringData(s.BackupWindow),
 		"rescueEnabled":   llx.BoolData(s.RescueEnabled),
 		"locked":          llx.BoolData(s.Locked),
@@ -83,32 +82,11 @@ func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetzner
 	m.cachePlacementGroup = s.PlacementGroup
 	m.cacheISO = s.ISO
 	m.cachePrivateNet = s.PrivateNet
+	for _, fw := range s.PublicNet.Firewalls {
+		m.cacheFirewallIDs = append(m.cacheFirewallIDs, fw.Firewall.ID)
+	}
+	m.cacheLoadBalancers = s.LoadBalancers
 	return m, nil
-}
-
-func serverPublicNetDict(p hcloud.ServerPublicNet) map[string]any {
-	floating := make([]any, 0, len(p.FloatingIPs))
-	for _, f := range p.FloatingIPs {
-		floating = append(floating, f.ID)
-	}
-	v4 := map[string]any{
-		"id":      p.IPv4.ID,
-		"ip":      ipString(p.IPv4.IP),
-		"blocked": p.IPv4.Blocked,
-		"dnsPtr":  p.IPv4.DNSPtr,
-	}
-	v6 := map[string]any{
-		"id":      p.IPv6.ID,
-		"ip":      ipString(p.IPv6.IP),
-		"network": ipNetString(p.IPv6.Network),
-		"blocked": p.IPv6.Blocked,
-		"dnsPtr":  stringMapAny(p.IPv6.DNSPtr),
-	}
-	return map[string]any{
-		"ipv4":        v4,
-		"ipv6":        v6,
-		"floatingIps": floating,
-	}
 }
 
 func initHetznerServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -175,6 +153,34 @@ func (m *mqlHetznerServer) floatingIps() ([]any, error) {
 	for _, f := range m.cacheFloatingIPs {
 		ref, err := NewResource(m.MqlRuntime, "hetzner.floatingIp", map[string]*llx.RawData{
 			"id": llx.IntData(f.ID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, ref)
+	}
+	return out, nil
+}
+
+func (m *mqlHetznerServer) firewalls() ([]any, error) {
+	out := make([]any, 0, len(m.cacheFirewallIDs))
+	for _, id := range m.cacheFirewallIDs {
+		ref, err := NewResource(m.MqlRuntime, "hetzner.firewall", map[string]*llx.RawData{
+			"id": llx.IntData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, ref)
+	}
+	return out, nil
+}
+
+func (m *mqlHetznerServer) loadBalancers() ([]any, error) {
+	out := make([]any, 0, len(m.cacheLoadBalancers))
+	for _, lb := range m.cacheLoadBalancers {
+		ref, err := NewResource(m.MqlRuntime, "hetzner.loadBalancer", map[string]*llx.RawData{
+			"id": llx.IntData(lb.ID),
 		})
 		if err != nil {
 			return nil, err
