@@ -17,6 +17,9 @@ alpn
 antispam
 apparmor
 appslot
+armcontainerregistry
+armcontainerregistrytasks
+armoperationalinsights
 arp
 artifactregistry
 asdk
@@ -52,6 +55,7 @@ bigtable
 BINPACK
 blackhole
 breakglass
+bumpable
 bwawxf
 BXdl
 bytematchstatement
@@ -177,6 +181,8 @@ gistfile
 githubactions
 godo
 gopls
+GOSUMDB
+gotchas
 gpc
 GPLv
 gpo
@@ -308,6 +314,7 @@ netin
 netout
 networkfirewall
 networkinterface
+newpath
 Newtonsoft
 nexthop
 nft
@@ -344,6 +351,7 @@ opensearch
 openssl
 openvpn
 openzfs
+operationalinsights
 ords
 orstatement
 OSGi
