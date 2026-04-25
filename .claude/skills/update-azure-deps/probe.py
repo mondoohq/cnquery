@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
 """Probe proxy.golang.org for latest stable major of every Azure dep in a provider's go.mod.
 
 Usage:  python3 probe.py providers/azure/go.mod

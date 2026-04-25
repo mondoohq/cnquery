@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
 """Print Azure SDK CHANGELOG sections between two majors so the agent can spot breaking changes.
 
 Usage:  python3 changelog.py <module_path_without_vN> <from_version> <to_version>
