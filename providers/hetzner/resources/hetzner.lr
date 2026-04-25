@@ -61,8 +61,8 @@ private hetzner.server @defaults("id name status") {
   image() hetzner.image
   // Public network attachment {ipv4, ipv6, floatingIps}
   publicNet dict
-  // Private network attachments [{network, ip, aliasIps, macAddress}]
-  privateNet []dict
+  // Private network attachments
+  privateNet() []hetzner.server.privateNet
   // Volumes attached to the server
   volumes() []hetzner.volume
   // Floating IPs assigned to the server
@@ -91,6 +91,22 @@ private hetzner.server @defaults("id name status") {
   labels map[string]string
   // Resource protection (delete, rebuild)
   protection dict
+}
+
+// Hetzner Cloud server private network attachment
+private hetzner.server.privateNet @defaults("ip macAddress") {
+  // Parent server ID (composite key with networkId)
+  serverId int
+  // Attached network ID (composite key)
+  networkId int
+  // Attached network (typed reference)
+  network() hetzner.network
+  // IP address on the network
+  ip string
+  // Alias IPs on the network
+  aliasIps []string
+  // MAC address of the network interface
+  macAddress string
 }
 
 // Hetzner Cloud server type (VM size)
@@ -293,8 +309,8 @@ private hetzner.loadBalancer @defaults("id name") {
   name string
   // Public network configuration {enabled, ipv4, ipv6}
   publicNet dict
-  // Private network attachments [{network, ip}]
-  privateNet []dict
+  // Private network attachments
+  privateNet() []hetzner.loadBalancer.privateNet
   // Location
   location() hetzner.location
   // Load balancer type
@@ -305,8 +321,6 @@ private hetzner.loadBalancer @defaults("id name") {
   services() []hetzner.loadBalancer.service
   // Targets behind the load balancer
   targets() []hetzner.loadBalancer.target
-  // Primary attached network (nullable)
-  network() hetzner.network
   // Resource protection (delete)
   protection dict
   // Labels
@@ -319,6 +333,18 @@ private hetzner.loadBalancer @defaults("id name") {
   outgoingTraffic int
   // Ingoing traffic for the current period (bytes)
   ingoingTraffic int
+}
+
+// Hetzner Cloud load balancer private network attachment
+private hetzner.loadBalancer.privateNet @defaults("ip") {
+  // Parent load balancer ID (composite key with networkId)
+  loadBalancerId int
+  // Attached network ID (composite key)
+  networkId int
+  // Attached network (typed reference)
+  network() hetzner.network
+  // IP address on the network
+  ip string
 }
 
 // Load balancer service definition
@@ -492,6 +518,10 @@ private hetzner.datacenter @defaults("id name") {
   description string
   // Location of the datacenter
   location() hetzner.location
-  // Server type availability {supported, available, availableForMigration}
-  serverTypes dict
+  // Server types supported in this datacenter
+  supportedServerTypes() []hetzner.serverType
+  // Server types currently available for new servers in this datacenter
+  availableServerTypes() []hetzner.serverType
+  // Server types available for migration into this datacenter
+  serverTypesAvailableForMigration() []hetzner.serverType
 }

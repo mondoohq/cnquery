@@ -9,6 +9,7 @@ import (
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/types"
 )
 
 type mqlHetznerServerInternal struct {
@@ -22,6 +23,7 @@ type mqlHetznerServerInternal struct {
 	cachePrimaryIPv6ID  int64
 	cachePlacementGroup *hcloud.PlacementGroup
 	cacheISO            *hcloud.ISO
+	cachePrivateNet     []hcloud.ServerPrivateNet
 }
 
 func (r *mqlHetznerServer) id() (string, error) {
@@ -49,22 +51,6 @@ func (h *mqlHetzner) servers() ([]any, error) {
 
 func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetznerServer, error) {
 	publicNet := serverPublicNetDict(s.PublicNet)
-	privateNet := make([]any, 0, len(s.PrivateNet))
-	for _, p := range s.PrivateNet {
-		entry := map[string]any{
-			"ip":         ipString(p.IP),
-			"macAddress": p.MACAddress,
-		}
-		if p.Network != nil {
-			entry["networkId"] = p.Network.ID
-		}
-		aliases := make([]any, 0, len(p.Aliases))
-		for _, a := range p.Aliases {
-			aliases = append(aliases, ipString(a))
-		}
-		entry["aliasIps"] = aliases
-		privateNet = append(privateNet, entry)
-	}
 
 	res, err := CreateResource(runtime, "hetzner.server", map[string]*llx.RawData{
 		"__id":            llx.StringData(fmt.Sprintf("hetzner.server/%d", s.ID)),
@@ -73,7 +59,6 @@ func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetzner
 		"status":          llx.StringData(string(s.Status)),
 		"created":         llx.TimeDataPtr(timePtr(s.Created)),
 		"publicNet":       llx.DictData(publicNet),
-		"privateNet":      dictArrayData(privateNet),
 		"backupWindow":    llx.StringData(s.BackupWindow),
 		"rescueEnabled":   llx.BoolData(s.RescueEnabled),
 		"locked":          llx.BoolData(s.Locked),
@@ -97,6 +82,7 @@ func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetzner
 	m.cachePrimaryIPv6ID = s.PublicNet.IPv6.ID
 	m.cachePlacementGroup = s.PlacementGroup
 	m.cacheISO = s.ISO
+	m.cachePrivateNet = s.PrivateNet
 	return m, nil
 }
 
@@ -230,4 +216,59 @@ func (m *mqlHetznerServer) iso() (*mqlHetznerIso, error) {
 	return resolveTypedResource(&m.Iso, m.cacheISO, func(iso *hcloud.ISO) (*mqlHetznerIso, error) {
 		return newMqlHetznerIso(m.MqlRuntime, iso)
 	})
+}
+
+func (m *mqlHetznerServer) privateNet() ([]any, error) {
+	out := make([]any, 0, len(m.cachePrivateNet))
+	for _, p := range m.cachePrivateNet {
+		res, err := newMqlHetznerServerPrivateNet(m.MqlRuntime, m.Id.Data, p)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// --- server.privateNet sub-resource ---
+
+func (r *mqlHetznerServerPrivateNet) id() (string, error) {
+	return fmt.Sprintf("hetzner.server.privateNet/%d/%d", r.ServerId.Data, r.NetworkId.Data), nil
+}
+
+func newMqlHetznerServerPrivateNet(runtime *plugin.Runtime, serverID int64, p hcloud.ServerPrivateNet) (*mqlHetznerServerPrivateNet, error) {
+	var networkID int64
+	if p.Network != nil {
+		networkID = p.Network.ID
+	}
+	aliases := make([]any, 0, len(p.Aliases))
+	for _, a := range p.Aliases {
+		aliases = append(aliases, ipString(a))
+	}
+	res, err := CreateResource(runtime, "hetzner.server.privateNet", map[string]*llx.RawData{
+		"__id":       llx.StringData(fmt.Sprintf("hetzner.server.privateNet/%d/%d", serverID, networkID)),
+		"serverId":   llx.IntData(serverID),
+		"networkId":  llx.IntData(networkID),
+		"ip":         llx.StringData(ipString(p.IP)),
+		"aliasIps":   llx.ArrayData(aliases, types.String),
+		"macAddress": llx.StringData(p.MACAddress),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlHetznerServerPrivateNet), nil
+}
+
+func (m *mqlHetznerServerPrivateNet) network() (*mqlHetznerNetwork, error) {
+	if m.NetworkId.Data == 0 {
+		m.Network.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ref, err := NewResource(m.MqlRuntime, "hetzner.network", map[string]*llx.RawData{
+		"id": llx.IntData(m.NetworkId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ref.(*mqlHetznerNetwork), nil
 }

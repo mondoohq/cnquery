@@ -16,25 +16,27 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceHetzner                    string = "hetzner"
-	ResourceHetznerServer              string = "hetzner.server"
-	ResourceHetznerServerType          string = "hetzner.serverType"
-	ResourceHetznerImage               string = "hetzner.image"
-	ResourceHetznerSshKey              string = "hetzner.sshKey"
-	ResourceHetznerVolume              string = "hetzner.volume"
-	ResourceHetznerNetwork             string = "hetzner.network"
-	ResourceHetznerFloatingIp          string = "hetzner.floatingIp"
-	ResourceHetznerPrimaryIp           string = "hetzner.primaryIp"
-	ResourceHetznerLoadBalancer        string = "hetzner.loadBalancer"
-	ResourceHetznerLoadBalancerService string = "hetzner.loadBalancer.service"
-	ResourceHetznerLoadBalancerTarget  string = "hetzner.loadBalancer.target"
-	ResourceHetznerLoadBalancerType    string = "hetzner.loadBalancerType"
-	ResourceHetznerFirewall            string = "hetzner.firewall"
-	ResourceHetznerCertificate         string = "hetzner.certificate"
-	ResourceHetznerPlacementGroup      string = "hetzner.placementGroup"
-	ResourceHetznerIso                 string = "hetzner.iso"
-	ResourceHetznerLocation            string = "hetzner.location"
-	ResourceHetznerDatacenter          string = "hetzner.datacenter"
+	ResourceHetzner                       string = "hetzner"
+	ResourceHetznerServer                 string = "hetzner.server"
+	ResourceHetznerServerPrivateNet       string = "hetzner.server.privateNet"
+	ResourceHetznerServerType             string = "hetzner.serverType"
+	ResourceHetznerImage                  string = "hetzner.image"
+	ResourceHetznerSshKey                 string = "hetzner.sshKey"
+	ResourceHetznerVolume                 string = "hetzner.volume"
+	ResourceHetznerNetwork                string = "hetzner.network"
+	ResourceHetznerFloatingIp             string = "hetzner.floatingIp"
+	ResourceHetznerPrimaryIp              string = "hetzner.primaryIp"
+	ResourceHetznerLoadBalancer           string = "hetzner.loadBalancer"
+	ResourceHetznerLoadBalancerPrivateNet string = "hetzner.loadBalancer.privateNet"
+	ResourceHetznerLoadBalancerService    string = "hetzner.loadBalancer.service"
+	ResourceHetznerLoadBalancerTarget     string = "hetzner.loadBalancer.target"
+	ResourceHetznerLoadBalancerType       string = "hetzner.loadBalancerType"
+	ResourceHetznerFirewall               string = "hetzner.firewall"
+	ResourceHetznerCertificate            string = "hetzner.certificate"
+	ResourceHetznerPlacementGroup         string = "hetzner.placementGroup"
+	ResourceHetznerIso                    string = "hetzner.iso"
+	ResourceHetznerLocation               string = "hetzner.location"
+	ResourceHetznerDatacenter             string = "hetzner.datacenter"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -48,6 +50,10 @@ func init() {
 		"hetzner.server": {
 			Init:   initHetznerServer,
 			Create: createHetznerServer,
+		},
+		"hetzner.server.privateNet": {
+			// to override args, implement: initHetznerServerPrivateNet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHetznerServerPrivateNet,
 		},
 		"hetzner.serverType": {
 			Init:   initHetznerServerType,
@@ -80,6 +86,10 @@ func init() {
 		"hetzner.loadBalancer": {
 			Init:   initHetznerLoadBalancer,
 			Create: createHetznerLoadBalancer,
+		},
+		"hetzner.loadBalancer.privateNet": {
+			// to override args, implement: initHetznerLoadBalancerPrivateNet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHetznerLoadBalancerPrivateNet,
 		},
 		"hetzner.loadBalancer.service": {
 			// to override args, implement: initHetznerLoadBalancerService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -264,7 +274,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlHetznerServer).GetPublicNet()).ToDataRes(types.Dict)
 	},
 	"hetzner.server.privateNet": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlHetznerServer).GetPrivateNet()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlHetznerServer).GetPrivateNet()).ToDataRes(types.Array(types.Resource("hetzner.server.privateNet")))
 	},
 	"hetzner.server.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetVolumes()).ToDataRes(types.Array(types.Resource("hetzner.volume")))
@@ -307,6 +317,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.server.protection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetProtection()).ToDataRes(types.Dict)
+	},
+	"hetzner.server.privateNet.serverId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerPrivateNet).GetServerId()).ToDataRes(types.Int)
+	},
+	"hetzner.server.privateNet.networkId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerPrivateNet).GetNetworkId()).ToDataRes(types.Int)
+	},
+	"hetzner.server.privateNet.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerPrivateNet).GetNetwork()).ToDataRes(types.Resource("hetzner.network"))
+	},
+	"hetzner.server.privateNet.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerPrivateNet).GetIp()).ToDataRes(types.String)
+	},
+	"hetzner.server.privateNet.aliasIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerPrivateNet).GetAliasIps()).ToDataRes(types.Array(types.String))
+	},
+	"hetzner.server.privateNet.macAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerPrivateNet).GetMacAddress()).ToDataRes(types.String)
 	},
 	"hetzner.serverType.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServerType).GetId()).ToDataRes(types.Int)
@@ -552,7 +580,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlHetznerLoadBalancer).GetPublicNet()).ToDataRes(types.Dict)
 	},
 	"hetzner.loadBalancer.privateNet": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlHetznerLoadBalancer).GetPrivateNet()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlHetznerLoadBalancer).GetPrivateNet()).ToDataRes(types.Array(types.Resource("hetzner.loadBalancer.privateNet")))
 	},
 	"hetzner.loadBalancer.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancer).GetLocation()).ToDataRes(types.Resource("hetzner.location"))
@@ -568,9 +596,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.loadBalancer.targets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancer).GetTargets()).ToDataRes(types.Array(types.Resource("hetzner.loadBalancer.target")))
-	},
-	"hetzner.loadBalancer.network": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlHetznerLoadBalancer).GetNetwork()).ToDataRes(types.Resource("hetzner.network"))
 	},
 	"hetzner.loadBalancer.protection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancer).GetProtection()).ToDataRes(types.Dict)
@@ -589,6 +614,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.loadBalancer.ingoingTraffic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancer).GetIngoingTraffic()).ToDataRes(types.Int)
+	},
+	"hetzner.loadBalancer.privateNet.loadBalancerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLoadBalancerPrivateNet).GetLoadBalancerId()).ToDataRes(types.Int)
+	},
+	"hetzner.loadBalancer.privateNet.networkId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLoadBalancerPrivateNet).GetNetworkId()).ToDataRes(types.Int)
+	},
+	"hetzner.loadBalancer.privateNet.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLoadBalancerPrivateNet).GetNetwork()).ToDataRes(types.Resource("hetzner.network"))
+	},
+	"hetzner.loadBalancer.privateNet.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLoadBalancerPrivateNet).GetIp()).ToDataRes(types.String)
 	},
 	"hetzner.loadBalancer.service.loadBalancerId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancerService).GetLoadBalancerId()).ToDataRes(types.Int)
@@ -785,8 +822,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.datacenter.location": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerDatacenter).GetLocation()).ToDataRes(types.Resource("hetzner.location"))
 	},
-	"hetzner.datacenter.serverTypes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlHetznerDatacenter).GetServerTypes()).ToDataRes(types.Dict)
+	"hetzner.datacenter.supportedServerTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerDatacenter).GetSupportedServerTypes()).ToDataRes(types.Array(types.Resource("hetzner.serverType")))
+	},
+	"hetzner.datacenter.availableServerTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerDatacenter).GetAvailableServerTypes()).ToDataRes(types.Array(types.Resource("hetzner.serverType")))
+	},
+	"hetzner.datacenter.serverTypesAvailableForMigration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerDatacenter).GetServerTypesAvailableForMigration()).ToDataRes(types.Array(types.Resource("hetzner.serverType")))
 	},
 }
 
@@ -966,6 +1009,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.server.protection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerServer).Protection, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.privateNet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerPrivateNet).__id, ok = v.Value.(string)
+		return
+	},
+	"hetzner.server.privateNet.serverId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerPrivateNet).ServerId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.privateNet.networkId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerPrivateNet).NetworkId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.privateNet.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerPrivateNet).Network, ok = plugin.RawToTValue[*mqlHetznerNetwork](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.privateNet.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerPrivateNet).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.privateNet.aliasIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerPrivateNet).AliasIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.privateNet.macAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerPrivateNet).MacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"hetzner.serverType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1348,10 +1419,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerLoadBalancer).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"hetzner.loadBalancer.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlHetznerLoadBalancer).Network, ok = plugin.RawToTValue[*mqlHetznerNetwork](v.Value, v.Error)
-		return
-	},
 	"hetzner.loadBalancer.protection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerLoadBalancer).Protection, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -1374,6 +1441,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.loadBalancer.ingoingTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerLoadBalancer).IngoingTraffic, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.loadBalancer.privateNet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLoadBalancerPrivateNet).__id, ok = v.Value.(string)
+		return
+	},
+	"hetzner.loadBalancer.privateNet.loadBalancerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLoadBalancerPrivateNet).LoadBalancerId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.loadBalancer.privateNet.networkId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLoadBalancerPrivateNet).NetworkId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hetzner.loadBalancer.privateNet.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLoadBalancerPrivateNet).Network, ok = plugin.RawToTValue[*mqlHetznerNetwork](v.Value, v.Error)
+		return
+	},
+	"hetzner.loadBalancer.privateNet.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLoadBalancerPrivateNet).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"hetzner.loadBalancer.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1672,8 +1759,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerDatacenter).Location, ok = plugin.RawToTValue[*mqlHetznerLocation](v.Value, v.Error)
 		return
 	},
-	"hetzner.datacenter.serverTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlHetznerDatacenter).ServerTypes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+	"hetzner.datacenter.supportedServerTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerDatacenter).SupportedServerTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.datacenter.availableServerTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerDatacenter).AvailableServerTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.datacenter.serverTypesAvailableForMigration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerDatacenter).ServerTypesAvailableForMigration, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -2169,7 +2264,19 @@ func (c *mqlHetznerServer) GetPublicNet() *plugin.TValue[any] {
 }
 
 func (c *mqlHetznerServer) GetPrivateNet() *plugin.TValue[[]any] {
-	return &c.PrivateNet
+	return plugin.GetOrCompute[[]any](&c.PrivateNet, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.server", c.__id, "privateNet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateNet()
+	})
 }
 
 func (c *mqlHetznerServer) GetVolumes() *plugin.TValue[[]any] {
@@ -2298,6 +2405,92 @@ func (c *mqlHetznerServer) GetLabels() *plugin.TValue[map[string]any] {
 
 func (c *mqlHetznerServer) GetProtection() *plugin.TValue[any] {
 	return &c.Protection
+}
+
+// mqlHetznerServerPrivateNet for the hetzner.server.privateNet resource
+type mqlHetznerServerPrivateNet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHetznerServerPrivateNetInternal it will be used here
+	ServerId   plugin.TValue[int64]
+	NetworkId  plugin.TValue[int64]
+	Network    plugin.TValue[*mqlHetznerNetwork]
+	Ip         plugin.TValue[string]
+	AliasIps   plugin.TValue[[]any]
+	MacAddress plugin.TValue[string]
+}
+
+// createHetznerServerPrivateNet creates a new instance of this resource
+func createHetznerServerPrivateNet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHetznerServerPrivateNet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hetzner.server.privateNet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHetznerServerPrivateNet) MqlName() string {
+	return "hetzner.server.privateNet"
+}
+
+func (c *mqlHetznerServerPrivateNet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHetznerServerPrivateNet) GetServerId() *plugin.TValue[int64] {
+	return &c.ServerId
+}
+
+func (c *mqlHetznerServerPrivateNet) GetNetworkId() *plugin.TValue[int64] {
+	return &c.NetworkId
+}
+
+func (c *mqlHetznerServerPrivateNet) GetNetwork() *plugin.TValue[*mqlHetznerNetwork] {
+	return plugin.GetOrCompute[*mqlHetznerNetwork](&c.Network, func() (*mqlHetznerNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.server.privateNet", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHetznerNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlHetznerServerPrivateNet) GetIp() *plugin.TValue[string] {
+	return &c.Ip
+}
+
+func (c *mqlHetznerServerPrivateNet) GetAliasIps() *plugin.TValue[[]any] {
+	return &c.AliasIps
+}
+
+func (c *mqlHetznerServerPrivateNet) GetMacAddress() *plugin.TValue[string] {
+	return &c.MacAddress
 }
 
 // mqlHetznerServerType for the hetzner.serverType resource
@@ -3108,7 +3301,6 @@ type mqlHetznerLoadBalancer struct {
 	Algorithm        plugin.TValue[string]
 	Services         plugin.TValue[[]any]
 	Targets          plugin.TValue[[]any]
-	Network          plugin.TValue[*mqlHetznerNetwork]
 	Protection       plugin.TValue[any]
 	Labels           plugin.TValue[map[string]any]
 	Created          plugin.TValue[*time.Time]
@@ -3167,7 +3359,19 @@ func (c *mqlHetznerLoadBalancer) GetPublicNet() *plugin.TValue[any] {
 }
 
 func (c *mqlHetznerLoadBalancer) GetPrivateNet() *plugin.TValue[[]any] {
-	return &c.PrivateNet
+	return plugin.GetOrCompute[[]any](&c.PrivateNet, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.loadBalancer", c.__id, "privateNet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateNet()
+	})
 }
 
 func (c *mqlHetznerLoadBalancer) GetLocation() *plugin.TValue[*mqlHetznerLocation] {
@@ -3238,22 +3442,6 @@ func (c *mqlHetznerLoadBalancer) GetTargets() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlHetznerLoadBalancer) GetNetwork() *plugin.TValue[*mqlHetznerNetwork] {
-	return plugin.GetOrCompute[*mqlHetznerNetwork](&c.Network, func() (*mqlHetznerNetwork, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.loadBalancer", c.__id, "network")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlHetznerNetwork), nil
-			}
-		}
-
-		return c.network()
-	})
-}
-
 func (c *mqlHetznerLoadBalancer) GetProtection() *plugin.TValue[any] {
 	return &c.Protection
 }
@@ -3276,6 +3464,82 @@ func (c *mqlHetznerLoadBalancer) GetOutgoingTraffic() *plugin.TValue[int64] {
 
 func (c *mqlHetznerLoadBalancer) GetIngoingTraffic() *plugin.TValue[int64] {
 	return &c.IngoingTraffic
+}
+
+// mqlHetznerLoadBalancerPrivateNet for the hetzner.loadBalancer.privateNet resource
+type mqlHetznerLoadBalancerPrivateNet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlHetznerLoadBalancerPrivateNetInternal it will be used here
+	LoadBalancerId plugin.TValue[int64]
+	NetworkId      plugin.TValue[int64]
+	Network        plugin.TValue[*mqlHetznerNetwork]
+	Ip             plugin.TValue[string]
+}
+
+// createHetznerLoadBalancerPrivateNet creates a new instance of this resource
+func createHetznerLoadBalancerPrivateNet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHetznerLoadBalancerPrivateNet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hetzner.loadBalancer.privateNet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHetznerLoadBalancerPrivateNet) MqlName() string {
+	return "hetzner.loadBalancer.privateNet"
+}
+
+func (c *mqlHetznerLoadBalancerPrivateNet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHetznerLoadBalancerPrivateNet) GetLoadBalancerId() *plugin.TValue[int64] {
+	return &c.LoadBalancerId
+}
+
+func (c *mqlHetznerLoadBalancerPrivateNet) GetNetworkId() *plugin.TValue[int64] {
+	return &c.NetworkId
+}
+
+func (c *mqlHetznerLoadBalancerPrivateNet) GetNetwork() *plugin.TValue[*mqlHetznerNetwork] {
+	return plugin.GetOrCompute[*mqlHetznerNetwork](&c.Network, func() (*mqlHetznerNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.loadBalancer.privateNet", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHetznerNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlHetznerLoadBalancerPrivateNet) GetIp() *plugin.TValue[string] {
+	return &c.Ip
 }
 
 // mqlHetznerLoadBalancerService for the hetzner.loadBalancer.service resource
@@ -3988,11 +4252,13 @@ type mqlHetznerDatacenter struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlHetznerDatacenterInternal
-	Id          plugin.TValue[int64]
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
-	Location    plugin.TValue[*mqlHetznerLocation]
-	ServerTypes plugin.TValue[any]
+	Id                               plugin.TValue[int64]
+	Name                             plugin.TValue[string]
+	Description                      plugin.TValue[string]
+	Location                         plugin.TValue[*mqlHetznerLocation]
+	SupportedServerTypes             plugin.TValue[[]any]
+	AvailableServerTypes             plugin.TValue[[]any]
+	ServerTypesAvailableForMigration plugin.TValue[[]any]
 }
 
 // createHetznerDatacenter creates a new instance of this resource
@@ -4060,6 +4326,50 @@ func (c *mqlHetznerDatacenter) GetLocation() *plugin.TValue[*mqlHetznerLocation]
 	})
 }
 
-func (c *mqlHetznerDatacenter) GetServerTypes() *plugin.TValue[any] {
-	return &c.ServerTypes
+func (c *mqlHetznerDatacenter) GetSupportedServerTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SupportedServerTypes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.datacenter", c.__id, "supportedServerTypes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.supportedServerTypes()
+	})
+}
+
+func (c *mqlHetznerDatacenter) GetAvailableServerTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AvailableServerTypes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.datacenter", c.__id, "availableServerTypes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.availableServerTypes()
+	})
+}
+
+func (c *mqlHetznerDatacenter) GetServerTypesAvailableForMigration() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServerTypesAvailableForMigration, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.datacenter", c.__id, "serverTypesAvailableForMigration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serverTypesAvailableForMigration()
+	})
 }

@@ -16,7 +16,7 @@ type mqlHetznerLoadBalancerInternal struct {
 	cacheLoadBalancerType *hcloud.LoadBalancerType
 	cacheServices         []hcloud.LoadBalancerService
 	cacheTargets          []hcloud.LoadBalancerTarget
-	cacheNetwork          *hcloud.Network
+	cachePrivateNet       []hcloud.LoadBalancerPrivateNet
 }
 
 func (r *mqlHetznerLoadBalancer) id() (string, error) {
@@ -48,27 +48,12 @@ func newMqlHetznerLoadBalancer(runtime *plugin.Runtime, lb *hcloud.LoadBalancer)
 		"ipv4":    ipString(lb.PublicNet.IPv4.IP),
 		"ipv6":    ipString(lb.PublicNet.IPv6.IP),
 	}
-	privateNet := make([]any, 0, len(lb.PrivateNet))
-	var firstNetwork *hcloud.Network
-	for _, p := range lb.PrivateNet {
-		entry := map[string]any{
-			"ip": ipString(p.IP),
-		}
-		if p.Network != nil {
-			entry["networkId"] = p.Network.ID
-			if firstNetwork == nil {
-				firstNetwork = p.Network
-			}
-		}
-		privateNet = append(privateNet, entry)
-	}
 
 	res, err := CreateResource(runtime, "hetzner.loadBalancer", map[string]*llx.RawData{
 		"__id":            llx.StringData(fmt.Sprintf("hetzner.loadBalancer/%d", lb.ID)),
 		"id":              llx.IntData(lb.ID),
 		"name":            llx.StringData(lb.Name),
 		"publicNet":       llx.DictData(publicNet),
-		"privateNet":      dictArrayData(privateNet),
 		"algorithm":       llx.StringData(string(lb.Algorithm.Type)),
 		"protection":      llx.DictData(protectionDict(lb.Protection.Delete)),
 		"labels":          labelData(lb.Labels),
@@ -85,7 +70,7 @@ func newMqlHetznerLoadBalancer(runtime *plugin.Runtime, lb *hcloud.LoadBalancer)
 	m.cacheLoadBalancerType = lb.LoadBalancerType
 	m.cacheServices = lb.Services
 	m.cacheTargets = lb.Targets
-	m.cacheNetwork = firstNetwork
+	m.cachePrivateNet = lb.PrivateNet
 	return m, nil
 }
 
@@ -117,14 +102,48 @@ func (m *mqlHetznerLoadBalancer) loadBalancerType() (*mqlHetznerLoadBalancerType
 	})
 }
 
-func (m *mqlHetznerLoadBalancer) network() (*mqlHetznerNetwork, error) {
-	if m.cacheNetwork == nil {
+func (m *mqlHetznerLoadBalancer) privateNet() ([]any, error) {
+	out := make([]any, 0, len(m.cachePrivateNet))
+	for _, p := range m.cachePrivateNet {
+		res, err := newMqlHetznerLoadBalancerPrivateNet(m.MqlRuntime, m.Id.Data, p)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// --- loadBalancer.privateNet sub-resource ---
+
+func (r *mqlHetznerLoadBalancerPrivateNet) id() (string, error) {
+	return fmt.Sprintf("hetzner.loadBalancer.privateNet/%d/%d", r.LoadBalancerId.Data, r.NetworkId.Data), nil
+}
+
+func newMqlHetznerLoadBalancerPrivateNet(runtime *plugin.Runtime, lbID int64, p hcloud.LoadBalancerPrivateNet) (*mqlHetznerLoadBalancerPrivateNet, error) {
+	var networkID int64
+	if p.Network != nil {
+		networkID = p.Network.ID
+	}
+	res, err := CreateResource(runtime, "hetzner.loadBalancer.privateNet", map[string]*llx.RawData{
+		"__id":           llx.StringData(fmt.Sprintf("hetzner.loadBalancer.privateNet/%d/%d", lbID, networkID)),
+		"loadBalancerId": llx.IntData(lbID),
+		"networkId":      llx.IntData(networkID),
+		"ip":             llx.StringData(ipString(p.IP)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlHetznerLoadBalancerPrivateNet), nil
+}
+
+func (m *mqlHetznerLoadBalancerPrivateNet) network() (*mqlHetznerNetwork, error) {
+	if m.NetworkId.Data == 0 {
 		m.Network.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	// Network on a LB private-net entry is partial; resolve via init.
 	ref, err := NewResource(m.MqlRuntime, "hetzner.network", map[string]*llx.RawData{
-		"id": llx.IntData(m.cacheNetwork.ID),
+		"id": llx.IntData(m.NetworkId.Data),
 	})
 	if err != nil {
 		return nil, err

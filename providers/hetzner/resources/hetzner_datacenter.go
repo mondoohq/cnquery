@@ -12,7 +12,10 @@ import (
 )
 
 type mqlHetznerDatacenterInternal struct {
-	cacheLocation *hcloud.Location
+	cacheLocation                      *hcloud.Location
+	cacheSupportedServerTypes          []*hcloud.ServerType
+	cacheAvailableServerTypes          []*hcloud.ServerType
+	cacheServerTypesAvailableMigration []*hcloud.ServerType
 }
 
 func (r *mqlHetznerDatacenter) id() (string, error) {
@@ -39,41 +42,20 @@ func (h *mqlHetzner) datacenters() ([]any, error) {
 }
 
 func newMqlHetznerDatacenter(runtime *plugin.Runtime, dc *hcloud.Datacenter) (*mqlHetznerDatacenter, error) {
-	st := map[string]any{}
-	if dc.ServerTypes.Supported != nil {
-		ids := make([]any, 0, len(dc.ServerTypes.Supported))
-		for _, t := range dc.ServerTypes.Supported {
-			ids = append(ids, t.ID)
-		}
-		st["supported"] = ids
-	}
-	if dc.ServerTypes.Available != nil {
-		ids := make([]any, 0, len(dc.ServerTypes.Available))
-		for _, t := range dc.ServerTypes.Available {
-			ids = append(ids, t.ID)
-		}
-		st["available"] = ids
-	}
-	if dc.ServerTypes.AvailableForMigration != nil {
-		ids := make([]any, 0, len(dc.ServerTypes.AvailableForMigration))
-		for _, t := range dc.ServerTypes.AvailableForMigration {
-			ids = append(ids, t.ID)
-		}
-		st["availableForMigration"] = ids
-	}
-
 	res, err := CreateResource(runtime, "hetzner.datacenter", map[string]*llx.RawData{
 		"__id":        llx.StringData(fmt.Sprintf("hetzner.datacenter/%d", dc.ID)),
 		"id":          llx.IntData(dc.ID),
 		"name":        llx.StringData(dc.Name),
 		"description": llx.StringData(dc.Description),
-		"serverTypes": llx.DictData(st),
 	})
 	if err != nil {
 		return nil, err
 	}
 	m := res.(*mqlHetznerDatacenter)
 	m.cacheLocation = dc.Location
+	m.cacheSupportedServerTypes = dc.ServerTypes.Supported
+	m.cacheAvailableServerTypes = dc.ServerTypes.Available
+	m.cacheServerTypesAvailableMigration = dc.ServerTypes.AvailableForMigration
 	return m, nil
 }
 
@@ -97,4 +79,30 @@ func (m *mqlHetznerDatacenter) location() (*mqlHetznerLocation, error) {
 	return resolveTypedResource(&m.Location, m.cacheLocation, func(loc *hcloud.Location) (*mqlHetznerLocation, error) {
 		return newMqlHetznerLocation(m.MqlRuntime, loc)
 	})
+}
+
+func (m *mqlHetznerDatacenter) supportedServerTypes() ([]any, error) {
+	return serverTypeRefs(m.MqlRuntime, m.cacheSupportedServerTypes)
+}
+
+func (m *mqlHetznerDatacenter) availableServerTypes() ([]any, error) {
+	return serverTypeRefs(m.MqlRuntime, m.cacheAvailableServerTypes)
+}
+
+func (m *mqlHetznerDatacenter) serverTypesAvailableForMigration() ([]any, error) {
+	return serverTypeRefs(m.MqlRuntime, m.cacheServerTypesAvailableMigration)
+}
+
+func serverTypeRefs(runtime *plugin.Runtime, types []*hcloud.ServerType) ([]any, error) {
+	out := make([]any, 0, len(types))
+	for _, t := range types {
+		ref, err := NewResource(runtime, "hetzner.serverType", map[string]*llx.RawData{
+			"id": llx.IntData(t.ID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, ref)
+	}
+	return out, nil
 }
