@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v2"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -132,8 +132,8 @@ func createWorkspaceResource(runtime *plugin.Runtime, ws *armoperationalinsights
 			"publicNetworkAccessForIngestion": llx.StringData(publicNetworkAccessForIngestion),
 			"publicNetworkAccessForQuery":     llx.StringData(publicNetworkAccessForQuery),
 			"forceCmkForQuery":                llx.BoolDataPtr(props.ForceCmkForQuery),
-			"createdDate":                     parseAzureDateString(props.CreatedDate),
-			"modifiedDate":                    parseAzureDateString(props.ModifiedDate),
+			"createdDate":                     llx.TimeDataPtr(props.CreatedDate),
+			"modifiedDate":                    llx.TimeDataPtr(props.ModifiedDate),
 			"provisioningState":               llx.StringData(provisioningState),
 			"customerId":                      llx.StringDataPtr(props.CustomerID),
 		})
