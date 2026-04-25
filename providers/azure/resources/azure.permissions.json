@@ -1,33 +1,40 @@
 {
   "provider": "azure",
   "version": "13.5.0",
-  "generated_at": "2026-04-24T22:26:35-07:00",
+  "generated_at": "2026-04-27T09:18:23-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
+    "Microsoft.Authorization/classicAdministrators/read",
+    "Microsoft.Authorization/denyAssignments/read",
     "Microsoft.Authorization/roleAssignments/read",
     "Microsoft.Authorization/roleDefinitions/read",
     "Microsoft.Batch/batchAccounts/pools/read",
     "Microsoft.Batch/batchAccounts/read",
     "Microsoft.Cache/redis/firewallRules/read",
     "Microsoft.Cache/redis/patchSchedules/read",
-    "Microsoft.Cdn/aFDCustomDomains/read",
-    "Microsoft.Cdn/aFDEndpoints/read",
-    "Microsoft.Cdn/aFDOriginGroups/read",
-    "Microsoft.Cdn/aFDOrigins/read",
+    "Microsoft.Cdn/profiles/afdendpoints/read",
+    "Microsoft.Cdn/profiles/customdomains/read",
+    "Microsoft.Cdn/profiles/origingroups/origins/read",
+    "Microsoft.Cdn/profiles/origingroups/read",
     "Microsoft.Cdn/profiles/read",
+    "Microsoft.Cdn/routes/read",
     "Microsoft.Compute/diskAccesses/read",
     "Microsoft.Compute/diskEncryptionSets/read",
     "Microsoft.Compute/disks/read",
     "Microsoft.Compute/virtualMachines/read",
-    "Microsoft.ContainerRegistry/replications/read",
-    "Microsoft.ContainerRegistry/scopeMaps/read",
-    "Microsoft.ContainerRegistry/tokens/read",
-    "Microsoft.ContainerRegistry/webhooks/read",
+    "Microsoft.ContainerRegistry/cacheRules/read",
+    "Microsoft.ContainerRegistry/connectedRegistries/read",
+    "Microsoft.ContainerRegistry/credentialSets/read",
+    "Microsoft.ContainerRegistry/registries/replications/read",
+    "Microsoft.ContainerRegistry/registries/scopeMaps/read",
+    "Microsoft.ContainerRegistry/registries/tokens/read",
+    "Microsoft.ContainerRegistry/registries/webhooks/read",
     "Microsoft.ContainerService/managedClusters/read",
     "Microsoft.DBforMySQL/servers/configurations/read",
     "Microsoft.DBforMySQL/servers/databases/read",
     "Microsoft.DBforMySQL/servers/firewallRules/read",
     "Microsoft.DBforMySQL/servers/read",
+    "Microsoft.DBforPostgreSQL/advancedThreatProtectionSettings/read",
     "Microsoft.DBforPostgreSQL/serverGroupsv2/read",
     "Microsoft.DBforPostgreSQL/servers/configurations/read",
     "Microsoft.DBforPostgreSQL/servers/databases/read",
@@ -35,11 +42,9 @@
     "Microsoft.DBforPostgreSQL/servers/read",
     "Microsoft.DataFactory/factories/read",
     "Microsoft.Databricks/workspaces/read",
-    "Microsoft.Dns/recordSets/read",
-    "Microsoft.Dns/zones/read",
     "Microsoft.DocumentDB/databaseAccounts/read",
-    "Microsoft.EventHub/consumerGroups/read",
-    "Microsoft.EventHub/eventHubs/read",
+    "Microsoft.EventHub/namespaces/eventHubs/consumergroups/read",
+    "Microsoft.EventHub/namespaces/eventhubs/read",
     "Microsoft.EventHub/namespaces/read",
     "Microsoft.Insights/activityLogAlerts/read",
     "Microsoft.Insights/components/read",
@@ -48,12 +53,15 @@
     "Microsoft.KeyVault/managedHsms/read",
     "Microsoft.KeyVault/vaults/read",
     "Microsoft.ManagedIdentity/userAssignedIdentities/read",
+    "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
     "Microsoft.Network/applicationGateways/read",
     "Microsoft.Network/applicationSecurityGroups/read",
     "Microsoft.Network/azureFirewalls/read",
     "Microsoft.Network/bastionHosts/read",
     "Microsoft.Network/connections/read",
     "Microsoft.Network/ddosProtectionPlans/read",
+    "Microsoft.Network/dnszones/read",
+    "Microsoft.Network/dnszones/recordsets/read",
     "Microsoft.Network/firewallPolicies/read",
     "Microsoft.Network/loadBalancers/read",
     "Microsoft.Network/natGateways/read",
@@ -61,6 +69,9 @@
     "Microsoft.Network/networkSecurityGroups/read",
     "Microsoft.Network/networkWatchers/flowLogs/read",
     "Microsoft.Network/networkWatchers/read",
+    "Microsoft.Network/privateDNSZoneGroups/read",
+    "Microsoft.Network/privateDnsZones/read",
+    "Microsoft.Network/privateDnsZones/virtualNetworkLinks/read",
     "Microsoft.Network/privateEndpoints/read",
     "Microsoft.Network/publicIPAddresses/read",
     "Microsoft.Network/routeTables/read",
@@ -69,24 +80,24 @@
     "Microsoft.Network/virtualNetworks/read",
     "Microsoft.Network/virtualNetworks/subnets/read",
     "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
-    "Microsoft.Network/webApplicationFirewallPolicies/read",
-    "Microsoft.Operationalinsights/dataExports/read",
-    "Microsoft.Operationalinsights/linkedServices/read",
-    "Microsoft.Operationalinsights/workspaces/read",
-    "Microsoft.Privatedns/privateZones/read",
-    "Microsoft.Privatedns/virtualNetworkLinks/read",
-    "Microsoft.Recoveryservices/backupPolicies/read",
-    "Microsoft.Recoveryservices/backupProtectedItems/read",
-    "Microsoft.Recoveryservices/backupResourceVaultConfigs/read",
-    "Microsoft.Recoveryservices/vaults/read",
-    "Microsoft.Resources/resourceGroups/read",
+    "Microsoft.OperationalInsights/queries/read",
+    "Microsoft.OperationalInsights/queryPacks/read",
+    "Microsoft.OperationalInsights/tables/read",
+    "Microsoft.OperationalInsights/workspaces/dataexports/read",
+    "Microsoft.OperationalInsights/workspaces/linkedservices/read",
+    "Microsoft.OperationalInsights/workspaces/read",
+    "Microsoft.RecoveryServices/Vaults/backupPolicies/read",
+    "Microsoft.RecoveryServices/Vaults/backupProtectedItems/read",
+    "Microsoft.RecoveryServices/Vaults/backupconfig/read",
+    "Microsoft.RecoveryServices/vaults/read",
     "Microsoft.Resources/resources/read",
     "Microsoft.Resources/subscriptions/read",
+    "Microsoft.Resources/subscriptions/resourceGroups/read",
     "Microsoft.Security/autoProvisioningSettings/read",
+    "Microsoft.ServiceBus/namespaces/queues/read",
     "Microsoft.ServiceBus/namespaces/read",
-    "Microsoft.ServiceBus/queues/read",
-    "Microsoft.ServiceBus/subscriptions/read",
-    "Microsoft.ServiceBus/topics/read",
+    "Microsoft.ServiceBus/namespaces/topics/read",
+    "Microsoft.ServiceBus/namespaces/topics/subscriptions/read",
     "Microsoft.Sql/servers/administrators/read",
     "Microsoft.Sql/servers/advancedThreatProtectionSettings/read",
     "Microsoft.Sql/servers/auditingSettings/read",
@@ -106,9 +117,10 @@
     "Microsoft.Sql/servers/securityAlertPolicies/read",
     "Microsoft.Sql/servers/virtualNetworkRules/read",
     "Microsoft.Sql/servers/vulnerabilityAssessments/read",
-    "Microsoft.Storage/encryptionScopes/read",
-    "Microsoft.Storage/managementPolicies/read",
+    "Microsoft.Storage/localUsers/read",
     "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+    "Microsoft.Storage/storageAccounts/encryptionScopes/read",
+    "Microsoft.Storage/storageAccounts/managementPolicies/read",
     "Microsoft.Storage/storageAccounts/read",
     "Microsoft.Synapse/workspaces/read",
     "Microsoft.Web/certificates/read",
@@ -122,6 +134,18 @@
       "service": "Microsoft.Advisor",
       "action": "NewListPager",
       "source_file": "advisor.go"
+    },
+    {
+      "permission": "Microsoft.Authorization/classicAdministrators/read",
+      "service": "Microsoft.Authorization",
+      "action": "NewListPager",
+      "source_file": "iam.go"
+    },
+    {
+      "permission": "Microsoft.Authorization/denyAssignments/read",
+      "service": "Microsoft.Authorization",
+      "action": "NewListPager",
+      "source_file": "iam.go"
     },
     {
       "permission": "Microsoft.Authorization/roleAssignments/read",
@@ -160,33 +184,39 @@
       "source_file": "redis.go"
     },
     {
-      "permission": "Microsoft.Cdn/aFDCustomDomains/read",
+      "permission": "Microsoft.Cdn/profiles/afdendpoints/read",
       "service": "Microsoft.Cdn",
       "action": "NewListByProfilePager",
       "source_file": "frontdoor.go"
     },
     {
-      "permission": "Microsoft.Cdn/aFDEndpoints/read",
+      "permission": "Microsoft.Cdn/profiles/customdomains/read",
       "service": "Microsoft.Cdn",
       "action": "NewListByProfilePager",
       "source_file": "frontdoor.go"
     },
     {
-      "permission": "Microsoft.Cdn/aFDOriginGroups/read",
-      "service": "Microsoft.Cdn",
-      "action": "NewListByProfilePager",
-      "source_file": "frontdoor.go"
-    },
-    {
-      "permission": "Microsoft.Cdn/aFDOrigins/read",
+      "permission": "Microsoft.Cdn/profiles/origingroups/origins/read",
       "service": "Microsoft.Cdn",
       "action": "NewListByOriginGroupPager",
+      "source_file": "frontdoor.go"
+    },
+    {
+      "permission": "Microsoft.Cdn/profiles/origingroups/read",
+      "service": "Microsoft.Cdn",
+      "action": "NewListByProfilePager",
       "source_file": "frontdoor.go"
     },
     {
       "permission": "Microsoft.Cdn/profiles/read",
       "service": "Microsoft.Cdn",
       "action": "NewListPager",
+      "source_file": "frontdoor.go"
+    },
+    {
+      "permission": "Microsoft.Cdn/routes/read",
+      "service": "Microsoft.Cdn",
+      "action": "NewListByEndpointPager",
       "source_file": "frontdoor.go"
     },
     {
@@ -204,7 +234,7 @@
     {
       "permission": "Microsoft.Compute/disks/read",
       "service": "Microsoft.Compute",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "compute.go"
     },
     {
@@ -214,25 +244,43 @@
       "source_file": "compute.go"
     },
     {
-      "permission": "Microsoft.ContainerRegistry/replications/read",
+      "permission": "Microsoft.ContainerRegistry/cacheRules/read",
       "service": "Microsoft.ContainerRegistry",
       "action": "NewListPager",
       "source_file": "containerregistry.go"
     },
     {
-      "permission": "Microsoft.ContainerRegistry/scopeMaps/read",
-      "service": "Microsoft.ContainerRegistry",
-      "action": "Get",
-      "source_file": "containerregistry.go"
-    },
-    {
-      "permission": "Microsoft.ContainerRegistry/tokens/read",
+      "permission": "Microsoft.ContainerRegistry/connectedRegistries/read",
       "service": "Microsoft.ContainerRegistry",
       "action": "NewListPager",
       "source_file": "containerregistry.go"
     },
     {
-      "permission": "Microsoft.ContainerRegistry/webhooks/read",
+      "permission": "Microsoft.ContainerRegistry/credentialSets/read",
+      "service": "Microsoft.ContainerRegistry",
+      "action": "NewListPager",
+      "source_file": "containerregistry.go"
+    },
+    {
+      "permission": "Microsoft.ContainerRegistry/registries/replications/read",
+      "service": "Microsoft.ContainerRegistry",
+      "action": "NewListPager",
+      "source_file": "containerregistry.go"
+    },
+    {
+      "permission": "Microsoft.ContainerRegistry/registries/scopeMaps/read",
+      "service": "Microsoft.ContainerRegistry",
+      "action": "NewListPager",
+      "source_file": "containerregistry.go"
+    },
+    {
+      "permission": "Microsoft.ContainerRegistry/registries/tokens/read",
+      "service": "Microsoft.ContainerRegistry",
+      "action": "NewListPager",
+      "source_file": "containerregistry.go"
+    },
+    {
+      "permission": "Microsoft.ContainerRegistry/registries/webhooks/read",
       "service": "Microsoft.ContainerRegistry",
       "action": "NewListPager",
       "source_file": "containerregistry.go"
@@ -266,6 +314,12 @@
       "service": "Microsoft.DBforMySQL",
       "action": "NewListPager",
       "source_file": "mysql.go"
+    },
+    {
+      "permission": "Microsoft.DBforPostgreSQL/advancedThreatProtectionSettings/read",
+      "service": "Microsoft.DBforPostgreSQL",
+      "action": "Get",
+      "source_file": "postgresql.go"
     },
     {
       "permission": "Microsoft.DBforPostgreSQL/serverGroupsv2/read",
@@ -310,31 +364,19 @@
       "source_file": "databricks.go"
     },
     {
-      "permission": "Microsoft.Dns/recordSets/read",
-      "service": "Microsoft.Dns",
-      "action": "NewListByDNSZonePager",
-      "source_file": "dns.go"
-    },
-    {
-      "permission": "Microsoft.Dns/zones/read",
-      "service": "Microsoft.Dns",
-      "action": "NewListPager",
-      "source_file": "dns.go"
-    },
-    {
       "permission": "Microsoft.DocumentDB/databaseAccounts/read",
       "service": "Microsoft.DocumentDB",
       "action": "NewListPager",
       "source_file": "cosmosdb.go"
     },
     {
-      "permission": "Microsoft.EventHub/consumerGroups/read",
+      "permission": "Microsoft.EventHub/namespaces/eventHubs/consumergroups/read",
       "service": "Microsoft.EventHub",
       "action": "NewListByEventHubPager",
       "source_file": "eventhub.go"
     },
     {
-      "permission": "Microsoft.EventHub/eventHubs/read",
+      "permission": "Microsoft.EventHub/namespaces/eventhubs/read",
       "service": "Microsoft.EventHub",
       "action": "NewListByNamespacePager",
       "source_file": "eventhub.go"
@@ -388,6 +430,12 @@
       "source_file": "iam.go"
     },
     {
+      "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
+      "service": "Microsoft.Network",
+      "action": "NewListAllPager",
+      "source_file": "network.go"
+    },
+    {
       "permission": "Microsoft.Network/applicationGateways/read",
       "service": "Microsoft.Network",
       "action": "NewListAllPager",
@@ -402,7 +450,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -424,6 +472,18 @@
       "source_file": "network.go"
     },
     {
+      "permission": "Microsoft.Network/dnszones/read",
+      "service": "Microsoft.Dns",
+      "action": "NewListPager",
+      "source_file": "dns.go"
+    },
+    {
+      "permission": "Microsoft.Network/dnszones/recordsets/read",
+      "service": "Microsoft.Dns",
+      "action": "NewListByDNSZonePager",
+      "source_file": "dns.go"
+    },
+    {
       "permission": "Microsoft.Network/firewallPolicies/read",
       "service": "Microsoft.Network",
       "action": "Get",
@@ -438,7 +498,7 @@
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -470,6 +530,24 @@
       "service": "Microsoft.Network",
       "action": "NewListAllPager",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/privateDNSZoneGroups/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
+      "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/privateDnsZones/read",
+      "service": "Microsoft.Privatedns",
+      "action": "NewListPager",
+      "source_file": "dns.go"
+    },
+    {
+      "permission": "Microsoft.Network/privateDnsZones/virtualNetworkLinks/read",
+      "service": "Microsoft.Privatedns",
+      "action": "NewListPager",
+      "source_file": "dns.go"
     },
     {
       "permission": "Microsoft.Network/privateEndpoints/read",
@@ -526,70 +604,64 @@
       "source_file": "network.go"
     },
     {
-      "permission": "Microsoft.Network/webApplicationFirewallPolicies/read",
-      "service": "Microsoft.Network",
-      "action": "NewListAllPager",
-      "source_file": "network.go"
+      "permission": "Microsoft.OperationalInsights/queries/read",
+      "service": "Microsoft.OperationalInsights",
+      "action": "NewListPager",
+      "source_file": "loganalytics.go"
     },
     {
-      "permission": "Microsoft.Operationalinsights/dataExports/read",
-      "service": "Microsoft.Operationalinsights",
+      "permission": "Microsoft.OperationalInsights/queryPacks/read",
+      "service": "Microsoft.OperationalInsights",
+      "action": "NewListPager",
+      "source_file": "loganalytics.go"
+    },
+    {
+      "permission": "Microsoft.OperationalInsights/tables/read",
+      "service": "Microsoft.OperationalInsights",
       "action": "NewListByWorkspacePager",
       "source_file": "loganalytics.go"
     },
     {
-      "permission": "Microsoft.Operationalinsights/linkedServices/read",
-      "service": "Microsoft.Operationalinsights",
+      "permission": "Microsoft.OperationalInsights/workspaces/dataexports/read",
+      "service": "Microsoft.OperationalInsights",
       "action": "NewListByWorkspacePager",
       "source_file": "loganalytics.go"
     },
     {
-      "permission": "Microsoft.Operationalinsights/workspaces/read",
-      "service": "Microsoft.Operationalinsights",
+      "permission": "Microsoft.OperationalInsights/workspaces/linkedservices/read",
+      "service": "Microsoft.OperationalInsights",
+      "action": "NewListByWorkspacePager",
+      "source_file": "loganalytics.go"
+    },
+    {
+      "permission": "Microsoft.OperationalInsights/workspaces/read",
+      "service": "Microsoft.OperationalInsights",
       "action": "Get",
       "source_file": "loganalytics.go"
     },
     {
-      "permission": "Microsoft.Privatedns/privateZones/read",
-      "service": "Microsoft.Privatedns",
-      "action": "NewListPager",
-      "source_file": "dns.go"
-    },
-    {
-      "permission": "Microsoft.Privatedns/virtualNetworkLinks/read",
-      "service": "Microsoft.Privatedns",
-      "action": "NewListPager",
-      "source_file": "dns.go"
-    },
-    {
-      "permission": "Microsoft.Recoveryservices/backupPolicies/read",
-      "service": "Microsoft.Recoveryservices",
+      "permission": "Microsoft.RecoveryServices/Vaults/backupPolicies/read",
+      "service": "Microsoft.RecoveryServices",
       "action": "NewListPager",
       "source_file": "recoveryservices.go"
     },
     {
-      "permission": "Microsoft.Recoveryservices/backupProtectedItems/read",
-      "service": "Microsoft.Recoveryservices",
+      "permission": "Microsoft.RecoveryServices/Vaults/backupProtectedItems/read",
+      "service": "Microsoft.RecoveryServices",
       "action": "NewListPager",
       "source_file": "recoveryservices.go"
     },
     {
-      "permission": "Microsoft.Recoveryservices/backupResourceVaultConfigs/read",
-      "service": "Microsoft.Recoveryservices",
+      "permission": "Microsoft.RecoveryServices/Vaults/backupconfig/read",
+      "service": "Microsoft.RecoveryServices",
       "action": "Get",
       "source_file": "recoveryservices.go"
     },
     {
-      "permission": "Microsoft.Recoveryservices/vaults/read",
-      "service": "Microsoft.Recoveryservices",
+      "permission": "Microsoft.RecoveryServices/vaults/read",
+      "service": "Microsoft.RecoveryServices",
       "action": "NewListBySubscriptionIDPager",
       "source_file": "recoveryservices.go"
-    },
-    {
-      "permission": "Microsoft.Resources/resourceGroups/read",
-      "service": "Microsoft.Resources",
-      "action": "NewListPager",
-      "source_file": "resource_groups.go"
     },
     {
       "permission": "Microsoft.Resources/resources/read",
@@ -616,10 +688,22 @@
       "source_file": "subscription.go"
     },
     {
+      "permission": "Microsoft.Resources/subscriptions/resourceGroups/read",
+      "service": "Microsoft.Resources",
+      "action": "NewListPager",
+      "source_file": "resource_groups.go"
+    },
+    {
       "permission": "Microsoft.Security/autoProvisioningSettings/read",
       "service": "Microsoft.Security",
       "action": "Get",
       "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.ServiceBus/namespaces/queues/read",
+      "service": "Microsoft.ServiceBus",
+      "action": "NewListByNamespacePager",
+      "source_file": "servicebus.go"
     },
     {
       "permission": "Microsoft.ServiceBus/namespaces/read",
@@ -628,21 +712,15 @@
       "source_file": "servicebus.go"
     },
     {
-      "permission": "Microsoft.ServiceBus/queues/read",
+      "permission": "Microsoft.ServiceBus/namespaces/topics/read",
       "service": "Microsoft.ServiceBus",
       "action": "NewListByNamespacePager",
       "source_file": "servicebus.go"
     },
     {
-      "permission": "Microsoft.ServiceBus/subscriptions/read",
+      "permission": "Microsoft.ServiceBus/namespaces/topics/subscriptions/read",
       "service": "Microsoft.ServiceBus",
       "action": "NewListByTopicPager",
-      "source_file": "servicebus.go"
-    },
-    {
-      "permission": "Microsoft.ServiceBus/topics/read",
-      "service": "Microsoft.ServiceBus",
-      "action": "NewListByNamespacePager",
       "source_file": "servicebus.go"
     },
     {
@@ -760,21 +838,27 @@
       "source_file": "sql.go"
     },
     {
-      "permission": "Microsoft.Storage/encryptionScopes/read",
+      "permission": "Microsoft.Storage/localUsers/read",
       "service": "Microsoft.Storage",
       "action": "NewListPager",
-      "source_file": "storage.go"
-    },
-    {
-      "permission": "Microsoft.Storage/managementPolicies/read",
-      "service": "Microsoft.Storage",
-      "action": "Get",
       "source_file": "storage.go"
     },
     {
       "permission": "Microsoft.Storage/storageAccounts/blobServices/containers/read",
       "service": "Microsoft.Storage",
       "action": "NewListPager",
+      "source_file": "storage.go"
+    },
+    {
+      "permission": "Microsoft.Storage/storageAccounts/encryptionScopes/read",
+      "service": "Microsoft.Storage",
+      "action": "NewListPager",
+      "source_file": "storage.go"
+    },
+    {
+      "permission": "Microsoft.Storage/storageAccounts/managementPolicies/read",
+      "service": "Microsoft.Storage",
+      "action": "Get",
       "source_file": "storage.go"
     },
     {

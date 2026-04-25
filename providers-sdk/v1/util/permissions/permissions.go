@@ -1382,6 +1382,8 @@ var azureServiceToARMMap = map[string]string{
 	"batch":                 "Microsoft.Batch",
 	"databricks":            "Microsoft.Databricks",
 	"synapse":               "Microsoft.Synapse",
+	"operationalinsights":   "Microsoft.OperationalInsights",
+	"recoveryservices":      "Microsoft.RecoveryServices",
 }
 
 func azureServiceToARM(service string) string {
@@ -1421,33 +1423,33 @@ var azurePermissionOverrides = map[string]string{
 	"Microsoft.DBforPostgreSQL/firewallRules/read":  "Microsoft.DBforPostgreSQL/servers/firewallRules/read",
 
 	// Network: client names don't match ARM resource types
-	"Microsoft.Network/interfaces/read":                        "Microsoft.Network/networkInterfaces/read",
-	"Microsoft.Network/securityGroups/read":                    "Microsoft.Network/networkSecurityGroups/read",
-	"Microsoft.Network/subnets/read":                           "Microsoft.Network/virtualNetworks/subnets/read",
-	"Microsoft.Network/flowLogs/read":                          "Microsoft.Network/networkWatchers/flowLogs/read",
-	"Microsoft.Network/watchers/read":                          "Microsoft.Network/networkWatchers/read",
-	"Microsoft.Network/virtualNetworkPeerings/read":            "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
-	"Microsoft.Network/virtualNetworkGatewayConnections/read":  "Microsoft.Network/connections/read",
+	"Microsoft.Network/interfaces/read":                       "Microsoft.Network/networkInterfaces/read",
+	"Microsoft.Network/securityGroups/read":                   "Microsoft.Network/networkSecurityGroups/read",
+	"Microsoft.Network/subnets/read":                          "Microsoft.Network/virtualNetworks/subnets/read",
+	"Microsoft.Network/flowLogs/read":                         "Microsoft.Network/networkWatchers/flowLogs/read",
+	"Microsoft.Network/watchers/read":                         "Microsoft.Network/networkWatchers/read",
+	"Microsoft.Network/virtualNetworkPeerings/read":           "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
+	"Microsoft.Network/virtualNetworkGatewayConnections/read": "Microsoft.Network/connections/read",
 
 	// SQL: sub-resources need servers/ or servers/databases/ parent paths
-	"Microsoft.Sql/databases/read":                              "Microsoft.Sql/servers/databases/read",
-	"Microsoft.Sql/firewallRules/read":                          "Microsoft.Sql/servers/firewallRules/read",
-	"Microsoft.Sql/virtualNetworkRules/read":                    "Microsoft.Sql/servers/virtualNetworkRules/read",
-	"Microsoft.Sql/encryptionProtectors/read":                   "Microsoft.Sql/servers/encryptionProtector/read",
-	"Microsoft.Sql/backupShortTermRetentionPolicies/read":       "Microsoft.Sql/servers/databases/backupShortTermRetentionPolicies/read",
-	"Microsoft.Sql/longTermRetentionPolicies/read":              "Microsoft.Sql/servers/databases/backupLongTermRetentionPolicies/read",
-	"Microsoft.Sql/transparentDataEncryptions/read":             "Microsoft.Sql/servers/databases/transparentDataEncryption/read",
+	"Microsoft.Sql/databases/read":                                "Microsoft.Sql/servers/databases/read",
+	"Microsoft.Sql/firewallRules/read":                            "Microsoft.Sql/servers/firewallRules/read",
+	"Microsoft.Sql/virtualNetworkRules/read":                      "Microsoft.Sql/servers/virtualNetworkRules/read",
+	"Microsoft.Sql/encryptionProtectors/read":                     "Microsoft.Sql/servers/encryptionProtector/read",
+	"Microsoft.Sql/backupShortTermRetentionPolicies/read":         "Microsoft.Sql/servers/databases/backupShortTermRetentionPolicies/read",
+	"Microsoft.Sql/longTermRetentionPolicies/read":                "Microsoft.Sql/servers/databases/backupLongTermRetentionPolicies/read",
+	"Microsoft.Sql/transparentDataEncryptions/read":               "Microsoft.Sql/servers/databases/transparentDataEncryption/read",
 	"Microsoft.Sql/databaseAdvancedThreatProtectionSettings/read": "Microsoft.Sql/servers/databases/advancedThreatProtectionSettings/read",
-	"Microsoft.Sql/databaseBlobAuditingPolicies/read":           "Microsoft.Sql/servers/databases/auditingSettings/read",
-	"Microsoft.Sql/databaseSecurityAlertPolicies/read":          "Microsoft.Sql/servers/databases/securityAlertPolicies/read",
-	"Microsoft.Sql/databaseUsages/read":                         "Microsoft.Sql/servers/databases/usages/read",
-	"Microsoft.Sql/serverAdvancedThreatProtectionSettings/read": "Microsoft.Sql/servers/advancedThreatProtectionSettings/read",
-	"Microsoft.Sql/serverAzureADAdministrators/read":            "Microsoft.Sql/servers/administrators/read",
-	"Microsoft.Sql/serverAzureADOnlyAuthentications/read":       "Microsoft.Sql/servers/azureADOnlyAuthentications/read",
-	"Microsoft.Sql/serverBlobAuditingPolicies/read":             "Microsoft.Sql/servers/auditingSettings/read",
-	"Microsoft.Sql/serverConnectionPolicies/read":               "Microsoft.Sql/servers/connectionPolicies/read",
-	"Microsoft.Sql/serverSecurityAlertPolicies/read":            "Microsoft.Sql/servers/securityAlertPolicies/read",
-	"Microsoft.Sql/serverVulnerabilityAssessments/read":         "Microsoft.Sql/servers/vulnerabilityAssessments/read",
+	"Microsoft.Sql/databaseBlobAuditingPolicies/read":             "Microsoft.Sql/servers/databases/auditingSettings/read",
+	"Microsoft.Sql/databaseSecurityAlertPolicies/read":            "Microsoft.Sql/servers/databases/securityAlertPolicies/read",
+	"Microsoft.Sql/databaseUsages/read":                           "Microsoft.Sql/servers/databases/usages/read",
+	"Microsoft.Sql/serverAdvancedThreatProtectionSettings/read":   "Microsoft.Sql/servers/advancedThreatProtectionSettings/read",
+	"Microsoft.Sql/serverAzureADAdministrators/read":              "Microsoft.Sql/servers/administrators/read",
+	"Microsoft.Sql/serverAzureADOnlyAuthentications/read":         "Microsoft.Sql/servers/azureADOnlyAuthentications/read",
+	"Microsoft.Sql/serverBlobAuditingPolicies/read":               "Microsoft.Sql/servers/auditingSettings/read",
+	"Microsoft.Sql/serverConnectionPolicies/read":                 "Microsoft.Sql/servers/connectionPolicies/read",
+	"Microsoft.Sql/serverSecurityAlertPolicies/read":              "Microsoft.Sql/servers/securityAlertPolicies/read",
+	"Microsoft.Sql/serverVulnerabilityAssessments/read":           "Microsoft.Sql/servers/vulnerabilityAssessments/read",
 
 	// Storage: client names don't match ARM resource types
 	"Microsoft.Storage/accounts/read":       "Microsoft.Storage/storageAccounts/read",
@@ -1457,6 +1459,55 @@ var azurePermissionOverrides = map[string]string{
 	"Microsoft.Web/environments/read": "Microsoft.Web/hostingEnvironments/read",
 	"Microsoft.Web/plans/read":        "Microsoft.Web/serverfarms/read",
 	"Microsoft.Web/webApps/read":      "Microsoft.Web/sites/read",
+
+	// CDN: Azure Front Door SDK clients omit the profiles/ parent path
+	"Microsoft.Cdn/aFDCustomDomains/read": "Microsoft.Cdn/profiles/customdomains/read",
+	"Microsoft.Cdn/aFDEndpoints/read":     "Microsoft.Cdn/profiles/afdendpoints/read",
+	"Microsoft.Cdn/aFDOriginGroups/read":  "Microsoft.Cdn/profiles/origingroups/read",
+	"Microsoft.Cdn/aFDOrigins/read":       "Microsoft.Cdn/profiles/origingroups/origins/read",
+
+	// ContainerRegistry: sub-resources need registries/ parent path
+	"Microsoft.ContainerRegistry/replications/read": "Microsoft.ContainerRegistry/registries/replications/read",
+	"Microsoft.ContainerRegistry/scopeMaps/read":    "Microsoft.ContainerRegistry/registries/scopeMaps/read",
+	"Microsoft.ContainerRegistry/tokens/read":       "Microsoft.ContainerRegistry/registries/tokens/read",
+	"Microsoft.ContainerRegistry/webhooks/read":     "Microsoft.ContainerRegistry/registries/webhooks/read",
+
+	// DNS: Azure DNS lives under Microsoft.Network, not Microsoft.Dns
+	"Microsoft.Dns/recordSets/read": "Microsoft.Network/dnszones/recordsets/read",
+	"Microsoft.Dns/zones/read":      "Microsoft.Network/dnszones/read",
+
+	// Private DNS: lives under Microsoft.Network/privateDnsZones, not Microsoft.Privatedns
+	"Microsoft.Privatedns/privateZones/read":        "Microsoft.Network/privateDnsZones/read",
+	"Microsoft.Privatedns/virtualNetworkLinks/read": "Microsoft.Network/privateDnsZones/virtualNetworkLinks/read",
+
+	// EventHub: sub-resources need namespaces/ (or namespaces/eventHubs/) parent path
+	"Microsoft.EventHub/consumerGroups/read": "Microsoft.EventHub/namespaces/eventHubs/consumergroups/read",
+	"Microsoft.EventHub/eventHubs/read":      "Microsoft.EventHub/namespaces/eventhubs/read",
+
+	// Network: SDK calls Application Gateway WAF, which has a longer ARM type name
+	"Microsoft.Network/webApplicationFirewallPolicies/read": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
+
+	// OperationalInsights: sub-resources need workspaces/ parent path
+	"Microsoft.OperationalInsights/dataExports/read":    "Microsoft.OperationalInsights/workspaces/dataexports/read",
+	"Microsoft.OperationalInsights/linkedServices/read": "Microsoft.OperationalInsights/workspaces/linkedservices/read",
+
+	// RecoveryServices: backup sub-resources need Vaults/ parent path; backupResourceVaultConfigs
+	// is the SDK client name but the ARM operation is called backupconfig
+	"Microsoft.RecoveryServices/backupPolicies/read":             "Microsoft.RecoveryServices/Vaults/backupPolicies/read",
+	"Microsoft.RecoveryServices/backupProtectedItems/read":       "Microsoft.RecoveryServices/Vaults/backupProtectedItems/read",
+	"Microsoft.RecoveryServices/backupResourceVaultConfigs/read": "Microsoft.RecoveryServices/Vaults/backupconfig/read",
+
+	// Resources: resource groups are nested under subscriptions/
+	"Microsoft.Resources/resourceGroups/read": "Microsoft.Resources/subscriptions/resourceGroups/read",
+
+	// ServiceBus: sub-resources need namespaces/ parent path; subscriptions are nested under topics
+	"Microsoft.ServiceBus/queues/read":        "Microsoft.ServiceBus/namespaces/queues/read",
+	"Microsoft.ServiceBus/topics/read":        "Microsoft.ServiceBus/namespaces/topics/read",
+	"Microsoft.ServiceBus/subscriptions/read": "Microsoft.ServiceBus/namespaces/topics/subscriptions/read",
+
+	// Storage: encryption/management policy sub-resources need storageAccounts/ parent path
+	"Microsoft.Storage/encryptionScopes/read":   "Microsoft.Storage/storageAccounts/encryptionScopes/read",
+	"Microsoft.Storage/managementPolicies/read": "Microsoft.Storage/storageAccounts/managementPolicies/read",
 }
 
 // azurePermission constructs the RBAC permission string.
