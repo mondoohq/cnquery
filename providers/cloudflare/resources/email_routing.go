@@ -22,8 +22,8 @@ type mqlCloudflareZoneEmailRoutingInternal struct {
 	dnsFetched bool
 	dnsCache   []cloudflare.DNSRecord
 
-	zoneNameLock     sync.Mutex
-	zoneNameResolved bool
+	zoneNameOnce sync.Once
+	zoneNameErr  error
 }
 
 func (c *mqlCloudflareZone) emailRouting() (*mqlCloudflareZoneEmailRouting, error) {
@@ -159,37 +159,28 @@ func (c *mqlCloudflareZoneEmailRouting) dmarcConfigured() (bool, error) {
 // resolveZoneName returns the zone name, fetching it from the API if it wasn't
 // populated when the email routing resource was created (e.g., when the zone
 // resource was reached via lazy init). The result is cached for the lifetime
-// of the resource.
+// of the resource via sync.Once for race-free initialization.
 func (c *mqlCloudflareZoneEmailRouting) resolveZoneName() (string, error) {
-	if c.zoneName != "" || c.zoneNameResolved {
-		return c.zoneName, nil
-	}
-	c.zoneNameLock.Lock()
-	defer c.zoneNameLock.Unlock()
-	if c.zoneName != "" || c.zoneNameResolved {
-		return c.zoneName, nil
-	}
-
-	if c.zoneID == "" {
-		c.zoneNameResolved = true
-		return "", nil
-	}
-
-	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	zone, err := conn.Cf.ZoneDetails(context.TODO(), c.zoneID)
-	if err != nil {
-		var notFound *cloudflare.NotFoundError
-		var authN *cloudflare.AuthenticationError
-		var authZ *cloudflare.AuthorizationError
-		if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
-			c.zoneNameResolved = true
-			return "", nil
+	c.zoneNameOnce.Do(func() {
+		if c.zoneName != "" || c.zoneID == "" {
+			return
 		}
-		return "", err
-	}
-	c.zoneName = zone.Name
-	c.zoneNameResolved = true
-	return c.zoneName, nil
+
+		conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+		zone, err := conn.Cf.ZoneDetails(context.TODO(), c.zoneID)
+		if err != nil {
+			var notFound *cloudflare.NotFoundError
+			var authN *cloudflare.AuthenticationError
+			var authZ *cloudflare.AuthorizationError
+			if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+				return
+			}
+			c.zoneNameErr = err
+			return
+		}
+		c.zoneName = zone.Name
+	})
+	return c.zoneName, c.zoneNameErr
 }
 
 func (c *mqlCloudflareZoneEmailRouting) fetchSuggestedDNSRecords() ([]cloudflare.DNSRecord, error) {

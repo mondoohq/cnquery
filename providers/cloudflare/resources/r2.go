@@ -157,14 +157,19 @@ func (c *mqlCloudflareR2Bucket) fetchPublicAccess() (available, enabled bool, do
 		return false, false, "", rerr
 	}
 
+	// An empty result body means the managed-domain endpoint returned no data —
+	// treat that as "not available" rather than "available but disabled".
+	if len(raw.Result) == 0 {
+		c.publicAccessFetched = true
+		return false, false, "", nil
+	}
+
 	var payload struct {
 		Enabled bool   `json:"enabled"`
 		Domain  string `json:"domain"`
 	}
-	if len(raw.Result) > 0 {
-		if err := json.Unmarshal(raw.Result, &payload); err != nil {
-			return false, false, "", fmt.Errorf("failed to decode r2 managed-domain response: %w", err)
-		}
+	if err := json.Unmarshal(raw.Result, &payload); err != nil {
+		return false, false, "", fmt.Errorf("failed to decode r2 managed-domain response: %w", err)
 	}
 
 	c.publicAccessAvailable = true
