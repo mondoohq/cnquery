@@ -53,6 +53,9 @@ digitalocean.certificate.state 13.0.1
 digitalocean.certificate.type 13.0.1
 digitalocean.certificates 13.0.1
 digitalocean.database 13.0.1
+digitalocean.database.connectionHost 13.0.2
+digitalocean.database.connectionPort 13.0.2
+digitalocean.database.connectionUri 13.0.2
 digitalocean.database.createdAt 13.0.1
 digitalocean.database.engine 13.0.1
 digitalocean.database.firewallRules 13.0.1
@@ -68,6 +71,7 @@ digitalocean.database.pool.name 13.0.1
 digitalocean.database.pool.size 13.0.1
 digitalocean.database.pool.user 13.0.1
 digitalocean.database.pools 13.0.1
+digitalocean.database.privateConnectionAvailable 13.0.2
 digitalocean.database.privateNetworkUuid 13.0.1
 digitalocean.database.region 13.0.1
 digitalocean.database.replica 13.0.1
@@ -82,12 +86,14 @@ digitalocean.database.replicas 13.0.1
 digitalocean.database.size 13.0.1
 digitalocean.database.status 13.0.1
 digitalocean.database.tags 13.0.1
+digitalocean.database.tlsEnforced 13.0.2
 digitalocean.database.user 13.0.1
 digitalocean.database.user.databaseId 13.0.1
 digitalocean.database.user.name 13.0.1
 digitalocean.database.user.role 13.0.1
 digitalocean.database.users 13.0.1
 digitalocean.database.version 13.0.1
+digitalocean.database.vpc 13.0.2
 digitalocean.databases 13.0.1
 digitalocean.domain 13.0.1
 digitalocean.domain.name 13.0.1
@@ -110,6 +116,7 @@ digitalocean.droplet.backupsEnabled 13.0.1
 digitalocean.droplet.createdAt 13.0.1
 digitalocean.droplet.disk 13.0.1
 digitalocean.droplet.features 13.0.1
+digitalocean.droplet.firewalls 13.0.2
 digitalocean.droplet.id 13.0.1
 digitalocean.droplet.image 13.0.1
 digitalocean.droplet.memory 13.0.1
@@ -121,12 +128,15 @@ digitalocean.droplet.region 13.0.1
 digitalocean.droplet.size 13.0.1
 digitalocean.droplet.status 13.0.1
 digitalocean.droplet.tags 13.0.1
+digitalocean.droplet.unprotectedPublicIp 13.0.2
 digitalocean.droplet.vcpus 13.0.1
+digitalocean.droplet.vpc 13.0.2
 digitalocean.droplet.vpcUuid 13.0.1
 digitalocean.droplets 13.0.1
 digitalocean.firewall 13.0.1
 digitalocean.firewall.createdAt 13.0.1
 digitalocean.firewall.dropletIds 13.0.1
+digitalocean.firewall.droplets 13.0.2
 digitalocean.firewall.id 13.0.1
 digitalocean.firewall.inboundRules 13.0.1
 digitalocean.firewall.name 13.0.1
@@ -150,6 +160,7 @@ digitalocean.kubernetes.cluster.surgeUpgrade 13.0.1
 digitalocean.kubernetes.cluster.tags 13.0.1
 digitalocean.kubernetes.cluster.updatedAt 13.0.1
 digitalocean.kubernetes.cluster.version 13.0.1
+digitalocean.kubernetes.cluster.vpc 13.0.2
 digitalocean.kubernetes.cluster.vpcUuid 13.0.1
 digitalocean.kubernetes.nodePool 13.0.1
 digitalocean.kubernetes.nodePool.autoScale 13.0.1
@@ -169,6 +180,7 @@ digitalocean.loadBalancer.algorithm 13.0.1
 digitalocean.loadBalancer.createdAt 13.0.1
 digitalocean.loadBalancer.disableLetsEncryptDnsRecords 13.0.1
 digitalocean.loadBalancer.dropletIds 13.0.1
+digitalocean.loadBalancer.droplets 13.0.2
 digitalocean.loadBalancer.enableBackendKeepalive 13.0.1
 digitalocean.loadBalancer.enableProxyProtocol 13.0.1
 digitalocean.loadBalancer.forwardingRules 13.0.1
@@ -181,6 +193,7 @@ digitalocean.loadBalancer.region 13.0.1
 digitalocean.loadBalancer.status 13.0.1
 digitalocean.loadBalancer.stickySessions 13.0.1
 digitalocean.loadBalancer.tags 13.0.1
+digitalocean.loadBalancer.vpc 13.0.2
 digitalocean.loadBalancer.vpcUuid 13.0.1
 digitalocean.loadBalancers 13.0.1
 digitalocean.project 13.0.1

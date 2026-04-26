@@ -96,6 +96,8 @@ digitalocean.droplet @defaults("id name status") {
   tags []string
   // VPC UUID
   vpcUuid string
+  // VPC the droplet is attached to
+  vpc() digitalocean.vpc
   // Features (e.g., monitoring, backups)
   features []string
   // Backup enabled
@@ -104,6 +106,10 @@ digitalocean.droplet @defaults("id name status") {
   monitoringEnabled bool
   // Image information
   image dict
+  // Firewalls covering this droplet (by id or matching tag)
+  firewalls() []digitalocean.firewall
+  // Whether the droplet has a public IPv4 not covered by any firewall
+  unprotectedPublicIp() bool
 }
 
 // DigitalOcean firewall
@@ -122,12 +128,14 @@ digitalocean.firewall @defaults("id name status") {
   outboundRules []dict
   // Droplet IDs protected by this firewall
   dropletIds []int
+  // Droplets directly attached to this firewall
+  droplets() []digitalocean.droplet
   // Tags used to target droplets
   tags []string
 }
 
 // DigitalOcean managed database cluster
-digitalocean.database @defaults("id name engine") {
+digitalocean.database @defaults("id name engine tlsEnforced") {
   // Database cluster ID
   id string
   // Database cluster name
@@ -148,10 +156,22 @@ digitalocean.database @defaults("id name engine") {
   createdAt time
   // Private network UUID
   privateNetworkUuid string
+  // VPC the cluster is attached to (resolved from privateNetworkUuid)
+  vpc() digitalocean.vpc
   // Tags
   tags []string
-  // Firewall rules
+  // Firewall rules (trusted sources)
   firewallRules() []dict
+  // Whether TLS/SSL is required for client connections
+  tlsEnforced bool
+  // Public connection URI (host visible on the internet)
+  connectionUri string
+  // Public connection host
+  connectionHost string
+  // Public connection port
+  connectionPort int
+  // Whether a private (VPC-only) connection endpoint is available
+  privateConnectionAvailable bool
   // Maintenance window
   maintenanceWindow dict
   // Database users
@@ -288,8 +308,12 @@ digitalocean.loadBalancer @defaults("id name status") {
   enableBackendKeepalive bool
   // VPC UUID
   vpcUuid string
+  // VPC the load balancer is attached to
+  vpc() digitalocean.vpc
   // Droplet IDs
   dropletIds []int
+  // Droplets attached to this load balancer
+  droplets() []digitalocean.droplet
   // Tags
   tags []string
   // Forwarding rules
@@ -356,6 +380,8 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   serviceSubnet string
   // VPC UUID
   vpcUuid string
+  // VPC the cluster is attached to
+  vpc() digitalocean.vpc
   // Auto-upgrade enabled
   autoUpgrade bool
   // Surge upgrade enabled

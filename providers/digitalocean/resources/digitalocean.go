@@ -277,19 +277,39 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 				mw["pending"] = db.MaintenanceWindow.Pending
 			}
 
+			// Connection details: DigitalOcean managed databases enforce TLS on the
+			// public connection. We surface the SSL bit returned by the API as
+			// tlsEnforced, with the public connection URI/host/port for visibility.
+			connURI := ""
+			connHost := ""
+			connPort := int64(0)
+			tlsEnforced := false
+			if db.Connection != nil {
+				connURI = db.Connection.URI
+				connHost = db.Connection.Host
+				connPort = int64(db.Connection.Port)
+				tlsEnforced = db.Connection.SSL
+			}
+			privateConnectionAvailable := db.PrivateConnection != nil
+
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.database", map[string]*llx.RawData{
-				"id":                 llx.StringData(db.ID),
-				"name":               llx.StringData(db.Name),
-				"engine":             llx.StringData(db.EngineSlug),
-				"version":            llx.StringData(db.VersionSlug),
-				"numNodes":           llx.IntData(int64(db.NumNodes)),
-				"size":               llx.StringData(db.SizeSlug),
-				"region":             llx.StringData(db.RegionSlug),
-				"status":             llx.StringData(db.Status),
-				"createdAt":          llx.TimeData(db.CreatedAt),
-				"privateNetworkUuid": llx.StringData(db.PrivateNetworkUUID),
-				"tags":               llx.ArrayData(tags, "\x02"),
-				"maintenanceWindow":  llx.DictData(mw),
+				"id":                         llx.StringData(db.ID),
+				"name":                       llx.StringData(db.Name),
+				"engine":                     llx.StringData(db.EngineSlug),
+				"version":                    llx.StringData(db.VersionSlug),
+				"numNodes":                   llx.IntData(int64(db.NumNodes)),
+				"size":                       llx.StringData(db.SizeSlug),
+				"region":                     llx.StringData(db.RegionSlug),
+				"status":                     llx.StringData(db.Status),
+				"createdAt":                  llx.TimeData(db.CreatedAt),
+				"privateNetworkUuid":         llx.StringData(db.PrivateNetworkUUID),
+				"tags":                       llx.ArrayData(tags, "\x02"),
+				"maintenanceWindow":          llx.DictData(mw),
+				"tlsEnforced":                llx.BoolData(tlsEnforced),
+				"connectionUri":              llx.StringData(connURI),
+				"connectionHost":             llx.StringData(connHost),
+				"connectionPort":             llx.IntData(connPort),
+				"privateConnectionAvailable": llx.BoolData(privateConnectionAvailable),
 			})
 			if err != nil {
 				return nil, err
