@@ -37,8 +37,11 @@ func (g *mqlGrafana) apiKeys() ([]any, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	// Grafana returns 410 Gone on instances where api keys are fully disabled.
-	if resp.StatusCode == http.StatusGone || resp.StatusCode == http.StatusNotFound {
+	// 410 → api keys fully disabled; 403/404 → caller lacks admin or endpoint
+	// removed. Return empty so iteration over apiKeys is safe in all cases.
+	if resp.StatusCode == http.StatusGone ||
+		resp.StatusCode == http.StatusNotFound ||
+		resp.StatusCode == http.StatusForbidden {
 		return []any{}, nil
 	}
 	if resp.StatusCode != http.StatusOK {

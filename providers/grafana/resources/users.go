@@ -208,6 +208,12 @@ func (u *mqlGrafanaUser) fetchDetail() (grafanaUserDetailJSON, error) {
 		return u.detail, err
 	}
 	defer resp.Body.Close()
+	// 403/404 → caller lacks server-admin permissions or user is gone. Return
+	// the zero-value detail so org-admin queries don't fail outright.
+	if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusNotFound {
+		u.detailFetched = true
+		return u.detail, nil
+	}
 	if resp.StatusCode != http.StatusOK {
 		err := fmt.Errorf("grafana: GET %s returned status %d", path, resp.StatusCode)
 		u.detailFetched = true
@@ -317,8 +323,9 @@ func (u *mqlGrafanaUser) permissions() (map[string]any, error) {
 	}
 	defer resp.Body.Close()
 
-	// 404 => endpoint not available (OSS) or RBAC disabled. Return empty map.
-	if resp.StatusCode == http.StatusNotFound {
+	// 403/404 → endpoint not available (OSS), RBAC disabled, or caller lacks
+	// access. Return empty map so org-admin queries don't fail.
+	if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusNotFound {
 		u.permsFetched = true
 		u.perms = map[string]any{}
 		return u.perms, nil
