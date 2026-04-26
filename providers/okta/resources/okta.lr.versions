@@ -11,7 +11,6 @@ okta.api.token.lastUpdated 13.1.6
 okta.api.token.name 13.1.6
 okta.api.token.tokenWindow 13.1.6
 okta.api.token.user 13.1.6
-okta.api.token.userId 13.1.6
 okta.apiTokens 13.1.6
 okta.application 9.0.0
 okta.application.created 9.0.0
@@ -210,5 +209,4 @@ okta.userFactor.profile 13.1.6
 okta.userFactor.provider 13.1.6
 okta.userFactor.status 13.1.6
 okta.userFactor.user 13.1.6
-okta.userFactor.userId 13.1.6
 okta.users 9.0.0

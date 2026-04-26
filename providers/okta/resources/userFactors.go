@@ -6,12 +6,19 @@ package resources
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
 )
+
+// mqlOktaUserFactorInternal caches the owning user's id so the typed user()
+// accessor can resolve without exposing a deprecated public field.
+type mqlOktaUserFactorInternal struct {
+	cacheUserId string
+}
 
 // userFactorRaw decodes the user factors endpoint directly so we can capture
 // the type-specific Profile object that the SDK's UserFactor struct discards.
@@ -40,8 +47,8 @@ func (o *mqlOktaUser) factors() ([]any, error) {
 	ctx := context.Background()
 	rq := client.CloneRequestExecutor()
 
-	url := fmt.Sprintf("/api/v1/users/%s/factors", o.Id.Data)
-	req, err := rq.WithAccept("application/json").WithContentType("application/json").NewRequest("GET", url, nil)
+	endpoint := fmt.Sprintf("/api/v1/users/%s/factors", url.PathEscape(o.Id.Data))
+	req, err := rq.WithAccept("application/json").WithContentType("application/json").NewRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +94,6 @@ func newMqlOktaUserFactor(runtime *plugin.Runtime, userId string, factor *userFa
 		"status":      llx.StringData(factor.Status),
 		"created":     llx.TimeDataPtr(factor.Created),
 		"lastUpdated": llx.TimeDataPtr(factor.LastUpdated),
-		"userId":      llx.StringData(userId),
 	}
 	if factor.Profile != nil {
 		args["profile"] = llx.DictData(factor.Profile)
@@ -99,27 +105,26 @@ func newMqlOktaUserFactor(runtime *plugin.Runtime, userId string, factor *userFa
 	if err != nil {
 		return nil, err
 	}
-	return r.(*mqlOktaUserFactor), nil
+	mqlFactor := r.(*mqlOktaUserFactor)
+	mqlFactor.cacheUserId = userId
+	return mqlFactor, nil
 }
 
 func (o *mqlOktaUserFactor) id() (string, error) {
-	return "okta.userFactor/" + o.UserId.Data + "/" + o.Id.Data, o.Id.Error
+	return "okta.userFactor/" + o.cacheUserId + "/" + o.Id.Data, o.Id.Error
 }
 
 // user resolves the typed user this factor belongs to. The runtime caches
 // okta.user instances keyed by id, so repeated lookups across factors reuse a
 // single GetUser call.
 func (o *mqlOktaUserFactor) user() (*mqlOktaUser, error) {
-	if o.UserId.Error != nil {
-		return nil, o.UserId.Error
-	}
-	if o.UserId.Data == "" {
+	if o.cacheUserId == "" {
 		o.User.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
 	r, err := NewResource(o.MqlRuntime, "okta.user", map[string]*llx.RawData{
-		"id": llx.StringData(o.UserId.Data),
+		"id": llx.StringData(o.cacheUserId),
 	})
 	if err != nil {
 		return nil, err

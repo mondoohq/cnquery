@@ -142,8 +142,6 @@ private okta.userFactor @defaults("factorType status") {
   created time
   // Timestamp when the factor was last updated
   lastUpdated time
-  // Deprecated: use user() instead. ID of the user this factor belongs to
-  userId string
   // The user this factor belongs to
   user() okta.user
   // Provider/factor-type-specific data. Shape depends on factorType:
@@ -186,13 +184,11 @@ private okta.authenticator @defaults("name key status") {
 }
 
 // Okta API token (used to authenticate to the Okta REST API)
-private okta.api.token @defaults("name userId") {
+private okta.api.token @defaults("name") {
   // Unique identifier of the API token
   id string
   // Display name of the token
   name string
-  // Deprecated: use user() instead. ID of the user the token belongs to
-  userId string
   // ID of the client the token was created for
   clientName string
   // Timestamp when the token was created

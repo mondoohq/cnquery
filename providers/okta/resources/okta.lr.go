@@ -368,9 +368,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.userFactor.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaUserFactor).GetLastUpdated()).ToDataRes(types.Time)
 	},
-	"okta.userFactor.userId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOktaUserFactor).GetUserId()).ToDataRes(types.String)
-	},
 	"okta.userFactor.user": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaUserFactor).GetUser()).ToDataRes(types.Resource("okta.user"))
 	},
@@ -421,9 +418,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.api.token.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaApiToken).GetName()).ToDataRes(types.String)
-	},
-	"okta.api.token.userId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOktaApiToken).GetUserId()).ToDataRes(types.String)
 	},
 	"okta.api.token.clientName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaApiToken).GetClientName()).ToDataRes(types.String)
@@ -1036,10 +1030,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaUserFactor).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"okta.userFactor.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaUserFactor).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"okta.userFactor.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaUserFactor).User, ok = plugin.RawToTValue[*mqlOktaUser](v.Value, v.Error)
 		return
@@ -1114,10 +1104,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.api.token.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaApiToken).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"okta.api.token.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOktaApiToken).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"okta.api.token.clientName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2362,14 +2348,13 @@ func (c *mqlOktaUser) GetFactors() *plugin.TValue[[]any] {
 type mqlOktaUserFactor struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOktaUserFactorInternal it will be used here
+	mqlOktaUserFactorInternal
 	Id          plugin.TValue[string]
 	FactorType  plugin.TValue[string]
 	Provider    plugin.TValue[string]
 	Status      plugin.TValue[string]
 	Created     plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
-	UserId      plugin.TValue[string]
 	User        plugin.TValue[*mqlOktaUser]
 	Profile     plugin.TValue[any]
 }
@@ -2433,10 +2418,6 @@ func (c *mqlOktaUserFactor) GetCreated() *plugin.TValue[*time.Time] {
 
 func (c *mqlOktaUserFactor) GetLastUpdated() *plugin.TValue[*time.Time] {
 	return &c.LastUpdated
-}
-
-func (c *mqlOktaUserFactor) GetUserId() *plugin.TValue[string] {
-	return &c.UserId
 }
 
 func (c *mqlOktaUserFactor) GetUser() *plugin.TValue[*mqlOktaUser] {
@@ -2582,10 +2563,9 @@ func (c *mqlOktaAuthenticator) GetLastUpdated() *plugin.TValue[*time.Time] {
 type mqlOktaApiToken struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOktaApiTokenInternal it will be used here
+	mqlOktaApiTokenInternal
 	Id          plugin.TValue[string]
 	Name        plugin.TValue[string]
-	UserId      plugin.TValue[string]
 	ClientName  plugin.TValue[string]
 	Created     plugin.TValue[*time.Time]
 	ExpiresAt   plugin.TValue[*time.Time]
@@ -2637,10 +2617,6 @@ func (c *mqlOktaApiToken) GetId() *plugin.TValue[string] {
 
 func (c *mqlOktaApiToken) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlOktaApiToken) GetUserId() *plugin.TValue[string] {
-	return &c.UserId
 }
 
 func (c *mqlOktaApiToken) GetClientName() *plugin.TValue[string] {

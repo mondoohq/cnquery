@@ -12,6 +12,12 @@ import (
 	"go.mondoo.com/mql/v13/providers/okta/resources/sdk"
 )
 
+// mqlOktaApiTokenInternal caches the owning user's id so the typed user()
+// accessor can resolve without exposing a deprecated public field.
+type mqlOktaApiTokenInternal struct {
+	cacheUserId string
+}
+
 // apiTokens lists API tokens for the org. Requires Super Admin privileges
 // (the /api/v1/api-tokens endpoint).
 func (o *mqlOkta) apiTokens() ([]any, error) {
@@ -28,7 +34,6 @@ func (o *mqlOkta) apiTokens() ([]any, error) {
 		r, err := CreateResource(o.MqlRuntime, "okta.api.token", map[string]*llx.RawData{
 			"id":          llx.StringData(t.Id),
 			"name":        llx.StringData(t.Name),
-			"userId":      llx.StringData(t.UserId),
 			"clientName":  llx.StringData(t.ClientName),
 			"created":     llx.TimeDataPtr(t.Created),
 			"expiresAt":   llx.TimeDataPtr(t.ExpiresAt),
@@ -38,7 +43,9 @@ func (o *mqlOkta) apiTokens() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		list = append(list, r)
+		mqlToken := r.(*mqlOktaApiToken)
+		mqlToken.cacheUserId = t.UserId
+		list = append(list, mqlToken)
 	}
 	return list, nil
 }
@@ -51,16 +58,13 @@ func (o *mqlOktaApiToken) id() (string, error) {
 // caches okta.user instances keyed by id, so repeated lookups across api
 // tokens (and other resources) reuse a single GetUser call.
 func (o *mqlOktaApiToken) user() (*mqlOktaUser, error) {
-	if o.UserId.Error != nil {
-		return nil, o.UserId.Error
-	}
-	if o.UserId.Data == "" {
+	if o.cacheUserId == "" {
 		o.User.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
 	r, err := NewResource(o.MqlRuntime, "okta.user", map[string]*llx.RawData{
-		"id": llx.StringData(o.UserId.Data),
+		"id": llx.StringData(o.cacheUserId),
 	})
 	if err != nil {
 		return nil, err
