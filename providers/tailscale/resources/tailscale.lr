@@ -147,7 +147,11 @@ tailscale.aclPolicy @defaults("tailnet") {
   autoApproverExitNodes []string
   // Subnet routes that are auto-approved when advertised by listed users/groups (CIDR → owners)
   autoApproverRoutes map[string][]string
-  // Subnet routes auto-approved as exit-node-equivalent (default source posture)
+  // Default device-posture rule names applied to every ACL src that doesn't
+  // specify its own srcPosture. Maps to the SDK's `DefaultSourcePosture` /
+  // policy `defaultSrcPosture`, which is a `[]string` of posture names — not
+  // a map, despite the JSON-style name. Empty when the experimental posture
+  // feature is unused.
   defaultSourcePosture []string
   // Whether IPv4 is disabled across the tailnet
   disableIPv4 bool
