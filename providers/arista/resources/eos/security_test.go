@@ -49,6 +49,20 @@ func TestParseAaaConfig_NoConfig(t *testing.T) {
 	assert.False(t, a.LocalUsersAllowed)
 }
 
+func TestParseAaaConfig_AccountingNone(t *testing.T) {
+	// `none` is a valid action with no methods following it.
+	cfg := `aaa accounting commands all default none
+aaa accounting exec default none
+`
+	a := ParseAaaConfig(cfg)
+	cmds, ok := a.AccountingCommands["all/default"]
+	assert.True(t, ok, "accounting commands list should be recorded even with action=none")
+	assert.Empty(t, cmds)
+	exec, ok := a.AccountingExec["default"]
+	assert.True(t, ok, "accounting exec list should be recorded even with action=none")
+	assert.Empty(t, exec)
+}
+
 func TestParseSshSettings_Full(t *testing.T) {
 	cfg := `! comment
 management ssh

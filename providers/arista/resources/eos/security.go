@@ -60,10 +60,13 @@ var (
 		`^aaa authorization commands\s+(\S+)\s+(\S+)\s+(.+)$`)
 	aaaAuthzExecRe = regexp.MustCompile(
 		`^aaa authorization exec\s+(\S+)\s+(.+)$`)
+	// Accounting lines have an action token (start-stop, stop-only, wait-start,
+	// none) between the list name and the methods. When action is "none" there
+	// are no method tokens, so the trailing methods group is optional.
 	aaaAcctCommandsRe = regexp.MustCompile(
-		`^aaa accounting commands\s+(\S+)\s+(\S+)\s+\S+\s+(.+)$`)
+		`^aaa accounting commands\s+(\S+)\s+(\S+)\s+(\S+)(?:\s+(.+))?$`)
 	aaaAcctExecRe = regexp.MustCompile(
-		`^aaa accounting exec\s+(\S+)\s+\S+\s+(.+)$`)
+		`^aaa accounting exec\s+(\S+)\s+(\S+)(?:\s+(.+))?$`)
 	tacacsHostRe = regexp.MustCompile(
 		`^tacacs-server host\s+(\S+)`)
 	radiusHostRe = regexp.MustCompile(
@@ -106,11 +109,11 @@ func ParseAaaConfig(runningConfig string) *AaaConfig {
 			continue
 		}
 		if m := aaaAcctCommandsRe.FindStringSubmatch(line); m != nil {
-			cfg.AccountingCommands[m[1]+"/"+m[2]] = strings.Fields(m[3])
+			cfg.AccountingCommands[m[1]+"/"+m[2]] = strings.Fields(m[4])
 			continue
 		}
 		if m := aaaAcctExecRe.FindStringSubmatch(line); m != nil {
-			cfg.AccountingExec[m[1]] = strings.Fields(m[2])
+			cfg.AccountingExec[m[1]] = strings.Fields(m[3])
 			continue
 		}
 		if m := tacacsHostRe.FindStringSubmatch(line); m != nil {
@@ -197,28 +200,28 @@ func ParseSshSettings(runningConfig string) *SshSettings {
 			s.Enabled = false
 		case line == "no shutdown":
 			s.Enabled = true
-		case strings.HasPrefix(line, "protocol version"):
-			s.ProtocolVersion = strings.TrimSpace(strings.TrimPrefix(line, "protocol version"))
-		case strings.HasPrefix(line, "idle-timeout"):
-			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "idle-timeout")))
+		case strings.HasPrefix(line, "protocol version "):
+			s.ProtocolVersion = strings.TrimSpace(strings.TrimPrefix(line, "protocol version "))
+		case strings.HasPrefix(line, "idle-timeout "):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "idle-timeout ")))
 			if err == nil {
 				s.IdleTimeout = n
 			}
-		case strings.HasPrefix(line, "server-port"):
-			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "server-port")))
+		case strings.HasPrefix(line, "server-port "):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "server-port ")))
 			if err == nil {
 				s.ServerPort = n
 			}
-		case strings.HasPrefix(line, "authentication mode"):
-			s.AuthenticationMode = strings.TrimSpace(strings.TrimPrefix(line, "authentication mode"))
-		case strings.HasPrefix(line, "cipher"):
-			s.Ciphers = strings.Fields(strings.TrimPrefix(line, "cipher"))
-		case strings.HasPrefix(line, "key-exchange"):
-			s.KeyExchange = strings.Fields(strings.TrimPrefix(line, "key-exchange"))
-		case strings.HasPrefix(line, "mac"):
-			s.Macs = strings.Fields(strings.TrimPrefix(line, "mac"))
-		case strings.HasPrefix(line, "hostkey"):
-			s.HostkeyAlgorithms = append(s.HostkeyAlgorithms, strings.TrimSpace(strings.TrimPrefix(line, "hostkey")))
+		case strings.HasPrefix(line, "authentication mode "):
+			s.AuthenticationMode = strings.TrimSpace(strings.TrimPrefix(line, "authentication mode "))
+		case strings.HasPrefix(line, "cipher "):
+			s.Ciphers = strings.Fields(strings.TrimPrefix(line, "cipher "))
+		case strings.HasPrefix(line, "key-exchange "):
+			s.KeyExchange = strings.Fields(strings.TrimPrefix(line, "key-exchange "))
+		case strings.HasPrefix(line, "mac "):
+			s.Macs = strings.Fields(strings.TrimPrefix(line, "mac "))
+		case strings.HasPrefix(line, "hostkey "):
+			s.HostkeyAlgorithms = append(s.HostkeyAlgorithms, strings.TrimSpace(strings.TrimPrefix(line, "hostkey ")))
 		case line == "fips restrictions":
 			s.FipsRestrictions = true
 		}
@@ -319,22 +322,22 @@ func ParseTelnetService(runningConfig string) *TelnetService {
 			t.Enabled = false
 		case line == "no shutdown":
 			t.Enabled = true
-		case strings.HasPrefix(line, "idle-timeout"):
-			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "idle-timeout")))
+		case strings.HasPrefix(line, "idle-timeout "):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "idle-timeout ")))
 			if err == nil {
 				t.IdleTimeout = n
 			}
-		case strings.HasPrefix(line, "session-limit per-host"):
-			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "session-limit per-host")))
+		case strings.HasPrefix(line, "session-limit per-host "):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "session-limit per-host ")))
 			if err == nil {
 				t.PerHostLimit = n
 			}
-		case strings.HasPrefix(line, "session-limit"):
-			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "session-limit")))
+		case strings.HasPrefix(line, "session-limit "):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "session-limit ")))
 			if err == nil {
 				t.SessionLimit = n
 			}
-		case strings.HasPrefix(line, "ip access-group"):
+		case strings.HasPrefix(line, "ip access-group "):
 			parts := strings.Fields(line)
 			if len(parts) >= 3 {
 				t.IPAccessGroup = parts[2]
@@ -439,19 +442,19 @@ func ParsePasswordPolicy(runningConfig string) *PasswordPolicy {
 				continue
 			}
 			switch {
-			case strings.HasPrefix(line, "minimum length"):
+			case strings.HasPrefix(line, "minimum length "):
 				p.MinimumLength = n
-			case strings.HasPrefix(line, "minimum digits"):
+			case strings.HasPrefix(line, "minimum digits "):
 				p.MinimumDigits = n
-			case strings.HasPrefix(line, "minimum upper"):
+			case strings.HasPrefix(line, "minimum upper "):
 				p.MinimumUppercase = n
-			case strings.HasPrefix(line, "minimum lower"):
+			case strings.HasPrefix(line, "minimum lower "):
 				p.MinimumLowercase = n
-			case strings.HasPrefix(line, "minimum special"):
+			case strings.HasPrefix(line, "minimum special "):
 				p.MinimumSpecial = n
-			case strings.HasPrefix(line, "maximum repetitive"):
+			case strings.HasPrefix(line, "maximum repetitive "):
 				p.MaximumRepetitive = n
-			case strings.HasPrefix(line, "maximum sequential"):
+			case strings.HasPrefix(line, "maximum sequential "):
 				p.MaximumSequential = n
 			}
 		}
@@ -515,8 +518,8 @@ type NtpAuthState struct {
 }
 
 var (
-	ntpKeyRe       = regexp.MustCompile(`^ntp authentication-key\s+(\d+)\s+(\S+)`)
-	ntpTrustedKeRe = regexp.MustCompile(`^ntp trusted-key\s+(.+)$`)
+	ntpKeyRe        = regexp.MustCompile(`^ntp authentication-key\s+(\d+)\s+(\S+)`)
+	ntpTrustedKeyRe = regexp.MustCompile(`^ntp trusted-key\s+(.+)$`)
 )
 
 func ParseNtpAuth(runningConfig string) *NtpAuthState {
@@ -536,7 +539,7 @@ func ParseNtpAuth(runningConfig string) *NtpAuthState {
 				})
 			}
 		case strings.HasPrefix(line, "ntp trusted-key"):
-			if m := ntpTrustedKeRe.FindStringSubmatch(line); m != nil {
+			if m := ntpTrustedKeyRe.FindStringSubmatch(line); m != nil {
 				for _, tok := range strings.Fields(m[1]) {
 					id, err := strconv.Atoi(tok)
 					if err == nil {
@@ -601,25 +604,25 @@ func ParseControlPlanePolicer(runningConfig string) *ControlPlanePolicer {
 		// is false, but the inverse is true, so the positive case must come
 		// last.
 		switch {
-		case strings.HasPrefix(line, "no service-policy input"):
+		case strings.HasPrefix(line, "no service-policy input "):
 			c.PolicyApplied = false
 			c.PolicyName = ""
-		case strings.HasPrefix(line, "service-policy input"):
+		case strings.HasPrefix(line, "service-policy input "):
 			c.PolicyApplied = true
 			parts := strings.Fields(line)
 			if len(parts) >= 3 {
 				c.PolicyName = parts[2]
 			}
-		case strings.HasPrefix(line, "no ip access-group"):
+		case strings.HasPrefix(line, "no ip access-group "):
 			c.IPAccessGroup = ""
-		case strings.HasPrefix(line, "ip access-group"):
+		case strings.HasPrefix(line, "ip access-group "):
 			parts := strings.Fields(line)
 			if len(parts) >= 3 {
 				c.IPAccessGroup = parts[2]
 			}
-		case strings.HasPrefix(line, "no ipv6 access-group"):
+		case strings.HasPrefix(line, "no ipv6 access-group "):
 			c.IP6AccessGroup = ""
-		case strings.HasPrefix(line, "ipv6 access-group"):
+		case strings.HasPrefix(line, "ipv6 access-group "):
 			parts := strings.Fields(line)
 			if len(parts) >= 3 {
 				c.IP6AccessGroup = parts[2]
@@ -652,6 +655,8 @@ type PortSecurityConfig struct {
 	StickyLearning bool
 }
 
+var ifaceHeaderRe = regexp.MustCompile(`(?m)^interface (\S+)\s*$`)
+
 // ParsePortSecurity walks every `interface <name>` block and returns one
 // PortSecurityConfig per interface that has at least one
 // `switchport port-security ...` line. Interfaces without port-security are
@@ -659,8 +664,7 @@ type PortSecurityConfig struct {
 func ParsePortSecurity(runningConfig string) []PortSecurityConfig {
 	res := []PortSecurityConfig{}
 
-	ifaceRe := regexp.MustCompile(`(?m)^interface (\S+)\s*$`)
-	matches := ifaceRe.FindAllStringSubmatchIndex(runningConfig, -1)
+	matches := ifaceHeaderRe.FindAllStringSubmatchIndex(runningConfig, -1)
 
 	for i, match := range matches {
 		ifaceName := runningConfig[match[2]:match[3]]
@@ -691,19 +695,19 @@ func ParsePortSecurity(runningConfig string) []PortSecurityConfig {
 			hasAny = true
 			rest := strings.TrimSpace(strings.TrimPrefix(line, "switchport port-security"))
 			switch {
-			case strings.HasPrefix(rest, "maximum"):
+			case strings.HasPrefix(rest, "maximum "):
 				parts := strings.Fields(rest)
 				if len(parts) >= 2 {
 					if n, err := strconv.Atoi(parts[1]); err == nil {
 						ps.MaximumMacAddresses = n
 					}
 				}
-			case strings.HasPrefix(rest, "violation"):
+			case strings.HasPrefix(rest, "violation "):
 				parts := strings.Fields(rest)
 				if len(parts) >= 2 {
 					ps.ViolationAction = parts[1]
 				}
-			case strings.HasPrefix(rest, "mac-address sticky"):
+			case rest == "mac-address sticky" || strings.HasPrefix(rest, "mac-address sticky "):
 				ps.StickyLearning = true
 			}
 		}
