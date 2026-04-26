@@ -282,31 +282,26 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 			// Host/port are exposed separately for connectivity checks.
 			connHost := ""
 			connPort := int64(0)
-			connSsl := false
 			if db.Connection != nil {
 				connHost = db.Connection.Host
 				connPort = int64(db.Connection.Port)
-				connSsl = db.Connection.SSL
 			}
-			privateConnectionAvailable := db.PrivateConnection != nil
 
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.database", map[string]*llx.RawData{
-				"id":                         llx.StringData(db.ID),
-				"name":                       llx.StringData(db.Name),
-				"engine":                     llx.StringData(db.EngineSlug),
-				"version":                    llx.StringData(db.VersionSlug),
-				"numNodes":                   llx.IntData(int64(db.NumNodes)),
-				"size":                       llx.StringData(db.SizeSlug),
-				"region":                     llx.StringData(db.RegionSlug),
-				"status":                     llx.StringData(db.Status),
-				"createdAt":                  llx.TimeData(db.CreatedAt),
-				"privateNetworkUuid":         llx.StringData(db.PrivateNetworkUUID),
-				"tags":                       llx.ArrayData(tags, "\x02"),
-				"maintenanceWindow":          llx.DictData(mw),
-				"connectionSsl":              llx.BoolData(connSsl),
-				"connectionHost":             llx.StringData(connHost),
-				"connectionPort":             llx.IntData(connPort),
-				"privateConnectionAvailable": llx.BoolData(privateConnectionAvailable),
+				"id":                 llx.StringData(db.ID),
+				"name":               llx.StringData(db.Name),
+				"engine":             llx.StringData(db.EngineSlug),
+				"version":            llx.StringData(db.VersionSlug),
+				"numNodes":           llx.IntData(int64(db.NumNodes)),
+				"size":               llx.StringData(db.SizeSlug),
+				"region":             llx.StringData(db.RegionSlug),
+				"status":             llx.StringData(db.Status),
+				"createdAt":          llx.TimeData(db.CreatedAt),
+				"privateNetworkUuid": llx.StringData(db.PrivateNetworkUUID),
+				"tags":               llx.ArrayData(tags, "\x02"),
+				"maintenanceWindow":  llx.DictData(mw),
+				"connectionHost":     llx.StringData(connHost),
+				"connectionPort":     llx.IntData(connPort),
 			})
 			if err != nil {
 				return nil, err

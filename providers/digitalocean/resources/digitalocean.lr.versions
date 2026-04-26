@@ -55,7 +55,6 @@ digitalocean.certificates 13.0.1
 digitalocean.database 13.0.1
 digitalocean.database.connectionHost 13.0.2
 digitalocean.database.connectionPort 13.0.2
-digitalocean.database.connectionSsl 13.0.2
 digitalocean.database.createdAt 13.0.1
 digitalocean.database.engine 13.0.1
 digitalocean.database.firewallRules 13.0.1
@@ -71,7 +70,6 @@ digitalocean.database.pool.name 13.0.1
 digitalocean.database.pool.size 13.0.1
 digitalocean.database.pool.user 13.0.1
 digitalocean.database.pools 13.0.1
-digitalocean.database.privateConnectionAvailable 13.0.2
 digitalocean.database.privateNetworkUuid 13.0.1
 digitalocean.database.region 13.0.1
 digitalocean.database.replica 13.0.1
@@ -116,6 +114,7 @@ digitalocean.droplet.createdAt 13.0.1
 digitalocean.droplet.disk 13.0.1
 digitalocean.droplet.features 13.0.1
 digitalocean.droplet.firewalls 13.0.2
+digitalocean.droplet.hasNoFirewall 13.0.2
 digitalocean.droplet.id 13.0.1
 digitalocean.droplet.image 13.0.1
 digitalocean.droplet.memory 13.0.1
@@ -127,7 +126,6 @@ digitalocean.droplet.region 13.0.1
 digitalocean.droplet.size 13.0.1
 digitalocean.droplet.status 13.0.1
 digitalocean.droplet.tags 13.0.1
-digitalocean.droplet.unprotectedPublicIp 13.0.2
 digitalocean.droplet.vcpus 13.0.1
 digitalocean.droplet.vpc 13.0.2
 digitalocean.droplet.vpcUuid 13.0.1

@@ -108,8 +108,8 @@ digitalocean.droplet @defaults("id name status") {
   image dict
   // Firewalls covering this droplet (by id or matching tag)
   firewalls() []digitalocean.firewall
-  // Whether the droplet has a public IPv4 not covered by any firewall
-  unprotectedPublicIp() bool
+  // Whether the droplet has a public IPv4 with no firewall attached at all (boolean: no firewall covers the droplet by ID or tag); for actual rule-level analysis, query `firewalls`
+  hasNoFirewall() bool
 }
 
 // DigitalOcean firewall
@@ -135,7 +135,7 @@ digitalocean.firewall @defaults("id name status") {
 }
 
 // DigitalOcean managed database cluster
-digitalocean.database @defaults("id name engine connectionSsl") {
+digitalocean.database @defaults("id name engine") {
   // Database cluster ID
   id string
   // Database cluster name
@@ -162,14 +162,10 @@ digitalocean.database @defaults("id name engine connectionSsl") {
   tags []string
   // Firewall rules (trusted sources)
   firewallRules() []dict
-  // Whether the public connection object reports SSL enabled (DigitalOcean managed databases always require TLS on public endpoints; this reflects the SDK's per-connection SSL flag, not a cluster-level enforcement policy)
-  connectionSsl bool
   // Public connection host
   connectionHost string
   // Public connection port
   connectionPort int
-  // Whether a private (VPC-only) connection endpoint is available
-  privateConnectionAvailable bool
   // Maintenance window
   maintenanceWindow dict
   // Database users
@@ -278,7 +274,8 @@ digitalocean.volume @defaults("id name sizeGigabytes") {
   createdAt time
   // Tags
   tags []string
-  // Deprecated: use droplets() instead. Droplet IDs attached to
+  // Droplet IDs attached to
+  // Deprecated: use droplets() instead
   dropletIds []int
   // Droplets this volume is attached to
   droplets() []digitalocean.droplet
