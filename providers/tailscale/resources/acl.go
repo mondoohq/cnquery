@@ -6,9 +6,9 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"sync"
 
-	"github.com/rs/zerolog/log"
 	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -47,18 +47,36 @@ func createTailscaleAclPolicyResource(runtime *plugin.Runtime, tailnet string, a
 		}
 	}
 
+	acls, err := structSliceToDictSlice(acl.ACLs)
+	if err != nil {
+		return nil, err
+	}
+	ssh, err := structSliceToDictSlice(acl.SSH)
+	if err != nil {
+		return nil, err
+	}
+	tests, err := structSliceToDictSlice(acl.Tests)
+	if err != nil {
+		return nil, err
+	}
+	nodeAttrs, err := structSliceToDictSlice(acl.NodeAttrs)
+	if err != nil {
+		return nil, err
+	}
+
 	return CreateResource(runtime, "tailscale.aclPolicy", map[string]*llx.RawData{
 		"tailnet":               llx.StringData(tailnet),
-		"acls":                  llx.ArrayData(structSliceToDictSlice(acl.ACLs), types.Dict),
+		"acls":                  llx.ArrayData(acls, types.Dict),
 		"groups":                llx.MapData(stringSliceMapToAny(acl.Groups), types.Array(types.String)),
 		"hosts":                 llx.MapData(stringMapToAny(acl.Hosts), types.String),
 		"tagOwners":             llx.MapData(stringSliceMapToAny(acl.TagOwners), types.Array(types.String)),
-		"ssh":                   llx.ArrayData(structSliceToDictSlice(acl.SSH), types.Dict),
-		"tests":                 llx.ArrayData(structSliceToDictSlice(acl.Tests), types.Dict),
-		"nodeAttrs":             llx.ArrayData(structSliceToDictSlice(acl.NodeAttrs), types.Dict),
+		"ssh":                   llx.ArrayData(ssh, types.Dict),
+		"tests":                 llx.ArrayData(tests, types.Dict),
+		"nodeAttrs":             llx.ArrayData(nodeAttrs, types.Dict),
 		"autoApproverExitNodes": llx.ArrayData(autoApproverExitNodes, types.String),
 		"autoApproverRoutes":    llx.MapData(autoApproverRoutes, types.Array(types.String)),
 		"defaultSourcePosture":  llx.ArrayData(stringSliceToAny(acl.DefaultSourcePosture), types.String),
+		"postures":              llx.MapData(stringSliceMapToAny(acl.Postures), types.Array(types.String)),
 		"disableIPv4":           llx.BoolData(acl.DisableIPv4),
 		"oneCGNATRoute":         llx.StringData(acl.OneCGNATRoute),
 		"randomizeClientPort":   llx.BoolData(acl.RandomizeClientPort),
@@ -67,6 +85,10 @@ func createTailscaleAclPolicyResource(runtime *plugin.Runtime, tailnet string, a
 }
 
 // raw lazily fetches the raw HuJSON representation of the policy.
+// Note: the `etag` field reflects the structured policy snapshot returned by
+// PolicyFile().Get() at resource creation, not this raw HuJSON fetch — the two
+// are independent API calls and may briefly diverge if the policy is edited
+// between them.
 func (a *mqlTailscaleAclPolicy) raw() (string, error) {
 	if a.rawFetched {
 		return a.rawValue, nil
@@ -89,26 +111,25 @@ func (a *mqlTailscaleAclPolicy) raw() (string, error) {
 // structSliceToDictSlice JSON-round-trips a slice of policy structs into a
 // slice of generic maps, suitable for use as MQL []dict. Field names match
 // the JSON tags on the Tailscale SDK types (e.g. "src", "dst", "ports",
-// "action", "proto", "users").
-func structSliceToDictSlice[T any](in []T) []any {
+// "action", "proto", "users"). Any conversion error is propagated so
+// security-sensitive policy entries are never silently dropped.
+func structSliceToDictSlice[T any](in []T) ([]any, error) {
 	if len(in) == 0 {
-		return []any{}
+		return []any{}, nil
 	}
 	out := make([]any, 0, len(in))
 	for i := range in {
 		b, err := json.Marshal(in[i])
 		if err != nil {
-			log.Warn().Err(err).Int("index", i).Msg("tailscale: failed to marshal policy entry; dropping")
-			continue
+			return nil, fmt.Errorf("tailscale: failed to marshal policy entry at index %d: %w", i, err)
 		}
 		var m map[string]any
 		if err := json.Unmarshal(b, &m); err != nil {
-			log.Warn().Err(err).Int("index", i).Msg("tailscale: failed to unmarshal policy entry; dropping")
-			continue
+			return nil, fmt.Errorf("tailscale: failed to unmarshal policy entry at index %d: %w", i, err)
 		}
 		out = append(out, m)
 	}
-	return out
+	return out, nil
 }
 
 func stringSliceMapToAny(in map[string][]string) map[string]any {

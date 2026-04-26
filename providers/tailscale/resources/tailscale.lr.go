@@ -284,6 +284,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tailscale.aclPolicy.defaultSourcePosture": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleAclPolicy).GetDefaultSourcePosture()).ToDataRes(types.Array(types.String))
 	},
+	"tailscale.aclPolicy.postures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAclPolicy).GetPostures()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
 	"tailscale.aclPolicy.disableIPv4": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleAclPolicy).GetDisableIPv4()).ToDataRes(types.Bool)
 	},
@@ -553,6 +556,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"tailscale.aclPolicy.defaultSourcePosture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTailscaleAclPolicy).DefaultSourcePosture, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"tailscale.aclPolicy.postures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAclPolicy).Postures, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"tailscale.aclPolicy.disableIPv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1033,6 +1040,7 @@ type mqlTailscaleAclPolicy struct {
 	AutoApproverExitNodes plugin.TValue[[]any]
 	AutoApproverRoutes    plugin.TValue[map[string]any]
 	DefaultSourcePosture  plugin.TValue[[]any]
+	Postures              plugin.TValue[map[string]any]
 	DisableIPv4           plugin.TValue[bool]
 	OneCGNATRoute         plugin.TValue[string]
 	RandomizeClientPort   plugin.TValue[bool]
@@ -1119,6 +1127,10 @@ func (c *mqlTailscaleAclPolicy) GetAutoApproverRoutes() *plugin.TValue[map[strin
 
 func (c *mqlTailscaleAclPolicy) GetDefaultSourcePosture() *plugin.TValue[[]any] {
 	return &c.DefaultSourcePosture
+}
+
+func (c *mqlTailscaleAclPolicy) GetPostures() *plugin.TValue[map[string]any] {
+	return &c.Postures
 }
 
 func (c *mqlTailscaleAclPolicy) GetDisableIPv4() *plugin.TValue[bool] {

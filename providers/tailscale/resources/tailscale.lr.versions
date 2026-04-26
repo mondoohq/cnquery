@@ -13,6 +13,7 @@ tailscale.aclPolicy.groups 13.0.7
 tailscale.aclPolicy.hosts 13.0.7
 tailscale.aclPolicy.nodeAttrs 13.0.7
 tailscale.aclPolicy.oneCGNATRoute 13.0.7
+tailscale.aclPolicy.postures 13.0.7
 tailscale.aclPolicy.randomizeClientPort 13.0.7
 tailscale.aclPolicy.raw 13.0.7
 tailscale.aclPolicy.ssh 13.0.7

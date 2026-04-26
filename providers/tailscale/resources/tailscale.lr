@@ -77,9 +77,9 @@ tailscale.device @defaults("id hostname os") {
   expiresAt time
   // When device was last active on the tailnet
   lastSeenAt time
-  // Subnet routes that the device is advertising
+  // Subnet routes that the device is advertising (fetched per-device on demand)
   advertisedRoutes() []string
-  // Subnet routes that are enabled (allowed) for the device — the device's effective subnet scope
+  // Subnet routes that are enabled (allowed) for the device — the device's effective subnet scope (fetched per-device on demand)
   enabledRoutes() []string
 }
 
@@ -153,6 +153,8 @@ tailscale.aclPolicy @defaults("tailnet") {
   // a map, despite the JSON-style name. Empty when the experimental posture
   // feature is unused.
   defaultSourcePosture []string
+  // Named device posture rules referenced by name from src/defaultSrcPosture (rule name -> list of posture conditions)
+  postures map[string][]string
   // Whether IPv4 is disabled across the tailnet
   disableIPv4 bool
   // Setting that affects how Tailscale routes traffic on the 100.64.0.0/10 CGNAT range
