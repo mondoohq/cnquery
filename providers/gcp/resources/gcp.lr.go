@@ -11946,7 +11946,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetPscAttachmentDetails()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.instance.pscAttachmentDetail")))
 	},
 	"gcp.project.memorystoreService.instance.endpoints": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetEndpoints()).ToDataRes(types.Dict)
+		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetEndpoints()).ToDataRes(types.Array(types.Dict))
 	},
 	"gcp.project.memorystoreService.instance.createTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetCreateTime()).ToDataRes(types.Time)
@@ -26987,7 +26987,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.memorystoreService.instance.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstance).Endpoints, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlGcpProjectMemorystoreServiceInstance).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.memorystoreService.instance.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62719,7 +62719,7 @@ type mqlGcpProjectMemorystoreServiceInstance struct {
 	DiscoveryEndpoints             plugin.TValue[[]any]
 	PscAutoConnections             plugin.TValue[[]any]
 	PscAttachmentDetails           plugin.TValue[[]any]
-	Endpoints                      plugin.TValue[any]
+	Endpoints                      plugin.TValue[[]any]
 	CreateTime                     plugin.TValue[*time.Time]
 	UpdateTime                     plugin.TValue[*time.Time]
 }
@@ -62929,7 +62929,7 @@ func (c *mqlGcpProjectMemorystoreServiceInstance) GetPscAttachmentDetails() *plu
 	return &c.PscAttachmentDetails
 }
 
-func (c *mqlGcpProjectMemorystoreServiceInstance) GetEndpoints() *plugin.TValue[any] {
+func (c *mqlGcpProjectMemorystoreServiceInstance) GetEndpoints() *plugin.TValue[[]any] {
 	return &c.Endpoints
 }
 

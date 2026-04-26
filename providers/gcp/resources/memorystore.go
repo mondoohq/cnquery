@@ -267,7 +267,7 @@ func mqlMemorystoreInstanceFromProto(runtime *plugin.Runtime, projectId string, 
 		"discoveryEndpoints":             llx.ArrayData(disc, types.Resource("gcp.project.memorystoreService.instance.discoveryEndpoint")),
 		"pscAutoConnections":             llx.ArrayData(pscAuto, types.Resource("gcp.project.memorystoreService.instance.pscAutoConnection")),
 		"pscAttachmentDetails":           llx.ArrayData(pscAttach, types.Resource("gcp.project.memorystoreService.instance.pscAttachmentDetail")),
-		"endpoints":                      llx.DictData(endpoints),
+		"endpoints":                      llx.ArrayData(endpoints, types.Dict),
 		"createTime":                     createTime,
 		"updateTime":                     updateTime,
 	})

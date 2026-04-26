@@ -8205,7 +8205,7 @@ private gcp.project.memorystoreService.instance @defaults("name state mode") {
   // Per-endpoint PSC attachment details
   pscAttachmentDetails []gcp.project.memorystoreService.instance.pscAttachmentDetail
   // Instance access endpoints (each contains a list of connections)
-  endpoints dict
+  endpoints []dict
   // Creation time
   createTime time
   // Last update time
