@@ -2,12 +2,31 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 tailscale 11.0.0
+tailscale.aclPolicy 13.0.7
+tailscale.aclPolicy.acls 13.0.7
+tailscale.aclPolicy.autoApproverExitNodes 13.0.7
+tailscale.aclPolicy.autoApproverRoutes 13.0.7
+tailscale.aclPolicy.defaultSourcePosture 13.0.7
+tailscale.aclPolicy.disableIPv4 13.0.7
+tailscale.aclPolicy.etag 13.0.7
+tailscale.aclPolicy.groups 13.0.7
+tailscale.aclPolicy.hosts 13.0.7
+tailscale.aclPolicy.nodeAttrs 13.0.7
+tailscale.aclPolicy.oneCGNATRoute 13.0.7
+tailscale.aclPolicy.randomizeClientPort 13.0.7
+tailscale.aclPolicy.raw 13.0.7
+tailscale.aclPolicy.ssh 13.0.7
+tailscale.aclPolicy.tagOwners 13.0.7
+tailscale.aclPolicy.tailnet 13.0.7
+tailscale.aclPolicy.tests 13.0.7
 tailscale.device 11.0.0
 tailscale.device.addresses 11.0.0
+tailscale.device.advertisedRoutes 13.0.7
 tailscale.device.authorized 11.0.0
 tailscale.device.blocksIncomingConnections 11.0.0
 tailscale.device.clientVersion 11.0.0
 tailscale.device.createdAt 11.0.0
+tailscale.device.enabledRoutes 13.0.7
 tailscale.device.expiresAt 11.0.0
 tailscale.device.hostname 11.0.0
 tailscale.device.id 11.0.0
@@ -23,11 +42,17 @@ tailscale.device.tailnetLockError 11.0.0
 tailscale.device.tailnetLockKey 11.0.0
 tailscale.device.updateAvailable 11.0.0
 tailscale.device.user 11.0.0
+tailscale.deviceApprovalRequired 13.0.7
 tailscale.devices 11.0.0
+tailscale.devicesAutoUpdatesEnabled 13.0.7
+tailscale.devicesKeyDurationDays 13.0.7
 tailscale.nameservers 11.0.0
+tailscale.networkFlowLoggingEnabled 13.0.7
+tailscale.postureIdentityCollectionEnabled 13.0.7
 tailscale.tailnet 11.0.0
 tailscale.user 11.0.0
 tailscale.user.createdAt 11.0.0
+tailscale.user.currentlyConnected 13.0.7
 tailscale.user.deviceCount 11.0.0
 tailscale.user.displayName 11.0.0
 tailscale.user.id 11.0.0
@@ -38,4 +63,6 @@ tailscale.user.role 11.0.0
 tailscale.user.status 11.0.0
 tailscale.user.tailnetId 11.0.0
 tailscale.user.type 11.0.0
+tailscale.userApprovalRequired 13.0.7
 tailscale.users 11.0.0
+tailscale.usersRoleAllowedToJoinExternalTailnets 13.0.7

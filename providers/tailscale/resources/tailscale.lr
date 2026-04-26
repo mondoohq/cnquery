@@ -14,6 +14,22 @@ tailscale {
   users() []tailscale.user
   // List global DNS nameservers for a tailnet
   nameservers() []string
+  // Whether new devices must be manually approved before joining the tailnet
+  deviceApprovalRequired() bool
+  // Whether new users must be manually approved before joining the tailnet
+  userApprovalRequired() bool
+  // Whether devices in the tailnet are configured to receive automatic Tailscale client updates
+  devicesAutoUpdatesEnabled() bool
+  // Number of days before a device's auth key expires (0 means keys never expire)
+  devicesKeyDurationDays() int
+  // Whether network flow logging is enabled for the tailnet
+  networkFlowLoggingEnabled() bool
+  // Whether device posture identity collection is enabled for the tailnet
+  postureIdentityCollectionEnabled() bool
+  // Which user role is allowed to join external tailnets ('none', 'admin', or 'member')
+  usersRoleAllowedToJoinExternalTailnets() string
+  // Tailnet ACL (access control list) policy
+  aclPolicy() tailscale.aclPolicy
 }
 
 // A Tailscale device (sometimes referred to as node or machine)
@@ -61,6 +77,10 @@ tailscale.device @defaults("id hostname os") {
   expiresAt time
   // When device was last active on the tailnet
   lastSeenAt time
+  // Subnet routes that the device is advertising
+  advertisedRoutes() []string
+  // Subnet routes that are enabled (allowed) for the device — the device's effective subnet scope
+  enabledRoutes() []string
 }
 
 // Tailscale user
@@ -96,4 +116,47 @@ tailscale.user @defaults("id displayName type") {
   // or
   // b) The last time the user authenticated to any Tailscale service, including the admin panel
   lastSeenAt time
+  // Whether the user is currently connected to the tailnet
+  currentlyConnected bool
+}
+
+// Tailscale tailnet ACL (access control list) policy
+//
+// The ACL policy governs which users and devices can talk to which other users and
+// devices. The structured representation here is parsed from the tailnet's HuJSON
+// policy file (https://tailscale.com/kb/1018/acls).
+tailscale.aclPolicy @defaults("tailnet") {
+  // Tailnet name this ACL policy belongs to
+  tailnet string
+  // ACL access rules defining what each source (src) can connect to (dst, ports, action)
+  acls []dict
+  // Named groups of users used in ACL rules (group name → list of members)
+  groups map[string][]string
+  // Named hosts (alias → IP/CIDR) referenced by ACL rules
+  hosts map[string]string
+  // Tag owners — users or groups allowed to assign each ACL tag (tag → list of owners)
+  tagOwners map[string][]string
+  // Tailscale SSH access rules
+  ssh []dict
+  // Connectivity tests embedded in the policy
+  tests []dict
+  // Per-node attribute grants
+  nodeAttrs []dict
+  // Users or groups whose advertised exit-node routes are auto-approved
+  // (empty means no users may auto-advertise as exit nodes)
+  autoApproverExitNodes []string
+  // Subnet routes that are auto-approved when advertised by listed users/groups (CIDR → owners)
+  autoApproverRoutes map[string][]string
+  // Subnet routes auto-approved as exit-node-equivalent (default source posture)
+  defaultSourcePosture []string
+  // Whether IPv4 is disabled across the tailnet
+  disableIPv4 bool
+  // Setting that affects how Tailscale routes traffic on the 100.64.0.0/10 CGNAT range
+  oneCGNATRoute string
+  // Whether the Tailscale client is set to randomize its source port on each connection
+  randomizeClientPort bool
+  // ETag (version identifier) of the policy
+  etag string
+  // Raw HuJSON representation of the policy
+  raw() string
 }

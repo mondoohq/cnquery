@@ -5,12 +5,22 @@ package resources
 
 import (
 	"context"
+	"sync"
 
+	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/tailscale/connection"
 )
+
+// mqlTailscaleInternal caches tailnet-level settings so multiple field accessors
+// share the result of a single TailnetSettings API call.
+type mqlTailscaleInternal struct {
+	settingsLock    sync.Mutex
+	settingsFetched bool
+	settings        *tsclient.TailnetSettings
+}
 
 func (r *mqlTailscale) id() (string, error) {
 	return r.Tailnet.Data, nil
@@ -80,4 +90,97 @@ func (t *mqlTailscale) nameservers() ([]any, error) {
 	conn := t.MqlRuntime.Connection.(*connection.TailscaleConnection)
 	nameservers, err := conn.Client().DNS().Nameservers(context.Background())
 	return convert.SliceAnyToInterface(nameservers), err
+}
+
+// fetchSettings returns the cached TailnetSettings, fetching it on first call.
+// Multiple tailnet-level field accessors share the same response.
+func (t *mqlTailscale) fetchSettings() (*tsclient.TailnetSettings, error) {
+	if t.settingsFetched {
+		return t.settings, nil
+	}
+	t.settingsLock.Lock()
+	defer t.settingsLock.Unlock()
+	if t.settingsFetched {
+		return t.settings, nil
+	}
+	conn := t.MqlRuntime.Connection.(*connection.TailscaleConnection)
+	settings, err := conn.Client().TailnetSettings().Get(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	t.settings = settings
+	t.settingsFetched = true
+	return t.settings, nil
+}
+
+func (t *mqlTailscale) deviceApprovalRequired() (bool, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return false, err
+	}
+	return s.DevicesApprovalOn, nil
+}
+
+func (t *mqlTailscale) userApprovalRequired() (bool, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return false, err
+	}
+	return s.UsersApprovalOn, nil
+}
+
+func (t *mqlTailscale) devicesAutoUpdatesEnabled() (bool, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return false, err
+	}
+	return s.DevicesAutoUpdatesOn, nil
+}
+
+func (t *mqlTailscale) devicesKeyDurationDays() (int64, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return 0, err
+	}
+	return int64(s.DevicesKeyDurationDays), nil
+}
+
+func (t *mqlTailscale) networkFlowLoggingEnabled() (bool, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return false, err
+	}
+	return s.NetworkFlowLoggingOn, nil
+}
+
+func (t *mqlTailscale) postureIdentityCollectionEnabled() (bool, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return false, err
+	}
+	return s.PostureIdentityCollectionOn, nil
+}
+
+func (t *mqlTailscale) usersRoleAllowedToJoinExternalTailnets() (string, error) {
+	s, err := t.fetchSettings()
+	if err != nil {
+		return "", err
+	}
+	return string(s.UsersRoleAllowedToJoinExternalTailnets), nil
+}
+
+func (t *mqlTailscale) aclPolicy() (*mqlTailscaleAclPolicy, error) {
+	conn := t.MqlRuntime.Connection.(*connection.TailscaleConnection)
+	ctx := context.Background()
+
+	acl, err := conn.Client().PolicyFile().Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	resource, err := createTailscaleAclPolicyResource(t.MqlRuntime, t.Tailnet.Data, acl)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlTailscaleAclPolicy), nil
 }

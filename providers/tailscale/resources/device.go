@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
 
 	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
@@ -14,6 +15,14 @@ import (
 	"go.mondoo.com/mql/v13/providers/tailscale/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// mqlTailscaleDeviceInternal caches subnet route lookups so the advertised
+// and enabled route accessors share a single SubnetRoutes API call.
+type mqlTailscaleDeviceInternal struct {
+	routesLock    sync.Mutex
+	routesFetched bool
+	routes        *tsclient.DeviceRoutes
+}
 
 func (r *mqlTailscaleDevice) id() (string, error) {
 	return "tailscale/device/" + r.Id.Data, nil
@@ -63,4 +72,45 @@ func createTailscaleDeviceResource(runtime *plugin.Runtime, device *tsclient.Dev
 		"tags":                      llx.ArrayData(convert.SliceAnyToInterface(device.Tags), types.String),
 		"addresses":                 llx.ArrayData(convert.SliceAnyToInterface(device.Addresses), types.String),
 	})
+}
+
+func (d *mqlTailscaleDevice) fetchRoutes() (*tsclient.DeviceRoutes, error) {
+	if d.routesFetched {
+		return d.routes, nil
+	}
+	d.routesLock.Lock()
+	defer d.routesLock.Unlock()
+	if d.routesFetched {
+		return d.routes, nil
+	}
+	conn := d.MqlRuntime.Connection.(*connection.TailscaleConnection)
+	routes, err := conn.Client().Devices().SubnetRoutes(context.Background(), d.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	d.routes = routes
+	d.routesFetched = true
+	return d.routes, nil
+}
+
+func (d *mqlTailscaleDevice) advertisedRoutes() ([]any, error) {
+	r, err := d.fetchRoutes()
+	if err != nil {
+		return nil, err
+	}
+	if r == nil {
+		return []any{}, nil
+	}
+	return convert.SliceAnyToInterface(r.Advertised), nil
+}
+
+func (d *mqlTailscaleDevice) enabledRoutes() ([]any, error) {
+	r, err := d.fetchRoutes()
+	if err != nil {
+		return nil, err
+	}
+	if r == nil {
+		return []any{}, nil
+	}
+	return convert.SliceAnyToInterface(r.Enabled), nil
 }

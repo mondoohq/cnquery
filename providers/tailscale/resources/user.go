@@ -39,16 +39,17 @@ func initTailscaleUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 
 func createTailscaleUserResource(runtime *plugin.Runtime, user *tsclient.User) (plugin.Resource, error) {
 	return CreateResource(runtime, "tailscale.user", map[string]*llx.RawData{
-		"id":            llx.StringData(user.ID),
-		"displayName":   llx.StringData(user.DisplayName),
-		"loginName":     llx.StringData(user.LoginName),
-		"profilePicUrl": llx.StringData(user.ProfilePicURL),
-		"tailnetId":     llx.StringData(user.TailnetID),
-		"type":          llx.StringData(string(user.Type)),
-		"role":          llx.StringData(string(user.Role)),
-		"status":        llx.StringData(string(user.Status)),
-		"deviceCount":   llx.IntData(user.DeviceCount),
-		"createdAt":     llx.TimeData(user.Created),
-		"lastSeenAt":    llx.TimeData(user.LastSeen),
+		"id":                 llx.StringData(user.ID),
+		"displayName":        llx.StringData(user.DisplayName),
+		"loginName":          llx.StringData(user.LoginName),
+		"profilePicUrl":      llx.StringData(user.ProfilePicURL),
+		"tailnetId":          llx.StringData(user.TailnetID),
+		"type":               llx.StringData(string(user.Type)),
+		"role":               llx.StringData(string(user.Role)),
+		"status":             llx.StringData(string(user.Status)),
+		"deviceCount":        llx.IntData(user.DeviceCount),
+		"createdAt":          llx.TimeData(user.Created),
+		"lastSeenAt":         llx.TimeData(user.LastSeen),
+		"currentlyConnected": llx.BoolData(user.CurrentlyConnected),
 	})
 }
