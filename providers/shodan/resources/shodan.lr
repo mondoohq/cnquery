@@ -26,7 +26,7 @@ shodan.host @defaults("ip") {
   hostnames() []string
   // Open ports
   ports() []int
-  // Vulnerabilities (CVE IDs)
+  // Deprecated: use vulns() instead. Vulnerabilities (CVE IDs)
   vulnerabilities() []string
   // Detailed vulnerabilities discovered across all services on this host
   vulns() []shodan.host.vulnerability
@@ -90,7 +90,7 @@ private shodan.host.service @defaults("port transport product version") {
   module string
   // Hostnames associated with the banner
   hostnames []string
-  // CVE IDs associated with this banner
+  // Deprecated: use vulns instead. CVE IDs associated with this banner
   vulnerabilities []string
   // Detailed vulnerabilities for this banner with CVSS and severity
   vulns []shodan.host.vulnerability
