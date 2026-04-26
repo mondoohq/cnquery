@@ -251,6 +251,21 @@ func TestParseControlPlanePolicer_NoPolicy(t *testing.T) {
 	c := ParseControlPlanePolicer(cfg)
 	assert.True(t, c.Configured)
 	assert.False(t, c.PolicyApplied)
+	assert.Empty(t, c.PolicyName)
+}
+
+func TestParseControlPlanePolicer_NoPolicyAfterApplied(t *testing.T) {
+	// A `no service-policy input` line must override an earlier
+	// `service-policy input` line in the same block.
+	cfg := `control-plane
+   service-policy input copp-system-policy
+   no service-policy input copp-system-policy
+!
+`
+	c := ParseControlPlanePolicer(cfg)
+	assert.True(t, c.Configured)
+	assert.False(t, c.PolicyApplied)
+	assert.Empty(t, c.PolicyName)
 }
 
 func TestParsePortSecurity(t *testing.T) {

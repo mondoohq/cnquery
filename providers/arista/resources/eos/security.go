@@ -391,6 +391,7 @@ type PasswordPolicy struct {
 var (
 	pwLockoutRe = regexp.MustCompile(
 		`^aaa authentication policy lockout(?:\s+failure\s+(\d+))?(?:\s+window\s+(\d+))?(?:\s+duration\s+(\d+))?`)
+	passwordPolicyHeaderRe = regexp.MustCompile(`(?m)^password policy\s+(\S+)\s*$`)
 )
 
 func ParsePasswordPolicy(runningConfig string) *PasswordPolicy {
@@ -462,8 +463,7 @@ func ParsePasswordPolicy(runningConfig string) *PasswordPolicy {
 // findFirstPolicyBlock returns the name and inner block of the first
 // `password policy <name>` section.
 func findFirstPolicyBlock(runningConfig string) (string, string) {
-	re := regexp.MustCompile(`(?m)^password policy\s+(\S+)\s*$`)
-	loc := re.FindStringSubmatchIndex(runningConfig)
+	loc := passwordPolicyHeaderRe.FindStringSubmatchIndex(runningConfig)
 	if loc == nil {
 		return "", ""
 	}
@@ -596,21 +596,29 @@ func ParseControlPlanePolicer(runningConfig string) *ControlPlanePolicer {
 	scanner := bufio.NewScanner(strings.NewReader(block))
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
+		// Check negated ("no ...") forms before their positive counterparts —
+		// `strings.HasPrefix("no service-policy input", "service-policy input")`
+		// is false, but the inverse is true, so the positive case must come
+		// last.
 		switch {
+		case strings.HasPrefix(line, "no service-policy input"):
+			c.PolicyApplied = false
+			c.PolicyName = ""
 		case strings.HasPrefix(line, "service-policy input"):
 			c.PolicyApplied = true
 			parts := strings.Fields(line)
 			if len(parts) >= 3 {
 				c.PolicyName = parts[2]
 			}
-		case strings.HasPrefix(line, "no service-policy input"):
-			c.PolicyApplied = false
-			c.PolicyName = ""
+		case strings.HasPrefix(line, "no ip access-group"):
+			c.IPAccessGroup = ""
 		case strings.HasPrefix(line, "ip access-group"):
 			parts := strings.Fields(line)
 			if len(parts) >= 3 {
 				c.IPAccessGroup = parts[2]
 			}
+		case strings.HasPrefix(line, "no ipv6 access-group"):
+			c.IP6AccessGroup = ""
 		case strings.HasPrefix(line, "ipv6 access-group"):
 			parts := strings.Fields(line)
 			if len(parts) >= 3 {
