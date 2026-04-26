@@ -44,13 +44,17 @@ func (o *mqlOktaUser) factors() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []okta.UserFactor
+		var page []okta.Factor
 		resp, err = resp.Next(ctx, &page)
 		if err != nil {
 			return nil, err
 		}
 		for i := range page {
-			r, err := newMqlOktaUserFactor(o.MqlRuntime, o.Id.Data, &page[i])
+			uf, ok := page[i].(*okta.UserFactor)
+			if !ok {
+				continue
+			}
+			r, err := newMqlOktaUserFactor(o.MqlRuntime, o.Id.Data, uf)
 			if err != nil {
 				return nil, err
 			}
@@ -58,9 +62,6 @@ func (o *mqlOktaUser) factors() ([]any, error) {
 		}
 	}
 
-	if len(list) == 0 {
-		return []any{}, nil
-	}
 	return list, nil
 }
 
