@@ -5,7 +5,7 @@ replace go.mondoo.com/mql/v13 => ../..
 go 1.26.2
 
 require (
-	github.com/digitalocean/godo v1.186.0
+	github.com/digitalocean/godo v1.187.0
 	go.mondoo.com/mql/v13 v13.5.0
 	golang.org/x/oauth2 v0.36.0
 )
