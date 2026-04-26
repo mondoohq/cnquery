@@ -1143,7 +1143,7 @@ type mqlGitlabProjectDeployKeyInternal struct {
 // daysOld returns the age of the deploy key in days. Returns -1 when createdAt
 // isn't set so callers can distinguish "missing data" from "fresh key".
 func (k *mqlGitlabProjectDeployKey) daysOld() (int64, error) {
-	if !k.CreatedAt.IsSet() || k.CreatedAt.Data == nil {
+	if !k.CreatedAt.IsSet() || k.CreatedAt.Data == nil || k.CreatedAt.Data.IsZero() {
 		return -1, nil
 	}
 	return int64(time.Since(*k.CreatedAt.Data).Hours() / 24), nil

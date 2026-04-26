@@ -484,16 +484,29 @@ func (g *mqlGitlabGroup) samlGroupLinks() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	groupID := int(g.Id.Data)
-	links, resp, err := conn.Client().Groups.ListGroupSAMLLinks(groupID)
-	if err != nil {
-		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
-			return []any{}, nil // not available on this GitLab tier
+
+	var allLinks []*gitlab.SAMLGroupLink
+	var opts []gitlab.RequestOptionFunc
+	for {
+		links, resp, err := conn.Client().Groups.ListGroupSAMLLinks(groupID, opts...)
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil // not available on this GitLab tier
+			}
+			return nil, err
 		}
-		return nil, err
+
+		allLinks = append(allLinks, links...)
+
+		next, hasNext := gitlab.WithNext(resp)
+		if !hasNext {
+			break
+		}
+		opts = []gitlab.RequestOptionFunc{next}
 	}
 
 	var mqlLinks []any
-	for _, link := range links {
+	for _, link := range allLinks {
 		linkInfo := map[string]*llx.RawData{
 			"name":         llx.StringData(link.Name),
 			"accessLevel":  llx.IntData(int64(link.AccessLevel)),
