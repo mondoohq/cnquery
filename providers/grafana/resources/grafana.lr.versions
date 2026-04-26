@@ -71,7 +71,6 @@ grafana.samlSettings 13.0.5
 grafana.samlSettings.allowIdpInitiated 13.0.5
 grafana.samlSettings.allowSignUp 13.0.5
 grafana.samlSettings.allowedOrganizations 13.0.5
-grafana.samlSettings.assertionsEncrypted 13.0.5
 grafana.samlSettings.enabled 13.0.5
 grafana.samlSettings.settings 13.0.5
 grafana.samlSettings.signRequests 13.0.5
@@ -101,7 +100,6 @@ grafana.serviceAccounts 13.0.1
 grafana.ssoSettings 13.0.5
 grafana.ssoSettings.allowSignUp 13.0.5
 grafana.ssoSettings.enabled 13.0.5
-grafana.ssoSettings.enforceSso 13.0.5
 grafana.ssoSettings.hasDomainRestriction 13.0.5
 grafana.ssoSettings.provider 13.0.5
 grafana.ssoSettings.settings 13.0.5

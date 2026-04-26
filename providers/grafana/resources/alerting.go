@@ -163,14 +163,14 @@ func (c *mqlGrafanaContactPoint) hasHttpAuth() (bool, error) {
 	if _, ok := s["username"]; ok {
 		return true, nil
 	}
-	if _, ok := s["authorization_credentials"]; ok {
+	if _, ok := s["authorizationCredentials"]; ok {
 		return true, nil
 	}
 	if hc, ok := s["httpConfig"].(map[string]any); ok {
-		if _, ok := hc["basic_auth"]; ok {
+		if _, ok := hc["basicAuth"]; ok {
 			return true, nil
 		}
-		if _, ok := hc["bearer_token"]; ok {
+		if _, ok := hc["bearerToken"]; ok {
 			return true, nil
 		}
 		if _, ok := hc["authorization"]; ok {

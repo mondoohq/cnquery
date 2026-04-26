@@ -444,9 +444,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"grafana.ssoSettings.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaSsoSettings).GetSettings()).ToDataRes(types.Dict)
 	},
-	"grafana.ssoSettings.enforceSso": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGrafanaSsoSettings).GetEnforceSso()).ToDataRes(types.Bool)
-	},
 	"grafana.ssoSettings.allowSignUp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaSsoSettings).GetAllowSignUp()).ToDataRes(types.Bool)
 	},
@@ -464,9 +461,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"grafana.samlSettings.signRequests": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaSamlSettings).GetSignRequests()).ToDataRes(types.Bool)
-	},
-	"grafana.samlSettings.assertionsEncrypted": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGrafanaSamlSettings).GetAssertionsEncrypted()).ToDataRes(types.Bool)
 	},
 	"grafana.samlSettings.singleLogoutEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaSamlSettings).GetSingleLogoutEnabled()).ToDataRes(types.Bool)
@@ -935,10 +929,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGrafanaSsoSettings).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"grafana.ssoSettings.enforceSso": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGrafanaSsoSettings).EnforceSso, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"grafana.ssoSettings.allowSignUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGrafanaSsoSettings).AllowSignUp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -965,10 +955,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"grafana.samlSettings.signRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGrafanaSamlSettings).SignRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"grafana.samlSettings.assertionsEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGrafanaSamlSettings).AssertionsEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"grafana.samlSettings.singleLogoutEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2067,7 +2053,6 @@ type mqlGrafanaSsoSettings struct {
 	Source               plugin.TValue[string]
 	Enabled              plugin.TValue[bool]
 	Settings             plugin.TValue[any]
-	EnforceSso           plugin.TValue[bool]
 	AllowSignUp          plugin.TValue[bool]
 	HasDomainRestriction plugin.TValue[bool]
 }
@@ -2125,10 +2110,6 @@ func (c *mqlGrafanaSsoSettings) GetSettings() *plugin.TValue[any] {
 	return &c.Settings
 }
 
-func (c *mqlGrafanaSsoSettings) GetEnforceSso() *plugin.TValue[bool] {
-	return &c.EnforceSso
-}
-
 func (c *mqlGrafanaSsoSettings) GetAllowSignUp() *plugin.TValue[bool] {
 	return &c.AllowSignUp
 }
@@ -2146,7 +2127,6 @@ type mqlGrafanaSamlSettings struct {
 	Source               plugin.TValue[string]
 	SignatureAlgorithm   plugin.TValue[string]
 	SignRequests         plugin.TValue[bool]
-	AssertionsEncrypted  plugin.TValue[bool]
 	SingleLogoutEnabled  plugin.TValue[bool]
 	AllowIdpInitiated    plugin.TValue[bool]
 	AllowSignUp          plugin.TValue[bool]
@@ -2206,10 +2186,6 @@ func (c *mqlGrafanaSamlSettings) GetSignatureAlgorithm() *plugin.TValue[string] 
 
 func (c *mqlGrafanaSamlSettings) GetSignRequests() *plugin.TValue[bool] {
 	return &c.SignRequests
-}
-
-func (c *mqlGrafanaSamlSettings) GetAssertionsEncrypted() *plugin.TValue[bool] {
-	return &c.AssertionsEncrypted
 }
 
 func (c *mqlGrafanaSamlSettings) GetSingleLogoutEnabled() *plugin.TValue[bool] {

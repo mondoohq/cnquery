@@ -71,12 +71,6 @@ func buildSsoSettingsResource(runtime *plugin.Runtime, s grafanaSsoSettingsJSON)
 
 	enabled := boolFromAny(s.Settings["enabled"])
 	allowSignUp := boolFromAny(s.Settings["allow_sign_up"])
-	skipOrgRoleSync := boolFromAny(s.Settings["skip_org_role_sync"])
-	autoLogin := boolFromAny(s.Settings["auto_login"])
-
-	// enforceSso is a derived signal: SSO is the only allowed flow if signup
-	// is disabled and sso is enabled (auto-login further indicates enforced).
-	enforceSso := enabled && !allowSignUp && (autoLogin || skipOrgRoleSync)
 
 	// hasDomainRestriction: any of allowed_domains, allowed_organizations,
 	// allowed_groups limit who can sign in.
@@ -89,7 +83,6 @@ func buildSsoSettingsResource(runtime *plugin.Runtime, s grafanaSsoSettingsJSON)
 		"source":               llx.StringData(s.Source),
 		"enabled":              llx.BoolData(enabled),
 		"settings":             llx.DictData(settingsDict),
-		"enforceSso":           llx.BoolData(enforceSso),
 		"allowSignUp":          llx.BoolData(allowSignUp),
 		"hasDomainRestriction": llx.BoolData(hasRestriction),
 	})
@@ -135,7 +128,6 @@ func (g *mqlGrafana) samlSettings() (*mqlGrafanaSamlSettings, error) {
 		"source":               llx.StringData(""),
 		"signatureAlgorithm":   llx.StringData(""),
 		"signRequests":         llx.BoolData(false),
-		"assertionsEncrypted":  llx.BoolData(false),
 		"singleLogoutEnabled":  llx.BoolData(false),
 		"allowIdpInitiated":    llx.BoolData(false),
 		"allowSignUp":          llx.BoolData(false),
@@ -169,8 +161,6 @@ func (g *mqlGrafana) samlSettings() (*mqlGrafanaSamlSettings, error) {
 	args["source"] = llx.StringData(saml.Source)
 	args["signatureAlgorithm"] = llx.StringData(stringFromAny(saml.Settings["signature_algorithm"]))
 	args["signRequests"] = llx.BoolData(boolFromAny(saml.Settings["signed_requests"]))
-	args["assertionsEncrypted"] = llx.BoolData(stringFromAny(saml.Settings["private_key"]) != "" ||
-		stringFromAny(saml.Settings["private_key_path"]) != "")
 	args["singleLogoutEnabled"] = llx.BoolData(boolFromAny(saml.Settings["single_logout"]))
 	args["allowIdpInitiated"] = llx.BoolData(boolFromAny(saml.Settings["allow_idp_initiated"]))
 	args["allowSignUp"] = llx.BoolData(boolFromAny(saml.Settings["allow_sign_up"]))

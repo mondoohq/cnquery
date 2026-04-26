@@ -237,8 +237,6 @@ grafana.ssoSettings @defaults("provider source") {
   enabled bool
   // Provider settings (non-secret fields; secrets are redacted by Grafana)
   settings dict
-  // Whether single-sign-on is the only allowed login flow (signup/skip-org-role auto-assign disabled)
-  enforceSso bool
   // Whether new users are auto-registered on first login
   allowSignUp bool
   // Whether sign-in is restricted to the configured allowed_domains/orgs
@@ -256,8 +254,6 @@ grafana.samlSettings @defaults("enabled") {
   signatureAlgorithm string
   // Whether the SP-initiated request is signed
   signRequests bool
-  // Whether assertions must be encrypted
-  assertionsEncrypted bool
   // Whether single-logout is enabled
   singleLogoutEnabled bool
   // Whether IdP-initiated SSO is allowed

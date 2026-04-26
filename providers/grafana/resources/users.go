@@ -337,11 +337,8 @@ func (u *mqlGrafanaUser) permissions() (map[string]any, error) {
 		return nil, err
 	}
 
-	// Grafana returns permissions as a list of {action, scope} objects.
-	var raw []struct {
-		Action string `json:"action"`
-		Scope  string `json:"scope"`
-	}
+	// Grafana returns permissions as a map of action -> []scope.
+	var raw map[string][]string
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
 		err = fmt.Errorf("grafana: decoding %s response: %w", path, err)
 		u.permsFetched = true
@@ -349,12 +346,8 @@ func (u *mqlGrafanaUser) permissions() (map[string]any, error) {
 		return nil, err
 	}
 
-	grouped := map[string][]string{}
-	for _, p := range raw {
-		grouped[p.Action] = append(grouped[p.Action], p.Scope)
-	}
-	out := make(map[string]any, len(grouped))
-	for k, scopes := range grouped {
+	out := make(map[string]any, len(raw))
+	for k, scopes := range raw {
 		anyScopes := make([]any, len(scopes))
 		for i, s := range scopes {
 			anyScopes[i] = s
