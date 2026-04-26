@@ -106,90 +106,97 @@ func (g *mqlGcpProjectStorageService) buckets() ([]any, error) {
 
 	res := make([]any, 0, len(buckets.Items))
 	for i := range buckets.Items {
-		bucket := buckets.Items[i]
-		created := parseTime(bucket.TimeCreated)
-		updated := parseTime(bucket.Updated)
-
-		var iamConfigurationDict map[string]any
-		iamConfigurationDict, err = convert.JsonToDict(bucket.IamConfiguration)
+		mqlBucket, err := mqlBucketFromAPI(g.MqlRuntime, projectId, buckets.Items[i])
 		if err != nil {
 			return nil, err
 		}
-
-		var retentionPolicy map[string]any
-		retentionPolicy, err = convert.JsonToDict(bucket.RetentionPolicy)
-		if err != nil {
-			return nil, err
-		}
-		enc, err := convert.JsonToDict(bucket.Encryption)
-		if err != nil {
-			return nil, err
-		}
-
-		publicAccessPrevention := ""
-		var uniformBucketLevelAccess map[string]any
-		if bucket.IamConfiguration != nil {
-			publicAccessPrevention = bucket.IamConfiguration.PublicAccessPrevention
-			uniformBucketLevelAccess, err = convert.JsonToDict(bucket.IamConfiguration.UniformBucketLevelAccess)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		softDeletePolicy, err := convert.JsonToDict(bucket.SoftDeletePolicy)
-		if err != nil {
-			return nil, err
-		}
-
-		objectRetentionMode := ""
-		if bucket.ObjectRetention != nil {
-			objectRetentionMode = bucket.ObjectRetention.Mode
-		}
-
-		autoclass, err := convert.JsonToDict(bucket.Autoclass)
-		if err != nil {
-			return nil, err
-		}
-
-		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
-			"id":               llx.StringData(bucket.Id),
-			"projectId":        llx.StringData(projectId),
-			"name":             llx.StringData(bucket.Name),
-			"labels":           llx.MapData(convert.MapToInterfaceMap(bucket.Labels), types.String),
-			"location":         llx.StringData(bucket.Location),
-			"locationType":     llx.StringData(bucket.LocationType),
-			"projectNumber":    llx.StringData(strconv.FormatUint(bucket.ProjectNumber, 10)),
-			"storageClass":     llx.StringData(bucket.StorageClass),
-			"created":          llx.TimeDataPtr(created),
-			"updated":          llx.TimeDataPtr(updated),
-			"iamConfiguration": llx.DictData(iamConfigurationDict),
-			"retentionPolicy":  llx.DictData(retentionPolicy),
-			"encryption":       llx.DictData(enc),
-			"lifecycle": llx.ArrayData(
-				storageLifecycleRulesToArrayInterface(g.MqlRuntime, bucket.Id, bucket.Lifecycle),
-				types.Resource("gcp.project.storageService.bucket.lifecycleRule"),
-			),
-			"defaultEventBasedHold":    llx.BoolData(bucket.DefaultEventBasedHold),
-			"rpo":                      llx.StringData(bucket.Rpo),
-			"satisfiesPZS":             llx.BoolData(bucket.SatisfiesPZS),
-			"versioningEnabled":        llx.BoolData(bucket.Versioning != nil && bucket.Versioning.Enabled),
-			"publicAccessPrevention":   llx.StringData(publicAccessPrevention),
-			"metageneration":           llx.IntData(bucket.Metageneration),
-			"uniformBucketLevelAccess": llx.DictData(uniformBucketLevelAccess),
-			"softDeletePolicy":         llx.DictData(softDeletePolicy),
-			"objectRetentionMode":      llx.StringData(objectRetentionMode),
-			"autoclass":                llx.DictData(autoclass),
-		})
-		if err != nil {
-			return nil, err
-		}
-		mqlBucket := mqlInstance.(*mqlGcpProjectStorageServiceBucket)
-		if bucket.Encryption != nil {
-			mqlBucket.cacheDefaultKmsKeyName = bucket.Encryption.DefaultKmsKeyName
-		}
-		res = append(res, mqlInstance)
+		res = append(res, mqlBucket)
 	}
 	return res, nil
+}
+
+// mqlBucketFromAPI converts a *storage.Bucket into a fully-populated mql
+// resource. Used by buckets() during a list and by init when resolving a
+// single bucket by name.
+func mqlBucketFromAPI(runtime *plugin.Runtime, projectId string, bucket *storage.Bucket) (*mqlGcpProjectStorageServiceBucket, error) {
+	created := parseTime(bucket.TimeCreated)
+	updated := parseTime(bucket.Updated)
+
+	iamConfigurationDict, err := convert.JsonToDict(bucket.IamConfiguration)
+	if err != nil {
+		return nil, err
+	}
+	retentionPolicy, err := convert.JsonToDict(bucket.RetentionPolicy)
+	if err != nil {
+		return nil, err
+	}
+	enc, err := convert.JsonToDict(bucket.Encryption)
+	if err != nil {
+		return nil, err
+	}
+
+	publicAccessPrevention := ""
+	var uniformBucketLevelAccess map[string]any
+	if bucket.IamConfiguration != nil {
+		publicAccessPrevention = bucket.IamConfiguration.PublicAccessPrevention
+		uniformBucketLevelAccess, err = convert.JsonToDict(bucket.IamConfiguration.UniformBucketLevelAccess)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	softDeletePolicy, err := convert.JsonToDict(bucket.SoftDeletePolicy)
+	if err != nil {
+		return nil, err
+	}
+
+	objectRetentionMode := ""
+	if bucket.ObjectRetention != nil {
+		objectRetentionMode = bucket.ObjectRetention.Mode
+	}
+
+	autoclass, err := convert.JsonToDict(bucket.Autoclass)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlInstance, err := CreateResource(runtime, "gcp.project.storageService.bucket", map[string]*llx.RawData{
+		"id":               llx.StringData(bucket.Id),
+		"projectId":        llx.StringData(projectId),
+		"name":             llx.StringData(bucket.Name),
+		"labels":           llx.MapData(convert.MapToInterfaceMap(bucket.Labels), types.String),
+		"location":         llx.StringData(bucket.Location),
+		"locationType":     llx.StringData(bucket.LocationType),
+		"projectNumber":    llx.StringData(strconv.FormatUint(bucket.ProjectNumber, 10)),
+		"storageClass":     llx.StringData(bucket.StorageClass),
+		"created":          llx.TimeDataPtr(created),
+		"updated":          llx.TimeDataPtr(updated),
+		"iamConfiguration": llx.DictData(iamConfigurationDict),
+		"retentionPolicy":  llx.DictData(retentionPolicy),
+		"encryption":       llx.DictData(enc),
+		"lifecycle": llx.ArrayData(
+			storageLifecycleRulesToArrayInterface(runtime, bucket.Id, bucket.Lifecycle),
+			types.Resource("gcp.project.storageService.bucket.lifecycleRule"),
+		),
+		"defaultEventBasedHold":    llx.BoolData(bucket.DefaultEventBasedHold),
+		"rpo":                      llx.StringData(bucket.Rpo),
+		"satisfiesPZS":             llx.BoolData(bucket.SatisfiesPZS),
+		"versioningEnabled":        llx.BoolData(bucket.Versioning != nil && bucket.Versioning.Enabled),
+		"publicAccessPrevention":   llx.StringData(publicAccessPrevention),
+		"metageneration":           llx.IntData(bucket.Metageneration),
+		"uniformBucketLevelAccess": llx.DictData(uniformBucketLevelAccess),
+		"softDeletePolicy":         llx.DictData(softDeletePolicy),
+		"objectRetentionMode":      llx.StringData(objectRetentionMode),
+		"autoclass":                llx.DictData(autoclass),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlBucket := mqlInstance.(*mqlGcpProjectStorageServiceBucket)
+	if bucket.Encryption != nil {
+		mqlBucket.cacheDefaultKmsKeyName = bucket.Encryption.DefaultKmsKeyName
+	}
+	return mqlBucket, nil
 }
 
 type mqlGcpProjectStorageServiceBucketInternal struct {
@@ -306,52 +313,64 @@ func initGcpProjectStorageServiceBucket(runtime *plugin.Runtime, args map[string
 		return args, nil, nil
 	}
 
-	// If no args are set, try reading them from the platform ID
+	// If no args are set, try reading them from the platform ID. The asset
+	// identifier path supplies all three (name + projectId + location).
 	if len(args) == 0 {
-		if ids := getAssetIdentifier(runtime); ids != nil {
-			args["name"] = llx.StringData(ids.name)
-			args["projectId"] = llx.StringData(ids.project)
-			args["location"] = llx.StringData(ids.region)
-		} else {
+		ids := getAssetIdentifier(runtime)
+		if ids == nil {
 			return nil, nil, errors.New("no asset identifier found")
 		}
+		args["name"] = llx.StringData(ids.name)
+		args["projectId"] = llx.StringData(ids.project)
+		args["location"] = llx.StringData(ids.region)
 	}
 
-	obj, err := CreateResource(runtime, "gcp.project.storageService", map[string]*llx.RawData{
-		"projectId": llx.StringData(args["projectId"].Value.(string)),
-	})
+	// Resolve the bucket directly via Buckets.Get(name). Bucket names are
+	// globally unique in GCS, so a single Get returns everything we need —
+	// including projectNumber and location — even when the caller only
+	// supplied "name" (e.g. cross-resource references like a Datastream
+	// connection profile pointing at a GCS bucket).
+	nameRaw, ok := args["name"]
+	if !ok || nameRaw == nil {
+		return args, nil, nil
+	}
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, storage.CloudPlatformScope)
 	if err != nil {
 		return nil, nil, err
 	}
-	storageSvc := obj.(*mqlGcpProjectStorageService)
-	buckets := storageSvc.GetBuckets()
-	if buckets.Error != nil {
-		return nil, nil, buckets.Error
+	ctx := context.Background()
+	storageSvc, err := storage.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, nil, err
+	}
+	bucket, err := storageSvc.Buckets.Get(name).Do()
+	if err != nil {
+		return nil, nil, err
 	}
 
-	for _, b := range buckets.Data {
-		bucket := b.(*mqlGcpProjectStorageServiceBucket)
-
-		if bucket.Name.Error != nil {
-			return nil, nil, bucket.Name.Error
-		}
-		name := bucket.Name.Data
-
-		if bucket.ProjectId.Error != nil {
-			return nil, nil, bucket.ProjectId.Error
-		}
-		projectId := bucket.ProjectId.Data
-
-		if bucket.Location.Error != nil {
-			return nil, nil, bucket.Location.Error
-		}
-		location := bucket.Location.Data
-
-		if name == args["name"].Value.(string) && projectId == args["projectId"].Value.(string) && location == args["location"].Value.(string) {
-			return args, bucket, nil
+	// Derive projectId from caller args when supplied; otherwise fall back to
+	// the connection's project. Bucket.ProjectNumber is numeric (not the
+	// human ID) so we can't use it directly as projectId.
+	projectId := conn.ResourceID()
+	if pidRaw, ok := args["projectId"]; ok && pidRaw != nil {
+		if s, ok := pidRaw.Value.(string); ok && s != "" {
+			projectId = s
 		}
 	}
-	return nil, nil, errors.New("bucket not found")
+	mqlBucket, err := mqlBucketFromAPI(runtime, projectId, bucket)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlBucket, nil
 }
 
 func (g *mqlGcpProjectStorageServiceBucket) iamPolicy() ([]any, error) {
