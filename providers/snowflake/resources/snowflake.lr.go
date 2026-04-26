@@ -232,8 +232,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.account.grants": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeAccount).GetGrants()).ToDataRes(types.Array(types.Resource("snowflake.grant")))
 	},
-	"snowflake.account.accountadmins": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeAccount).GetAccountadmins()).ToDataRes(types.Array(types.Resource("snowflake.user")))
+	"snowflake.account.accountAdmins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAccount).GetAccountAdmins()).ToDataRes(types.Array(types.Resource("snowflake.user")))
 	},
 	"snowflake.user.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetName()).ToDataRes(types.String)
@@ -921,8 +921,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeAccount).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"snowflake.account.accountadmins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAccount).Accountadmins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"snowflake.account.accountAdmins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAccount).AccountAdmins, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1874,7 +1874,7 @@ type mqlSnowflakeAccount struct {
 	Shares               plugin.TValue[[]any]
 	ApiIntegrations      plugin.TValue[[]any]
 	Grants               plugin.TValue[[]any]
-	Accountadmins        plugin.TValue[[]any]
+	AccountAdmins        plugin.TValue[[]any]
 }
 
 // createSnowflakeAccount creates a new instance of this resource
@@ -2156,10 +2156,10 @@ func (c *mqlSnowflakeAccount) GetGrants() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlSnowflakeAccount) GetAccountadmins() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.Accountadmins, func() ([]any, error) {
+func (c *mqlSnowflakeAccount) GetAccountAdmins() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccountAdmins, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "accountadmins")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("snowflake.account", c.__id, "accountAdmins")
 			if err != nil {
 				return nil, err
 			}
@@ -2168,7 +2168,7 @@ func (c *mqlSnowflakeAccount) GetAccountadmins() *plugin.TValue[[]any] {
 			}
 		}
 
-		return c.accountadmins()
+		return c.accountAdmins()
 	})
 }
 

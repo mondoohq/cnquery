@@ -103,6 +103,8 @@ func (r *mqlSnowflakeApiIntegration) properties() (map[string]any, error) {
 
 // splitPrefixes parses Snowflake's bracketed prefix list. Snowflake renders
 // these as e.g. "[https://api.example.com/, https://other.example.com/]".
+// Splits on ", " (comma-space) — the actual Snowflake delimiter — so URLs
+// containing literal commas survive intact.
 func splitPrefixes(value string) []any {
 	value = strings.TrimSpace(value)
 	value = strings.TrimPrefix(value, "[")
@@ -110,7 +112,7 @@ func splitPrefixes(value string) []any {
 	if value == "" {
 		return []any{}
 	}
-	parts := strings.Split(value, ",")
+	parts := strings.Split(value, ", ")
 	out := make([]any, 0, len(parts))
 	for _, p := range parts {
 		p = strings.TrimSpace(p)

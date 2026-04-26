@@ -78,9 +78,9 @@ func (r *mqlSnowflakeRole) grantees() ([]any, error) {
 	return convertGrants(r.MqlRuntime, grants)
 }
 
-// accountadmins returns all users that hold the ACCOUNTADMIN role, either directly
+// accountAdmins returns all users that hold the ACCOUNTADMIN role, either directly
 // or transitively via role-to-role grants.
-func (r *mqlSnowflakeAccount) accountadmins() ([]any, error) {
+func (r *mqlSnowflakeAccount) accountAdmins() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()
 	ctx := context.Background()
@@ -98,7 +98,10 @@ func (r *mqlSnowflakeAccount) accountadmins() ([]any, error) {
 
 	list := []any{}
 	for i := range users {
-		if !holders[users[i].Name] {
+		// Normalize user name through NewAccountObjectIdentifier so quote-stripping
+		// matches the holders set (which was built from GranteeName.Name()).
+		key := sdk.NewAccountObjectIdentifier(users[i].Name).Name()
+		if !holders[key] {
 			continue
 		}
 		mqlUser, err := newMqlSnowflakeUser(r.MqlRuntime, users[i])

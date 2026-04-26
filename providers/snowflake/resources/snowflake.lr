@@ -46,7 +46,7 @@ snowflake.account {
   // Account-level grants (privileges granted ON ACCOUNT)
   grants() []snowflake.grant
   // Users that hold the ACCOUNTADMIN role (directly or indirectly via role grants)
-  accountadmins() []snowflake.user
+  accountAdmins() []snowflake.user
 }
 
 // Snowflake User

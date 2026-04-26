@@ -46,7 +46,7 @@ func (r *mqlSnowflakeAccount) securityIntegrations() ([]any, error) {
 
 func newMqlSnowflakeSecurityIntegration(runtime *plugin.Runtime, integration sdk.SecurityIntegration) (*mqlSnowflakeSecurityIntegration, error) {
 	r, err := CreateResource(runtime, "snowflake.securityIntegration", map[string]*llx.RawData{
-		"__id":      llx.StringData(integration.Name),
+		"__id":      llx.StringData(sdk.NewAccountObjectIdentifier(integration.Name).FullyQualifiedName()),
 		"name":      llx.StringData(integration.Name),
 		"type":      llx.StringData(integration.IntegrationType),
 		"comment":   llx.StringData(integration.Comment),

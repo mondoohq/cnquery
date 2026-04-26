@@ -3,8 +3,8 @@
 
 snowflake 11.0.0
 snowflake.account 11.0.0
+snowflake.account.accountAdmins 13.0.7
 snowflake.account.accountId 11.0.0
-snowflake.account.accountadmins 13.0.7
 snowflake.account.apiIntegrations 13.0.7
 snowflake.account.databases 11.0.0
 snowflake.account.grants 13.0.7
