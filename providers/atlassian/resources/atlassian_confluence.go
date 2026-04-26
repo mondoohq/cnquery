@@ -219,9 +219,6 @@ func (a *mqlAtlassianConfluenceSpace) pages() ([]any, error) {
 			res = append(res, mqlPage)
 		}
 		startAt += len(page.Results)
-		if page.Size > 0 && startAt >= page.Size {
-			break
-		}
 		if len(page.Results) < CONFLUENCE_PAGE_LIMIT {
 			break
 		}

@@ -458,34 +458,32 @@ func (a *mqlAtlassianJiraProject) permissionScheme() (*mqlAtlassianJiraPermissio
 	}
 
 	mqlScheme := res.(*mqlAtlassianJiraPermissionScheme)
-	// Cache the grants we already have so grants() doesn't have to call out again.
-	if scheme.Permissions != nil {
-		grants := []any{}
-		for _, grant := range scheme.Permissions {
-			if grant == nil {
-				continue
-			}
-			holderType := ""
-			holderParam := ""
-			if grant.Holder != nil {
-				holderType = grant.Holder.Type
-				holderParam = grant.Holder.Parameter
-			}
-			grantID := strconv.Itoa(scheme.ID) + "/" + strconv.Itoa(grant.ID)
-			mqlGrant, err := CreateResource(a.MqlRuntime, "atlassian.jira.permissionScheme.grant",
-				map[string]*llx.RawData{
-					"id":              llx.StringData(grantID),
-					"permission":      llx.StringData(grant.Permission),
-					"holderType":      llx.StringData(holderType),
-					"holderParameter": llx.StringData(holderParam),
-				})
-			if err != nil {
-				return nil, err
-			}
-			grants = append(grants, mqlGrant)
+	// Cache the grants from the parent fetch so grants() doesn't call out again.
+	grants := []any{}
+	for _, grant := range scheme.Permissions {
+		if grant == nil {
+			continue
 		}
-		mqlScheme.Grants = plugin.TValue[[]any]{Data: grants, State: plugin.StateIsSet}
+		holderType := ""
+		holderParam := ""
+		if grant.Holder != nil {
+			holderType = grant.Holder.Type
+			holderParam = grant.Holder.Parameter
+		}
+		grantID := strconv.Itoa(scheme.ID) + "/" + strconv.Itoa(grant.ID)
+		mqlGrant, err := CreateResource(a.MqlRuntime, "atlassian.jira.permissionScheme.grant",
+			map[string]*llx.RawData{
+				"id":              llx.StringData(grantID),
+				"permission":      llx.StringData(grant.Permission),
+				"holderType":      llx.StringData(holderType),
+				"holderParameter": llx.StringData(holderParam),
+			})
+		if err != nil {
+			return nil, err
+		}
+		grants = append(grants, mqlGrant)
 	}
+	mqlScheme.Grants = plugin.TValue[[]any]{Data: grants, State: plugin.StateIsSet}
 
 	return mqlScheme, nil
 }
