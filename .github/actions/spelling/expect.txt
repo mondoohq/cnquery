@@ -261,7 +261,7 @@ KQL
 kqueue
 krbtgt
 kts
-kty OTP SYMANTEC totp webauthn
+kty
 kubenet
 kustomization
 labelmatchstatement
@@ -373,6 +373,7 @@ ords
 orstatement
 OSGi
 ospf
+OTP
 ovmf
 OVS
 owpjy
@@ -486,6 +487,7 @@ subscriptionfilter
 superusers
 swi
 switchports
+SYMANTEC
 symfony
 tailnets
 tailscale
@@ -503,6 +505,7 @@ tokenid
 tokio
 toplevel
 toport
+totp
 tpl
 tpu
 trae
@@ -549,6 +552,7 @@ vulnerabilityassessmentsettings
 vulnmgmt
 vulns
 vztmpl
+webauthn
 webcam
 webide
 WEBSERVERS
