@@ -176,6 +176,148 @@ github.organization @defaults("login name") {
   defaultRepositoryBranch string
   // GitHub Actions settings for this organization
   actionsSettings() github.organizationActionsSettings
+  // SAML SSO configuration for the organization (requires GitHub Enterprise Cloud)
+  samlConfig() github.organization.samlConfig
+  // IP allow list configuration for the organization (requires GitHub Enterprise Cloud)
+  ipAllowList() github.organization.ipAllowList
+  // Custom organization roles (requires GitHub Enterprise Cloud)
+  customRoles() []github.organization.customRole
+  // OAuth applications and other credentials authorized through SAML SSO (requires GitHub Enterprise Cloud)
+  oauthApps() []github.organization.oauthApp
+  // Approved fine-grained personal access tokens that can access the organization (requires GitHub Enterprise Cloud)
+  personalAccessTokens() []github.organization.personalAccessToken
+  // Audit log streaming destination configuration (requires GitHub Enterprise Cloud)
+  auditLogStreamConfig() github.organization.auditLogStreamConfig
+}
+
+// SAML SSO configuration for a GitHub organization (requires GitHub Enterprise Cloud)
+private github.organization.samlConfig @defaults("enabled ssoUrl") {
+  // Whether SAML SSO is enabled for the organization
+  enabled bool
+  // The URL used for sign in
+  ssoUrl string
+  // The IdP issuer URL
+  issuer string
+  // SAML digest method algorithm
+  digestMethod string
+  // SAML signature method algorithm
+  signatureMethod string
+  // The IdP X.509 certificate (PEM)
+  idpCertificate string
+}
+
+// IP allow list configuration for a GitHub organization (requires GitHub Enterprise Cloud)
+private github.organization.ipAllowList @defaults("enabled") {
+  // Whether the IP allow list is enabled
+  enabled bool
+  // Whether the IP allow list is enabled for installed GitHub Apps
+  enabledForInstalledApps bool
+  // List of allowed IP addresses or CIDR ranges
+  entries []github.organization.ipAllowList.entry
+}
+
+// An entry in the IP allow list
+private github.organization.ipAllowList.entry @defaults("name allowedValue") {
+  // Entry ID
+  id string
+  // Human-readable name
+  name string
+  // The IP/CIDR range allowed
+  allowedValue string
+  // Whether this entry is active
+  isActive bool
+  // Creation time
+  createdAt time
+  // Last update time
+  updatedAt time
+}
+
+// A custom organization role (requires GitHub Enterprise Cloud)
+private github.organization.customRole @defaults("id name baseRole") {
+  // Role ID
+  id int
+  // Role name
+  name string
+  // Role description
+  description string
+  // Base role this is built on (read, triage, write, maintain, admin)
+  baseRole string
+  // Permissions granted by the role
+  permissions []string
+  // Source of the role (e.g., Organization)
+  source string
+  // Role creation time
+  createdAt time
+  // Role update time
+  updatedAt time
+}
+
+// An OAuth application or other credential authorized through SAML SSO (requires GitHub Enterprise Cloud)
+private github.organization.oauthApp @defaults("login credentialType") {
+  // Login of the user that owns the underlying credential
+  login string
+  // Unique identifier for the credential
+  credentialId int
+  // Type of credential (e.g., "personal access token", "OAuth", "SSH Key")
+  credentialType string
+  // Last eight characters of the token (only for personal access tokens)
+  tokenLastEight string
+  // OAuth scopes the token has been granted
+  scopes []string
+  // Time when the credential was authorized for use
+  authorizedAt time
+  // Time when the credential was last accessed
+  lastAccessedAt time
+  // Title given to the SSH key (SSH key credentials only)
+  authorizedCredentialTitle string
+  // Note given to the token (token credentials only)
+  authorizedCredentialNote string
+  // Expiry of the token (token credentials only)
+  authorizedCredentialExpiresAt time
+  // Fingerprint (SSH key credentials only)
+  fingerprint string
+  // The organization that authorized this credential
+  organization() github.organization
+}
+
+// A fine-grained personal access token approved to access the organization (requires GitHub Enterprise Cloud)
+private github.organization.personalAccessToken @defaults("tokenName tokenId") {
+  // Approval ID
+  id int
+  // Token ID
+  tokenId int
+  // Token name
+  tokenName string
+  // Owning user login
+  ownerLogin string
+  // Repository selection (none, all, subset)
+  repositorySelection string
+  // Permissions granted, categorized (organization, repository, other)
+  permissions dict
+  // Time the token was granted access to the organization
+  accessGrantedAt time
+  // Whether the token has expired
+  expired bool
+  // Time the token expires
+  expiresAt time
+  // Last time the token was used for authentication
+  lastUsedAt time
+}
+
+// Audit log streaming destination for an organization (requires GitHub Enterprise Cloud)
+private github.organization.auditLogStreamConfig @defaults("enabled streamType") {
+  // Whether audit log streaming is enabled
+  enabled bool
+  // Stream destination type (Azure Blob Storage, Azure Event Hubs, Amazon S3, Splunk, HTTPS Endpoint, Datadog, Google Cloud Storage)
+  streamType string
+  // Identifier for the configured stream
+  streamId int
+  // Time the stream was configured
+  createdAt time
+  // Time the stream was last updated
+  updatedAt time
+  // Whether the most recent stream test was successful (if reported)
+  enabledStreamPaused bool
 }
 
 // GitHub repository fine-grained permission
@@ -246,6 +388,8 @@ private github.user @defaults("login name email company") {
   repositories() []github.repository
   // User gists
   gists() []github.gist
+  // User's public SSH keys
+  publicKeys() []github.deployKey
 }
 
 // GitHub team
@@ -486,6 +630,56 @@ github.repository @defaults("fullName") {
   rulesets() []github.repositoryRuleset
   // GitHub Actions settings for this repository
   actionsSettings() github.repositoryActionsSettings
+  // Deploy keys configured on the repository
+  deployKeys() []github.deployKey
+  // Parsed CODEOWNERS rules (from .github/CODEOWNERS, CODEOWNERS, or docs/CODEOWNERS)
+  codeowners() github.repository.codeowners
+}
+
+// A repository deploy key
+private github.deployKey @defaults("id title readOnly") {
+  // Deploy key ID
+  id int
+  // Title given to the key
+  title string
+  // The public SSH key
+  key string
+  // Whether the key is read-only
+  readOnly bool
+  // Whether the key has been verified
+  verified bool
+  // Time the key was created
+  createdAt time
+  // Time the key was last used (null if never used)
+  lastUsed time
+  // Login of the user who added the key, if known
+  addedBy string
+  // Approximate age of the key in days since createdAt (-1 if createdAt is unknown)
+  ageInDays int
+  // The repository this key is configured on
+  repository() github.repository
+}
+
+// Parsed CODEOWNERS rules for a repository
+private github.repository.codeowners @defaults("path exists") {
+  // Path within the repository where CODEOWNERS was found (.github/CODEOWNERS, CODEOWNERS, or docs/CODEOWNERS); empty if not found
+  path string
+  // Whether a CODEOWNERS file was found
+  exists bool
+  // Raw file contents (empty if not found)
+  content string
+  // Parsed rules
+  rules []github.codeowners.rule
+}
+
+// A single rule from a CODEOWNERS file
+private github.codeowners.rule @defaults("pattern") {
+  // The path pattern (e.g. *, *.go, docs/*)
+  pattern string
+  // List of owners (GitHub usernames, team slugs, or email addresses) responsible for the pattern
+  owners []string
+  // Line number of the rule in the source file (1-indexed)
+  lineNumber int
 }
 
 // SPDX SBOM for a GitHub repository
@@ -728,6 +922,8 @@ private github.branchprotection @defaults("id") {
   requiredConversationResolution dict
   // Whether signed commits are required
   requiredSignatures bool
+  // Whether signed commits are required (alias for requiredSignatures)
+  requireSignedCommits bool
   // Require linear history
   requireLinearHistory dict
   // Include administrators
@@ -744,6 +940,16 @@ private github.branchprotection @defaults("id") {
   lockBranch bool
   // Whether fork syncing is allowed
   allowForkSyncing bool
+  // Number of approving reviews required to merge a pull request (0 if not configured)
+  requiredApprovingReviewCount int
+  // Whether an approved review is required for files with a designated code owner
+  requireCodeOwnerReviews bool
+  // Whether stale reviews are dismissed when a new commit is pushed
+  dismissStaleReviews bool
+  // Whether the most recent pusher is required to approve a pull request
+  requireLastPushApproval bool
+  // Users and teams allowed to dismiss reviews
+  dismissalRestrictions dict
 }
 
 // GitHub repository commit
@@ -824,6 +1030,20 @@ private github.installation @defaults("id appId") {
   createdAt time
   // Application installation update time
   updatedAt time
+  // Type of target the app is installed on (Organization, User)
+  targetType string
+  // Repository selection (all, selected)
+  repositorySelection string
+  // Subscribed events
+  events []string
+  // Permissions granted to this installation
+  permissions dict
+  // Time the installation was suspended (null if not suspended)
+  suspendedAt time
+  // The user that suspended the installation, if any
+  suspendedBy github.user
+  // Repositories accessible to this installation (only when repositorySelection is "selected")
+  repositories() []github.repository
 }
 
 // GitHub gist

@@ -695,6 +695,27 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 		return nil, err
 	}
 
+	// Flatten the most-frequently-asserted PR review fields onto the resource
+	// for easier MQL queries (e.g. branchprotection.requireCodeOwnerReviews).
+	var (
+		requiredApprovingReviewCount int64
+		requireCodeOwnerReviews      bool
+		dismissStaleReviews          bool
+		requireLastPushApproval      bool
+		dismissalRestrictionsDict    map[string]any
+	)
+	if branchProtection.RequiredPullRequestReviews != nil {
+		rpr := branchProtection.RequiredPullRequestReviews
+		requiredApprovingReviewCount = int64(rpr.RequiredApprovingReviewCount)
+		requireCodeOwnerReviews = rpr.RequireCodeOwnerReviews
+		dismissStaleReviews = rpr.DismissStaleReviews
+		requireLastPushApproval = rpr.RequireLastPushApproval
+		if ghDismissalRestrictions != nil {
+			dismissalRestrictionsDict, _ = convert.JsonToDict(ghDismissalRestrictions)
+		}
+	}
+
+	signedCommits := convert.ToValue(sc.Enabled)
 	res, err := CreateResource(g.MqlRuntime, "github.branchprotection", map[string]*llx.RawData{
 		"id":                             llx.StringData(repoName + "/" + branchName),
 		"requiredStatusChecks":           llx.MapData(rsc, types.Any),
@@ -705,10 +726,16 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 		"allowForcePushes":               llx.MapData(afp, types.Any),
 		"allowDeletions":                 llx.MapData(ad, types.Any),
 		"requiredConversationResolution": llx.MapData(rcr, types.Any),
-		"requiredSignatures":             llx.BoolDataPtr(sc.Enabled),
+		"requiredSignatures":             llx.BoolData(signedCommits),
+		"requireSignedCommits":           llx.BoolData(signedCommits),
 		"blockCreations":                 llx.BoolData(branchProtection.GetBlockCreations().GetEnabled()),
 		"lockBranch":                     llx.BoolData(branchProtection.GetLockBranch().GetEnabled()),
 		"allowForkSyncing":               llx.BoolData(branchProtection.GetAllowForkSyncing().GetEnabled()),
+		"requiredApprovingReviewCount":   llx.IntData(requiredApprovingReviewCount),
+		"requireCodeOwnerReviews":        llx.BoolData(requireCodeOwnerReviews),
+		"dismissStaleReviews":            llx.BoolData(dismissStaleReviews),
+		"requireLastPushApproval":        llx.BoolData(requireLastPushApproval),
+		"dismissalRestrictions":          llx.MapData(dismissalRestrictionsDict, types.Any),
 	})
 	if err != nil {
 		return nil, err

@@ -648,17 +648,47 @@ func (g *mqlGithubOrganization) installations() ([]any, error) {
 			id = *app.ID
 		}
 
-		r, err := CreateResource(g.MqlRuntime, "github.installation", map[string]*llx.RawData{
-			"id":        llx.IntData(id),
-			"appId":     llx.IntDataPtr(app.AppID),
-			"appSlug":   llx.StringDataPtr(app.AppSlug),
-			"createdAt": llx.TimeDataPtr(githubTimestamp(app.CreatedAt)),
-			"updatedAt": llx.TimeDataPtr(githubTimestamp(app.UpdatedAt)),
-		})
+		permsDict, _ := convert.JsonToDict(app.Permissions)
+
+		var suspendedBy plugin.Resource
+		if app.SuspendedBy != nil && app.SuspendedBy.GetID() != 0 {
+			sb, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntData(app.SuspendedBy.GetID()),
+				"login": llx.StringData(app.SuspendedBy.GetLogin()),
+			})
+			if err != nil {
+				return nil, err
+			}
+			suspendedBy = sb
+		}
+
+		args := map[string]*llx.RawData{
+			"id":                  llx.IntData(id),
+			"appId":               llx.IntDataPtr(app.AppID),
+			"appSlug":             llx.StringDataPtr(app.AppSlug),
+			"createdAt":           llx.TimeDataPtr(githubTimestamp(app.CreatedAt)),
+			"updatedAt":           llx.TimeDataPtr(githubTimestamp(app.UpdatedAt)),
+			"targetType":          llx.StringDataPtr(app.TargetType),
+			"repositorySelection": llx.StringDataPtr(app.RepositorySelection),
+			"events":              llx.ArrayData(convert.SliceAnyToInterface[string](app.Events), types.String),
+			"permissions":         llx.MapData(permsDict, types.Any),
+			"suspendedAt":         llx.TimeDataPtr(githubTimestamp(app.SuspendedAt)),
+		}
+		if suspendedBy != nil {
+			args["suspendedBy"] = llx.ResourceData(suspendedBy, suspendedBy.MqlName())
+		}
+
+		r, err := CreateResource(g.MqlRuntime, "github.installation", args)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, r)
+		mqlInst := r.(*mqlGithubInstallation)
+		if suspendedBy == nil {
+			mqlInst.SuspendedBy.State = plugin.StateIsSet | plugin.StateIsNull
+		}
+		mqlInst.cacheOrgLogin = orgLogin
+		mqlInst.cacheInstallationID = id
+		res = append(res, mqlInst)
 	}
 
 	return res, nil
