@@ -54,6 +54,30 @@ func (a *mqlAtlassianConfluenceUser) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+// initAtlassianConfluenceUser supports creating a bare user reference from an
+// account ID. The Confluence v1 SDK exposes no /user GET endpoint, so we cannot
+// hydrate fields like name/type here — callers that traversed via a typed ref
+// (e.g. permissionUsers, restriction.users) get the accountId only and any
+// other accessed field will surface as null. Listing via atlassian.confluence.users
+// remains the canonical way to enumerate user details.
+func initAtlassianConfluenceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// A bare resource (just an id) is a valid empty state.
+	return args, nil, nil
+}
+
+func (a *mqlAtlassianConfluenceGroup) id() (string, error) {
+	return "atlassian.confluence.group/" + a.Id.Data, nil
+}
+
+// initAtlassianConfluenceGroup supports creating a bare group reference from a
+// group id or name. The Confluence v1 SDK exposes no standalone group GET, so
+// we cannot hydrate additional fields here. Callers receive a typed handle they
+// can compare/filter on.
+func initAtlassianConfluenceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// A bare resource (just an id/name) is a valid empty state.
+	return args, nil, nil
+}
+
 // spaces fetches all Confluence spaces with permission expansion so callers can
 // inspect anonymous-access settings and per-subject permissions inline.
 func (a *mqlAtlassianConfluence) spaces() ([]any, error) {
@@ -175,6 +199,74 @@ func (a *mqlAtlassianConfluenceSpace) id() (string, error) {
 	return "atlassian.confluence.space/" + a.Key.Data, nil
 }
 
+// permissionUsers returns the distinct typed atlassian.confluence.user resources
+// referenced by this space's permissions list. The permissions field contains
+// subjectType="user" rows whose subjectKey is the user's accountId.
+func (a *mqlAtlassianConfluenceSpace) permissionUsers() ([]any, error) {
+	seen := map[string]bool{}
+	res := []any{}
+	for _, p := range a.Permissions.Data {
+		row, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
+		if t, _ := row["subjectType"].(string); t != "user" {
+			continue
+		}
+		key, _ := row["subjectKey"].(string)
+		if key == "" || seen[key] {
+			continue
+		}
+		seen[key] = true
+		name, _ := row["subjectName"].(string)
+		args := map[string]*llx.RawData{
+			"id":   llx.StringData(key),
+			"name": llx.StringData(name),
+			"type": llx.StringData(""),
+		}
+		mqlUser, err := NewResource(a.MqlRuntime, "atlassian.confluence.user", args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlUser)
+	}
+	return res, nil
+}
+
+// permissionGroups returns the distinct typed atlassian.confluence.group resources
+// referenced by this space's permissions list. The permissions field contains
+// subjectType="group" rows whose subjectKey is the group id (and subjectName is
+// the group display name).
+func (a *mqlAtlassianConfluenceSpace) permissionGroups() ([]any, error) {
+	seen := map[string]bool{}
+	res := []any{}
+	for _, p := range a.Permissions.Data {
+		row, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
+		if t, _ := row["subjectType"].(string); t != "group" {
+			continue
+		}
+		key, _ := row["subjectKey"].(string)
+		if key == "" || seen[key] {
+			continue
+		}
+		seen[key] = true
+		name, _ := row["subjectName"].(string)
+		args := map[string]*llx.RawData{
+			"id":   llx.StringData(key),
+			"name": llx.StringData(name),
+		}
+		mqlGroup, err := NewResource(a.MqlRuntime, "atlassian.confluence.group", args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlGroup)
+	}
+	return res, nil
+}
+
 // pages lists all "page" content within this space. Trashed/draft pages are excluded
 // (the SDK defaults to type=page, status=current via the search call).
 func (a *mqlAtlassianConfluenceSpace) pages() ([]any, error) {
@@ -194,7 +286,8 @@ func (a *mqlAtlassianConfluenceSpace) pages() ([]any, error) {
 
 	for {
 		// Use ContentByType so we get only pages and don't mix in blogposts, comments, attachments.
-		page, _, err := client.Space.ContentByType(context.Background(), spaceKey, "page", "all", []string{"restrictions.read.restrictions.user", "restrictions.read.restrictions.group"}, startAt, CONFLUENCE_PAGE_LIMIT)
+		// status="current" excludes trashed and draft pages — better for audit use cases.
+		page, _, err := client.Space.ContentByType(context.Background(), spaceKey, "page", "current", []string{"restrictions.read.restrictions.user", "restrictions.read.restrictions.group"}, startAt, CONFLUENCE_PAGE_LIMIT)
 		if err != nil {
 			return nil, err
 		}
@@ -329,4 +422,51 @@ func (a *mqlAtlassianConfluencePage) fetchRestrictions() ([]any, error) {
 
 func (a *mqlAtlassianConfluencePageRestriction) id() (string, error) {
 	return "atlassian.confluence.page.restriction/" + a.Id.Data, nil
+}
+
+// users resolves the userIds list to typed atlassian.confluence.user references.
+// Each id is treated as an accountId; the underlying user resource has no fetch
+// endpoint so only the id is hydrated.
+func (a *mqlAtlassianConfluencePageRestriction) users() ([]any, error) {
+	res := []any{}
+	for _, raw := range a.UserIds.Data {
+		accountID, ok := raw.(string)
+		if !ok || accountID == "" {
+			continue
+		}
+		mqlUser, err := NewResource(a.MqlRuntime, "atlassian.confluence.user",
+			map[string]*llx.RawData{
+				"id":   llx.StringData(accountID),
+				"name": llx.StringData(""),
+				"type": llx.StringData(""),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlUser)
+	}
+	return res, nil
+}
+
+// groups resolves the groupNames list to typed atlassian.confluence.group references.
+// Confluence page restrictions identify groups by name (not id), so we use the
+// name as the resource id for caching.
+func (a *mqlAtlassianConfluencePageRestriction) groups() ([]any, error) {
+	res := []any{}
+	for _, raw := range a.GroupNames.Data {
+		name, ok := raw.(string)
+		if !ok || name == "" {
+			continue
+		}
+		mqlGroup, err := NewResource(a.MqlRuntime, "atlassian.confluence.group",
+			map[string]*llx.RawData{
+				"id":   llx.StringData(name),
+				"name": llx.StringData(name),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlGroup)
+	}
+	return res, nil
 }

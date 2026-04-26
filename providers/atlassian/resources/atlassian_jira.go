@@ -322,9 +322,10 @@ func (a *mqlAtlassianJira) auditRecords() ([]any, error) {
 
 	res := []any{}
 	offset := 0
-	total := JIRA_SEARCH_MAX_RESULTS
+	// Safety bound to guard against misbehaving servers that never signal end-of-results.
+	const maxOffset = 100000
 
-	for offset < total {
+	for offset < maxOffset {
 		page, _, err := jiraClient.Audit.Get(context.Background(), nil, offset, JIRA_SEARCH_MAX_RESULTS)
 		if err != nil {
 			return nil, err
@@ -408,17 +409,24 @@ func (a *mqlAtlassianJira) auditRecords() ([]any, error) {
 			res = append(res, mqlAuditRecord)
 		}
 
-		if len(page.Records) == 0 {
+		offset += len(page.Records)
+		if len(page.Records) < JIRA_SEARCH_MAX_RESULTS {
 			break
 		}
-		total = page.Total
-		offset += len(page.Records)
 	}
 	return res, nil
 }
 
 func (a *mqlAtlassianJiraAuditRecord) id() (string, error) {
 	return "atlassian.jira.auditRecord/" + strconv.FormatInt(a.Id.Data, 10), nil
+}
+
+// mqlAtlassianJiraPermissionSchemeInternal caches state needed by lazy methods.
+// projectKey is the parent project's key, used by grants() to call the
+// project-scoped permission API (which can return a different scheme/ID than
+// the global Permission.Scheme.Get endpoint).
+type mqlAtlassianJiraPermissionSchemeInternal struct {
+	cacheProjectKey string
 }
 
 // permissionScheme returns the permission scheme assigned to this Jira project.
@@ -458,32 +466,36 @@ func (a *mqlAtlassianJiraProject) permissionScheme() (*mqlAtlassianJiraPermissio
 	}
 
 	mqlScheme := res.(*mqlAtlassianJiraPermissionScheme)
-	// Cache the grants from the parent fetch so grants() doesn't call out again.
-	grants := []any{}
-	for _, grant := range scheme.Permissions {
-		if grant == nil {
-			continue
+	// Cache the project key so the grants() fallback can re-fetch via the
+	// project-scoped endpoint instead of the global one.
+	mqlScheme.cacheProjectKey = projectKey
+	// Cache the grants we already have so grants() doesn't have to call out again.
+	if scheme.Permissions != nil {
+		grants := []any{}
+		for _, grant := range scheme.Permissions {
+			if grant == nil {
+				continue
+			}
+			holderType := ""
+			holderParam := ""
+			if grant.Holder != nil {
+				holderType = grant.Holder.Type
+				holderParam = grant.Holder.Parameter
+			}
+			mqlGrant, err := CreateResource(a.MqlRuntime, "atlassian.jira.permissionScheme.grant",
+				map[string]*llx.RawData{
+					"id":              llx.StringData(strconv.Itoa(grant.ID)),
+					"permission":      llx.StringData(grant.Permission),
+					"holderType":      llx.StringData(holderType),
+					"holderParameter": llx.StringData(holderParam),
+				})
+			if err != nil {
+				return nil, err
+			}
+			grants = append(grants, mqlGrant)
 		}
-		holderType := ""
-		holderParam := ""
-		if grant.Holder != nil {
-			holderType = grant.Holder.Type
-			holderParam = grant.Holder.Parameter
-		}
-		grantID := strconv.Itoa(scheme.ID) + "/" + strconv.Itoa(grant.ID)
-		mqlGrant, err := CreateResource(a.MqlRuntime, "atlassian.jira.permissionScheme.grant",
-			map[string]*llx.RawData{
-				"id":              llx.StringData(grantID),
-				"permission":      llx.StringData(grant.Permission),
-				"holderType":      llx.StringData(holderType),
-				"holderParameter": llx.StringData(holderParam),
-			})
-		if err != nil {
-			return nil, err
-		}
-		grants = append(grants, mqlGrant)
+		mqlScheme.Grants = plugin.TValue[[]any]{Data: grants, State: plugin.StateIsSet}
 	}
-	mqlScheme.Grants = plugin.TValue[[]any]{Data: grants, State: plugin.StateIsSet}
 
 	return mqlScheme, nil
 }
@@ -494,6 +506,9 @@ func (a *mqlAtlassianJiraPermissionScheme) id() (string, error) {
 
 // grants is a fallback if grants weren't pre-populated by permissionScheme().
 // In practice this rarely runs because the parent caches grants on creation.
+// Uses the project-scoped endpoint (matching the parent fetch) so the grant
+// list aligns with the scheme returned for the project — the global
+// Permission.Scheme.Get endpoint can return a different scheme/grant set.
 func (a *mqlAtlassianJiraPermissionScheme) grants() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	if !ok {
@@ -501,7 +516,11 @@ func (a *mqlAtlassianJiraPermissionScheme) grants() ([]any, error) {
 	}
 	jiraClient := conn.Client()
 
-	scheme, _, err := jiraClient.Permission.Scheme.Get(context.Background(), int(a.Id.Data), []string{"permissions", "user", "group", "projectRole", "field", "all"})
+	if a.cacheProjectKey == "" {
+		return []any{}, nil
+	}
+
+	scheme, _, err := jiraClient.Project.Permission.Get(context.Background(), a.cacheProjectKey, []string{"permissions", "user", "group", "projectRole", "field", "all"})
 	if err != nil {
 		return nil, err
 	}
@@ -519,10 +538,9 @@ func (a *mqlAtlassianJiraPermissionScheme) grants() ([]any, error) {
 			holderType = grant.Holder.Type
 			holderParam = grant.Holder.Parameter
 		}
-		grantID := strconv.Itoa(scheme.ID) + "/" + strconv.Itoa(grant.ID)
 		mqlGrant, err := CreateResource(a.MqlRuntime, "atlassian.jira.permissionScheme.grant",
 			map[string]*llx.RawData{
-				"id":              llx.StringData(grantID),
+				"id":              llx.StringData(strconv.Itoa(grant.ID)),
 				"permission":      llx.StringData(grant.Permission),
 				"holderType":      llx.StringData(holderType),
 				"holderParameter": llx.StringData(holderParam),

@@ -36,6 +36,7 @@ const (
 	ResourceAtlassianJiraGroup                    string = "atlassian.jira.group"
 	ResourceAtlassianConfluence                   string = "atlassian.confluence"
 	ResourceAtlassianConfluenceUser               string = "atlassian.confluence.user"
+	ResourceAtlassianConfluenceGroup              string = "atlassian.confluence.group"
 	ResourceAtlassianConfluenceSpace              string = "atlassian.confluence.space"
 	ResourceAtlassianConfluencePage               string = "atlassian.confluence.page"
 	ResourceAtlassianConfluencePageRestriction    string = "atlassian.confluence.page.restriction"
@@ -122,8 +123,12 @@ func init() {
 			Create: createAtlassianConfluence,
 		},
 		"atlassian.confluence.user": {
-			// to override args, implement: initAtlassianConfluenceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAtlassianConfluenceUser,
 			Create: createAtlassianConfluenceUser,
+		},
+		"atlassian.confluence.group": {
+			Init:   initAtlassianConfluenceGroup,
+			Create: createAtlassianConfluenceGroup,
 		},
 		"atlassian.confluence.space": {
 			// to override args, implement: initAtlassianConfluenceSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -490,6 +495,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.confluence.user.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluenceUser).GetType()).ToDataRes(types.String)
 	},
+	"atlassian.confluence.group.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceGroup).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.group.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceGroup).GetName()).ToDataRes(types.String)
+	},
 	"atlassian.confluence.space.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluenceSpace).GetId()).ToDataRes(types.Int)
 	},
@@ -513,6 +524,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.confluence.space.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluenceSpace).GetPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"atlassian.confluence.space.permissionUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetPermissionUsers()).ToDataRes(types.Array(types.Resource("atlassian.confluence.user")))
+	},
+	"atlassian.confluence.space.permissionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetPermissionGroups()).ToDataRes(types.Array(types.Resource("atlassian.confluence.group")))
 	},
 	"atlassian.confluence.space.pages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluenceSpace).GetPages()).ToDataRes(types.Array(types.Resource("atlassian.confluence.page")))
@@ -549,6 +566,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.confluence.page.restriction.groupNames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluencePageRestriction).GetGroupNames()).ToDataRes(types.Array(types.String))
+	},
+	"atlassian.confluence.page.restriction.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePageRestriction).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.confluence.user")))
+	},
+	"atlassian.confluence.page.restriction.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePageRestriction).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.confluence.group")))
 	},
 }
 
@@ -1018,6 +1041,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianConfluenceUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.confluence.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.confluence.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.confluence.space.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluenceSpace).__id, ok = v.Value.(string)
 		return
@@ -1052,6 +1087,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.confluence.space.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluenceSpace).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.permissionUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).PermissionUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.permissionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).PermissionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.confluence.space.pages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1108,6 +1151,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.confluence.page.restriction.groupNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluencePageRestriction).GroupNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.restriction.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePageRestriction).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.restriction.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePageRestriction).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -2314,7 +2365,7 @@ func (c *mqlAtlassianJiraProject) GetPermissionScheme() *plugin.TValue[*mqlAtlas
 type mqlAtlassianJiraPermissionScheme struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAtlassianJiraPermissionSchemeInternal it will be used here
+	mqlAtlassianJiraPermissionSchemeInternal
 	Id          plugin.TValue[int64]
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -2690,6 +2741,60 @@ func (c *mqlAtlassianConfluenceUser) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
+// mqlAtlassianConfluenceGroup for the atlassian.confluence.group resource
+type mqlAtlassianConfluenceGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianConfluenceGroupInternal it will be used here
+	Id   plugin.TValue[string]
+	Name plugin.TValue[string]
+}
+
+// createAtlassianConfluenceGroup creates a new instance of this resource
+func createAtlassianConfluenceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianConfluenceGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.confluence.group", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianConfluenceGroup) MqlName() string {
+	return "atlassian.confluence.group"
+}
+
+func (c *mqlAtlassianConfluenceGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianConfluenceGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianConfluenceGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
 // mqlAtlassianConfluenceSpace for the atlassian.confluence.space resource
 type mqlAtlassianConfluenceSpace struct {
 	MqlRuntime *plugin.Runtime
@@ -2703,6 +2808,8 @@ type mqlAtlassianConfluenceSpace struct {
 	AnonymousAccess  plugin.TValue[bool]
 	UnlicensedAccess plugin.TValue[bool]
 	Permissions      plugin.TValue[[]any]
+	PermissionUsers  plugin.TValue[[]any]
+	PermissionGroups plugin.TValue[[]any]
 	Pages            plugin.TValue[[]any]
 }
 
@@ -2773,6 +2880,38 @@ func (c *mqlAtlassianConfluenceSpace) GetUnlicensedAccess() *plugin.TValue[bool]
 
 func (c *mqlAtlassianConfluenceSpace) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetPermissionUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PermissionUsers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.space", c.__id, "permissionUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.permissionUsers()
+	})
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetPermissionGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PermissionGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.space", c.__id, "permissionGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.permissionGroups()
+	})
 }
 
 func (c *mqlAtlassianConfluenceSpace) GetPages() *plugin.TValue[[]any] {
@@ -2893,6 +3032,8 @@ type mqlAtlassianConfluencePageRestriction struct {
 	Operation  plugin.TValue[string]
 	UserIds    plugin.TValue[[]any]
 	GroupNames plugin.TValue[[]any]
+	Users      plugin.TValue[[]any]
+	Groups     plugin.TValue[[]any]
 }
 
 // createAtlassianConfluencePageRestriction creates a new instance of this resource
@@ -2946,4 +3087,36 @@ func (c *mqlAtlassianConfluencePageRestriction) GetUserIds() *plugin.TValue[[]an
 
 func (c *mqlAtlassianConfluencePageRestriction) GetGroupNames() *plugin.TValue[[]any] {
 	return &c.GroupNames
+}
+
+func (c *mqlAtlassianConfluencePageRestriction) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.page.restriction", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+func (c *mqlAtlassianConfluencePageRestriction) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.page.restriction", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.groups()
+	})
 }
