@@ -142,7 +142,7 @@ private okta.userFactor @defaults("factorType status") {
   created time
   // Timestamp when the factor was last updated
   lastUpdated time
-  // ID of the user this factor belongs to
+  // Deprecated: use user() instead. ID of the user this factor belongs to
   userId string
   // The user this factor belongs to
   user() okta.user
@@ -184,7 +184,7 @@ private okta.api.token @defaults("name userId") {
   id string
   // Display name of the token
   name string
-  // ID of the user the token belongs to
+  // Deprecated: use user() instead. ID of the user the token belongs to
   userId string
   // ID of the client the token was created for
   clientName string
