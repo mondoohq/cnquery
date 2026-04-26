@@ -212,8 +212,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"shodan.host.isProxy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanHost).GetIsProxy()).ToDataRes(types.Bool)
 	},
-	"shodan.host.isDatacenter": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlShodanHost).GetIsDatacenter()).ToDataRes(types.Bool)
+	"shodan.host.isInfrastructure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetIsInfrastructure()).ToDataRes(types.Bool)
 	},
 	"shodan.host.services": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanHost).GetServices()).ToDataRes(types.Array(types.Resource("shodan.host.service")))
@@ -549,8 +549,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlShodanHost).IsProxy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"shodan.host.isDatacenter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlShodanHost).IsDatacenter, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"shodan.host.isInfrastructure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).IsInfrastructure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"shodan.host.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -954,31 +954,31 @@ type mqlShodanHost struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlShodanHostInternal
-	Ip              plugin.TValue[string]
-	Os              plugin.TValue[string]
-	Org             plugin.TValue[string]
-	Isp             plugin.TValue[string]
-	Asn             plugin.TValue[string]
-	Tags            plugin.TValue[[]any]
-	Hostnames       plugin.TValue[[]any]
-	Ports           plugin.TValue[[]any]
-	Vulnerabilities plugin.TValue[[]any]
-	Vulns           plugin.TValue[[]any]
-	Country         plugin.TValue[string]
-	City            plugin.TValue[string]
-	CountryCode     plugin.TValue[string]
-	RegionCode      plugin.TValue[string]
-	PostalCode      plugin.TValue[string]
-	Latitude        plugin.TValue[float64]
-	Longitude       plugin.TValue[float64]
-	LastUpdate      plugin.TValue[*time.Time]
-	IsCloud         plugin.TValue[bool]
-	IsCdn           plugin.TValue[bool]
-	IsVpn           plugin.TValue[bool]
-	IsTor           plugin.TValue[bool]
-	IsProxy         plugin.TValue[bool]
-	IsDatacenter    plugin.TValue[bool]
-	Services        plugin.TValue[[]any]
+	Ip               plugin.TValue[string]
+	Os               plugin.TValue[string]
+	Org              plugin.TValue[string]
+	Isp              plugin.TValue[string]
+	Asn              plugin.TValue[string]
+	Tags             plugin.TValue[[]any]
+	Hostnames        plugin.TValue[[]any]
+	Ports            plugin.TValue[[]any]
+	Vulnerabilities  plugin.TValue[[]any]
+	Vulns            plugin.TValue[[]any]
+	Country          plugin.TValue[string]
+	City             plugin.TValue[string]
+	CountryCode      plugin.TValue[string]
+	RegionCode       plugin.TValue[string]
+	PostalCode       plugin.TValue[string]
+	Latitude         plugin.TValue[float64]
+	Longitude        plugin.TValue[float64]
+	LastUpdate       plugin.TValue[*time.Time]
+	IsCloud          plugin.TValue[bool]
+	IsCdn            plugin.TValue[bool]
+	IsVpn            plugin.TValue[bool]
+	IsTor            plugin.TValue[bool]
+	IsProxy          plugin.TValue[bool]
+	IsInfrastructure plugin.TValue[bool]
+	Services         plugin.TValue[[]any]
 }
 
 // createShodanHost creates a new instance of this resource
@@ -1164,9 +1164,9 @@ func (c *mqlShodanHost) GetIsProxy() *plugin.TValue[bool] {
 	})
 }
 
-func (c *mqlShodanHost) GetIsDatacenter() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.IsDatacenter, func() (bool, error) {
-		return c.isDatacenter()
+func (c *mqlShodanHost) GetIsInfrastructure() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsInfrastructure, func() (bool, error) {
+		return c.isInfrastructure()
 	})
 }
 

@@ -39,7 +39,7 @@ shodan.host.hostnames 11.0.0
 shodan.host.ip 11.0.0
 shodan.host.isCdn 13.0.7
 shodan.host.isCloud 13.0.7
-shodan.host.isDatacenter 13.0.7
+shodan.host.isInfrastructure 13.0.7
 shodan.host.isProxy 13.0.7
 shodan.host.isTor 13.0.7
 shodan.host.isVpn 13.0.7

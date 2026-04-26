@@ -56,8 +56,8 @@ shodan.host @defaults("ip") {
   isTor() bool
   // True if Shodan tags identify this IP as an open/anonymous proxy
   isProxy() bool
-  // True if Shodan tags suggest this IP belongs to a hosting provider or datacenter (cloud, hosting, cdn, vpn, proxy, tor)
-  isDatacenter() bool
+  // True if any Shodan infrastructure tag matches this IP — cloud, CDN, VPN, proxy, or Tor. Broader-than-datacenter heuristic for spotting non-residential traffic origins.
+  isInfrastructure() bool
   // Service banners observed on this host
   services() []shodan.host.service
 }

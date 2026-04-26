@@ -298,7 +298,7 @@ func (r *mqlShodanHost) isProxy() (bool, error) {
 	return r.hasTagFromSet(shodanProxyTags), nil
 }
 
-func (r *mqlShodanHost) isDatacenter() (bool, error) {
+func (r *mqlShodanHost) isInfrastructure() (bool, error) {
 	if !r.Tags.IsSet() {
 		if err := r.fetchBaseInformation(); err != nil {
 			return false, err
@@ -517,11 +517,7 @@ func optionalStringPtr(p *string) *llx.RawData {
 }
 
 func optionalShodanTime(raw string) *llx.RawData {
-	t := parseShodanTime(raw)
-	if t == nil {
-		return llx.NilData
-	}
-	return llx.TimeData(*t)
+	return llx.TimeDataPtr(parseShodanTime(raw))
 }
 
 // optionalResource emits a Shodan resource ref, or NilData if the resource

@@ -81,9 +81,12 @@ func buildTlsResource(runtime *plugin.Runtime, ip string, port int, ssl *models.
 }
 
 // weakCipherPatterns lists substrings of cipher names commonly considered weak
-// or broken. Matches case-insensitive.
+// or broken. Matches case-insensitive. PSK is intentionally omitted because it
+// is a key-exchange mechanism (legitimate in IoT and private-network TLS), not
+// a broken primitive — narrow PSK_WITH_NULL/PSK_WITH_RC4 combinations are
+// caught by the NULL/RC4 patterns below.
 var weakCipherPatterns = []string{
-	"NULL", "EXPORT", "ANON", "RC4", "DES", "3DES", "IDEA", "MD5", "PSK",
+	"NULL", "EXPORT", "ANON", "RC4", "DES", "3DES", "IDEA", "MD5",
 }
 
 func isWeakCipher(name string, bits int) bool {
@@ -93,11 +96,6 @@ func isWeakCipher(name string, bits int) bool {
 	upper := strings.ToUpper(name)
 	for _, p := range weakCipherPatterns {
 		if strings.Contains(upper, p) {
-			// "TLS_AES_..." and "TLS_CHACHA20_..." contain "AES"/"CHACHA" — the
-			// patterns above don't appear in those, so we can be liberal here.
-			// One exception: "3DES" must not match the trailing "DES" of
-			// "TRIPLE_DES_..." (we already check 3DES first; the DES check below
-			// catches "DES_CBC" / "DES_40").
 			return true
 		}
 	}
