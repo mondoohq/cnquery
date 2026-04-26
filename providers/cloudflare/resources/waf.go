@@ -4,6 +4,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
@@ -40,11 +41,18 @@ func (c *mqlCloudflareZone) wafRules() ([]any, error) {
 		rs := rulesets[i]
 
 		// `ListRulesets` only returns ruleset metadata; fetch each ruleset to
-		// get its rules. We keep going on individual fetch errors — a managed
-		// ruleset can fail to expand without breaking the rest of the query.
+		// get its rules. Skip individual rulesets that the caller can't read
+		// (e.g., managed rulesets requiring extra entitlements) but surface
+		// transient/unknown errors so they aren't silently swallowed.
 		full, err := conn.Cf.GetRuleset(context.TODO(), zone, rs.ID)
 		if err != nil {
-			continue
+			var notFound *cloudflare.NotFoundError
+			var authN *cloudflare.AuthenticationError
+			var authZ *cloudflare.AuthorizationError
+			if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+				continue
+			}
+			return nil, err
 		}
 
 		version := ""

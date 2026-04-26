@@ -12,10 +12,6 @@ import (
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
 
-func (c *mqlCloudflareZoneDnssec) id() (string, error) {
-	return "", nil
-}
-
 func (c *mqlCloudflareZone) dnssec() (*mqlCloudflareZoneDnssec, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 

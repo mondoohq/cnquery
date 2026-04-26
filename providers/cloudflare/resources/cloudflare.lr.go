@@ -8720,12 +8720,7 @@ func createCloudflareZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cloudflare.zone.dnssec", res.__id)
@@ -9020,12 +9015,7 @@ func createCloudflareZoneEmailRouting(runtime *plugin.Runtime, args map[string]*
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cloudflare.zone.emailRouting", res.__id)

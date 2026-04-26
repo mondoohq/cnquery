@@ -21,10 +21,13 @@ type mqlCloudflareOneInternal struct {
 
 // isSAMLIdpType returns true for IdP types that authenticate via SAML 2.0
 // (either the generic SAML connector or vendor-specific SAML connectors).
-// OIDC and social IdPs (e.g., google, github) are excluded.
+// OIDC and social IdPs (e.g., google, github, yandex) are excluded.
+//
+// Note: Cloudflare's `okta` connector is OIDC. Okta deployments that use
+// SAML come through as the generic `saml` type, which is already covered.
 func isSAMLIdpType(t string) bool {
 	switch t {
-	case "saml", "centrify", "onelogin", "ping", "yandex":
+	case "saml", "centrify", "onelogin", "ping":
 		return true
 	}
 	return false

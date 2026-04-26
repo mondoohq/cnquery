@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
@@ -16,10 +17,11 @@ import (
 type mqlCloudflareZoneEmailRoutingInternal struct {
 	zoneID   string
 	zoneName string
-}
 
-func (c *mqlCloudflareZoneEmailRouting) id() (string, error) {
-	return "", nil
+	dnsLock    sync.Mutex
+	dnsFetched bool
+	dnsCache   []cloudflare.DNSRecord
+	dnsErr     error
 }
 
 func (c *mqlCloudflareZone) emailRouting() (*mqlCloudflareZoneEmailRouting, error) {
@@ -146,11 +148,26 @@ func (c *mqlCloudflareZoneEmailRouting) dmarcConfigured() (bool, error) {
 }
 
 func (c *mqlCloudflareZoneEmailRouting) fetchSuggestedDNSRecords() ([]cloudflare.DNSRecord, error) {
-	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+	if c.dnsFetched {
+		return c.dnsCache, c.dnsErr
+	}
+	c.dnsLock.Lock()
+	defer c.dnsLock.Unlock()
+	if c.dnsFetched {
+		return c.dnsCache, c.dnsErr
+	}
+
 	if c.zoneID == "" {
+		c.dnsFetched = true
 		return nil, nil
 	}
-	return conn.Cf.GetEmailRoutingDNSSettings(context.TODO(), &cloudflare.ResourceContainer{
+
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+	records, err := conn.Cf.GetEmailRoutingDNSSettings(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.zoneID,
 	})
+	c.dnsCache = records
+	c.dnsErr = err
+	c.dnsFetched = true
+	return c.dnsCache, c.dnsErr
 }

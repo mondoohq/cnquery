@@ -570,7 +570,7 @@ private cloudflare.one.idp @defaults("name") {
 	name string // The name of the identity provider, shown to users on the login page.
 	type string // The type of the identity provider.
 
-	// Whether this IdP is SAML-based (SAML, Centrify, OneLogin, Ping, Okta-via-SAML, etc. — derived from `type`)
+	// Whether this IdP is SAML-based (SAML, Centrify, OneLogin, Ping, or Okta-via-the-generic-saml-type; OIDC and social IdPs are excluded)
 	saml bool
 	// SAML SSO target URL (only set for SAML IdPs)
 	ssoTargetUrl string
