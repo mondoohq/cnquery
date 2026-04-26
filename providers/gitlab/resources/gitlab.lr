@@ -61,6 +61,40 @@ gitlab.user @defaults("username name state") {
   bot bool
   // Whether two-factor authentication is enabled
   twoFactorEnabled bool
+  // External SSO identities linked to this user (SAML, LDAP, OAuth providers, etc.)
+  externalIdentities() []gitlab.user.externalIdentity
+  // SSH keys registered for this user (requires admin or self-access)
+  sshKeys() []gitlab.user.sshKey
+}
+
+// External SSO identity linked to a GitLab user (SAML, LDAP, OAuth provider, etc.)
+private gitlab.user.externalIdentity @defaults("provider externUID") {
+  // Identity provider name (e.g., saml, ldapmain, google_oauth2, github)
+  provider string
+  // External identifier within the provider
+  externUID string
+  // The GitLab user this identity is linked to
+  user() gitlab.user
+}
+
+// SSH key registered to a GitLab user account
+private gitlab.user.sshKey @defaults("id title createdAt") {
+  // Key ID
+  id int
+  // Key title
+  title string
+  // Public SSH key
+  key string
+  // Key creation time
+  createdAt time
+  // Key expiration time
+  expiresAt time
+  // Key usage type (auth, signing, auth_and_signing)
+  usageType string
+  // Age of the key in days since creation
+  daysOld() int
+  // The GitLab user that owns this SSH key
+  user() gitlab.user
 }
 
 // GitLab member (used in both groups and projects)
@@ -127,6 +161,10 @@ gitlab.group @defaults("name visibility webURL") {
   visibility string
   // Whether all users in this group are required to set up two-factor authentication
   requireTwoFactorAuthentication bool
+  // Time (in hours) users are allowed to skip forced 2FA configuration before being locked out
+  twoFactorGracePeriod int
+  // Whether membership in the group is locked - members can only be added by administrators
+  membershipLock bool
   // Whether forking projects outside this group is forbidden
   preventForkingOutsideGroup bool
   // Whether group email notifications are disabled
@@ -159,6 +197,60 @@ gitlab.group @defaults("name visibility webURL") {
   deployTokens() []gitlab.group.deployToken
   // Protected branches at the group level
   protectedBranches() []gitlab.group.protectedBranch
+  // SAML group links mapping SAML claim values to group access levels (Premium/Ultimate)
+  samlGroupLinks() []gitlab.group.samlGroupLink
+  // Audit events for the group (Premium/Ultimate)
+  auditEvents() []gitlab.group.auditEvent
+}
+
+// GitLab SAML group link - maps an external SAML group/claim value to a GitLab access level.
+// Available on Premium and Ultimate tiers via /groups/:id/saml_group_links.
+private gitlab.group.samlGroupLink @defaults("name accessLevel provider") {
+  // Name of the SAML group / claim value
+  name string
+  // GitLab access level granted (10=Guest, 20=Reporter, 30=Developer, 40=Maintainer, 50=Owner)
+  accessLevel int
+  // Member role ID for custom roles (0 if not used)
+  memberRoleId int
+  // SAML provider name (when using multiple providers)
+  provider string
+}
+
+// GitLab group audit event - records a security-relevant action against the group.
+// Available on Premium and Ultimate tiers via /groups/:id/audit_events.
+private gitlab.group.auditEvent @defaults("id eventName createdAt") {
+  // Audit event ID
+  id int
+  // ID of the user who performed the action
+  authorId int
+  // ID of the entity the event applies to
+  entityId int
+  // Entity type (Group, User, Project, etc.)
+  entityType string
+  // Name of the event (e.g., user_added_to_group)
+  eventName string
+  // Event type
+  eventType string
+  // Time the event occurred
+  createdAt time
+  // Display name of the author
+  authorName string
+  // Email of the author
+  authorEmail string
+  // Class of the author (User, DeployToken, etc.)
+  authorClass string
+  // Description of the change
+  customMessage string
+  // Type of the target object
+  targetType string
+  // Target details
+  targetDetails string
+  // IP address the action originated from
+  ipAddress string
+  // Path of the entity within the group hierarchy
+  entityPath string
+  // Whether this was a failed login event
+  failedLogin string
 }
 
 // GitLab project
@@ -326,11 +418,61 @@ private gitlab.project.file @defaults("path type") {
 }
 
 // GitLab project webhook
+//
+// Note: GitLab's API never returns the configured secret token in list/get
+// responses (write-only field), so we cannot expose its presence directly.
+// Use the GitLab UI or audit logs to verify a token is configured.
 private gitlab.project.webhook @defaults("url sslVerification") {
+  // Webhook ID
+  id int
   // Webhook URL
   url string
-  // Whether SSL verification is enabled
+  // Webhook display name
+  name string
+  // Webhook description
+  description string
+  // Whether SSL verification is enabled - disabling permits man-in-the-middle interception of webhook payloads
   sslVerification bool
+  // Whether push events trigger the webhook
+  pushEvents bool
+  // Branch filter for push events
+  pushEventsBranchFilter string
+  // Whether issues events trigger the webhook
+  issuesEvents bool
+  // Whether confidential issues events trigger the webhook
+  confidentialIssuesEvents bool
+  // Whether merge request events trigger the webhook
+  mergeRequestsEvents bool
+  // Whether tag push events trigger the webhook
+  tagPushEvents bool
+  // Whether note (comment) events trigger the webhook
+  noteEvents bool
+  // Whether confidential note events trigger the webhook
+  confidentialNoteEvents bool
+  // Whether job events trigger the webhook
+  jobEvents bool
+  // Whether pipeline events trigger the webhook
+  pipelineEvents bool
+  // Whether wiki page events trigger the webhook
+  wikiPageEvents bool
+  // Whether deployment events trigger the webhook
+  deploymentEvents bool
+  // Whether release events trigger the webhook
+  releasesEvents bool
+  // Whether resource access token events trigger the webhook
+  resourceAccessTokenEvents bool
+  // Whether vulnerability events trigger the webhook
+  vulnerabilityEvents bool
+  // Whether feature flag events trigger the webhook
+  featureFlagEvents bool
+  // Webhook creation time
+  createdAt time
+  // Time until which the webhook is disabled (set by GitLab when too many failures occur)
+  disabledUntil time
+  // Alert status of the webhook
+  alertStatus string
+  // The project this webhook is registered against
+  project() gitlab.project
 }
 
 // GitLab project merge request
@@ -693,6 +835,10 @@ private gitlab.project.deployKey @defaults("id title canPush") {
   expiresAt time
   // Whether the key has push (write) access
   canPush bool
+  // Age of the deploy key in days since creation
+  daysOld() int
+  // The project this deploy key is registered against
+  project() gitlab.project
 }
 
 // GitLab project deploy token

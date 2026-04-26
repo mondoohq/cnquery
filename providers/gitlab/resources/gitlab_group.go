@@ -50,6 +50,8 @@ func initGitlabGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	args["webURL"] = llx.StringData(string(grp.WebURL))
 	args["visibility"] = llx.StringData(string(grp.Visibility))
 	args["requireTwoFactorAuthentication"] = llx.BoolData(grp.RequireTwoFactorAuth)
+	args["twoFactorGracePeriod"] = llx.IntData(grp.TwoFactorGracePeriod)
+	args["membershipLock"] = llx.BoolData(grp.MembershipLock)
 	args["preventForkingOutsideGroup"] = llx.BoolData(grp.PreventForkingOutsideGroup)
 	args["mentionsDisabled"] = llx.BoolData(grp.MentionsDisabled)
 	args["emailsDisabled"] = llx.BoolData(!grp.EmailsEnabled)
@@ -215,6 +217,8 @@ func (g *mqlGitlabGroup) subgroups() ([]any, error) {
 			"webURL":                         llx.StringData(string(subgroup.WebURL)),
 			"visibility":                     llx.StringData(string(subgroup.Visibility)),
 			"requireTwoFactorAuthentication": llx.BoolData(subgroup.RequireTwoFactorAuth),
+			"twoFactorGracePeriod":           llx.IntData(subgroup.TwoFactorGracePeriod),
+			"membershipLock":                 llx.BoolData(subgroup.MembershipLock),
 			"preventForkingOutsideGroup":     llx.BoolData(subgroup.PreventForkingOutsideGroup),
 			"mentionsDisabled":               llx.BoolData(subgroup.MentionsDisabled),
 			"emailsDisabled":                 llx.BoolData(!subgroup.EmailsEnabled),
@@ -462,6 +466,121 @@ func (g *mqlGitlabGroup) deployTokens() ([]any, error) {
 	}
 
 	return mqlTokens, nil
+}
+
+// id function for gitlab.group.samlGroupLink
+func (s *mqlGitlabGroupSamlGroupLink) id() (string, error) {
+	return "gitlab.group.samlGroupLink/" + s.Provider.Data + "/" + s.Name.Data, nil
+}
+
+// samlGroupLinks fetches SAML group links for the group.
+//
+// SAML group links are a Premium/Ultimate feature. On lower tiers the API
+// returns 403/404, in which case we return an empty list rather than failing
+// the whole resource graph.
+//
+// see https://docs.gitlab.com/api/groups/#saml-group-links
+func (g *mqlGitlabGroup) samlGroupLinks() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	groupID := int(g.Id.Data)
+	links, resp, err := conn.Client().Groups.ListGroupSAMLLinks(groupID)
+	if err != nil {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			return []any{}, nil // not available on this GitLab tier
+		}
+		return nil, err
+	}
+
+	var mqlLinks []any
+	for _, link := range links {
+		linkInfo := map[string]*llx.RawData{
+			"name":         llx.StringData(link.Name),
+			"accessLevel":  llx.IntData(int64(link.AccessLevel)),
+			"memberRoleId": llx.IntData(link.MemberRoleID),
+			"provider":     llx.StringData(link.Provider),
+		}
+		mqlLink, err := CreateResource(g.MqlRuntime, "gitlab.group.samlGroupLink", linkInfo)
+		if err != nil {
+			return nil, err
+		}
+		mqlLinks = append(mqlLinks, mqlLink)
+	}
+
+	return mqlLinks, nil
+}
+
+// id function for gitlab.group.auditEvent
+func (a *mqlGitlabGroupAuditEvent) id() (string, error) {
+	return "gitlab.group.auditEvent/" + strconv.FormatInt(a.Id.Data, 10), nil
+}
+
+// auditEvents fetches audit events for the group.
+//
+// Group audit events are a Premium/Ultimate feature. On lower tiers the API
+// returns 403/404, in which case we return an empty list rather than failing
+// the whole resource graph.
+//
+// see https://docs.gitlab.com/api/audit_events/#group-audit-events
+func (g *mqlGitlabGroup) auditEvents() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	groupID := int(g.Id.Data)
+
+	perPage := int64(50)
+	page := int64(1)
+	var allEvents []*gitlab.AuditEvent
+
+	for {
+		events, resp, err := conn.Client().AuditEvents.ListGroupAuditEvents(groupID, &gitlab.ListAuditEventsOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return []any{}, nil // not available on this GitLab tier
+			}
+			return nil, err
+		}
+
+		allEvents = append(allEvents, events...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
+	}
+
+	var mqlEvents []any
+	for _, event := range allEvents {
+		eventInfo := map[string]*llx.RawData{
+			"id":            llx.IntData(event.ID),
+			"authorId":      llx.IntData(event.AuthorID),
+			"entityId":      llx.IntData(event.EntityID),
+			"entityType":    llx.StringData(event.EntityType),
+			"eventName":     llx.StringData(event.EventName),
+			"eventType":     llx.StringData(event.EventType),
+			"createdAt":     llx.TimeDataPtr(event.CreatedAt),
+			"authorName":    llx.StringData(event.Details.AuthorName),
+			"authorEmail":   llx.StringData(event.Details.AuthorEmail),
+			"authorClass":   llx.StringData(event.Details.AuthorClass),
+			"customMessage": llx.StringData(event.Details.CustomMessage),
+			"targetType":    llx.StringData(event.Details.TargetType),
+			"targetDetails": llx.StringData(event.Details.TargetDetails),
+			"ipAddress":     llx.StringData(event.Details.IPAddress),
+			"entityPath":    llx.StringData(event.Details.EntityPath),
+			"failedLogin":   llx.StringData(event.Details.FailedLogin),
+		}
+		mqlEvent, err := CreateResource(g.MqlRuntime, "gitlab.group.auditEvent", eventInfo)
+		if err != nil {
+			return nil, err
+		}
+		mqlEvents = append(mqlEvents, mqlEvent)
+	}
+
+	return mqlEvents, nil
 }
 
 // id function for gitlab.group.protectedBranch

@@ -314,27 +314,91 @@ func (p *mqlGitlabProject) projectFiles() ([]any, error) {
 	return mqlFiles, nil
 }
 
-// id function for gitlab.project.webhook
+// id function for gitlab.project.webhook - hook ID is unique per project, but
+// hooks are scoped to a project so we include the project ID for global uniqueness.
 func (g *mqlGitlabProjectWebhook) id() (string, error) {
-	return g.Url.Data, nil
+	return "gitlab.project.webhook/" + strconv.FormatInt(g.Id.Data, 10), nil
 }
 
-// webhooks fetches the webhooks for a project
+// mqlGitlabProjectWebhookInternal stores parent project context for typed refs.
+type mqlGitlabProjectWebhookInternal struct {
+	projectID int64
+}
+
+// project returns a typed reference to the parent project this webhook is registered on.
+func (h *mqlGitlabProjectWebhook) project() (*mqlGitlabProject, error) {
+	if h.projectID == 0 {
+		h.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlProject, err := NewResource(h.MqlRuntime, "gitlab.project", map[string]*llx.RawData{
+		"id": llx.IntData(h.projectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlProject.(*mqlGitlabProject), nil
+}
+
+// webhooks fetches the webhooks for a project. The list/get hook responses
+// from GitLab never include the configured secret token (write-only field), so
+// we cannot expose token presence or value here - sslVerification + the per-event
+// trigger flags are the auditable surface.
 func (p *mqlGitlabProject) webhooks() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
 	projectID := int(p.Id.Data)
 
-	hooks, _, err := conn.Client().Projects.ListProjectHooks(projectID, nil)
-	if err != nil {
-		return nil, err
+	perPage := int64(50)
+	page := int64(1)
+	var allHooks []*gitlab.ProjectHook
+
+	for {
+		hooks, resp, err := conn.Client().Projects.ListProjectHooks(projectID, &gitlab.ListProjectHooksOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allHooks = append(allHooks, hooks...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
 	}
 
 	var mqlWebhooks []any
-	for _, hook := range hooks {
+	for _, hook := range allHooks {
 		hookInfo := map[string]*llx.RawData{
-			"url":             llx.StringData(hook.URL),
-			"sslVerification": llx.BoolData(hook.EnableSSLVerification),
+			"id":                        llx.IntData(hook.ID),
+			"url":                       llx.StringData(hook.URL),
+			"name":                      llx.StringData(hook.Name),
+			"description":               llx.StringData(hook.Description),
+			"sslVerification":           llx.BoolData(hook.EnableSSLVerification),
+			"pushEvents":                llx.BoolData(hook.PushEvents),
+			"pushEventsBranchFilter":    llx.StringData(hook.PushEventsBranchFilter),
+			"issuesEvents":              llx.BoolData(hook.IssuesEvents),
+			"confidentialIssuesEvents":  llx.BoolData(hook.ConfidentialIssuesEvents),
+			"mergeRequestsEvents":       llx.BoolData(hook.MergeRequestsEvents),
+			"tagPushEvents":             llx.BoolData(hook.TagPushEvents),
+			"noteEvents":                llx.BoolData(hook.NoteEvents),
+			"confidentialNoteEvents":    llx.BoolData(hook.ConfidentialNoteEvents),
+			"jobEvents":                 llx.BoolData(hook.JobEvents),
+			"pipelineEvents":            llx.BoolData(hook.PipelineEvents),
+			"wikiPageEvents":            llx.BoolData(hook.WikiPageEvents),
+			"deploymentEvents":          llx.BoolData(hook.DeploymentEvents),
+			"releasesEvents":            llx.BoolData(hook.ReleasesEvents),
+			"resourceAccessTokenEvents": llx.BoolData(hook.ResourceAccessTokenEvents),
+			"vulnerabilityEvents":       llx.BoolData(hook.VulnerabilityEvents),
+			"featureFlagEvents":         llx.BoolData(hook.FeatureFlagEvents),
+			"createdAt":                 llx.TimeDataPtr(hook.CreatedAt),
+			"disabledUntil":             llx.TimeDataPtr(hook.DisabledUntil),
+			"alertStatus":               llx.StringData(hook.AlertStatus),
 		}
 
 		mqlWebhook, err := CreateResource(p.MqlRuntime, "gitlab.project.webhook", hookInfo)
@@ -342,6 +406,7 @@ func (p *mqlGitlabProject) webhooks() ([]any, error) {
 			return nil, err
 		}
 
+		mqlWebhook.(*mqlGitlabProjectWebhook).projectID = p.Id.Data
 		mqlWebhooks = append(mqlWebhooks, mqlWebhook)
 	}
 
@@ -1070,6 +1135,35 @@ func (k *mqlGitlabProjectDeployKey) id() (string, error) {
 	return "gitlab.project.deployKey/" + strconv.FormatInt(k.Id.Data, 10), nil
 }
 
+// mqlGitlabProjectDeployKeyInternal stores parent project context for typed refs.
+type mqlGitlabProjectDeployKeyInternal struct {
+	projectID int64
+}
+
+// daysOld returns the age of the deploy key in days. Returns -1 when createdAt
+// isn't set so callers can distinguish "missing data" from "fresh key".
+func (k *mqlGitlabProjectDeployKey) daysOld() (int64, error) {
+	if !k.CreatedAt.IsSet() || k.CreatedAt.Data == nil {
+		return -1, nil
+	}
+	return int64(time.Since(*k.CreatedAt.Data).Hours() / 24), nil
+}
+
+// project returns a typed reference to the parent project the deploy key is registered against.
+func (k *mqlGitlabProjectDeployKey) project() (*mqlGitlabProject, error) {
+	if k.projectID == 0 {
+		k.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlProject, err := NewResource(k.MqlRuntime, "gitlab.project", map[string]*llx.RawData{
+		"id": llx.IntData(k.projectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlProject.(*mqlGitlabProject), nil
+}
+
 // deployKeys fetches the list of deploy keys for the project
 func (p *mqlGitlabProject) deployKeys() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
@@ -1117,6 +1211,7 @@ func (p *mqlGitlabProject) deployKeys() ([]any, error) {
 			return nil, err
 		}
 
+		mqlKey.(*mqlGitlabProjectDeployKey).projectID = p.Id.Data
 		mqlKeys = append(mqlKeys, mqlKey)
 	}
 
