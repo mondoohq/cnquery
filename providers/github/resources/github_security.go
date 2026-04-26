@@ -990,71 +990,33 @@ type codeownersRule struct {
 	lineNumber int
 }
 
-// stripInlineCodeownersComment removes any unescaped `#` comment from the line
-// and unescapes `\#` and `\ ` sequences in the remaining content.
-func stripInlineCodeownersComment(line string) string {
-	var b strings.Builder
-	b.Grow(len(line))
-	for i := 0; i < len(line); i++ {
-		c := line[i]
-		if c == '\\' && i+1 < len(line) {
-			next := line[i+1]
-			if next == '#' || next == ' ' {
-				b.WriteByte(next)
-				i++
-				continue
-			}
-			// unrecognized escape — preserve verbatim
-			b.WriteByte(c)
-			continue
-		}
-		if c == '#' {
-			break
-		}
-		b.WriteByte(c)
-	}
-	return b.String()
-}
-
-// splitCodeownersFields tokenizes a line on unescaped whitespace, honoring
-// `\ ` (escaped space) within tokens. Whitespace inside an escape is treated
-// as part of the token rather than as a separator.
-func splitCodeownersFields(line string) []string {
-	var (
-		fields []string
-		cur    strings.Builder
-	)
-	flush := func() {
-		if cur.Len() > 0 {
-			fields = append(fields, cur.String())
-			cur.Reset()
-		}
-	}
-	// stripInlineCodeownersComment already unescaped sequences, so a literal
-	// space here is always a real separator.
+// isCodeownersCommentLine reports whether the line is a comment per the
+// GitHub CODEOWNERS spec: a line is a comment only when `#` is the first
+// non-whitespace character. Inline `#` is treated as part of the pattern or
+// owner token (e.g. `path/to/#special`), not as a comment marker.
+func isCodeownersCommentLine(line string) bool {
 	for i := 0; i < len(line); i++ {
 		c := line[i]
 		if c == ' ' || c == '\t' {
-			flush()
 			continue
 		}
-		cur.WriteByte(c)
+		return c == '#'
 	}
-	flush()
-	return fields
+	return false
 }
 
 func parseCodeowners(content string) []codeownersRule {
 	rules := []codeownersRule{}
 	for i, line := range strings.Split(content, "\n") {
 		line = strings.TrimRight(line, "\r")
-		// strip inline comments (honoring \# escape) and unescape \# / \ ` `
-		line = stripInlineCodeownersComment(line)
+		if isCodeownersCommentLine(line) {
+			continue
+		}
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		fields := splitCodeownersFields(line)
+		fields := strings.Fields(line)
 		if len(fields) < 1 {
 			continue
 		}
