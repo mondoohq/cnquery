@@ -467,7 +467,7 @@ spo
 sqli
 sqlimatchstatement
 sqlserver
-sslv vulns webcam
+sslv
 Sspr
 stdio
 stdlib
@@ -539,7 +539,9 @@ vrf
 vtpm
 vulnerabilityassessmentsettings
 vulnmgmt
+vulns
 vztmpl
+webcam
 webide
 WEBSERVERS
 Webstore
