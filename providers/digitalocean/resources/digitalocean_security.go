@@ -210,6 +210,32 @@ func (r *mqlDigitaloceanLoadBalancer) droplets() ([]any, error) {
 	return out, nil
 }
 
+// --- Volume typed refs ---
+
+func (r *mqlDigitaloceanVolume) droplets() ([]any, error) {
+	all, err := listAllDroplets(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	wanted := make(map[int64]struct{}, len(r.DropletIds.Data))
+	for _, id := range r.DropletIds.Data {
+		if i, ok := id.(int64); ok {
+			wanted[i] = struct{}{}
+		}
+	}
+	if len(wanted) == 0 {
+		return []any{}, nil
+	}
+	var out []any
+	for _, d := range all {
+		dr := d.(*mqlDigitaloceanDroplet)
+		if _, ok := wanted[dr.Id.Data]; ok {
+			out = append(out, dr)
+		}
+	}
+	return out, nil
+}
+
 // --- Kubernetes typed refs ---
 
 func (r *mqlDigitaloceanKubernetesCluster) vpc() (*mqlDigitaloceanVpc, error) {

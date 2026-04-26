@@ -584,6 +584,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.volume.dropletIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVolume).GetDropletIds()).ToDataRes(types.Array(types.Int))
 	},
+	"digitalocean.volume.droplets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVolume).GetDroplets()).ToDataRes(types.Array(types.Resource("digitalocean.droplet")))
+	},
 	"digitalocean.loadBalancer.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanLoadBalancer).GetId()).ToDataRes(types.String)
 	},
@@ -1496,6 +1499,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.volume.dropletIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanVolume).DropletIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.volume.droplets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVolume).Droplets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"digitalocean.loadBalancer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3440,6 +3447,7 @@ type mqlDigitaloceanVolume struct {
 	CreatedAt       plugin.TValue[*time.Time]
 	Tags            plugin.TValue[[]any]
 	DropletIds      plugin.TValue[[]any]
+	Droplets        plugin.TValue[[]any]
 }
 
 // createDigitaloceanVolume creates a new instance of this resource
@@ -3517,6 +3525,22 @@ func (c *mqlDigitaloceanVolume) GetTags() *plugin.TValue[[]any] {
 
 func (c *mqlDigitaloceanVolume) GetDropletIds() *plugin.TValue[[]any] {
 	return &c.DropletIds
+}
+
+func (c *mqlDigitaloceanVolume) GetDroplets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Droplets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.volume", c.__id, "droplets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.droplets()
+	})
 }
 
 // mqlDigitaloceanLoadBalancer for the digitalocean.loadBalancer resource

@@ -252,6 +252,7 @@ digitalocean.volume 13.0.1
 digitalocean.volume.createdAt 13.0.1
 digitalocean.volume.description 13.0.1
 digitalocean.volume.dropletIds 13.0.1
+digitalocean.volume.droplets 13.0.2
 digitalocean.volume.filesystemLabel 13.0.1
 digitalocean.volume.filesystemType 13.0.1
 digitalocean.volume.id 13.0.1

@@ -94,7 +94,7 @@ digitalocean.droplet @defaults("id name status") {
   privateIpv4 string
   // Tags
   tags []string
-  // VPC UUID
+  // Deprecated: use vpc() instead. VPC UUID
   vpcUuid string
   // VPC the droplet is attached to
   vpc() digitalocean.vpc
@@ -126,7 +126,7 @@ digitalocean.firewall @defaults("id name status") {
   inboundRules []dict
   // Outbound rules
   outboundRules []dict
-  // Droplet IDs protected by this firewall
+  // Deprecated: use droplets() instead. Droplet IDs protected by this firewall
   dropletIds []int
   // Droplets covered by this firewall (by direct ID or matching tag)
   droplets() []digitalocean.droplet
@@ -278,8 +278,10 @@ digitalocean.volume @defaults("id name sizeGigabytes") {
   createdAt time
   // Tags
   tags []string
-  // Droplet IDs attached to
+  // Deprecated: use droplets() instead. Droplet IDs attached to
   dropletIds []int
+  // Droplets this volume is attached to
+  droplets() []digitalocean.droplet
 }
 
 // DigitalOcean load balancer
@@ -304,11 +306,11 @@ digitalocean.loadBalancer @defaults("id name status") {
   enableProxyProtocol bool
   // Enable backend keepalive
   enableBackendKeepalive bool
-  // VPC UUID
+  // Deprecated: use vpc() instead. VPC UUID
   vpcUuid string
   // VPC the load balancer is attached to
   vpc() digitalocean.vpc
-  // Droplet IDs
+  // Deprecated: use droplets() instead. Droplet IDs
   dropletIds []int
   // Droplets attached to this load balancer
   droplets() []digitalocean.droplet
@@ -376,7 +378,7 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   clusterSubnet string
   // Service subnet
   serviceSubnet string
-  // VPC UUID
+  // Deprecated: use vpc() instead. VPC UUID
   vpcUuid string
   // VPC the cluster is attached to
   vpc() digitalocean.vpc
