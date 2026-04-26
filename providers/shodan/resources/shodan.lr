@@ -26,12 +26,164 @@ shodan.host @defaults("ip") {
   hostnames() []string
   // Open ports
   ports() []int
-  // Vulnerabilities
+  // Vulnerabilities (CVE IDs)
   vulnerabilities() []string
+  // Detailed vulnerabilities discovered across all services on this host
+  vulns() []shodan.host.vulnerability
   // Country
   country() string
   // City
   city() string
+  // 2-letter country code (ISO 3166-1 alpha-2)
+  countryCode() string
+  // Region code
+  regionCode() string
+  // Postal code
+  postalCode() string
+  // Latitude of the geolocation
+  latitude() float
+  // Longitude of the geolocation
+  longitude() float
+  // Last time Shodan updated information for this host
+  lastUpdate() time
+  // True if Shodan tags identify this IP as cloud-hosted (e.g. AWS, Azure, GCP)
+  isCloud() bool
+  // True if Shodan tags identify this IP as a CDN edge (e.g. Cloudflare, Fastly)
+  isCdn() bool
+  // True if Shodan tags identify this IP as a VPN endpoint
+  isVpn() bool
+  // True if Shodan tags identify this IP as a Tor exit/relay node
+  isTor() bool
+  // True if Shodan tags identify this IP as an open/anonymous proxy
+  isProxy() bool
+  // True if Shodan tags suggest this IP belongs to a hosting provider or datacenter (cloud, hosting, cdn, vpn, proxy, tor)
+  isDatacenter() bool
+  // Service banners observed on this host
+  services() []shodan.host.service
+}
+
+// Service banner observed by Shodan on a specific host port
+private shodan.host.service @defaults("port transport product version") {
+  // IP of the host this service runs on
+  ip string
+  // Port number
+  port int
+  // Transport protocol (tcp or udp)
+  transport string
+  // Software product running the service (e.g. nginx, OpenSSH)
+  product string
+  // Version of the software running the service
+  version string
+  // Common Platform Enumeration (CPE) entries
+  cpe []string
+  // Raw banner data returned by the service
+  data string
+  // Hash of the banner data
+  hash int
+  // Page title (HTTP services only)
+  title string
+  // Device type (e.g. webcam, router) reported by Shodan
+  deviceType string
+  // Timestamp the banner was collected
+  timestamp time
+  // Shodan module that collected the banner (e.g. http, https, ssh)
+  module string
+  // Hostnames associated with the banner
+  hostnames []string
+  // CVE IDs associated with this banner
+  vulnerabilities []string
+  // Detailed vulnerabilities for this banner with CVSS and severity
+  vulns []shodan.host.vulnerability
+  // SSL/TLS data for the service (null if not present)
+  tlsBanner shodan.host.tls
+}
+
+// SSL/TLS posture observed on a single Shodan service banner
+private shodan.host.tls @defaults("ip port") {
+  // IP of the host the SSL/TLS service runs on
+  ip string
+  // Port the SSL/TLS service runs on
+  port int
+  // List of SSL/TLS versions reported by the service. Negative entries (prefixed "-") indicate the version is NOT supported.
+  versions []string
+  // List of supported SSL/TLS versions (positive entries from versions)
+  supportedVersions []string
+  // True if the service negotiates SSLv2 (insecure)
+  sslv2 bool
+  // True if the service negotiates SSLv3 (insecure)
+  sslv3 bool
+  // True if the service negotiates TLS 1.0 (deprecated)
+  tlsv10 bool
+  // True if the service negotiates TLS 1.1 (deprecated)
+  tlsv11 bool
+  // True if the service negotiates TLS 1.2
+  tlsv12 bool
+  // True if the service negotiates TLS 1.3
+  tlsv13 bool
+  // True if any insecure SSL/TLS version (SSLv2, SSLv3, TLS 1.0, TLS 1.1) is enabled
+  hasInsecureProtocol bool
+  // ALPN protocols advertised by the server (e.g. h2, http/1.1)
+  alpn []string
+  // Preferred cipher name negotiated for the SSL connection
+  cipherName string
+  // Cipher key length in bits
+  cipherBits int
+  // SSL/TLS version of the preferred cipher
+  cipherVersion string
+  // True if the preferred cipher is considered weak (RC4, DES, 3DES, EXPORT, NULL, anon, MD5, < 128 bits)
+  hasWeakCipher bool
+  // Server certificate
+  cert shodan.host.cert
+}
+
+// X.509 certificate parsed from a Shodan SSL/TLS service banner
+private shodan.host.cert @defaults("subjectCN issuerCN expired") {
+  // SHA256 fingerprint of the certificate
+  fingerprintSha256 string
+  // SHA1 fingerprint of the certificate
+  fingerprintSha1 string
+  // True if the certificate is past its "expires" timestamp
+  expired bool
+  // Time the certificate was issued
+  issued time
+  // Time the certificate expires
+  expires time
+  // Subject Common Name (CN)
+  subjectCN string
+  // Subject Organization (O)
+  subjectO string
+  // Issuer Common Name (CN)
+  issuerCN string
+  // Issuer Organization (O)
+  issuerO string
+  // Signature algorithm (e.g. sha256WithRSAEncryption)
+  sigAlg string
+  // Public key type (e.g. rsa, ecdsa)
+  pubkeyType string
+  // Public key length in bits
+  pubkeyBits int
+  // Certificate serial number
+  serial string
+  // Certificate version (e.g. 3 for X.509 v3)
+  version int
+  // True if the certificate's subject CN matches its issuer CN (likely self-signed)
+  selfSigned bool
+}
+
+// Vulnerability detail from a Shodan host service banner
+private shodan.host.vulnerability @defaults("cve cvss severity") {
+  // CVE identifier (e.g. CVE-2021-44228)
+  cve string
+  // CVSS base score reported by Shodan, or -1 if not provided
+  cvss float
+  // Qualitative severity derived from CVSS: critical (>=9.0), high (>=7.0), medium (>=4.0), low (>0), none (=0), unknown (no score)
+  severity string
+  // Whether the Shodan crawler verified the vulnerability
+  verified bool
+  // Description of the vulnerability
+  summary string
+  // Reference URLs (advisories, vendor pages)
+  references []string
 }
 
 // Shodan Search Engine domain information

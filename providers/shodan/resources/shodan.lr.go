@@ -16,12 +16,16 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceShodan         string = "shodan"
-	ResourceShodanHost     string = "shodan.host"
-	ResourceShodanDomain   string = "shodan.domain"
-	ResourceShodanNsrecord string = "shodan.nsrecord"
-	ResourceShodanProfile  string = "shodan.profile"
-	ResourceShodanApiPlan  string = "shodan.apiPlan"
+	ResourceShodan                  string = "shodan"
+	ResourceShodanHost              string = "shodan.host"
+	ResourceShodanHostService       string = "shodan.host.service"
+	ResourceShodanHostTls           string = "shodan.host.tls"
+	ResourceShodanHostCert          string = "shodan.host.cert"
+	ResourceShodanHostVulnerability string = "shodan.host.vulnerability"
+	ResourceShodanDomain            string = "shodan.domain"
+	ResourceShodanNsrecord          string = "shodan.nsrecord"
+	ResourceShodanProfile           string = "shodan.profile"
+	ResourceShodanApiPlan           string = "shodan.apiPlan"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -35,6 +39,22 @@ func init() {
 		"shodan.host": {
 			Init:   initShodanHost,
 			Create: createShodanHost,
+		},
+		"shodan.host.service": {
+			// to override args, implement: initShodanHostService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createShodanHostService,
+		},
+		"shodan.host.tls": {
+			// to override args, implement: initShodanHostTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createShodanHostTls,
+		},
+		"shodan.host.cert": {
+			// to override args, implement: initShodanHostCert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createShodanHostCert,
+		},
+		"shodan.host.vulnerability": {
+			// to override args, implement: initShodanHostVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createShodanHostVulnerability,
 		},
 		"shodan.domain": {
 			Init:   initShodanDomain,
@@ -150,11 +170,215 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"shodan.host.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanHost).GetVulnerabilities()).ToDataRes(types.Array(types.String))
 	},
+	"shodan.host.vulns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetVulns()).ToDataRes(types.Array(types.Resource("shodan.host.vulnerability")))
+	},
 	"shodan.host.country": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanHost).GetCountry()).ToDataRes(types.String)
 	},
 	"shodan.host.city": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanHost).GetCity()).ToDataRes(types.String)
+	},
+	"shodan.host.countryCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetCountryCode()).ToDataRes(types.String)
+	},
+	"shodan.host.regionCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetRegionCode()).ToDataRes(types.String)
+	},
+	"shodan.host.postalCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetPostalCode()).ToDataRes(types.String)
+	},
+	"shodan.host.latitude": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetLatitude()).ToDataRes(types.Float)
+	},
+	"shodan.host.longitude": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetLongitude()).ToDataRes(types.Float)
+	},
+	"shodan.host.lastUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetLastUpdate()).ToDataRes(types.Time)
+	},
+	"shodan.host.isCloud": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetIsCloud()).ToDataRes(types.Bool)
+	},
+	"shodan.host.isCdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetIsCdn()).ToDataRes(types.Bool)
+	},
+	"shodan.host.isVpn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetIsVpn()).ToDataRes(types.Bool)
+	},
+	"shodan.host.isTor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetIsTor()).ToDataRes(types.Bool)
+	},
+	"shodan.host.isProxy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetIsProxy()).ToDataRes(types.Bool)
+	},
+	"shodan.host.isDatacenter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetIsDatacenter()).ToDataRes(types.Bool)
+	},
+	"shodan.host.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHost).GetServices()).ToDataRes(types.Array(types.Resource("shodan.host.service")))
+	},
+	"shodan.host.service.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetIp()).ToDataRes(types.String)
+	},
+	"shodan.host.service.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetPort()).ToDataRes(types.Int)
+	},
+	"shodan.host.service.transport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetTransport()).ToDataRes(types.String)
+	},
+	"shodan.host.service.product": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetProduct()).ToDataRes(types.String)
+	},
+	"shodan.host.service.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetVersion()).ToDataRes(types.String)
+	},
+	"shodan.host.service.cpe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetCpe()).ToDataRes(types.Array(types.String))
+	},
+	"shodan.host.service.data": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetData()).ToDataRes(types.String)
+	},
+	"shodan.host.service.hash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetHash()).ToDataRes(types.Int)
+	},
+	"shodan.host.service.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetTitle()).ToDataRes(types.String)
+	},
+	"shodan.host.service.deviceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetDeviceType()).ToDataRes(types.String)
+	},
+	"shodan.host.service.timestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetTimestamp()).ToDataRes(types.Time)
+	},
+	"shodan.host.service.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetModule()).ToDataRes(types.String)
+	},
+	"shodan.host.service.hostnames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetHostnames()).ToDataRes(types.Array(types.String))
+	},
+	"shodan.host.service.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetVulnerabilities()).ToDataRes(types.Array(types.String))
+	},
+	"shodan.host.service.vulns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetVulns()).ToDataRes(types.Array(types.Resource("shodan.host.vulnerability")))
+	},
+	"shodan.host.service.tlsBanner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostService).GetTlsBanner()).ToDataRes(types.Resource("shodan.host.tls"))
+	},
+	"shodan.host.tls.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetIp()).ToDataRes(types.String)
+	},
+	"shodan.host.tls.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetPort()).ToDataRes(types.Int)
+	},
+	"shodan.host.tls.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetVersions()).ToDataRes(types.Array(types.String))
+	},
+	"shodan.host.tls.supportedVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetSupportedVersions()).ToDataRes(types.Array(types.String))
+	},
+	"shodan.host.tls.sslv2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetSslv2()).ToDataRes(types.Bool)
+	},
+	"shodan.host.tls.sslv3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetSslv3()).ToDataRes(types.Bool)
+	},
+	"shodan.host.tls.tlsv10": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetTlsv10()).ToDataRes(types.Bool)
+	},
+	"shodan.host.tls.tlsv11": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetTlsv11()).ToDataRes(types.Bool)
+	},
+	"shodan.host.tls.tlsv12": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetTlsv12()).ToDataRes(types.Bool)
+	},
+	"shodan.host.tls.tlsv13": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetTlsv13()).ToDataRes(types.Bool)
+	},
+	"shodan.host.tls.hasInsecureProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetHasInsecureProtocol()).ToDataRes(types.Bool)
+	},
+	"shodan.host.tls.alpn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetAlpn()).ToDataRes(types.Array(types.String))
+	},
+	"shodan.host.tls.cipherName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetCipherName()).ToDataRes(types.String)
+	},
+	"shodan.host.tls.cipherBits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetCipherBits()).ToDataRes(types.Int)
+	},
+	"shodan.host.tls.cipherVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetCipherVersion()).ToDataRes(types.String)
+	},
+	"shodan.host.tls.hasWeakCipher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetHasWeakCipher()).ToDataRes(types.Bool)
+	},
+	"shodan.host.tls.cert": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostTls).GetCert()).ToDataRes(types.Resource("shodan.host.cert"))
+	},
+	"shodan.host.cert.fingerprintSha256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetFingerprintSha256()).ToDataRes(types.String)
+	},
+	"shodan.host.cert.fingerprintSha1": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetFingerprintSha1()).ToDataRes(types.String)
+	},
+	"shodan.host.cert.expired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetExpired()).ToDataRes(types.Bool)
+	},
+	"shodan.host.cert.issued": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetIssued()).ToDataRes(types.Time)
+	},
+	"shodan.host.cert.expires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetExpires()).ToDataRes(types.Time)
+	},
+	"shodan.host.cert.subjectCN": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetSubjectCN()).ToDataRes(types.String)
+	},
+	"shodan.host.cert.subjectO": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetSubjectO()).ToDataRes(types.String)
+	},
+	"shodan.host.cert.issuerCN": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetIssuerCN()).ToDataRes(types.String)
+	},
+	"shodan.host.cert.issuerO": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetIssuerO()).ToDataRes(types.String)
+	},
+	"shodan.host.cert.sigAlg": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetSigAlg()).ToDataRes(types.String)
+	},
+	"shodan.host.cert.pubkeyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetPubkeyType()).ToDataRes(types.String)
+	},
+	"shodan.host.cert.pubkeyBits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetPubkeyBits()).ToDataRes(types.Int)
+	},
+	"shodan.host.cert.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetSerial()).ToDataRes(types.String)
+	},
+	"shodan.host.cert.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetVersion()).ToDataRes(types.Int)
+	},
+	"shodan.host.cert.selfSigned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostCert).GetSelfSigned()).ToDataRes(types.Bool)
+	},
+	"shodan.host.vulnerability.cve": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostVulnerability).GetCve()).ToDataRes(types.String)
+	},
+	"shodan.host.vulnerability.cvss": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostVulnerability).GetCvss()).ToDataRes(types.Float)
+	},
+	"shodan.host.vulnerability.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostVulnerability).GetSeverity()).ToDataRes(types.String)
+	},
+	"shodan.host.vulnerability.verified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostVulnerability).GetVerified()).ToDataRes(types.Bool)
+	},
+	"shodan.host.vulnerability.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostVulnerability).GetSummary()).ToDataRes(types.String)
+	},
+	"shodan.host.vulnerability.references": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShodanHostVulnerability).GetReferences()).ToDataRes(types.Array(types.String))
 	},
 	"shodan.domain.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlShodanDomain).GetName()).ToDataRes(types.String)
@@ -269,12 +493,300 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlShodanHost).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"shodan.host.vulns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).Vulns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"shodan.host.country": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShodanHost).Country, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"shodan.host.city": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlShodanHost).City, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.countryCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).CountryCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.regionCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).RegionCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.postalCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).PostalCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.latitude": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).Latitude, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"shodan.host.longitude": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).Longitude, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"shodan.host.lastUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).LastUpdate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"shodan.host.isCloud": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).IsCloud, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.isCdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).IsCdn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.isVpn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).IsVpn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.isTor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).IsTor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.isProxy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).IsProxy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.isDatacenter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).IsDatacenter, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHost).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).__id, ok = v.Value.(string)
+		return
+	},
+	"shodan.host.service.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.transport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Transport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.product": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Product, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.cpe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Cpe, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.data": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Data, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.hash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Hash, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.deviceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).DeviceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.timestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Timestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Module, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.hostnames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Hostnames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.vulns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).Vulns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"shodan.host.service.tlsBanner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostService).TlsBanner, ok = plugin.RawToTValue[*mqlShodanHostTls](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).__id, ok = v.Value.(string)
+		return
+	},
+	"shodan.host.tls.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.supportedVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).SupportedVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.sslv2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Sslv2, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.sslv3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Sslv3, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.tlsv10": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Tlsv10, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.tlsv11": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Tlsv11, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.tlsv12": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Tlsv12, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.tlsv13": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Tlsv13, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.hasInsecureProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).HasInsecureProtocol, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.alpn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Alpn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.cipherName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).CipherName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.cipherBits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).CipherBits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.cipherVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).CipherVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.hasWeakCipher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).HasWeakCipher, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.tls.cert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostTls).Cert, ok = plugin.RawToTValue[*mqlShodanHostCert](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).__id, ok = v.Value.(string)
+		return
+	},
+	"shodan.host.cert.fingerprintSha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).FingerprintSha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.fingerprintSha1": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).FingerprintSha1, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.expired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).Expired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.issued": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).Issued, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.expires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).Expires, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.subjectCN": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).SubjectCN, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.subjectO": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).SubjectO, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.issuerCN": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).IssuerCN, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.issuerO": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).IssuerO, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.sigAlg": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).SigAlg, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.pubkeyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).PubkeyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.pubkeyBits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).PubkeyBits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).Serial, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shodan.host.cert.selfSigned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostCert).SelfSigned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.vulnerability.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostVulnerability).__id, ok = v.Value.(string)
+		return
+	},
+	"shodan.host.vulnerability.cve": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostVulnerability).Cve, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.vulnerability.cvss": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostVulnerability).Cvss, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"shodan.host.vulnerability.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostVulnerability).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.vulnerability.verified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostVulnerability).Verified, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shodan.host.vulnerability.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostVulnerability).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shodan.host.vulnerability.references": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShodanHostVulnerability).References, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"shodan.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -441,7 +953,7 @@ func (c *mqlShodan) MqlID() string {
 type mqlShodanHost struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlShodanHostInternal it will be used here
+	mqlShodanHostInternal
 	Ip              plugin.TValue[string]
 	Os              plugin.TValue[string]
 	Org             plugin.TValue[string]
@@ -451,8 +963,22 @@ type mqlShodanHost struct {
 	Hostnames       plugin.TValue[[]any]
 	Ports           plugin.TValue[[]any]
 	Vulnerabilities plugin.TValue[[]any]
+	Vulns           plugin.TValue[[]any]
 	Country         plugin.TValue[string]
 	City            plugin.TValue[string]
+	CountryCode     plugin.TValue[string]
+	RegionCode      plugin.TValue[string]
+	PostalCode      plugin.TValue[string]
+	Latitude        plugin.TValue[float64]
+	Longitude       plugin.TValue[float64]
+	LastUpdate      plugin.TValue[*time.Time]
+	IsCloud         plugin.TValue[bool]
+	IsCdn           plugin.TValue[bool]
+	IsVpn           plugin.TValue[bool]
+	IsTor           plugin.TValue[bool]
+	IsProxy         plugin.TValue[bool]
+	IsDatacenter    plugin.TValue[bool]
+	Services        plugin.TValue[[]any]
 }
 
 // createShodanHost creates a new instance of this resource
@@ -544,6 +1070,22 @@ func (c *mqlShodanHost) GetVulnerabilities() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlShodanHost) GetVulns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vulns, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("shodan.host", c.__id, "vulns")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vulns()
+	})
+}
+
 func (c *mqlShodanHost) GetCountry() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Country, func() (string, error) {
 		return c.country()
@@ -554,6 +1096,520 @@ func (c *mqlShodanHost) GetCity() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.City, func() (string, error) {
 		return c.city()
 	})
+}
+
+func (c *mqlShodanHost) GetCountryCode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CountryCode, func() (string, error) {
+		return c.countryCode()
+	})
+}
+
+func (c *mqlShodanHost) GetRegionCode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RegionCode, func() (string, error) {
+		return c.regionCode()
+	})
+}
+
+func (c *mqlShodanHost) GetPostalCode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PostalCode, func() (string, error) {
+		return c.postalCode()
+	})
+}
+
+func (c *mqlShodanHost) GetLatitude() *plugin.TValue[float64] {
+	return plugin.GetOrCompute[float64](&c.Latitude, func() (float64, error) {
+		return c.latitude()
+	})
+}
+
+func (c *mqlShodanHost) GetLongitude() *plugin.TValue[float64] {
+	return plugin.GetOrCompute[float64](&c.Longitude, func() (float64, error) {
+		return c.longitude()
+	})
+}
+
+func (c *mqlShodanHost) GetLastUpdate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastUpdate, func() (*time.Time, error) {
+		return c.lastUpdate()
+	})
+}
+
+func (c *mqlShodanHost) GetIsCloud() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsCloud, func() (bool, error) {
+		return c.isCloud()
+	})
+}
+
+func (c *mqlShodanHost) GetIsCdn() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsCdn, func() (bool, error) {
+		return c.isCdn()
+	})
+}
+
+func (c *mqlShodanHost) GetIsVpn() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsVpn, func() (bool, error) {
+		return c.isVpn()
+	})
+}
+
+func (c *mqlShodanHost) GetIsTor() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsTor, func() (bool, error) {
+		return c.isTor()
+	})
+}
+
+func (c *mqlShodanHost) GetIsProxy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsProxy, func() (bool, error) {
+		return c.isProxy()
+	})
+}
+
+func (c *mqlShodanHost) GetIsDatacenter() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsDatacenter, func() (bool, error) {
+		return c.isDatacenter()
+	})
+}
+
+func (c *mqlShodanHost) GetServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("shodan.host", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.services()
+	})
+}
+
+// mqlShodanHostService for the shodan.host.service resource
+type mqlShodanHostService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlShodanHostServiceInternal it will be used here
+	Ip              plugin.TValue[string]
+	Port            plugin.TValue[int64]
+	Transport       plugin.TValue[string]
+	Product         plugin.TValue[string]
+	Version         plugin.TValue[string]
+	Cpe             plugin.TValue[[]any]
+	Data            plugin.TValue[string]
+	Hash            plugin.TValue[int64]
+	Title           plugin.TValue[string]
+	DeviceType      plugin.TValue[string]
+	Timestamp       plugin.TValue[*time.Time]
+	Module          plugin.TValue[string]
+	Hostnames       plugin.TValue[[]any]
+	Vulnerabilities plugin.TValue[[]any]
+	Vulns           plugin.TValue[[]any]
+	TlsBanner       plugin.TValue[*mqlShodanHostTls]
+}
+
+// createShodanHostService creates a new instance of this resource
+func createShodanHostService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlShodanHostService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("shodan.host.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlShodanHostService) MqlName() string {
+	return "shodan.host.service"
+}
+
+func (c *mqlShodanHostService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlShodanHostService) GetIp() *plugin.TValue[string] {
+	return &c.Ip
+}
+
+func (c *mqlShodanHostService) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlShodanHostService) GetTransport() *plugin.TValue[string] {
+	return &c.Transport
+}
+
+func (c *mqlShodanHostService) GetProduct() *plugin.TValue[string] {
+	return &c.Product
+}
+
+func (c *mqlShodanHostService) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlShodanHostService) GetCpe() *plugin.TValue[[]any] {
+	return &c.Cpe
+}
+
+func (c *mqlShodanHostService) GetData() *plugin.TValue[string] {
+	return &c.Data
+}
+
+func (c *mqlShodanHostService) GetHash() *plugin.TValue[int64] {
+	return &c.Hash
+}
+
+func (c *mqlShodanHostService) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlShodanHostService) GetDeviceType() *plugin.TValue[string] {
+	return &c.DeviceType
+}
+
+func (c *mqlShodanHostService) GetTimestamp() *plugin.TValue[*time.Time] {
+	return &c.Timestamp
+}
+
+func (c *mqlShodanHostService) GetModule() *plugin.TValue[string] {
+	return &c.Module
+}
+
+func (c *mqlShodanHostService) GetHostnames() *plugin.TValue[[]any] {
+	return &c.Hostnames
+}
+
+func (c *mqlShodanHostService) GetVulnerabilities() *plugin.TValue[[]any] {
+	return &c.Vulnerabilities
+}
+
+func (c *mqlShodanHostService) GetVulns() *plugin.TValue[[]any] {
+	return &c.Vulns
+}
+
+func (c *mqlShodanHostService) GetTlsBanner() *plugin.TValue[*mqlShodanHostTls] {
+	return &c.TlsBanner
+}
+
+// mqlShodanHostTls for the shodan.host.tls resource
+type mqlShodanHostTls struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlShodanHostTlsInternal it will be used here
+	Ip                  plugin.TValue[string]
+	Port                plugin.TValue[int64]
+	Versions            plugin.TValue[[]any]
+	SupportedVersions   plugin.TValue[[]any]
+	Sslv2               plugin.TValue[bool]
+	Sslv3               plugin.TValue[bool]
+	Tlsv10              plugin.TValue[bool]
+	Tlsv11              plugin.TValue[bool]
+	Tlsv12              plugin.TValue[bool]
+	Tlsv13              plugin.TValue[bool]
+	HasInsecureProtocol plugin.TValue[bool]
+	Alpn                plugin.TValue[[]any]
+	CipherName          plugin.TValue[string]
+	CipherBits          plugin.TValue[int64]
+	CipherVersion       plugin.TValue[string]
+	HasWeakCipher       plugin.TValue[bool]
+	Cert                plugin.TValue[*mqlShodanHostCert]
+}
+
+// createShodanHostTls creates a new instance of this resource
+func createShodanHostTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlShodanHostTls{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("shodan.host.tls", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlShodanHostTls) MqlName() string {
+	return "shodan.host.tls"
+}
+
+func (c *mqlShodanHostTls) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlShodanHostTls) GetIp() *plugin.TValue[string] {
+	return &c.Ip
+}
+
+func (c *mqlShodanHostTls) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlShodanHostTls) GetVersions() *plugin.TValue[[]any] {
+	return &c.Versions
+}
+
+func (c *mqlShodanHostTls) GetSupportedVersions() *plugin.TValue[[]any] {
+	return &c.SupportedVersions
+}
+
+func (c *mqlShodanHostTls) GetSslv2() *plugin.TValue[bool] {
+	return &c.Sslv2
+}
+
+func (c *mqlShodanHostTls) GetSslv3() *plugin.TValue[bool] {
+	return &c.Sslv3
+}
+
+func (c *mqlShodanHostTls) GetTlsv10() *plugin.TValue[bool] {
+	return &c.Tlsv10
+}
+
+func (c *mqlShodanHostTls) GetTlsv11() *plugin.TValue[bool] {
+	return &c.Tlsv11
+}
+
+func (c *mqlShodanHostTls) GetTlsv12() *plugin.TValue[bool] {
+	return &c.Tlsv12
+}
+
+func (c *mqlShodanHostTls) GetTlsv13() *plugin.TValue[bool] {
+	return &c.Tlsv13
+}
+
+func (c *mqlShodanHostTls) GetHasInsecureProtocol() *plugin.TValue[bool] {
+	return &c.HasInsecureProtocol
+}
+
+func (c *mqlShodanHostTls) GetAlpn() *plugin.TValue[[]any] {
+	return &c.Alpn
+}
+
+func (c *mqlShodanHostTls) GetCipherName() *plugin.TValue[string] {
+	return &c.CipherName
+}
+
+func (c *mqlShodanHostTls) GetCipherBits() *plugin.TValue[int64] {
+	return &c.CipherBits
+}
+
+func (c *mqlShodanHostTls) GetCipherVersion() *plugin.TValue[string] {
+	return &c.CipherVersion
+}
+
+func (c *mqlShodanHostTls) GetHasWeakCipher() *plugin.TValue[bool] {
+	return &c.HasWeakCipher
+}
+
+func (c *mqlShodanHostTls) GetCert() *plugin.TValue[*mqlShodanHostCert] {
+	return &c.Cert
+}
+
+// mqlShodanHostCert for the shodan.host.cert resource
+type mqlShodanHostCert struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlShodanHostCertInternal it will be used here
+	FingerprintSha256 plugin.TValue[string]
+	FingerprintSha1   plugin.TValue[string]
+	Expired           plugin.TValue[bool]
+	Issued            plugin.TValue[*time.Time]
+	Expires           plugin.TValue[*time.Time]
+	SubjectCN         plugin.TValue[string]
+	SubjectO          plugin.TValue[string]
+	IssuerCN          plugin.TValue[string]
+	IssuerO           plugin.TValue[string]
+	SigAlg            plugin.TValue[string]
+	PubkeyType        plugin.TValue[string]
+	PubkeyBits        plugin.TValue[int64]
+	Serial            plugin.TValue[string]
+	Version           plugin.TValue[int64]
+	SelfSigned        plugin.TValue[bool]
+}
+
+// createShodanHostCert creates a new instance of this resource
+func createShodanHostCert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlShodanHostCert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("shodan.host.cert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlShodanHostCert) MqlName() string {
+	return "shodan.host.cert"
+}
+
+func (c *mqlShodanHostCert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlShodanHostCert) GetFingerprintSha256() *plugin.TValue[string] {
+	return &c.FingerprintSha256
+}
+
+func (c *mqlShodanHostCert) GetFingerprintSha1() *plugin.TValue[string] {
+	return &c.FingerprintSha1
+}
+
+func (c *mqlShodanHostCert) GetExpired() *plugin.TValue[bool] {
+	return &c.Expired
+}
+
+func (c *mqlShodanHostCert) GetIssued() *plugin.TValue[*time.Time] {
+	return &c.Issued
+}
+
+func (c *mqlShodanHostCert) GetExpires() *plugin.TValue[*time.Time] {
+	return &c.Expires
+}
+
+func (c *mqlShodanHostCert) GetSubjectCN() *plugin.TValue[string] {
+	return &c.SubjectCN
+}
+
+func (c *mqlShodanHostCert) GetSubjectO() *plugin.TValue[string] {
+	return &c.SubjectO
+}
+
+func (c *mqlShodanHostCert) GetIssuerCN() *plugin.TValue[string] {
+	return &c.IssuerCN
+}
+
+func (c *mqlShodanHostCert) GetIssuerO() *plugin.TValue[string] {
+	return &c.IssuerO
+}
+
+func (c *mqlShodanHostCert) GetSigAlg() *plugin.TValue[string] {
+	return &c.SigAlg
+}
+
+func (c *mqlShodanHostCert) GetPubkeyType() *plugin.TValue[string] {
+	return &c.PubkeyType
+}
+
+func (c *mqlShodanHostCert) GetPubkeyBits() *plugin.TValue[int64] {
+	return &c.PubkeyBits
+}
+
+func (c *mqlShodanHostCert) GetSerial() *plugin.TValue[string] {
+	return &c.Serial
+}
+
+func (c *mqlShodanHostCert) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlShodanHostCert) GetSelfSigned() *plugin.TValue[bool] {
+	return &c.SelfSigned
+}
+
+// mqlShodanHostVulnerability for the shodan.host.vulnerability resource
+type mqlShodanHostVulnerability struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlShodanHostVulnerabilityInternal it will be used here
+	Cve        plugin.TValue[string]
+	Cvss       plugin.TValue[float64]
+	Severity   plugin.TValue[string]
+	Verified   plugin.TValue[bool]
+	Summary    plugin.TValue[string]
+	References plugin.TValue[[]any]
+}
+
+// createShodanHostVulnerability creates a new instance of this resource
+func createShodanHostVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlShodanHostVulnerability{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("shodan.host.vulnerability", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlShodanHostVulnerability) MqlName() string {
+	return "shodan.host.vulnerability"
+}
+
+func (c *mqlShodanHostVulnerability) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlShodanHostVulnerability) GetCve() *plugin.TValue[string] {
+	return &c.Cve
+}
+
+func (c *mqlShodanHostVulnerability) GetCvss() *plugin.TValue[float64] {
+	return &c.Cvss
+}
+
+func (c *mqlShodanHostVulnerability) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlShodanHostVulnerability) GetVerified() *plugin.TValue[bool] {
+	return &c.Verified
+}
+
+func (c *mqlShodanHostVulnerability) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
+func (c *mqlShodanHostVulnerability) GetReferences() *plugin.TValue[[]any] {
+	return &c.References
 }
 
 // mqlShodanDomain for the shodan.domain resource
