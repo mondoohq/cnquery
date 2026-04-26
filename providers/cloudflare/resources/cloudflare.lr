@@ -93,6 +93,15 @@ private cloudflare.zone @defaults("name account.name") {
 	logpushJobs() []cloudflare.zone.logpushJob
 	// Bot management settings
 	botManagement() cloudflare.zone.botManagement
+
+	// DNSSEC configuration for the zone
+	dnssec() cloudflare.zone.dnssec
+	// Rate-limit rules (legacy rate-limiting product)
+	rateLimitRules() []cloudflare.zone.rateLimitRule
+	// WAF rules (managed and custom rulesets, expanded into individual rules)
+	wafRules() []cloudflare.zone.wafRule
+	// Email routing configuration (SPF/DKIM/DMARC awareness)
+	emailRouting() cloudflare.zone.emailRouting
 }
 
 // Cloudflare account
@@ -161,6 +170,17 @@ private cloudflare.zone.settings {
 	hotlinkProtection string
 	// Server-side excludes (on, off)
 	serverSideExcludes string
+
+	// Whether HSTS (Strict-Transport-Security) is enabled for the zone
+	hstsEnabled bool
+	// HSTS max-age (in seconds)
+	hstsMaxAge int
+	// Whether HSTS applies to subdomains
+	hstsIncludeSubdomains bool
+	// Whether the domain is signaled as eligible for HSTS preload list inclusion
+	hstsPreload bool
+	// Whether the X-Content-Type-Options: nosniff header is sent alongside HSTS
+	hstsNoSniff bool
 }
 
 // Cloudflare custom SSL certificate (user-uploaded)
@@ -268,6 +288,33 @@ private cloudflare.account @defaults("name") {
 
 	// Account roles
 	roles() []cloudflare.account.role
+
+	// API tokens visible to the calling user (user-scoped tokens; lists tokens for the authenticated user, surfaced on accounts they belong to)
+	apiTokens() []cloudflare.account.apiToken
+}
+
+// Cloudflare API token (user-scoped)
+private cloudflare.account.apiToken @defaults("name status expiresOn") {
+	// Token identifier
+	id string
+	// Token name
+	name string
+	// Token status (active, disabled, expired)
+	status string
+	// Time the token was issued
+	issuedOn time
+	// Time the token was last modified
+	modifiedOn time
+	// Earliest time the token is valid
+	notBefore time
+	// Time the token expires
+	expiresOn time
+	// IP addresses allowed to use the token (CIDR list)
+	ipIn []string
+	// IP addresses blocked from using the token (CIDR list)
+	ipNotIn []string
+	// Token policies (effect, resources, permission groups) as raw structured data
+	policies []dict
 }
 
 // Account settings
@@ -363,6 +410,16 @@ private cloudflare.r2.bucket {
   location string
   // Time the bucket was created
   createdOn time
+  // Public-access configuration via the managed r2.dev subdomain
+  publicAccess() cloudflare.r2.bucket.publicAccess
+}
+
+// R2 bucket public-access configuration (managed r2.dev subdomain)
+private cloudflare.r2.bucket.publicAccess {
+	// Whether public access via the managed r2.dev subdomain is enabled
+	enabled bool
+	// Managed r2.dev domain assigned to the bucket (empty when public access is disabled)
+	domain string
 }
 
 // Cloudflare workers
@@ -372,6 +429,12 @@ private cloudflare.workers {
 
 	// List all pages
 	pages() []cloudflare.workers.page
+
+	// Inventory of secrets bound to all worker scripts (metadata only — values are not exposed)
+	secrets() []cloudflare.workers.secret
+
+	// Inventory of environment variables bound to Pages projects across preview and production environments (metadata only — values are not exposed)
+	pageEnvVars() []cloudflare.pages.envVar
 }
 
 // Cloudflare worker
@@ -506,6 +569,23 @@ private cloudflare.one.idp @defaults("name") {
 	id string // UUID
 	name string // The name of the identity provider, shown to users on the login page.
 	type string // The type of the identity provider.
+
+	// Whether this IdP is SAML-based (SAML, Centrify, OneLogin, Ping, Okta-via-SAML, etc. — derived from `type`)
+	saml bool
+	// SAML SSO target URL (only set for SAML IdPs)
+	ssoTargetUrl string
+	// SAML/OIDC issuer URL
+	issuerUrl string
+	// Whether SAML AuthnRequests are signed
+	signRequest bool
+	// PEM-encoded IdP signing certificate (SAML)
+	idpPublicCert string
+	// SAML attribute used as the user's email
+	emailAttributeName string
+	// Additional SAML attributes mapped from the IdP
+	attributes []string
+	// Whether SCIM provisioning is enabled for this IdP
+	scimEnabled bool
 }
 
 // Cloudflare One access policy
@@ -978,4 +1058,128 @@ private cloudflare.account.role @defaults("name") {
 	name string
 	// Role description
 	description string
+}
+
+// Cloudflare zone DNSSEC configuration
+private cloudflare.zone.dnssec @defaults("status algorithm") {
+	// DNSSEC status (active, disabled, pending)
+	status string
+	// DNSKEY flags
+	flags int
+	// DNSKEY algorithm
+	algorithm string
+	// DNSKEY key type
+	keyType string
+	// DS digest type
+	digestType string
+	// DS digest algorithm
+	digestAlgorithm string
+	// DS digest hex value
+	digest string
+	// DS resource record (parent-zone-ready string)
+	ds string
+	// DNSKEY key tag
+	keyTag int
+	// DNSKEY public key
+	publicKey string
+	// Time the configuration was last modified
+	modifiedOn time
+}
+
+// Cloudflare zone rate-limit rule (legacy rate-limiting product)
+private cloudflare.zone.rateLimitRule @defaults("id action.mode threshold") {
+	// Rule identifier
+	id string
+	// Rule description
+	description string
+	// Whether the rule is disabled
+	disabled bool
+	// Number of requests allowed within `period` before the action triggers
+	threshold int
+	// Window over which `threshold` is measured (seconds)
+	period int
+	// Action taken when the threshold is exceeded ({mode, timeout, response})
+	action dict
+	// Request URL pattern matched by this rule
+	urlPattern string
+	// HTTP methods matched by this rule
+	methods []string
+	// HTTP schemes matched by this rule (HTTP, HTTPS, _ALL_)
+	schemes []string
+	// Origin response status codes matched by this rule
+	responseStatuses []int
+}
+
+// Cloudflare zone WAF rule (a single rule from a managed or custom ruleset)
+private cloudflare.zone.wafRule @defaults("rulesetKind action description") {
+	// Rule identifier
+	id string
+	// Ruleset this rule belongs to
+	rulesetId string
+	// Ruleset name
+	rulesetName string
+	// Ruleset kind (managed, custom, root, zone)
+	rulesetKind string
+	// Ruleset phase (e.g., http_request_firewall_managed, http_request_firewall_custom)
+	rulesetPhase string
+	// Action (block, challenge, managed_challenge, log, skip, etc.)
+	action string
+	// Filter expression
+	expression string
+	// Rule description
+	description string
+	// Rule reference tag
+	ref string
+	// Whether the rule is enabled
+	enabled bool
+	// Score threshold for the rule (managed rulesets)
+	scoreThreshold int
+	// Rule version
+	version string
+	// Time the rule was last updated
+	lastUpdated time
+}
+
+// Cloudflare email-routing configuration
+private cloudflare.zone.emailRouting @defaults("enabled status") {
+	// Whether email routing is enabled for the zone
+	enabled bool
+	// Email routing status (ready, unconfigured, misconfigured, etc.)
+	status string
+	// Email routing display name
+	name string
+	// Time the configuration was created
+	createdAt time
+	// Time the configuration was last modified
+	modifiedAt time
+	// Suggested DNS records (MX, SPF/TXT, DKIM/TXT, DMARC) returned by the email-routing settings endpoint as raw record dicts
+	dnsRecords() []dict
+	// Whether at least one MX record consistent with email-routing is in place
+	mxConfigured() bool
+	// Whether an SPF (TXT v=spf1) record consistent with email-routing is in place
+	spfConfigured() bool
+	// Whether a DMARC (TXT v=DMARC1) record is published for the zone
+	dmarcConfigured() bool
+}
+
+// Cloudflare workers script secret (metadata only — Cloudflare's API never returns secret values)
+private cloudflare.workers.secret @defaults("scriptName name") {
+	// Worker script name
+	scriptName string
+	// Secret name (binding identifier)
+	name string
+	// Secret type (e.g., secret_text)
+	secretType string
+}
+
+// Cloudflare Pages environment variable (metadata only; values are intentionally not exposed)
+private cloudflare.pages.envVar @defaults("projectName environment name type") {
+	// Pages project name
+	projectName string
+	// Environment (preview, production)
+	environment string
+	// Variable name
+	name string
+	// Variable type (plain_text, secret_text)
+	type string
 }

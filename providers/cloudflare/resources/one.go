@@ -19,6 +19,17 @@ type mqlCloudflareOneInternal struct {
 	AccountID string
 }
 
+// isSAMLIdpType returns true for IdP types that authenticate via SAML 2.0
+// (either the generic SAML connector or vendor-specific SAML connectors).
+// OIDC and social IdPs (e.g., google, github) are excluded.
+func isSAMLIdpType(t string) bool {
+	switch t {
+	case "saml", "centrify", "onelogin", "ping", "yandex":
+		return true
+	}
+	return false
+}
+
 func (c *mqlCloudflareZone) one() (*mqlCloudflareOne, error) {
 	res, err := CreateResource(c.MqlRuntime, "cloudflare.one", map[string]*llx.RawData{
 		"__id": llx.StringData("cloudflare.one@" + c.Id.Data),
@@ -343,9 +354,17 @@ func (c *mqlCloudflareOne) identityProviders() ([]any, error) {
 			rec := records[i]
 
 			res, err := NewResource(c.MqlRuntime, "cloudflare.one.idp", map[string]*llx.RawData{
-				"id":   llx.StringData(rec.ID),
-				"name": llx.StringData(rec.Name),
-				"type": llx.StringData(string(rec.Type)),
+				"id":                 llx.StringData(rec.ID),
+				"name":               llx.StringData(rec.Name),
+				"type":               llx.StringData(string(rec.Type)),
+				"saml":               llx.BoolData(isSAMLIdpType(string(rec.Type))),
+				"ssoTargetUrl":       llx.StringData(rec.Config.SsoTargetURL),
+				"issuerUrl":          llx.StringData(rec.Config.IssuerURL),
+				"signRequest":        llx.BoolData(rec.Config.SignRequest),
+				"idpPublicCert":      llx.StringData(rec.Config.IdpPublicCert),
+				"emailAttributeName": llx.StringData(rec.Config.EmailAttributeName),
+				"attributes":         llx.ArrayData(convert.SliceAnyToInterface(rec.Config.Attributes), types.String),
+				"scimEnabled":        llx.BoolData(rec.ScimConfig.Enabled),
 			})
 			if err != nil {
 				return nil, err

@@ -23,6 +23,45 @@ func extractSettingStr(settings []cloudflare.ZoneSetting, id string) string {
 	return ""
 }
 
+func extractSettingValue(settings []cloudflare.ZoneSetting, id string) any {
+	for _, s := range settings {
+		if s.ID == id {
+			return s.Value
+		}
+	}
+	return nil
+}
+
+// extractHSTS pulls HSTS subfields from the `security_header` zone setting.
+// The setting value is `{strict_transport_security: {enabled, max_age, include_subdomains, preload, nosniff}}`.
+func extractHSTS(settings []cloudflare.ZoneSetting) (enabled bool, maxAge int64, includeSubdomains bool, preload bool, nosniff bool) {
+	v := extractSettingValue(settings, "security_header")
+	m, ok := v.(map[string]any)
+	if !ok {
+		return
+	}
+	sts, ok := m["strict_transport_security"].(map[string]any)
+	if !ok {
+		return
+	}
+	if e, ok := sts["enabled"].(bool); ok {
+		enabled = e
+	}
+	if a, ok := sts["max_age"].(float64); ok {
+		maxAge = int64(a)
+	}
+	if i, ok := sts["include_subdomains"].(bool); ok {
+		includeSubdomains = i
+	}
+	if p, ok := sts["preload"].(bool); ok {
+		preload = p
+	}
+	if n, ok := sts["nosniff"].(bool); ok {
+		nosniff = n
+	}
+	return
+}
+
 func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
@@ -32,6 +71,8 @@ func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 	}
 
 	settings := resp.Result
+
+	hstsEnabled, hstsMaxAge, hstsIncludeSubdomains, hstsPreload, hstsNoSniff := extractHSTS(settings)
 
 	res, err := CreateResource(c.MqlRuntime, "cloudflare.zone.settings", map[string]*llx.RawData{
 		"__id":                    llx.StringData("cloudflare.zone.settings@" + c.Id.Data),
@@ -47,6 +88,11 @@ func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 		"emailObfuscation":        llx.StringData(extractSettingStr(settings, "email_obfuscation")),
 		"hotlinkProtection":       llx.StringData(extractSettingStr(settings, "hotlink_protection")),
 		"serverSideExcludes":      llx.StringData(extractSettingStr(settings, "server_side_exclude")),
+		"hstsEnabled":             llx.BoolData(hstsEnabled),
+		"hstsMaxAge":              llx.IntData(hstsMaxAge),
+		"hstsIncludeSubdomains":   llx.BoolData(hstsIncludeSubdomains),
+		"hstsPreload":             llx.BoolData(hstsPreload),
+		"hstsNoSniff":             llx.BoolData(hstsNoSniff),
 	})
 	if err != nil {
 		return nil, err

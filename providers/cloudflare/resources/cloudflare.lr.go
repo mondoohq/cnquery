@@ -27,12 +27,14 @@ const (
 	ResourceCloudflareDns                         string = "cloudflare.dns"
 	ResourceCloudflareDnsRecord                   string = "cloudflare.dns.record"
 	ResourceCloudflareAccount                     string = "cloudflare.account"
+	ResourceCloudflareAccountApiToken             string = "cloudflare.account.apiToken"
 	ResourceCloudflareAccountSettings             string = "cloudflare.account.settings"
 	ResourceCloudflareStreams                     string = "cloudflare.streams"
 	ResourceCloudflareStreamsLiveInput            string = "cloudflare.streams.liveInput"
 	ResourceCloudflareStreamsVideo                string = "cloudflare.streams.video"
 	ResourceCloudflareR2                          string = "cloudflare.r2"
 	ResourceCloudflareR2Bucket                    string = "cloudflare.r2.bucket"
+	ResourceCloudflareR2BucketPublicAccess        string = "cloudflare.r2.bucket.publicAccess"
 	ResourceCloudflareWorkers                     string = "cloudflare.workers"
 	ResourceCloudflareWorkersWorker               string = "cloudflare.workers.worker"
 	ResourceCloudflareWorkersPage                 string = "cloudflare.workers.page"
@@ -64,6 +66,12 @@ const (
 	ResourceCloudflareZoneLogpushJob              string = "cloudflare.zone.logpushJob"
 	ResourceCloudflareZoneBotManagement           string = "cloudflare.zone.botManagement"
 	ResourceCloudflareAccountRole                 string = "cloudflare.account.role"
+	ResourceCloudflareZoneDnssec                  string = "cloudflare.zone.dnssec"
+	ResourceCloudflareZoneRateLimitRule           string = "cloudflare.zone.rateLimitRule"
+	ResourceCloudflareZoneWafRule                 string = "cloudflare.zone.wafRule"
+	ResourceCloudflareZoneEmailRouting            string = "cloudflare.zone.emailRouting"
+	ResourceCloudflareWorkersSecret               string = "cloudflare.workers.secret"
+	ResourceCloudflarePagesEnvVar                 string = "cloudflare.pages.envVar"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -114,6 +122,10 @@ func init() {
 			Init:   initCloudflareAccount,
 			Create: createCloudflareAccount,
 		},
+		"cloudflare.account.apiToken": {
+			// to override args, implement: initCloudflareAccountApiToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareAccountApiToken,
+		},
 		"cloudflare.account.settings": {
 			// to override args, implement: initCloudflareAccountSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareAccountSettings,
@@ -137,6 +149,10 @@ func init() {
 		"cloudflare.r2.bucket": {
 			// to override args, implement: initCloudflareR2Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareR2Bucket,
+		},
+		"cloudflare.r2.bucket.publicAccess": {
+			// to override args, implement: initCloudflareR2BucketPublicAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareR2BucketPublicAccess,
 		},
 		"cloudflare.workers": {
 			// to override args, implement: initCloudflareWorkers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -261,6 +277,30 @@ func init() {
 		"cloudflare.account.role": {
 			// to override args, implement: initCloudflareAccountRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareAccountRole,
+		},
+		"cloudflare.zone.dnssec": {
+			// to override args, implement: initCloudflareZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneDnssec,
+		},
+		"cloudflare.zone.rateLimitRule": {
+			// to override args, implement: initCloudflareZoneRateLimitRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneRateLimitRule,
+		},
+		"cloudflare.zone.wafRule": {
+			// to override args, implement: initCloudflareZoneWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneWafRule,
+		},
+		"cloudflare.zone.emailRouting": {
+			// to override args, implement: initCloudflareZoneEmailRouting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneEmailRouting,
+		},
+		"cloudflare.workers.secret": {
+			// to override args, implement: initCloudflareWorkersSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareWorkersSecret,
+		},
+		"cloudflare.pages.envVar": {
+			// to override args, implement: initCloudflarePagesEnvVar(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflarePagesEnvVar,
 		},
 	}
 }
@@ -435,6 +475,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.botManagement": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZone).GetBotManagement()).ToDataRes(types.Resource("cloudflare.zone.botManagement"))
 	},
+	"cloudflare.zone.dnssec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetDnssec()).ToDataRes(types.Resource("cloudflare.zone.dnssec"))
+	},
+	"cloudflare.zone.rateLimitRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetRateLimitRules()).ToDataRes(types.Array(types.Resource("cloudflare.zone.rateLimitRule")))
+	},
+	"cloudflare.zone.wafRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetWafRules()).ToDataRes(types.Array(types.Resource("cloudflare.zone.wafRule")))
+	},
+	"cloudflare.zone.emailRouting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetEmailRouting()).ToDataRes(types.Resource("cloudflare.zone.emailRouting"))
+	},
 	"cloudflare.zone.account.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneAccount).GetId()).ToDataRes(types.String)
 	},
@@ -512,6 +564,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.zone.settings.serverSideExcludes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneSettings).GetServerSideExcludes()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.settings.hstsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneSettings).GetHstsEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.settings.hstsMaxAge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneSettings).GetHstsMaxAge()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.settings.hstsIncludeSubdomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneSettings).GetHstsIncludeSubdomains()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.settings.hstsPreload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneSettings).GetHstsPreload()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.settings.hstsNoSniff": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneSettings).GetHstsNoSniff()).ToDataRes(types.Bool)
 	},
 	"cloudflare.zone.customCertificate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneCustomCertificate).GetId()).ToDataRes(types.String)
@@ -627,6 +694,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.account.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccount).GetRoles()).ToDataRes(types.Array(types.Resource("cloudflare.account.role")))
 	},
+	"cloudflare.account.apiTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetApiTokens()).ToDataRes(types.Array(types.Resource("cloudflare.account.apiToken")))
+	},
+	"cloudflare.account.apiToken.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountApiToken).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.account.apiToken.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountApiToken).GetName()).ToDataRes(types.String)
+	},
+	"cloudflare.account.apiToken.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountApiToken).GetStatus()).ToDataRes(types.String)
+	},
+	"cloudflare.account.apiToken.issuedOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountApiToken).GetIssuedOn()).ToDataRes(types.Time)
+	},
+	"cloudflare.account.apiToken.modifiedOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountApiToken).GetModifiedOn()).ToDataRes(types.Time)
+	},
+	"cloudflare.account.apiToken.notBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountApiToken).GetNotBefore()).ToDataRes(types.Time)
+	},
+	"cloudflare.account.apiToken.expiresOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountApiToken).GetExpiresOn()).ToDataRes(types.Time)
+	},
+	"cloudflare.account.apiToken.ipIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountApiToken).GetIpIn()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.account.apiToken.ipNotIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountApiToken).GetIpNotIn()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.account.apiToken.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccountApiToken).GetPolicies()).ToDataRes(types.Array(types.Dict))
+	},
 	"cloudflare.account.settings.enforceTwoFactor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccountSettings).GetEnforceTwoFactor()).ToDataRes(types.Bool)
 	},
@@ -708,11 +808,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.r2.bucket.createdOn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareR2Bucket).GetCreatedOn()).ToDataRes(types.Time)
 	},
+	"cloudflare.r2.bucket.publicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2Bucket).GetPublicAccess()).ToDataRes(types.Resource("cloudflare.r2.bucket.publicAccess"))
+	},
+	"cloudflare.r2.bucket.publicAccess.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2BucketPublicAccess).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.r2.bucket.publicAccess.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2BucketPublicAccess).GetDomain()).ToDataRes(types.String)
+	},
 	"cloudflare.workers.workers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareWorkers).GetWorkers()).ToDataRes(types.Array(types.Resource("cloudflare.workers.worker")))
 	},
 	"cloudflare.workers.pages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareWorkers).GetPages()).ToDataRes(types.Array(types.Resource("cloudflare.workers.page")))
+	},
+	"cloudflare.workers.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkers).GetSecrets()).ToDataRes(types.Array(types.Resource("cloudflare.workers.secret")))
+	},
+	"cloudflare.workers.pageEnvVars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkers).GetPageEnvVars()).ToDataRes(types.Array(types.Resource("cloudflare.pages.envVar")))
 	},
 	"cloudflare.workers.worker.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareWorkersWorker).GetId()).ToDataRes(types.String)
@@ -908,6 +1023,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.one.idp.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneIdp).GetType()).ToDataRes(types.String)
+	},
+	"cloudflare.one.idp.saml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetSaml()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.idp.ssoTargetUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetSsoTargetUrl()).ToDataRes(types.String)
+	},
+	"cloudflare.one.idp.issuerUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetIssuerUrl()).ToDataRes(types.String)
+	},
+	"cloudflare.one.idp.signRequest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetSignRequest()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.idp.idpPublicCert": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetIdpPublicCert()).ToDataRes(types.String)
+	},
+	"cloudflare.one.idp.emailAttributeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetEmailAttributeName()).ToDataRes(types.String)
+	},
+	"cloudflare.one.idp.attributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetAttributes()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.one.idp.scimEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneIdp).GetScimEnabled()).ToDataRes(types.Bool)
 	},
 	"cloudflare.one.accessPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneAccessPolicy).GetId()).ToDataRes(types.String)
@@ -1473,6 +1612,156 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.account.role.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccountRole).GetDescription()).ToDataRes(types.String)
 	},
+	"cloudflare.zone.dnssec.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetStatus()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.dnssec.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetFlags()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.dnssec.algorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetAlgorithm()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.dnssec.keyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetKeyType()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.dnssec.digestType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetDigestType()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.dnssec.digestAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetDigestAlgorithm()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.dnssec.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetDigest()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.dnssec.ds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetDs()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.dnssec.keyTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetKeyTag()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.dnssec.publicKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetPublicKey()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.dnssec.modifiedOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneDnssec).GetModifiedOn()).ToDataRes(types.Time)
+	},
+	"cloudflare.zone.rateLimitRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRateLimitRule).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.rateLimitRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRateLimitRule).GetDescription()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.rateLimitRule.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRateLimitRule).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.rateLimitRule.threshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRateLimitRule).GetThreshold()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.rateLimitRule.period": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRateLimitRule).GetPeriod()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.rateLimitRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRateLimitRule).GetAction()).ToDataRes(types.Dict)
+	},
+	"cloudflare.zone.rateLimitRule.urlPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRateLimitRule).GetUrlPattern()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.rateLimitRule.methods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRateLimitRule).GetMethods()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.rateLimitRule.schemes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRateLimitRule).GetSchemes()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.rateLimitRule.responseStatuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneRateLimitRule).GetResponseStatuses()).ToDataRes(types.Array(types.Int))
+	},
+	"cloudflare.zone.wafRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.rulesetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRulesetId()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.rulesetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRulesetName()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.rulesetKind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRulesetKind()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.rulesetPhase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRulesetPhase()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetAction()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.expression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetExpression()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetDescription()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.ref": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRef()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.wafRule.scoreThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetScoreThreshold()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.wafRule.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetVersion()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"cloudflare.zone.emailRouting.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneEmailRouting).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.emailRouting.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneEmailRouting).GetStatus()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.emailRouting.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneEmailRouting).GetName()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.emailRouting.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneEmailRouting).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"cloudflare.zone.emailRouting.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneEmailRouting).GetModifiedAt()).ToDataRes(types.Time)
+	},
+	"cloudflare.zone.emailRouting.dnsRecords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneEmailRouting).GetDnsRecords()).ToDataRes(types.Array(types.Dict))
+	},
+	"cloudflare.zone.emailRouting.mxConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneEmailRouting).GetMxConfigured()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.emailRouting.spfConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneEmailRouting).GetSpfConfigured()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.emailRouting.dmarcConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneEmailRouting).GetDmarcConfigured()).ToDataRes(types.Bool)
+	},
+	"cloudflare.workers.secret.scriptName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkersSecret).GetScriptName()).ToDataRes(types.String)
+	},
+	"cloudflare.workers.secret.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkersSecret).GetName()).ToDataRes(types.String)
+	},
+	"cloudflare.workers.secret.secretType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkersSecret).GetSecretType()).ToDataRes(types.String)
+	},
+	"cloudflare.pages.envVar.projectName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflarePagesEnvVar).GetProjectName()).ToDataRes(types.String)
+	},
+	"cloudflare.pages.envVar.environment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflarePagesEnvVar).GetEnvironment()).ToDataRes(types.String)
+	},
+	"cloudflare.pages.envVar.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflarePagesEnvVar).GetName()).ToDataRes(types.String)
+	},
+	"cloudflare.pages.envVar.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflarePagesEnvVar).GetType()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1629,6 +1918,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareZone).BotManagement, ok = plugin.RawToTValue[*mqlCloudflareZoneBotManagement](v.Value, v.Error)
 		return
 	},
+	"cloudflare.zone.dnssec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).Dnssec, ok = plugin.RawToTValue[*mqlCloudflareZoneDnssec](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).RateLimitRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).WafRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.emailRouting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).EmailRouting, ok = plugin.RawToTValue[*mqlCloudflareZoneEmailRouting](v.Value, v.Error)
+		return
+	},
 	"cloudflare.zone.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZoneAccount).__id, ok = v.Value.(string)
 		return
@@ -1747,6 +2052,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.zone.settings.serverSideExcludes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZoneSettings).ServerSideExcludes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.settings.hstsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneSettings).HstsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.settings.hstsMaxAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneSettings).HstsMaxAge, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.settings.hstsIncludeSubdomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneSettings).HstsIncludeSubdomains, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.settings.hstsPreload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneSettings).HstsPreload, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.settings.hstsNoSniff": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneSettings).HstsNoSniff, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.customCertificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1921,6 +2246,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareAccount).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"cloudflare.account.apiTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).ApiTokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.apiToken.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.account.apiToken.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.apiToken.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.apiToken.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.apiToken.issuedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).IssuedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.apiToken.modifiedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).ModifiedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.apiToken.notBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).NotBefore, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.apiToken.expiresOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).ExpiresOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.apiToken.ipIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).IpIn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.apiToken.ipNotIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).IpNotIn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.apiToken.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccountApiToken).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"cloudflare.account.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareAccountSettings).__id, ok = v.Value.(string)
 		return
@@ -2053,6 +2426,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareR2Bucket).CreatedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"cloudflare.r2.bucket.publicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2Bucket).PublicAccess, ok = plugin.RawToTValue[*mqlCloudflareR2BucketPublicAccess](v.Value, v.Error)
+		return
+	},
+	"cloudflare.r2.bucket.publicAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2BucketPublicAccess).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.r2.bucket.publicAccess.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2BucketPublicAccess).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.r2.bucket.publicAccess.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2BucketPublicAccess).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"cloudflare.workers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareWorkers).__id, ok = v.Value.(string)
 		return
@@ -2063,6 +2452,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.workers.pages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareWorkers).Pages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkers).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.pageEnvVars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkers).PageEnvVars, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cloudflare.workers.worker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2347,6 +2744,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.one.idp.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareOneIdp).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.saml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).Saml, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.ssoTargetUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).SsoTargetUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.issuerUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).IssuerUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.signRequest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).SignRequest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.idpPublicCert": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).IdpPublicCert, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.emailAttributeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).EmailAttributeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).Attributes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.idp.scimEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneIdp).ScimEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"cloudflare.one.accessPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3197,6 +3626,230 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareAccountRole).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"cloudflare.zone.dnssec.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.dnssec.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.dnssec.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).Flags, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.dnssec.algorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).Algorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.dnssec.keyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).KeyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.dnssec.digestType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).DigestType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.dnssec.digestAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).DigestAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.dnssec.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.dnssec.ds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).Ds, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.dnssec.keyTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).KeyTag, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.dnssec.publicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).PublicKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.dnssec.modifiedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneDnssec).ModifiedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.threshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).Threshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.period": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).Period, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).Action, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.urlPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).UrlPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.methods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).Methods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.schemes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).Schemes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.rateLimitRule.responseStatuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneRateLimitRule).ResponseStatuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.wafRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.rulesetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).RulesetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.rulesetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).RulesetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.rulesetKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).RulesetKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.rulesetPhase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).RulesetPhase, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.expression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).Expression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.ref": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).Ref, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.scoreThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).ScoreThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.emailRouting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneEmailRouting).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.emailRouting.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneEmailRouting).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.emailRouting.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneEmailRouting).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.emailRouting.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneEmailRouting).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.emailRouting.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneEmailRouting).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.emailRouting.modifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneEmailRouting).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.emailRouting.dnsRecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneEmailRouting).DnsRecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.emailRouting.mxConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneEmailRouting).MxConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.emailRouting.spfConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneEmailRouting).SpfConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.emailRouting.dmarcConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneEmailRouting).DmarcConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersSecret).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.workers.secret.scriptName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersSecret).ScriptName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.secret.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersSecret).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.secret.secretType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersSecret).SecretType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.pages.envVar.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflarePagesEnvVar).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.pages.envVar.projectName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflarePagesEnvVar).ProjectName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.pages.envVar.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflarePagesEnvVar).Environment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.pages.envVar.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflarePagesEnvVar).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.pages.envVar.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflarePagesEnvVar).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -3336,6 +3989,10 @@ type mqlCloudflareZone struct {
 	CustomHostnames       plugin.TValue[[]any]
 	LogpushJobs           plugin.TValue[[]any]
 	BotManagement         plugin.TValue[*mqlCloudflareZoneBotManagement]
+	Dnssec                plugin.TValue[*mqlCloudflareZoneDnssec]
+	RateLimitRules        plugin.TValue[[]any]
+	WafRules              plugin.TValue[[]any]
+	EmailRouting          plugin.TValue[*mqlCloudflareZoneEmailRouting]
 }
 
 // createCloudflareZone creates a new instance of this resource
@@ -3743,6 +4400,70 @@ func (c *mqlCloudflareZone) GetBotManagement() *plugin.TValue[*mqlCloudflareZone
 	})
 }
 
+func (c *mqlCloudflareZone) GetDnssec() *plugin.TValue[*mqlCloudflareZoneDnssec] {
+	return plugin.GetOrCompute[*mqlCloudflareZoneDnssec](&c.Dnssec, func() (*mqlCloudflareZoneDnssec, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "dnssec")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareZoneDnssec), nil
+			}
+		}
+
+		return c.dnssec()
+	})
+}
+
+func (c *mqlCloudflareZone) GetRateLimitRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RateLimitRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "rateLimitRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rateLimitRules()
+	})
+}
+
+func (c *mqlCloudflareZone) GetWafRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WafRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "wafRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.wafRules()
+	})
+}
+
+func (c *mqlCloudflareZone) GetEmailRouting() *plugin.TValue[*mqlCloudflareZoneEmailRouting] {
+	return plugin.GetOrCompute[*mqlCloudflareZoneEmailRouting](&c.EmailRouting, func() (*mqlCloudflareZoneEmailRouting, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "emailRouting")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareZoneEmailRouting), nil
+			}
+		}
+
+		return c.emailRouting()
+	})
+}
+
 // mqlCloudflareZoneAccount for the cloudflare.zone.account resource
 type mqlCloudflareZoneAccount struct {
 	MqlRuntime *plugin.Runtime
@@ -3962,6 +4683,11 @@ type mqlCloudflareZoneSettings struct {
 	EmailObfuscation        plugin.TValue[string]
 	HotlinkProtection       plugin.TValue[string]
 	ServerSideExcludes      plugin.TValue[string]
+	HstsEnabled             plugin.TValue[bool]
+	HstsMaxAge              plugin.TValue[int64]
+	HstsIncludeSubdomains   plugin.TValue[bool]
+	HstsPreload             plugin.TValue[bool]
+	HstsNoSniff             plugin.TValue[bool]
 }
 
 // createCloudflareZoneSettings creates a new instance of this resource
@@ -4042,6 +4768,26 @@ func (c *mqlCloudflareZoneSettings) GetHotlinkProtection() *plugin.TValue[string
 
 func (c *mqlCloudflareZoneSettings) GetServerSideExcludes() *plugin.TValue[string] {
 	return &c.ServerSideExcludes
+}
+
+func (c *mqlCloudflareZoneSettings) GetHstsEnabled() *plugin.TValue[bool] {
+	return &c.HstsEnabled
+}
+
+func (c *mqlCloudflareZoneSettings) GetHstsMaxAge() *plugin.TValue[int64] {
+	return &c.HstsMaxAge
+}
+
+func (c *mqlCloudflareZoneSettings) GetHstsIncludeSubdomains() *plugin.TValue[bool] {
+	return &c.HstsIncludeSubdomains
+}
+
+func (c *mqlCloudflareZoneSettings) GetHstsPreload() *plugin.TValue[bool] {
+	return &c.HstsPreload
+}
+
+func (c *mqlCloudflareZoneSettings) GetHstsNoSniff() *plugin.TValue[bool] {
+	return &c.HstsNoSniff
 }
 
 // mqlCloudflareZoneCustomCertificate for the cloudflare.zone.customCertificate resource
@@ -4390,6 +5136,7 @@ type mqlCloudflareAccount struct {
 	LiveInputs plugin.TValue[[]any]
 	Videos     plugin.TValue[[]any]
 	Roles      plugin.TValue[[]any]
+	ApiTokens  plugin.TValue[[]any]
 }
 
 // createCloudflareAccount creates a new instance of this resource
@@ -4495,6 +5242,116 @@ func (c *mqlCloudflareAccount) GetRoles() *plugin.TValue[[]any] {
 
 		return c.roles()
 	})
+}
+
+func (c *mqlCloudflareAccount) GetApiTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiTokens, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "apiTokens")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiTokens()
+	})
+}
+
+// mqlCloudflareAccountApiToken for the cloudflare.account.apiToken resource
+type mqlCloudflareAccountApiToken struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareAccountApiTokenInternal it will be used here
+	Id         plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Status     plugin.TValue[string]
+	IssuedOn   plugin.TValue[*time.Time]
+	ModifiedOn plugin.TValue[*time.Time]
+	NotBefore  plugin.TValue[*time.Time]
+	ExpiresOn  plugin.TValue[*time.Time]
+	IpIn       plugin.TValue[[]any]
+	IpNotIn    plugin.TValue[[]any]
+	Policies   plugin.TValue[[]any]
+}
+
+// createCloudflareAccountApiToken creates a new instance of this resource
+func createCloudflareAccountApiToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareAccountApiToken{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.account.apiToken", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareAccountApiToken) MqlName() string {
+	return "cloudflare.account.apiToken"
+}
+
+func (c *mqlCloudflareAccountApiToken) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareAccountApiToken) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareAccountApiToken) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCloudflareAccountApiToken) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlCloudflareAccountApiToken) GetIssuedOn() *plugin.TValue[*time.Time] {
+	return &c.IssuedOn
+}
+
+func (c *mqlCloudflareAccountApiToken) GetModifiedOn() *plugin.TValue[*time.Time] {
+	return &c.ModifiedOn
+}
+
+func (c *mqlCloudflareAccountApiToken) GetNotBefore() *plugin.TValue[*time.Time] {
+	return &c.NotBefore
+}
+
+func (c *mqlCloudflareAccountApiToken) GetExpiresOn() *plugin.TValue[*time.Time] {
+	return &c.ExpiresOn
+}
+
+func (c *mqlCloudflareAccountApiToken) GetIpIn() *plugin.TValue[[]any] {
+	return &c.IpIn
+}
+
+func (c *mqlCloudflareAccountApiToken) GetIpNotIn() *plugin.TValue[[]any] {
+	return &c.IpNotIn
+}
+
+func (c *mqlCloudflareAccountApiToken) GetPolicies() *plugin.TValue[[]any] {
+	return &c.Policies
 }
 
 // mqlCloudflareAccountSettings for the cloudflare.account.settings resource
@@ -4843,10 +5700,11 @@ func (c *mqlCloudflareR2) GetBuckets() *plugin.TValue[[]any] {
 type mqlCloudflareR2Bucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCloudflareR2BucketInternal it will be used here
-	Name      plugin.TValue[string]
-	Location  plugin.TValue[string]
-	CreatedOn plugin.TValue[*time.Time]
+	mqlCloudflareR2BucketInternal
+	Name         plugin.TValue[string]
+	Location     plugin.TValue[string]
+	CreatedOn    plugin.TValue[*time.Time]
+	PublicAccess plugin.TValue[*mqlCloudflareR2BucketPublicAccess]
 }
 
 // createCloudflareR2Bucket creates a new instance of this resource
@@ -4898,13 +5756,80 @@ func (c *mqlCloudflareR2Bucket) GetCreatedOn() *plugin.TValue[*time.Time] {
 	return &c.CreatedOn
 }
 
+func (c *mqlCloudflareR2Bucket) GetPublicAccess() *plugin.TValue[*mqlCloudflareR2BucketPublicAccess] {
+	return plugin.GetOrCompute[*mqlCloudflareR2BucketPublicAccess](&c.PublicAccess, func() (*mqlCloudflareR2BucketPublicAccess, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.r2.bucket", c.__id, "publicAccess")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareR2BucketPublicAccess), nil
+			}
+		}
+
+		return c.publicAccess()
+	})
+}
+
+// mqlCloudflareR2BucketPublicAccess for the cloudflare.r2.bucket.publicAccess resource
+type mqlCloudflareR2BucketPublicAccess struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareR2BucketPublicAccessInternal it will be used here
+	Enabled plugin.TValue[bool]
+	Domain  plugin.TValue[string]
+}
+
+// createCloudflareR2BucketPublicAccess creates a new instance of this resource
+func createCloudflareR2BucketPublicAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareR2BucketPublicAccess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.r2.bucket.publicAccess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareR2BucketPublicAccess) MqlName() string {
+	return "cloudflare.r2.bucket.publicAccess"
+}
+
+func (c *mqlCloudflareR2BucketPublicAccess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareR2BucketPublicAccess) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlCloudflareR2BucketPublicAccess) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
 // mqlCloudflareWorkers for the cloudflare.workers resource
 type mqlCloudflareWorkers struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlCloudflareWorkersInternal
-	Workers plugin.TValue[[]any]
-	Pages   plugin.TValue[[]any]
+	Workers     plugin.TValue[[]any]
+	Pages       plugin.TValue[[]any]
+	Secrets     plugin.TValue[[]any]
+	PageEnvVars plugin.TValue[[]any]
 }
 
 // createCloudflareWorkers creates a new instance of this resource
@@ -4968,6 +5893,38 @@ func (c *mqlCloudflareWorkers) GetPages() *plugin.TValue[[]any] {
 		}
 
 		return c.pages()
+	})
+}
+
+func (c *mqlCloudflareWorkers) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.workers", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
+}
+
+func (c *mqlCloudflareWorkers) GetPageEnvVars() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PageEnvVars, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.workers", c.__id, "pageEnvVars")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pageEnvVars()
 	})
 }
 
@@ -5642,9 +6599,17 @@ type mqlCloudflareOneIdp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlCloudflareOneIdpInternal it will be used here
-	Id   plugin.TValue[string]
-	Name plugin.TValue[string]
-	Type plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Saml               plugin.TValue[bool]
+	SsoTargetUrl       plugin.TValue[string]
+	IssuerUrl          plugin.TValue[string]
+	SignRequest        plugin.TValue[bool]
+	IdpPublicCert      plugin.TValue[string]
+	EmailAttributeName plugin.TValue[string]
+	Attributes         plugin.TValue[[]any]
+	ScimEnabled        plugin.TValue[bool]
 }
 
 // createCloudflareOneIdp creates a new instance of this resource
@@ -5694,6 +6659,38 @@ func (c *mqlCloudflareOneIdp) GetName() *plugin.TValue[string] {
 
 func (c *mqlCloudflareOneIdp) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+func (c *mqlCloudflareOneIdp) GetSaml() *plugin.TValue[bool] {
+	return &c.Saml
+}
+
+func (c *mqlCloudflareOneIdp) GetSsoTargetUrl() *plugin.TValue[string] {
+	return &c.SsoTargetUrl
+}
+
+func (c *mqlCloudflareOneIdp) GetIssuerUrl() *plugin.TValue[string] {
+	return &c.IssuerUrl
+}
+
+func (c *mqlCloudflareOneIdp) GetSignRequest() *plugin.TValue[bool] {
+	return &c.SignRequest
+}
+
+func (c *mqlCloudflareOneIdp) GetIdpPublicCert() *plugin.TValue[string] {
+	return &c.IdpPublicCert
+}
+
+func (c *mqlCloudflareOneIdp) GetEmailAttributeName() *plugin.TValue[string] {
+	return &c.EmailAttributeName
+}
+
+func (c *mqlCloudflareOneIdp) GetAttributes() *plugin.TValue[[]any] {
+	return &c.Attributes
+}
+
+func (c *mqlCloudflareOneIdp) GetScimEnabled() *plugin.TValue[bool] {
+	return &c.ScimEnabled
 }
 
 // mqlCloudflareOneAccessPolicy for the cloudflare.one.accessPolicy resource
@@ -7692,4 +8689,526 @@ func (c *mqlCloudflareAccountRole) GetName() *plugin.TValue[string] {
 
 func (c *mqlCloudflareAccountRole) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+// mqlCloudflareZoneDnssec for the cloudflare.zone.dnssec resource
+type mqlCloudflareZoneDnssec struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareZoneDnssecInternal it will be used here
+	Status          plugin.TValue[string]
+	Flags           plugin.TValue[int64]
+	Algorithm       plugin.TValue[string]
+	KeyType         plugin.TValue[string]
+	DigestType      plugin.TValue[string]
+	DigestAlgorithm plugin.TValue[string]
+	Digest          plugin.TValue[string]
+	Ds              plugin.TValue[string]
+	KeyTag          plugin.TValue[int64]
+	PublicKey       plugin.TValue[string]
+	ModifiedOn      plugin.TValue[*time.Time]
+}
+
+// createCloudflareZoneDnssec creates a new instance of this resource
+func createCloudflareZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneDnssec{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.dnssec", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneDnssec) MqlName() string {
+	return "cloudflare.zone.dnssec"
+}
+
+func (c *mqlCloudflareZoneDnssec) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneDnssec) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlCloudflareZoneDnssec) GetFlags() *plugin.TValue[int64] {
+	return &c.Flags
+}
+
+func (c *mqlCloudflareZoneDnssec) GetAlgorithm() *plugin.TValue[string] {
+	return &c.Algorithm
+}
+
+func (c *mqlCloudflareZoneDnssec) GetKeyType() *plugin.TValue[string] {
+	return &c.KeyType
+}
+
+func (c *mqlCloudflareZoneDnssec) GetDigestType() *plugin.TValue[string] {
+	return &c.DigestType
+}
+
+func (c *mqlCloudflareZoneDnssec) GetDigestAlgorithm() *plugin.TValue[string] {
+	return &c.DigestAlgorithm
+}
+
+func (c *mqlCloudflareZoneDnssec) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
+}
+
+func (c *mqlCloudflareZoneDnssec) GetDs() *plugin.TValue[string] {
+	return &c.Ds
+}
+
+func (c *mqlCloudflareZoneDnssec) GetKeyTag() *plugin.TValue[int64] {
+	return &c.KeyTag
+}
+
+func (c *mqlCloudflareZoneDnssec) GetPublicKey() *plugin.TValue[string] {
+	return &c.PublicKey
+}
+
+func (c *mqlCloudflareZoneDnssec) GetModifiedOn() *plugin.TValue[*time.Time] {
+	return &c.ModifiedOn
+}
+
+// mqlCloudflareZoneRateLimitRule for the cloudflare.zone.rateLimitRule resource
+type mqlCloudflareZoneRateLimitRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareZoneRateLimitRuleInternal it will be used here
+	Id               plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Disabled         plugin.TValue[bool]
+	Threshold        plugin.TValue[int64]
+	Period           plugin.TValue[int64]
+	Action           plugin.TValue[any]
+	UrlPattern       plugin.TValue[string]
+	Methods          plugin.TValue[[]any]
+	Schemes          plugin.TValue[[]any]
+	ResponseStatuses plugin.TValue[[]any]
+}
+
+// createCloudflareZoneRateLimitRule creates a new instance of this resource
+func createCloudflareZoneRateLimitRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneRateLimitRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.rateLimitRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) MqlName() string {
+	return "cloudflare.zone.rateLimitRule"
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) GetThreshold() *plugin.TValue[int64] {
+	return &c.Threshold
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) GetPeriod() *plugin.TValue[int64] {
+	return &c.Period
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) GetAction() *plugin.TValue[any] {
+	return &c.Action
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) GetUrlPattern() *plugin.TValue[string] {
+	return &c.UrlPattern
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) GetMethods() *plugin.TValue[[]any] {
+	return &c.Methods
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) GetSchemes() *plugin.TValue[[]any] {
+	return &c.Schemes
+}
+
+func (c *mqlCloudflareZoneRateLimitRule) GetResponseStatuses() *plugin.TValue[[]any] {
+	return &c.ResponseStatuses
+}
+
+// mqlCloudflareZoneWafRule for the cloudflare.zone.wafRule resource
+type mqlCloudflareZoneWafRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareZoneWafRuleInternal it will be used here
+	Id             plugin.TValue[string]
+	RulesetId      plugin.TValue[string]
+	RulesetName    plugin.TValue[string]
+	RulesetKind    plugin.TValue[string]
+	RulesetPhase   plugin.TValue[string]
+	Action         plugin.TValue[string]
+	Expression     plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Ref            plugin.TValue[string]
+	Enabled        plugin.TValue[bool]
+	ScoreThreshold plugin.TValue[int64]
+	Version        plugin.TValue[string]
+	LastUpdated    plugin.TValue[*time.Time]
+}
+
+// createCloudflareZoneWafRule creates a new instance of this resource
+func createCloudflareZoneWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneWafRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.wafRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneWafRule) MqlName() string {
+	return "cloudflare.zone.wafRule"
+}
+
+func (c *mqlCloudflareZoneWafRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneWafRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRulesetId() *plugin.TValue[string] {
+	return &c.RulesetId
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRulesetName() *plugin.TValue[string] {
+	return &c.RulesetName
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRulesetKind() *plugin.TValue[string] {
+	return &c.RulesetKind
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRulesetPhase() *plugin.TValue[string] {
+	return &c.RulesetPhase
+}
+
+func (c *mqlCloudflareZoneWafRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlCloudflareZoneWafRule) GetExpression() *plugin.TValue[string] {
+	return &c.Expression
+}
+
+func (c *mqlCloudflareZoneWafRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRef() *plugin.TValue[string] {
+	return &c.Ref
+}
+
+func (c *mqlCloudflareZoneWafRule) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlCloudflareZoneWafRule) GetScoreThreshold() *plugin.TValue[int64] {
+	return &c.ScoreThreshold
+}
+
+func (c *mqlCloudflareZoneWafRule) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlCloudflareZoneWafRule) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+// mqlCloudflareZoneEmailRouting for the cloudflare.zone.emailRouting resource
+type mqlCloudflareZoneEmailRouting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlCloudflareZoneEmailRoutingInternal
+	Enabled         plugin.TValue[bool]
+	Status          plugin.TValue[string]
+	Name            plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	ModifiedAt      plugin.TValue[*time.Time]
+	DnsRecords      plugin.TValue[[]any]
+	MxConfigured    plugin.TValue[bool]
+	SpfConfigured   plugin.TValue[bool]
+	DmarcConfigured plugin.TValue[bool]
+}
+
+// createCloudflareZoneEmailRouting creates a new instance of this resource
+func createCloudflareZoneEmailRouting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneEmailRouting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.emailRouting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneEmailRouting) MqlName() string {
+	return "cloudflare.zone.emailRouting"
+}
+
+func (c *mqlCloudflareZoneEmailRouting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneEmailRouting) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlCloudflareZoneEmailRouting) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlCloudflareZoneEmailRouting) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCloudflareZoneEmailRouting) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlCloudflareZoneEmailRouting) GetModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.ModifiedAt
+}
+
+func (c *mqlCloudflareZoneEmailRouting) GetDnsRecords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DnsRecords, func() ([]any, error) {
+		return c.dnsRecords()
+	})
+}
+
+func (c *mqlCloudflareZoneEmailRouting) GetMxConfigured() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MxConfigured, func() (bool, error) {
+		return c.mxConfigured()
+	})
+}
+
+func (c *mqlCloudflareZoneEmailRouting) GetSpfConfigured() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SpfConfigured, func() (bool, error) {
+		return c.spfConfigured()
+	})
+}
+
+func (c *mqlCloudflareZoneEmailRouting) GetDmarcConfigured() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DmarcConfigured, func() (bool, error) {
+		return c.dmarcConfigured()
+	})
+}
+
+// mqlCloudflareWorkersSecret for the cloudflare.workers.secret resource
+type mqlCloudflareWorkersSecret struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareWorkersSecretInternal it will be used here
+	ScriptName plugin.TValue[string]
+	Name       plugin.TValue[string]
+	SecretType plugin.TValue[string]
+}
+
+// createCloudflareWorkersSecret creates a new instance of this resource
+func createCloudflareWorkersSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareWorkersSecret{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.workers.secret", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareWorkersSecret) MqlName() string {
+	return "cloudflare.workers.secret"
+}
+
+func (c *mqlCloudflareWorkersSecret) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareWorkersSecret) GetScriptName() *plugin.TValue[string] {
+	return &c.ScriptName
+}
+
+func (c *mqlCloudflareWorkersSecret) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCloudflareWorkersSecret) GetSecretType() *plugin.TValue[string] {
+	return &c.SecretType
+}
+
+// mqlCloudflarePagesEnvVar for the cloudflare.pages.envVar resource
+type mqlCloudflarePagesEnvVar struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflarePagesEnvVarInternal it will be used here
+	ProjectName plugin.TValue[string]
+	Environment plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Type        plugin.TValue[string]
+}
+
+// createCloudflarePagesEnvVar creates a new instance of this resource
+func createCloudflarePagesEnvVar(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflarePagesEnvVar{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.pages.envVar", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflarePagesEnvVar) MqlName() string {
+	return "cloudflare.pages.envVar"
+}
+
+func (c *mqlCloudflarePagesEnvVar) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflarePagesEnvVar) GetProjectName() *plugin.TValue[string] {
+	return &c.ProjectName
+}
+
+func (c *mqlCloudflarePagesEnvVar) GetEnvironment() *plugin.TValue[string] {
+	return &c.Environment
+}
+
+func (c *mqlCloudflarePagesEnvVar) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCloudflarePagesEnvVar) GetType() *plugin.TValue[string] {
+	return &c.Type
 }
