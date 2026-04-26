@@ -388,6 +388,14 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   surgeUpgrade bool
   // HA control plane enabled
   ha bool
+  // Whether single sign-on is enabled for the cluster
+  ssoEnabled bool
+  // Whether single sign-on is required for the cluster
+  ssoRequired bool
+  // OIDC issuer URL configured for cluster SSO
+  ssoIssuerUrl string
+  // OAuth client ID configured for cluster SSO
+  ssoClientId string
   // Tags
   tags []string
   // Maintenance policy

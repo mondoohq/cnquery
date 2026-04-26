@@ -655,6 +655,15 @@ func (r *mqlDigitalocean) kubernetesClusters() ([]interface{}, error) {
 				status = string(c.Status.State)
 			}
 
+			var ssoEnabled, ssoRequired bool
+			var ssoIssuerURL, ssoClientID string
+			if c.SSO != nil {
+				ssoEnabled = c.SSO.Enabled
+				ssoRequired = c.SSO.Required
+				ssoIssuerURL = c.SSO.IssuerURL
+				ssoClientID = c.SSO.ClientID
+			}
+
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.kubernetes.cluster", map[string]*llx.RawData{
 				"id":                llx.StringData(c.ID),
 				"name":              llx.StringData(c.Name),
@@ -669,6 +678,10 @@ func (r *mqlDigitalocean) kubernetesClusters() ([]interface{}, error) {
 				"autoUpgrade":       llx.BoolData(c.AutoUpgrade),
 				"surgeUpgrade":      llx.BoolData(c.SurgeUpgrade),
 				"ha":                llx.BoolData(c.HA),
+				"ssoEnabled":        llx.BoolData(ssoEnabled),
+				"ssoRequired":       llx.BoolData(ssoRequired),
+				"ssoIssuerUrl":      llx.StringData(ssoIssuerURL),
+				"ssoClientId":       llx.StringData(ssoClientID),
 				"tags":              llx.ArrayData(tags, "\x02"),
 				"maintenancePolicy": llx.DictData(mp),
 			})

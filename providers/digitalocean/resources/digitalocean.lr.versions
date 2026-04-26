@@ -154,6 +154,10 @@ digitalocean.kubernetes.cluster.name 13.0.1
 digitalocean.kubernetes.cluster.nodePools 13.0.1
 digitalocean.kubernetes.cluster.region 13.0.1
 digitalocean.kubernetes.cluster.serviceSubnet 13.0.1
+digitalocean.kubernetes.cluster.ssoClientId 13.0.2
+digitalocean.kubernetes.cluster.ssoEnabled 13.0.2
+digitalocean.kubernetes.cluster.ssoIssuerUrl 13.0.2
+digitalocean.kubernetes.cluster.ssoRequired 13.0.2
 digitalocean.kubernetes.cluster.status 13.0.1
 digitalocean.kubernetes.cluster.surgeUpgrade 13.0.1
 digitalocean.kubernetes.cluster.tags 13.0.1

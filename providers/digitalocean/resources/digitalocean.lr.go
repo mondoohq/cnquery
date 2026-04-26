@@ -722,6 +722,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.kubernetes.cluster.ha": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanKubernetesCluster).GetHa()).ToDataRes(types.Bool)
 	},
+	"digitalocean.kubernetes.cluster.ssoEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanKubernetesCluster).GetSsoEnabled()).ToDataRes(types.Bool)
+	},
+	"digitalocean.kubernetes.cluster.ssoRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanKubernetesCluster).GetSsoRequired()).ToDataRes(types.Bool)
+	},
+	"digitalocean.kubernetes.cluster.ssoIssuerUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanKubernetesCluster).GetSsoIssuerUrl()).ToDataRes(types.String)
+	},
+	"digitalocean.kubernetes.cluster.ssoClientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanKubernetesCluster).GetSsoClientId()).ToDataRes(types.String)
+	},
 	"digitalocean.kubernetes.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanKubernetesCluster).GetTags()).ToDataRes(types.Array(types.String))
 	},
@@ -1699,6 +1711,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.kubernetes.cluster.ha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanKubernetesCluster).Ha, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.kubernetes.cluster.ssoEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanKubernetesCluster).SsoEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.kubernetes.cluster.ssoRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanKubernetesCluster).SsoRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.kubernetes.cluster.ssoIssuerUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanKubernetesCluster).SsoIssuerUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.kubernetes.cluster.ssoClientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanKubernetesCluster).SsoClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"digitalocean.kubernetes.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3873,6 +3901,10 @@ type mqlDigitaloceanKubernetesCluster struct {
 	AutoUpgrade       plugin.TValue[bool]
 	SurgeUpgrade      plugin.TValue[bool]
 	Ha                plugin.TValue[bool]
+	SsoEnabled        plugin.TValue[bool]
+	SsoRequired       plugin.TValue[bool]
+	SsoIssuerUrl      plugin.TValue[string]
+	SsoClientId       plugin.TValue[string]
 	Tags              plugin.TValue[[]any]
 	MaintenancePolicy plugin.TValue[any]
 	NodePools         plugin.TValue[[]any]
@@ -3981,6 +4013,22 @@ func (c *mqlDigitaloceanKubernetesCluster) GetSurgeUpgrade() *plugin.TValue[bool
 
 func (c *mqlDigitaloceanKubernetesCluster) GetHa() *plugin.TValue[bool] {
 	return &c.Ha
+}
+
+func (c *mqlDigitaloceanKubernetesCluster) GetSsoEnabled() *plugin.TValue[bool] {
+	return &c.SsoEnabled
+}
+
+func (c *mqlDigitaloceanKubernetesCluster) GetSsoRequired() *plugin.TValue[bool] {
+	return &c.SsoRequired
+}
+
+func (c *mqlDigitaloceanKubernetesCluster) GetSsoIssuerUrl() *plugin.TValue[string] {
+	return &c.SsoIssuerUrl
+}
+
+func (c *mqlDigitaloceanKubernetesCluster) GetSsoClientId() *plugin.TValue[string] {
+	return &c.SsoClientId
 }
 
 func (c *mqlDigitaloceanKubernetesCluster) GetTags() *plugin.TValue[[]any] {
