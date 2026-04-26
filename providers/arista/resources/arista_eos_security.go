@@ -16,12 +16,12 @@ import (
 // content on the existing arista.eos.runningConfig resource (which already
 // handles double-checked locking) so we don't issue redundant
 // `show running-config` calls when multiple security resources are queried.
-func fetchRunningConfig(runtime *plugin.Runtime) string {
+func fetchRunningConfig(runtime *plugin.Runtime) (string, error) {
 	rc, err := CreateResource(runtime, "arista.eos.runningConfig", map[string]*llx.RawData{})
-	if err == nil {
-		return rc.(*mqlAristaEosRunningConfig).fetchContent()
+	if err != nil {
+		return "", err
 	}
-	return aristaClient(runtime).RunningConfig()
+	return rc.(*mqlAristaEosRunningConfig).fetchContent(), nil
 }
 
 // stringSliceToAny converts []string to []any for llx.ArrayData.
@@ -53,18 +53,22 @@ func (a *mqlAristaEosAaa) id() (string, error) {
 }
 
 func (a *mqlAristaEos) aaa() (*mqlAristaEosAaa, error) {
-	cfg := eos.ParseAaaConfig(fetchRunningConfig(a.MqlRuntime))
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	cfg := eos.ParseAaaConfig(rc)
 
 	res, err := CreateResource(a.MqlRuntime, "arista.eos.aaa", map[string]*llx.RawData{
-		"authenticationLogin":   llx.MapData(methodMapToDict(cfg.AuthenticationLogin), types.Array(types.String)),
-		"authenticationEnable":  llx.MapData(methodMapToDict(cfg.AuthenticationEnable), types.Array(types.String)),
-		"authorizationCommands": llx.MapData(methodMapToDict(cfg.AuthorizationCommands), types.Array(types.String)),
-		"authorizationExec":     llx.MapData(methodMapToDict(cfg.AuthorizationExec), types.Array(types.String)),
-		"accountingCommands":    llx.MapData(methodMapToDict(cfg.AccountingCommands), types.Array(types.String)),
-		"accountingExec":        llx.MapData(methodMapToDict(cfg.AccountingExec), types.Array(types.String)),
-		"tacacsServers":         llx.ArrayData(stringSliceToAny(cfg.TacacsServers), types.String),
-		"radiusServers":         llx.ArrayData(stringSliceToAny(cfg.RadiusServers), types.String),
-		"localUsersAllowed":     llx.BoolData(cfg.LocalUsersAllowed),
+		"authenticationLogin":          llx.MapData(methodMapToDict(cfg.AuthenticationLogin), types.Array(types.String)),
+		"authenticationEnable":         llx.MapData(methodMapToDict(cfg.AuthenticationEnable), types.Array(types.String)),
+		"authorizationCommands":        llx.MapData(methodMapToDict(cfg.AuthorizationCommands), types.Array(types.String)),
+		"authorizationExec":            llx.MapData(methodMapToDict(cfg.AuthorizationExec), types.Array(types.String)),
+		"accountingCommands":           llx.MapData(methodMapToDict(cfg.AccountingCommands), types.Array(types.String)),
+		"accountingExec":               llx.MapData(methodMapToDict(cfg.AccountingExec), types.Array(types.String)),
+		"tacacsServers":                llx.ArrayData(stringSliceToAny(cfg.TacacsServers), types.String),
+		"radiusServers":                llx.ArrayData(stringSliceToAny(cfg.RadiusServers), types.String),
+		"defaultLoginPermitsLocalOnly": llx.BoolData(cfg.DefaultLoginPermitsLocalOnly),
 	})
 	if err != nil {
 		return nil, err
@@ -81,7 +85,11 @@ func (a *mqlAristaEosSshSettings) id() (string, error) {
 }
 
 func (a *mqlAristaEos) sshSettings() (*mqlAristaEosSshSettings, error) {
-	s := eos.ParseSshSettings(fetchRunningConfig(a.MqlRuntime))
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	s := eos.ParseSshSettings(rc)
 
 	res, err := CreateResource(a.MqlRuntime, "arista.eos.sshSettings", map[string]*llx.RawData{
 		"enabled":            llx.BoolData(s.Enabled),
@@ -105,25 +113,49 @@ func (a *mqlAristaEos) sshSettings() (*mqlAristaEosSshSettings, error) {
 // arista.eos.snmpCommunity (list)
 // =====================================================================
 
+type mqlAristaEosSnmpCommunityInternal struct {
+	cacheAcl string
+}
+
 func (a *mqlAristaEosSnmpCommunity) id() (string, error) {
 	return "arista.eos.snmpCommunity/" + a.Name.Data, a.Name.Error
 }
 
 func (a *mqlAristaEos) snmpCommunities() ([]any, error) {
-	communities := eos.ParseSnmpCommunities(fetchRunningConfig(a.MqlRuntime))
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	communities := eos.ParseSnmpCommunities(rc)
 	res := make([]any, 0, len(communities))
 	for _, c := range communities {
 		mqlC, err := CreateResource(a.MqlRuntime, "arista.eos.snmpCommunity", map[string]*llx.RawData{
 			"name":   llx.StringData(c.Name),
 			"access": llx.StringData(c.Access),
 			"acl":    llx.StringData(c.ACL),
+			"ipv6":   llx.BoolData(c.IPv6),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlC.(*mqlAristaEosSnmpCommunity).cacheAcl = c.ACL
 		res = append(res, mqlC)
 	}
 	return res, nil
+}
+
+func (a *mqlAristaEosSnmpCommunity) aclResource() (*mqlAristaEosAcl, error) {
+	if a.cacheAcl == "" {
+		a.AclResource.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlAcl, err := NewResource(a.MqlRuntime, "arista.eos.acl", map[string]*llx.RawData{
+		"name": llx.StringData(a.cacheAcl),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlAcl.(*mqlAristaEosAcl), nil
 }
 
 // =====================================================================
@@ -135,7 +167,11 @@ func (a *mqlAristaEosTelnetService) id() (string, error) {
 }
 
 func (a *mqlAristaEos) telnetService() (*mqlAristaEosTelnetService, error) {
-	t := eos.ParseTelnetService(fetchRunningConfig(a.MqlRuntime))
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	t := eos.ParseTelnetService(rc)
 
 	res, err := CreateResource(a.MqlRuntime, "arista.eos.telnetService", map[string]*llx.RawData{
 		"configured":    llx.BoolData(t.Configured),
@@ -160,7 +196,11 @@ func (a *mqlAristaEosPasswordPolicy) id() (string, error) {
 }
 
 func (a *mqlAristaEos) passwordPolicy() (*mqlAristaEosPasswordPolicy, error) {
-	p := eos.ParsePasswordPolicy(fetchRunningConfig(a.MqlRuntime))
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	p := eos.ParsePasswordPolicy(rc)
 
 	res, err := CreateResource(a.MqlRuntime, "arista.eos.passwordPolicy", map[string]*llx.RawData{
 		"lockoutFailure":             llx.IntData(int64(p.LockoutFailure)),
@@ -196,7 +236,11 @@ func (a *mqlAristaEosNtpAuthKey) id() (string, error) {
 }
 
 func (a *mqlAristaEos) ntpAuthKeys() ([]any, error) {
-	state := eos.ParseNtpAuth(fetchRunningConfig(a.MqlRuntime))
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	state := eos.ParseNtpAuth(rc)
 	res := make([]any, 0, len(state.Keys))
 	for _, k := range state.Keys {
 		mqlK, err := CreateResource(a.MqlRuntime, "arista.eos.ntpAuthKey", map[string]*llx.RawData{
@@ -213,7 +257,11 @@ func (a *mqlAristaEos) ntpAuthKeys() ([]any, error) {
 }
 
 func (a *mqlAristaEos) ntpAuthenticationEnabled() (bool, error) {
-	state := eos.ParseNtpAuth(fetchRunningConfig(a.MqlRuntime))
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return false, err
+	}
+	state := eos.ParseNtpAuth(rc)
 	return state.AuthenticationEnabled, nil
 }
 
@@ -221,12 +269,21 @@ func (a *mqlAristaEos) ntpAuthenticationEnabled() (bool, error) {
 // arista.eos.controlPlanePolicer
 // =====================================================================
 
+type mqlAristaEosControlPlanePolicerInternal struct {
+	cacheIpAccessGroup  string
+	cacheIp6AccessGroup string
+}
+
 func (a *mqlAristaEosControlPlanePolicer) id() (string, error) {
 	return "arista.eos.controlPlanePolicer", nil
 }
 
 func (a *mqlAristaEos) controlPlanePolicer() (*mqlAristaEosControlPlanePolicer, error) {
-	c := eos.ParseControlPlanePolicer(fetchRunningConfig(a.MqlRuntime))
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	c := eos.ParseControlPlanePolicer(rc)
 	res, err := CreateResource(a.MqlRuntime, "arista.eos.controlPlanePolicer", map[string]*llx.RawData{
 		"configured":     llx.BoolData(c.Configured),
 		"policyApplied":  llx.BoolData(c.PolicyApplied),
@@ -237,7 +294,38 @@ func (a *mqlAristaEos) controlPlanePolicer() (*mqlAristaEosControlPlanePolicer, 
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAristaEosControlPlanePolicer), nil
+	mqlPolicer := res.(*mqlAristaEosControlPlanePolicer)
+	mqlPolicer.cacheIpAccessGroup = c.IPAccessGroup
+	mqlPolicer.cacheIp6AccessGroup = c.IP6AccessGroup
+	return mqlPolicer, nil
+}
+
+func (a *mqlAristaEosControlPlanePolicer) ipAccessGroupAcl() (*mqlAristaEosAcl, error) {
+	if a.cacheIpAccessGroup == "" {
+		a.IpAccessGroupAcl.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlAcl, err := NewResource(a.MqlRuntime, "arista.eos.acl", map[string]*llx.RawData{
+		"name": llx.StringData(a.cacheIpAccessGroup),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlAcl.(*mqlAristaEosAcl), nil
+}
+
+func (a *mqlAristaEosControlPlanePolicer) ip6AccessGroupAcl() (*mqlAristaEosAcl, error) {
+	if a.cacheIp6AccessGroup == "" {
+		a.Ip6AccessGroupAcl.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlAcl, err := NewResource(a.MqlRuntime, "arista.eos.acl", map[string]*llx.RawData{
+		"name": llx.StringData(a.cacheIp6AccessGroup),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlAcl.(*mqlAristaEosAcl), nil
 }
 
 // =====================================================================
@@ -249,7 +337,11 @@ func (a *mqlAristaEosPortSecurity) id() (string, error) {
 }
 
 func (a *mqlAristaEos) portSecurity() ([]any, error) {
-	configs := eos.ParsePortSecurity(fetchRunningConfig(a.MqlRuntime))
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	configs := eos.ParsePortSecurity(rc)
 	res := make([]any, 0, len(configs))
 	for _, c := range configs {
 		mqlC, err := CreateResource(a.MqlRuntime, "arista.eos.portSecurity", map[string]*llx.RawData{

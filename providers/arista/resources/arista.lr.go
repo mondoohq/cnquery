@@ -799,8 +799,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.aaa.radiusServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAaa).GetRadiusServers()).ToDataRes(types.Array(types.String))
 	},
-	"arista.eos.aaa.localUsersAllowed": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAristaEosAaa).GetLocalUsersAllowed()).ToDataRes(types.Bool)
+	"arista.eos.aaa.defaultLoginPermitsLocalOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetDefaultLoginPermitsLocalOnly()).ToDataRes(types.Bool)
 	},
 	"arista.eos.sshSettings.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSshSettings).GetEnabled()).ToDataRes(types.Bool)
@@ -840,6 +840,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.snmpCommunity.acl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSnmpCommunity).GetAcl()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpCommunity.aclResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpCommunity).GetAclResource()).ToDataRes(types.Resource("arista.eos.acl"))
+	},
+	"arista.eos.snmpCommunity.ipv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpCommunity).GetIpv6()).ToDataRes(types.Bool)
 	},
 	"arista.eos.telnetService.configured": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosTelnetService).GetConfigured()).ToDataRes(types.Bool)
@@ -922,8 +928,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.controlPlanePolicer.ipAccessGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosControlPlanePolicer).GetIpAccessGroup()).ToDataRes(types.String)
 	},
+	"arista.eos.controlPlanePolicer.ipAccessGroupAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosControlPlanePolicer).GetIpAccessGroupAcl()).ToDataRes(types.Resource("arista.eos.acl"))
+	},
 	"arista.eos.controlPlanePolicer.ip6AccessGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosControlPlanePolicer).GetIp6AccessGroup()).ToDataRes(types.String)
+	},
+	"arista.eos.controlPlanePolicer.ip6AccessGroupAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosControlPlanePolicer).GetIp6AccessGroupAcl()).ToDataRes(types.Resource("arista.eos.acl"))
 	},
 	"arista.eos.portSecurity.interface": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosPortSecurity).GetInterface()).ToDataRes(types.String)
@@ -1776,8 +1788,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosAaa).RadiusServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"arista.eos.aaa.localUsersAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAristaEosAaa).LocalUsersAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"arista.eos.aaa.defaultLoginPermitsLocalOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).DefaultLoginPermitsLocalOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"arista.eos.sshSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1838,6 +1850,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.snmpCommunity.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosSnmpCommunity).Acl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpCommunity.aclResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpCommunity).AclResource, ok = plugin.RawToTValue[*mqlAristaEosAcl](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpCommunity.ipv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpCommunity).Ipv6, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"arista.eos.telnetService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1964,8 +1984,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosControlPlanePolicer).IpAccessGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"arista.eos.controlPlanePolicer.ipAccessGroupAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosControlPlanePolicer).IpAccessGroupAcl, ok = plugin.RawToTValue[*mqlAristaEosAcl](v.Value, v.Error)
+		return
+	},
 	"arista.eos.controlPlanePolicer.ip6AccessGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosControlPlanePolicer).Ip6AccessGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.controlPlanePolicer.ip6AccessGroupAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosControlPlanePolicer).Ip6AccessGroupAcl, ok = plugin.RawToTValue[*mqlAristaEosAcl](v.Value, v.Error)
 		return
 	},
 	"arista.eos.portSecurity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4406,15 +4434,15 @@ type mqlAristaEosAaa struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAristaEosAaaInternal it will be used here
-	AuthenticationLogin   plugin.TValue[map[string]any]
-	AuthenticationEnable  plugin.TValue[map[string]any]
-	AuthorizationCommands plugin.TValue[map[string]any]
-	AuthorizationExec     plugin.TValue[map[string]any]
-	AccountingCommands    plugin.TValue[map[string]any]
-	AccountingExec        plugin.TValue[map[string]any]
-	TacacsServers         plugin.TValue[[]any]
-	RadiusServers         plugin.TValue[[]any]
-	LocalUsersAllowed     plugin.TValue[bool]
+	AuthenticationLogin          plugin.TValue[map[string]any]
+	AuthenticationEnable         plugin.TValue[map[string]any]
+	AuthorizationCommands        plugin.TValue[map[string]any]
+	AuthorizationExec            plugin.TValue[map[string]any]
+	AccountingCommands           plugin.TValue[map[string]any]
+	AccountingExec               plugin.TValue[map[string]any]
+	TacacsServers                plugin.TValue[[]any]
+	RadiusServers                plugin.TValue[[]any]
+	DefaultLoginPermitsLocalOnly plugin.TValue[bool]
 }
 
 // createAristaEosAaa creates a new instance of this resource
@@ -4486,8 +4514,8 @@ func (c *mqlAristaEosAaa) GetRadiusServers() *plugin.TValue[[]any] {
 	return &c.RadiusServers
 }
 
-func (c *mqlAristaEosAaa) GetLocalUsersAllowed() *plugin.TValue[bool] {
-	return &c.LocalUsersAllowed
+func (c *mqlAristaEosAaa) GetDefaultLoginPermitsLocalOnly() *plugin.TValue[bool] {
+	return &c.DefaultLoginPermitsLocalOnly
 }
 
 // mqlAristaEosSshSettings for the arista.eos.sshSettings resource
@@ -4588,10 +4616,12 @@ func (c *mqlAristaEosSshSettings) GetFipsRestrictions() *plugin.TValue[bool] {
 type mqlAristaEosSnmpCommunity struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAristaEosSnmpCommunityInternal it will be used here
-	Name   plugin.TValue[string]
-	Access plugin.TValue[string]
-	Acl    plugin.TValue[string]
+	mqlAristaEosSnmpCommunityInternal
+	Name        plugin.TValue[string]
+	Access      plugin.TValue[string]
+	Acl         plugin.TValue[string]
+	AclResource plugin.TValue[*mqlAristaEosAcl]
+	Ipv6        plugin.TValue[bool]
 }
 
 // createAristaEosSnmpCommunity creates a new instance of this resource
@@ -4641,6 +4671,26 @@ func (c *mqlAristaEosSnmpCommunity) GetAccess() *plugin.TValue[string] {
 
 func (c *mqlAristaEosSnmpCommunity) GetAcl() *plugin.TValue[string] {
 	return &c.Acl
+}
+
+func (c *mqlAristaEosSnmpCommunity) GetAclResource() *plugin.TValue[*mqlAristaEosAcl] {
+	return plugin.GetOrCompute[*mqlAristaEosAcl](&c.AclResource, func() (*mqlAristaEosAcl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.snmpCommunity", c.__id, "aclResource")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosAcl), nil
+			}
+		}
+
+		return c.aclResource()
+	})
+}
+
+func (c *mqlAristaEosSnmpCommunity) GetIpv6() *plugin.TValue[bool] {
+	return &c.Ipv6
 }
 
 // mqlAristaEosTelnetService for the arista.eos.telnetService resource
@@ -4894,12 +4944,14 @@ func (c *mqlAristaEosNtpAuthKey) GetTrusted() *plugin.TValue[bool] {
 type mqlAristaEosControlPlanePolicer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAristaEosControlPlanePolicerInternal it will be used here
-	Configured     plugin.TValue[bool]
-	PolicyApplied  plugin.TValue[bool]
-	PolicyName     plugin.TValue[string]
-	IpAccessGroup  plugin.TValue[string]
-	Ip6AccessGroup plugin.TValue[string]
+	mqlAristaEosControlPlanePolicerInternal
+	Configured        plugin.TValue[bool]
+	PolicyApplied     plugin.TValue[bool]
+	PolicyName        plugin.TValue[string]
+	IpAccessGroup     plugin.TValue[string]
+	IpAccessGroupAcl  plugin.TValue[*mqlAristaEosAcl]
+	Ip6AccessGroup    plugin.TValue[string]
+	Ip6AccessGroupAcl plugin.TValue[*mqlAristaEosAcl]
 }
 
 // createAristaEosControlPlanePolicer creates a new instance of this resource
@@ -4955,8 +5007,40 @@ func (c *mqlAristaEosControlPlanePolicer) GetIpAccessGroup() *plugin.TValue[stri
 	return &c.IpAccessGroup
 }
 
+func (c *mqlAristaEosControlPlanePolicer) GetIpAccessGroupAcl() *plugin.TValue[*mqlAristaEosAcl] {
+	return plugin.GetOrCompute[*mqlAristaEosAcl](&c.IpAccessGroupAcl, func() (*mqlAristaEosAcl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.controlPlanePolicer", c.__id, "ipAccessGroupAcl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosAcl), nil
+			}
+		}
+
+		return c.ipAccessGroupAcl()
+	})
+}
+
 func (c *mqlAristaEosControlPlanePolicer) GetIp6AccessGroup() *plugin.TValue[string] {
 	return &c.Ip6AccessGroup
+}
+
+func (c *mqlAristaEosControlPlanePolicer) GetIp6AccessGroupAcl() *plugin.TValue[*mqlAristaEosAcl] {
+	return plugin.GetOrCompute[*mqlAristaEosAcl](&c.Ip6AccessGroupAcl, func() (*mqlAristaEosAcl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.controlPlanePolicer", c.__id, "ip6AccessGroupAcl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosAcl), nil
+			}
+		}
+
+		return c.ip6AccessGroupAcl()
+	})
 }
 
 // mqlAristaEosPortSecurity for the arista.eos.portSecurity resource

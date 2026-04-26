@@ -467,9 +467,11 @@ arista.eos.aaa {
   tacacsServers []string
   // RADIUS server hosts
   radiusServers []string
-  // Whether the local user database is the only authentication source for the
-  // default login list (i.e. no remote AAA group is configured before local).
-  localUsersAllowed bool
+  // True when the default authentication list contains "local" with no
+  // `group` token preceding it — i.e. the local user database is the only
+  // authentication source for the default login list, with no remote AAA
+  // group configured before local.
+  defaultLoginPermitsLocalOnly bool
 }
 
 // Arista EOS management SSH service configuration
@@ -502,8 +504,14 @@ private arista.eos.snmpCommunity @defaults("name access acl") {
   name string
   // Access mode: "ro" (read-only) or "rw" (read-write)
   access string
-  // Access-list name applied to this community (empty = no ACL)
+  // Access-list name applied to this community (empty = no ACL). When
+  // `ipv6` is true this is an IPv6 access-list; otherwise IPv4.
   acl string
+  // Typed reference to the access-list ACL applied to this community
+  aclResource() arista.eos.acl
+  // Whether the community line declares an IPv6 ACL (via the `ipv6`
+  // keyword in `snmp-server community <name> ro ipv6 <acl6>`)
+  ipv6 bool
 }
 
 // Arista EOS management telnet service
@@ -575,8 +583,12 @@ arista.eos.controlPlanePolicer {
   policyName string
   // IPv4 access-group applied to control-plane (empty if none)
   ipAccessGroup string
+  // Typed reference to the IPv4 access-group ACL applied to control-plane
+  ipAccessGroupAcl() arista.eos.acl
   // IPv6 access-group applied to control-plane (empty if none)
   ip6AccessGroup string
+  // Typed reference to the IPv6 access-group ACL applied to control-plane
+  ip6AccessGroupAcl() arista.eos.acl
 }
 
 // Arista EOS per-interface switchport port-security configuration

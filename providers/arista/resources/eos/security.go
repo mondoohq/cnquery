@@ -45,10 +45,12 @@ type AaaConfig struct {
 	TacacsServers []string
 	// RadiusServers lists configured RADIUS server hostnames/IPs.
 	RadiusServers []string
-	// LocalUsersAllowed is true when any default authentication list contains
-	// "local" as the first or only method (control-plane could be reached
-	// without contacting remote AAA).
-	LocalUsersAllowed bool
+	// DefaultLoginPermitsLocalOnly is true when the default authentication
+	// list contains "local" with no `group` token preceding it — i.e. the
+	// local user database is the only authentication source for the default
+	// login list (control-plane could be reached without contacting remote
+	// AAA).
+	DefaultLoginPermitsLocalOnly bool
 }
 
 var (
@@ -126,8 +128,9 @@ func ParseAaaConfig(runningConfig string) *AaaConfig {
 		}
 	}
 
-	// LocalUsersAllowed: any "default" login list whose first method is local,
-	// or that contains "local" with no remote group method preceding it.
+	// DefaultLoginPermitsLocalOnly: the "default" login list contains "local"
+	// with no `group` token preceding it — i.e. local is reachable without
+	// going through remote AAA.
 	if methods, ok := cfg.AuthenticationLogin["default"]; ok {
 		hasGroup := false
 		for _, m := range methods {
@@ -140,7 +143,7 @@ func ParseAaaConfig(runningConfig string) *AaaConfig {
 		if !hasGroup {
 			for _, m := range methods {
 				if m == "local" {
-					cfg.LocalUsersAllowed = true
+					cfg.DefaultLoginPermitsLocalOnly = true
 					break
 				}
 			}
@@ -181,7 +184,7 @@ type SshSettings struct {
 }
 
 func ParseSshSettings(runningConfig string) *SshSettings {
-	block := extractBlock(runningConfig, "management ssh")
+	block := GetSection(strings.NewReader(runningConfig), "management ssh")
 	s := &SshSettings{
 		// EOS default: SSH enabled unless an explicit "shutdown" is present
 		Enabled: true,
@@ -243,16 +246,28 @@ func ParseSshSettings(runningConfig string) *SshSettings {
 type SnmpCommunity struct {
 	Name   string
 	Access string
-	ACL    string
+	// ACL is the optional access-list name applied to the community. When
+	// IPv6 is true the ACL is an IPv6 access-list (per the
+	// `snmp-server community <name> ro ipv6 <acl6>` form); otherwise it
+	// is an IPv4 ACL.
+	ACL string
+	// IPv6 is true when the community line declares an IPv6 ACL via the
+	// `ipv6` keyword.
+	IPv6 bool
 }
-
-var snmpCommunityRe = regexp.MustCompile(
-	`^snmp-server community\s+(\S+)(?:\s+(ro|rw))?(?:\s+(\S+))?\s*$`)
 
 // ParseSnmpCommunities extracts SNMPv1/v2c community strings from
 // running-config. SNMPv3 (`snmp-server user`/`snmp-server group`) is
 // intentionally excluded since v3 uses authPriv/authNoPriv per-user, not
 // communities.
+//
+// The full EOS form is:
+//
+//	snmp-server community <name> [view <view-name>] [ro|rw] [ipv6] [<acl>]
+//
+// The optional `view` clause and the optional `ipv6` keyword (for IPv6
+// ACLs) are recognized so that the access mode and ACL are captured
+// correctly regardless of the extra tokens.
 func ParseSnmpCommunities(runningConfig string) []SnmpCommunity {
 	res := []SnmpCommunity{}
 	scanner := bufio.NewScanner(strings.NewReader(runningConfig))
@@ -261,16 +276,30 @@ func ParseSnmpCommunities(runningConfig string) []SnmpCommunity {
 		if !strings.HasPrefix(line, "snmp-server community ") {
 			continue
 		}
-		m := snmpCommunityRe.FindStringSubmatch(line)
-		if m == nil {
+		toks := strings.Fields(line)
+		// toks[0]="snmp-server", toks[1]="community", toks[2]=name
+		if len(toks) < 3 {
 			continue
 		}
-		c := SnmpCommunity{Name: m[1], Access: m[2]}
-		if c.Access == "" {
-			c.Access = "ro"
+		c := SnmpCommunity{Name: toks[2], Access: "ro"}
+		i := 3
+		// Optional `view <view-name>` clause.
+		if i+1 < len(toks) && toks[i] == "view" {
+			i += 2
 		}
-		if len(m) > 3 {
-			c.ACL = m[3]
+		// Optional access mode.
+		if i < len(toks) && (toks[i] == "ro" || toks[i] == "rw") {
+			c.Access = toks[i]
+			i++
+		}
+		// Optional `ipv6` keyword for IPv6 ACLs.
+		if i < len(toks) && toks[i] == "ipv6" {
+			c.IPv6 = true
+			i++
+		}
+		// Optional trailing ACL name.
+		if i < len(toks) {
+			c.ACL = toks[i]
 		}
 		res = append(res, c)
 	}
@@ -302,7 +331,7 @@ type TelnetService struct {
 }
 
 func ParseTelnetService(runningConfig string) *TelnetService {
-	block := extractBlock(runningConfig, "management telnet")
+	block := GetSection(strings.NewReader(runningConfig), "management telnet")
 	t := &TelnetService{}
 	if block == "" {
 		return t
@@ -392,8 +421,11 @@ type PasswordPolicy struct {
 }
 
 var (
-	pwLockoutRe = regexp.MustCompile(
-		`^aaa authentication policy lockout(?:\s+failure\s+(\d+))?(?:\s+window\s+(\d+))?(?:\s+duration\s+(\d+))?`)
+	// EOS does not enforce token order on the lockout clauses (failure /
+	// window / duration), so each clause is matched independently.
+	pwLockoutFailureRe     = regexp.MustCompile(`failure\s+(\d+)`)
+	pwLockoutWindowRe      = regexp.MustCompile(`window\s+(\d+)`)
+	pwLockoutDurationRe    = regexp.MustCompile(`duration\s+(\d+)`)
 	passwordPolicyHeaderRe = regexp.MustCompile(`(?m)^password policy\s+(\S+)\s*$`)
 )
 
@@ -406,16 +438,14 @@ func ParsePasswordPolicy(runningConfig string) *PasswordPolicy {
 		line := strings.TrimSpace(scanner.Text())
 		switch {
 		case strings.HasPrefix(line, "aaa authentication policy lockout"):
-			if m := pwLockoutRe.FindStringSubmatch(line); m != nil {
-				if m[1] != "" {
-					p.LockoutFailure, _ = strconv.Atoi(m[1])
-				}
-				if m[2] != "" {
-					p.LockoutWindowSeconds, _ = strconv.Atoi(m[2])
-				}
-				if m[3] != "" {
-					p.LockoutDurationSeconds, _ = strconv.Atoi(m[3])
-				}
+			if m := pwLockoutFailureRe.FindStringSubmatch(line); m != nil {
+				p.LockoutFailure, _ = strconv.Atoi(m[1])
+			}
+			if m := pwLockoutWindowRe.FindStringSubmatch(line); m != nil {
+				p.LockoutWindowSeconds, _ = strconv.Atoi(m[1])
+			}
+			if m := pwLockoutDurationRe.FindStringSubmatch(line); m != nil {
+				p.LockoutDurationSeconds, _ = strconv.Atoi(m[1])
 			}
 		case line == "aaa authentication policy local allow-nopassword-remote-login":
 			p.AllowNopasswordRemoteLogin = true
@@ -426,8 +456,11 @@ func ParsePasswordPolicy(runningConfig string) *PasswordPolicy {
 		}
 	}
 
-	// Find any `password policy <name>` block. We take the first one.
-	policyName, block := findFirstPolicyBlock(runningConfig)
+	// Find a `password policy <name>` block. EOS allows multiple named
+	// policies; if multiple exist we prefer the one named "default" (the
+	// most common case), otherwise the first declared block. The single
+	// `passwordPolicy` field can only represent one policy.
+	policyName, block := findPolicyBlock(runningConfig)
 	if policyName != "" {
 		p.PolicyName = policyName
 		s := bufio.NewScanner(strings.NewReader(block))
@@ -463,15 +496,27 @@ func ParsePasswordPolicy(runningConfig string) *PasswordPolicy {
 	return p
 }
 
-// findFirstPolicyBlock returns the name and inner block of the first
-// `password policy <name>` section.
-func findFirstPolicyBlock(runningConfig string) (string, string) {
-	loc := passwordPolicyHeaderRe.FindStringSubmatchIndex(runningConfig)
-	if loc == nil {
+// findPolicyBlock returns the name and inner body of a `password policy
+// <name>` section. EOS allows multiple named policies in running-config; we
+// prefer the policy named "default" if present, otherwise the first one
+// declared.
+func findPolicyBlock(runningConfig string) (string, string) {
+	locs := passwordPolicyHeaderRe.FindAllStringSubmatchIndex(runningConfig, -1)
+	if len(locs) == 0 {
 		return "", ""
 	}
-	name := runningConfig[loc[2]:loc[3]]
-	rest := runningConfig[loc[1]:]
+
+	// Prefer the "default" policy if it exists; otherwise take the first.
+	chosen := locs[0]
+	for _, loc := range locs {
+		if runningConfig[loc[2]:loc[3]] == "default" {
+			chosen = loc
+			break
+		}
+	}
+
+	name := runningConfig[chosen[2]:chosen[3]]
+	rest := runningConfig[chosen[1]:]
 
 	// Walk lines until we hit the next non-indented, non-comment line.
 	var b strings.Builder
@@ -589,7 +634,7 @@ type ControlPlanePolicer struct {
 }
 
 func ParseControlPlanePolicer(runningConfig string) *ControlPlanePolicer {
-	block := extractBlock(runningConfig, "control-plane")
+	block := GetSection(strings.NewReader(runningConfig), "control-plane")
 	c := &ControlPlanePolicer{}
 	if block == "" {
 		return c
@@ -599,10 +644,9 @@ func ParseControlPlanePolicer(runningConfig string) *ControlPlanePolicer {
 	scanner := bufio.NewScanner(strings.NewReader(block))
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		// Check negated ("no ...") forms before their positive counterparts —
-		// `strings.HasPrefix("no service-policy input", "service-policy input")`
-		// is false, but the inverse is true, so the positive case must come
-		// last.
+		// The negated ("no ...") cases must be matched before their positive
+		// counterparts so a later `no` line clears state set by an earlier
+		// positive line.
 		switch {
 		case strings.HasPrefix(line, "no service-policy input "):
 			c.PolicyApplied = false
@@ -716,38 +760,4 @@ func ParsePortSecurity(runningConfig string) []PortSecurityConfig {
 		}
 	}
 	return res
-}
-
-// extractBlock returns the indented body of the first occurrence of `header`
-// at column 0 in runningConfig. The body excludes the header line itself and
-// stops at the next column-0 line that isn't a comment.
-func extractBlock(runningConfig, header string) string {
-	scanner := bufio.NewScanner(strings.NewReader(runningConfig))
-	inBlock := false
-	var b strings.Builder
-	for scanner.Scan() {
-		line := scanner.Text()
-		trimmed := strings.TrimSpace(line)
-		if !inBlock {
-			if line == header {
-				inBlock = true
-			}
-			continue
-		}
-		// In-block: stop at next non-indented line that isn't a comment.
-		if line == "" {
-			continue
-		}
-		if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
-			if strings.HasPrefix(trimmed, "!") {
-				// running config separator inside or right after a block —
-				// safest to treat as the block terminator
-				break
-			}
-			break
-		}
-		b.WriteString(trimmed)
-		b.WriteByte('\n')
-	}
-	return b.String()
 }

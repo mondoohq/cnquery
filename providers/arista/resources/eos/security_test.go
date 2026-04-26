@@ -4,6 +4,7 @@
 package eos
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,21 +33,21 @@ radius-server host 10.0.0.5
 	assert.Equal(t, []string{"10.0.0.1", "10.0.0.2"}, a.TacacsServers)
 	assert.Equal(t, []string{"10.0.0.5"}, a.RadiusServers)
 	// Local is a fallback after group, not the only option.
-	assert.False(t, a.LocalUsersAllowed)
+	assert.False(t, a.DefaultLoginPermitsLocalOnly)
 }
 
 func TestParseAaaConfig_LocalOnly(t *testing.T) {
 	cfg := `aaa authentication login default local
 `
 	a := ParseAaaConfig(cfg)
-	assert.True(t, a.LocalUsersAllowed)
+	assert.True(t, a.DefaultLoginPermitsLocalOnly)
 }
 
 func TestParseAaaConfig_NoConfig(t *testing.T) {
 	a := ParseAaaConfig("")
 	assert.Empty(t, a.AuthenticationLogin)
 	assert.Empty(t, a.TacacsServers)
-	assert.False(t, a.LocalUsersAllowed)
+	assert.False(t, a.DefaultLoginPermitsLocalOnly)
 }
 
 func TestParseAaaConfig_AccountingNone(t *testing.T) {
@@ -114,10 +115,12 @@ func TestParseSnmpCommunities(t *testing.T) {
 snmp-server community ops ro IPV4-MGMT
 snmp-server community admin rw
 snmp-server community readonly
+snmp-server community viewed view restricted ro IPV4-MGMT
+snmp-server community v6only ro ipv6 IPV6-MGMT
 snmp-server engineID local 800000110300010203040506
 `
 	cs := ParseSnmpCommunities(cfg)
-	assert.Len(t, cs, 4)
+	assert.Len(t, cs, 6)
 
 	byName := map[string]SnmpCommunity{}
 	for _, c := range cs {
@@ -125,10 +128,20 @@ snmp-server engineID local 800000110300010203040506
 	}
 	assert.Equal(t, "ro", byName["public"].Access)
 	assert.Equal(t, "", byName["public"].ACL)
+	assert.False(t, byName["public"].IPv6)
 	assert.Equal(t, "ro", byName["ops"].Access)
 	assert.Equal(t, "IPV4-MGMT", byName["ops"].ACL)
+	assert.False(t, byName["ops"].IPv6)
 	assert.Equal(t, "rw", byName["admin"].Access)
 	assert.Equal(t, "ro", byName["readonly"].Access)
+	// view <view-name> clause shouldn't be captured as access mode or ACL
+	assert.Equal(t, "ro", byName["viewed"].Access)
+	assert.Equal(t, "IPV4-MGMT", byName["viewed"].ACL)
+	assert.False(t, byName["viewed"].IPv6)
+	// ipv6 keyword should set IPv6=true and the trailing token is the ACL
+	assert.Equal(t, "ro", byName["v6only"].Access)
+	assert.Equal(t, "IPV6-MGMT", byName["v6only"].ACL)
+	assert.True(t, byName["v6only"].IPv6)
 }
 
 func TestParseTelnetService_Shutdown(t *testing.T) {
@@ -203,6 +216,44 @@ func TestParsePasswordPolicy_Empty(t *testing.T) {
 	assert.Equal(t, "", p.PolicyName)
 	assert.False(t, p.AllowNopasswordRemoteLogin)
 	assert.Equal(t, 0, p.MinimumLength)
+}
+
+func TestParsePasswordPolicy_LockoutOrderIndependent(t *testing.T) {
+	// EOS does not enforce token order on lockout clauses.
+	cfg := `aaa authentication policy lockout duration 300 window 60 failure 5
+`
+	p := ParsePasswordPolicy(cfg)
+	assert.Equal(t, 5, p.LockoutFailure)
+	assert.Equal(t, 60, p.LockoutWindowSeconds)
+	assert.Equal(t, 300, p.LockoutDurationSeconds)
+}
+
+func TestParsePasswordPolicy_PrefersDefaultPolicy(t *testing.T) {
+	// When multiple `password policy <name>` blocks exist we prefer one
+	// named "default" over the first declared.
+	cfg := `password policy strict
+   minimum length 16
+!
+password policy default
+   minimum length 12
+!
+`
+	p := ParsePasswordPolicy(cfg)
+	assert.Equal(t, "default", p.PolicyName)
+	assert.Equal(t, 12, p.MinimumLength)
+}
+
+func TestParsePasswordPolicy_MultipleNonDefaultFallsBackToFirst(t *testing.T) {
+	cfg := `password policy strict
+   minimum length 16
+!
+password policy lax
+   minimum length 8
+!
+`
+	p := ParsePasswordPolicy(cfg)
+	assert.Equal(t, "strict", p.PolicyName)
+	assert.Equal(t, 16, p.MinimumLength)
 }
 
 func TestParseNtpAuth(t *testing.T) {
@@ -323,7 +374,7 @@ end
 	assert.False(t, ok, "Ethernet2 has no port-security; should be excluded")
 }
 
-func TestExtractBlock_StopsAtNextSection(t *testing.T) {
+func TestGetSection_StopsAtNextSection(t *testing.T) {
 	cfg := `management ssh
    no shutdown
    protocol version 2
@@ -332,7 +383,7 @@ management telnet
    shutdown
 !
 `
-	body := extractBlock(cfg, "management ssh")
+	body := GetSection(strings.NewReader(cfg), "management ssh")
 	assert.Contains(t, body, "no shutdown")
 	assert.Contains(t, body, "protocol version 2")
 	assert.NotContains(t, body, "telnet")

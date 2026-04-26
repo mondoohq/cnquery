@@ -9,7 +9,7 @@ arista.eos.aaa.authenticationEnable 13.1.9
 arista.eos.aaa.authenticationLogin 13.1.9
 arista.eos.aaa.authorizationCommands 13.1.9
 arista.eos.aaa.authorizationExec 13.1.9
-arista.eos.aaa.localUsersAllowed 13.1.9
+arista.eos.aaa.defaultLoginPermitsLocalOnly 13.1.9
 arista.eos.aaa.radiusServers 13.1.9
 arista.eos.aaa.tacacsServers 13.1.9
 arista.eos.acl 13.0.1
@@ -48,7 +48,9 @@ arista.eos.bgp.vrfs 13.0.1
 arista.eos.controlPlanePolicer 13.1.9
 arista.eos.controlPlanePolicer.configured 13.1.9
 arista.eos.controlPlanePolicer.ip6AccessGroup 13.1.9
+arista.eos.controlPlanePolicer.ip6AccessGroupAcl 13.1.9
 arista.eos.controlPlanePolicer.ipAccessGroup 13.1.9
+arista.eos.controlPlanePolicer.ipAccessGroupAcl 13.1.9
 arista.eos.controlPlanePolicer.policyApplied 13.1.9
 arista.eos.controlPlanePolicer.policyName 13.1.9
 arista.eos.fqdn 9.0.0
@@ -176,6 +178,8 @@ arista.eos.snmpCommunities 13.1.9
 arista.eos.snmpCommunity 13.1.9
 arista.eos.snmpCommunity.access 13.1.9
 arista.eos.snmpCommunity.acl 13.1.9
+arista.eos.snmpCommunity.aclResource 13.1.9
+arista.eos.snmpCommunity.ipv6 13.1.10
 arista.eos.snmpCommunity.name 13.1.9
 arista.eos.snmpSetting 9.0.0
 arista.eos.snmpSetting.enabled 9.0.0
