@@ -22,6 +22,10 @@ okta {
   networks() []okta.network
 	// Okta custom roles
   customRoles() []okta.customRole
+  // Okta authenticators (admin-defined MFA factors)
+  authenticators() []okta.authenticator
+  // Okta API tokens
+  apiTokens() []okta.api.token
 }
 
 // Okta organization
@@ -120,6 +124,80 @@ private okta.user @defaults("profile['email']" ){
   transitioningToStatus string
   // The roles assigned to the user
   roles() []okta.role
+  // MFA factors enrolled by the user
+  factors() []okta.userFactor
+}
+
+// Okta MFA factor enrolled by a user
+private okta.userFactor @defaults("factorType status") {
+  // Unique identifier of the factor
+  id string
+  // Type of factor (e.g., token:software:totp, push, sms, webauthn, email)
+  factorType string
+  // Provider of the factor (e.g., OKTA, GOOGLE, RSA, SYMANTEC, DUO, FIDO, CUSTOM)
+  provider string
+  // Status of the factor (e.g., NOT_SETUP, ACTIVE, PENDING_ACTIVATION, DISABLED, EXPIRED)
+  status string
+  // Timestamp when the factor was enrolled
+  created time
+  // Timestamp when the factor was last updated
+  lastUpdated time
+  // ID of the user this factor belongs to
+  userId string
+  // The user this factor belongs to
+  user() okta.user
+}
+
+// Okta authenticator (admin-defined MFA factor catalog entry)
+private okta.authenticator @defaults("name key status") {
+  // Unique identifier of the authenticator
+  id string
+  // Stable key for the authenticator (e.g., okta_password, okta_email, phone_number, webauthn)
+  key string
+  // Display name of the authenticator
+  name string
+  // Type of authenticator (e.g., password, security_key, phone, email, app)
+  type string
+  // Status of the authenticator: ACTIVE or INACTIVE
+  status string
+  // Provider type for this authenticator (e.g., OKTA, DUO)
+  providerType string
+  // Provider-specific configuration
+  providerConfiguration dict
+  // Authenticator settings (allowedFor, tokenLifetimeInMinutes, userVerification, etc.)
+  settings dict
+  // Whether the authenticator is allowed for any policy ("any", "recovery", "sso", "none")
+  allowedFor string
+  // Token lifetime in minutes (for email, OTP-style authenticators)
+  tokenLifetimeInMinutes int
+  // User verification setting (e.g., REQUIRED, PREFERRED, DISCOURAGED)
+  userVerification string
+  // Timestamp when the authenticator was created
+  created time
+  // Timestamp when the authenticator was last updated
+  lastUpdated time
+}
+
+// Okta API token (used to authenticate to the Okta REST API)
+private okta.api.token @defaults("name userId") {
+  // Unique identifier of the API token
+  id string
+  // Display name of the token
+  name string
+  // ID of the user the token belongs to
+  userId string
+  // ID of the client the token was created for
+  clientName string
+  // Timestamp when the token was created
+  created time
+  // Timestamp when the token expires
+  expiresAt time
+  // Timestamp when the token was last updated (also reflects the last time the token was used)
+  lastUpdated time
+  // Token window (lifetime) in ISO 8601 duration format
+  tokenWindow string
+  // The user the token belongs to
+  user() okta.user
 }
 
 // Okta role
@@ -204,6 +282,42 @@ private okta.application @defaults("name") {
   status string
   // Visibility settings for the application
   visibility dict
+  // Signing keys/certificates published for this application (for SAML/OIDC signing)
+  signingKeys() []okta.application.key
+}
+
+// Okta application signing key/certificate (JsonWebKey)
+private okta.application.key @defaults("kid status expiresAt") {
+  // ID of the application this key belongs to (composite with kid for uniqueness)
+  applicationId string
+  // Key ID of the application key
+  kid string
+  // Status of the key (e.g., ACTIVE, INACTIVE, EXPIRED)
+  status string
+  // Algorithm used (e.g., RS256)
+  alg string
+  // Key type (e.g., RSA)
+  kty string
+  // Public key use (e.g., sig, enc)
+  use string
+  // Permitted key operations
+  keyOps []string
+  // Timestamp when the key was created
+  created time
+  // Timestamp when the key was last updated
+  lastUpdated time
+  // Timestamp when the key/certificate expires
+  expiresAt time
+  // X.509 certificate chain (PEM/DER without headers, base64-encoded)
+  x5c []string
+  // SHA-1 thumbprint of the X.509 certificate
+  x5t string
+  // SHA-256 thumbprint of the X.509 certificate
+  x5tS256 string
+  // RSA modulus
+  n string
+  // RSA exponent
+  e string
 }
 
 // Okta domain

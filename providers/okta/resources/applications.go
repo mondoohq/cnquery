@@ -115,3 +115,58 @@ func newMqlOktaApplication(runtime *plugin.Runtime, entry *okta.Application) (an
 func (o *mqlOktaApplication) id() (string, error) {
 	return "okta.application/" + o.Id.Data, o.Id.Error
 }
+
+// signingKeys returns the X.509 signing certificates / JWKs published for this app.
+// These are used to sign SAML assertions and OIDC tokens, so checking expiresAt and
+// status is essential for catching expired/about-to-expire signing certs.
+func (o *mqlOktaApplication) signingKeys() ([]any, error) {
+	if o.Id.Error != nil {
+		return nil, o.Id.Error
+	}
+	if o.Id.Data == "" {
+		return nil, nil
+	}
+
+	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
+	client := conn.Client()
+
+	ctx := context.Background()
+	keys, _, err := client.Application.ListApplicationKeys(ctx, o.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	list := []any{}
+	for i := range keys {
+		k := keys[i]
+		if k == nil {
+			continue
+		}
+		r, err := CreateResource(o.MqlRuntime, "okta.application.key", map[string]*llx.RawData{
+			"applicationId": llx.StringData(o.Id.Data),
+			"kid":           llx.StringData(k.Kid),
+			"status":        llx.StringData(k.Status),
+			"alg":           llx.StringData(k.Alg),
+			"kty":           llx.StringData(k.Kty),
+			"use":           llx.StringData(k.Use),
+			"keyOps":        llx.ArrayData(convert.SliceAnyToInterface(k.KeyOps), types.String),
+			"created":       llx.TimeDataPtr(k.Created),
+			"lastUpdated":   llx.TimeDataPtr(k.LastUpdated),
+			"expiresAt":     llx.TimeDataPtr(k.ExpiresAt),
+			"x5c":           llx.ArrayData(convert.SliceAnyToInterface(k.X5c), types.String),
+			"x5t":           llx.StringData(k.X5t),
+			"x5tS256":       llx.StringData(k.X5tS256),
+			"n":             llx.StringData(k.N),
+			"e":             llx.StringData(k.E),
+		})
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, r)
+	}
+	return list, nil
+}
+
+func (o *mqlOktaApplicationKey) id() (string, error) {
+	return "okta.application.key/" + o.ApplicationId.Data + "/" + o.Kid.Data, o.Kid.Error
+}
