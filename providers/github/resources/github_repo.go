@@ -721,7 +721,6 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 		}
 	}
 
-	signedCommits := convert.ToValue(sc.Enabled)
 	res, err := CreateResource(g.MqlRuntime, "github.branchprotection", map[string]*llx.RawData{
 		"id":                             llx.StringData(repoName + "/" + branchName),
 		"requiredStatusChecks":           llx.MapData(rsc, types.Any),
@@ -732,8 +731,8 @@ func (g *mqlGithubBranch) protectionRules() (*mqlGithubBranchprotection, error) 
 		"allowForcePushes":               llx.MapData(afp, types.Any),
 		"allowDeletions":                 llx.MapData(ad, types.Any),
 		"requiredConversationResolution": llx.MapData(rcr, types.Any),
-		"requiredSignatures":             llx.BoolData(signedCommits),
-		"requireSignedCommits":           llx.BoolData(signedCommits),
+		"requiredSignatures":             llx.BoolDataPtr(sc.Enabled),
+		"requireSignedCommits":           llx.BoolData(convert.ToValue(sc.Enabled)),
 		"blockCreations":                 llx.BoolData(branchProtection.GetBlockCreations().GetEnabled()),
 		"lockBranch":                     llx.BoolData(branchProtection.GetLockBranch().GetEnabled()),
 		"allowForkSyncing":               llx.BoolData(branchProtection.GetAllowForkSyncing().GetEnabled()),

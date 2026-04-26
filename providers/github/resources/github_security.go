@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -29,8 +30,17 @@ func isAccessDeniedOrNotFound(err error) bool {
 	if err == nil {
 		return false
 	}
+	var ghErr *github.ErrorResponse
+	if errors.As(err, &ghErr) && ghErr.Response != nil {
+		switch ghErr.Response.StatusCode {
+		case http.StatusNotFound, http.StatusForbidden:
+			return true
+		}
+	}
+	// Fallback for non-typed errors (e.g. body-decoded GraphQL errors that
+	// surface as plain strings like "no available registrations").
 	msg := err.Error()
-	return strings.Contains(msg, "404") || strings.Contains(msg, "403") || strings.Contains(msg, "Not Found") || strings.Contains(msg, "no available registrations")
+	return strings.Contains(msg, "no available registrations")
 }
 
 // doRawJSON performs a raw GET request through the github client against the
@@ -244,12 +254,8 @@ func (g *mqlGithubOrganization) ipAllowList() (*mqlGithubOrganizationIpAllowList
 			"name":         llx.StringData(name),
 			"allowedValue": llx.StringData(e.AllowListValue),
 			"isActive":     llx.BoolData(e.IsActive),
-		}
-		if e.CreatedAt != nil {
-			entryArgs["createdAt"] = llx.TimeData(*e.CreatedAt)
-		}
-		if e.UpdatedAt != nil {
-			entryArgs["updatedAt"] = llx.TimeData(*e.UpdatedAt)
+			"createdAt":    llx.TimeDataPtr(e.CreatedAt),
+			"updatedAt":    llx.TimeDataPtr(e.UpdatedAt),
 		}
 		r, err := CreateResource(g.MqlRuntime, "github.organization.ipAllowList.entry", entryArgs)
 		if err != nil {
@@ -511,6 +517,8 @@ func (g *mqlGithubOrganization) auditLogStreamConfig() (*mqlGithubOrganizationAu
 				"streamType":          llx.StringData(""),
 				"streamId":            llx.IntData(0),
 				"enabledStreamPaused": llx.BoolData(false),
+				"createdAt":           llx.TimeDataPtr(nil),
+				"updatedAt":           llx.TimeDataPtr(nil),
 			})
 			if cerr != nil {
 				return nil, cerr
@@ -526,12 +534,8 @@ func (g *mqlGithubOrganization) auditLogStreamConfig() (*mqlGithubOrganizationAu
 		"streamType":          llx.StringData(stream.StreamType),
 		"streamId":            llx.IntData(stream.ID),
 		"enabledStreamPaused": llx.BoolData(stream.StreamPaused),
-	}
-	if stream.CreatedAt != nil {
-		args["createdAt"] = llx.TimeData(*stream.CreatedAt)
-	}
-	if stream.UpdatedAt != nil {
-		args["updatedAt"] = llx.TimeData(*stream.UpdatedAt)
+		"createdAt":           llx.TimeDataPtr(stream.CreatedAt),
+		"updatedAt":           llx.TimeDataPtr(stream.UpdatedAt),
 	}
 
 	res, err := CreateResource(g.MqlRuntime, "github.organization.auditLogStreamConfig", args)
@@ -787,17 +791,12 @@ type codeownersRule struct {
 func parseCodeowners(content string) []codeownersRule {
 	rules := []codeownersRule{}
 	for i, line := range strings.Split(content, "\n") {
-		// strip trailing CR
 		line = strings.TrimRight(line, "\r")
-		// strip inline comments (# is comment marker per GitHub docs)
-		if idx := strings.Index(line, "#"); idx >= 0 {
-			line = line[:idx]
-		}
-		line = strings.TrimSpace(line)
-		if line == "" {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 			continue
 		}
-		fields := strings.Fields(line)
+		fields := strings.Fields(trimmed)
 		if len(fields) < 1 {
 			continue
 		}
