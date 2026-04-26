@@ -6,6 +6,7 @@ package resources
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -191,25 +192,39 @@ func getDiskByUrl(diskUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComput
 	return res.(*mqlGcpProjectComputeServiceDisk), nil
 }
 
+// getNetworkByUrl resolves a typed network resource from either of the two
+// reference formats GCP APIs hand back:
+//
+//   - Self-link URL:  https://www.googleapis.com/compute/v1/projects/{project}/global/networks/{name}
+//     (also https://compute.googleapis.com/compute/v1/...)
+//     Used by Compute, Memorystore PSC connections, etc.
+//
+//   - Bare resource name:  projects/{project}/global/networks/{name}
+//     Used by Datastream's VpcPeeringConfig.Vpc, Memcache's AuthorizedNetwork, etc.
+//
+// After the prefix strip, both shapes collapse to the same path layout and
+// can be split into 5 segments: ["projects", project, "global", "networks", name].
+// Anything that doesn't fit that shape (empty, malformed) is rejected.
 func getNetworkByUrl(networkUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceNetwork, error) {
 	// A reference to a network is not mandatory for this resource
 	if networkUrl == "" {
 		return nil, nil
 	}
 
-	// Format is https://www.googleapis.com/compute/v1/projects/project1/global/networks/net-1
-	// or https://compute.googleapis.com/compute/v1/projects/project1/global/networks/net-1
 	params := strings.TrimPrefix(networkUrl, "https://www.googleapis.com/compute/v1/")
 	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
 	parts := strings.Split(params, "/")
-	resId := resourceId{Project: parts[1], Region: parts[2], Name: parts[4]}
+	if len(parts) < 5 || parts[0] != "projects" || parts[3] != "networks" {
+		return nil, fmt.Errorf("unrecognized network reference: %q", networkUrl)
+	}
+	project, name := parts[1], parts[4]
 
 	// Use NewResource so initGcpProjectComputeServiceNetwork runs and
 	// populates every field (scalars like autoCreateSubnetworks would
 	// otherwise surface as "no type information" when accessed).
 	res, err := NewResource(runtime, "gcp.project.computeService.network", map[string]*llx.RawData{
-		"name":      llx.StringData(resId.Name),
-		"projectId": llx.StringData(resId.Project),
+		"name":      llx.StringData(name),
+		"projectId": llx.StringData(project),
 	})
 	if err != nil {
 		return nil, err
