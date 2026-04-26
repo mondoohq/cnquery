@@ -23,10 +23,6 @@ func (o *mqlOkta) authenticators() ([]any, error) {
 		return nil, err
 	}
 
-	if len(authenticators) == 0 {
-		return nil, nil
-	}
-
 	list := []any{}
 	for i := range authenticators {
 		r, err := newMqlOktaAuthenticator(o.MqlRuntime, authenticators[i])
