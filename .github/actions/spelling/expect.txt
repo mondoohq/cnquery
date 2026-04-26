@@ -67,7 +67,7 @@ cavium
 cbf
 ccf
 cdn
-Centrify hsts
+Centrify
 ceph
 certificatechains
 certificatesmanagement
@@ -211,6 +211,7 @@ hostkeyalgorithms
 hostkeys
 hotlink
 hpi
+hsts
 hvm
 Iaa
 iana
