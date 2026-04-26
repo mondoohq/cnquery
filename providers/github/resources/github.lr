@@ -276,6 +276,8 @@ private github.organization.oauthApp @defaults("login credentialType") {
   authorizedCredentialExpiresAt time
   // Fingerprint (SSH key credentials only)
   fingerprint string
+  // The user that owns the underlying credential
+  user() github.user
   // The organization that authorized this credential
   organization() github.organization
 }
@@ -290,6 +292,8 @@ private github.organization.personalAccessToken @defaults("tokenName tokenId") {
   tokenName string
   // Owning user login
   ownerLogin string
+  // The user that owns the token
+  owner() github.user
   // Repository selection (none, all, subset)
   repositorySelection string
   // Permissions granted, categorized (organization, repository, other)
@@ -654,8 +658,8 @@ private github.deployKey @defaults("id title readOnly") {
   createdAt time
   // Time the key was last used (null if never used)
   lastUsed time
-  // Login of the user who added the key, if known
-  addedBy string
+  // The user who added the key, if known
+  addedBy() github.user
   // Approximate age of the key in days since createdAt (-1 if createdAt is unknown)
   ageInDays int
   // The repository this key is configured on

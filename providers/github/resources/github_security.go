@@ -331,7 +331,8 @@ func (g *mqlGithubOrganization) customRoles() ([]any, error) {
 // ---------- OAuth apps / SAML SSO credential authorizations ----------
 
 type mqlGithubOrganizationOauthAppInternal struct {
-	cacheOrgLogin string
+	cacheOrgLogin  string
+	cacheUserLogin string
 }
 
 func (g *mqlGithubOrganizationOauthApp) id() (string, error) {
@@ -393,6 +394,9 @@ func (g *mqlGithubOrganization) oauthApps() ([]any, error) {
 		}
 		oauthApp := r.(*mqlGithubOrganizationOauthApp)
 		oauthApp.cacheOrgLogin = orgLogin
+		if c.Login != nil {
+			oauthApp.cacheUserLogin = *c.Login
+		}
 		res = append(res, oauthApp)
 	}
 	return res, nil
@@ -412,6 +416,20 @@ func (g *mqlGithubOrganizationOauthApp) organization() (*mqlGithubOrganization, 
 	return o.(*mqlGithubOrganization), nil
 }
 
+func (g *mqlGithubOrganizationOauthApp) user() (*mqlGithubUser, error) {
+	if g.cacheUserLogin == "" {
+		g.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	u, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		"login": llx.StringData(g.cacheUserLogin),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return u.(*mqlGithubUser), nil
+}
+
 // ---------- Personal access tokens (fine-grained, org-level) ----------
 
 func (g *mqlGithubOrganizationPersonalAccessToken) id() (string, error) {
@@ -419,6 +437,23 @@ func (g *mqlGithubOrganizationPersonalAccessToken) id() (string, error) {
 		return "", g.Id.Error
 	}
 	return "github.organization.personalAccessToken/" + strconv.FormatInt(g.Id.Data, 10), nil
+}
+
+func (g *mqlGithubOrganizationPersonalAccessToken) owner() (*mqlGithubUser, error) {
+	if g.OwnerLogin.Error != nil {
+		return nil, g.OwnerLogin.Error
+	}
+	if g.OwnerLogin.Data == "" {
+		g.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	u, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		"login": llx.StringData(g.OwnerLogin.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return u.(*mqlGithubUser), nil
 }
 
 func (g *mqlGithubOrganization) personalAccessTokens() ([]any, error) {
@@ -612,8 +647,9 @@ func (g *mqlGithubInstallation) repositories() ([]any, error) {
 // ---------- Deploy keys (repo + user) ----------
 
 type mqlGithubDeployKeyInternal struct {
-	cacheRepoOwner string
-	cacheRepoName  string
+	cacheRepoOwner    string
+	cacheRepoName     string
+	cacheAddedByLogin string
 }
 
 func (g *mqlGithubDeployKey) id() (string, error) {
@@ -645,7 +681,6 @@ func newMqlDeployKey(runtime *plugin.Runtime, k *github.Key, repoOwner, repoName
 		"verified":  llx.BoolData(k.GetVerified()),
 		"createdAt": llx.TimeDataPtr(githubTimestamp(k.CreatedAt)),
 		"lastUsed":  llx.TimeDataPtr(githubTimestamp(k.LastUsed)),
-		"addedBy":   llx.StringDataPtr(k.AddedBy),
 		"ageInDays": llx.IntData(keyAgeInDays(k.CreatedAt)),
 	}
 	r, err := CreateResource(runtime, "github.deployKey", args)
@@ -655,10 +690,27 @@ func newMqlDeployKey(runtime *plugin.Runtime, k *github.Key, repoOwner, repoName
 	dk := r.(*mqlGithubDeployKey)
 	dk.cacheRepoOwner = repoOwner
 	dk.cacheRepoName = repoName
+	if k.AddedBy != nil {
+		dk.cacheAddedByLogin = *k.AddedBy
+	}
 	if repoOwner == "" || repoName == "" {
 		dk.Repository.State = plugin.StateIsSet | plugin.StateIsNull
 	}
 	return dk, nil
+}
+
+func (g *mqlGithubDeployKey) addedBy() (*mqlGithubUser, error) {
+	if g.cacheAddedByLogin == "" {
+		g.AddedBy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	u, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		"login": llx.StringData(g.cacheAddedByLogin),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return u.(*mqlGithubUser), nil
 }
 
 func (g *mqlGithubDeployKey) repository() (*mqlGithubRepository, error) {

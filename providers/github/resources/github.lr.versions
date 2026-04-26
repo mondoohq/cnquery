@@ -361,6 +361,7 @@ github.organization.oauthApp.login 13.0.8
 github.organization.oauthApp.organization 13.0.8
 github.organization.oauthApp.scopes 13.0.8
 github.organization.oauthApp.tokenLastEight 13.0.8
+github.organization.oauthApp.user 13.0.8
 github.organization.oauthApps 13.0.8
 github.organization.ownedPrivateRepos 9.0.0
 github.organization.owners 9.0.0
@@ -371,6 +372,7 @@ github.organization.personalAccessToken.expired 13.0.8
 github.organization.personalAccessToken.expiresAt 13.0.8
 github.organization.personalAccessToken.id 13.0.8
 github.organization.personalAccessToken.lastUsedAt 13.0.8
+github.organization.personalAccessToken.owner 13.0.8
 github.organization.personalAccessToken.ownerLogin 13.0.8
 github.organization.personalAccessToken.permissions 13.0.8
 github.organization.personalAccessToken.repositorySelection 13.0.8

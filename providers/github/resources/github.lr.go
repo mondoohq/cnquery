@@ -727,6 +727,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.organization.oauthApp.fingerprint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationOauthApp).GetFingerprint()).ToDataRes(types.String)
 	},
+	"github.organization.oauthApp.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationOauthApp).GetUser()).ToDataRes(types.Resource("github.user"))
+	},
 	"github.organization.oauthApp.organization": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationOauthApp).GetOrganization()).ToDataRes(types.Resource("github.organization"))
 	},
@@ -741,6 +744,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.organization.personalAccessToken.ownerLogin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationPersonalAccessToken).GetOwnerLogin()).ToDataRes(types.String)
+	},
+	"github.organization.personalAccessToken.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganizationPersonalAccessToken).GetOwner()).ToDataRes(types.Resource("github.user"))
 	},
 	"github.organization.personalAccessToken.repositorySelection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationPersonalAccessToken).GetRepositorySelection()).ToDataRes(types.String)
@@ -1223,7 +1229,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGithubDeployKey).GetLastUsed()).ToDataRes(types.Time)
 	},
 	"github.deployKey.addedBy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubDeployKey).GetAddedBy()).ToDataRes(types.String)
+		return (r.(*mqlGithubDeployKey).GetAddedBy()).ToDataRes(types.Resource("github.user"))
 	},
 	"github.deployKey.ageInDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubDeployKey).GetAgeInDays()).ToDataRes(types.Int)
@@ -2697,6 +2703,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubOrganizationOauthApp).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"github.organization.oauthApp.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationOauthApp).User, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
 	"github.organization.oauthApp.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganizationOauthApp).Organization, ok = plugin.RawToTValue[*mqlGithubOrganization](v.Value, v.Error)
 		return
@@ -2719,6 +2729,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.organization.personalAccessToken.ownerLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganizationPersonalAccessToken).OwnerLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.organization.personalAccessToken.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganizationPersonalAccessToken).Owner, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
 		return
 	},
 	"github.organization.personalAccessToken.repositorySelection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3406,7 +3420,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"github.deployKey.addedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGithubDeployKey).AddedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGithubDeployKey).AddedBy, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
 		return
 	},
 	"github.deployKey.ageInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5991,6 +6005,7 @@ type mqlGithubOrganizationOauthApp struct {
 	AuthorizedCredentialNote      plugin.TValue[string]
 	AuthorizedCredentialExpiresAt plugin.TValue[*time.Time]
 	Fingerprint                   plugin.TValue[string]
+	User                          plugin.TValue[*mqlGithubUser]
 	Organization                  plugin.TValue[*mqlGithubOrganization]
 }
 
@@ -6075,6 +6090,22 @@ func (c *mqlGithubOrganizationOauthApp) GetFingerprint() *plugin.TValue[string] 
 	return &c.Fingerprint
 }
 
+func (c *mqlGithubOrganizationOauthApp) GetUser() *plugin.TValue[*mqlGithubUser] {
+	return plugin.GetOrCompute[*mqlGithubUser](&c.User, func() (*mqlGithubUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization.oauthApp", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
 func (c *mqlGithubOrganizationOauthApp) GetOrganization() *plugin.TValue[*mqlGithubOrganization] {
 	return plugin.GetOrCompute[*mqlGithubOrganization](&c.Organization, func() (*mqlGithubOrganization, error) {
 		if c.MqlRuntime.HasRecording {
@@ -6100,6 +6131,7 @@ type mqlGithubOrganizationPersonalAccessToken struct {
 	TokenId             plugin.TValue[int64]
 	TokenName           plugin.TValue[string]
 	OwnerLogin          plugin.TValue[string]
+	Owner               plugin.TValue[*mqlGithubUser]
 	RepositorySelection plugin.TValue[string]
 	Permissions         plugin.TValue[any]
 	AccessGrantedAt     plugin.TValue[*time.Time]
@@ -6159,6 +6191,22 @@ func (c *mqlGithubOrganizationPersonalAccessToken) GetTokenName() *plugin.TValue
 
 func (c *mqlGithubOrganizationPersonalAccessToken) GetOwnerLogin() *plugin.TValue[string] {
 	return &c.OwnerLogin
+}
+
+func (c *mqlGithubOrganizationPersonalAccessToken) GetOwner() *plugin.TValue[*mqlGithubUser] {
+	return plugin.GetOrCompute[*mqlGithubUser](&c.Owner, func() (*mqlGithubUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization.personalAccessToken", c.__id, "owner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubUser), nil
+			}
+		}
+
+		return c.owner()
+	})
 }
 
 func (c *mqlGithubOrganizationPersonalAccessToken) GetRepositorySelection() *plugin.TValue[string] {
@@ -7900,7 +7948,7 @@ type mqlGithubDeployKey struct {
 	Verified   plugin.TValue[bool]
 	CreatedAt  plugin.TValue[*time.Time]
 	LastUsed   plugin.TValue[*time.Time]
-	AddedBy    plugin.TValue[string]
+	AddedBy    plugin.TValue[*mqlGithubUser]
 	AgeInDays  plugin.TValue[int64]
 	Repository plugin.TValue[*mqlGithubRepository]
 }
@@ -7970,8 +8018,20 @@ func (c *mqlGithubDeployKey) GetLastUsed() *plugin.TValue[*time.Time] {
 	return &c.LastUsed
 }
 
-func (c *mqlGithubDeployKey) GetAddedBy() *plugin.TValue[string] {
-	return &c.AddedBy
+func (c *mqlGithubDeployKey) GetAddedBy() *plugin.TValue[*mqlGithubUser] {
+	return plugin.GetOrCompute[*mqlGithubUser](&c.AddedBy, func() (*mqlGithubUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.deployKey", c.__id, "addedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubUser), nil
+			}
+		}
+
+		return c.addedBy()
+	})
 }
 
 func (c *mqlGithubDeployKey) GetAgeInDays() *plugin.TValue[int64] {
