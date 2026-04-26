@@ -131,38 +131,56 @@ func (o *mqlOktaApplication) signingKeys() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	keys, _, err := client.Application.ListApplicationKeys(ctx, o.Id.Data)
+	keys, resp, err := client.Application.ListApplicationKeys(ctx, o.Id.Data)
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	for i := range keys {
-		k := keys[i]
-		if k == nil {
-			continue
+	appendKeys := func(entries []*okta.JsonWebKey) error {
+		for i := range entries {
+			k := entries[i]
+			if k == nil {
+				continue
+			}
+			r, err := CreateResource(o.MqlRuntime, "okta.application.key", map[string]*llx.RawData{
+				"applicationId": llx.StringData(o.Id.Data),
+				"kid":           llx.StringData(k.Kid),
+				"status":        llx.StringData(k.Status),
+				"alg":           llx.StringData(k.Alg),
+				"kty":           llx.StringData(k.Kty),
+				"use":           llx.StringData(k.Use),
+				"keyOps":        llx.ArrayData(convert.SliceAnyToInterface(k.KeyOps), types.String),
+				"created":       llx.TimeDataPtr(k.Created),
+				"lastUpdated":   llx.TimeDataPtr(k.LastUpdated),
+				"expiresAt":     llx.TimeDataPtr(k.ExpiresAt),
+				"x5c":           llx.ArrayData(convert.SliceAnyToInterface(k.X5c), types.String),
+				"x5t":           llx.StringData(k.X5t),
+				"x5tS256":       llx.StringData(k.X5tS256),
+				"n":             llx.StringData(k.N),
+				"e":             llx.StringData(k.E),
+			})
+			if err != nil {
+				return err
+			}
+			list = append(list, r)
 		}
-		r, err := CreateResource(o.MqlRuntime, "okta.application.key", map[string]*llx.RawData{
-			"applicationId": llx.StringData(o.Id.Data),
-			"kid":           llx.StringData(k.Kid),
-			"status":        llx.StringData(k.Status),
-			"alg":           llx.StringData(k.Alg),
-			"kty":           llx.StringData(k.Kty),
-			"use":           llx.StringData(k.Use),
-			"keyOps":        llx.ArrayData(convert.SliceAnyToInterface(k.KeyOps), types.String),
-			"created":       llx.TimeDataPtr(k.Created),
-			"lastUpdated":   llx.TimeDataPtr(k.LastUpdated),
-			"expiresAt":     llx.TimeDataPtr(k.ExpiresAt),
-			"x5c":           llx.ArrayData(convert.SliceAnyToInterface(k.X5c), types.String),
-			"x5t":           llx.StringData(k.X5t),
-			"x5tS256":       llx.StringData(k.X5tS256),
-			"n":             llx.StringData(k.N),
-			"e":             llx.StringData(k.E),
-		})
+		return nil
+	}
+
+	if err := appendKeys(keys); err != nil {
+		return nil, err
+	}
+
+	for resp != nil && resp.HasNextPage() {
+		var page []*okta.JsonWebKey
+		resp, err = resp.Next(ctx, &page)
 		if err != nil {
 			return nil, err
 		}
-		list = append(list, r)
+		if err := appendKeys(page); err != nil {
+			return nil, err
+		}
 	}
 	return list, nil
 }

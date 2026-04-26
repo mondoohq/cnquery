@@ -18,18 +18,36 @@ func (o *mqlOkta) authenticators() ([]any, error) {
 	client := conn.Client()
 
 	ctx := context.Background()
-	authenticators, _, err := client.Authenticator.ListAuthenticators(ctx)
+	authenticators, resp, err := client.Authenticator.ListAuthenticators(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	for i := range authenticators {
-		r, err := newMqlOktaAuthenticator(o.MqlRuntime, authenticators[i])
+	appendEntries := func(entries []*okta.Authenticator) error {
+		for i := range entries {
+			r, err := newMqlOktaAuthenticator(o.MqlRuntime, entries[i])
+			if err != nil {
+				return err
+			}
+			list = append(list, r)
+		}
+		return nil
+	}
+
+	if err := appendEntries(authenticators); err != nil {
+		return nil, err
+	}
+
+	for resp != nil && resp.HasNextPage() {
+		var page []*okta.Authenticator
+		resp, err = resp.Next(ctx, &page)
 		if err != nil {
 			return nil, err
 		}
-		list = append(list, r)
+		if err := appendEntries(page); err != nil {
+			return nil, err
+		}
 	}
 	return list, nil
 }
