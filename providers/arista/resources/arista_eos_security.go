@@ -225,7 +225,7 @@ func (a *mqlAristaEos) passwordPolicy() (*mqlAristaEosPasswordPolicy, error) {
 }
 
 // =====================================================================
-// arista.eos.ntpAuthKey (list) + arista.eos.ntpAuthenticationEnabled
+// arista.eos.ntp.authKeys (list) + arista.eos.ntp.authenticationEnabled
 // =====================================================================
 
 func (a *mqlAristaEosNtpAuthKey) id() (string, error) {
@@ -235,7 +235,7 @@ func (a *mqlAristaEosNtpAuthKey) id() (string, error) {
 	return "arista.eos.ntpAuthKey/" + strconv.FormatInt(a.Id.Data, 10), nil
 }
 
-func (a *mqlAristaEos) ntpAuthKeys() ([]any, error) {
+func (a *mqlAristaEosNtp) authKeys() ([]any, error) {
 	rc, err := fetchRunningConfig(a.MqlRuntime)
 	if err != nil {
 		return nil, err
@@ -256,7 +256,7 @@ func (a *mqlAristaEos) ntpAuthKeys() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAristaEos) ntpAuthenticationEnabled() (bool, error) {
+func (a *mqlAristaEosNtp) authenticationEnabled() (bool, error) {
 	rc, err := fetchRunningConfig(a.MqlRuntime)
 	if err != nil {
 		return false, err

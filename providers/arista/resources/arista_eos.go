@@ -181,7 +181,7 @@ func (a *mqlAristaEos) roles() ([]any, error) {
 	return lumRoles, nil
 }
 
-func (a *mqlAristaEos) ntp() (*mqlAristaEosNtpSetting, error) {
+func (a *mqlAristaEos) ntp() (*mqlAristaEosNtp, error) {
 	eos := aristaClient(a.MqlRuntime)
 
 	ntp, err := eos.NtpStatus()
@@ -189,18 +189,18 @@ func (a *mqlAristaEos) ntp() (*mqlAristaEosNtpSetting, error) {
 		return nil, err
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "arista.eos.ntpSetting", map[string]*llx.RawData{
+	res, err := CreateResource(a.MqlRuntime, "arista.eos.ntp", map[string]*llx.RawData{
 		"status": llx.StringData(ntp.Status),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return res.(*mqlAristaEosNtpSetting), nil
+	return res.(*mqlAristaEosNtp), nil
 }
 
-func (v *mqlAristaEosNtpSetting) id() (string, error) {
-	return "arista.eos.ntpSetting", nil
+func (v *mqlAristaEosNtp) id() (string, error) {
+	return "arista.eos.ntp", nil
 }
 
 func (a *mqlAristaEos) snmp() (*mqlAristaEosSnmpSetting, error) {

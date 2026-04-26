@@ -122,14 +122,13 @@ arista.eos.mlag.peerAddress 13.0.1
 arista.eos.mlag.peerLink 13.0.1
 arista.eos.mlag.shutdown 13.0.1
 arista.eos.ntp 9.0.0
+arista.eos.ntp.authKeys 13.1.9
+arista.eos.ntp.authenticationEnabled 13.1.9
+arista.eos.ntp.status 13.1.9
 arista.eos.ntpAuthKey 13.1.9
 arista.eos.ntpAuthKey.hashAlgo 13.1.9
 arista.eos.ntpAuthKey.id 13.1.9
 arista.eos.ntpAuthKey.trusted 13.1.9
-arista.eos.ntpAuthKeys 13.1.9
-arista.eos.ntpAuthenticationEnabled 13.1.9
-arista.eos.ntpSetting 9.0.0
-arista.eos.ntpSetting.status 9.0.0
 arista.eos.passwordPolicy 13.1.9
 arista.eos.passwordPolicy.allowNopasswordRemoteLogin 13.1.9
 arista.eos.passwordPolicy.lockoutDurationSeconds 13.1.9
