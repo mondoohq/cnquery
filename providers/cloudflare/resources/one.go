@@ -30,7 +30,7 @@ type mqlCloudflareOneInternal struct {
 // SAML come through as the generic `saml` type, which is already covered.
 func isSAMLIdpType(t string) bool {
 	switch t {
-	case "saml", "centrify", "onelogin", "ping":
+	case "saml", "adfs", "centrify", "onelogin", "ping", "pingone":
 		return true
 	}
 	return false

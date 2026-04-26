@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-func (c *mqlCloudflareAccountApiToken) id() (string, error) {
+func (c *mqlCloudflareApiToken) id() (string, error) {
 	if c.Id.Error != nil {
 		return "", c.Id.Error
 	}
@@ -21,11 +21,11 @@ func (c *mqlCloudflareAccountApiToken) id() (string, error) {
 }
 
 // apiTokens lists API tokens visible to the calling user. Cloudflare's API
-// tokens are *user* scoped (`/user/tokens`), not account scoped, so we surface
-// them on the account resource for ergonomic discovery — the same set is
-// returned regardless of which account the resource belongs to. Account-owned
-// tokens (Enterprise) are not yet exposed by cloudflare-go.
-func (c *mqlCloudflareAccount) apiTokens() ([]any, error) {
+// tokens are *user* scoped (`/user/tokens`), not account scoped, so they are
+// surfaced on the root cloudflare resource — the same set is returned
+// regardless of which accounts the user belongs to. Account-owned tokens
+// (Enterprise) are not yet exposed by cloudflare-go.
+func (c *mqlCloudflare) apiTokens() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	tokens, err := conn.Cf.APITokens(context.TODO())
@@ -68,8 +68,8 @@ func (c *mqlCloudflareAccount) apiTokens() ([]any, error) {
 			})
 		}
 
-		res, err := CreateResource(c.MqlRuntime, "cloudflare.account.apiToken", map[string]*llx.RawData{
-			"__id":       llx.StringData("cloudflare.account.apiToken@" + t.ID),
+		res, err := CreateResource(c.MqlRuntime, "cloudflare.apiToken", map[string]*llx.RawData{
+			"__id":       llx.StringData("cloudflare.apiToken@" + t.ID),
 			"id":         llx.StringData(t.ID),
 			"name":       llx.StringData(t.Name),
 			"status":     llx.StringData(t.Status),

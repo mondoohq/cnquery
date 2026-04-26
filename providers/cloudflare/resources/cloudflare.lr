@@ -11,6 +11,9 @@ cloudflare {
 
 	// List available accounts
 	accounts() []cloudflare.account
+
+	// API tokens visible to the calling user (user-scoped tokens)
+	apiTokens() []cloudflare.apiToken
 }
 
 // Cloudflare DNS zone
@@ -288,13 +291,10 @@ private cloudflare.account @defaults("name") {
 
 	// Account roles
 	roles() []cloudflare.account.role
-
-	// API tokens visible to the calling user (user-scoped tokens; lists tokens for the authenticated user, surfaced on accounts they belong to)
-	apiTokens() []cloudflare.account.apiToken
 }
 
 // Cloudflare API token (user-scoped)
-private cloudflare.account.apiToken @defaults("name status expiresOn") {
+private cloudflare.apiToken @defaults("name status expiresOn") {
 	// Token identifier
 	id string
 	// Token name
@@ -410,16 +410,10 @@ private cloudflare.r2.bucket {
   location string
   // Time the bucket was created
   createdOn time
-  // Public-access configuration via the managed r2.dev subdomain
-  publicAccess() cloudflare.r2.bucket.publicAccess
-}
-
-// R2 bucket public-access configuration (managed r2.dev subdomain)
-private cloudflare.r2.bucket.publicAccess {
-	// Whether public access via the managed r2.dev subdomain is enabled
-	enabled bool
-	// Managed r2.dev domain assigned to the bucket (empty when public access is disabled)
-	domain string
+  // Whether public access via the managed r2.dev subdomain is enabled
+  publicAccessEnabled() bool
+  // Managed r2.dev domain assigned to the bucket (empty when public access is disabled)
+  publicAccessDomain() string
 }
 
 // Cloudflare workers

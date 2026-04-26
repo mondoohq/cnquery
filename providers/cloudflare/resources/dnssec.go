@@ -28,7 +28,7 @@ func (c *mqlCloudflareZone) dnssec() (*mqlCloudflareZoneDnssec, error) {
 		return nil, err
 	}
 
-	res, err := CreateResource(c.MqlRuntime, "cloudflare.zone.dnssec", map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"__id":            llx.StringData("cloudflare.zone.dnssec@" + c.Id.Data),
 		"status":          llx.StringData(ds.Status),
 		"flags":           llx.IntData(int64(ds.Flags)),
@@ -41,10 +41,28 @@ func (c *mqlCloudflareZone) dnssec() (*mqlCloudflareZoneDnssec, error) {
 		"keyTag":          llx.IntData(int64(ds.KeyTag)),
 		"publicKey":       llx.StringData(ds.PublicKey),
 		"modifiedOn":      llx.TimeData(ds.ModifiedOn),
-	})
+	}
+
+	res, err := CreateResource(c.MqlRuntime, "cloudflare.zone.dnssec", args)
 	if err != nil {
 		return nil, err
 	}
 
-	return res.(*mqlCloudflareZoneDnssec), nil
+	mqlDnssec := res.(*mqlCloudflareZoneDnssec)
+
+	// When DNSSEC is disabled the algorithm/key/digest/DS fields are not
+	// meaningful — surface them as null instead of zero/empty values.
+	if ds.Status == "disabled" {
+		nullState := plugin.StateIsSet | plugin.StateIsNull
+		mqlDnssec.Algorithm = plugin.TValue[string]{State: nullState}
+		mqlDnssec.KeyType = plugin.TValue[string]{State: nullState}
+		mqlDnssec.DigestType = plugin.TValue[string]{State: nullState}
+		mqlDnssec.DigestAlgorithm = plugin.TValue[string]{State: nullState}
+		mqlDnssec.Digest = plugin.TValue[string]{State: nullState}
+		mqlDnssec.Ds = plugin.TValue[string]{State: nullState}
+		mqlDnssec.KeyTag = plugin.TValue[int64]{State: nullState}
+		mqlDnssec.PublicKey = plugin.TValue[string]{State: nullState}
+	}
+
+	return mqlDnssec, nil
 }

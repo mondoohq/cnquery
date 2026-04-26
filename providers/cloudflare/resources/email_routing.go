@@ -21,7 +21,9 @@ type mqlCloudflareZoneEmailRoutingInternal struct {
 	dnsLock    sync.Mutex
 	dnsFetched bool
 	dnsCache   []cloudflare.DNSRecord
-	dnsErr     error
+
+	zoneNameLock     sync.Mutex
+	zoneNameResolved bool
 }
 
 func (c *mqlCloudflareZone) emailRouting() (*mqlCloudflareZoneEmailRouting, error) {
@@ -116,7 +118,9 @@ func (c *mqlCloudflareZoneEmailRouting) spfConfigured() (bool, error) {
 
 // dmarcConfigured queries the zone's existing DNS records (not the suggested
 // ones — Cloudflare doesn't auto-generate DMARC for email routing) and looks
-// for a `_dmarc.<zone>` TXT record starting with `v=DMARC1`.
+// for a `_dmarc.<zone>` TXT record starting with `v=DMARC1`. It filters
+// server-side by record name so we get only the candidate record(s) regardless
+// of pagination.
 func (c *mqlCloudflareZoneEmailRouting) dmarcConfigured() (bool, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
@@ -124,16 +128,21 @@ func (c *mqlCloudflareZoneEmailRouting) dmarcConfigured() (bool, error) {
 		return false, nil
 	}
 
-	records, _, err := conn.Cf.ListDNSRecords(context.TODO(),
-		&cloudflare.ResourceContainer{Identifier: c.zoneID},
-		cloudflare.ListDNSRecordsParams{Type: "TXT"})
+	zoneName, err := c.resolveZoneName()
 	if err != nil {
 		return false, err
 	}
 
 	dmarcName := "_dmarc"
-	if c.zoneName != "" {
-		dmarcName = "_dmarc." + c.zoneName
+	if zoneName != "" {
+		dmarcName = "_dmarc." + zoneName
+	}
+
+	records, _, err := conn.Cf.ListDNSRecords(context.TODO(),
+		&cloudflare.ResourceContainer{Identifier: c.zoneID},
+		cloudflare.ListDNSRecordsParams{Type: "TXT", Name: dmarcName})
+	if err != nil {
+		return false, err
 	}
 
 	for _, r := range records {
@@ -147,14 +156,50 @@ func (c *mqlCloudflareZoneEmailRouting) dmarcConfigured() (bool, error) {
 	return false, nil
 }
 
+// resolveZoneName returns the zone name, fetching it from the API if it wasn't
+// populated when the email routing resource was created (e.g., when the zone
+// resource was reached via lazy init). The result is cached for the lifetime
+// of the resource.
+func (c *mqlCloudflareZoneEmailRouting) resolveZoneName() (string, error) {
+	if c.zoneName != "" || c.zoneNameResolved {
+		return c.zoneName, nil
+	}
+	c.zoneNameLock.Lock()
+	defer c.zoneNameLock.Unlock()
+	if c.zoneName != "" || c.zoneNameResolved {
+		return c.zoneName, nil
+	}
+
+	if c.zoneID == "" {
+		c.zoneNameResolved = true
+		return "", nil
+	}
+
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+	zone, err := conn.Cf.ZoneDetails(context.TODO(), c.zoneID)
+	if err != nil {
+		var notFound *cloudflare.NotFoundError
+		var authN *cloudflare.AuthenticationError
+		var authZ *cloudflare.AuthorizationError
+		if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
+			c.zoneNameResolved = true
+			return "", nil
+		}
+		return "", err
+	}
+	c.zoneName = zone.Name
+	c.zoneNameResolved = true
+	return c.zoneName, nil
+}
+
 func (c *mqlCloudflareZoneEmailRouting) fetchSuggestedDNSRecords() ([]cloudflare.DNSRecord, error) {
 	if c.dnsFetched {
-		return c.dnsCache, c.dnsErr
+		return c.dnsCache, nil
 	}
 	c.dnsLock.Lock()
 	defer c.dnsLock.Unlock()
 	if c.dnsFetched {
-		return c.dnsCache, c.dnsErr
+		return c.dnsCache, nil
 	}
 
 	if c.zoneID == "" {
@@ -166,8 +211,12 @@ func (c *mqlCloudflareZoneEmailRouting) fetchSuggestedDNSRecords() ([]cloudflare
 	records, err := conn.Cf.GetEmailRoutingDNSSettings(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.zoneID,
 	})
+	if err != nil {
+		// Don't cache transient errors — leave dnsFetched=false so the next
+		// call retries instead of returning the stale failure forever.
+		return nil, err
+	}
 	c.dnsCache = records
-	c.dnsErr = err
 	c.dnsFetched = true
-	return c.dnsCache, c.dnsErr
+	return c.dnsCache, nil
 }

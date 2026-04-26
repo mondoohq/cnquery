@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
@@ -39,6 +40,12 @@ func (c *mqlCloudflareZone) r2() (*mqlCloudflareR2, error) {
 
 type mqlCloudflareR2BucketInternal struct {
 	accountID string
+
+	publicAccessLock        sync.Mutex
+	publicAccessFetched     bool
+	publicAccessAvailable   bool
+	cachePublicAccessOn     bool
+	cachePublicAccessDomain string
 }
 
 func (c *mqlCloudflareR2Bucket) id() (string, error) {
@@ -115,28 +122,39 @@ func (c *mqlCloudflareR2) buckets() ([]any, error) {
 	return result, nil
 }
 
-// publicAccess returns the bucket's managed-domain (r2.dev) public-access
+// fetchPublicAccess fetches the bucket's managed-domain (r2.dev) public-access
 // configuration. The cloudflare-go SDK does not yet wrap this endpoint, so we
-// hit `/accounts/{id}/r2/buckets/{name}/domains/managed` via api.Raw.
-func (c *mqlCloudflareR2Bucket) publicAccess() (*mqlCloudflareR2BucketPublicAccess, error) {
-	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-
-	if c.accountID == "" {
-		c.PublicAccess.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+// hit `/accounts/{id}/r2/buckets/{name}/domains/managed` via api.Raw. The
+// `available` return is false when the bucket has no managed domain or the
+// caller lacks access to read it; in that case the calling computed method
+// should mark its field null.
+func (c *mqlCloudflareR2Bucket) fetchPublicAccess() (available, enabled bool, domain string, err error) {
+	if c.publicAccessFetched {
+		return c.publicAccessAvailable, c.cachePublicAccessOn, c.cachePublicAccessDomain, nil
+	}
+	c.publicAccessLock.Lock()
+	defer c.publicAccessLock.Unlock()
+	if c.publicAccessFetched {
+		return c.publicAccessAvailable, c.cachePublicAccessOn, c.cachePublicAccessDomain, nil
 	}
 
+	if c.accountID == "" {
+		c.publicAccessFetched = true
+		return false, false, "", nil
+	}
+
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 	uri := fmt.Sprintf("/accounts/%s/r2/buckets/%s/domains/managed", c.accountID, c.GetName().Data)
-	raw, err := conn.Cf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
-	if err != nil {
+	raw, rerr := conn.Cf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
+	if rerr != nil {
 		var notFound *cloudflare.NotFoundError
 		var authN *cloudflare.AuthenticationError
 		var authZ *cloudflare.AuthorizationError
-		if errors.As(err, &notFound) || errors.As(err, &authN) || errors.As(err, &authZ) {
-			c.PublicAccess.State = plugin.StateIsNull | plugin.StateIsSet
-			return nil, nil
+		if errors.As(rerr, &notFound) || errors.As(rerr, &authN) || errors.As(rerr, &authZ) {
+			c.publicAccessFetched = true
+			return false, false, "", nil
 		}
-		return nil, err
+		return false, false, "", rerr
 	}
 
 	var payload struct {
@@ -145,18 +163,37 @@ func (c *mqlCloudflareR2Bucket) publicAccess() (*mqlCloudflareR2BucketPublicAcce
 	}
 	if len(raw.Result) > 0 {
 		if err := json.Unmarshal(raw.Result, &payload); err != nil {
-			return nil, fmt.Errorf("failed to decode r2 managed-domain response: %w", err)
+			return false, false, "", fmt.Errorf("failed to decode r2 managed-domain response: %w", err)
 		}
 	}
-	enabled, domain := payload.Enabled, payload.Domain
 
-	res, err := CreateResource(c.MqlRuntime, "cloudflare.r2.bucket.publicAccess", map[string]*llx.RawData{
-		"__id":    llx.StringData("cloudflare.r2.bucket.publicAccess@" + c.accountID + "/" + c.GetName().Data),
-		"enabled": llx.BoolData(enabled),
-		"domain":  llx.StringData(domain),
-	})
+	c.publicAccessAvailable = true
+	c.cachePublicAccessOn = payload.Enabled
+	c.cachePublicAccessDomain = payload.Domain
+	c.publicAccessFetched = true
+	return c.publicAccessAvailable, c.cachePublicAccessOn, c.cachePublicAccessDomain, nil
+}
+
+func (c *mqlCloudflareR2Bucket) publicAccessEnabled() (bool, error) {
+	available, enabled, _, err := c.fetchPublicAccess()
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	return res.(*mqlCloudflareR2BucketPublicAccess), nil
+	if !available {
+		c.PublicAccessEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	return enabled, nil
+}
+
+func (c *mqlCloudflareR2Bucket) publicAccessDomain() (string, error) {
+	available, _, domain, err := c.fetchPublicAccess()
+	if err != nil {
+		return "", err
+	}
+	if !available {
+		c.PublicAccessDomain.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return domain, nil
 }
