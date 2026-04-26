@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -15,9 +16,11 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-// mqlTailscaleAclPolicyInternal caches the raw HuJSON body so it can be
-// fetched lazily via `raw()` without forcing a second API call when the
-// structured policy is already loaded.
+// mqlTailscaleAclPolicyInternal caches the raw HuJSON body across `raw()`
+// reads. The Tailscale API exposes the structured ACL (`PolicyFile().Get()`)
+// and the raw HuJSON (`PolicyFile().Raw()`) as separate endpoints — the
+// structured response does not include the source HuJSON — so a second call
+// is required the first time `raw()` is read.
 type mqlTailscaleAclPolicyInternal struct {
 	rawLock    sync.Mutex
 	rawFetched bool
@@ -95,10 +98,12 @@ func structSliceToDictSlice[T any](in []T) []any {
 	for i := range in {
 		b, err := json.Marshal(in[i])
 		if err != nil {
+			log.Warn().Err(err).Int("index", i).Msg("tailscale: failed to marshal policy entry; dropping")
 			continue
 		}
 		var m map[string]any
 		if err := json.Unmarshal(b, &m); err != nil {
+			log.Warn().Err(err).Int("index", i).Msg("tailscale: failed to unmarshal policy entry; dropping")
 			continue
 		}
 		out = append(out, m)
