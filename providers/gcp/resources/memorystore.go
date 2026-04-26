@@ -307,10 +307,6 @@ func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[
 }
 
 // =====================
-// DiscoveryEndpoint
-// =====================
-
-// =====================
 // PscAttachmentDetail
 // =====================
 
