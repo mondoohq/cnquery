@@ -49,9 +49,16 @@ func buildTlsResource(runtime *plugin.Runtime, ip string, port int, ssl *models.
 	tlsv13 := negotiates("TLSv1.3")
 	hasInsecureProto := sslv2 || sslv3 || tlsv10 || tlsv11
 
-	cert, err := buildCertResource(runtime, ip, port, &ssl.Cert)
-	if err != nil {
-		return nil, err
+	// SSL.Cert is a value type (not a pointer), so &ssl.Cert is always non-nil.
+	// Banners with no parsed certificate (e.g. plaintext-on-TLS-port probes) leave
+	// it zero-valued — skip building a phantom cert full of empty strings.
+	var cert *mqlShodanHostCert
+	if !isEmptySslCert(&ssl.Cert) {
+		c, err := buildCertResource(runtime, ip, port, &ssl.Cert)
+		if err != nil {
+			return nil, err
+		}
+		cert = c
 	}
 
 	res, err := CreateResource(runtime, "shodan.host.tls", map[string]*llx.RawData{
@@ -103,6 +110,21 @@ func isWeakCipher(name string, bits int) bool {
 		return true
 	}
 	return false
+}
+
+// isEmptySslCert reports whether the cert struct carries no parsed X.509 data.
+// Shodan emits an empty cert object when the SSL probe didn't return one, so we
+// use this to avoid creating a phantom resource full of empty strings.
+func isEmptySslCert(cert *models.SslCert) bool {
+	if cert == nil {
+		return true
+	}
+	return cert.Subject.CN == "" &&
+		cert.Issuer.CN == "" &&
+		cert.Fingerprint.SHA256 == "" &&
+		cert.Fingerprint.SHA1 == "" &&
+		cert.Issued == "" &&
+		cert.Expires == ""
 }
 
 // buildCertResource extracts the X.509 details Shodan publishes for a banner.

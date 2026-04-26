@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -341,12 +342,15 @@ func (r *mqlShodanHost) buildServiceResources(svcs []*models.Service) ([]any, []
 			cveKeys = append(cveKeys, cve)
 		}
 		sort.Strings(cveKeys)
+		// Use IPString() so the service IP is populated for both v4 and v6
+		// banners (svc.IPstr is empty when the host is reached over IPv6).
+		svcIP := svc.IPString()
 		for _, cve := range cveKeys {
 			vuln := svc.Vulns[cve]
 			cvss, hasCvss := parseCVSS(vuln.CVSS)
 			severity := classifyCVSS(cvss, hasCvss)
 			vulnRes, err := CreateResource(r.MqlRuntime, "shodan.host.vulnerability", map[string]*llx.RawData{
-				"__id":       llx.StringData(fmt.Sprintf("shodan.host.vulnerability/%s/%d/%s", svc.IPstr, svc.Port, cve)),
+				"__id":       llx.StringData(fmt.Sprintf("shodan.host.vulnerability/%s/%d/%s", svcIP, svc.Port, cve)),
 				"cve":        llx.StringData(cve),
 				"cvss":       llx.FloatData(cvss),
 				"severity":   llx.StringData(severity),
@@ -386,7 +390,7 @@ func (r *mqlShodanHost) buildServiceResources(svcs []*models.Service) ([]any, []
 		// Build the SSL/TLS sub-resource if present.
 		var tlsResource *mqlShodanHostTls
 		if svc.SSL != nil {
-			tlsRes, err := buildTlsResource(r.MqlRuntime, svc.IPstr, svc.Port, svc.SSL)
+			tlsRes, err := buildTlsResource(r.MqlRuntime, svcIP, svc.Port, svc.SSL)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -395,8 +399,8 @@ func (r *mqlShodanHost) buildServiceResources(svcs []*models.Service) ([]any, []
 
 		// Construct the service resource.
 		serviceArgs := map[string]*llx.RawData{
-			"__id":            llx.StringData(fmt.Sprintf("shodan.host.service/%s/%d/%s", svc.IPstr, svc.Port, svc.Transport)),
-			"ip":              llx.StringData(svc.IPstr),
+			"__id":            llx.StringData(fmt.Sprintf("shodan.host.service/%s/%d/%s", svcIP, svc.Port, svc.Transport)),
+			"ip":              llx.StringData(svcIP),
 			"port":            llx.IntData(int64(svc.Port)),
 			"transport":       llx.StringData(svc.Transport),
 			"product":         llx.StringData(svc.ProductString()),
@@ -469,19 +473,17 @@ func parseCVSS(raw any) (float64, bool) {
 	case nil:
 		return -1, false
 	case float64:
+		// JSON-unmarshalled numbers are always float64 — no need to handle
+		// other numeric types here.
 		return v, true
-	case float32:
-		return float64(v), true
-	case int:
-		return float64(v), true
-	case int64:
-		return float64(v), true
 	case string:
-		if v == "" {
+		s := strings.TrimSpace(v)
+		if s == "" {
 			return -1, false
 		}
-		var f float64
-		_, err := fmt.Sscanf(v, "%f", &f)
+		// Use ParseFloat (not fmt.Sscanf) so partial parses like "9.8 high"
+		// are rejected rather than silently truncated.
+		f, err := strconv.ParseFloat(s, 64)
 		if err != nil {
 			return -1, false
 		}
