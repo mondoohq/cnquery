@@ -324,14 +324,15 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() (
 	}
 	defer httpResp.Body.Close()
 
-	// 202 Accepted → poll the Location/Azure-AsyncOperation header until the result is ready.
+	// 202 Accepted → poll the Location header until the result is ready. We don't
+	// fall back to Azure-AsyncOperation: that endpoint returns a status envelope
+	// (`{"status": "InProgress"|"Succeeded"|"Failed"}`), not the effective-rules
+	// payload, so a 200 from it would just be the loop exiting onto the wrong body.
 	for httpResp.StatusCode == http.StatusAccepted {
 		loc := httpResp.Header.Get("Location")
 		if loc == "" {
-			loc = httpResp.Header.Get("Azure-AsyncOperation")
-		}
-		if loc == "" {
-			break
+			io.Copy(io.Discard, httpResp.Body)
+			return nil, fmt.Errorf("effective NSG list returned 202 without a Location header")
 		}
 		// Sleep a beat then poll.
 		select {
@@ -375,23 +376,14 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() (
 
 	var res []any
 	for _, ensg := range payload.Value {
-		res = append(res, ensg.EffectiveSecurityRules...)
+		for _, rule := range ensg.EffectiveSecurityRules {
+			if rule == nil {
+				continue
+			}
+			res = append(res, rule)
+		}
 	}
 	return res, nil
-}
-
-// isNicEffectiveRulesUnavailableErr returns true when Azure rejects an effective-rules
-// lookup because the NIC is detached, the VM is stopped/deallocated, or RBAC denies it.
-func isNicEffectiveRulesUnavailableErr(err error) bool {
-	var respErr *azcore.ResponseError
-	if !errors.As(err, &respErr) {
-		return false
-	}
-	switch respErr.StatusCode {
-	case http.StatusBadRequest, http.StatusNotFound, http.StatusForbidden:
-		return true
-	}
-	return false
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
