@@ -124,7 +124,7 @@ func (o *mqlOktaApplication) signingKeys() ([]any, error) {
 		return nil, o.Id.Error
 	}
 	if o.Id.Data == "" {
-		return nil, nil
+		return []any{}, nil
 	}
 
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)

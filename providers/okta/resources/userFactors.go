@@ -53,9 +53,12 @@ func (o *mqlOktaUser) factors() ([]any, error) {
 		return nil, err
 	}
 
+	// The factors endpoint returns all enrolled factors in a single response;
+	// we use the raw request executor (rather than client.UserFactor.ListFactors)
+	// to capture the per-factorType `profile` object that the SDK's typed
+	// UserFactor struct discards.
 	var page []userFactorRaw
-	resp, err := rq.Do(ctx, req, &page)
-	if err != nil {
+	if _, err := rq.Do(ctx, req, &page); err != nil {
 		return nil, err
 	}
 
@@ -66,21 +69,6 @@ func (o *mqlOktaUser) factors() ([]any, error) {
 			return nil, err
 		}
 		list = append(list, r)
-	}
-
-	for resp != nil && resp.HasNextPage() {
-		var next []userFactorRaw
-		resp, err = resp.Next(ctx, &next)
-		if err != nil {
-			return nil, err
-		}
-		for i := range next {
-			r, err := newMqlOktaUserFactor(o.MqlRuntime, o.Id.Data, &next[i])
-			if err != nil {
-				return nil, err
-			}
-			list = append(list, r)
-		}
 	}
 
 	return list, nil

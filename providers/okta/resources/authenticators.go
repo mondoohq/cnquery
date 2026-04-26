@@ -93,7 +93,7 @@ func (o *mqlOktaAuthenticator) id() (string, error) {
 }
 
 func (o *mqlOktaAuthenticator) providerType() (string, error) {
-	if o.provider == nil {
+	if o.provider == nil || o.provider.Type == "" {
 		o.ProviderType.State = plugin.StateIsSet | plugin.StateIsNull
 		return "", nil
 	}
@@ -109,7 +109,7 @@ func (o *mqlOktaAuthenticator) providerConfiguration() (any, error) {
 }
 
 func (o *mqlOktaAuthenticator) allowedFor() (string, error) {
-	if o.settings == nil {
+	if o.settings == nil || o.settings.AllowedFor == "" {
 		o.AllowedFor.State = plugin.StateIsSet | plugin.StateIsNull
 		return "", nil
 	}
@@ -125,7 +125,7 @@ func (o *mqlOktaAuthenticator) tokenLifetimeInMinutes() (int64, error) {
 }
 
 func (o *mqlOktaAuthenticator) userVerification() (string, error) {
-	if o.settings == nil {
+	if o.settings == nil || o.settings.UserVerification == "" {
 		o.UserVerification.State = plugin.StateIsSet | plugin.StateIsNull
 		return "", nil
 	}
