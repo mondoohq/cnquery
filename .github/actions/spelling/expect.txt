@@ -70,7 +70,7 @@ cdn
 ceph
 certificatechains
 certificatesmanagement
-CGNAT tailnets
+CGNAT
 chabc
 chatgpt
 chokepoint
@@ -480,6 +480,7 @@ superusers
 swi
 switchports
 symfony
+tailnets
 tailscale
 tanium
 targetgroup
