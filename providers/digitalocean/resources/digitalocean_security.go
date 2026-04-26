@@ -121,11 +121,11 @@ func (r *mqlDigitaloceanDroplet) unprotectedPublicIp() (bool, error) {
 	if r.PublicIpv4.Data == "" {
 		return false, nil
 	}
-	covers, err := r.firewalls()
-	if err != nil {
-		return false, err
+	covers := r.GetFirewalls()
+	if covers.Error != nil {
+		return false, covers.Error
 	}
-	return len(covers) == 0, nil
+	return len(covers.Data) == 0, nil
 }
 
 // --- Firewall typed refs ---
