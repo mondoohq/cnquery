@@ -204,13 +204,31 @@ func (p *mqlGitlabProject) projectMembers() ([]any, error) {
 
 	projectID := int(p.Id.Data)
 
-	members, _, err := conn.Client().ProjectMembers.ListAllProjectMembers(projectID, nil)
-	if err != nil {
-		return nil, err
+	perPage := int64(50)
+	page := int64(1)
+	var allMembers []*gitlab.ProjectMember
+
+	for {
+		members, resp, err := conn.Client().ProjectMembers.ListAllProjectMembers(projectID, &gitlab.ListProjectMembersOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allMembers = append(allMembers, members...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
 	}
 
 	var mqlMembers []any
-	for _, member := range members {
+	for _, member := range allMembers {
 		role := mapAccessLevelToRole(int(member.AccessLevel))
 
 		mqlUser, err := CreateResource(p.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
@@ -463,12 +481,11 @@ func createMilestoneResource(runtime *plugin.Runtime, milestone *gitlab.Mileston
 	return mqlMilestone.(*mqlGitlabProjectMilestone), nil
 }
 
-// milestone fetches the milestone for a merge request
+// milestone fetches the milestone for a merge request. The milestone is
+// populated eagerly when the merge request is materialized; this fallback
+// covers MRs without an attached milestone.
 func (m *mqlGitlabProjectMergeRequest) milestone() (*mqlGitlabProjectMilestone, error) {
-	// The milestone should already be set when the merge request is created
-	// This method is only called as a fallback if it wasn't set
-	// In that case, we would need to fetch the merge request details again
-	// For now, return nil to indicate no milestone
+	m.Milestone.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
 
@@ -553,12 +570,11 @@ func (i *mqlGitlabProjectIssue) id() (string, error) {
 	return strconv.FormatInt(i.Id.Data, 10), nil
 }
 
-// milestone fetches the milestone for an issue
+// milestone fetches the milestone for an issue. The milestone is populated
+// eagerly when the issue is materialized; this fallback covers issues without
+// an attached milestone.
 func (i *mqlGitlabProjectIssue) milestone() (*mqlGitlabProjectMilestone, error) {
-	// The milestone should already be set when the issue is created
-	// This method is only called as a fallback if it wasn't set
-	// In that case, we would need to fetch the issue details again
-	// For now, return nil to indicate no milestone
+	i.Milestone.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
 
@@ -1034,9 +1050,14 @@ func (p *mqlGitlabProject) pushRules() (*mqlGitlabProjectPushRule, error) {
 	rules, resp, err := conn.Client().Projects.GetProjectPushRules(projectID)
 	if err != nil {
 		if resp != nil && resp.StatusCode == 404 {
+			p.PushRules.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil // no push rules configured
 		}
 		return nil, err
+	}
+	if rules == nil {
+		p.PushRules.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	ruleInfo := map[string]*llx.RawData{
@@ -1283,9 +1304,14 @@ func (p *mqlGitlabProject) securitySettings() (*mqlGitlabProjectSecuritySetting,
 	settings, resp, err := conn.Client().ProjectSecuritySettings.ListProjectSecuritySettings(projectID)
 	if err != nil {
 		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			p.SecuritySettings.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil // not available on this GitLab tier
 		}
 		return nil, err
+	}
+	if settings == nil {
+		p.SecuritySettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	settingInfo := map[string]*llx.RawData{

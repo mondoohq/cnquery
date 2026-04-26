@@ -121,13 +121,31 @@ func (g *mqlGitlabGroup) members() ([]any, error) {
 
 	groupID := int(g.Id.Data)
 
-	members, _, err := conn.Client().Groups.ListAllGroupMembers(groupID, nil)
-	if err != nil {
-		return nil, err
+	perPage := int64(50)
+	page := int64(1)
+	var allMembers []*gitlab.GroupMember
+
+	for {
+		members, resp, err := conn.Client().Groups.ListAllGroupMembers(groupID, &gitlab.ListGroupMembersOptions{
+			ListOptions: gitlab.ListOptions{
+				Page:    page,
+				PerPage: perPage,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		allMembers = append(allMembers, members...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		page = resp.NextPage
 	}
 
 	var mqlMembers []any
-	for _, member := range members {
+	for _, member := range allMembers {
 		role := mapAccessLevelToRole(int(member.AccessLevel))
 
 		mqlUser, err := CreateResource(g.MqlRuntime, "gitlab.user", map[string]*llx.RawData{
@@ -315,9 +333,14 @@ func (g *mqlGitlabGroup) pushRules() (*mqlGitlabGroupPushRule, error) {
 	rules, resp, err := conn.Client().Groups.GetGroupPushRules(groupID)
 	if err != nil {
 		if resp != nil && resp.StatusCode == 404 {
+			g.PushRules.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil // no push rules configured
 		}
 		return nil, err
+	}
+	if rules == nil {
+		g.PushRules.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 
 	ruleInfo := map[string]*llx.RawData{
