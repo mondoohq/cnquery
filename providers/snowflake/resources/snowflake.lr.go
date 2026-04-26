@@ -3479,7 +3479,7 @@ func (c *mqlSnowflakeGrant) GetCreatedAt() *plugin.TValue[*time.Time] {
 type mqlSnowflakeSessionPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlSnowflakeSessionPolicyInternal it will be used here
+	mqlSnowflakeSessionPolicyInternal
 	Name                     plugin.TValue[string]
 	DatabaseName             plugin.TValue[string]
 	SchemaName               plugin.TValue[string]

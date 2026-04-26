@@ -5,12 +5,21 @@ package resources
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/snowflake/connection"
 )
+
+type mqlSnowflakeSessionPolicyInternal struct {
+	descLock          sync.Mutex
+	descLoaded        bool
+	descLoadErr       error
+	descIdleTimeout   int64
+	descUiIdleTimeout int64
+}
 
 func (r *mqlSnowflakeAccount) sessionPolicies() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
@@ -53,24 +62,42 @@ func newMqlSnowflakeSessionPolicy(runtime *plugin.Runtime, policy sdk.SessionPol
 }
 
 func (r *mqlSnowflakeSessionPolicy) gatherSessionPolicyDetails() error {
+	if r.descLoaded {
+		return r.descLoadErr
+	}
+	r.descLock.Lock()
+	defer r.descLock.Unlock()
+	if r.descLoaded {
+		return r.descLoadErr
+	}
+
 	conn := r.MqlRuntime.Connection.(*connection.SnowflakeConnection)
 	client := conn.Client()
 	ctx := context.Background()
 
 	desc, err := client.SessionPolicies.Describe(ctx, sdk.NewSchemaObjectIdentifier(r.DatabaseName.Data, r.SchemaName.Data, r.Name.Data))
 	if err != nil {
+		r.descLoaded = true
+		r.descLoadErr = err
 		return err
 	}
 
-	r.SessionIdleTimeoutMins = plugin.TValue[int64]{Data: int64(desc.SessionIdleTimeoutMins), Error: nil, State: plugin.StateIsSet}
-	r.SessionUiIdleTimeoutMins = plugin.TValue[int64]{Data: int64(desc.SessionUIIdleTimeoutMins), Error: nil, State: plugin.StateIsSet}
+	r.descIdleTimeout = int64(desc.SessionIdleTimeoutMins)
+	r.descUiIdleTimeout = int64(desc.SessionUIIdleTimeoutMins)
+	r.descLoaded = true
 	return nil
 }
 
 func (r *mqlSnowflakeSessionPolicy) sessionIdleTimeoutMins() (int64, error) {
-	return 0, r.gatherSessionPolicyDetails()
+	if err := r.gatherSessionPolicyDetails(); err != nil {
+		return 0, err
+	}
+	return r.descIdleTimeout, nil
 }
 
 func (r *mqlSnowflakeSessionPolicy) sessionUiIdleTimeoutMins() (int64, error) {
-	return 0, r.gatherSessionPolicyDetails()
+	if err := r.gatherSessionPolicyDetails(); err != nil {
+		return 0, err
+	}
+	return r.descUiIdleTimeout, nil
 }
