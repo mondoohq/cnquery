@@ -5,14 +5,17 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -293,43 +296,86 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() (
 		return nil, err
 	}
 
-	client, err := network.NewInterfacesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
+	// armnetwork v9 misshapes EffectiveNetworkSecurityGroup.TagMap (declared *string,
+	// API returns object), so SDK unmarshalling fails. Use REST directly and pluck
+	// the effectiveSecurityRules out as raw JSON.
+	tok, err := conn.Token().GetToken(ctx, policy.TokenRequestOptions{
+		Scopes: []string{"https://management.azure.com/.default"},
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	poller, err := client.BeginListEffectiveNetworkSecurityGroups(ctx, resourceID.ResourceGroup, nicName, nil)
+	url := fmt.Sprintf(
+		"https://management.azure.com/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/networkInterfaces/%s/effectiveNetworkSecurityGroups?api-version=2024-05-01",
+		resourceID.SubscriptionID, resourceID.ResourceGroup, nicName,
+	)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		if isNicEffectiveRulesUnavailableErr(err) {
-			log.Warn().Str("nic", nicName).Err(err).Msg("effective security rules unavailable for NIC")
-			return []any{}, nil
-		}
 		return nil, err
 	}
-	resp, err := poller.PollUntilDone(ctx, nil)
+	req.Header.Set("Authorization", "Bearer "+tok.Token)
+	req.Header.Set("Accept", "application/json")
+
+	httpClient := &http.Client{Timeout: 60 * time.Second}
+	httpResp, err := httpClient.Do(req)
 	if err != nil {
-		if isNicEffectiveRulesUnavailableErr(err) {
-			log.Warn().Str("nic", nicName).Err(err).Msg("effective security rules unavailable for NIC")
-			return []any{}, nil
+		return nil, err
+	}
+	defer httpResp.Body.Close()
+
+	// 202 Accepted → poll the Location/Azure-AsyncOperation header until the result is ready.
+	for httpResp.StatusCode == http.StatusAccepted {
+		loc := httpResp.Header.Get("Location")
+		if loc == "" {
+			loc = httpResp.Header.Get("Azure-AsyncOperation")
 		}
+		if loc == "" {
+			break
+		}
+		// Sleep a beat then poll.
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(2 * time.Second):
+		}
+		pollReq, perr := http.NewRequestWithContext(ctx, http.MethodGet, loc, nil)
+		if perr != nil {
+			return nil, perr
+		}
+		pollReq.Header.Set("Authorization", "Bearer "+tok.Token)
+		pollReq.Header.Set("Accept", "application/json")
+		newResp, perr := httpClient.Do(pollReq)
+		if perr != nil {
+			return nil, perr
+		}
+		httpResp.Body.Close()
+		httpResp = newResp
+	}
+
+	if httpResp.StatusCode == http.StatusBadRequest ||
+		httpResp.StatusCode == http.StatusNotFound ||
+		httpResp.StatusCode == http.StatusForbidden {
+		log.Warn().Str("nic", nicName).Int("status", httpResp.StatusCode).Msg("effective security rules unavailable for NIC")
+		return []any{}, nil
+	}
+	if httpResp.StatusCode >= 400 {
+		body, _ := io.ReadAll(httpResp.Body)
+		return nil, fmt.Errorf("effective NSG list returned %d: %s", httpResp.StatusCode, string(body))
+	}
+
+	var payload struct {
+		Value []struct {
+			EffectiveSecurityRules []any `json:"effectiveSecurityRules"`
+		} `json:"value"`
+	}
+	if err := json.NewDecoder(httpResp.Body).Decode(&payload); err != nil {
 		return nil, err
 	}
 
 	var res []any
-	for _, ensg := range resp.Value {
-		if ensg == nil {
-			continue
-		}
-		for _, rule := range ensg.EffectiveSecurityRules {
-			if rule == nil {
-				continue
-			}
-			if d, err := convert.JsonToDict(rule); err == nil {
-				res = append(res, d)
-			}
-		}
+	for _, ensg := range payload.Value {
+		res = append(res, ensg.EffectiveSecurityRules...)
 	}
 	return res, nil
 }
