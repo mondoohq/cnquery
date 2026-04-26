@@ -28,14 +28,6 @@ func (a *mqlTailscaleAclPolicy) id() (string, error) {
 	return "tailscale/tailnet/" + a.Tailnet.Data + "/aclPolicy", nil
 }
 
-// createTailscaleAclPolicyResource maps a Tailscale ACL into MQL form.
-//
-// Per CLAUDE.md's "When to create a sub-resource" guidance: ACL rules,
-// SSH rules, tests, and node attribute grants do not have stable identifiers
-// and primarily exist as data containers, so they are exposed as []dict
-// rather than as typed sub-resources. Groups, hosts, and tag owners use
-// map types for the same reason. Auto-approver fields are flattened onto
-// the policy.
 func createTailscaleAclPolicyResource(runtime *plugin.Runtime, tailnet string, acl *tsclient.ACL) (plugin.Resource, error) {
 	autoApproverExitNodes := []any{}
 	autoApproverRoutes := map[string]any{}
