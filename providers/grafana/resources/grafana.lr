@@ -252,7 +252,7 @@ grafana.samlSettings @defaults("enabled") {
   enabled bool
   // Source of the configuration (system or database)
   source string
-  // Whether the IdP must sign assertions
+  // SAML signature algorithm (e.g., rsa-sha256)
   signatureAlgorithm string
   // Whether the SP-initiated request is signed
   signRequests bool

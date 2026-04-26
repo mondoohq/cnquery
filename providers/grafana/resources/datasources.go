@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -81,11 +82,16 @@ func (g *mqlGrafana) datasources() ([]interface{}, error) {
 		// Promote secret-field names to a sorted []string for stable output.
 		// secureJsonFields is server-managed: a key is present (with value true)
 		// when a secret is stored, regardless of value.
-		secureFields := make([]any, 0, len(ds.SecureJSONFields))
+		secureFieldNames := make([]string, 0, len(ds.SecureJSONFields))
 		for k, v := range ds.SecureJSONFields {
 			if v {
-				secureFields = append(secureFields, k)
+				secureFieldNames = append(secureFieldNames, k)
 			}
+		}
+		slices.Sort(secureFieldNames)
+		secureFields := make([]any, len(secureFieldNames))
+		for i, s := range secureFieldNames {
+			secureFields[i] = s
 		}
 
 		res, err := CreateResource(g.MqlRuntime, "grafana.datasource", map[string]*llx.RawData{
