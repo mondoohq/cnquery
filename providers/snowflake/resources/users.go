@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"go.mondoo.com/mql/v13/llx"
@@ -64,6 +65,20 @@ func newMqlSnowflakeUser(runtime *plugin.Runtime, user sdk.User) (*mqlSnowflakeU
 	}
 	mqlResource := r.(*mqlSnowflakeUser)
 	return mqlResource, nil
+}
+
+// daysSinceLastLogin returns whole days since the user's last successful login.
+// Returns -1 if the user has never logged in (no recorded last-login time).
+func (r *mqlSnowflakeUser) daysSinceLastLogin() (int64, error) {
+	last := r.LastSuccessLogin.Data
+	if last == nil || last.IsZero() {
+		return -1, nil
+	}
+	delta := time.Since(*last)
+	if delta < 0 {
+		return 0, nil
+	}
+	return int64(delta / (24 * time.Hour)), nil
 }
 
 func (r *mqlSnowflakeUser) parameters() ([]any, error) {

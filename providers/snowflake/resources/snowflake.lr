@@ -37,6 +37,16 @@ snowflake.account {
   databases() []snowflake.database
   // Warehouses in the account
   warehouses() []snowflake.warehouse
+  // Session policies in the account
+  sessionPolicies() []snowflake.sessionPolicy
+  // Shares in the account (inbound and outbound)
+  shares() []snowflake.share
+  // API integrations in the account
+  apiIntegrations() []snowflake.apiIntegration
+  // Account-level grants (privileges granted ON ACCOUNT)
+  grants() []snowflake.grant
+  // Users that hold the ACCOUNTADMIN role (directly or indirectly via role grants)
+  accountadmins() []snowflake.user
 }
 
 // Snowflake User
@@ -83,6 +93,10 @@ snowflake.user @defaults("name") {
   extAuthnUid string
   // Parameters for the user
   parameters() []snowflake.parameter
+  // Number of days since the user last successfully logged in (-1 if never logged in)
+  daysSinceLastLogin() int
+  // Roles granted directly to this user (SHOW GRANTS TO USER)
+  grants() []snowflake.grant
 }
 
 // Snowflake Role
@@ -105,6 +119,10 @@ snowflake.role @defaults("name") {
   owner string
   // Comment for the role
   comment string
+  // Privileges granted to this role (SHOW GRANTS TO ROLE)
+  grants() []snowflake.grant
+  // Names of grantees (users and roles) this role is granted to (SHOW GRANTS OF ROLE)
+  grantees() []snowflake.grant
 }
 
 // Snowflake Security Integration
@@ -121,6 +139,20 @@ snowflake.securityIntegration @defaults("name") {
   enabled bool
   // When the security integration was created
   createdAt time
+  // All properties returned by DESCRIBE SECURITY INTEGRATION (includes SAML2_X509_CERT, SAML2_ISSUER, OAUTH_*, etc.)
+  properties() map[string]string
+  // SAML2_X509_CERT property (only set for SAML2 integrations)
+  saml2X509Cert() string
+  // SAML2_ISSUER property (only set for SAML2 integrations)
+  saml2Issuer() string
+  // SAML2_PROVIDER property (only set for SAML2 integrations)
+  saml2Provider() string
+  // SAML2_SSO_URL property (only set for SAML2 integrations)
+  saml2SsoUrl() string
+  // SAML2_SIGN_REQUEST property (only set for SAML2 integrations)
+  saml2SignRequest() bool
+  // SAML2_FORCE_AUTHN property (only set for SAML2 integrations)
+  saml2ForceAuthn() bool
 }
 
 // Snowflake Password Policy
@@ -351,6 +383,102 @@ snowflake.warehouse @defaults("name") {
   resumedAt time
   // When the warehouse was updated
   updatedAt time
+}
+
+// Snowflake Grant. Represents a single privilege granted on an object to a role,
+// user, or share. Modeled from SHOW GRANTS in Snowflake.
+snowflake.grant @defaults("privilege grantedOn name granteeName") {
+  // Privilege granted (e.g., USAGE, SELECT, OWNERSHIP, MODIFY)
+  privilege string
+  // Object type the privilege is on (e.g., DATABASE, SCHEMA, TABLE, ROLE)
+  grantedOn string
+  // Fully qualified name of the object the privilege is on
+  name string
+  // Type of grantee (ROLE, USER, SHARE, DATABASE_ROLE)
+  grantedTo string
+  // Name of the grantee (role name, user name, share name, etc.)
+  granteeName string
+  // Whether the grantee may further grant this privilege (WITH GRANT OPTION)
+  grantOption bool
+  // Role that issued the grant
+  grantedBy string
+  // When the grant was created
+  createdAt time
+}
+
+// Snowflake Session Policy. Controls session timeouts and idle behavior.
+// See https://docs.snowflake.com/en/sql-reference/sql/create-session-policy
+snowflake.sessionPolicy @defaults("name sessionIdleTimeoutMins") {
+  // Name of the session policy
+  name string
+  // Database name
+  databaseName string
+  // Schema name
+  schemaName string
+  // Kind of policy
+  kind string
+  // Owner of the session policy
+  owner string
+  // Owner role type
+  ownerRoleType string
+  // Comment for the session policy
+  comment string
+  // Comma-separated list of options
+  options string
+  // Time in minutes a session can remain idle before being terminated (Snowflake default 240)
+  sessionIdleTimeoutMins() int
+  // Time in minutes a UI (Snowsight) session can remain idle before being terminated (Snowflake default 240)
+  sessionUiIdleTimeoutMins() int
+}
+
+// Snowflake Share. Represents a data share, either provided to other accounts (OUTBOUND)
+// or consumed from another account (INBOUND).
+snowflake.share @defaults("name kind") {
+  // Fully qualified share name (account.share for INBOUND, share name for OUTBOUND)
+  name string
+  // Kind of share: INBOUND or OUTBOUND
+  kind string
+  // Database backing the share
+  databaseName string
+  // For OUTBOUND shares, list of accounts the share has been granted to
+  to []string
+  // Owner of the share
+  owner string
+  // Comment for the share
+  comment string
+  // When the share was created
+  createdAt time
+}
+
+// Snowflake API Integration. Provides authentication context for external functions and Git integrations.
+// See https://docs.snowflake.com/en/sql-reference/sql/create-api-integration
+snowflake.apiIntegration @defaults("name type enabled") {
+  // Name of the API integration
+  name string
+  // API type (e.g., aws_api_gateway, azure_api_management, google_api_gateway)
+  type string
+  // Category of the integration (always "API")
+  category string
+  // Whether the integration is enabled
+  enabled bool
+  // Comment for the integration
+  comment string
+  // When the integration was created
+  createdAt time
+  // All properties returned by DESCRIBE API INTEGRATION (e.g., API_AWS_ROLE_ARN, API_ALLOWED_PREFIXES)
+  properties() map[string]string
+  // List of URL prefixes that calls from Snowflake are restricted to
+  apiAllowedPrefixes() []string
+  // List of URL prefixes that calls from Snowflake are blocked from
+  apiBlockedPrefixes() []string
+  // AWS IAM role ARN for AWS API Gateway integrations
+  apiAwsRoleArn() string
+  // AWS IAM user ARN that Snowflake uses to assume the role (assume-role principal)
+  apiAwsExternalId() string
+  // Azure tenant ID (for Azure API Management integrations)
+  azureTenantId() string
+  // Azure AD application ID (for Azure API Management integrations)
+  azureAdApplicationId() string
 }
 
 // Snowflake View
