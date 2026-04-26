@@ -573,6 +573,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.group.auditEvent.failedLogin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroupAuditEvent).GetFailedLogin()).ToDataRes(types.String)
 	},
+	"gitlab.group.auditEvent.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupAuditEvent).GetAuthor()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.group.auditEvent.entityUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupAuditEvent).GetEntityUser()).ToDataRes(types.Resource("gitlab.user"))
+	},
+	"gitlab.group.auditEvent.entityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupAuditEvent).GetEntityGroup()).ToDataRes(types.Resource("gitlab.group"))
+	},
+	"gitlab.group.auditEvent.entityProject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabGroupAuditEvent).GetEntityProject()).ToDataRes(types.Resource("gitlab.project"))
+	},
 	"gitlab.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetId()).ToDataRes(types.Int)
 	},
@@ -851,6 +863,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.webhook.featureFlagEvents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectWebhook).GetFeatureFlagEvents()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.webhook.milestoneEvents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectWebhook).GetMilestoneEvents()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.webhook.emojiEvents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectWebhook).GetEmojiEvents()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.webhook.repositoryUpdateEvents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectWebhook).GetRepositoryUpdateEvents()).ToDataRes(types.Bool)
+	},
+	"gitlab.project.webhook.branchFilterStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectWebhook).GetBranchFilterStrategy()).ToDataRes(types.String)
+	},
+	"gitlab.project.webhook.customWebhookTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabProjectWebhook).GetCustomWebhookTemplate()).ToDataRes(types.String)
 	},
 	"gitlab.project.webhook.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectWebhook).GetCreatedAt()).ToDataRes(types.Time)
@@ -1872,6 +1899,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabGroupAuditEvent).FailedLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gitlab.group.auditEvent.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupAuditEvent).Author, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.auditEvent.entityUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupAuditEvent).EntityUser, ok = plugin.RawToTValue[*mqlGitlabUser](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.auditEvent.entityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupAuditEvent).EntityGroup, ok = plugin.RawToTValue[*mqlGitlabGroup](v.Value, v.Error)
+		return
+	},
+	"gitlab.group.auditEvent.entityProject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabGroupAuditEvent).EntityProject, ok = plugin.RawToTValue[*mqlGitlabProject](v.Value, v.Error)
+		return
+	},
 	"gitlab.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).__id, ok = v.Value.(string)
 		return
@@ -2266,6 +2309,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.webhook.featureFlagEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectWebhook).FeatureFlagEvents, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.webhook.milestoneEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectWebhook).MilestoneEvents, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.webhook.emojiEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectWebhook).EmojiEvents, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.webhook.repositoryUpdateEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectWebhook).RepositoryUpdateEvents, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.webhook.branchFilterStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectWebhook).BranchFilterStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gitlab.project.webhook.customWebhookTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabProjectWebhook).CustomWebhookTemplate, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.webhook.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4019,7 +4082,7 @@ func (c *mqlGitlabGroup) GetAuditEvents() *plugin.TValue[[]any] {
 type mqlGitlabGroupSamlGroupLink struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGitlabGroupSamlGroupLinkInternal it will be used here
+	mqlGitlabGroupSamlGroupLinkInternal
 	Name         plugin.TValue[string]
 	AccessLevel  plugin.TValue[int64]
 	MemberRoleId plugin.TValue[int64]
@@ -4100,6 +4163,10 @@ type mqlGitlabGroupAuditEvent struct {
 	IpAddress     plugin.TValue[string]
 	EntityPath    plugin.TValue[string]
 	FailedLogin   plugin.TValue[string]
+	Author        plugin.TValue[*mqlGitlabUser]
+	EntityUser    plugin.TValue[*mqlGitlabUser]
+	EntityGroup   plugin.TValue[*mqlGitlabGroup]
+	EntityProject plugin.TValue[*mqlGitlabProject]
 }
 
 // createGitlabGroupAuditEvent creates a new instance of this resource
@@ -4201,6 +4268,70 @@ func (c *mqlGitlabGroupAuditEvent) GetEntityPath() *plugin.TValue[string] {
 
 func (c *mqlGitlabGroupAuditEvent) GetFailedLogin() *plugin.TValue[string] {
 	return &c.FailedLogin
+}
+
+func (c *mqlGitlabGroupAuditEvent) GetAuthor() *plugin.TValue[*mqlGitlabUser] {
+	return plugin.GetOrCompute[*mqlGitlabUser](&c.Author, func() (*mqlGitlabUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.group.auditEvent", c.__id, "author")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabUser), nil
+			}
+		}
+
+		return c.author()
+	})
+}
+
+func (c *mqlGitlabGroupAuditEvent) GetEntityUser() *plugin.TValue[*mqlGitlabUser] {
+	return plugin.GetOrCompute[*mqlGitlabUser](&c.EntityUser, func() (*mqlGitlabUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.group.auditEvent", c.__id, "entityUser")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabUser), nil
+			}
+		}
+
+		return c.entityUser()
+	})
+}
+
+func (c *mqlGitlabGroupAuditEvent) GetEntityGroup() *plugin.TValue[*mqlGitlabGroup] {
+	return plugin.GetOrCompute[*mqlGitlabGroup](&c.EntityGroup, func() (*mqlGitlabGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.group.auditEvent", c.__id, "entityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabGroup), nil
+			}
+		}
+
+		return c.entityGroup()
+	})
+}
+
+func (c *mqlGitlabGroupAuditEvent) GetEntityProject() *plugin.TValue[*mqlGitlabProject] {
+	return plugin.GetOrCompute[*mqlGitlabProject](&c.EntityProject, func() (*mqlGitlabProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gitlab.group.auditEvent", c.__id, "entityProject")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGitlabProject), nil
+			}
+		}
+
+		return c.entityProject()
+	})
 }
 
 // mqlGitlabProject for the gitlab.project resource
@@ -5029,6 +5160,11 @@ type mqlGitlabProjectWebhook struct {
 	ResourceAccessTokenEvents plugin.TValue[bool]
 	VulnerabilityEvents       plugin.TValue[bool]
 	FeatureFlagEvents         plugin.TValue[bool]
+	MilestoneEvents           plugin.TValue[bool]
+	EmojiEvents               plugin.TValue[bool]
+	RepositoryUpdateEvents    plugin.TValue[bool]
+	BranchFilterStrategy      plugin.TValue[string]
+	CustomWebhookTemplate     plugin.TValue[string]
 	CreatedAt                 plugin.TValue[*time.Time]
 	DisabledUntil             plugin.TValue[*time.Time]
 	AlertStatus               plugin.TValue[string]
@@ -5154,6 +5290,26 @@ func (c *mqlGitlabProjectWebhook) GetVulnerabilityEvents() *plugin.TValue[bool] 
 
 func (c *mqlGitlabProjectWebhook) GetFeatureFlagEvents() *plugin.TValue[bool] {
 	return &c.FeatureFlagEvents
+}
+
+func (c *mqlGitlabProjectWebhook) GetMilestoneEvents() *plugin.TValue[bool] {
+	return &c.MilestoneEvents
+}
+
+func (c *mqlGitlabProjectWebhook) GetEmojiEvents() *plugin.TValue[bool] {
+	return &c.EmojiEvents
+}
+
+func (c *mqlGitlabProjectWebhook) GetRepositoryUpdateEvents() *plugin.TValue[bool] {
+	return &c.RepositoryUpdateEvents
+}
+
+func (c *mqlGitlabProjectWebhook) GetBranchFilterStrategy() *plugin.TValue[string] {
+	return &c.BranchFilterStrategy
+}
+
+func (c *mqlGitlabProjectWebhook) GetCustomWebhookTemplate() *plugin.TValue[string] {
+	return &c.CustomWebhookTemplate
 }
 
 func (c *mqlGitlabProjectWebhook) GetCreatedAt() *plugin.TValue[*time.Time] {

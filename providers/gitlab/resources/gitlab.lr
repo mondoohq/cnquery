@@ -251,6 +251,14 @@ private gitlab.group.auditEvent @defaults("id eventName createdAt") {
   entityPath string
   // Whether this was a failed login event
   failedLogin string
+  // Typed reference to the user who performed the action (null if authorId is unknown)
+  author() gitlab.user
+  // Typed reference to the entity user when entityType is "User" (null otherwise)
+  entityUser() gitlab.user
+  // Typed reference to the entity group when entityType is "Group" (null otherwise)
+  entityGroup() gitlab.group
+  // Typed reference to the entity project when entityType is "Project" (null otherwise)
+  entityProject() gitlab.project
 }
 
 // GitLab project
@@ -465,6 +473,16 @@ private gitlab.project.webhook @defaults("url sslVerification") {
   vulnerabilityEvents bool
   // Whether feature flag events trigger the webhook
   featureFlagEvents bool
+  // Whether milestone events trigger the webhook
+  milestoneEvents bool
+  // Whether emoji events trigger the webhook
+  emojiEvents bool
+  // Whether repository update events trigger the webhook
+  repositoryUpdateEvents bool
+  // Strategy used to filter branches for push events: all_branches, wildcard, or regex
+  branchFilterStrategy string
+  // Custom webhook payload template configured for this hook (empty when default payload is used)
+  customWebhookTemplate string
   // Webhook creation time
   createdAt time
   // Time until which the webhook is disabled (set by GitLab when too many failures occur)

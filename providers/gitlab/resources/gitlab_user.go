@@ -16,10 +16,15 @@ import (
 
 // mqlGitlabUserInternal caches a fetched *gitlab.User so that multiple computed
 // methods (externalIdentities, etc.) only trigger a single GetUser API call.
+//
+// cacheIdentities lets producers (e.g. group/project members()) seed identities
+// from the *gitlab.User they already have, so externalIdentities() doesn't need
+// to call GetUser at all - eliminating an N+1 across N members.
 type mqlGitlabUserInternal struct {
-	fetched bool
-	user    *gitlab.User
-	lock    sync.Mutex
+	fetched         bool
+	user            *gitlab.User
+	cacheIdentities []*gitlab.UserIdentity
+	lock            sync.Mutex
 }
 
 // initGitlabUser supports `gitlab.user(id: <int>)` lookups so typed back-references
@@ -41,8 +46,14 @@ func initGitlabUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	conn := runtime.Connection.(*connection.GitLabConnection)
-	user, _, err := conn.Client().Users.GetUser(idArg.Value.(int64), gitlab.GetUsersOptions{})
+	user, resp, err := conn.Client().Users.GetUser(idArg.Value.(int64), gitlab.GetUsersOptions{})
 	if err != nil {
+		// Non-admin tokens get 403/404 from /users/:id. Let the resource exist
+		// with whatever id was passed in so typed back-refs (sshKey.user, etc.)
+		// don't blow up the whole resource graph.
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			return args, nil, nil
+		}
 		return nil, nil, err
 	}
 
@@ -65,8 +76,9 @@ func initGitlabUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 }
 
 // fetchUser loads the full user record by ID (with double-checked locking).
-// External identities aren't returned by the group/project member endpoints,
-// so we have to call GetUser to surface them.
+// Used as a fallback when no creator seeded the user data. Returns (nil, nil)
+// on 403/404 - non-admin tokens lack permission to read /users/:id but should
+// not fail the whole resource graph.
 func (u *mqlGitlabUser) fetchUser() (*gitlab.User, error) {
 	if u.fetched {
 		return u.user, nil
@@ -77,8 +89,12 @@ func (u *mqlGitlabUser) fetchUser() (*gitlab.User, error) {
 		return u.user, nil
 	}
 	conn := u.MqlRuntime.Connection.(*connection.GitLabConnection)
-	user, _, err := conn.Client().Users.GetUser(u.Id.Data, gitlab.GetUsersOptions{})
+	user, resp, err := conn.Client().Users.GetUser(u.Id.Data, gitlab.GetUsersOptions{})
 	if err != nil {
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			u.fetched = true
+			return nil, nil
+		}
 		return nil, err
 	}
 	u.user = user
@@ -113,14 +129,25 @@ func (i *mqlGitlabUserExternalIdentity) user() (*mqlGitlabUser, error) {
 }
 
 // externalIdentities lists the SSO/external identities linked to this user.
+//
+// Uses cacheIdentities seeded by the creator (e.g. members()) to avoid an
+// N+1 GetUser call per user. Falls back to fetchUser() only when a user was
+// constructed via NewResource (lazy lookup), and that fall-back gracefully
+// returns an empty list on 403/404 instead of failing the whole graph.
 func (u *mqlGitlabUser) externalIdentities() ([]any, error) {
-	user, err := u.fetchUser()
-	if err != nil {
-		return nil, err
+	identities := u.cacheIdentities
+	if identities == nil {
+		user, err := u.fetchUser()
+		if err != nil {
+			return nil, err
+		}
+		if user != nil {
+			identities = user.Identities
+		}
 	}
 
 	var mqlIdentities []any
-	for _, identity := range user.Identities {
+	for _, identity := range identities {
 		if identity == nil {
 			continue
 		}

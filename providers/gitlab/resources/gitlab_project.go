@@ -67,6 +67,24 @@ func initGitlabProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	conn := runtime.Connection.(*connection.GitLabConnection)
+
+	// If only id is provided, fetch the project by id - used by typed refs
+	// (e.g. webhook.project(), deployKey.project(), auditEvent.entityProject()).
+	// 403/404 yields a bare resource so the typed back-ref doesn't fail the
+	// whole resource graph on insufficient perms.
+	if idArg, ok := args["id"]; ok && idArg != nil && idArg.Error == nil {
+		pid := int(idArg.Value.(int64))
+		project, resp, err := conn.Client().Projects.GetProject(pid, nil)
+		if err != nil {
+			if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+				return args, nil, nil
+			}
+			return nil, nil, err
+		}
+		args = getGitlabProjectArgs(project)
+		return args, nil, nil
+	}
+
 	project, err := conn.Project()
 	if err != nil {
 		return nil, nil, err
@@ -414,6 +432,11 @@ func (p *mqlGitlabProject) webhooks() ([]any, error) {
 			"resourceAccessTokenEvents": llx.BoolData(hook.ResourceAccessTokenEvents),
 			"vulnerabilityEvents":       llx.BoolData(hook.VulnerabilityEvents),
 			"featureFlagEvents":         llx.BoolData(hook.FeatureFlagEvents),
+			"milestoneEvents":           llx.BoolData(hook.MilestoneEvents),
+			"emojiEvents":               llx.BoolData(hook.EmojiEvents),
+			"repositoryUpdateEvents":    llx.BoolData(hook.RepositoryUpdateEvents),
+			"branchFilterStrategy":      llx.StringData(hook.BranchFilterStrategy),
+			"customWebhookTemplate":     llx.StringData(hook.CustomWebhookTemplate),
 			"createdAt":                 llx.TimeDataPtr(hook.CreatedAt),
 			"disabledUntil":             llx.TimeDataPtr(hook.DisabledUntil),
 			"alertStatus":               llx.StringData(hook.AlertStatus),
