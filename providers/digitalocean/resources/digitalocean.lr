@@ -274,8 +274,7 @@ digitalocean.volume @defaults("id name sizeGigabytes") {
   createdAt time
   // Tags
   tags []string
-  // Droplet IDs attached to
-  // Deprecated: use droplets() instead
+  // Deprecated: use droplets() instead. Droplet IDs attached to this volume
   dropletIds []int
   // Droplets this volume is attached to
   droplets() []digitalocean.droplet
