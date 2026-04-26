@@ -4,7 +4,10 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
 
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
@@ -90,9 +93,9 @@ func (c *mqlCloudflareOne) apps() ([]any, error) {
 
 				"allowedIdentityProviders": llx.ArrayData(convert.SliceAnyToInterface(rec.AllowedIdps), types.String),
 
-				"appLauncherVisible":     llx.BoolData(*rec.AppLauncherVisible),
-				"autoRedirectToIdentity": llx.BoolData(*rec.AutoRedirectToIdentity),
-				"optionsPreflightBypass": llx.BoolData(*rec.OptionsPreflightBypass),
+				"appLauncherVisible":     llx.BoolDataPtr(rec.AppLauncherVisible),
+				"autoRedirectToIdentity": llx.BoolDataPtr(rec.AutoRedirectToIdentity),
+				"optionsPreflightBypass": llx.BoolDataPtr(rec.OptionsPreflightBypass),
 
 				"customDenyMessage":      llx.StringData(rec.CustomDenyMessage),
 				"customDenyUrl":          llx.StringData(rec.CustomDenyURL),
@@ -255,36 +258,56 @@ func (c *mqlCloudflareOneServiceToken) id() (string, error) {
 	return c.Id.Data, nil
 }
 
+// serviceTokens lists Access service tokens. cloudflare-go's
+// ListAccessServiceTokens does not paginate, so we call the endpoint directly
+// via api.Raw and walk pages using the response's result_info block.
 func (c *mqlCloudflareOne) serviceTokens() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, _, err := conn.Cf.ListAccessServiceTokens(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: c.AccountID,
-		Level:      cloudflare.AccountRouteLevel,
-	}, cloudflare.ListAccessServiceTokensParams{})
-	if err != nil {
-		return nil, err
-	}
+	var (
+		result  []any
+		page    = 1
+		perPage = 50
+	)
 
-	var result []any
-	for i := range records {
-		rec := records[i]
-
-		res, err := NewResource(c.MqlRuntime, "cloudflare.one.serviceToken", map[string]*llx.RawData{
-			"id":         llx.StringData(rec.ID),
-			"name":       llx.StringData(rec.Name),
-			"clientId":   llx.StringData(rec.ClientID),
-			"duration":   llx.StringData(rec.Duration),
-			"expiresAt":  llx.TimeDataPtr(rec.ExpiresAt),
-			"lastSeenAt": llx.TimeDataPtr(rec.LastSeenAt),
-			"createdAt":  llx.TimeDataPtr(rec.CreatedAt),
-			"updatedAt":  llx.TimeDataPtr(rec.UpdatedAt),
-		})
+	for {
+		uri := fmt.Sprintf("/accounts/%s/access/service_tokens?page=%d&per_page=%d", c.AccountID, page, perPage)
+		raw, err := conn.Cf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
 		if err != nil {
 			return nil, err
 		}
 
-		result = append(result, res)
+		var records []cloudflare.AccessServiceToken
+		if len(raw.Result) > 0 {
+			if err := json.Unmarshal(raw.Result, &records); err != nil {
+				return nil, fmt.Errorf("failed to decode access service tokens response: %w", err)
+			}
+		}
+
+		for i := range records {
+			rec := records[i]
+
+			res, err := NewResource(c.MqlRuntime, "cloudflare.one.serviceToken", map[string]*llx.RawData{
+				"id":         llx.StringData(rec.ID),
+				"name":       llx.StringData(rec.Name),
+				"clientId":   llx.StringData(rec.ClientID),
+				"duration":   llx.StringData(rec.Duration),
+				"expiresAt":  llx.TimeDataPtr(rec.ExpiresAt),
+				"lastSeenAt": llx.TimeDataPtr(rec.LastSeenAt),
+				"createdAt":  llx.TimeDataPtr(rec.CreatedAt),
+				"updatedAt":  llx.TimeDataPtr(rec.UpdatedAt),
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			result = append(result, res)
+		}
+
+		if raw.ResultInfo == nil || !raw.ResultInfo.HasMorePages() {
+			break
+		}
+		page++
 	}
 
 	return result, nil

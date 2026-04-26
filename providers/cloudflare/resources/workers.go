@@ -5,6 +5,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/llx"
@@ -27,22 +28,48 @@ func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
 
 type mqlCloudflareWorkersInternal struct {
 	AccountID string
+
+	workerListLock sync.Mutex
+	workerListDone bool
+	workerList     []cloudflare.WorkerMetaData
+	workerListErr  error
 }
 
-func (c *mqlCloudflareWorkers) workers() ([]any, error) {
-	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+// fetchWorkerList caches the per-account workers list so that workers() and
+// secrets() share a single ListWorkers API call.
+func (c *mqlCloudflareWorkers) fetchWorkerList() ([]cloudflare.WorkerMetaData, error) {
+	if c.workerListDone {
+		return c.workerList, c.workerListErr
+	}
+	c.workerListLock.Lock()
+	defer c.workerListLock.Unlock()
+	if c.workerListDone {
+		return c.workerList, c.workerListErr
+	}
 
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 	resp, _, err := conn.Cf.ListWorkers(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.mqlCloudflareWorkersInternal.AccountID,
 		Level:      cloudflare.AccountRouteLevel,
 	}, cloudflare.ListWorkersParams{})
 	if err != nil {
+		c.workerListErr = err
+	} else {
+		c.workerList = resp.WorkerList
+	}
+	c.workerListDone = true
+	return c.workerList, c.workerListErr
+}
+
+func (c *mqlCloudflareWorkers) workers() ([]any, error) {
+	workerList, err := c.fetchWorkerList()
+	if err != nil {
 		return nil, err
 	}
 
 	var result []any
-	for i := range resp.WorkerList {
-		w := resp.WorkerList[i]
+	for i := range workerList {
+		w := workerList[i]
 
 		placementMode := ""
 		if w.PlacementMode != nil {
@@ -93,14 +120,14 @@ func (c *mqlCloudflareWorkers) secrets() ([]any, error) {
 		Level:      cloudflare.AccountRouteLevel,
 	}
 
-	resp, _, err := conn.Cf.ListWorkers(context.TODO(), rc, cloudflare.ListWorkersParams{})
+	workerList, err := c.fetchWorkerList()
 	if err != nil {
 		return nil, err
 	}
 
 	var result []any
-	for i := range resp.WorkerList {
-		w := resp.WorkerList[i]
+	for i := range workerList {
+		w := workerList[i]
 		secrets, err := conn.Cf.ListWorkersSecrets(context.TODO(), rc, cloudflare.ListWorkersSecretsParams{
 			ScriptName: w.ID,
 		})

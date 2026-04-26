@@ -48,33 +48,68 @@ func (c *mqlCloudflareR2Bucket) id() (string, error) {
 	return c.accountID + "/" + c.GetName().Data, nil
 }
 
+// buckets enumerates R2 buckets across the account. cloudflare-go's
+// ListR2Buckets returns only the first page (no cursor handling), so we walk
+// the API directly via api.Raw and follow `result_info.cursor`.
 func (c *mqlCloudflareR2) buckets() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	buckets, err := conn.Cf.ListR2Buckets(context.TODO(), &cloudflare.ResourceContainer{
-		Identifier: c.mqlCloudflareR2Internal.AccountID,
-	}, cloudflare.ListR2BucketsParams{})
-	if err != nil {
-		return nil, err
-	}
+	accountID := c.mqlCloudflareR2Internal.AccountID
 
-	var result []any
-	for i := range buckets {
-		bucket := buckets[i]
-		res, err := CreateResource(c.MqlRuntime, "cloudflare.r2.bucket", map[string]*llx.RawData{
-			"__id":      llx.StringData(c.mqlCloudflareR2Internal.AccountID + "/" + bucket.Name),
-			"name":      llx.StringData(bucket.Name),
-			"location":  llx.StringData(bucket.Location),
-			"createdOn": llx.TimeDataPtr(bucket.CreationDate),
-		})
+	var (
+		result  []any
+		cursor  string
+		perPage = 100
+	)
+
+	for {
+		uri := fmt.Sprintf("/accounts/%s/r2/buckets?per_page=%d", accountID, perPage)
+		if cursor != "" {
+			uri += "&cursor=" + cursor
+		}
+		raw, err := conn.Cf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
 		if err != nil {
 			return nil, err
 		}
 
-		mqlBucket := res.(*mqlCloudflareR2Bucket)
-		mqlBucket.accountID = c.mqlCloudflareR2Internal.AccountID
+		var payload struct {
+			Buckets []cloudflare.R2Bucket `json:"buckets"`
+		}
+		if len(raw.Result) > 0 {
+			if err := json.Unmarshal(raw.Result, &payload); err != nil {
+				return nil, fmt.Errorf("failed to decode r2 buckets response: %w", err)
+			}
+		}
 
-		result = append(result, res)
+		for i := range payload.Buckets {
+			bucket := payload.Buckets[i]
+			res, err := CreateResource(c.MqlRuntime, "cloudflare.r2.bucket", map[string]*llx.RawData{
+				"__id":      llx.StringData(accountID + "/" + bucket.Name),
+				"name":      llx.StringData(bucket.Name),
+				"location":  llx.StringData(bucket.Location),
+				"createdOn": llx.TimeDataPtr(bucket.CreationDate),
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			mqlBucket := res.(*mqlCloudflareR2Bucket)
+			mqlBucket.accountID = accountID
+
+			result = append(result, res)
+		}
+
+		if raw.ResultInfo == nil {
+			break
+		}
+		next := raw.ResultInfo.Cursor
+		if next == "" {
+			next = raw.ResultInfo.Cursors.After
+		}
+		if next == "" || next == cursor {
+			break
+		}
+		cursor = next
 	}
 
 	return result, nil
