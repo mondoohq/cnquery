@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -271,9 +272,17 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) vm() (*mqlAzureSubscriptio
 
 // effectiveSecurityRules computes the merged NSG rules effective on this NIC
 // (NSG attached to NIC + ASG + NSG attached to subnet). Lazily called per NIC.
+//
+// Azure only computes effective rules for NICs attached to a running VM; for
+// detached or stopped NICs the API returns NicNotAssociatedWithVm or similar
+// 400/404 errors. We treat those as "no effective rules" rather than failing
+// the whole interfaces query.
 func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
+	// Bound the long-poll so a stuck operation doesn't hang the interfaces query.
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
 	id := a.Id.Data
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
@@ -293,10 +302,18 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() (
 
 	poller, err := client.BeginListEffectiveNetworkSecurityGroups(ctx, resourceID.ResourceGroup, nicName, nil)
 	if err != nil {
+		if isNicEffectiveRulesUnavailableErr(err) {
+			log.Warn().Str("nic", nicName).Err(err).Msg("effective security rules unavailable for NIC")
+			return []any{}, nil
+		}
 		return nil, err
 	}
 	resp, err := poller.PollUntilDone(ctx, nil)
 	if err != nil {
+		if isNicEffectiveRulesUnavailableErr(err) {
+			log.Warn().Str("nic", nicName).Err(err).Msg("effective security rules unavailable for NIC")
+			return []any{}, nil
+		}
 		return nil, err
 	}
 
@@ -315,6 +332,20 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() (
 		}
 	}
 	return res, nil
+}
+
+// isNicEffectiveRulesUnavailableErr returns true when Azure rejects an effective-rules
+// lookup because the NIC is detached, the VM is stopped/deallocated, or RBAC denies it.
+func isNicEffectiveRulesUnavailableErr(err error) bool {
+	var respErr *azcore.ResponseError
+	if !errors.As(err, &respErr) {
+		return false
+	}
+	switch respErr.StatusCode {
+	case http.StatusBadRequest, http.StatusNotFound, http.StatusForbidden:
+		return true
+	}
+	return false
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceWatcher) flowLogs() ([]any, error) {
@@ -1604,8 +1635,8 @@ func (a *mqlAzureSubscriptionNetworkServicePrivateEndpoint) privateDnsZoneGroups
 				continue
 			}
 			entry := map[string]any{
-				"id":   llxStrOr(g.ID, ""),
-				"name": llxStrOr(g.Name, ""),
+				"id":   convert.ToValue(g.ID),
+				"name": convert.ToValue(g.Name),
 			}
 			if g.Properties != nil {
 				var zoneIds []any
@@ -1615,7 +1646,7 @@ func (a *mqlAzureSubscriptionNetworkServicePrivateEndpoint) privateDnsZoneGroups
 						continue
 					}
 					ce := map[string]any{
-						"name": llxStrOr(c.Name, ""),
+						"name": convert.ToValue(c.Name),
 					}
 					if c.Properties != nil && c.Properties.PrivateDNSZoneID != nil {
 						ce["privateDnsZoneId"] = *c.Properties.PrivateDNSZoneID
@@ -1633,13 +1664,6 @@ func (a *mqlAzureSubscriptionNetworkServicePrivateEndpoint) privateDnsZoneGroups
 		}
 	}
 	return res, nil
-}
-
-func llxStrOr(s *string, def string) string {
-	if s == nil {
-		return def
-	}
-	return *s
 }
 
 func privateLinkServiceConnectionToMql(runtime *plugin.Runtime, c *network.PrivateLinkServiceConnection) (*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection, error) {

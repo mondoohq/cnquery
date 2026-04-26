@@ -117,6 +117,16 @@ func (a *mqlAzureSubscriptionRecoveryServicesService) vaults() ([]any, error) {
 			if vault == nil {
 				continue
 			}
+			// The list-by-subscription API returns vault basics but not nested
+			// SecuritySettings/Encryption/RedundancySettings. Fetch each vault
+			// individually so the security-relevant detail is populated.
+			if vault.ID != nil {
+				if rid, err := ParseResourceID(*vault.ID); err == nil {
+					if detail, err := client.Get(ctx, rid.ResourceGroup, *vault.Name, nil); err == nil {
+						vault = &detail.Vault
+					}
+				}
+			}
 			mqlVault, err := createVaultResource(a.MqlRuntime, vault)
 			if err != nil {
 				return nil, err

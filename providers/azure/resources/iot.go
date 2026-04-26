@@ -97,7 +97,7 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 			}
 
 			var provisioningState, state, hostName, minTlsVersion, publicNetworkAccess string
-			var disableLocalAuth, disableDeviceSAS, disableModuleSAS, restrictOutbound, enableDataResidency bool
+			var disableLocalAuth, disableDeviceSAS, disableModuleSAS, restrictOutbound, enableDataResidency *bool
 			var allowedFqdns []any
 			var nrs any
 			if props := hub.Properties; props != nil {
@@ -116,21 +116,11 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 				if props.PublicNetworkAccess != nil {
 					publicNetworkAccess = string(*props.PublicNetworkAccess)
 				}
-				if props.DisableLocalAuth != nil {
-					disableLocalAuth = *props.DisableLocalAuth
-				}
-				if props.DisableDeviceSAS != nil {
-					disableDeviceSAS = *props.DisableDeviceSAS
-				}
-				if props.DisableModuleSAS != nil {
-					disableModuleSAS = *props.DisableModuleSAS
-				}
-				if props.RestrictOutboundNetworkAccess != nil {
-					restrictOutbound = *props.RestrictOutboundNetworkAccess
-				}
-				if props.EnableDataResidency != nil {
-					enableDataResidency = *props.EnableDataResidency
-				}
+				disableLocalAuth = props.DisableLocalAuth
+				disableDeviceSAS = props.DisableDeviceSAS
+				disableModuleSAS = props.DisableModuleSAS
+				restrictOutbound = props.RestrictOutboundNetworkAccess
+				enableDataResidency = props.EnableDataResidency
 				for _, fqdn := range props.AllowedFqdnList {
 					if fqdn != nil {
 						allowedFqdns = append(allowedFqdns, *fqdn)
@@ -153,14 +143,14 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 				"provisioningState":             llx.StringData(provisioningState),
 				"state":                         llx.StringData(state),
 				"hostName":                      llx.StringData(hostName),
-				"disableLocalAuth":              llx.BoolData(disableLocalAuth),
-				"disableDeviceSAS":              llx.BoolData(disableDeviceSAS),
-				"disableModuleSAS":              llx.BoolData(disableModuleSAS),
+				"disableLocalAuth":              llx.BoolDataPtr(disableLocalAuth),
+				"disableDeviceSAS":              llx.BoolDataPtr(disableDeviceSAS),
+				"disableModuleSAS":              llx.BoolDataPtr(disableModuleSAS),
 				"minTlsVersion":                 llx.StringData(minTlsVersion),
 				"publicNetworkAccess":           llx.StringData(publicNetworkAccess),
-				"restrictOutboundNetworkAccess": llx.BoolData(restrictOutbound),
+				"restrictOutboundNetworkAccess": llx.BoolDataPtr(restrictOutbound),
 				"allowedFqdnList":               llx.ArrayData(allowedFqdns, types.String),
-				"enableDataResidency":           llx.BoolData(enableDataResidency),
+				"enableDataResidency":           llx.BoolDataPtr(enableDataResidency),
 				"networkRuleSet":                llx.DictData(nrs),
 			})
 			if err != nil {

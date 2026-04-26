@@ -102,7 +102,7 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 			var computerName, adminUsername, licenseType *string
 			var vmId, provisioningState *string
 			var timeCreated *time.Time
-			var disablePasswordAuth, provisionVMAgent, enableAutomaticUpdates bool
+			var disablePasswordAuth, provisionVMAgent, enableAutomaticUpdates *bool
 			var patchMode string
 			var sshPublicKeys []any
 			if vm.Properties != nil {
@@ -114,12 +114,8 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 					computerName = osp.ComputerName
 					adminUsername = osp.AdminUsername
 					if lc := osp.LinuxConfiguration; lc != nil {
-						if lc.DisablePasswordAuthentication != nil {
-							disablePasswordAuth = *lc.DisablePasswordAuthentication
-						}
-						if lc.ProvisionVMAgent != nil {
-							provisionVMAgent = *lc.ProvisionVMAgent
-						}
+						disablePasswordAuth = lc.DisablePasswordAuthentication
+						provisionVMAgent = lc.ProvisionVMAgent
 						if lc.SSH != nil {
 							for _, k := range lc.SSH.PublicKeys {
 								if k == nil {
@@ -140,12 +136,8 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 						}
 					}
 					if wc := osp.WindowsConfiguration; wc != nil {
-						if wc.ProvisionVMAgent != nil {
-							provisionVMAgent = *wc.ProvisionVMAgent
-						}
-						if wc.EnableAutomaticUpdates != nil {
-							enableAutomaticUpdates = *wc.EnableAutomaticUpdates
-						}
+						provisionVMAgent = wc.ProvisionVMAgent
+						enableAutomaticUpdates = wc.EnableAutomaticUpdates
 						if wc.PatchSettings != nil && wc.PatchSettings.PatchMode != nil {
 							patchMode = string(*wc.PatchSettings.PatchMode)
 						}
@@ -180,9 +172,9 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 					"provisioningState":             llx.StringDataPtr(provisioningState),
 					"timeCreated":                   llx.TimeDataPtr(timeCreated),
 					"sshPublicKeys":                 llx.ArrayData(sshPublicKeys, types.Dict),
-					"disablePasswordAuthentication": llx.BoolData(disablePasswordAuth),
-					"provisionVMAgent":              llx.BoolData(provisionVMAgent),
-					"enableAutomaticUpdates":        llx.BoolData(enableAutomaticUpdates),
+					"disablePasswordAuthentication": llx.BoolDataPtr(disablePasswordAuth),
+					"provisionVMAgent":              llx.BoolDataPtr(provisionVMAgent),
+					"enableAutomaticUpdates":        llx.BoolDataPtr(enableAutomaticUpdates),
 					"patchMode":                     llx.StringData(patchMode),
 				})
 			if err != nil {

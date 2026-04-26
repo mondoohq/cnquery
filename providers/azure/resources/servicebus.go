@@ -81,7 +81,8 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 			}
 
 			var status, serviceBusEndpoint, provisioningState, cmkKeySource string
-			var disableLocalAuth, zoneRedundant, requireInfraEnc bool
+			var disableLocalAuth, zoneRedundant bool
+			var requireInfraEnc *bool
 			var cmkKeys []any
 			if ns.Properties != nil {
 				if ns.Properties.Status != nil {
@@ -103,9 +104,7 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 					if enc.KeySource != nil {
 						cmkKeySource = *enc.KeySource
 					}
-					if enc.RequireInfrastructureEncryption != nil {
-						requireInfraEnc = *enc.RequireInfrastructureEncryption
-					}
+					requireInfraEnc = enc.RequireInfrastructureEncryption
 					for _, kvp := range enc.KeyVaultProperties {
 						if kvp == nil {
 							continue
@@ -129,7 +128,7 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				"zoneRedundant":                   llx.BoolData(zoneRedundant),
 				"provisioningState":               llx.StringData(provisioningState),
 				"cmkKeySource":                    llx.StringData(cmkKeySource),
-				"requireInfrastructureEncryption": llx.BoolData(requireInfraEnc),
+				"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfraEnc),
 				"cmkKeys":                         llx.ArrayData(cmkKeys, types.Dict),
 			})
 			if err != nil {

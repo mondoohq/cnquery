@@ -368,7 +368,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) denyAssignments() ([]any, err
 				continue
 			}
 			var denyName, description, scope string
-			var doNotApplyToChild, isSystemProtected bool
+			var doNotApplyToChild, isSystemProtected *bool
 			var perms, principals, excludePrincipals []any
 			if p := da.Properties; p != nil {
 				if p.DenyAssignmentName != nil {
@@ -380,12 +380,8 @@ func (a *mqlAzureSubscriptionAuthorizationService) denyAssignments() ([]any, err
 				if p.Scope != nil {
 					scope = *p.Scope
 				}
-				if p.DoNotApplyToChildScopes != nil {
-					doNotApplyToChild = *p.DoNotApplyToChildScopes
-				}
-				if p.IsSystemProtected != nil {
-					isSystemProtected = *p.IsSystemProtected
-				}
+				doNotApplyToChild = p.DoNotApplyToChildScopes
+				isSystemProtected = p.IsSystemProtected
 				for _, pm := range p.Permissions {
 					if pm == nil {
 						continue
@@ -419,8 +415,8 @@ func (a *mqlAzureSubscriptionAuthorizationService) denyAssignments() ([]any, err
 					"type":                    llx.StringDataPtr(da.Type),
 					"denyAssignmentName":      llx.StringData(denyName),
 					"description":             llx.StringData(description),
-					"doNotApplyToChildScopes": llx.BoolData(doNotApplyToChild),
-					"isSystemProtected":       llx.BoolData(isSystemProtected),
+					"doNotApplyToChildScopes": llx.BoolDataPtr(doNotApplyToChild),
+					"isSystemProtected":       llx.BoolDataPtr(isSystemProtected),
 					"scope":                   llx.StringData(scope),
 					"permissions":             llx.ArrayData(perms, types.Dict),
 					"principals":              llx.ArrayData(principals, types.Dict),

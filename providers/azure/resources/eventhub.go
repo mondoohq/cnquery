@@ -77,7 +77,8 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 			}
 
 			var status, cmkKeySource string
-			var isAutoInflateEnabled, kafkaEnabled, disableLocalAuth, zoneRedundant, requireInfraEnc bool
+			var isAutoInflateEnabled, kafkaEnabled, disableLocalAuth, zoneRedundant bool
+			var requireInfraEnc *bool
 			var maximumThroughputUnits int64
 			var minimumTlsVersion, publicNetworkAccess string
 			var cmkKeys []any
@@ -110,9 +111,7 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 					if enc.KeySource != nil {
 						cmkKeySource = string(*enc.KeySource)
 					}
-					if enc.RequireInfrastructureEncryption != nil {
-						requireInfraEnc = *enc.RequireInfrastructureEncryption
-					}
+					requireInfraEnc = enc.RequireInfrastructureEncryption
 					for _, kvp := range enc.KeyVaultProperties {
 						if kvp == nil {
 							continue
@@ -139,7 +138,7 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 				"publicNetworkAccess":             llx.StringData(publicNetworkAccess),
 				"zoneRedundant":                   llx.BoolData(zoneRedundant),
 				"cmkKeySource":                    llx.StringData(cmkKeySource),
-				"requireInfrastructureEncryption": llx.BoolData(requireInfraEnc),
+				"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfraEnc),
 				"cmkKeys":                         llx.ArrayData(cmkKeys, types.Dict),
 			})
 			if err != nil {

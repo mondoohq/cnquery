@@ -148,18 +148,22 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		}
 
 		if enc := props.Encryption; enc != nil && enc.Entities != nil {
-			if md := enc.Entities.ManagedDisk; md != nil && md.KeyVaultProperties != nil {
+			if md := enc.Entities.ManagedDisk; md != nil {
+				// KeySource may be "Default" (Microsoft-managed) without KeyVaultProperties,
+				// or "Microsoft.Keyvault" with KV details. Read it independently.
 				if md.KeySource != nil {
 					managedDiskKeySource = string(*md.KeySource)
 				}
-				if md.KeyVaultProperties.KeyVaultURI != nil {
-					managedDiskKeyVaultUri = *md.KeyVaultProperties.KeyVaultURI
-				}
-				if md.KeyVaultProperties.KeyName != nil {
-					managedDiskKeyName = *md.KeyVaultProperties.KeyName
-				}
-				if md.KeyVaultProperties.KeyVersion != nil {
-					managedDiskKeyVersion = *md.KeyVaultProperties.KeyVersion
+				if md.KeyVaultProperties != nil {
+					if md.KeyVaultProperties.KeyVaultURI != nil {
+						managedDiskKeyVaultUri = *md.KeyVaultProperties.KeyVaultURI
+					}
+					if md.KeyVaultProperties.KeyName != nil {
+						managedDiskKeyName = *md.KeyVaultProperties.KeyName
+					}
+					if md.KeyVaultProperties.KeyVersion != nil {
+						managedDiskKeyVersion = *md.KeyVaultProperties.KeyVersion
+					}
 				}
 			}
 			if ms := enc.Entities.ManagedServices; ms != nil {

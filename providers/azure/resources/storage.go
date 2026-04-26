@@ -158,7 +158,21 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 			return nil, err
 		}
 		for _, container := range page.Value {
-			properties, err := convert.JsonToDict(container.Properties)
+			// The list-by-account API returns hasImmutabilityPolicy/hasLegalHold flags but not the
+			// nested ImmutabilityPolicy/LegalHold detail. Fetch the container individually when
+			// either flag is set so the detail fields are populated.
+			containerProps := container.Properties
+			needsDetail := containerProps != nil &&
+				((containerProps.HasImmutabilityPolicy != nil && *containerProps.HasImmutabilityPolicy) ||
+					(containerProps.HasLegalHold != nil && *containerProps.HasLegalHold))
+			if needsDetail && container.Name != nil {
+				detail, err := client.Get(ctx, resourceID.ResourceGroup, account, *container.Name, nil)
+				if err == nil && detail.BlobContainer.ContainerProperties != nil {
+					containerProps = detail.BlobContainer.ContainerProperties
+				}
+			}
+
+			properties, err := convert.JsonToDict(containerProps)
 			if err != nil {
 				return nil, err
 			}
@@ -177,38 +191,38 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 			var objectLevelImmutabilityEnabled bool
 			var legalHoldTags []any
 			metadata := map[string]any{}
-			if container.Properties != nil {
-				if container.Properties.PublicAccess != nil {
-					publicAccess = string(*container.Properties.PublicAccess)
+			if containerProps != nil {
+				if containerProps.PublicAccess != nil {
+					publicAccess = string(*containerProps.PublicAccess)
 				}
-				if container.Properties.HasImmutabilityPolicy != nil {
-					hasImmutabilityPolicy = *container.Properties.HasImmutabilityPolicy
+				if containerProps.HasImmutabilityPolicy != nil {
+					hasImmutabilityPolicy = *containerProps.HasImmutabilityPolicy
 				}
-				if container.Properties.HasLegalHold != nil {
-					hasLegalHold = *container.Properties.HasLegalHold
+				if containerProps.HasLegalHold != nil {
+					hasLegalHold = *containerProps.HasLegalHold
 				}
-				if container.Properties.DefaultEncryptionScope != nil {
-					defaultEncryptionScope = *container.Properties.DefaultEncryptionScope
+				if containerProps.DefaultEncryptionScope != nil {
+					defaultEncryptionScope = *containerProps.DefaultEncryptionScope
 				}
-				if container.Properties.DenyEncryptionScopeOverride != nil {
-					denyEncryptionScopeOverride = *container.Properties.DenyEncryptionScopeOverride
+				if containerProps.DenyEncryptionScopeOverride != nil {
+					denyEncryptionScopeOverride = *containerProps.DenyEncryptionScopeOverride
 				}
-				if container.Properties.LeaseState != nil {
-					leaseState = string(*container.Properties.LeaseState)
+				if containerProps.LeaseState != nil {
+					leaseState = string(*containerProps.LeaseState)
 				}
-				if container.Properties.LeaseStatus != nil {
-					leaseStatus = string(*container.Properties.LeaseStatus)
+				if containerProps.LeaseStatus != nil {
+					leaseStatus = string(*containerProps.LeaseStatus)
 				}
-				deleted = container.Properties.Deleted
-				deletedTime = container.Properties.DeletedTime
-				lastModifiedTime = container.Properties.LastModifiedTime
-				remainingRetentionDays = container.Properties.RemainingRetentionDays
-				for k, v := range container.Properties.Metadata {
+				deleted = containerProps.Deleted
+				deletedTime = containerProps.DeletedTime
+				lastModifiedTime = containerProps.LastModifiedTime
+				remainingRetentionDays = containerProps.RemainingRetentionDays
+				for k, v := range containerProps.Metadata {
 					if v != nil {
 						metadata[k] = *v
 					}
 				}
-				if ip := container.Properties.ImmutabilityPolicy; ip != nil && ip.Properties != nil {
+				if ip := containerProps.ImmutabilityPolicy; ip != nil && ip.Properties != nil {
 					if ip.Properties.State != nil {
 						immutabilityPolicyState = string(*ip.Properties.State)
 					}
@@ -222,10 +236,10 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 						immutabilityAllowProtectedAppendWritesAll = *ip.Properties.AllowProtectedAppendWritesAll
 					}
 				}
-				if isv := container.Properties.ImmutableStorageWithVersioning; isv != nil && isv.Enabled != nil {
+				if isv := containerProps.ImmutableStorageWithVersioning; isv != nil && isv.Enabled != nil {
 					objectLevelImmutabilityEnabled = *isv.Enabled
 				}
-				if lh := container.Properties.LegalHold; lh != nil {
+				if lh := containerProps.LegalHold; lh != nil {
 					for _, tag := range lh.Tags {
 						if tag == nil {
 							continue
@@ -1267,7 +1281,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccountLocalUser) id() (string, error
 // localUsers fetches local SFTP/SSH user accounts on the storage account.
 // Local users bypass shared-key and AAD auth so they're a high-impact audit surface.
 func (a *mqlAzureSubscriptionStorageServiceAccount) localUsers() ([]any, error) {
-	if !a.GetIsLocalUserEnabled().Data {
+	enabled := a.GetIsLocalUserEnabled()
+	if enabled.Error != nil {
+		return nil, enabled.Error
+	}
+	if !enabled.Data {
 		return []any{}, nil
 	}
 
