@@ -393,7 +393,7 @@ private github.user @defaults("login name email company") {
   // User gists
   gists() []github.gist
   // User's public SSH keys
-  publicKeys() []github.deployKey
+  publicKeys() []github.publicKey
 }
 
 // GitHub team
@@ -664,6 +664,24 @@ private github.deployKey @defaults("id title readOnly") {
   ageInDays int
   // The repository this key is configured on
   repository() github.repository
+}
+
+// A user's public SSH key
+private github.publicKey @defaults("id title") {
+  // Public key ID
+  id int
+  // Title given to the key
+  title string
+  // The public SSH key
+  key string
+  // Whether the key has been verified
+  verified bool
+  // Time the key was created
+  createdAt time
+  // Approximate age of the key in days since createdAt (-1 if createdAt is unknown)
+  ageInDays int
+  // The user this key belongs to
+  user() github.user
 }
 
 // Parsed CODEOWNERS rules for a repository

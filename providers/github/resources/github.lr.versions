@@ -434,6 +434,14 @@ github.packages.internal 11.3.7
 github.packages.list 11.3.7
 github.packages.private 11.3.7
 github.packages.public 11.3.7
+github.publicKey 13.0.8
+github.publicKey.ageInDays 13.0.8
+github.publicKey.createdAt 13.0.8
+github.publicKey.id 13.0.8
+github.publicKey.key 13.0.8
+github.publicKey.title 13.0.8
+github.publicKey.user 13.0.8
+github.publicKey.verified 13.0.8
 github.release 9.0.0
 github.release.author 11.4.120
 github.release.createdAt 11.4.120

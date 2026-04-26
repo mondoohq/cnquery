@@ -799,13 +799,65 @@ func (g *mqlGithubUser) publicKeys() ([]any, error) {
 
 	res := make([]any, 0, len(allKeys))
 	for _, k := range allKeys {
-		dk, err := newMqlDeployKey(g.MqlRuntime, k, "", "")
+		pk, err := newMqlPublicKey(g.MqlRuntime, k, userLogin)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, dk)
+		res = append(res, pk)
 	}
 	return res, nil
+}
+
+// ---------- User public keys ----------
+
+type mqlGithubPublicKeyInternal struct {
+	cacheUserLogin string
+}
+
+func (g *mqlGithubPublicKey) id() (string, error) {
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return "github.publicKey/" + strconv.FormatInt(g.Id.Data, 10), nil
+}
+
+func newMqlPublicKey(runtime *plugin.Runtime, k *github.Key, userLogin string) (*mqlGithubPublicKey, error) {
+	var idVal int64
+	if k.ID != nil {
+		idVal = *k.ID
+	}
+	args := map[string]*llx.RawData{
+		"id":        llx.IntData(idVal),
+		"title":     llx.StringDataPtr(k.Title),
+		"key":       llx.StringDataPtr(k.Key),
+		"verified":  llx.BoolData(k.GetVerified()),
+		"createdAt": llx.TimeDataPtr(githubTimestamp(k.CreatedAt)),
+		"ageInDays": llx.IntData(keyAgeInDays(k.CreatedAt)),
+	}
+	r, err := CreateResource(runtime, "github.publicKey", args)
+	if err != nil {
+		return nil, err
+	}
+	pk := r.(*mqlGithubPublicKey)
+	pk.cacheUserLogin = userLogin
+	if userLogin == "" {
+		pk.User.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return pk, nil
+}
+
+func (g *mqlGithubPublicKey) user() (*mqlGithubUser, error) {
+	if g.cacheUserLogin == "" {
+		g.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	u, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+		"login": llx.StringData(g.cacheUserLogin),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return u.(*mqlGithubUser), nil
 }
 
 // ---------- CODEOWNERS ----------

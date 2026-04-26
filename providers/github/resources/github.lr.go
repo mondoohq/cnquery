@@ -38,6 +38,7 @@ const (
 	ResourceGithubPackages                         string = "github.packages"
 	ResourceGithubRepository                       string = "github.repository"
 	ResourceGithubDeployKey                        string = "github.deployKey"
+	ResourceGithubPublicKey                        string = "github.publicKey"
 	ResourceGithubRepositoryCodeowners             string = "github.repository.codeowners"
 	ResourceGithubCodeownersRule                   string = "github.codeowners.rule"
 	ResourceGithubRepositorySbom                   string = "github.repository.sbom"
@@ -165,6 +166,10 @@ func init() {
 		"github.deployKey": {
 			// to override args, implement: initGithubDeployKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubDeployKey,
+		},
+		"github.publicKey": {
+			// to override args, implement: initGithubPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubPublicKey,
 		},
 		"github.repository.codeowners": {
 			// to override args, implement: initGithubRepositoryCodeowners(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -872,7 +877,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGithubUser).GetGists()).ToDataRes(types.Array(types.Resource("github.gist")))
 	},
 	"github.user.publicKeys": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGithubUser).GetPublicKeys()).ToDataRes(types.Array(types.Resource("github.deployKey")))
+		return (r.(*mqlGithubUser).GetPublicKeys()).ToDataRes(types.Array(types.Resource("github.publicKey")))
 	},
 	"github.team.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubTeam).GetId()).ToDataRes(types.Int)
@@ -1236,6 +1241,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.deployKey.repository": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubDeployKey).GetRepository()).ToDataRes(types.Resource("github.repository"))
+	},
+	"github.publicKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPublicKey).GetId()).ToDataRes(types.Int)
+	},
+	"github.publicKey.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPublicKey).GetTitle()).ToDataRes(types.String)
+	},
+	"github.publicKey.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPublicKey).GetKey()).ToDataRes(types.String)
+	},
+	"github.publicKey.verified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPublicKey).GetVerified()).ToDataRes(types.Bool)
+	},
+	"github.publicKey.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPublicKey).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"github.publicKey.ageInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPublicKey).GetAgeInDays()).ToDataRes(types.Int)
+	},
+	"github.publicKey.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubPublicKey).GetUser()).ToDataRes(types.Resource("github.user"))
 	},
 	"github.repository.codeowners.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepositoryCodeowners).GetPath()).ToDataRes(types.String)
@@ -3429,6 +3455,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.deployKey.repository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubDeployKey).Repository, ok = plugin.RawToTValue[*mqlGithubRepository](v.Value, v.Error)
+		return
+	},
+	"github.publicKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPublicKey).__id, ok = v.Value.(string)
+		return
+	},
+	"github.publicKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPublicKey).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.publicKey.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPublicKey).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.publicKey.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPublicKey).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.publicKey.verified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPublicKey).Verified, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.publicKey.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPublicKey).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.publicKey.ageInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPublicKey).AgeInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"github.publicKey.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubPublicKey).User, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
 		return
 	},
 	"github.repository.codeowners.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8051,6 +8109,97 @@ func (c *mqlGithubDeployKey) GetRepository() *plugin.TValue[*mqlGithubRepository
 		}
 
 		return c.repository()
+	})
+}
+
+// mqlGithubPublicKey for the github.publicKey resource
+type mqlGithubPublicKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGithubPublicKeyInternal
+	Id        plugin.TValue[int64]
+	Title     plugin.TValue[string]
+	Key       plugin.TValue[string]
+	Verified  plugin.TValue[bool]
+	CreatedAt plugin.TValue[*time.Time]
+	AgeInDays plugin.TValue[int64]
+	User      plugin.TValue[*mqlGithubUser]
+}
+
+// createGithubPublicKey creates a new instance of this resource
+func createGithubPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubPublicKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.publicKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubPublicKey) MqlName() string {
+	return "github.publicKey"
+}
+
+func (c *mqlGithubPublicKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubPublicKey) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGithubPublicKey) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGithubPublicKey) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlGithubPublicKey) GetVerified() *plugin.TValue[bool] {
+	return &c.Verified
+}
+
+func (c *mqlGithubPublicKey) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGithubPublicKey) GetAgeInDays() *plugin.TValue[int64] {
+	return &c.AgeInDays
+}
+
+func (c *mqlGithubPublicKey) GetUser() *plugin.TValue[*mqlGithubUser] {
+	return plugin.GetOrCompute[*mqlGithubUser](&c.User, func() (*mqlGithubUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.publicKey", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGithubUser), nil
+			}
+		}
+
+		return c.user()
 	})
 }
 
