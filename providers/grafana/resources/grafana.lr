@@ -18,6 +18,14 @@ grafana {
   contactPoints() []grafana.contactPoint
   // Notification policy tree
   notificationPolicy() grafana.notificationPolicy
+  // Legacy API keys (distinct from service account tokens)
+  apiKeys() []grafana.apiKey
+  // RBAC roles (Grafana Enterprise/Cloud)
+  roles() []grafana.role
+  // SSO settings for all configured identity providers
+  ssoSettings() []grafana.ssoSettings
+  // SAML SSO settings (convenience accessor for the saml provider)
+  samlSettings() grafana.samlSettings
 }
 
 // Grafana organization
@@ -46,6 +54,20 @@ grafana.user @defaults("login role") {
   lastSeenAt time
   // Human-readable last seen age
   lastSeenAtAge string
+  // Auth provider module name (e.g., oauth_google, ldap, saml, "" for password)
+  authModule() string
+  // Auth labels populated by Grafana (e.g., ["OAuth"], ["LDAP"])
+  authLabels() []string
+  // Whether the user authenticates via an external identity provider
+  isExternal() bool
+  // Whether the user is a Grafana server-level admin
+  isGrafanaAdmin() bool
+  // Whether the user account is disabled
+  isDisabled() bool
+  // Whether multi-factor authentication is enabled for this user
+  mfaEnabled() bool
+  // RBAC permissions granted to this user (action -> scope list)
+  permissions() map[string][]string
 }
 
 // Grafana service account
@@ -110,8 +132,30 @@ grafana.datasource @defaults("id name type") {
   readOnly bool
   // Whether basic auth is enabled for this datasource
   basicAuth bool
+  // Basic auth username (no password is ever returned by the API)
+  basicAuthUser string
+  // Username for non-basic-auth credential schemes (e.g., direct DB user)
+  user string
+  // Database name (datasource-type specific)
+  database string
+  // Whether the datasource has an inline plaintext password set (legacy, insecure)
+  hasPassword bool
+  // Whether the datasource has an inline plaintext basic auth password set (legacy, insecure)
+  hasBasicAuthPassword bool
+  // Whether browser cookies (session credentials) are forwarded with proxied requests
+  withCredentials bool
+  // Names of secret fields stored encrypted (e.g., basicAuthPassword, tlsClientCert)
+  secureJsonFields []string
   // JSON data configuration (non-secret fields)
   jsonData dict
+  // Whether the datasource URL uses HTTPS
+  isHttps() bool
+  // Whether TLS server-certificate verification is skipped (jsonData.tlsSkipVerify)
+  tlsSkipVerify() bool
+  // Whether mutual TLS (client cert) is configured
+  tlsClientAuth() bool
+  // Whether OAuth pass-through (oauthPassThru) is enabled
+  oauthPassThru() bool
 }
 
 // Grafana alerting contact point
@@ -125,6 +169,106 @@ grafana.contactPoint @defaults("uid name type") {
   // Whether resolve messages are disabled
   disableResolveMessage bool
   // Contact point settings (non-secret fields)
+  settings dict
+  // URL configured on the contact point (webhook/slack URL when applicable)
+  url() string
+  // Whether the configured webhook/URL uses HTTPS (true if no URL applies, e.g., email)
+  isHttps() bool
+  // Whether TLS verification is disabled in the contact point settings
+  tlsSkipVerify() bool
+  // Whether HTTP authentication (basic auth or bearer token) is configured
+  hasHttpAuth() bool
+}
+
+// Legacy Grafana API key (distinct from service account tokens). Use service
+// accounts and tokens for new integrations; api keys are deprecated.
+grafana.apiKey @defaults("name role") {
+  // API key ID
+  id int
+  // Organization ID
+  orgId int
+  // Key name
+  name string
+  // Role granted by the key (Admin, Editor, Viewer)
+  role string
+  // Timestamp when the key expires (zero if no expiration)
+  expiration time
+  // Whether an expiration is set on the key
+  hasExpiration bool
+  // Whether the key has expired
+  isExpired bool
+  // Service account ID this key was migrated to (zero if not migrated)
+  serviceAccountId int
+}
+
+// Grafana RBAC role (Enterprise/Cloud)
+grafana.role @defaults("name displayName") {
+  // Role UID
+  uid string
+  // Role name (e.g., fixed:datasources:writer)
+  name string
+  // Human-readable display name
+  displayName string
+  // Description of the role's purpose
+  description string
+  // Group the role belongs to (e.g., "Data sources")
+  group string
+  // Whether the role is built-in to Grafana (cannot be modified)
+  global bool
+  // Whether the role is hidden from the UI by default
+  hidden bool
+  // Role version
+  version int
+  // Permissions granted by this role (action -> scope list)
+  permissions map[string][]string
+  // Timestamp when the role was created
+  created time
+  // Timestamp when the role was last updated
+  updated time
+}
+
+// Grafana SSO settings for a single identity provider
+grafana.ssoSettings @defaults("provider source") {
+  // Provider name (e.g., saml, github, google, generic_oauth, azuread, gitlab, okta)
+  provider string
+  // Source of the configuration (system or database)
+  source string
+  // Whether SSO for this provider is enabled
+  enabled bool
+  // Provider settings (non-secret fields; secrets are redacted by Grafana)
+  settings dict
+  // Whether single-sign-on is the only allowed login flow (signup/skip-org-role auto-assign disabled)
+  enforceSso bool
+  // Whether new users are auto-registered on first login
+  allowSignUp bool
+  // Whether sign-in is restricted to the configured allowed_domains/orgs
+  hasDomainRestriction bool
+}
+
+// Grafana SAML SSO settings (Enterprise/Cloud). Convenience view of the saml
+// entry from grafana.ssoSettings with security-relevant fields surfaced.
+grafana.samlSettings @defaults("enabled") {
+  // Whether SAML SSO is enabled
+  enabled bool
+  // Source of the configuration (system or database)
+  source string
+  // Whether the IdP must sign assertions
+  signatureAlgorithm string
+  // Whether the SP-initiated request is signed
+  signRequests bool
+  // Whether assertions must be encrypted
+  assertionsEncrypted bool
+  // Whether single-logout is enabled
+  singleLogoutEnabled bool
+  // Whether IdP-initiated SSO is allowed
+  allowIdpInitiated bool
+  // Whether new users are auto-registered on first login
+  allowSignUp bool
+  // Comma-separated list of allowed organizations
+  allowedOrganizations string
+  // Whether email-based skip-org-role-sync is enabled
+  skipOrgRoleSync bool
+  // Raw provider settings (secrets redacted by Grafana)
   settings dict
 }
 

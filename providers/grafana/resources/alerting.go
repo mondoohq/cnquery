@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -82,6 +83,101 @@ func (g *mqlGrafana) contactPoints() ([]interface{}, error) {
 
 func (c *mqlGrafanaContactPoint) id() (string, error) {
 	return "grafana-cp/" + c.Uid.Data, nil
+}
+
+// contactPointSettings returns the parsed settings dict, or nil if absent.
+func (c *mqlGrafanaContactPoint) contactPointSettings() map[string]any {
+	v := c.Settings
+	if v.Error != nil || v.Data == nil {
+		return nil
+	}
+	m, ok := v.Data.(map[string]any)
+	if !ok {
+		return nil
+	}
+	return m
+}
+
+// contactPointURL returns the URL configured on the contact point. Different
+// contact-point types use different keys (slack=url, webhook=url,
+// pagerduty=integrationKey not URL, etc.).
+func contactPointURL(cpType string, settings map[string]any) string {
+	if settings == nil {
+		return ""
+	}
+	candidates := []string{"url", "endpointUrl", "apiUrl", "webhook", "webhookUrl"}
+	for _, k := range candidates {
+		if v, ok := settings[k]; ok {
+			if s, ok := v.(string); ok && s != "" {
+				return s
+			}
+		}
+	}
+	return ""
+}
+
+func (c *mqlGrafanaContactPoint) url() (string, error) {
+	return contactPointURL(c.Type.Data, c.contactPointSettings()), nil
+}
+
+// isHttps reports whether the configured URL uses HTTPS. For contact-point
+// types that have no URL (e.g., email, sms, prometheus alertmanager via
+// internal addressing), this returns true so the field is not falsely flagged.
+func (c *mqlGrafanaContactPoint) isHttps() (bool, error) {
+	u := contactPointURL(c.Type.Data, c.contactPointSettings())
+	if u == "" {
+		return true, nil
+	}
+	return strings.HasPrefix(strings.ToLower(u), "https://"), nil
+}
+
+func (c *mqlGrafanaContactPoint) tlsSkipVerify() (bool, error) {
+	s := c.contactPointSettings()
+	if s == nil {
+		return false, nil
+	}
+	// httpConfig is the standard Alertmanager-style nested key; tlsConfig is the
+	// flatter Grafana-managed key.
+	if hc, ok := s["httpConfig"].(map[string]any); ok {
+		if tls, ok := hc["tlsConfig"].(map[string]any); ok {
+			if v, ok := tls["insecureSkipVerify"].(bool); ok && v {
+				return true, nil
+			}
+		}
+	}
+	if tls, ok := s["tlsConfig"].(map[string]any); ok {
+		if v, ok := tls["insecureSkipVerify"].(bool); ok && v {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// hasHttpAuth reports whether basic-auth or bearer-token auth is configured on
+// the contact point, indicating the alert receiver requires authentication.
+func (c *mqlGrafanaContactPoint) hasHttpAuth() (bool, error) {
+	s := c.contactPointSettings()
+	if s == nil {
+		return false, nil
+	}
+	if _, ok := s["username"]; ok {
+		return true, nil
+	}
+	if _, ok := s["authorization_credentials"]; ok {
+		return true, nil
+	}
+	if hc, ok := s["httpConfig"].(map[string]any); ok {
+		if _, ok := hc["basic_auth"]; ok {
+			return true, nil
+		}
+		if _, ok := hc["bearer_token"]; ok {
+			return true, nil
+		}
+		if _, ok := hc["authorization"]; ok {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // initGrafanaNotificationPolicy delegates to the parent grafana resource when

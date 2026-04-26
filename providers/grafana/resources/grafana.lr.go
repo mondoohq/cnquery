@@ -23,6 +23,10 @@ const (
 	ResourceGrafanaServiceAccountToken string = "grafana.serviceAccountToken"
 	ResourceGrafanaDatasource          string = "grafana.datasource"
 	ResourceGrafanaContactPoint        string = "grafana.contactPoint"
+	ResourceGrafanaApiKey              string = "grafana.apiKey"
+	ResourceGrafanaRole                string = "grafana.role"
+	ResourceGrafanaSsoSettings         string = "grafana.ssoSettings"
+	ResourceGrafanaSamlSettings        string = "grafana.samlSettings"
 	ResourceGrafanaNotificationPolicy  string = "grafana.notificationPolicy"
 )
 
@@ -57,6 +61,22 @@ func init() {
 		"grafana.contactPoint": {
 			// to override args, implement: initGrafanaContactPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGrafanaContactPoint,
+		},
+		"grafana.apiKey": {
+			// to override args, implement: initGrafanaApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGrafanaApiKey,
+		},
+		"grafana.role": {
+			// to override args, implement: initGrafanaRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGrafanaRole,
+		},
+		"grafana.ssoSettings": {
+			// to override args, implement: initGrafanaSsoSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGrafanaSsoSettings,
+		},
+		"grafana.samlSettings": {
+			Init:   initGrafanaSamlSettings,
+			Create: createGrafanaSamlSettings,
 		},
 		"grafana.notificationPolicy": {
 			Init:   initGrafanaNotificationPolicy,
@@ -151,6 +171,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"grafana.notificationPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafana).GetNotificationPolicy()).ToDataRes(types.Resource("grafana.notificationPolicy"))
 	},
+	"grafana.apiKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafana).GetApiKeys()).ToDataRes(types.Array(types.Resource("grafana.apiKey")))
+	},
+	"grafana.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafana).GetRoles()).ToDataRes(types.Array(types.Resource("grafana.role")))
+	},
+	"grafana.ssoSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafana).GetSsoSettings()).ToDataRes(types.Array(types.Resource("grafana.ssoSettings")))
+	},
+	"grafana.samlSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafana).GetSamlSettings()).ToDataRes(types.Resource("grafana.samlSettings"))
+	},
 	"grafana.organization.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaOrganization).GetId()).ToDataRes(types.Int)
 	},
@@ -180,6 +212,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"grafana.user.lastSeenAtAge": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaUser).GetLastSeenAtAge()).ToDataRes(types.String)
+	},
+	"grafana.user.authModule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaUser).GetAuthModule()).ToDataRes(types.String)
+	},
+	"grafana.user.authLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaUser).GetAuthLabels()).ToDataRes(types.Array(types.String))
+	},
+	"grafana.user.isExternal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaUser).GetIsExternal()).ToDataRes(types.Bool)
+	},
+	"grafana.user.isGrafanaAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaUser).GetIsGrafanaAdmin()).ToDataRes(types.Bool)
+	},
+	"grafana.user.isDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaUser).GetIsDisabled()).ToDataRes(types.Bool)
+	},
+	"grafana.user.mfaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaUser).GetMfaEnabled()).ToDataRes(types.Bool)
+	},
+	"grafana.user.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaUser).GetPermissions()).ToDataRes(types.Map(types.String, types.Array(types.String)))
 	},
 	"grafana.serviceAccount.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaServiceAccount).GetId()).ToDataRes(types.Int)
@@ -259,8 +312,41 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"grafana.datasource.basicAuth": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaDatasource).GetBasicAuth()).ToDataRes(types.Bool)
 	},
+	"grafana.datasource.basicAuthUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetBasicAuthUser()).ToDataRes(types.String)
+	},
+	"grafana.datasource.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetUser()).ToDataRes(types.String)
+	},
+	"grafana.datasource.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetDatabase()).ToDataRes(types.String)
+	},
+	"grafana.datasource.hasPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetHasPassword()).ToDataRes(types.Bool)
+	},
+	"grafana.datasource.hasBasicAuthPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetHasBasicAuthPassword()).ToDataRes(types.Bool)
+	},
+	"grafana.datasource.withCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetWithCredentials()).ToDataRes(types.Bool)
+	},
+	"grafana.datasource.secureJsonFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetSecureJsonFields()).ToDataRes(types.Array(types.String))
+	},
 	"grafana.datasource.jsonData": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaDatasource).GetJsonData()).ToDataRes(types.Dict)
+	},
+	"grafana.datasource.isHttps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetIsHttps()).ToDataRes(types.Bool)
+	},
+	"grafana.datasource.tlsSkipVerify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetTlsSkipVerify()).ToDataRes(types.Bool)
+	},
+	"grafana.datasource.tlsClientAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetTlsClientAuth()).ToDataRes(types.Bool)
+	},
+	"grafana.datasource.oauthPassThru": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaDatasource).GetOauthPassThru()).ToDataRes(types.Bool)
 	},
 	"grafana.contactPoint.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaContactPoint).GetUid()).ToDataRes(types.String)
@@ -276,6 +362,129 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"grafana.contactPoint.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaContactPoint).GetSettings()).ToDataRes(types.Dict)
+	},
+	"grafana.contactPoint.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaContactPoint).GetUrl()).ToDataRes(types.String)
+	},
+	"grafana.contactPoint.isHttps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaContactPoint).GetIsHttps()).ToDataRes(types.Bool)
+	},
+	"grafana.contactPoint.tlsSkipVerify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaContactPoint).GetTlsSkipVerify()).ToDataRes(types.Bool)
+	},
+	"grafana.contactPoint.hasHttpAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaContactPoint).GetHasHttpAuth()).ToDataRes(types.Bool)
+	},
+	"grafana.apiKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaApiKey).GetId()).ToDataRes(types.Int)
+	},
+	"grafana.apiKey.orgId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaApiKey).GetOrgId()).ToDataRes(types.Int)
+	},
+	"grafana.apiKey.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaApiKey).GetName()).ToDataRes(types.String)
+	},
+	"grafana.apiKey.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaApiKey).GetRole()).ToDataRes(types.String)
+	},
+	"grafana.apiKey.expiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaApiKey).GetExpiration()).ToDataRes(types.Time)
+	},
+	"grafana.apiKey.hasExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaApiKey).GetHasExpiration()).ToDataRes(types.Bool)
+	},
+	"grafana.apiKey.isExpired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaApiKey).GetIsExpired()).ToDataRes(types.Bool)
+	},
+	"grafana.apiKey.serviceAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaApiKey).GetServiceAccountId()).ToDataRes(types.Int)
+	},
+	"grafana.role.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetUid()).ToDataRes(types.String)
+	},
+	"grafana.role.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetName()).ToDataRes(types.String)
+	},
+	"grafana.role.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetDisplayName()).ToDataRes(types.String)
+	},
+	"grafana.role.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetDescription()).ToDataRes(types.String)
+	},
+	"grafana.role.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetGroup()).ToDataRes(types.String)
+	},
+	"grafana.role.global": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetGlobal()).ToDataRes(types.Bool)
+	},
+	"grafana.role.hidden": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetHidden()).ToDataRes(types.Bool)
+	},
+	"grafana.role.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetVersion()).ToDataRes(types.Int)
+	},
+	"grafana.role.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetPermissions()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"grafana.role.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetCreated()).ToDataRes(types.Time)
+	},
+	"grafana.role.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaRole).GetUpdated()).ToDataRes(types.Time)
+	},
+	"grafana.ssoSettings.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSsoSettings).GetProvider()).ToDataRes(types.String)
+	},
+	"grafana.ssoSettings.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSsoSettings).GetSource()).ToDataRes(types.String)
+	},
+	"grafana.ssoSettings.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSsoSettings).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"grafana.ssoSettings.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSsoSettings).GetSettings()).ToDataRes(types.Dict)
+	},
+	"grafana.ssoSettings.enforceSso": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSsoSettings).GetEnforceSso()).ToDataRes(types.Bool)
+	},
+	"grafana.ssoSettings.allowSignUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSsoSettings).GetAllowSignUp()).ToDataRes(types.Bool)
+	},
+	"grafana.ssoSettings.hasDomainRestriction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSsoSettings).GetHasDomainRestriction()).ToDataRes(types.Bool)
+	},
+	"grafana.samlSettings.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"grafana.samlSettings.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetSource()).ToDataRes(types.String)
+	},
+	"grafana.samlSettings.signatureAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetSignatureAlgorithm()).ToDataRes(types.String)
+	},
+	"grafana.samlSettings.signRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetSignRequests()).ToDataRes(types.Bool)
+	},
+	"grafana.samlSettings.assertionsEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetAssertionsEncrypted()).ToDataRes(types.Bool)
+	},
+	"grafana.samlSettings.singleLogoutEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetSingleLogoutEnabled()).ToDataRes(types.Bool)
+	},
+	"grafana.samlSettings.allowIdpInitiated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetAllowIdpInitiated()).ToDataRes(types.Bool)
+	},
+	"grafana.samlSettings.allowSignUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetAllowSignUp()).ToDataRes(types.Bool)
+	},
+	"grafana.samlSettings.allowedOrganizations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetAllowedOrganizations()).ToDataRes(types.String)
+	},
+	"grafana.samlSettings.skipOrgRoleSync": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetSkipOrgRoleSync()).ToDataRes(types.Bool)
+	},
+	"grafana.samlSettings.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaSamlSettings).GetSettings()).ToDataRes(types.Dict)
 	},
 	"grafana.notificationPolicy.receiver": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaNotificationPolicy).GetReceiver()).ToDataRes(types.String)
@@ -326,6 +535,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGrafana).NotificationPolicy, ok = plugin.RawToTValue[*mqlGrafanaNotificationPolicy](v.Value, v.Error)
 		return
 	},
+	"grafana.apiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafana).ApiKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"grafana.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafana).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"grafana.ssoSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafana).SsoSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafana).SamlSettings, ok = plugin.RawToTValue[*mqlGrafanaSamlSettings](v.Value, v.Error)
+		return
+	},
 	"grafana.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGrafanaOrganization).__id, ok = v.Value.(string)
 		return
@@ -372,6 +597,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"grafana.user.lastSeenAtAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGrafanaUser).LastSeenAtAge, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.user.authModule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaUser).AuthModule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.user.authLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaUser).AuthLabels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"grafana.user.isExternal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaUser).IsExternal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.user.isGrafanaAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaUser).IsGrafanaAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.user.isDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaUser).IsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.user.mfaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaUser).MfaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.user.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaUser).Permissions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"grafana.serviceAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -490,8 +743,52 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGrafanaDatasource).BasicAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"grafana.datasource.basicAuthUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).BasicAuthUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.datasource.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.datasource.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).Database, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.datasource.hasPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).HasPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.datasource.hasBasicAuthPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).HasBasicAuthPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.datasource.withCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).WithCredentials, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.datasource.secureJsonFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).SecureJsonFields, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"grafana.datasource.jsonData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGrafanaDatasource).JsonData, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"grafana.datasource.isHttps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).IsHttps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.datasource.tlsSkipVerify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).TlsSkipVerify, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.datasource.tlsClientAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).TlsClientAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.datasource.oauthPassThru": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaDatasource).OauthPassThru, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"grafana.contactPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -516,6 +813,186 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"grafana.contactPoint.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGrafanaContactPoint).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"grafana.contactPoint.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaContactPoint).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.contactPoint.isHttps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaContactPoint).IsHttps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.contactPoint.tlsSkipVerify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaContactPoint).TlsSkipVerify, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.contactPoint.hasHttpAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaContactPoint).HasHttpAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaApiKey).__id, ok = v.Value.(string)
+		return
+	},
+	"grafana.apiKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaApiKey).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"grafana.apiKey.orgId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaApiKey).OrgId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"grafana.apiKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaApiKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.apiKey.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaApiKey).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.apiKey.expiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaApiKey).Expiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"grafana.apiKey.hasExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaApiKey).HasExpiration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.apiKey.isExpired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaApiKey).IsExpired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.apiKey.serviceAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaApiKey).ServiceAccountId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"grafana.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).__id, ok = v.Value.(string)
+		return
+	},
+	"grafana.role.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.role.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.role.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.role.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.role.global": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).Global, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.role.hidden": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).Hidden, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.role.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"grafana.role.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).Permissions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"grafana.role.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"grafana.role.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaRole).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"grafana.ssoSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSsoSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"grafana.ssoSettings.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSsoSettings).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.ssoSettings.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSsoSettings).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.ssoSettings.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSsoSettings).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.ssoSettings.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSsoSettings).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"grafana.ssoSettings.enforceSso": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSsoSettings).EnforceSso, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.ssoSettings.allowSignUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSsoSettings).AllowSignUp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.ssoSettings.hasDomainRestriction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSsoSettings).HasDomainRestriction, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"grafana.samlSettings.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.signatureAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).SignatureAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.signRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).SignRequests, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.assertionsEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).AssertionsEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.singleLogoutEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).SingleLogoutEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.allowIdpInitiated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).AllowIdpInitiated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.allowSignUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).AllowSignUp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.allowedOrganizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).AllowedOrganizations, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.skipOrgRoleSync": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).SkipOrgRoleSync, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.samlSettings.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaSamlSettings).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"grafana.notificationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -569,6 +1046,10 @@ type mqlGrafana struct {
 	Datasources        plugin.TValue[[]any]
 	ContactPoints      plugin.TValue[[]any]
 	NotificationPolicy plugin.TValue[*mqlGrafanaNotificationPolicy]
+	ApiKeys            plugin.TValue[[]any]
+	Roles              plugin.TValue[[]any]
+	SsoSettings        plugin.TValue[[]any]
+	SamlSettings       plugin.TValue[*mqlGrafanaSamlSettings]
 }
 
 // createGrafana creates a new instance of this resource
@@ -704,6 +1185,70 @@ func (c *mqlGrafana) GetNotificationPolicy() *plugin.TValue[*mqlGrafanaNotificat
 	})
 }
 
+func (c *mqlGrafana) GetApiKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("grafana", c.__id, "apiKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiKeys()
+	})
+}
+
+func (c *mqlGrafana) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("grafana", c.__id, "roles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roles()
+	})
+}
+
+func (c *mqlGrafana) GetSsoSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SsoSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("grafana", c.__id, "ssoSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ssoSettings()
+	})
+}
+
+func (c *mqlGrafana) GetSamlSettings() *plugin.TValue[*mqlGrafanaSamlSettings] {
+	return plugin.GetOrCompute[*mqlGrafanaSamlSettings](&c.SamlSettings, func() (*mqlGrafanaSamlSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("grafana", c.__id, "samlSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGrafanaSamlSettings), nil
+			}
+		}
+
+		return c.samlSettings()
+	})
+}
+
 // mqlGrafanaOrganization for the grafana.organization resource
 type mqlGrafanaOrganization struct {
 	MqlRuntime *plugin.Runtime
@@ -762,15 +1307,22 @@ func (c *mqlGrafanaOrganization) GetName() *plugin.TValue[string] {
 type mqlGrafanaUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGrafanaUserInternal it will be used here
-	UserId        plugin.TValue[int64]
-	OrgId         plugin.TValue[int64]
-	Email         plugin.TValue[string]
-	Name          plugin.TValue[string]
-	Login         plugin.TValue[string]
-	Role          plugin.TValue[string]
-	LastSeenAt    plugin.TValue[*time.Time]
-	LastSeenAtAge plugin.TValue[string]
+	mqlGrafanaUserInternal
+	UserId         plugin.TValue[int64]
+	OrgId          plugin.TValue[int64]
+	Email          plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Login          plugin.TValue[string]
+	Role           plugin.TValue[string]
+	LastSeenAt     plugin.TValue[*time.Time]
+	LastSeenAtAge  plugin.TValue[string]
+	AuthModule     plugin.TValue[string]
+	AuthLabels     plugin.TValue[[]any]
+	IsExternal     plugin.TValue[bool]
+	IsGrafanaAdmin plugin.TValue[bool]
+	IsDisabled     plugin.TValue[bool]
+	MfaEnabled     plugin.TValue[bool]
+	Permissions    plugin.TValue[map[string]any]
 }
 
 // createGrafanaUser creates a new instance of this resource
@@ -840,6 +1392,48 @@ func (c *mqlGrafanaUser) GetLastSeenAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlGrafanaUser) GetLastSeenAtAge() *plugin.TValue[string] {
 	return &c.LastSeenAtAge
+}
+
+func (c *mqlGrafanaUser) GetAuthModule() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuthModule, func() (string, error) {
+		return c.authModule()
+	})
+}
+
+func (c *mqlGrafanaUser) GetAuthLabels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthLabels, func() ([]any, error) {
+		return c.authLabels()
+	})
+}
+
+func (c *mqlGrafanaUser) GetIsExternal() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsExternal, func() (bool, error) {
+		return c.isExternal()
+	})
+}
+
+func (c *mqlGrafanaUser) GetIsGrafanaAdmin() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsGrafanaAdmin, func() (bool, error) {
+		return c.isGrafanaAdmin()
+	})
+}
+
+func (c *mqlGrafanaUser) GetIsDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsDisabled, func() (bool, error) {
+		return c.isDisabled()
+	})
+}
+
+func (c *mqlGrafanaUser) GetMfaEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MfaEnabled, func() (bool, error) {
+		return c.mfaEnabled()
+	})
+}
+
+func (c *mqlGrafanaUser) GetPermissions() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Permissions, func() (map[string]any, error) {
+		return c.permissions()
+	})
 }
 
 // mqlGrafanaServiceAccount for the grafana.serviceAccount resource
@@ -1027,17 +1621,28 @@ type mqlGrafanaDatasource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGrafanaDatasourceInternal it will be used here
-	Id        plugin.TValue[int64]
-	Uid       plugin.TValue[string]
-	OrgId     plugin.TValue[int64]
-	Name      plugin.TValue[string]
-	Type      plugin.TValue[string]
-	Access    plugin.TValue[string]
-	Url       plugin.TValue[string]
-	IsDefault plugin.TValue[bool]
-	ReadOnly  plugin.TValue[bool]
-	BasicAuth plugin.TValue[bool]
-	JsonData  plugin.TValue[any]
+	Id                   plugin.TValue[int64]
+	Uid                  plugin.TValue[string]
+	OrgId                plugin.TValue[int64]
+	Name                 plugin.TValue[string]
+	Type                 plugin.TValue[string]
+	Access               plugin.TValue[string]
+	Url                  plugin.TValue[string]
+	IsDefault            plugin.TValue[bool]
+	ReadOnly             plugin.TValue[bool]
+	BasicAuth            plugin.TValue[bool]
+	BasicAuthUser        plugin.TValue[string]
+	User                 plugin.TValue[string]
+	Database             plugin.TValue[string]
+	HasPassword          plugin.TValue[bool]
+	HasBasicAuthPassword plugin.TValue[bool]
+	WithCredentials      plugin.TValue[bool]
+	SecureJsonFields     plugin.TValue[[]any]
+	JsonData             plugin.TValue[any]
+	IsHttps              plugin.TValue[bool]
+	TlsSkipVerify        plugin.TValue[bool]
+	TlsClientAuth        plugin.TValue[bool]
+	OauthPassThru        plugin.TValue[bool]
 }
 
 // createGrafanaDatasource creates a new instance of this resource
@@ -1117,8 +1722,60 @@ func (c *mqlGrafanaDatasource) GetBasicAuth() *plugin.TValue[bool] {
 	return &c.BasicAuth
 }
 
+func (c *mqlGrafanaDatasource) GetBasicAuthUser() *plugin.TValue[string] {
+	return &c.BasicAuthUser
+}
+
+func (c *mqlGrafanaDatasource) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlGrafanaDatasource) GetDatabase() *plugin.TValue[string] {
+	return &c.Database
+}
+
+func (c *mqlGrafanaDatasource) GetHasPassword() *plugin.TValue[bool] {
+	return &c.HasPassword
+}
+
+func (c *mqlGrafanaDatasource) GetHasBasicAuthPassword() *plugin.TValue[bool] {
+	return &c.HasBasicAuthPassword
+}
+
+func (c *mqlGrafanaDatasource) GetWithCredentials() *plugin.TValue[bool] {
+	return &c.WithCredentials
+}
+
+func (c *mqlGrafanaDatasource) GetSecureJsonFields() *plugin.TValue[[]any] {
+	return &c.SecureJsonFields
+}
+
 func (c *mqlGrafanaDatasource) GetJsonData() *plugin.TValue[any] {
 	return &c.JsonData
+}
+
+func (c *mqlGrafanaDatasource) GetIsHttps() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsHttps, func() (bool, error) {
+		return c.isHttps()
+	})
+}
+
+func (c *mqlGrafanaDatasource) GetTlsSkipVerify() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsSkipVerify, func() (bool, error) {
+		return c.tlsSkipVerify()
+	})
+}
+
+func (c *mqlGrafanaDatasource) GetTlsClientAuth() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsClientAuth, func() (bool, error) {
+		return c.tlsClientAuth()
+	})
+}
+
+func (c *mqlGrafanaDatasource) GetOauthPassThru() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OauthPassThru, func() (bool, error) {
+		return c.oauthPassThru()
+	})
 }
 
 // mqlGrafanaContactPoint for the grafana.contactPoint resource
@@ -1131,6 +1788,10 @@ type mqlGrafanaContactPoint struct {
 	Type                  plugin.TValue[string]
 	DisableResolveMessage plugin.TValue[bool]
 	Settings              plugin.TValue[any]
+	Url                   plugin.TValue[string]
+	IsHttps               plugin.TValue[bool]
+	TlsSkipVerify         plugin.TValue[bool]
+	HasHttpAuth           plugin.TValue[bool]
 }
 
 // createGrafanaContactPoint creates a new instance of this resource
@@ -1187,6 +1848,391 @@ func (c *mqlGrafanaContactPoint) GetDisableResolveMessage() *plugin.TValue[bool]
 }
 
 func (c *mqlGrafanaContactPoint) GetSettings() *plugin.TValue[any] {
+	return &c.Settings
+}
+
+func (c *mqlGrafanaContactPoint) GetUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Url, func() (string, error) {
+		return c.url()
+	})
+}
+
+func (c *mqlGrafanaContactPoint) GetIsHttps() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsHttps, func() (bool, error) {
+		return c.isHttps()
+	})
+}
+
+func (c *mqlGrafanaContactPoint) GetTlsSkipVerify() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsSkipVerify, func() (bool, error) {
+		return c.tlsSkipVerify()
+	})
+}
+
+func (c *mqlGrafanaContactPoint) GetHasHttpAuth() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasHttpAuth, func() (bool, error) {
+		return c.hasHttpAuth()
+	})
+}
+
+// mqlGrafanaApiKey for the grafana.apiKey resource
+type mqlGrafanaApiKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGrafanaApiKeyInternal it will be used here
+	Id               plugin.TValue[int64]
+	OrgId            plugin.TValue[int64]
+	Name             plugin.TValue[string]
+	Role             plugin.TValue[string]
+	Expiration       plugin.TValue[*time.Time]
+	HasExpiration    plugin.TValue[bool]
+	IsExpired        plugin.TValue[bool]
+	ServiceAccountId plugin.TValue[int64]
+}
+
+// createGrafanaApiKey creates a new instance of this resource
+func createGrafanaApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGrafanaApiKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("grafana.apiKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGrafanaApiKey) MqlName() string {
+	return "grafana.apiKey"
+}
+
+func (c *mqlGrafanaApiKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGrafanaApiKey) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlGrafanaApiKey) GetOrgId() *plugin.TValue[int64] {
+	return &c.OrgId
+}
+
+func (c *mqlGrafanaApiKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGrafanaApiKey) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlGrafanaApiKey) GetExpiration() *plugin.TValue[*time.Time] {
+	return &c.Expiration
+}
+
+func (c *mqlGrafanaApiKey) GetHasExpiration() *plugin.TValue[bool] {
+	return &c.HasExpiration
+}
+
+func (c *mqlGrafanaApiKey) GetIsExpired() *plugin.TValue[bool] {
+	return &c.IsExpired
+}
+
+func (c *mqlGrafanaApiKey) GetServiceAccountId() *plugin.TValue[int64] {
+	return &c.ServiceAccountId
+}
+
+// mqlGrafanaRole for the grafana.role resource
+type mqlGrafanaRole struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGrafanaRoleInternal it will be used here
+	Uid         plugin.TValue[string]
+	Name        plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Group       plugin.TValue[string]
+	Global      plugin.TValue[bool]
+	Hidden      plugin.TValue[bool]
+	Version     plugin.TValue[int64]
+	Permissions plugin.TValue[map[string]any]
+	Created     plugin.TValue[*time.Time]
+	Updated     plugin.TValue[*time.Time]
+}
+
+// createGrafanaRole creates a new instance of this resource
+func createGrafanaRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGrafanaRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("grafana.role", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGrafanaRole) MqlName() string {
+	return "grafana.role"
+}
+
+func (c *mqlGrafanaRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGrafanaRole) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGrafanaRole) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGrafanaRole) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGrafanaRole) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGrafanaRole) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlGrafanaRole) GetGlobal() *plugin.TValue[bool] {
+	return &c.Global
+}
+
+func (c *mqlGrafanaRole) GetHidden() *plugin.TValue[bool] {
+	return &c.Hidden
+}
+
+func (c *mqlGrafanaRole) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlGrafanaRole) GetPermissions() *plugin.TValue[map[string]any] {
+	return &c.Permissions
+}
+
+func (c *mqlGrafanaRole) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGrafanaRole) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGrafanaSsoSettings for the grafana.ssoSettings resource
+type mqlGrafanaSsoSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGrafanaSsoSettingsInternal it will be used here
+	Provider             plugin.TValue[string]
+	Source               plugin.TValue[string]
+	Enabled              plugin.TValue[bool]
+	Settings             plugin.TValue[any]
+	EnforceSso           plugin.TValue[bool]
+	AllowSignUp          plugin.TValue[bool]
+	HasDomainRestriction plugin.TValue[bool]
+}
+
+// createGrafanaSsoSettings creates a new instance of this resource
+func createGrafanaSsoSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGrafanaSsoSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("grafana.ssoSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGrafanaSsoSettings) MqlName() string {
+	return "grafana.ssoSettings"
+}
+
+func (c *mqlGrafanaSsoSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGrafanaSsoSettings) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlGrafanaSsoSettings) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlGrafanaSsoSettings) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGrafanaSsoSettings) GetSettings() *plugin.TValue[any] {
+	return &c.Settings
+}
+
+func (c *mqlGrafanaSsoSettings) GetEnforceSso() *plugin.TValue[bool] {
+	return &c.EnforceSso
+}
+
+func (c *mqlGrafanaSsoSettings) GetAllowSignUp() *plugin.TValue[bool] {
+	return &c.AllowSignUp
+}
+
+func (c *mqlGrafanaSsoSettings) GetHasDomainRestriction() *plugin.TValue[bool] {
+	return &c.HasDomainRestriction
+}
+
+// mqlGrafanaSamlSettings for the grafana.samlSettings resource
+type mqlGrafanaSamlSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGrafanaSamlSettingsInternal it will be used here
+	Enabled              plugin.TValue[bool]
+	Source               plugin.TValue[string]
+	SignatureAlgorithm   plugin.TValue[string]
+	SignRequests         plugin.TValue[bool]
+	AssertionsEncrypted  plugin.TValue[bool]
+	SingleLogoutEnabled  plugin.TValue[bool]
+	AllowIdpInitiated    plugin.TValue[bool]
+	AllowSignUp          plugin.TValue[bool]
+	AllowedOrganizations plugin.TValue[string]
+	SkipOrgRoleSync      plugin.TValue[bool]
+	Settings             plugin.TValue[any]
+}
+
+// createGrafanaSamlSettings creates a new instance of this resource
+func createGrafanaSamlSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGrafanaSamlSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("grafana.samlSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGrafanaSamlSettings) MqlName() string {
+	return "grafana.samlSettings"
+}
+
+func (c *mqlGrafanaSamlSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGrafanaSamlSettings) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlGrafanaSamlSettings) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlGrafanaSamlSettings) GetSignatureAlgorithm() *plugin.TValue[string] {
+	return &c.SignatureAlgorithm
+}
+
+func (c *mqlGrafanaSamlSettings) GetSignRequests() *plugin.TValue[bool] {
+	return &c.SignRequests
+}
+
+func (c *mqlGrafanaSamlSettings) GetAssertionsEncrypted() *plugin.TValue[bool] {
+	return &c.AssertionsEncrypted
+}
+
+func (c *mqlGrafanaSamlSettings) GetSingleLogoutEnabled() *plugin.TValue[bool] {
+	return &c.SingleLogoutEnabled
+}
+
+func (c *mqlGrafanaSamlSettings) GetAllowIdpInitiated() *plugin.TValue[bool] {
+	return &c.AllowIdpInitiated
+}
+
+func (c *mqlGrafanaSamlSettings) GetAllowSignUp() *plugin.TValue[bool] {
+	return &c.AllowSignUp
+}
+
+func (c *mqlGrafanaSamlSettings) GetAllowedOrganizations() *plugin.TValue[string] {
+	return &c.AllowedOrganizations
+}
+
+func (c *mqlGrafanaSamlSettings) GetSkipOrgRoleSync() *plugin.TValue[bool] {
+	return &c.SkipOrgRoleSync
+}
+
+func (c *mqlGrafanaSamlSettings) GetSettings() *plugin.TValue[any] {
 	return &c.Settings
 }
 
