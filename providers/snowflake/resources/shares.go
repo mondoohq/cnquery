@@ -61,6 +61,3 @@ func newMqlSnowflakeShare(runtime *plugin.Runtime, share sdk.Share) (*mqlSnowfla
 	}
 	return r.(*mqlSnowflakeShare), nil
 }
-
-// silence unused import warning when build tags strip code below
-var _ = plugin.StateIsSet
