@@ -128,14 +128,14 @@ digitalocean.firewall @defaults("id name status") {
   outboundRules []dict
   // Droplet IDs protected by this firewall
   dropletIds []int
-  // Droplets directly attached to this firewall
+  // Droplets covered by this firewall (by direct ID or matching tag)
   droplets() []digitalocean.droplet
   // Tags used to target droplets
   tags []string
 }
 
 // DigitalOcean managed database cluster
-digitalocean.database @defaults("id name engine tlsEnforced") {
+digitalocean.database @defaults("id name engine connectionSsl") {
   // Database cluster ID
   id string
   // Database cluster name
@@ -162,10 +162,8 @@ digitalocean.database @defaults("id name engine tlsEnforced") {
   tags []string
   // Firewall rules (trusted sources)
   firewallRules() []dict
-  // Whether TLS/SSL is required for client connections
-  tlsEnforced bool
-  // Public connection URI (host visible on the internet)
-  connectionUri string
+  // Whether the public connection object reports SSL enabled (DigitalOcean managed databases always require TLS on public endpoints; this reflects the SDK's per-connection SSL flag, not a cluster-level enforcement policy)
+  connectionSsl bool
   // Public connection host
   connectionHost string
   // Public connection port

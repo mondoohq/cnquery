@@ -443,11 +443,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.database.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabase).GetFirewallRules()).ToDataRes(types.Array(types.Dict))
 	},
-	"digitalocean.database.tlsEnforced": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDigitaloceanDatabase).GetTlsEnforced()).ToDataRes(types.Bool)
-	},
-	"digitalocean.database.connectionUri": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDigitaloceanDatabase).GetConnectionUri()).ToDataRes(types.String)
+	"digitalocean.database.connectionSsl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDatabase).GetConnectionSsl()).ToDataRes(types.Bool)
 	},
 	"digitalocean.database.connectionHost": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDatabase).GetConnectionHost()).ToDataRes(types.String)
@@ -1289,12 +1286,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanDatabase).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"digitalocean.database.tlsEnforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDigitaloceanDatabase).TlsEnforced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"digitalocean.database.connectionUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDigitaloceanDatabase).ConnectionUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"digitalocean.database.connectionSsl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDatabase).ConnectionSsl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"digitalocean.database.connectionHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2874,8 +2867,7 @@ type mqlDigitaloceanDatabase struct {
 	Vpc                        plugin.TValue[*mqlDigitaloceanVpc]
 	Tags                       plugin.TValue[[]any]
 	FirewallRules              plugin.TValue[[]any]
-	TlsEnforced                plugin.TValue[bool]
-	ConnectionUri              plugin.TValue[string]
+	ConnectionSsl              plugin.TValue[bool]
 	ConnectionHost             plugin.TValue[string]
 	ConnectionPort             plugin.TValue[int64]
 	PrivateConnectionAvailable plugin.TValue[bool]
@@ -2988,12 +2980,8 @@ func (c *mqlDigitaloceanDatabase) GetFirewallRules() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlDigitaloceanDatabase) GetTlsEnforced() *plugin.TValue[bool] {
-	return &c.TlsEnforced
-}
-
-func (c *mqlDigitaloceanDatabase) GetConnectionUri() *plugin.TValue[string] {
-	return &c.ConnectionUri
+func (c *mqlDigitaloceanDatabase) GetConnectionSsl() *plugin.TValue[bool] {
+	return &c.ConnectionSsl
 }
 
 func (c *mqlDigitaloceanDatabase) GetConnectionHost() *plugin.TValue[string] {

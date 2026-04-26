@@ -55,7 +55,7 @@ digitalocean.certificates 13.0.1
 digitalocean.database 13.0.1
 digitalocean.database.connectionHost 13.0.2
 digitalocean.database.connectionPort 13.0.2
-digitalocean.database.connectionUri 13.0.2
+digitalocean.database.connectionSsl 13.0.2
 digitalocean.database.createdAt 13.0.1
 digitalocean.database.engine 13.0.1
 digitalocean.database.firewallRules 13.0.1
@@ -86,7 +86,6 @@ digitalocean.database.replicas 13.0.1
 digitalocean.database.size 13.0.1
 digitalocean.database.status 13.0.1
 digitalocean.database.tags 13.0.1
-digitalocean.database.tlsEnforced 13.0.2
 digitalocean.database.user 13.0.1
 digitalocean.database.user.databaseId 13.0.1
 digitalocean.database.user.name 13.0.1

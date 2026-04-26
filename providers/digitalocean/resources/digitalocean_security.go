@@ -10,11 +10,13 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
-// findVpcByID resolves a VPC by its ID via the parent digitalocean resource so
-// the firewall/droplet/database results are reused via the resource cache
-// (avoids redoing client.VPCs.List per accessor).
-func findVpcByID(runtime *plugin.Runtime, vpcID string) (*mqlDigitaloceanVpc, error) {
-	if vpcID == "" {
+// resolveVpcRef resolves a VPC by ID via the parent digitalocean resource so
+// the firewall/droplet/database results share the same cached VPC list (avoids
+// redoing client.VPCs.List per accessor). It owns the StateIsSet|StateIsNull
+// bookkeeping on the target field so callers can't forget it.
+func resolveVpcRef(runtime *plugin.Runtime, target *plugin.TValue[*mqlDigitaloceanVpc], vpcID string) (*mqlDigitaloceanVpc, error) {
+	if strings.TrimSpace(vpcID) == "" {
+		target.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	parent, err := CreateResource(runtime, "digitalocean", map[string]*llx.RawData{})
@@ -32,6 +34,7 @@ func findVpcByID(runtime *plugin.Runtime, vpcID string) (*mqlDigitaloceanVpc, er
 			return mqlVpc, nil
 		}
 	}
+	target.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
 
@@ -69,15 +72,7 @@ func listAllFirewalls(runtime *plugin.Runtime) ([]any, error) {
 // --- Droplet typed refs / computed fields ---
 
 func (r *mqlDigitaloceanDroplet) vpc() (*mqlDigitaloceanVpc, error) {
-	vpc, err := findVpcByID(r.MqlRuntime, r.VpcUuid.Data)
-	if err != nil {
-		return nil, err
-	}
-	if vpc == nil {
-		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return vpc, nil
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.VpcUuid.Data)
 }
 
 // firewallCoversDroplet reports whether the given firewall covers this droplet
@@ -182,30 +177,13 @@ func (r *mqlDigitaloceanFirewall) droplets() ([]any, error) {
 // --- Database typed refs ---
 
 func (r *mqlDigitaloceanDatabase) vpc() (*mqlDigitaloceanVpc, error) {
-	id := strings.TrimSpace(r.PrivateNetworkUuid.Data)
-	vpc, err := findVpcByID(r.MqlRuntime, id)
-	if err != nil {
-		return nil, err
-	}
-	if vpc == nil {
-		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return vpc, nil
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.PrivateNetworkUuid.Data)
 }
 
 // --- LoadBalancer typed refs ---
 
 func (r *mqlDigitaloceanLoadBalancer) vpc() (*mqlDigitaloceanVpc, error) {
-	vpc, err := findVpcByID(r.MqlRuntime, r.VpcUuid.Data)
-	if err != nil {
-		return nil, err
-	}
-	if vpc == nil {
-		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return vpc, nil
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.VpcUuid.Data)
 }
 
 func (r *mqlDigitaloceanLoadBalancer) droplets() ([]any, error) {
@@ -235,13 +213,5 @@ func (r *mqlDigitaloceanLoadBalancer) droplets() ([]any, error) {
 // --- Kubernetes typed refs ---
 
 func (r *mqlDigitaloceanKubernetesCluster) vpc() (*mqlDigitaloceanVpc, error) {
-	vpc, err := findVpcByID(r.MqlRuntime, r.VpcUuid.Data)
-	if err != nil {
-		return nil, err
-	}
-	if vpc == nil {
-		r.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	return vpc, nil
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.VpcUuid.Data)
 }

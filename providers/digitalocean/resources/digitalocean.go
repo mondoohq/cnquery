@@ -277,18 +277,16 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 				mw["pending"] = db.MaintenanceWindow.Pending
 			}
 
-			// Connection details: DigitalOcean managed databases enforce TLS on the
-			// public connection. We surface the SSL bit returned by the API as
-			// tlsEnforced, with the public connection URI/host/port for visibility.
-			connURI := ""
+			// The DigitalOcean API returns a public connection URI that embeds the
+			// admin password, so we deliberately do not surface it on the resource.
+			// Host/port are exposed separately for connectivity checks.
 			connHost := ""
 			connPort := int64(0)
-			tlsEnforced := false
+			connSsl := false
 			if db.Connection != nil {
-				connURI = db.Connection.URI
 				connHost = db.Connection.Host
 				connPort = int64(db.Connection.Port)
-				tlsEnforced = db.Connection.SSL
+				connSsl = db.Connection.SSL
 			}
 			privateConnectionAvailable := db.PrivateConnection != nil
 
@@ -305,8 +303,7 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 				"privateNetworkUuid":         llx.StringData(db.PrivateNetworkUUID),
 				"tags":                       llx.ArrayData(tags, "\x02"),
 				"maintenanceWindow":          llx.DictData(mw),
-				"tlsEnforced":                llx.BoolData(tlsEnforced),
-				"connectionUri":              llx.StringData(connURI),
+				"connectionSsl":              llx.BoolData(connSsl),
 				"connectionHost":             llx.StringData(connHost),
 				"connectionPort":             llx.IntData(connPort),
 				"privateConnectionAvailable": llx.BoolData(privateConnectionAvailable),
