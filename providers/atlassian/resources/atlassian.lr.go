@@ -24,15 +24,21 @@ const (
 	ResourceAtlassianAdminOrganizationPolicy      string = "atlassian.admin.organization.policy"
 	ResourceAtlassianAdminOrganizationDomain      string = "atlassian.admin.organization.domain"
 	ResourceAtlassianJira                         string = "atlassian.jira"
+	ResourceAtlassianJiraAuditRecord              string = "atlassian.jira.auditRecord"
 	ResourceAtlassianJiraIssue                    string = "atlassian.jira.issue"
 	ResourceAtlassianJiraServerInfo               string = "atlassian.jira.serverInfo"
 	ResourceAtlassianJiraUser                     string = "atlassian.jira.user"
 	ResourceAtlassianJiraApplicationRole          string = "atlassian.jira.applicationRole"
 	ResourceAtlassianJiraProject                  string = "atlassian.jira.project"
+	ResourceAtlassianJiraPermissionScheme         string = "atlassian.jira.permissionScheme"
+	ResourceAtlassianJiraPermissionSchemeGrant    string = "atlassian.jira.permissionScheme.grant"
 	ResourceAtlassianJiraProjectProperty          string = "atlassian.jira.project.property"
 	ResourceAtlassianJiraGroup                    string = "atlassian.jira.group"
 	ResourceAtlassianConfluence                   string = "atlassian.confluence"
 	ResourceAtlassianConfluenceUser               string = "atlassian.confluence.user"
+	ResourceAtlassianConfluenceSpace              string = "atlassian.confluence.space"
+	ResourceAtlassianConfluencePage               string = "atlassian.confluence.page"
+	ResourceAtlassianConfluencePageRestriction    string = "atlassian.confluence.page.restriction"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -71,6 +77,10 @@ func init() {
 			// to override args, implement: initAtlassianJira(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJira,
 		},
+		"atlassian.jira.auditRecord": {
+			// to override args, implement: initAtlassianJiraAuditRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraAuditRecord,
+		},
 		"atlassian.jira.issue": {
 			// to override args, implement: initAtlassianJiraIssue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJiraIssue,
@@ -91,6 +101,14 @@ func init() {
 			// to override args, implement: initAtlassianJiraProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJiraProject,
 		},
+		"atlassian.jira.permissionScheme": {
+			// to override args, implement: initAtlassianJiraPermissionScheme(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraPermissionScheme,
+		},
+		"atlassian.jira.permissionScheme.grant": {
+			// to override args, implement: initAtlassianJiraPermissionSchemeGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianJiraPermissionSchemeGrant,
+		},
 		"atlassian.jira.project.property": {
 			// to override args, implement: initAtlassianJiraProjectProperty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianJiraProjectProperty,
@@ -106,6 +124,18 @@ func init() {
 		"atlassian.confluence.user": {
 			// to override args, implement: initAtlassianConfluenceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAtlassianConfluenceUser,
+		},
+		"atlassian.confluence.space": {
+			// to override args, implement: initAtlassianConfluenceSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianConfluenceSpace,
+		},
+		"atlassian.confluence.page": {
+			// to override args, implement: initAtlassianConfluencePage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianConfluencePage,
+		},
+		"atlassian.confluence.page.restriction": {
+			// to override args, implement: initAtlassianConfluencePageRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianConfluencePageRestriction,
 		},
 	}
 }
@@ -283,6 +313,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.serverInfos": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJira).GetServerInfos()).ToDataRes(types.Resource("atlassian.jira.serverInfo"))
 	},
+	"atlassian.jira.auditRecords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJira).GetAuditRecords()).ToDataRes(types.Array(types.Resource("atlassian.jira.auditRecord")))
+	},
+	"atlassian.jira.auditRecord.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetId()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.auditRecord.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetSummary()).ToDataRes(types.String)
+	},
+	"atlassian.jira.auditRecord.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetCategory()).ToDataRes(types.String)
+	},
+	"atlassian.jira.auditRecord.eventSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetEventSource()).ToDataRes(types.String)
+	},
+	"atlassian.jira.auditRecord.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetDescription()).ToDataRes(types.String)
+	},
+	"atlassian.jira.auditRecord.authorKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetAuthorKey()).ToDataRes(types.String)
+	},
+	"atlassian.jira.auditRecord.remoteAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetRemoteAddress()).ToDataRes(types.String)
+	},
+	"atlassian.jira.auditRecord.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"atlassian.jira.auditRecord.objectItem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetObjectItem()).ToDataRes(types.Dict)
+	},
+	"atlassian.jira.auditRecord.changedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetChangedValues()).ToDataRes(types.Array(types.Dict))
+	},
+	"atlassian.jira.auditRecord.associatedItems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraAuditRecord).GetAssociatedItems()).ToDataRes(types.Array(types.Dict))
+	},
 	"atlassian.jira.issue.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetId()).ToDataRes(types.String)
 	},
@@ -373,6 +439,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.project.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetProperties()).ToDataRes(types.Array(types.Resource("atlassian.jira.project.property")))
 	},
+	"atlassian.jira.project.permissionScheme": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraProject).GetPermissionScheme()).ToDataRes(types.Resource("atlassian.jira.permissionScheme"))
+	},
+	"atlassian.jira.permissionScheme.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraPermissionScheme).GetId()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.permissionScheme.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraPermissionScheme).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.jira.permissionScheme.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraPermissionScheme).GetDescription()).ToDataRes(types.String)
+	},
+	"atlassian.jira.permissionScheme.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraPermissionScheme).GetGrants()).ToDataRes(types.Array(types.Resource("atlassian.jira.permissionScheme.grant")))
+	},
+	"atlassian.jira.permissionScheme.grant.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraPermissionSchemeGrant).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.jira.permissionScheme.grant.permission": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraPermissionSchemeGrant).GetPermission()).ToDataRes(types.String)
+	},
+	"atlassian.jira.permissionScheme.grant.holderType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraPermissionSchemeGrant).GetHolderType()).ToDataRes(types.String)
+	},
+	"atlassian.jira.permissionScheme.grant.holderParameter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraPermissionSchemeGrant).GetHolderParameter()).ToDataRes(types.String)
+	},
 	"atlassian.jira.project.property.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProjectProperty).GetId()).ToDataRes(types.String)
 	},
@@ -385,6 +478,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.confluence.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluence).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.confluence.user")))
 	},
+	"atlassian.confluence.spaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluence).GetSpaces()).ToDataRes(types.Array(types.Resource("atlassian.confluence.space")))
+	},
 	"atlassian.confluence.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluenceUser).GetId()).ToDataRes(types.String)
 	},
@@ -393,6 +489,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.confluence.user.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluenceUser).GetType()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.space.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetId()).ToDataRes(types.Int)
+	},
+	"atlassian.confluence.space.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetKey()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.space.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.space.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetType()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.space.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetStatus()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.space.anonymousAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetAnonymousAccess()).ToDataRes(types.Bool)
+	},
+	"atlassian.confluence.space.unlicensedAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetUnlicensedAccess()).ToDataRes(types.Bool)
+	},
+	"atlassian.confluence.space.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"atlassian.confluence.space.pages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluenceSpace).GetPages()).ToDataRes(types.Array(types.Resource("atlassian.confluence.page")))
+	},
+	"atlassian.confluence.page.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.page.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetTitle()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.page.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetStatus()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.page.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetType()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.page.spaceKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetSpaceKey()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.page.hasRestrictions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetHasRestrictions()).ToDataRes(types.Bool)
+	},
+	"atlassian.confluence.page.restrictions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePage).GetRestrictions()).ToDataRes(types.Array(types.Resource("atlassian.confluence.page.restriction")))
+	},
+	"atlassian.confluence.page.restriction.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePageRestriction).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.page.restriction.operation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePageRestriction).GetOperation()).ToDataRes(types.String)
+	},
+	"atlassian.confluence.page.restriction.userIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePageRestriction).GetUserIds()).ToDataRes(types.Array(types.String))
+	},
+	"atlassian.confluence.page.restriction.groupNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianConfluencePageRestriction).GetGroupNames()).ToDataRes(types.Array(types.String))
 	},
 }
 
@@ -578,6 +734,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianJira).ServerInfos, ok = plugin.RawToTValue[*mqlAtlassianJiraServerInfo](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.auditRecords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJira).AuditRecords, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.jira.auditRecord.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.eventSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).EventSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.authorKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).AuthorKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.remoteAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).RemoteAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.objectItem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).ObjectItem, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.changedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).ChangedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.auditRecord.associatedItems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraAuditRecord).AssociatedItems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.issue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraIssue).__id, ok = v.Value.(string)
 		return
@@ -718,6 +926,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianJiraProject).Properties, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.project.permissionScheme": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraProject).PermissionScheme, ok = plugin.RawToTValue[*mqlAtlassianJiraPermissionScheme](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.permissionScheme.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraPermissionScheme).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.jira.permissionScheme.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraPermissionScheme).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.permissionScheme.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraPermissionScheme).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.permissionScheme.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraPermissionScheme).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.permissionScheme.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraPermissionScheme).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.permissionScheme.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraPermissionSchemeGrant).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.jira.permissionScheme.grant.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraPermissionSchemeGrant).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.permissionScheme.grant.permission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraPermissionSchemeGrant).Permission, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.permissionScheme.grant.holderType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraPermissionSchemeGrant).HolderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.permissionScheme.grant.holderParameter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraPermissionSchemeGrant).HolderParameter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.project.property.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraProjectProperty).__id, ok = v.Value.(string)
 		return
@@ -746,6 +998,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianConfluence).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"atlassian.confluence.spaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluence).Spaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"atlassian.confluence.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluenceUser).__id, ok = v.Value.(string)
 		return
@@ -760,6 +1016,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.confluence.user.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianConfluenceUser).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.confluence.space.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.anonymousAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).AnonymousAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.unlicensedAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).UnlicensedAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.space.pages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluenceSpace).Pages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.confluence.page.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.spaceKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).SpaceKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.hasRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).HasRestrictions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.restrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePage).Restrictions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.restriction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePageRestriction).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.confluence.page.restriction.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePageRestriction).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.restriction.operation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePageRestriction).Operation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.restriction.userIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePageRestriction).UserIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.confluence.page.restriction.groupNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianConfluencePageRestriction).GroupNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -1309,11 +1657,12 @@ type mqlAtlassianJira struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAtlassianJiraInternal it will be used here
-	Users       plugin.TValue[[]any]
-	Projects    plugin.TValue[[]any]
-	Issues      plugin.TValue[[]any]
-	Groups      plugin.TValue[[]any]
-	ServerInfos plugin.TValue[*mqlAtlassianJiraServerInfo]
+	Users        plugin.TValue[[]any]
+	Projects     plugin.TValue[[]any]
+	Issues       plugin.TValue[[]any]
+	Groups       plugin.TValue[[]any]
+	ServerInfos  plugin.TValue[*mqlAtlassianJiraServerInfo]
+	AuditRecords plugin.TValue[[]any]
 }
 
 // createAtlassianJira creates a new instance of this resource
@@ -1431,6 +1780,116 @@ func (c *mqlAtlassianJira) GetServerInfos() *plugin.TValue[*mqlAtlassianJiraServ
 
 		return c.serverInfos()
 	})
+}
+
+func (c *mqlAtlassianJira) GetAuditRecords() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditRecords, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "auditRecords")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.auditRecords()
+	})
+}
+
+// mqlAtlassianJiraAuditRecord for the atlassian.jira.auditRecord resource
+type mqlAtlassianJiraAuditRecord struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianJiraAuditRecordInternal it will be used here
+	Id              plugin.TValue[int64]
+	Summary         plugin.TValue[string]
+	Category        plugin.TValue[string]
+	EventSource     plugin.TValue[string]
+	Description     plugin.TValue[string]
+	AuthorKey       plugin.TValue[string]
+	RemoteAddress   plugin.TValue[string]
+	CreatedAt       plugin.TValue[*time.Time]
+	ObjectItem      plugin.TValue[any]
+	ChangedValues   plugin.TValue[[]any]
+	AssociatedItems plugin.TValue[[]any]
+}
+
+// createAtlassianJiraAuditRecord creates a new instance of this resource
+func createAtlassianJiraAuditRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraAuditRecord{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.auditRecord", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraAuditRecord) MqlName() string {
+	return "atlassian.jira.auditRecord"
+}
+
+func (c *mqlAtlassianJiraAuditRecord) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetEventSource() *plugin.TValue[string] {
+	return &c.EventSource
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetAuthorKey() *plugin.TValue[string] {
+	return &c.AuthorKey
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetRemoteAddress() *plugin.TValue[string] {
+	return &c.RemoteAddress
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetObjectItem() *plugin.TValue[any] {
+	return &c.ObjectItem
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetChangedValues() *plugin.TValue[[]any] {
+	return &c.ChangedValues
+}
+
+func (c *mqlAtlassianJiraAuditRecord) GetAssociatedItems() *plugin.TValue[[]any] {
+	return &c.AssociatedItems
 }
 
 // mqlAtlassianJiraIssue for the atlassian.jira.issue resource
@@ -1728,16 +2187,17 @@ type mqlAtlassianJiraProject struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAtlassianJiraProjectInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Uuid       plugin.TValue[string]
-	Key        plugin.TValue[string]
-	Url        plugin.TValue[string]
-	Email      plugin.TValue[string]
-	Private    plugin.TValue[bool]
-	Deleted    plugin.TValue[bool]
-	Archived   plugin.TValue[bool]
-	Properties plugin.TValue[[]any]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Uuid             plugin.TValue[string]
+	Key              plugin.TValue[string]
+	Url              plugin.TValue[string]
+	Email            plugin.TValue[string]
+	Private          plugin.TValue[bool]
+	Deleted          plugin.TValue[bool]
+	Archived         plugin.TValue[bool]
+	Properties       plugin.TValue[[]any]
+	PermissionScheme plugin.TValue[*mqlAtlassianJiraPermissionScheme]
 }
 
 // createAtlassianJiraProject creates a new instance of this resource
@@ -1827,6 +2287,152 @@ func (c *mqlAtlassianJiraProject) GetProperties() *plugin.TValue[[]any] {
 
 		return c.properties()
 	})
+}
+
+func (c *mqlAtlassianJiraProject) GetPermissionScheme() *plugin.TValue[*mqlAtlassianJiraPermissionScheme] {
+	return plugin.GetOrCompute[*mqlAtlassianJiraPermissionScheme](&c.PermissionScheme, func() (*mqlAtlassianJiraPermissionScheme, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira.project", c.__id, "permissionScheme")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAtlassianJiraPermissionScheme), nil
+			}
+		}
+
+		return c.permissionScheme()
+	})
+}
+
+// mqlAtlassianJiraPermissionScheme for the atlassian.jira.permissionScheme resource
+type mqlAtlassianJiraPermissionScheme struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianJiraPermissionSchemeInternal it will be used here
+	Id          plugin.TValue[int64]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Grants      plugin.TValue[[]any]
+}
+
+// createAtlassianJiraPermissionScheme creates a new instance of this resource
+func createAtlassianJiraPermissionScheme(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraPermissionScheme{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.permissionScheme", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraPermissionScheme) MqlName() string {
+	return "atlassian.jira.permissionScheme"
+}
+
+func (c *mqlAtlassianJiraPermissionScheme) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraPermissionScheme) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianJiraPermissionScheme) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAtlassianJiraPermissionScheme) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAtlassianJiraPermissionScheme) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira.permissionScheme", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
+}
+
+// mqlAtlassianJiraPermissionSchemeGrant for the atlassian.jira.permissionScheme.grant resource
+type mqlAtlassianJiraPermissionSchemeGrant struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianJiraPermissionSchemeGrantInternal it will be used here
+	Id              plugin.TValue[string]
+	Permission      plugin.TValue[string]
+	HolderType      plugin.TValue[string]
+	HolderParameter plugin.TValue[string]
+}
+
+// createAtlassianJiraPermissionSchemeGrant creates a new instance of this resource
+func createAtlassianJiraPermissionSchemeGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianJiraPermissionSchemeGrant{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.jira.permissionScheme.grant", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianJiraPermissionSchemeGrant) MqlName() string {
+	return "atlassian.jira.permissionScheme.grant"
+}
+
+func (c *mqlAtlassianJiraPermissionSchemeGrant) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianJiraPermissionSchemeGrant) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianJiraPermissionSchemeGrant) GetPermission() *plugin.TValue[string] {
+	return &c.Permission
+}
+
+func (c *mqlAtlassianJiraPermissionSchemeGrant) GetHolderType() *plugin.TValue[string] {
+	return &c.HolderType
+}
+
+func (c *mqlAtlassianJiraPermissionSchemeGrant) GetHolderParameter() *plugin.TValue[string] {
+	return &c.HolderParameter
 }
 
 // mqlAtlassianJiraProjectProperty for the atlassian.jira.project.property resource
@@ -1937,7 +2543,8 @@ type mqlAtlassianConfluence struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAtlassianConfluenceInternal it will be used here
-	Users plugin.TValue[[]any]
+	Users  plugin.TValue[[]any]
+	Spaces plugin.TValue[[]any]
 }
 
 // createAtlassianConfluence creates a new instance of this resource
@@ -1990,6 +2597,22 @@ func (c *mqlAtlassianConfluence) GetUsers() *plugin.TValue[[]any] {
 		}
 
 		return c.users()
+	})
+}
+
+func (c *mqlAtlassianConfluence) GetSpaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Spaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence", c.__id, "spaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.spaces()
 	})
 }
 
@@ -2050,4 +2673,247 @@ func (c *mqlAtlassianConfluenceUser) GetName() *plugin.TValue[string] {
 
 func (c *mqlAtlassianConfluenceUser) GetType() *plugin.TValue[string] {
 	return &c.Type
+}
+
+// mqlAtlassianConfluenceSpace for the atlassian.confluence.space resource
+type mqlAtlassianConfluenceSpace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianConfluenceSpaceInternal it will be used here
+	Id               plugin.TValue[int64]
+	Key              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Status           plugin.TValue[string]
+	AnonymousAccess  plugin.TValue[bool]
+	UnlicensedAccess plugin.TValue[bool]
+	Permissions      plugin.TValue[[]any]
+	Pages            plugin.TValue[[]any]
+}
+
+// createAtlassianConfluenceSpace creates a new instance of this resource
+func createAtlassianConfluenceSpace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianConfluenceSpace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.confluence.space", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianConfluenceSpace) MqlName() string {
+	return "atlassian.confluence.space"
+}
+
+func (c *mqlAtlassianConfluenceSpace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetAnonymousAccess() *plugin.TValue[bool] {
+	return &c.AnonymousAccess
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetUnlicensedAccess() *plugin.TValue[bool] {
+	return &c.UnlicensedAccess
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
+func (c *mqlAtlassianConfluenceSpace) GetPages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pages, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.space", c.__id, "pages")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pages()
+	})
+}
+
+// mqlAtlassianConfluencePage for the atlassian.confluence.page resource
+type mqlAtlassianConfluencePage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianConfluencePageInternal it will be used here
+	Id              plugin.TValue[string]
+	Title           plugin.TValue[string]
+	Status          plugin.TValue[string]
+	Type            plugin.TValue[string]
+	SpaceKey        plugin.TValue[string]
+	HasRestrictions plugin.TValue[bool]
+	Restrictions    plugin.TValue[[]any]
+}
+
+// createAtlassianConfluencePage creates a new instance of this resource
+func createAtlassianConfluencePage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianConfluencePage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.confluence.page", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianConfluencePage) MqlName() string {
+	return "atlassian.confluence.page"
+}
+
+func (c *mqlAtlassianConfluencePage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianConfluencePage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianConfluencePage) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlAtlassianConfluencePage) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAtlassianConfluencePage) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAtlassianConfluencePage) GetSpaceKey() *plugin.TValue[string] {
+	return &c.SpaceKey
+}
+
+func (c *mqlAtlassianConfluencePage) GetHasRestrictions() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasRestrictions, func() (bool, error) {
+		return c.hasRestrictions()
+	})
+}
+
+func (c *mqlAtlassianConfluencePage) GetRestrictions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Restrictions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.confluence.page", c.__id, "restrictions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.restrictions()
+	})
+}
+
+// mqlAtlassianConfluencePageRestriction for the atlassian.confluence.page.restriction resource
+type mqlAtlassianConfluencePageRestriction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAtlassianConfluencePageRestrictionInternal it will be used here
+	Id         plugin.TValue[string]
+	Operation  plugin.TValue[string]
+	UserIds    plugin.TValue[[]any]
+	GroupNames plugin.TValue[[]any]
+}
+
+// createAtlassianConfluencePageRestriction creates a new instance of this resource
+func createAtlassianConfluencePageRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianConfluencePageRestriction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.confluence.page.restriction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianConfluencePageRestriction) MqlName() string {
+	return "atlassian.confluence.page.restriction"
+}
+
+func (c *mqlAtlassianConfluencePageRestriction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianConfluencePageRestriction) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianConfluencePageRestriction) GetOperation() *plugin.TValue[string] {
+	return &c.Operation
+}
+
+func (c *mqlAtlassianConfluencePageRestriction) GetUserIds() *plugin.TValue[[]any] {
+	return &c.UserIds
+}
+
+func (c *mqlAtlassianConfluencePageRestriction) GetGroupNames() *plugin.TValue[[]any] {
+	return &c.GroupNames
 }

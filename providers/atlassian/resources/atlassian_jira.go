@@ -7,10 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/atlassian/connection/jira"
+	"go.mondoo.com/mql/v13/types"
 )
 
 const (
@@ -306,4 +309,226 @@ func (a *mqlAtlassianJiraGroup) id() (string, error) {
 
 func (a *mqlAtlassianJiraProject) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+// auditRecords fetches recent Jira audit log records (most recent first).
+// The Jira REST API tops out at 1000 records per page; we return the first page.
+func (a *mqlAtlassianJira) auditRecords() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
+	jiraClient := conn.Client()
+
+	res := []any{}
+	offset := 0
+	limit := 1000
+
+	page, _, err := jiraClient.Audit.Get(context.Background(), nil, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	if page == nil {
+		return res, nil
+	}
+
+	for _, record := range page.Records {
+		if record == nil {
+			continue
+		}
+
+		var createdAt *time.Time
+		if record.Created != "" {
+			// Audit records use RFC3339-ish timestamps; tolerate parse failures.
+			if t, perr := time.Parse(time.RFC3339, record.Created); perr == nil {
+				ut := t.UTC()
+				createdAt = &ut
+			} else if t, perr := time.Parse(JIRA_TIME_FORMAT, record.Created); perr == nil {
+				ut := t.UTC()
+				createdAt = &ut
+			}
+		}
+
+		var objectItem any
+		if record.ObjectItem != nil {
+			objectItem = map[string]any{
+				"id":         record.ObjectItem.ID,
+				"name":       record.ObjectItem.Name,
+				"typeName":   record.ObjectItem.TypeName,
+				"parentId":   record.ObjectItem.ParentID,
+				"parentName": record.ObjectItem.ParentName,
+			}
+		}
+
+		changedValues := []any{}
+		for _, cv := range record.ChangedValues {
+			if cv == nil {
+				continue
+			}
+			changedValues = append(changedValues, map[string]any{
+				"fieldName":   cv.FieldName,
+				"changedFrom": cv.ChangedFrom,
+				"changedTo":   cv.ChangedTo,
+			})
+		}
+
+		associatedItems := []any{}
+		for _, ai := range record.AssociatedItems {
+			if ai == nil {
+				continue
+			}
+			associatedItems = append(associatedItems, map[string]any{
+				"id":         ai.ID,
+				"name":       ai.Name,
+				"typeName":   ai.TypeName,
+				"parentId":   ai.ParentID,
+				"parentName": ai.ParentName,
+			})
+		}
+
+		args := map[string]*llx.RawData{
+			"id":              llx.IntData(int64(record.ID)),
+			"summary":         llx.StringData(record.Summary),
+			"category":        llx.StringData(record.Category),
+			"eventSource":     llx.StringData(record.EventSource),
+			"description":     llx.StringData(record.Description),
+			"authorKey":       llx.StringData(record.AuthorKey),
+			"remoteAddress":   llx.StringData(record.RemoteAddress),
+			"createdAt":       llx.TimeDataPtr(createdAt),
+			"objectItem":      llx.DictData(objectItem),
+			"changedValues":   llx.ArrayData(changedValues, types.Dict),
+			"associatedItems": llx.ArrayData(associatedItems, types.Dict),
+		}
+
+		mqlAuditRecord, err := CreateResource(a.MqlRuntime, "atlassian.jira.auditRecord", args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAuditRecord)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJiraAuditRecord) id() (string, error) {
+	return "atlassian.jira.auditRecord/" + strconv.FormatInt(a.Id.Data, 10), nil
+}
+
+// permissionScheme returns the permission scheme assigned to this Jira project.
+func (a *mqlAtlassianJiraProject) permissionScheme() (*mqlAtlassianJiraPermissionScheme, error) {
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
+	jiraClient := conn.Client()
+
+	projectKey := a.Key.Data
+	if projectKey == "" {
+		projectKey = a.Id.Data
+	}
+	if projectKey == "" {
+		a.PermissionScheme.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	scheme, _, err := jiraClient.Project.Permission.Get(context.Background(), projectKey, []string{"permissions", "user", "group", "projectRole", "field", "all"})
+	if err != nil {
+		return nil, err
+	}
+	if scheme == nil {
+		a.PermissionScheme.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "atlassian.jira.permissionScheme",
+		map[string]*llx.RawData{
+			"id":          llx.IntData(int64(scheme.ID)),
+			"name":        llx.StringData(scheme.Name),
+			"description": llx.StringData(scheme.Description),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	mqlScheme := res.(*mqlAtlassianJiraPermissionScheme)
+	// Cache the grants we already have so grants() doesn't have to call out again.
+	if scheme.Permissions != nil {
+		grants := []any{}
+		for _, grant := range scheme.Permissions {
+			if grant == nil {
+				continue
+			}
+			holderType := ""
+			holderParam := ""
+			if grant.Holder != nil {
+				holderType = grant.Holder.Type
+				holderParam = grant.Holder.Parameter
+			}
+			grantID := strconv.Itoa(scheme.ID) + "/" + strconv.Itoa(grant.ID)
+			mqlGrant, err := CreateResource(a.MqlRuntime, "atlassian.jira.permissionScheme.grant",
+				map[string]*llx.RawData{
+					"id":              llx.StringData(grantID),
+					"permission":      llx.StringData(grant.Permission),
+					"holderType":      llx.StringData(holderType),
+					"holderParameter": llx.StringData(holderParam),
+				})
+			if err != nil {
+				return nil, err
+			}
+			grants = append(grants, mqlGrant)
+		}
+		mqlScheme.Grants = plugin.TValue[[]any]{Data: grants, State: plugin.StateIsSet}
+	}
+
+	return mqlScheme, nil
+}
+
+func (a *mqlAtlassianJiraPermissionScheme) id() (string, error) {
+	return "atlassian.jira.permissionScheme/" + strconv.FormatInt(a.Id.Data, 10), nil
+}
+
+// grants is a fallback if grants weren't pre-populated by permissionScheme().
+// In practice this rarely runs because the parent caches grants on creation.
+func (a *mqlAtlassianJiraPermissionScheme) grants() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
+	jiraClient := conn.Client()
+
+	scheme, _, err := jiraClient.Permission.Scheme.Get(context.Background(), int(a.Id.Data), []string{"permissions", "user", "group", "projectRole", "field", "all"})
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	if scheme == nil {
+		return res, nil
+	}
+	for _, grant := range scheme.Permissions {
+		if grant == nil {
+			continue
+		}
+		holderType := ""
+		holderParam := ""
+		if grant.Holder != nil {
+			holderType = grant.Holder.Type
+			holderParam = grant.Holder.Parameter
+		}
+		grantID := strconv.Itoa(scheme.ID) + "/" + strconv.Itoa(grant.ID)
+		mqlGrant, err := CreateResource(a.MqlRuntime, "atlassian.jira.permissionScheme.grant",
+			map[string]*llx.RawData{
+				"id":              llx.StringData(grantID),
+				"permission":      llx.StringData(grant.Permission),
+				"holderType":      llx.StringData(holderType),
+				"holderParameter": llx.StringData(holderParam),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlGrant)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJiraPermissionSchemeGrant) id() (string, error) {
+	return "atlassian.jira.permissionScheme.grant/" + a.Id.Data, nil
 }
