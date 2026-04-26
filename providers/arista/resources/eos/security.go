@@ -1,0 +1,741 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package eos
+
+import (
+	"bufio"
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+// AaaConfig captures Authentication, Authorization, and Accounting settings
+// extracted from running-config.
+//
+// Arista EOS configures AAA via lines like:
+//
+//	aaa authentication login default group tacacs+ local
+//	aaa authorization commands all default group tacacs+ local
+//	aaa accounting exec default start-stop group tacacs+
+//	tacacs-server host 10.0.0.1
+//	radius-server host 10.0.0.2
+//
+// The methods slice for each block is the ordered list of authentication
+// sources (e.g. ["group", "tacacs+", "local"]). The "local" method as a
+// terminal fallback indicates control-plane access can succeed using the
+// switch's local account database alone — usually an audit finding when
+// remote AAA is required by policy.
+type AaaConfig struct {
+	// AuthenticationLogin holds method lists for "aaa authentication login"
+	// keyed by list name (typically "default").
+	AuthenticationLogin map[string][]string
+	// AuthenticationEnable holds method lists for "aaa authentication enable".
+	AuthenticationEnable map[string][]string
+	// AuthorizationCommands holds method lists for "aaa authorization commands"
+	// keyed by privilege level (or "all"+listName).
+	AuthorizationCommands map[string][]string
+	// AuthorizationExec holds method lists for "aaa authorization exec".
+	AuthorizationExec map[string][]string
+	// AccountingCommands holds method lists for "aaa accounting commands".
+	AccountingCommands map[string][]string
+	// AccountingExec holds method lists for "aaa accounting exec".
+	AccountingExec map[string][]string
+	// TacacsServers lists configured TACACS+ server hostnames/IPs.
+	TacacsServers []string
+	// RadiusServers lists configured RADIUS server hostnames/IPs.
+	RadiusServers []string
+	// LocalUsersAllowed is true when any default authentication list contains
+	// "local" as the first or only method (control-plane could be reached
+	// without contacting remote AAA).
+	LocalUsersAllowed bool
+}
+
+var (
+	aaaAuthLoginRe = regexp.MustCompile(
+		`^aaa authentication login\s+(\S+)\s+(.+)$`)
+	aaaAuthEnableRe = regexp.MustCompile(
+		`^aaa authentication enable\s+(\S+)\s+(.+)$`)
+	aaaAuthzCommandsRe = regexp.MustCompile(
+		`^aaa authorization commands\s+(\S+)\s+(\S+)\s+(.+)$`)
+	aaaAuthzExecRe = regexp.MustCompile(
+		`^aaa authorization exec\s+(\S+)\s+(.+)$`)
+	aaaAcctCommandsRe = regexp.MustCompile(
+		`^aaa accounting commands\s+(\S+)\s+(\S+)\s+\S+\s+(.+)$`)
+	aaaAcctExecRe = regexp.MustCompile(
+		`^aaa accounting exec\s+(\S+)\s+\S+\s+(.+)$`)
+	tacacsHostRe = regexp.MustCompile(
+		`^tacacs-server host\s+(\S+)`)
+	radiusHostRe = regexp.MustCompile(
+		`^radius-server host\s+(\S+)`)
+)
+
+// ParseAaaConfig extracts AAA configuration from running-config.
+// Comments (lines starting with "!") are ignored.
+func ParseAaaConfig(runningConfig string) *AaaConfig {
+	cfg := &AaaConfig{
+		AuthenticationLogin:   map[string][]string{},
+		AuthenticationEnable:  map[string][]string{},
+		AuthorizationCommands: map[string][]string{},
+		AuthorizationExec:     map[string][]string{},
+		AccountingCommands:    map[string][]string{},
+		AccountingExec:        map[string][]string{},
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(runningConfig))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "!") {
+			continue
+		}
+
+		if m := aaaAuthLoginRe.FindStringSubmatch(line); m != nil {
+			cfg.AuthenticationLogin[m[1]] = strings.Fields(m[2])
+			continue
+		}
+		if m := aaaAuthEnableRe.FindStringSubmatch(line); m != nil {
+			cfg.AuthenticationEnable[m[1]] = strings.Fields(m[2])
+			continue
+		}
+		if m := aaaAuthzCommandsRe.FindStringSubmatch(line); m != nil {
+			cfg.AuthorizationCommands[m[1]+"/"+m[2]] = strings.Fields(m[3])
+			continue
+		}
+		if m := aaaAuthzExecRe.FindStringSubmatch(line); m != nil {
+			cfg.AuthorizationExec[m[1]] = strings.Fields(m[2])
+			continue
+		}
+		if m := aaaAcctCommandsRe.FindStringSubmatch(line); m != nil {
+			cfg.AccountingCommands[m[1]+"/"+m[2]] = strings.Fields(m[3])
+			continue
+		}
+		if m := aaaAcctExecRe.FindStringSubmatch(line); m != nil {
+			cfg.AccountingExec[m[1]] = strings.Fields(m[2])
+			continue
+		}
+		if m := tacacsHostRe.FindStringSubmatch(line); m != nil {
+			cfg.TacacsServers = append(cfg.TacacsServers, m[1])
+			continue
+		}
+		if m := radiusHostRe.FindStringSubmatch(line); m != nil {
+			cfg.RadiusServers = append(cfg.RadiusServers, m[1])
+			continue
+		}
+	}
+
+	// LocalUsersAllowed: any "default" login list whose first method is local,
+	// or that contains "local" with no remote group method preceding it.
+	if methods, ok := cfg.AuthenticationLogin["default"]; ok {
+		hasGroup := false
+		for _, m := range methods {
+			if m == "group" {
+				hasGroup = true
+				break
+			}
+		}
+		// If there's no remote group at all, local is the only source.
+		if !hasGroup {
+			for _, m := range methods {
+				if m == "local" {
+					cfg.LocalUsersAllowed = true
+					break
+				}
+			}
+		}
+	}
+
+	return cfg
+}
+
+// SshSettings captures SSH server settings from `management ssh`.
+//
+// Real-world EOS output looks like:
+//
+//	management ssh
+//	   ip access-group MGMT in
+//	   idle-timeout 30
+//	   server-port 22
+//	   no shutdown
+//	   authentication mode keyboard-interactive
+//	   protocol version 2
+//	   cipher aes256-gcm@openssh.com aes256-ctr
+//	   key-exchange curve25519-sha256 ecdh-sha2-nistp521
+//	   mac hmac-sha2-512-etm@openssh.com
+//	   hostkey rsa key-size 4096
+//
+// Lines that aren't recognized are ignored.
+type SshSettings struct {
+	Enabled            bool
+	ProtocolVersion    string
+	IdleTimeout        int
+	ServerPort         int
+	AuthenticationMode string
+	Ciphers            []string
+	KeyExchange        []string
+	Macs               []string
+	HostkeyAlgorithms  []string
+	FipsRestrictions   bool
+}
+
+func ParseSshSettings(runningConfig string) *SshSettings {
+	block := extractBlock(runningConfig, "management ssh")
+	s := &SshSettings{
+		// EOS default: SSH enabled unless an explicit "shutdown" is present
+		Enabled: true,
+	}
+	if block == "" {
+		// No explicit `management ssh` section in the diffed running-config; can
+		// still be on by default — leave Enabled=true and other fields empty.
+		return s
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(block))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		switch {
+		case line == "shutdown":
+			s.Enabled = false
+		case line == "no shutdown":
+			s.Enabled = true
+		case strings.HasPrefix(line, "protocol version"):
+			s.ProtocolVersion = strings.TrimSpace(strings.TrimPrefix(line, "protocol version"))
+		case strings.HasPrefix(line, "idle-timeout"):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "idle-timeout")))
+			if err == nil {
+				s.IdleTimeout = n
+			}
+		case strings.HasPrefix(line, "server-port"):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "server-port")))
+			if err == nil {
+				s.ServerPort = n
+			}
+		case strings.HasPrefix(line, "authentication mode"):
+			s.AuthenticationMode = strings.TrimSpace(strings.TrimPrefix(line, "authentication mode"))
+		case strings.HasPrefix(line, "cipher"):
+			s.Ciphers = strings.Fields(strings.TrimPrefix(line, "cipher"))
+		case strings.HasPrefix(line, "key-exchange"):
+			s.KeyExchange = strings.Fields(strings.TrimPrefix(line, "key-exchange"))
+		case strings.HasPrefix(line, "mac"):
+			s.Macs = strings.Fields(strings.TrimPrefix(line, "mac"))
+		case strings.HasPrefix(line, "hostkey"):
+			s.HostkeyAlgorithms = append(s.HostkeyAlgorithms, strings.TrimSpace(strings.TrimPrefix(line, "hostkey")))
+		case line == "fips restrictions":
+			s.FipsRestrictions = true
+		}
+	}
+	return s
+}
+
+// SnmpCommunity represents a single `snmp-server community` line.
+//
+// Examples:
+//
+//	snmp-server community public ro
+//	snmp-server community ops ro IPV4-MGMT
+//	snmp-server community admin rw
+//
+// The `name` is the community string itself — treat as plaintext shared secret.
+// `access` is "ro" or "rw" (omitted defaults to "ro" in EOS). `acl` is the
+// optional ACL name applied to the community.
+type SnmpCommunity struct {
+	Name   string
+	Access string
+	ACL    string
+}
+
+var snmpCommunityRe = regexp.MustCompile(
+	`^snmp-server community\s+(\S+)(?:\s+(ro|rw))?(?:\s+(\S+))?\s*$`)
+
+// ParseSnmpCommunities extracts SNMPv1/v2c community strings from
+// running-config. SNMPv3 (`snmp-server user`/`snmp-server group`) is
+// intentionally excluded since v3 uses authPriv/authNoPriv per-user, not
+// communities.
+func ParseSnmpCommunities(runningConfig string) []SnmpCommunity {
+	res := []SnmpCommunity{}
+	scanner := bufio.NewScanner(strings.NewReader(runningConfig))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if !strings.HasPrefix(line, "snmp-server community ") {
+			continue
+		}
+		m := snmpCommunityRe.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		c := SnmpCommunity{Name: m[1], Access: m[2]}
+		if c.Access == "" {
+			c.Access = "ro"
+		}
+		if len(m) > 3 {
+			c.ACL = m[3]
+		}
+		res = append(res, c)
+	}
+	return res
+}
+
+// TelnetService represents the `management telnet` configuration block.
+//
+//	management telnet
+//	   shutdown            <- service disabled (good)
+//	   no shutdown         <- service enabled (insecure)
+//	   idle-timeout 0
+//	   session-limit 20
+//
+// On a stock EOS device the telnet service is shut down by default. If the
+// `management telnet` block is absent entirely, the service is considered
+// disabled.
+type TelnetService struct {
+	// Configured indicates whether a `management telnet` block exists in the
+	// running-config (vs. being completely absent).
+	Configured bool
+	// Enabled is true only when the block is present AND not shutdown. We
+	// treat absent block as disabled.
+	Enabled       bool
+	IdleTimeout   int
+	SessionLimit  int
+	PerHostLimit  int
+	IPAccessGroup string
+}
+
+func ParseTelnetService(runningConfig string) *TelnetService {
+	block := extractBlock(runningConfig, "management telnet")
+	t := &TelnetService{}
+	if block == "" {
+		return t
+	}
+	t.Configured = true
+
+	// Default: when the block exists, EOS treats telnet as enabled unless
+	// `shutdown` appears. Most production configs explicitly include
+	// `shutdown` for safety.
+	t.Enabled = true
+
+	scanner := bufio.NewScanner(strings.NewReader(block))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		switch {
+		case line == "shutdown":
+			t.Enabled = false
+		case line == "no shutdown":
+			t.Enabled = true
+		case strings.HasPrefix(line, "idle-timeout"):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "idle-timeout")))
+			if err == nil {
+				t.IdleTimeout = n
+			}
+		case strings.HasPrefix(line, "session-limit per-host"):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "session-limit per-host")))
+			if err == nil {
+				t.PerHostLimit = n
+			}
+		case strings.HasPrefix(line, "session-limit"):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "session-limit")))
+			if err == nil {
+				t.SessionLimit = n
+			}
+		case strings.HasPrefix(line, "ip access-group"):
+			parts := strings.Fields(line)
+			if len(parts) >= 3 {
+				t.IPAccessGroup = parts[2]
+			}
+		}
+	}
+	return t
+}
+
+// PasswordPolicy describes password policy attributes derived from
+// running-config. EOS exposes password policy via:
+//
+//	aaa authentication policy lockout failure 5 window 60 duration 300
+//	aaa authentication policy local allow-nopassword-remote-login
+//	aaa authentication policy on-failure log
+//	aaa authentication policy on-success log
+//	password policy <name>
+//	   minimum length 12
+//	   minimum digits 1
+//	   minimum upper 1
+//	   minimum lower 1
+//	   minimum special 1
+//	   maximum repetitive 2
+//	   maximum sequential 2
+//
+// When the `password policy` block is absent, all minimum/maximum fields
+// are zero, indicating no enforced complexity.
+type PasswordPolicy struct {
+	// LockoutFailure is the number of failed login attempts before lockout.
+	// 0 means lockout is not configured.
+	LockoutFailure int
+	// LockoutWindowSeconds is the rolling window during which failures count.
+	LockoutWindowSeconds int
+	// LockoutDurationSeconds is how long an account stays locked.
+	LockoutDurationSeconds int
+	// AllowNopasswordRemoteLogin permits remote login for users with no
+	// password configured (insecure when true).
+	AllowNopasswordRemoteLogin bool
+	// LogOnFailure / LogOnSuccess: whether auth events are logged.
+	LogOnFailure bool
+	LogOnSuccess bool
+	// PolicyName is the configured `password policy <name>`.
+	PolicyName string
+	// MinimumLength etc. are 0 when unset.
+	MinimumLength     int
+	MinimumDigits     int
+	MinimumUppercase  int
+	MinimumLowercase  int
+	MinimumSpecial    int
+	MaximumRepetitive int
+	MaximumSequential int
+}
+
+var (
+	pwLockoutRe = regexp.MustCompile(
+		`^aaa authentication policy lockout(?:\s+failure\s+(\d+))?(?:\s+window\s+(\d+))?(?:\s+duration\s+(\d+))?`)
+)
+
+func ParsePasswordPolicy(runningConfig string) *PasswordPolicy {
+	p := &PasswordPolicy{}
+
+	// Top-level policy lines.
+	scanner := bufio.NewScanner(strings.NewReader(runningConfig))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		switch {
+		case strings.HasPrefix(line, "aaa authentication policy lockout"):
+			if m := pwLockoutRe.FindStringSubmatch(line); m != nil {
+				if m[1] != "" {
+					p.LockoutFailure, _ = strconv.Atoi(m[1])
+				}
+				if m[2] != "" {
+					p.LockoutWindowSeconds, _ = strconv.Atoi(m[2])
+				}
+				if m[3] != "" {
+					p.LockoutDurationSeconds, _ = strconv.Atoi(m[3])
+				}
+			}
+		case line == "aaa authentication policy local allow-nopassword-remote-login":
+			p.AllowNopasswordRemoteLogin = true
+		case line == "aaa authentication policy on-failure log":
+			p.LogOnFailure = true
+		case line == "aaa authentication policy on-success log":
+			p.LogOnSuccess = true
+		}
+	}
+
+	// Find any `password policy <name>` block. We take the first one.
+	policyName, block := findFirstPolicyBlock(runningConfig)
+	if policyName != "" {
+		p.PolicyName = policyName
+		s := bufio.NewScanner(strings.NewReader(block))
+		for s.Scan() {
+			line := strings.TrimSpace(s.Text())
+			parts := strings.Fields(line)
+			if len(parts) < 3 {
+				continue
+			}
+			n, err := strconv.Atoi(parts[len(parts)-1])
+			if err != nil {
+				continue
+			}
+			switch {
+			case strings.HasPrefix(line, "minimum length"):
+				p.MinimumLength = n
+			case strings.HasPrefix(line, "minimum digits"):
+				p.MinimumDigits = n
+			case strings.HasPrefix(line, "minimum upper"):
+				p.MinimumUppercase = n
+			case strings.HasPrefix(line, "minimum lower"):
+				p.MinimumLowercase = n
+			case strings.HasPrefix(line, "minimum special"):
+				p.MinimumSpecial = n
+			case strings.HasPrefix(line, "maximum repetitive"):
+				p.MaximumRepetitive = n
+			case strings.HasPrefix(line, "maximum sequential"):
+				p.MaximumSequential = n
+			}
+		}
+	}
+
+	return p
+}
+
+// findFirstPolicyBlock returns the name and inner block of the first
+// `password policy <name>` section.
+func findFirstPolicyBlock(runningConfig string) (string, string) {
+	re := regexp.MustCompile(`(?m)^password policy\s+(\S+)\s*$`)
+	loc := re.FindStringSubmatchIndex(runningConfig)
+	if loc == nil {
+		return "", ""
+	}
+	name := runningConfig[loc[2]:loc[3]]
+	rest := runningConfig[loc[1]:]
+
+	// Walk lines until we hit the next non-indented, non-comment line.
+	var b strings.Builder
+	scanner := bufio.NewScanner(strings.NewReader(rest))
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "!") {
+			continue
+		}
+		// Stop when we hit a line at column 0 that isn't a comment — this
+		// belongs to the next config block.
+		if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
+			break
+		}
+		b.WriteString(trimmed)
+		b.WriteByte('\n')
+	}
+	return name, b.String()
+}
+
+// NtpAuthKey represents an `ntp authentication-key <id> <hash> ...` line.
+//
+//	ntp authentication-key 1 sha1 7 0123456789ABCDEF
+//	ntp authentication-key 2 md5 7 0123456789ABCDEF
+//
+// The hash field is one of md5, sha1, sha256, sha384, sha512. md5 is
+// considered weak.
+type NtpAuthKey struct {
+	ID       int
+	HashAlgo string
+	// Trusted indicates whether the key ID appears in
+	// `ntp trusted-key <id>` and is therefore actually used for
+	// authenticating servers.
+	Trusted bool
+}
+
+// NtpAuthState aggregates NTP authentication settings.
+type NtpAuthState struct {
+	// AuthenticationEnabled indicates whether `ntp authenticate` was issued.
+	AuthenticationEnabled bool
+	Keys                  []NtpAuthKey
+	TrustedKeyIDs         []int
+}
+
+var (
+	ntpKeyRe       = regexp.MustCompile(`^ntp authentication-key\s+(\d+)\s+(\S+)`)
+	ntpTrustedKeRe = regexp.MustCompile(`^ntp trusted-key\s+(.+)$`)
+)
+
+func ParseNtpAuth(runningConfig string) *NtpAuthState {
+	state := &NtpAuthState{}
+	scanner := bufio.NewScanner(strings.NewReader(runningConfig))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		switch {
+		case line == "ntp authenticate":
+			state.AuthenticationEnabled = true
+		case strings.HasPrefix(line, "ntp authentication-key"):
+			if m := ntpKeyRe.FindStringSubmatch(line); m != nil {
+				id, _ := strconv.Atoi(m[1])
+				state.Keys = append(state.Keys, NtpAuthKey{
+					ID:       id,
+					HashAlgo: m[2],
+				})
+			}
+		case strings.HasPrefix(line, "ntp trusted-key"):
+			if m := ntpTrustedKeRe.FindStringSubmatch(line); m != nil {
+				for _, tok := range strings.Fields(m[1]) {
+					id, err := strconv.Atoi(tok)
+					if err == nil {
+						state.TrustedKeyIDs = append(state.TrustedKeyIDs, id)
+					}
+				}
+			}
+		}
+	}
+
+	// Mark trusted keys.
+	trusted := map[int]bool{}
+	for _, id := range state.TrustedKeyIDs {
+		trusted[id] = true
+	}
+	for i := range state.Keys {
+		if trusted[state.Keys[i].ID] {
+			state.Keys[i].Trusted = true
+		}
+	}
+	return state
+}
+
+// ControlPlanePolicer describes Control-Plane Policing (CoPP) coverage from
+// the `control-plane` section of running-config.
+//
+//	control-plane
+//	   no service-policy input copp-system-policy
+//
+// Or, configured:
+//
+//	control-plane
+//	   ip access-group COPP-IN in
+//	   service-policy input copp-system-policy
+//
+// Without a service policy applied, the device has no CoPP protection
+// against control-plane DoS — a high-impact misconfiguration.
+type ControlPlanePolicer struct {
+	// Configured indicates whether a `control-plane` block exists.
+	Configured bool
+	// PolicyApplied is true if a `service-policy input <name>` line is
+	// present (and not negated).
+	PolicyApplied  bool
+	PolicyName     string
+	IPAccessGroup  string
+	IP6AccessGroup string
+}
+
+func ParseControlPlanePolicer(runningConfig string) *ControlPlanePolicer {
+	block := extractBlock(runningConfig, "control-plane")
+	c := &ControlPlanePolicer{}
+	if block == "" {
+		return c
+	}
+	c.Configured = true
+
+	scanner := bufio.NewScanner(strings.NewReader(block))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		switch {
+		case strings.HasPrefix(line, "service-policy input"):
+			c.PolicyApplied = true
+			parts := strings.Fields(line)
+			if len(parts) >= 3 {
+				c.PolicyName = parts[2]
+			}
+		case strings.HasPrefix(line, "no service-policy input"):
+			c.PolicyApplied = false
+			c.PolicyName = ""
+		case strings.HasPrefix(line, "ip access-group"):
+			parts := strings.Fields(line)
+			if len(parts) >= 3 {
+				c.IPAccessGroup = parts[2]
+			}
+		case strings.HasPrefix(line, "ipv6 access-group"):
+			parts := strings.Fields(line)
+			if len(parts) >= 3 {
+				c.IP6AccessGroup = parts[2]
+			}
+		}
+	}
+	return c
+}
+
+// PortSecurityConfig captures `switchport port-security` settings on an
+// interface block.
+//
+//	interface Ethernet1
+//	   switchport port-security
+//	   switchport port-security maximum 2
+//	   switchport port-security violation protect
+//	   switchport port-security mac-address sticky
+//
+// Without `switchport port-security` (the bare command), the feature is
+// disabled on the interface — which is the EOS default.
+type PortSecurityConfig struct {
+	// Interface is the parent interface name (e.g. "Ethernet1").
+	Interface string
+	Enabled   bool
+	// MaximumMacAddresses is the configured limit. 0 means default (1).
+	MaximumMacAddresses int
+	// ViolationAction: "protect", "restrict", or "shutdown".
+	ViolationAction string
+	// StickyLearning is true when sticky MAC learning is configured.
+	StickyLearning bool
+}
+
+// ParsePortSecurity walks every `interface <name>` block and returns one
+// PortSecurityConfig per interface that has at least one
+// `switchport port-security ...` line. Interfaces without port-security are
+// excluded — caller decides the policy default.
+func ParsePortSecurity(runningConfig string) []PortSecurityConfig {
+	res := []PortSecurityConfig{}
+
+	ifaceRe := regexp.MustCompile(`(?m)^interface (\S+)\s*$`)
+	matches := ifaceRe.FindAllStringSubmatchIndex(runningConfig, -1)
+
+	for i, match := range matches {
+		ifaceName := runningConfig[match[2]:match[3]]
+		blockStart := match[1]
+		blockEnd := len(runningConfig)
+		if i+1 < len(matches) {
+			blockEnd = matches[i+1][0]
+		}
+		block := runningConfig[blockStart:blockEnd]
+
+		ps := PortSecurityConfig{Interface: ifaceName}
+		hasAny := false
+		scanner := bufio.NewScanner(strings.NewReader(block))
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			// Stop reading at end-of-block markers within the block too.
+			if line == "!" || line == "end" {
+				break
+			}
+			if line == "switchport port-security" {
+				ps.Enabled = true
+				hasAny = true
+				continue
+			}
+			if !strings.HasPrefix(line, "switchport port-security") {
+				continue
+			}
+			hasAny = true
+			rest := strings.TrimSpace(strings.TrimPrefix(line, "switchport port-security"))
+			switch {
+			case strings.HasPrefix(rest, "maximum"):
+				parts := strings.Fields(rest)
+				if len(parts) >= 2 {
+					if n, err := strconv.Atoi(parts[1]); err == nil {
+						ps.MaximumMacAddresses = n
+					}
+				}
+			case strings.HasPrefix(rest, "violation"):
+				parts := strings.Fields(rest)
+				if len(parts) >= 2 {
+					ps.ViolationAction = parts[1]
+				}
+			case strings.HasPrefix(rest, "mac-address sticky"):
+				ps.StickyLearning = true
+			}
+		}
+		if hasAny {
+			res = append(res, ps)
+		}
+	}
+	return res
+}
+
+// extractBlock returns the indented body of the first occurrence of `header`
+// at column 0 in runningConfig. The body excludes the header line itself and
+// stops at the next column-0 line that isn't a comment.
+func extractBlock(runningConfig, header string) string {
+	scanner := bufio.NewScanner(strings.NewReader(runningConfig))
+	inBlock := false
+	var b strings.Builder
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmed := strings.TrimSpace(line)
+		if !inBlock {
+			if line == header {
+				inBlock = true
+			}
+			continue
+		}
+		// In-block: stop at next non-indented line that isn't a comment.
+		if line == "" {
+			continue
+		}
+		if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
+			if strings.HasPrefix(trimmed, "!") {
+				// running config separator inside or right after a block —
+				// safest to treat as the block terminator
+				break
+			}
+			break
+		}
+		b.WriteString(trimmed)
+		b.WriteByte('\n')
+	}
+	return b.String()
+}

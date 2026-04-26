@@ -40,6 +40,24 @@ arista.eos {
   acls() []arista.eos.acl
   // Hardware environment and inventory
   hardware() arista.eos.hardware
+  // AAA (Authentication, Authorization, Accounting) configuration
+  aaa() arista.eos.aaa
+  // Management SSH service configuration
+  sshSettings() arista.eos.sshSettings
+  // SNMPv1/v2c community strings (plaintext shared secrets)
+  snmpCommunities() []arista.eos.snmpCommunity
+  // Management telnet service configuration (insecure plaintext protocol)
+  telnetService() arista.eos.telnetService
+  // Password policy and account-lockout configuration
+  passwordPolicy() arista.eos.passwordPolicy
+  // NTP authentication keys and trusted-key state
+  ntpAuthKeys() []arista.eos.ntpAuthKey
+  // Whether NTP authentication is globally enabled (`ntp authenticate`)
+  ntpAuthenticationEnabled() bool
+  // Control-Plane Policing (CoPP) configuration
+  controlPlanePolicer() arista.eos.controlPlanePolicer
+  // Per-interface switchport port-security configurations
+  portSecurity() []arista.eos.portSecurity
 }
 
 // Arista EOS system's operating configuration
@@ -429,4 +447,148 @@ private arista.eos.hardware.inventoryItem @defaults("name description serialNumb
   hardwareRevision string
   // Inventory category (system, powerSupply, fanTray, transceiver, card)
   category string
+}
+
+// Arista EOS AAA (Authentication, Authorization, Accounting) configuration
+arista.eos.aaa {
+  // Authentication login method lists (key = list name, e.g. "default")
+  authenticationLogin map[string][]string
+  // Authentication enable method lists
+  authenticationEnable map[string][]string
+  // Authorization commands method lists (key = "<level>/<list>")
+  authorizationCommands map[string][]string
+  // Authorization exec method lists
+  authorizationExec map[string][]string
+  // Accounting commands method lists (key = "<level>/<list>")
+  accountingCommands map[string][]string
+  // Accounting exec method lists
+  accountingExec map[string][]string
+  // TACACS+ server hosts
+  tacacsServers []string
+  // RADIUS server hosts
+  radiusServers []string
+  // Whether the local user database is the only authentication source for the
+  // default login list (i.e. no remote AAA group is configured before local).
+  localUsersAllowed bool
+}
+
+// Arista EOS management SSH service configuration
+arista.eos.sshSettings {
+  // Whether the SSH service is enabled (no shutdown)
+  enabled bool
+  // Configured SSH protocol version (typically "2")
+  protocolVersion string
+  // Idle timeout in minutes (0 = no timeout)
+  idleTimeout int
+  // TCP server port (default 22)
+  serverPort int
+  // Authentication mode (e.g. "keyboard-interactive", "password")
+  authenticationMode string
+  // Allowed cipher algorithms
+  ciphers []string
+  // Allowed key-exchange algorithms
+  keyExchange []string
+  // Allowed MAC algorithms
+  macs []string
+  // Configured host key algorithms (raw lines after `hostkey`)
+  hostkeyAlgorithms []string
+  // Whether `fips restrictions` is enabled on the SSH service
+  fipsRestrictions bool
+}
+
+// Arista EOS SNMPv1/v2c community string configuration
+private arista.eos.snmpCommunity @defaults("name access acl") {
+  // Community string (acts as a plaintext shared secret)
+  name string
+  // Access mode: "ro" (read-only) or "rw" (read-write)
+  access string
+  // Access-list name applied to this community (empty = no ACL)
+  acl string
+}
+
+// Arista EOS management telnet service
+arista.eos.telnetService {
+  // Whether a `management telnet` block exists in the running-config
+  configured bool
+  // Whether the telnet service is enabled (configured AND not shutdown)
+  enabled bool
+  // Idle timeout in minutes (0 = no timeout)
+  idleTimeout int
+  // Maximum concurrent sessions
+  sessionLimit int
+  // Maximum concurrent sessions per host
+  perHostLimit int
+  // Access-list name restricting connections (empty = no ACL)
+  ipAccessGroup string
+}
+
+// Arista EOS password policy and account-lockout configuration
+arista.eos.passwordPolicy {
+  // Failures allowed before account lockout (0 = lockout not configured)
+  lockoutFailure int
+  // Rolling window during which failures count, in seconds
+  lockoutWindowSeconds int
+  // How long an account stays locked, in seconds
+  lockoutDurationSeconds int
+  // Whether remote login is permitted for users with no password configured
+  allowNopasswordRemoteLogin bool
+  // Whether failed authentication events are logged
+  logOnFailure bool
+  // Whether successful authentication events are logged
+  logOnSuccess bool
+  // Configured `password policy <name>` (empty = no policy block)
+  policyName string
+  // Minimum password length (0 = unset)
+  minimumLength int
+  // Minimum digit characters required
+  minimumDigits int
+  // Minimum uppercase characters required
+  minimumUppercase int
+  // Minimum lowercase characters required
+  minimumLowercase int
+  // Minimum special characters required
+  minimumSpecial int
+  // Maximum allowed repetitive characters
+  maximumRepetitive int
+  // Maximum allowed sequential characters
+  maximumSequential int
+}
+
+// Arista EOS NTP authentication key
+private arista.eos.ntpAuthKey @defaults("id hashAlgo trusted") {
+  // Key ID
+  id int
+  // Hash algorithm (md5, sha1, sha256, sha384, sha512). md5 is weak.
+  hashAlgo string
+  // Whether this key ID appears in `ntp trusted-key` and is therefore
+  // actually used for authenticating servers
+  trusted bool
+}
+
+// Arista EOS Control-Plane Policing (CoPP) configuration
+arista.eos.controlPlanePolicer {
+  // Whether a `control-plane` block exists in the running-config
+  configured bool
+  // Whether a `service-policy input <name>` is applied
+  policyApplied bool
+  // The service-policy name (empty if none applied)
+  policyName string
+  // IPv4 access-group applied to control-plane (empty if none)
+  ipAccessGroup string
+  // IPv6 access-group applied to control-plane (empty if none)
+  ip6AccessGroup string
+}
+
+// Arista EOS per-interface switchport port-security configuration
+private arista.eos.portSecurity @defaults("interface enabled violationAction") {
+  // Parent interface name (e.g. "Ethernet1")
+  interface string
+  // Whether port-security is enabled on the interface
+  enabled bool
+  // Maximum learned MAC addresses (0 = EOS default of 1)
+  maximumMacAddresses int
+  // Violation action: "protect", "restrict", or "shutdown" (empty = unset)
+  violationAction string
+  // Whether sticky MAC learning is configured
+  stickyLearning bool
 }
