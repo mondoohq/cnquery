@@ -47,7 +47,9 @@ func (o *mqlOktaApiToken) id() (string, error) {
 	return "okta.api.token/" + o.Id.Data, o.Id.Error
 }
 
-// user resolves the typed user this API token was issued for.
+// user resolves the typed user this API token was issued for. The runtime
+// caches okta.user instances keyed by id, so repeated lookups across api
+// tokens (and other resources) reuse a single GetUser call.
 func (o *mqlOktaApiToken) user() (*mqlOktaUser, error) {
 	if o.UserId.Error != nil {
 		return nil, o.UserId.Error
@@ -57,13 +59,11 @@ func (o *mqlOktaApiToken) user() (*mqlOktaUser, error) {
 		return nil, nil
 	}
 
-	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
-
-	ctx := context.Background()
-	usr, _, err := client.User.GetUser(ctx, o.UserId.Data)
+	r, err := NewResource(o.MqlRuntime, "okta.user", map[string]*llx.RawData{
+		"id": llx.StringData(o.UserId.Data),
+	})
 	if err != nil {
 		return nil, err
 	}
-	return newMqlOktaUser(o.MqlRuntime, usr)
+	return r.(*mqlOktaUser), nil
 }

@@ -146,6 +146,13 @@ private okta.userFactor @defaults("factorType status") {
   userId string
   // The user this factor belongs to
   user() okta.user
+  // Provider/factor-type-specific data. Shape depends on factorType:
+  // - sms/call: { phoneNumber }
+  // - push: { name, platform, version, deviceType, ... }
+  // - webauthn: { credentialId, authenticatorName, ... }
+  // - token:software:totp: { credentialId }
+  // - question: { question, questionText }
+  profile dict
 }
 
 // Okta authenticator (admin-defined MFA factor catalog entry)
@@ -161,17 +168,17 @@ private okta.authenticator @defaults("name key status") {
   // Status of the authenticator: ACTIVE or INACTIVE
   status string
   // Provider type for this authenticator (e.g., OKTA, DUO)
-  providerType string
+  providerType() string
   // Provider-specific configuration
-  providerConfiguration dict
+  providerConfiguration() dict
   // Authenticator settings (allowedFor, tokenLifetimeInMinutes, userVerification, etc.)
   settings dict
   // Whether the authenticator is allowed for any policy ("any", "recovery", "sso", "none")
-  allowedFor string
+  allowedFor() string
   // Token lifetime in minutes (for email, OTP-style authenticators)
-  tokenLifetimeInMinutes int
+  tokenLifetimeInMinutes() int
   // User verification setting (e.g., REQUIRED, PREFERRED, DISCOURAGED)
-  userVerification string
+  userVerification() string
   // Timestamp when the authenticator was created
   created time
   // Timestamp when the authenticator was last updated

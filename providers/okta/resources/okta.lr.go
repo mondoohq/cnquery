@@ -54,7 +54,7 @@ func init() {
 			Create: createOktaPolicies,
 		},
 		"okta.user": {
-			// to override args, implement: initOktaUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOktaUser,
 			Create: createOktaUser,
 		},
 		"okta.userFactor": {
@@ -373,6 +373,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.userFactor.user": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaUserFactor).GetUser()).ToDataRes(types.Resource("okta.user"))
+	},
+	"okta.userFactor.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaUserFactor).GetProfile()).ToDataRes(types.Dict)
 	},
 	"okta.authenticator.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaAuthenticator).GetId()).ToDataRes(types.String)
@@ -1039,6 +1042,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.userFactor.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaUserFactor).User, ok = plugin.RawToTValue[*mqlOktaUser](v.Value, v.Error)
+		return
+	},
+	"okta.userFactor.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaUserFactor).Profile, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"okta.authenticator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2364,6 +2371,7 @@ type mqlOktaUserFactor struct {
 	LastUpdated plugin.TValue[*time.Time]
 	UserId      plugin.TValue[string]
 	User        plugin.TValue[*mqlOktaUser]
+	Profile     plugin.TValue[any]
 }
 
 // createOktaUserFactor creates a new instance of this resource
@@ -2447,11 +2455,15 @@ func (c *mqlOktaUserFactor) GetUser() *plugin.TValue[*mqlOktaUser] {
 	})
 }
 
+func (c *mqlOktaUserFactor) GetProfile() *plugin.TValue[any] {
+	return &c.Profile
+}
+
 // mqlOktaAuthenticator for the okta.authenticator resource
 type mqlOktaAuthenticator struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOktaAuthenticatorInternal it will be used here
+	mqlOktaAuthenticatorInternal
 	Id                     plugin.TValue[string]
 	Key                    plugin.TValue[string]
 	Name                   plugin.TValue[string]
@@ -2525,11 +2537,15 @@ func (c *mqlOktaAuthenticator) GetStatus() *plugin.TValue[string] {
 }
 
 func (c *mqlOktaAuthenticator) GetProviderType() *plugin.TValue[string] {
-	return &c.ProviderType
+	return plugin.GetOrCompute[string](&c.ProviderType, func() (string, error) {
+		return c.providerType()
+	})
 }
 
 func (c *mqlOktaAuthenticator) GetProviderConfiguration() *plugin.TValue[any] {
-	return &c.ProviderConfiguration
+	return plugin.GetOrCompute[any](&c.ProviderConfiguration, func() (any, error) {
+		return c.providerConfiguration()
+	})
 }
 
 func (c *mqlOktaAuthenticator) GetSettings() *plugin.TValue[any] {
@@ -2537,15 +2553,21 @@ func (c *mqlOktaAuthenticator) GetSettings() *plugin.TValue[any] {
 }
 
 func (c *mqlOktaAuthenticator) GetAllowedFor() *plugin.TValue[string] {
-	return &c.AllowedFor
+	return plugin.GetOrCompute[string](&c.AllowedFor, func() (string, error) {
+		return c.allowedFor()
+	})
 }
 
 func (c *mqlOktaAuthenticator) GetTokenLifetimeInMinutes() *plugin.TValue[int64] {
-	return &c.TokenLifetimeInMinutes
+	return plugin.GetOrCompute[int64](&c.TokenLifetimeInMinutes, func() (int64, error) {
+		return c.tokenLifetimeInMinutes()
+	})
 }
 
 func (c *mqlOktaAuthenticator) GetUserVerification() *plugin.TValue[string] {
-	return &c.UserVerification
+	return plugin.GetOrCompute[string](&c.UserVerification, func() (string, error) {
+		return c.userVerification()
+	})
 }
 
 func (c *mqlOktaAuthenticator) GetCreated() *plugin.TValue[*time.Time] {

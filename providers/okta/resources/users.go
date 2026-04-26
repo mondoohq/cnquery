@@ -14,6 +14,68 @@ import (
 	"go.mondoo.com/mql/v13/providers/okta/connection"
 )
 
+// initOktaUser allows callers to construct an okta.user via NewResource by id.
+// When only an id is provided, this fetches the user lazily (cached by the
+// runtime) so referencing the same user across resources does not N+1 the API.
+func initOktaUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// If we already have the full set of fields, no fetch needed.
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	idArg, ok := args["id"]
+	if !ok || idArg == nil || idArg.Value == nil {
+		// Bare resource construction (no id) is a valid empty state.
+		return args, nil, nil
+	}
+	id, ok := idArg.Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.OktaConnection)
+	client := conn.Client()
+	ctx := context.Background()
+	user, _, err := client.User.GetUser(ctx, id)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	userType, err := convert.JsonToDict(user.Type)
+	if err != nil {
+		return nil, nil, err
+	}
+	var userTypeId string
+	if user.Type != nil {
+		userTypeId = user.Type.Id
+	}
+	credentials, err := convert.JsonToDict(user.Credentials)
+	if err != nil {
+		return nil, nil, err
+	}
+	profileDict := map[string]any{}
+	if user.Profile != nil {
+		for k, v := range *user.Profile {
+			profileDict[k] = v
+		}
+	}
+
+	args["id"] = llx.StringData(user.Id)
+	args["type"] = llx.DictData(userType)
+	args["typeId"] = llx.StringData(userTypeId)
+	args["credentials"] = llx.DictData(credentials)
+	args["activated"] = llx.TimeDataPtr(user.Activated)
+	args["created"] = llx.TimeDataPtr(user.Created)
+	args["lastLogin"] = llx.TimeDataPtr(user.LastLogin)
+	args["lastUpdated"] = llx.TimeDataPtr(user.LastUpdated)
+	args["passwordChanged"] = llx.TimeDataPtr(user.PasswordChanged)
+	args["profile"] = llx.DictData(profileDict)
+	args["status"] = llx.StringData(user.Status)
+	args["statusChanged"] = llx.TimeDataPtr(user.StatusChanged)
+	args["transitioningToStatus"] = llx.StringData(user.TransitioningToStatus)
+	return args, nil, nil
+}
+
 func (o *mqlOkta) users() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()

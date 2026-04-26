@@ -206,6 +206,7 @@ okta.userFactor.created 13.1.6
 okta.userFactor.factorType 13.1.6
 okta.userFactor.id 13.1.6
 okta.userFactor.lastUpdated 13.1.6
+okta.userFactor.profile 13.1.6
 okta.userFactor.provider 13.1.6
 okta.userFactor.status 13.1.6
 okta.userFactor.user 13.1.6

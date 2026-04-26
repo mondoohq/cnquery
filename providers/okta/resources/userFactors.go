@@ -5,12 +5,25 @@ package resources
 
 import (
 	"context"
+	"fmt"
+	"time"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/okta/connection"
 )
+
+// userFactorRaw decodes the user factors endpoint directly so we can capture
+// the type-specific Profile object that the SDK's UserFactor struct discards.
+type userFactorRaw struct {
+	Id          string         `json:"id,omitempty"`
+	FactorType  string         `json:"factorType,omitempty"`
+	Provider    string         `json:"provider,omitempty"`
+	Status      string         `json:"status,omitempty"`
+	Created     *time.Time     `json:"created,omitempty"`
+	LastUpdated *time.Time     `json:"lastUpdated,omitempty"`
+	Profile     map[string]any `json:"profile,omitempty"`
+}
 
 // factors returns the MFA factors enrolled by this user.
 func (o *mqlOktaUser) factors() ([]any, error) {
@@ -18,25 +31,30 @@ func (o *mqlOktaUser) factors() ([]any, error) {
 		return nil, o.Id.Error
 	}
 	if o.Id.Data == "" {
-		return nil, nil
+		return []any{}, nil
 	}
 
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
 
 	ctx := context.Background()
-	factors, resp, err := client.UserFactor.ListFactors(ctx, o.Id.Data)
+	rq := client.CloneRequestExecutor()
+
+	url := fmt.Sprintf("/api/v1/users/%s/factors", o.Id.Data)
+	req, err := rq.WithAccept("application/json").WithContentType("application/json").NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var page []userFactorRaw
+	resp, err := rq.Do(ctx, req, &page)
 	if err != nil {
 		return nil, err
 	}
 
 	list := []any{}
-	for i := range factors {
-		uf, ok := factors[i].(*okta.UserFactor)
-		if !ok {
-			continue
-		}
-		r, err := newMqlOktaUserFactor(o.MqlRuntime, o.Id.Data, uf)
+	for i := range page {
+		r, err := newMqlOktaUserFactor(o.MqlRuntime, o.Id.Data, &page[i])
 		if err != nil {
 			return nil, err
 		}
@@ -44,17 +62,13 @@ func (o *mqlOktaUser) factors() ([]any, error) {
 	}
 
 	for resp != nil && resp.HasNextPage() {
-		var page []okta.Factor
-		resp, err = resp.Next(ctx, &page)
+		var next []userFactorRaw
+		resp, err = resp.Next(ctx, &next)
 		if err != nil {
 			return nil, err
 		}
-		for i := range page {
-			uf, ok := page[i].(*okta.UserFactor)
-			if !ok {
-				continue
-			}
-			r, err := newMqlOktaUserFactor(o.MqlRuntime, o.Id.Data, uf)
+		for i := range next {
+			r, err := newMqlOktaUserFactor(o.MqlRuntime, o.Id.Data, &next[i])
 			if err != nil {
 				return nil, err
 			}
@@ -65,8 +79,8 @@ func (o *mqlOktaUser) factors() ([]any, error) {
 	return list, nil
 }
 
-func newMqlOktaUserFactor(runtime *plugin.Runtime, userId string, factor *okta.UserFactor) (*mqlOktaUserFactor, error) {
-	r, err := CreateResource(runtime, "okta.userFactor", map[string]*llx.RawData{
+func newMqlOktaUserFactor(runtime *plugin.Runtime, userId string, factor *userFactorRaw) (*mqlOktaUserFactor, error) {
+	args := map[string]*llx.RawData{
 		"id":          llx.StringData(factor.Id),
 		"factorType":  llx.StringData(factor.FactorType),
 		"provider":    llx.StringData(factor.Provider),
@@ -74,7 +88,14 @@ func newMqlOktaUserFactor(runtime *plugin.Runtime, userId string, factor *okta.U
 		"created":     llx.TimeDataPtr(factor.Created),
 		"lastUpdated": llx.TimeDataPtr(factor.LastUpdated),
 		"userId":      llx.StringData(userId),
-	})
+	}
+	if factor.Profile != nil {
+		args["profile"] = llx.DictData(factor.Profile)
+	} else {
+		args["profile"] = llx.NilData
+	}
+
+	r, err := CreateResource(runtime, "okta.userFactor", args)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +106,9 @@ func (o *mqlOktaUserFactor) id() (string, error) {
 	return "okta.userFactor/" + o.UserId.Data + "/" + o.Id.Data, o.Id.Error
 }
 
-// user resolves the typed user this factor belongs to.
+// user resolves the typed user this factor belongs to. The runtime caches
+// okta.user instances keyed by id, so repeated lookups across factors reuse a
+// single GetUser call.
 func (o *mqlOktaUserFactor) user() (*mqlOktaUser, error) {
 	if o.UserId.Error != nil {
 		return nil, o.UserId.Error
@@ -95,13 +118,11 @@ func (o *mqlOktaUserFactor) user() (*mqlOktaUser, error) {
 		return nil, nil
 	}
 
-	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
-	client := conn.Client()
-
-	ctx := context.Background()
-	usr, _, err := client.User.GetUser(ctx, o.UserId.Data)
+	r, err := NewResource(o.MqlRuntime, "okta.user", map[string]*llx.RawData{
+		"id": llx.StringData(o.UserId.Data),
+	})
 	if err != nil {
 		return nil, err
 	}
-	return newMqlOktaUser(o.MqlRuntime, usr)
+	return r.(*mqlOktaUser), nil
 }

@@ -13,6 +13,11 @@ import (
 	"go.mondoo.com/mql/v13/providers/okta/connection"
 )
 
+type mqlOktaAuthenticatorInternal struct {
+	provider *okta.AuthenticatorProvider
+	settings *okta.AuthenticatorSettings
+}
+
 func (o *mqlOkta) authenticators() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()
@@ -63,45 +68,66 @@ func newMqlOktaAuthenticator(runtime *plugin.Runtime, entry *okta.Authenticator)
 		"lastUpdated": llx.TimeDataPtr(entry.LastUpdated),
 	}
 
-	if entry.Provider != nil {
-		args["providerType"] = llx.StringData(entry.Provider.Type)
-		providerCfg, err := convert.JsonToDict(entry.Provider.Configuration)
-		if err != nil {
-			return nil, err
-		}
-		args["providerConfiguration"] = llx.DictData(providerCfg)
-	} else {
-		args["providerType"] = llx.StringData("")
-		args["providerConfiguration"] = llx.DictData(map[string]any{})
-	}
-
 	if entry.Settings != nil {
 		settings, err := convert.JsonToDict(entry.Settings)
 		if err != nil {
 			return nil, err
 		}
 		args["settings"] = llx.DictData(settings)
-		args["allowedFor"] = llx.StringData(entry.Settings.AllowedFor)
-		args["userVerification"] = llx.StringData(entry.Settings.UserVerification)
-		if entry.Settings.TokenLifetimeInMinutesPtr != nil {
-			args["tokenLifetimeInMinutes"] = llx.IntData(*entry.Settings.TokenLifetimeInMinutesPtr)
-		} else {
-			args["tokenLifetimeInMinutes"] = llx.IntData(0)
-		}
 	} else {
 		args["settings"] = llx.DictData(map[string]any{})
-		args["allowedFor"] = llx.StringData("")
-		args["userVerification"] = llx.StringData("")
-		args["tokenLifetimeInMinutes"] = llx.IntData(0)
 	}
 
 	r, err := CreateResource(runtime, "okta.authenticator", args)
 	if err != nil {
 		return nil, err
 	}
-	return r.(*mqlOktaAuthenticator), nil
+	mqlAuth := r.(*mqlOktaAuthenticator)
+	mqlAuth.provider = entry.Provider
+	mqlAuth.settings = entry.Settings
+	return mqlAuth, nil
 }
 
 func (o *mqlOktaAuthenticator) id() (string, error) {
 	return "okta.authenticator/" + o.Id.Data, o.Id.Error
+}
+
+func (o *mqlOktaAuthenticator) providerType() (string, error) {
+	if o.provider == nil {
+		o.ProviderType.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return o.provider.Type, nil
+}
+
+func (o *mqlOktaAuthenticator) providerConfiguration() (any, error) {
+	if o.provider == nil || o.provider.Configuration == nil {
+		o.ProviderConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return convert.JsonToDict(o.provider.Configuration)
+}
+
+func (o *mqlOktaAuthenticator) allowedFor() (string, error) {
+	if o.settings == nil {
+		o.AllowedFor.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return o.settings.AllowedFor, nil
+}
+
+func (o *mqlOktaAuthenticator) tokenLifetimeInMinutes() (int64, error) {
+	if o.settings == nil || o.settings.TokenLifetimeInMinutesPtr == nil {
+		o.TokenLifetimeInMinutes.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return *o.settings.TokenLifetimeInMinutesPtr, nil
+}
+
+func (o *mqlOktaAuthenticator) userVerification() (string, error) {
+	if o.settings == nil {
+		o.UserVerification.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return o.settings.UserVerification, nil
 }
