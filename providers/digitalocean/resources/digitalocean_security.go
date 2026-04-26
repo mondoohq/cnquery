@@ -117,7 +117,7 @@ func (r *mqlDigitaloceanDroplet) firewalls() ([]any, error) {
 	return out, nil
 }
 
-func (r *mqlDigitaloceanDroplet) hasNoFirewall() (bool, error) {
+func (r *mqlDigitaloceanDroplet) missingFirewall() (bool, error) {
 	if r.PublicIpv4.Data == "" {
 		return false, nil
 	}

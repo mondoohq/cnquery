@@ -108,8 +108,8 @@ digitalocean.droplet @defaults("id name status") {
   image dict
   // Firewalls covering this droplet (by id or matching tag)
   firewalls() []digitalocean.firewall
-  // Whether the droplet has a public IPv4 with no firewall attached at all (boolean: no firewall covers the droplet by ID or tag); for actual rule-level analysis, query `firewalls`
-  hasNoFirewall() bool
+  // True when no firewall is attached to the droplet (by id or tag); does not check inbound rule restrictiveness — for that, query `firewalls`
+  missingFirewall() bool
 }
 
 // DigitalOcean firewall

@@ -114,10 +114,10 @@ digitalocean.droplet.createdAt 13.0.1
 digitalocean.droplet.disk 13.0.1
 digitalocean.droplet.features 13.0.1
 digitalocean.droplet.firewalls 13.0.2
-digitalocean.droplet.hasNoFirewall 13.0.2
 digitalocean.droplet.id 13.0.1
 digitalocean.droplet.image 13.0.1
 digitalocean.droplet.memory 13.0.1
+digitalocean.droplet.missingFirewall 13.0.2
 digitalocean.droplet.monitoringEnabled 13.0.1
 digitalocean.droplet.name 13.0.1
 digitalocean.droplet.privateIpv4 13.0.1

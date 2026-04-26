@@ -374,8 +374,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.droplet.firewalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanDroplet).GetFirewalls()).ToDataRes(types.Array(types.Resource("digitalocean.firewall")))
 	},
-	"digitalocean.droplet.hasNoFirewall": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlDigitaloceanDroplet).GetHasNoFirewall()).ToDataRes(types.Bool)
+	"digitalocean.droplet.missingFirewall": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanDroplet).GetMissingFirewall()).ToDataRes(types.Bool)
 	},
 	"digitalocean.firewall.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanFirewall).GetId()).ToDataRes(types.String)
@@ -1195,8 +1195,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanDroplet).Firewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"digitalocean.droplet.hasNoFirewall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlDigitaloceanDroplet).HasNoFirewall, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"digitalocean.droplet.missingFirewall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanDroplet).MissingFirewall, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"digitalocean.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2623,7 +2623,7 @@ type mqlDigitaloceanDroplet struct {
 	MonitoringEnabled plugin.TValue[bool]
 	Image             plugin.TValue[any]
 	Firewalls         plugin.TValue[[]any]
-	HasNoFirewall     plugin.TValue[bool]
+	MissingFirewall   plugin.TValue[bool]
 }
 
 // createDigitaloceanDroplet creates a new instance of this resource
@@ -2763,9 +2763,9 @@ func (c *mqlDigitaloceanDroplet) GetFirewalls() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlDigitaloceanDroplet) GetHasNoFirewall() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.HasNoFirewall, func() (bool, error) {
-		return c.hasNoFirewall()
+func (c *mqlDigitaloceanDroplet) GetMissingFirewall() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MissingFirewall, func() (bool, error) {
+		return c.missingFirewall()
 	})
 }
 
