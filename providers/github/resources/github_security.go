@@ -89,9 +89,38 @@ type ghSamlConfigResponse struct {
 		} `json:"organization"`
 	} `json:"data"`
 	Errors []struct {
-		Type    string `json:"type"`
-		Message string `json:"message"`
+		Type       string         `json:"type"`
+		Message    string         `json:"message"`
+		Extensions map[string]any `json:"extensions"`
 	} `json:"errors"`
+}
+
+// isSamlScopeOrPermissionError returns true if any error in the list looks
+// like a permission/scope problem (the caller should bubble these up rather
+// than silently returning null, so users know to grant the required scopes).
+func isSamlScopeOrPermissionError(errs []struct {
+	Type       string         `json:"type"`
+	Message    string         `json:"message"`
+	Extensions map[string]any `json:"extensions"`
+},
+) bool {
+	for _, e := range errs {
+		t := strings.ToUpper(e.Type)
+		if t == "INSUFFICIENT_SCOPES" || t == "FORBIDDEN" || t == "UNAUTHORIZED" {
+			return true
+		}
+		if code, ok := e.Extensions["code"].(string); ok {
+			cu := strings.ToUpper(code)
+			if cu == "INSUFFICIENT_SCOPES" || cu == "FORBIDDEN" || cu == "UNAUTHORIZED" {
+				return true
+			}
+		}
+		mu := strings.ToLower(e.Message)
+		if strings.Contains(mu, "scope") || strings.Contains(mu, "forbidden") || strings.Contains(mu, "must have admin") {
+			return true
+		}
+	}
+	return false
 }
 
 func (g *mqlGithubOrganization) samlConfig() (*mqlGithubOrganizationSamlConfig, error) {
@@ -123,8 +152,13 @@ func (g *mqlGithubOrganization) samlConfig() (*mqlGithubOrganizationSamlConfig, 
 		return nil, err
 	}
 	if len(resp.Errors) > 0 {
-		// SAML SSO is not configured / not enterprise; treat as null
-		log.Debug().Msgf("SAML config GraphQL errors: %s", resp.Errors[0].Message)
+		// Distinguish "no config / not enterprise" (treat as null) from
+		// permission/scope errors (bubble up so users know to fix auth).
+		if isSamlScopeOrPermissionError(resp.Errors) {
+			log.Debug().Msgf("SAML config GraphQL permission/scope error: %s", resp.Errors[0].Message)
+			return nil, fmt.Errorf("github SAML config: %s (type=%s)", resp.Errors[0].Message, resp.Errors[0].Type)
+		}
+		log.Debug().Msgf("SAML config GraphQL errors (treating as null): %s", resp.Errors[0].Message)
 		g.SamlConfig.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -191,7 +225,11 @@ type ghIpAllowListResponse struct {
 			IpAllowListEnabledSetting                 *string `json:"ipAllowListEnabledSetting"`
 			IpAllowListForInstalledAppsEnabledSetting *string `json:"ipAllowListForInstalledAppsEnabledSetting"`
 			IpAllowListEntries                        struct {
-				Nodes []ghIpAllowListEntry `json:"nodes"`
+				Nodes    []ghIpAllowListEntry `json:"nodes"`
+				PageInfo struct {
+					EndCursor   *string `json:"endCursor"`
+					HasNextPage bool    `json:"hasNextPage"`
+				} `json:"pageInfo"`
 			} `json:"ipAllowListEntries"`
 		} `json:"organization"`
 	} `json:"data"`
@@ -207,11 +245,11 @@ func (g *mqlGithubOrganization) ipAllowList() (*mqlGithubOrganizationIpAllowList
 	}
 	orgLogin := g.Login.Data
 
-	query := `query($login: String!) {
+	query := `query($login: String!, $after: String) {
 		organization(login: $login) {
 			ipAllowListEnabledSetting
 			ipAllowListForInstalledAppsEnabledSetting
-			ipAllowListEntries(first: 100) {
+			ipAllowListEntries(first: 100, after: $after) {
 				nodes {
 					id
 					name
@@ -220,31 +258,59 @@ func (g *mqlGithubOrganization) ipAllowList() (*mqlGithubOrganizationIpAllowList
 					createdAt
 					updatedAt
 				}
+				pageInfo {
+					endCursor
+					hasNextPage
+				}
 			}
 		}
 	}`
-	var resp ghIpAllowListResponse
-	_, err := doRawGraphQL(conn.Context(), conn.Client(), query, map[string]any{"login": orgLogin}, &resp)
-	if err != nil {
-		if isAccessDeniedOrNotFound(err) {
+
+	var (
+		allNodes       []ghIpAllowListEntry
+		enabled        bool
+		enabledForApps bool
+		cursor         *string
+	)
+	for {
+		vars := map[string]any{"login": orgLogin}
+		if cursor != nil {
+			vars["after"] = *cursor
+		} else {
+			vars["after"] = nil
+		}
+		var resp ghIpAllowListResponse
+		_, err := doRawGraphQL(conn.Context(), conn.Client(), query, vars, &resp)
+		if err != nil {
+			if isAccessDeniedOrNotFound(err) {
+				g.IpAllowList.State = plugin.StateIsSet | plugin.StateIsNull
+				return nil, nil
+			}
+			return nil, err
+		}
+		if len(resp.Errors) > 0 {
+			log.Debug().Msgf("ip allow list GraphQL errors: %s", resp.Errors[0].Message)
 			g.IpAllowList.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
-		return nil, err
-	}
-	if len(resp.Errors) > 0 {
-		log.Debug().Msgf("ip allow list GraphQL errors: %s", resp.Errors[0].Message)
-		g.IpAllowList.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
 
-	enabled := resp.Data.Organization.IpAllowListEnabledSetting != nil &&
-		strings.EqualFold(*resp.Data.Organization.IpAllowListEnabledSetting, "ENABLED")
-	enabledForApps := resp.Data.Organization.IpAllowListForInstalledAppsEnabledSetting != nil &&
-		strings.EqualFold(*resp.Data.Organization.IpAllowListForInstalledAppsEnabledSetting, "ENABLED")
+		// settings live on the organization object; same on every page
+		enabled = resp.Data.Organization.IpAllowListEnabledSetting != nil &&
+			strings.EqualFold(*resp.Data.Organization.IpAllowListEnabledSetting, "ENABLED")
+		enabledForApps = resp.Data.Organization.IpAllowListForInstalledAppsEnabledSetting != nil &&
+			strings.EqualFold(*resp.Data.Organization.IpAllowListForInstalledAppsEnabledSetting, "ENABLED")
+
+		allNodes = append(allNodes, resp.Data.Organization.IpAllowListEntries.Nodes...)
+
+		pi := resp.Data.Organization.IpAllowListEntries.PageInfo
+		if !pi.HasNextPage || pi.EndCursor == nil {
+			break
+		}
+		cursor = pi.EndCursor
+	}
 
 	entries := []any{}
-	for _, e := range resp.Data.Organization.IpAllowListEntries.Nodes {
+	for _, e := range allNodes {
 		var name string
 		if e.Name != nil {
 			name = *e.Name
@@ -333,11 +399,18 @@ func (g *mqlGithubOrganization) customRoles() ([]any, error) {
 type mqlGithubOrganizationOauthAppInternal struct {
 	cacheOrgLogin  string
 	cacheUserLogin string
+	// fallback __id suffix when the API returned a nil credential id
+	cacheCompositeID string
 }
 
 func (g *mqlGithubOrganizationOauthApp) id() (string, error) {
 	if g.CredentialId.Error != nil {
 		return "", g.CredentialId.Error
+	}
+	// CredentialID can be nil for some org listings; fall back to a
+	// composite key to avoid every nil-id row colliding under "/0".
+	if g.CredentialId.Data == 0 && g.cacheCompositeID != "" {
+		return "github.organization.oauthApp/" + g.cacheCompositeID, nil
 	}
 	return "github.organization.oauthApp/" + strconv.FormatInt(g.CredentialId.Data, 10), nil
 }
@@ -375,6 +448,21 @@ func (g *mqlGithubOrganization) oauthApps() ([]any, error) {
 		if c.CredentialID != nil {
 			credID = *c.CredentialID
 		}
+		// composite fallback for rows where CredentialID is nil
+		var compositeID string
+		if credID == 0 {
+			var login, lastEight, authAt string
+			if c.Login != nil {
+				login = *c.Login
+			}
+			if c.TokenLastEight != nil {
+				lastEight = *c.TokenLastEight
+			}
+			if ts := githubTimestamp(c.CredentialAuthorizedAt); ts != nil {
+				authAt = ts.UTC().Format(time.RFC3339Nano)
+			}
+			compositeID = login + "/" + lastEight + "/" + authAt
+		}
 		args := map[string]*llx.RawData{
 			"login":                         llx.StringDataPtr(c.Login),
 			"credentialId":                  llx.IntData(credID),
@@ -397,6 +485,7 @@ func (g *mqlGithubOrganization) oauthApps() ([]any, error) {
 		if c.Login != nil {
 			oauthApp.cacheUserLogin = *c.Login
 		}
+		oauthApp.cacheCompositeID = compositeID
 		res = append(res, oauthApp)
 	}
 	return res, nil
@@ -436,7 +525,22 @@ func (g *mqlGithubOrganizationPersonalAccessToken) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
 	}
-	return "github.organization.personalAccessToken/" + strconv.FormatInt(g.Id.Data, 10), nil
+	if g.Id.Data != 0 {
+		return "github.organization.personalAccessToken/" + strconv.FormatInt(g.Id.Data, 10), nil
+	}
+	// Fall back to a composite key when the API didn't return an id, so we
+	// don't collide every nil-id row under "/0".
+	var owner, name, expires string
+	if g.OwnerLogin.IsSet() && g.OwnerLogin.Error == nil {
+		owner = g.OwnerLogin.Data
+	}
+	if g.TokenName.IsSet() && g.TokenName.Error == nil {
+		name = g.TokenName.Data
+	}
+	if g.ExpiresAt.IsSet() && g.ExpiresAt.Error == nil && g.ExpiresAt.Data != nil {
+		expires = g.ExpiresAt.Data.UTC().Format(time.RFC3339Nano)
+	}
+	return "github.organization.personalAccessToken/" + owner + "/" + name + "/" + expires, nil
 }
 
 func (g *mqlGithubOrganizationPersonalAccessToken) owner() (*mqlGithubUser, error) {
@@ -526,11 +630,12 @@ func (g *mqlGithubOrganizationAuditLogStreamConfig) id() (string, error) {
 // Cloud audit log stream config endpoint.
 // API docs: GET /orgs/{org}/audit-log/stream-config (Enterprise Cloud only).
 type ghAuditLogStream struct {
-	ID           int64      `json:"id"`
-	StreamType   string     `json:"stream_type"`
-	StreamPaused bool       `json:"stream_paused"`
-	CreatedAt    *time.Time `json:"created_at"`
-	UpdatedAt    *time.Time `json:"updated_at"`
+	ID         int64      `json:"id"`
+	StreamType string     `json:"stream_type"`
+	Enabled    *bool      `json:"enabled"`
+	PausedAt   *time.Time `json:"paused_at"`
+	CreatedAt  *time.Time `json:"created_at"`
+	UpdatedAt  *time.Time `json:"updated_at"`
 }
 
 func (g *mqlGithubOrganization) auditLogStreamConfig() (*mqlGithubOrganizationAuditLogStreamConfig, error) {
@@ -544,33 +649,34 @@ func (g *mqlGithubOrganization) auditLogStreamConfig() (*mqlGithubOrganizationAu
 	var stream ghAuditLogStream
 	resp, err := doRawJSON(conn.Context(), conn.Client(), urlStr, &stream)
 	if err != nil {
-		// 404 means no stream configured or org isn't enterprise; return null
+		// 404 means no stream configured or org isn't enterprise; treat as null
+		// (matches samlConfig / ipAllowList pattern).
 		if isAccessDeniedOrNotFound(err) || (resp != nil && resp.StatusCode == http.StatusNotFound) {
-			res, cerr := CreateResource(g.MqlRuntime, "github.organization.auditLogStreamConfig", map[string]*llx.RawData{
-				"__id":                llx.StringData("github.organization.auditLogStreamConfig/" + orgLogin),
-				"enabled":             llx.BoolData(false),
-				"streamType":          llx.StringData(""),
-				"streamId":            llx.IntData(0),
-				"enabledStreamPaused": llx.BoolData(false),
-				"createdAt":           llx.TimeDataPtr(nil),
-				"updatedAt":           llx.TimeDataPtr(nil),
-			})
-			if cerr != nil {
-				return nil, cerr
-			}
-			return res.(*mqlGithubOrganizationAuditLogStreamConfig), nil
+			g.AuditLogStreamConfig.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
 
+	// Prefer the API's `enabled` field; fall back to "stream is configured" if
+	// the API didn't return it (older responses or the field being omitted).
+	enabled := stream.ID != 0
+	if stream.Enabled != nil {
+		enabled = *stream.Enabled
+	}
+
 	args := map[string]*llx.RawData{
 		"__id":                llx.StringData("github.organization.auditLogStreamConfig/" + orgLogin),
-		"enabled":             llx.BoolData(stream.ID != 0),
+		"enabled":             llx.BoolData(enabled),
 		"streamType":          llx.StringData(stream.StreamType),
 		"streamId":            llx.IntData(stream.ID),
-		"enabledStreamPaused": llx.BoolData(stream.StreamPaused),
-		"createdAt":           llx.TimeDataPtr(stream.CreatedAt),
-		"updatedAt":           llx.TimeDataPtr(stream.UpdatedAt),
+		"enabledStreamPaused": llx.BoolData(stream.PausedAt != nil),
+	}
+	if stream.CreatedAt != nil {
+		args["createdAt"] = llx.TimeData(*stream.CreatedAt)
+	}
+	if stream.UpdatedAt != nil {
+		args["updatedAt"] = llx.TimeData(*stream.UpdatedAt)
 	}
 
 	res, err := CreateResource(g.MqlRuntime, "github.organization.auditLogStreamConfig", args)
@@ -599,38 +705,30 @@ func (g *mqlGithubInstallation) repositories() ([]any, error) {
 		return []any{}, nil
 	}
 
-	// We need an installation access token to call /installation/repositories.
-	// That requires an app-authenticated client which the connection provides
-	// when running with --app-id; otherwise this endpoint isn't accessible
-	// using a personal access token.
-	if g.cacheOrgLogin == "" {
-		// fall back to listing accessible repos via the token's default scope;
-		// without app auth we can't enumerate the installation's repos.
+	if g.cacheInstallationID == 0 {
+		// without an installation ID we cannot enumerate the installation's repos
 		return []any{}, nil
 	}
 
-	// Try /installation/repositories first (requires app authentication).
-	// If the token can't, it'll 401/403 and we fall back to []any{}.
-	type installationRepoResp struct {
-		TotalCount   int                  `json:"total_count"`
-		Repositories []*github.Repository `json:"repositories"`
-	}
+	// List repos accessible to the user-authenticated token under this
+	// installation. Endpoint: GET /user/installations/{installation_id}/repositories
+	opts := &github.ListOptions{PerPage: paginationPerPage}
 	var allRepos []*github.Repository
-	page := 1
 	for {
-		var r installationRepoResp
-		resp, err := doRawJSON(conn.Context(), conn.Client(), fmt.Sprintf("installation/repositories?per_page=%d&page=%d", paginationPerPage, page), &r)
+		r, resp, err := conn.Client().Apps.ListUserRepos(conn.Context(), g.cacheInstallationID, opts)
 		if err != nil {
 			if isAccessDeniedOrNotFound(err) {
 				return []any{}, nil
 			}
 			return nil, err
 		}
-		allRepos = append(allRepos, r.Repositories...)
+		if r != nil {
+			allRepos = append(allRepos, r.Repositories...)
+		}
 		if resp == nil || resp.NextPage == 0 {
 			break
 		}
-		page = resp.NextPage
+		opts.Page = resp.NextPage
 	}
 
 	res := make([]any, 0, len(allRepos))
@@ -892,15 +990,71 @@ type codeownersRule struct {
 	lineNumber int
 }
 
+// stripInlineCodeownersComment removes any unescaped `#` comment from the line
+// and unescapes `\#` and `\ ` sequences in the remaining content.
+func stripInlineCodeownersComment(line string) string {
+	var b strings.Builder
+	b.Grow(len(line))
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+		if c == '\\' && i+1 < len(line) {
+			next := line[i+1]
+			if next == '#' || next == ' ' {
+				b.WriteByte(next)
+				i++
+				continue
+			}
+			// unrecognized escape — preserve verbatim
+			b.WriteByte(c)
+			continue
+		}
+		if c == '#' {
+			break
+		}
+		b.WriteByte(c)
+	}
+	return b.String()
+}
+
+// splitCodeownersFields tokenizes a line on unescaped whitespace, honoring
+// `\ ` (escaped space) within tokens. Whitespace inside an escape is treated
+// as part of the token rather than as a separator.
+func splitCodeownersFields(line string) []string {
+	var (
+		fields []string
+		cur    strings.Builder
+	)
+	flush := func() {
+		if cur.Len() > 0 {
+			fields = append(fields, cur.String())
+			cur.Reset()
+		}
+	}
+	// stripInlineCodeownersComment already unescaped sequences, so a literal
+	// space here is always a real separator.
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+		if c == ' ' || c == '\t' {
+			flush()
+			continue
+		}
+		cur.WriteByte(c)
+	}
+	flush()
+	return fields
+}
+
 func parseCodeowners(content string) []codeownersRule {
 	rules := []codeownersRule{}
 	for i, line := range strings.Split(content, "\n") {
 		line = strings.TrimRight(line, "\r")
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+		// strip inline comments (honoring \# escape) and unescape \# / \ ` `
+		line = stripInlineCodeownersComment(line)
+		line = strings.TrimSpace(line)
+		if line == "" {
 			continue
 		}
-		fields := strings.Fields(trimmed)
+		fields := splitCodeownersFields(line)
 		if len(fields) < 1 {
 			continue
 		}
