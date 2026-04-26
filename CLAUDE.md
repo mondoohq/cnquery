@@ -503,6 +503,7 @@ for {
 - **Match SDK types faithfully:** If an SDK field is `*bool`, use `bool` in `.lr` and `llx.BoolDataPtr()` in Go — don't cast it to `string`. If an SDK enum has only two states (Enabled/Disabled), prefer `bool`. Use `*type` intermediate variables with `llx.*DataPtr` helpers to preserve nil semantics.
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
 - **Verify enum values in `.lr` comments:** When listing possible values in field comments, check the SDK/API docs for completeness — don't assume the set is closed.
+- **Skip deprecated SDK fields and methods.** Before exposing a proto field or calling a method, check the SDK's `// Deprecated:` comment. Deprecated fields often return empty/zero on modern instances because the data has moved elsewhere (e.g. GCP Memorystore moved `DiscoveryEndpoints`/`PscAutoConnections` into `Endpoints`). Modeling them anyway adds dead schema that looks queryable but never returns data. Same goes for `Get*`/`List*` methods marked deprecated — pick the replacement. If you genuinely need a deprecated field for backward-compat with old API responses, leave a comment explaining why.
 
 ### Provider Modules & Dependencies
 - Each provider in `providers/` has its own `go.mod` for isolation

@@ -8184,8 +8184,6 @@ private gcp.project.memorystoreService.instance @defaults("name state mode") {
   availableMaintenanceVersions []string
   // Whether deletion protection is enabled
   deletionProtectionEnabled bool
-  // Whether deployment with fewer zones than requested is allowed
-  allowFewerZonesDeployment bool
   // Zone distribution configuration (mode, zone)
   zoneDistributionConfig dict
   // Cross-instance replication configuration
@@ -8198,10 +8196,6 @@ private gcp.project.memorystoreService.instance @defaults("name state mode") {
   satisfiesPzi bool
   // Whether the resource satisfies PZS
   satisfiesPzs bool
-  // Discovery endpoints exposed by the instance
-  discoveryEndpoints []gcp.project.memorystoreService.instance.discoveryEndpoint
-  // Auto-established Private Service Connect connections
-  pscAutoConnections []gcp.project.memorystoreService.instance.pscAutoConnection
   // Per-endpoint PSC attachment details
   pscAttachmentDetails []gcp.project.memorystoreService.instance.pscAttachmentDetail
   // Instance access endpoints (each contains a list of connections)
@@ -8210,46 +8204,6 @@ private gcp.project.memorystoreService.instance @defaults("name state mode") {
   createTime time
   // Last update time
   updateTime time
-}
-
-// Google Cloud (GCP) Memorystore instance discovery endpoint
-private gcp.project.memorystoreService.instance.discoveryEndpoint @defaults("address port") {
-  // Project ID
-  projectId string
-  // Parent instance resource name
-  instanceName string
-  // IP or hostname of the endpoint
-  address string
-  // Port of the endpoint
-  port int
-  // VPC network the endpoint is attached to
-  network() gcp.project.computeService.network
-}
-
-// Google Cloud (GCP) Memorystore instance PSC auto-connection
-private gcp.project.memorystoreService.instance.pscAutoConnection @defaults("pscConnectionId ipAddress") {
-  // Project ID
-  projectId string
-  // Parent instance resource name
-  instanceName string
-  // PSC connection identifier
-  pscConnectionId string
-  // Reserved IP address
-  ipAddress string
-  // Exposed endpoint port (Primary/Reader/Discovery)
-  port int
-  // Consumer VPC network
-  network() gcp.project.computeService.network
-  // Consumer project ID
-  consumerProjectId string
-  // Service attachment resource name
-  serviceAttachment string
-  // Forwarding rule resource name
-  forwardingRule string
-  // Connection type: PRIVATE_SERVICE_CONNECT | PUBLIC_ENDPOINT
-  connectionType string
-  // PSC connection status: ACTIVE | INACTIVE | FAILED
-  pscConnectionStatus string
 }
 
 // Google Cloud (GCP) Memorystore instance PSC attachment detail

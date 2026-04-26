@@ -353,8 +353,6 @@ const (
 	ResourceGcpProjectDatastreamServiceRoute                                           string = "gcp.project.datastreamService.route"
 	ResourceGcpProjectMemorystoreService                                               string = "gcp.project.memorystoreService"
 	ResourceGcpProjectMemorystoreServiceInstance                                       string = "gcp.project.memorystoreService.instance"
-	ResourceGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint                      string = "gcp.project.memorystoreService.instance.discoveryEndpoint"
-	ResourceGcpProjectMemorystoreServiceInstancePscAutoConnection                      string = "gcp.project.memorystoreService.instance.pscAutoConnection"
 	ResourceGcpProjectMemorystoreServiceInstancePscAttachmentDetail                    string = "gcp.project.memorystoreService.instance.pscAttachmentDetail"
 	ResourceGcpProjectMemorystoreServiceBackupCollection                               string = "gcp.project.memorystoreService.backupCollection"
 	ResourceGcpProjectMemorystoreServiceBackup                                         string = "gcp.project.memorystoreService.backup"
@@ -1712,14 +1710,6 @@ func init() {
 		"gcp.project.memorystoreService.instance": {
 			Init:   initGcpProjectMemorystoreServiceInstance,
 			Create: createGcpProjectMemorystoreServiceInstance,
-		},
-		"gcp.project.memorystoreService.instance.discoveryEndpoint": {
-			// to override args, implement: initGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint,
-		},
-		"gcp.project.memorystoreService.instance.pscAutoConnection": {
-			// to override args, implement: initGcpProjectMemorystoreServiceInstancePscAutoConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createGcpProjectMemorystoreServiceInstancePscAutoConnection,
 		},
 		"gcp.project.memorystoreService.instance.pscAttachmentDetail": {
 			// to override args, implement: initGcpProjectMemorystoreServiceInstancePscAttachmentDetail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11915,9 +11905,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.memorystoreService.instance.deletionProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetDeletionProtectionEnabled()).ToDataRes(types.Bool)
 	},
-	"gcp.project.memorystoreService.instance.allowFewerZonesDeployment": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetAllowFewerZonesDeployment()).ToDataRes(types.Bool)
-	},
 	"gcp.project.memorystoreService.instance.zoneDistributionConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetZoneDistributionConfig()).ToDataRes(types.Dict)
 	},
@@ -11936,12 +11923,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.memorystoreService.instance.satisfiesPzs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetSatisfiesPzs()).ToDataRes(types.Bool)
 	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoints": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetDiscoveryEndpoints()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.instance.discoveryEndpoint")))
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnections": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetPscAutoConnections()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.instance.pscAutoConnection")))
-	},
 	"gcp.project.memorystoreService.instance.pscAttachmentDetails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetPscAttachmentDetails()).ToDataRes(types.Array(types.Resource("gcp.project.memorystoreService.instance.pscAttachmentDetail")))
 	},
@@ -11953,54 +11934,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.memorystoreService.instance.updateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceInstance).GetUpdateTime()).ToDataRes(types.Time)
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.projectId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).GetProjectId()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.instanceName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).GetInstanceName()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.address": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).GetAddress()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.port": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).GetPort()).ToDataRes(types.Int)
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.network": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.projectId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetProjectId()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.instanceName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetInstanceName()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.pscConnectionId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetPscConnectionId()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.ipAddress": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetIpAddress()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.port": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetPort()).ToDataRes(types.Int)
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.network": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.consumerProjectId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetConsumerProjectId()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.serviceAttachment": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetServiceAttachment()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.forwardingRule": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetForwardingRule()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.connectionType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetConnectionType()).ToDataRes(types.String)
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.pscConnectionStatus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).GetPscConnectionStatus()).ToDataRes(types.String)
 	},
 	"gcp.project.memorystoreService.instance.pscAttachmentDetail.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail).GetProjectId()).ToDataRes(types.String)
@@ -26946,10 +26879,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectMemorystoreServiceInstance).DeletionProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"gcp.project.memorystoreService.instance.allowFewerZonesDeployment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstance).AllowFewerZonesDeployment, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"gcp.project.memorystoreService.instance.zoneDistributionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMemorystoreServiceInstance).ZoneDistributionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -26974,14 +26903,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectMemorystoreServiceInstance).SatisfiesPzs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstance).DiscoveryEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstance).PscAutoConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"gcp.project.memorystoreService.instance.pscAttachmentDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMemorystoreServiceInstance).PscAttachmentDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -26996,78 +26917,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.memorystoreService.instance.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectMemorystoreServiceInstance).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).__id, ok = v.Value.(string)
-		return
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.discoveryEndpoint.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).__id, ok = v.Value.(string)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.instanceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).InstanceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.pscConnectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).PscConnectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.consumerProjectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).ConsumerProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.serviceAttachment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).ServiceAttachment, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.forwardingRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).ForwardingRule, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.connectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).ConnectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.memorystoreService.instance.pscAutoConnection.pscConnectionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection).PscConnectionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.memorystoreService.instance.pscAttachmentDetail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62709,15 +62558,12 @@ type mqlGcpProjectMemorystoreServiceInstance struct {
 	EffectiveMaintenanceVersion    plugin.TValue[string]
 	AvailableMaintenanceVersions   plugin.TValue[[]any]
 	DeletionProtectionEnabled      plugin.TValue[bool]
-	AllowFewerZonesDeployment      plugin.TValue[bool]
 	ZoneDistributionConfig         plugin.TValue[any]
 	CrossInstanceReplicationConfig plugin.TValue[any]
 	AutomatedBackupConfig          plugin.TValue[any]
 	BackupCollection               plugin.TValue[*mqlGcpProjectMemorystoreServiceBackupCollection]
 	SatisfiesPzi                   plugin.TValue[bool]
 	SatisfiesPzs                   plugin.TValue[bool]
-	DiscoveryEndpoints             plugin.TValue[[]any]
-	PscAutoConnections             plugin.TValue[[]any]
 	PscAttachmentDetails           plugin.TValue[[]any]
 	Endpoints                      plugin.TValue[[]any]
 	CreateTime                     plugin.TValue[*time.Time]
@@ -62877,10 +62723,6 @@ func (c *mqlGcpProjectMemorystoreServiceInstance) GetDeletionProtectionEnabled()
 	return &c.DeletionProtectionEnabled
 }
 
-func (c *mqlGcpProjectMemorystoreServiceInstance) GetAllowFewerZonesDeployment() *plugin.TValue[bool] {
-	return &c.AllowFewerZonesDeployment
-}
-
 func (c *mqlGcpProjectMemorystoreServiceInstance) GetZoneDistributionConfig() *plugin.TValue[any] {
 	return &c.ZoneDistributionConfig
 }
@@ -62917,14 +62759,6 @@ func (c *mqlGcpProjectMemorystoreServiceInstance) GetSatisfiesPzs() *plugin.TVal
 	return &c.SatisfiesPzs
 }
 
-func (c *mqlGcpProjectMemorystoreServiceInstance) GetDiscoveryEndpoints() *plugin.TValue[[]any] {
-	return &c.DiscoveryEndpoints
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstance) GetPscAutoConnections() *plugin.TValue[[]any] {
-	return &c.PscAutoConnections
-}
-
 func (c *mqlGcpProjectMemorystoreServiceInstance) GetPscAttachmentDetails() *plugin.TValue[[]any] {
 	return &c.PscAttachmentDetails
 }
@@ -62939,198 +62773,6 @@ func (c *mqlGcpProjectMemorystoreServiceInstance) GetCreateTime() *plugin.TValue
 
 func (c *mqlGcpProjectMemorystoreServiceInstance) GetUpdateTime() *plugin.TValue[*time.Time] {
 	return &c.UpdateTime
-}
-
-// mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint for the gcp.project.memorystoreService.instance.discoveryEndpoint resource
-type mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpointInternal
-	ProjectId    plugin.TValue[string]
-	InstanceName plugin.TValue[string]
-	Address      plugin.TValue[string]
-	Port         plugin.TValue[int64]
-	Network      plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
-}
-
-// createGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint creates a new instance of this resource
-func createGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.instance.discoveryEndpoint", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) MqlName() string {
-	return "gcp.project.memorystoreService.instance.discoveryEndpoint"
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) GetProjectId() *plugin.TValue[string] {
-	return &c.ProjectId
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) GetInstanceName() *plugin.TValue[string] {
-	return &c.InstanceName
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) GetAddress() *plugin.TValue[string] {
-	return &c.Address
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) GetPort() *plugin.TValue[int64] {
-	return &c.Port
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
-	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.instance.discoveryEndpoint", c.__id, "network")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
-			}
-		}
-
-		return c.network()
-	})
-}
-
-// mqlGcpProjectMemorystoreServiceInstancePscAutoConnection for the gcp.project.memorystoreService.instance.pscAutoConnection resource
-type mqlGcpProjectMemorystoreServiceInstancePscAutoConnection struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	mqlGcpProjectMemorystoreServiceInstancePscAutoConnectionInternal
-	ProjectId           plugin.TValue[string]
-	InstanceName        plugin.TValue[string]
-	PscConnectionId     plugin.TValue[string]
-	IpAddress           plugin.TValue[string]
-	Port                plugin.TValue[int64]
-	Network             plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
-	ConsumerProjectId   plugin.TValue[string]
-	ServiceAttachment   plugin.TValue[string]
-	ForwardingRule      plugin.TValue[string]
-	ConnectionType      plugin.TValue[string]
-	PscConnectionStatus plugin.TValue[string]
-}
-
-// createGcpProjectMemorystoreServiceInstancePscAutoConnection creates a new instance of this resource
-func createGcpProjectMemorystoreServiceInstancePscAutoConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlGcpProjectMemorystoreServiceInstancePscAutoConnection{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("gcp.project.memorystoreService.instance.pscAutoConnection", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) MqlName() string {
-	return "gcp.project.memorystoreService.instance.pscAutoConnection"
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetProjectId() *plugin.TValue[string] {
-	return &c.ProjectId
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetInstanceName() *plugin.TValue[string] {
-	return &c.InstanceName
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetPscConnectionId() *plugin.TValue[string] {
-	return &c.PscConnectionId
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetIpAddress() *plugin.TValue[string] {
-	return &c.IpAddress
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetPort() *plugin.TValue[int64] {
-	return &c.Port
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
-	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.memorystoreService.instance.pscAutoConnection", c.__id, "network")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
-			}
-		}
-
-		return c.network()
-	})
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetConsumerProjectId() *plugin.TValue[string] {
-	return &c.ConsumerProjectId
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetServiceAttachment() *plugin.TValue[string] {
-	return &c.ServiceAttachment
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetForwardingRule() *plugin.TValue[string] {
-	return &c.ForwardingRule
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetConnectionType() *plugin.TValue[string] {
-	return &c.ConnectionType
-}
-
-func (c *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) GetPscConnectionStatus() *plugin.TValue[string] {
-	return &c.PscConnectionStatus
 }
 
 // mqlGcpProjectMemorystoreServiceInstancePscAttachmentDetail for the gcp.project.memorystoreService.instance.pscAttachmentDetail resource

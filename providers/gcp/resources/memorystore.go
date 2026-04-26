@@ -207,14 +207,6 @@ func mqlMemorystoreInstanceFromProto(runtime *plugin.Runtime, projectId string, 
 		serverCaMode = inst.ServerCaMode.String()
 	}
 
-	disc, err := buildMemorystoreDiscoveryEndpoints(runtime, projectId, inst.Name, inst.DiscoveryEndpoints)
-	if err != nil {
-		return nil, err
-	}
-	pscAuto, err := buildMemorystorePscAutoConnections(runtime, projectId, inst.Name, inst.PscAutoConnections)
-	if err != nil {
-		return nil, err
-	}
 	pscAttach, err := buildMemorystorePscAttachmentDetails(runtime, projectId, inst.Name, inst.PscAttachmentDetails)
 	if err != nil {
 		return nil, err
@@ -258,14 +250,11 @@ func mqlMemorystoreInstanceFromProto(runtime *plugin.Runtime, projectId string, 
 		"effectiveMaintenanceVersion":    llx.StringDataPtr(inst.EffectiveMaintenanceVersion),
 		"availableMaintenanceVersions":   llx.ArrayData(convert.SliceAnyToInterface(inst.AvailableMaintenanceVersions), types.String),
 		"deletionProtectionEnabled":      llx.BoolData(deletionProtection),
-		"allowFewerZonesDeployment":      llx.BoolData(inst.AllowFewerZonesDeployment),
 		"zoneDistributionConfig":         llx.DictData(zoneDistConfig),
 		"crossInstanceReplicationConfig": llx.DictData(crossRepl),
 		"automatedBackupConfig":          llx.DictData(autoBackup),
 		"satisfiesPzi":                   llx.BoolDataPtr(inst.SatisfiesPzi),
 		"satisfiesPzs":                   llx.BoolDataPtr(inst.SatisfiesPzs),
-		"discoveryEndpoints":             llx.ArrayData(disc, types.Resource("gcp.project.memorystoreService.instance.discoveryEndpoint")),
-		"pscAutoConnections":             llx.ArrayData(pscAuto, types.Resource("gcp.project.memorystoreService.instance.pscAutoConnection")),
 		"pscAttachmentDetails":           llx.ArrayData(pscAttach, types.Resource("gcp.project.memorystoreService.instance.pscAttachmentDetail")),
 		"endpoints":                      llx.ArrayData(endpoints, types.Dict),
 		"createTime":                     createTime,
@@ -320,114 +309,6 @@ func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[
 // =====================
 // DiscoveryEndpoint
 // =====================
-
-func (g *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) id() (string, error) {
-	if g.InstanceName.Error != nil {
-		return "", g.InstanceName.Error
-	}
-	return fmt.Sprintf("%s/discoveryEndpoints/%s:%d", g.InstanceName.Data, g.Address.Data, g.Port.Data), nil
-}
-
-type mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpointInternal struct {
-	cacheNetwork string
-}
-
-func (g *mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.cacheNetwork == "" {
-		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	return getNetworkByUrl(g.cacheNetwork, g.MqlRuntime)
-}
-
-func buildMemorystoreDiscoveryEndpoints(runtime *plugin.Runtime, projectId, instanceName string, eps []*memorystorepb.DiscoveryEndpoint) ([]any, error) {
-	res := make([]any, 0, len(eps))
-	for _, ep := range eps {
-		if ep == nil {
-			continue
-		}
-		mqlEp, err := CreateResource(runtime, "gcp.project.memorystoreService.instance.discoveryEndpoint", map[string]*llx.RawData{
-			"projectId":    llx.StringData(projectId),
-			"instanceName": llx.StringData(instanceName),
-			"address":      llx.StringData(ep.Address),
-			"port":         llx.IntData(int64(ep.Port)),
-		})
-		if err != nil {
-			return nil, err
-		}
-		obj := mqlEp.(*mqlGcpProjectMemorystoreServiceInstanceDiscoveryEndpoint)
-		obj.cacheNetwork = ep.Network
-		res = append(res, obj)
-	}
-	return res, nil
-}
-
-// =====================
-// PscAutoConnection
-// =====================
-
-func (g *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) id() (string, error) {
-	if g.InstanceName.Error != nil {
-		return "", g.InstanceName.Error
-	}
-	if g.PscConnectionId.Error != nil {
-		return "", g.PscConnectionId.Error
-	}
-	return fmt.Sprintf("%s/pscAutoConnections/%s", g.InstanceName.Data, g.PscConnectionId.Data), nil
-}
-
-type mqlGcpProjectMemorystoreServiceInstancePscAutoConnectionInternal struct {
-	cacheNetwork string
-}
-
-func (g *mqlGcpProjectMemorystoreServiceInstancePscAutoConnection) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.cacheNetwork == "" {
-		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	return getNetworkByUrl(g.cacheNetwork, g.MqlRuntime)
-}
-
-// memorystorePscAutoConnectionPort returns the exposed port carried by a
-// PscAutoConnection's `ports` oneof, or 0 if unset.
-func memorystorePscAutoConnectionPort(c *memorystorepb.PscAutoConnection) int64 {
-	if c == nil {
-		return 0
-	}
-	if pp, ok := c.Ports.(*memorystorepb.PscAutoConnection_Port); ok && pp != nil {
-		return int64(pp.Port)
-	}
-	return 0
-}
-
-func buildMemorystorePscAutoConnections(runtime *plugin.Runtime, projectId, instanceName string, conns []*memorystorepb.PscAutoConnection) ([]any, error) {
-	res := make([]any, 0, len(conns))
-	for _, c := range conns {
-		if c == nil {
-			continue
-		}
-		port := memorystorePscAutoConnectionPort(c)
-		mqlConn, err := CreateResource(runtime, "gcp.project.memorystoreService.instance.pscAutoConnection", map[string]*llx.RawData{
-			"projectId":           llx.StringData(projectId),
-			"instanceName":        llx.StringData(instanceName),
-			"pscConnectionId":     llx.StringData(c.PscConnectionId),
-			"ipAddress":           llx.StringData(c.IpAddress),
-			"port":                llx.IntData(port),
-			"consumerProjectId":   llx.StringData(c.ProjectId),
-			"serviceAttachment":   llx.StringData(c.ServiceAttachment),
-			"forwardingRule":      llx.StringData(c.ForwardingRule),
-			"connectionType":      llx.StringData(c.ConnectionType.String()),
-			"pscConnectionStatus": llx.StringData(c.PscConnectionStatus.String()),
-		})
-		if err != nil {
-			return nil, err
-		}
-		obj := mqlConn.(*mqlGcpProjectMemorystoreServiceInstancePscAutoConnection)
-		obj.cacheNetwork = c.Network
-		res = append(res, obj)
-	}
-	return res, nil
-}
 
 // =====================
 // PscAttachmentDetail
