@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v84/github"
+	"github.com/google/go-github/v85/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/logger"
@@ -30,6 +30,7 @@ const (
 	saSecretScanningPushProtection
 	saDependabotSecurityUpdates
 	saSecretScanningValidityChecks
+	saCodeSecurity
 )
 
 func saEnabled(sa *github.SecurityAndAnalysis, field saField) bool {
@@ -56,6 +57,10 @@ func saEnabled(sa *github.SecurityAndAnalysis, field saField) bool {
 	case saSecretScanningValidityChecks:
 		if sa.SecretScanningValidityChecks != nil {
 			return sa.SecretScanningValidityChecks.GetStatus() == "enabled"
+		}
+	case saCodeSecurity:
+		if sa.CodeSecurity != nil {
+			return sa.CodeSecurity.GetStatus() == "enabled"
 		}
 	}
 	return false
@@ -118,6 +123,7 @@ func newMqlGithubRepository(runtime *plugin.Runtime, repo *github.Repository) (*
 		"secretScanningPushProtectionEnabled": llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saSecretScanningPushProtection)),
 		"dependabotSecurityUpdatesEnabled":    llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saDependabotSecurityUpdates)),
 		"secretScanningValidityChecksEnabled": llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saSecretScanningValidityChecks)),
+		"codeSecurityEnabled":                 llx.BoolData(saEnabled(repo.SecurityAndAnalysis, saCodeSecurity)),
 	})
 	if err != nil {
 		return nil, err

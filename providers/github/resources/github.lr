@@ -624,6 +624,8 @@ github.repository @defaults("fullName") {
   dependabotSecurityUpdatesEnabled bool
   // Whether secret scanning validity checks are enabled
   secretScanningValidityChecksEnabled bool
+  // Whether GitHub code security is enabled
+  codeSecurityEnabled bool
   // Whether web-based commit signoff is required
   webCommitSignoffRequired bool
   // Repository rulesets

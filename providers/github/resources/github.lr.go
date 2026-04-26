@@ -1183,6 +1183,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.secretScanningValidityChecksEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetSecretScanningValidityChecksEnabled()).ToDataRes(types.Bool)
 	},
+	"github.repository.codeSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetCodeSecurityEnabled()).ToDataRes(types.Bool)
+	},
 	"github.repository.webCommitSignoffRequired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetWebCommitSignoffRequired()).ToDataRes(types.Bool)
 	},
@@ -3344,6 +3347,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.repository.secretScanningValidityChecksEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).SecretScanningValidityChecksEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.codeSecurityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).CodeSecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.repository.webCommitSignoffRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7136,6 +7143,7 @@ type mqlGithubRepository struct {
 	SecretScanningPushProtectionEnabled plugin.TValue[bool]
 	DependabotSecurityUpdatesEnabled    plugin.TValue[bool]
 	SecretScanningValidityChecksEnabled plugin.TValue[bool]
+	CodeSecurityEnabled                 plugin.TValue[bool]
 	WebCommitSignoffRequired            plugin.TValue[bool]
 	Rulesets                            plugin.TValue[[]any]
 	ActionsSettings                     plugin.TValue[*mqlGithubRepositoryActionsSettings]
@@ -7806,6 +7814,10 @@ func (c *mqlGithubRepository) GetDependabotSecurityUpdatesEnabled() *plugin.TVal
 
 func (c *mqlGithubRepository) GetSecretScanningValidityChecksEnabled() *plugin.TValue[bool] {
 	return &c.SecretScanningValidityChecksEnabled
+}
+
+func (c *mqlGithubRepository) GetCodeSecurityEnabled() *plugin.TValue[bool] {
+	return &c.CodeSecurityEnabled
 }
 
 func (c *mqlGithubRepository) GetWebCommitSignoffRequired() *plugin.TValue[bool] {
