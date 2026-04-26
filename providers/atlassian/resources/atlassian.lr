@@ -120,7 +120,7 @@ atlassian.jira.auditRecord @defaults("summary createdAt") {
   eventSource string
   // Detailed description of the audited action
   description string
-  // Display name of the user who triggered the event
+  // Account key/ID of the user who triggered the event
   authorKey string
   // IP address from which the action originated
   remoteAddress string

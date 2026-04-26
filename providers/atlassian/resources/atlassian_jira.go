@@ -311,8 +311,8 @@ func (a *mqlAtlassianJiraProject) id() (string, error) {
 	return a.Id.Data, nil
 }
 
-// auditRecords fetches recent Jira audit log records (most recent first).
-// The Jira REST API tops out at 1000 records per page; we return the first page.
+// auditRecords fetches all Jira audit log records (most recent first), paginating
+// through the Jira REST API in pages of up to 1000 records.
 func (a *mqlAtlassianJira) auditRecords() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
 	if !ok {
@@ -322,89 +322,97 @@ func (a *mqlAtlassianJira) auditRecords() ([]any, error) {
 
 	res := []any{}
 	offset := 0
-	limit := 1000
+	total := JIRA_SEARCH_MAX_RESULTS
 
-	page, _, err := jiraClient.Audit.Get(context.Background(), nil, offset, limit)
-	if err != nil {
-		return nil, err
-	}
-	if page == nil {
-		return res, nil
-	}
-
-	for _, record := range page.Records {
-		if record == nil {
-			continue
-		}
-
-		var createdAt *time.Time
-		if record.Created != "" {
-			// Audit records use RFC3339-ish timestamps; tolerate parse failures.
-			if t, perr := time.Parse(time.RFC3339, record.Created); perr == nil {
-				ut := t.UTC()
-				createdAt = &ut
-			} else if t, perr := time.Parse(JIRA_TIME_FORMAT, record.Created); perr == nil {
-				ut := t.UTC()
-				createdAt = &ut
-			}
-		}
-
-		var objectItem any
-		if record.ObjectItem != nil {
-			objectItem = map[string]any{
-				"id":         record.ObjectItem.ID,
-				"name":       record.ObjectItem.Name,
-				"typeName":   record.ObjectItem.TypeName,
-				"parentId":   record.ObjectItem.ParentID,
-				"parentName": record.ObjectItem.ParentName,
-			}
-		}
-
-		changedValues := []any{}
-		for _, cv := range record.ChangedValues {
-			if cv == nil {
-				continue
-			}
-			changedValues = append(changedValues, map[string]any{
-				"fieldName":   cv.FieldName,
-				"changedFrom": cv.ChangedFrom,
-				"changedTo":   cv.ChangedTo,
-			})
-		}
-
-		associatedItems := []any{}
-		for _, ai := range record.AssociatedItems {
-			if ai == nil {
-				continue
-			}
-			associatedItems = append(associatedItems, map[string]any{
-				"id":         ai.ID,
-				"name":       ai.Name,
-				"typeName":   ai.TypeName,
-				"parentId":   ai.ParentID,
-				"parentName": ai.ParentName,
-			})
-		}
-
-		args := map[string]*llx.RawData{
-			"id":              llx.IntData(int64(record.ID)),
-			"summary":         llx.StringData(record.Summary),
-			"category":        llx.StringData(record.Category),
-			"eventSource":     llx.StringData(record.EventSource),
-			"description":     llx.StringData(record.Description),
-			"authorKey":       llx.StringData(record.AuthorKey),
-			"remoteAddress":   llx.StringData(record.RemoteAddress),
-			"createdAt":       llx.TimeDataPtr(createdAt),
-			"objectItem":      llx.DictData(objectItem),
-			"changedValues":   llx.ArrayData(changedValues, types.Dict),
-			"associatedItems": llx.ArrayData(associatedItems, types.Dict),
-		}
-
-		mqlAuditRecord, err := CreateResource(a.MqlRuntime, "atlassian.jira.auditRecord", args)
+	for offset < total {
+		page, _, err := jiraClient.Audit.Get(context.Background(), nil, offset, JIRA_SEARCH_MAX_RESULTS)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAuditRecord)
+		if page == nil {
+			break
+		}
+
+		for _, record := range page.Records {
+			if record == nil {
+				continue
+			}
+
+			var createdAt *time.Time
+			if record.Created != "" {
+				// Audit records use RFC3339-ish timestamps; tolerate parse failures.
+				if t, perr := time.Parse(time.RFC3339, record.Created); perr == nil {
+					ut := t.UTC()
+					createdAt = &ut
+				} else if t, perr := time.Parse(JIRA_TIME_FORMAT, record.Created); perr == nil {
+					ut := t.UTC()
+					createdAt = &ut
+				}
+			}
+
+			var objectItem any
+			if record.ObjectItem != nil {
+				objectItem = map[string]any{
+					"id":         record.ObjectItem.ID,
+					"name":       record.ObjectItem.Name,
+					"typeName":   record.ObjectItem.TypeName,
+					"parentId":   record.ObjectItem.ParentID,
+					"parentName": record.ObjectItem.ParentName,
+				}
+			}
+
+			changedValues := []any{}
+			for _, cv := range record.ChangedValues {
+				if cv == nil {
+					continue
+				}
+				changedValues = append(changedValues, map[string]any{
+					"fieldName":   cv.FieldName,
+					"changedFrom": cv.ChangedFrom,
+					"changedTo":   cv.ChangedTo,
+				})
+			}
+
+			associatedItems := []any{}
+			for _, ai := range record.AssociatedItems {
+				if ai == nil {
+					continue
+				}
+				associatedItems = append(associatedItems, map[string]any{
+					"id":         ai.ID,
+					"name":       ai.Name,
+					"typeName":   ai.TypeName,
+					"parentId":   ai.ParentID,
+					"parentName": ai.ParentName,
+				})
+			}
+
+			args := map[string]*llx.RawData{
+				"id":              llx.IntData(int64(record.ID)),
+				"summary":         llx.StringData(record.Summary),
+				"category":        llx.StringData(record.Category),
+				"eventSource":     llx.StringData(record.EventSource),
+				"description":     llx.StringData(record.Description),
+				"authorKey":       llx.StringData(record.AuthorKey),
+				"remoteAddress":   llx.StringData(record.RemoteAddress),
+				"createdAt":       llx.TimeDataPtr(createdAt),
+				"objectItem":      llx.DictData(objectItem),
+				"changedValues":   llx.ArrayData(changedValues, types.Dict),
+				"associatedItems": llx.ArrayData(associatedItems, types.Dict),
+			}
+
+			mqlAuditRecord, err := CreateResource(a.MqlRuntime, "atlassian.jira.auditRecord", args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAuditRecord)
+		}
+
+		if len(page.Records) == 0 {
+			break
+		}
+		total = page.Total
+		offset += len(page.Records)
 	}
 	return res, nil
 }

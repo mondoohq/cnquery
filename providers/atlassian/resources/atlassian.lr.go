@@ -1827,7 +1827,12 @@ func createAtlassianJiraAuditRecord(runtime *plugin.Runtime, args map[string]*ll
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.jira.auditRecord", res.__id)
@@ -2327,7 +2332,12 @@ func createAtlassianJiraPermissionScheme(runtime *plugin.Runtime, args map[strin
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.jira.permissionScheme", res.__id)
@@ -2398,7 +2408,12 @@ func createAtlassianJiraPermissionSchemeGrant(runtime *plugin.Runtime, args map[
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.jira.permissionScheme.grant", res.__id)
@@ -2702,7 +2717,12 @@ func createAtlassianConfluenceSpace(runtime *plugin.Runtime, args map[string]*ll
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.confluence.space", res.__id)
@@ -2796,7 +2816,12 @@ func createAtlassianConfluencePage(runtime *plugin.Runtime, args map[string]*llx
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.confluence.page", res.__id)
@@ -2881,7 +2906,12 @@ func createAtlassianConfluencePageRestriction(runtime *plugin.Runtime, args map[
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("atlassian.confluence.page.restriction", res.__id)
