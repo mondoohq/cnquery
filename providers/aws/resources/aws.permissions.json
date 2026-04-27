@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.15.1",
-  "generated_at": "2026-04-20T13:18:14-07:00",
+  "version": "13.18.0",
+  "generated_at": "2026-04-27T14:12:24-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -344,6 +344,7 @@
     "kinesis:ListStreams",
     "kinesis:ListTagsForStream",
     "kms:DescribeKey",
+    "kms:GetKeyLastUsage",
     "kms:GetKeyPolicy",
     "kms:GetKeyRotationStatus",
     "kms:ListAliases",
@@ -2752,6 +2753,12 @@
       "permission": "kms:DescribeKey",
       "service": "kms",
       "action": "DescribeKey",
+      "source_file": "aws_kms.go"
+    },
+    {
+      "permission": "kms:GetKeyLastUsage",
+      "service": "kms",
+      "action": "GetKeyLastUsage",
       "source_file": "aws_kms.go"
     },
     {

@@ -276,6 +276,57 @@ func (a *mqlAwsKmsKey) onDemandRotationStartedAt() (*time.Time, error) {
 	return resp.OnDemandRotationStartDate, nil
 }
 
+func (a *mqlAwsKmsKey) getLastUsage() (*kms.GetKeyLastUsageOutput, error) {
+	if a.lastUsageFetched {
+		return a.cachedLastUsage, nil
+	}
+	a.lastUsageLock.Lock()
+	defer a.lastUsageLock.Unlock()
+	if a.lastUsageFetched {
+		return a.cachedLastUsage, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	keyArn := a.Arn.Data
+
+	svc := conn.Kms(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.GetKeyLastUsage(ctx, &kms.GetKeyLastUsageInput{KeyId: &keyArn})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.lastUsageFetched = true
+			return nil, nil
+		}
+		return nil, err
+	}
+	a.cachedLastUsage = resp
+	a.lastUsageFetched = true
+	return resp, nil
+}
+
+func (a *mqlAwsKmsKey) lastUsageOperation() (string, error) {
+	resp, err := a.getLastUsage()
+	if err != nil {
+		return "", err
+	}
+	if resp == nil || resp.KeyLastUsage == nil {
+		return "", nil
+	}
+	return string(resp.KeyLastUsage.Operation), nil
+}
+
+func (a *mqlAwsKmsKey) lastUsedAt() (*time.Time, error) {
+	resp, err := a.getLastUsage()
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.KeyLastUsage == nil {
+		return nil, nil
+	}
+	return resp.KeyLastUsage.Timestamp, nil
+}
+
 func (a *mqlAwsKmsKey) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	keyArn := a.Arn.Data
@@ -335,6 +386,9 @@ type mqlAwsKmsKeyInternal struct {
 	cachedRotationStatus  *kms.GetKeyRotationStatusOutput
 	rotationStatusFetched bool
 	rotationStatusLock    sync.Mutex
+	cachedLastUsage       *kms.GetKeyLastUsageOutput
+	lastUsageFetched      bool
+	lastUsageLock         sync.Mutex
 }
 
 func (a *mqlAwsKmsKey) getKeyMetadata() (*types.KeyMetadata, error) {

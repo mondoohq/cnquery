@@ -1333,6 +1333,10 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   expirationModel() string
   // Expiration date for imported key material (null if key material does not expire)
   validTo() time
+  // Last successful cryptographic operation: Decrypt, Encrypt, Sign, Verify, GenerateDataKey, GenerateMac, ReEncrypt, DeriveSharedSecret, etc. Empty if the key has not been used since KMS began tracking.
+  lastUsageOperation() string
+  // Date the key was last used for a successful cryptographic operation. Null if the key has not been used since KMS began tracking.
+  lastUsedAt() time
 }
 
 // AWS KMS key grant
@@ -3958,6 +3962,10 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   customEndpointCertificate() aws.acm.certificate
   // Whether SAML is enabled
   samlEnabled bool
+  // Whether JWT authentication is enabled
+  jwtEnabled bool
+  // JWKS URL the cluster retrieves public keys from to verify JWT requests (empty if JWT auth is not configured)
+  jwksUrl string
   // Whether anonymous auth is enabled
   anonymousAuthEnabled bool
   // Whether internal user database is enabled

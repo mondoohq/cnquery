@@ -26,7 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.61.1
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.10
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.56.2
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.69.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.14
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.35.14
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.33.23
@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.24
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.14
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.8
-	github.com/aws/aws-sdk-go-v2/service/glue v1.139.3
+	github.com/aws/aws-sdk-go-v2/service/glue v1.140.0
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.75.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.8
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.6
@@ -62,7 +62,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.6
-	github.com/aws/aws-sdk-go-v2/service/kms v1.50.5
+	github.com/aws/aws-sdk-go-v2/service/kms v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.90.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.51.1
@@ -70,7 +70,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.20
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.44.4
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.60.0
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.65.0
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.51.2
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.23.21
 	github.com/aws/aws-sdk-go-v2/service/ram v1.36.4
@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.34.20
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.100.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.70.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.242.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.243.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.23
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.6
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.69.1
@@ -94,10 +94,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.21
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.70.1
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.71.4
 	github.com/aws/aws-sdk-go-v2/service/workdocs v1.30.21
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.67.3
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.38.5
 	github.com/aws/smithy-go v1.25.1
 	github.com/cockroachdb/errors v1.12.0

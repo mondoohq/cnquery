@@ -3455,6 +3455,8 @@ aws.kms.key.keyRotationEnabled 11.15.2
 aws.kms.key.keySpec 13.6.3
 aws.kms.key.keyState 11.15.2
 aws.kms.key.keyUsage 13.6.3
+aws.kms.key.lastUsageOperation 13.18.1
+aws.kms.key.lastUsedAt 13.18.1
 aws.kms.key.metadata 11.15.2
 aws.kms.key.multiRegion 13.6.3
 aws.kms.key.multiRegionConfiguration 13.6.3
@@ -4223,6 +4225,8 @@ aws.opensearch.domain.instanceCount 11.15.2
 aws.opensearch.domain.instanceType 11.15.2
 aws.opensearch.domain.internalUserDatabaseEnabled 11.15.2
 aws.opensearch.domain.ipAddressType 11.15.2
+aws.opensearch.domain.jwksUrl 13.18.1
+aws.opensearch.domain.jwtEnabled 13.18.1
 aws.opensearch.domain.name 11.15.2
 aws.opensearch.domain.nodeToNodeEncryptionEnabled 11.15.2
 aws.opensearch.domain.offPeakWindowEnabled 11.16.1

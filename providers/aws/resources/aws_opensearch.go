@@ -286,6 +286,8 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 	// Advanced security options
 	var advancedSecurityEnabled bool
 	var samlEnabled bool
+	var jwtEnabled bool
+	var jwksUrl string
 	var anonymousAuthEnabled bool
 	var internalUserDatabaseEnabled bool
 	if domain.AdvancedSecurityOptions != nil {
@@ -294,6 +296,10 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 		internalUserDatabaseEnabled = convert.ToValue(domain.AdvancedSecurityOptions.InternalUserDatabaseEnabled)
 		if domain.AdvancedSecurityOptions.SAMLOptions != nil {
 			samlEnabled = convert.ToValue(domain.AdvancedSecurityOptions.SAMLOptions.Enabled)
+		}
+		if domain.AdvancedSecurityOptions.JWTOptions != nil {
+			jwtEnabled = convert.ToValue(domain.AdvancedSecurityOptions.JWTOptions.Enabled)
+			jwksUrl = convert.ToValue(domain.AdvancedSecurityOptions.JWTOptions.JwksUrl)
 		}
 	}
 
@@ -366,6 +372,8 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 			"customEndpointEnabled":       llx.BoolData(customEndpointEnabled),
 			"customEndpoint":              llx.StringData(customEndpoint),
 			"samlEnabled":                 llx.BoolData(samlEnabled),
+			"jwtEnabled":                  llx.BoolData(jwtEnabled),
+			"jwksUrl":                     llx.StringData(jwksUrl),
 			"anonymousAuthEnabled":        llx.BoolData(anonymousAuthEnabled),
 			"internalUserDatabaseEnabled": llx.BoolData(internalUserDatabaseEnabled),
 			"advancedSecurityEnabled":     llx.BoolData(advancedSecurityEnabled),

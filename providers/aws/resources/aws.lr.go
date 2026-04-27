@@ -4930,6 +4930,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.key.validTo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetValidTo()).ToDataRes(types.Time)
 	},
+	"aws.kms.key.lastUsageOperation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetLastUsageOperation()).ToDataRes(types.String)
+	},
+	"aws.kms.key.lastUsedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetLastUsedAt()).ToDataRes(types.Time)
+	},
 	"aws.kms.grant.grantId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsGrant).GetGrantId()).ToDataRes(types.String)
 	},
@@ -8181,6 +8187,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.opensearch.domain.samlEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetSamlEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.jwtEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetJwtEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.jwksUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetJwksUrl()).ToDataRes(types.String)
 	},
 	"aws.opensearch.domain.anonymousAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetAnonymousAuthEnabled()).ToDataRes(types.Bool)
@@ -24421,6 +24433,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsKey).ValidTo, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.kms.key.lastUsageOperation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).LastUsageOperation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.lastUsedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).LastUsedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.kms.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsGrant).__id, ok = v.Value.(string)
 		return
@@ -29199,6 +29219,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.opensearch.domain.samlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).SamlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.jwtEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).JwtEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.jwksUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).JwksUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.opensearch.domain.anonymousAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55902,6 +55930,8 @@ type mqlAwsKmsKey struct {
 	KeyAgreementAlgorithms    plugin.TValue[[]any]
 	ExpirationModel           plugin.TValue[string]
 	ValidTo                   plugin.TValue[*time.Time]
+	LastUsageOperation        plugin.TValue[string]
+	LastUsedAt                plugin.TValue[*time.Time]
 }
 
 // createAwsKmsKey creates a new instance of this resource
@@ -56110,6 +56140,18 @@ func (c *mqlAwsKmsKey) GetExpirationModel() *plugin.TValue[string] {
 func (c *mqlAwsKmsKey) GetValidTo() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.ValidTo, func() (*time.Time, error) {
 		return c.validTo()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetLastUsageOperation() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LastUsageOperation, func() (string, error) {
+		return c.lastUsageOperation()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetLastUsedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastUsedAt, func() (*time.Time, error) {
+		return c.lastUsedAt()
 	})
 }
 
@@ -69258,6 +69300,8 @@ type mqlAwsOpensearchDomain struct {
 	CustomEndpoint              plugin.TValue[string]
 	CustomEndpointCertificate   plugin.TValue[*mqlAwsAcmCertificate]
 	SamlEnabled                 plugin.TValue[bool]
+	JwtEnabled                  plugin.TValue[bool]
+	JwksUrl                     plugin.TValue[string]
 	AnonymousAuthEnabled        plugin.TValue[bool]
 	InternalUserDatabaseEnabled plugin.TValue[bool]
 	AdvancedSecurityEnabled     plugin.TValue[bool]
@@ -69482,6 +69526,14 @@ func (c *mqlAwsOpensearchDomain) GetCustomEndpointCertificate() *plugin.TValue[*
 
 func (c *mqlAwsOpensearchDomain) GetSamlEnabled() *plugin.TValue[bool] {
 	return &c.SamlEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetJwtEnabled() *plugin.TValue[bool] {
+	return &c.JwtEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetJwksUrl() *plugin.TValue[string] {
+	return &c.JwksUrl
 }
 
 func (c *mqlAwsOpensearchDomain) GetAnonymousAuthEnabled() *plugin.TValue[bool] {
