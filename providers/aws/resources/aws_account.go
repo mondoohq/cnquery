@@ -108,7 +108,9 @@ func (c *mqlAwsAccount) tags() (map[string]any, error) {
 		}
 
 		for _, tag := range res.Tags {
-			tags[*tag.Key] = *tag.Value
+			if tag.Key != nil && tag.Value != nil {
+				tags[*tag.Key] = *tag.Value
+			}
 		}
 	}
 
@@ -210,14 +212,18 @@ func (a *mqlAwsAccount) alternateContacts() ([]any, error) {
 		}
 
 		// Contact is configured - create resource with data
+		ac := resp.AlternateContact
+		if ac == nil {
+			ac = &types.AlternateContact{}
+		}
 		contact, err := CreateResource(a.MqlRuntime, ResourceAwsAccountAlternateContact,
 			map[string]*llx.RawData{
 				"accountId":    llx.StringData(a.Id.Data),
 				"contactType":  llx.StringData(string(cType)),
-				"emailAddress": llx.StringData(aws.ToString(resp.AlternateContact.EmailAddress)),
-				"name":         llx.StringData(aws.ToString(resp.AlternateContact.Name)),
-				"phoneNumber":  llx.StringData(aws.ToString(resp.AlternateContact.PhoneNumber)),
-				"title":        llx.StringData(aws.ToString(resp.AlternateContact.Title)),
+				"emailAddress": llx.StringData(aws.ToString(ac.EmailAddress)),
+				"name":         llx.StringData(aws.ToString(ac.Name)),
+				"phoneNumber":  llx.StringData(aws.ToString(ac.PhoneNumber)),
+				"title":        llx.StringData(aws.ToString(ac.Title)),
 				"exists":       llx.BoolData(true),
 			})
 		if err != nil {

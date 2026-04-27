@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"maps"
 	"sync"
 	"time"
 
@@ -24,6 +23,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/providers/aws/resources/awspolicy"
 	"go.mondoo.com/mql/v13/types"
+	"golang.org/x/sync/errgroup"
 )
 
 func (a *mqlAwsLambda) id() (string, error) {
@@ -74,6 +74,13 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					}
 					return nil, errors.Wrap(err, "could not gather aws lambda functions")
 				}
+				// Pre-fetch tags in parallel when tag-based filters are configured.
+				// Lambda's ListTags has no batch endpoint, so this turns a sequential
+				// per-function call into bounded concurrent calls.
+				var tagsByArn map[string]map[string]string
+				if conn.Filters.General.HasTags() {
+					tagsByArn = batchFetchLambdaTags(ctx, svc, functionsResp.Functions)
+				}
 				for _, function := range functionsResp.Functions {
 					vpcConfigJson, err := convert.JsonToDict(function.VpcConfig)
 					if err != nil {
@@ -83,14 +90,9 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					if function.DeadLetterConfig != nil {
 						dlqTarget = convert.ToValue(function.DeadLetterConfig.TargetArn)
 					}
-					// Only fetch tags eagerly when tag-based filters are configured
 					var tags map[string]string
 					if conn.Filters.General.HasTags() {
-						tags = make(map[string]string)
-						tagsResp, err := svc.ListTags(ctx, &lambda.ListTagsInput{Resource: function.FunctionArn})
-						if err == nil {
-							maps.Copy(tags, tagsResp.Tags)
-						}
+						tags = tagsByArn[convert.ToValue(function.FunctionArn)]
 						if conn.Filters.General.IsFilteredOutByTags(tags) {
 							log.Debug().Interface("function", function.FunctionArn).Msg("excluding function due to filters")
 							continue
@@ -245,6 +247,40 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+// batchFetchLambdaTags resolves tags for a slice of Lambda functions concurrently.
+// Lambda's API has no batch tags endpoint, so this bounds the per-function ListTags
+// calls with a small worker pool. Errors and missing tag responses are tolerated:
+// the resulting map will simply not contain an entry for those ARNs, matching the
+// previous best-effort sequential behavior.
+func batchFetchLambdaTags(ctx context.Context, svc *lambda.Client, fns []lambdatypes.FunctionConfiguration) map[string]map[string]string {
+	result := make(map[string]map[string]string, len(fns))
+	if len(fns) == 0 {
+		return result
+	}
+	var mu sync.Mutex
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(10)
+	for _, fn := range fns {
+		if fn.FunctionArn == nil {
+			continue
+		}
+		arnVal := *fn.FunctionArn
+		input := &lambda.ListTagsInput{Resource: fn.FunctionArn}
+		g.Go(func() error {
+			resp, err := svc.ListTags(gctx, input)
+			if err != nil || resp == nil {
+				return nil
+			}
+			mu.Lock()
+			result[arnVal] = resp.Tags
+			mu.Unlock()
+			return nil
+		})
+	}
+	_ = g.Wait()
+	return result
 }
 
 func getLambdaArn(name string, region string, accountId string) string {

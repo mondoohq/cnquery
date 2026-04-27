@@ -205,6 +205,9 @@ func (a *mqlAwsKinesisStream) kmsKey() (*mqlAwsKmsKey, error) {
 		if err != nil {
 			return nil, err
 		}
+		if resp.KeyMetadata == nil || resp.KeyMetadata.Arn == nil {
+			return nil, fmt.Errorf("kms alias %q has no resolved key ARN", keyArn)
+		}
 		keyArn = *resp.KeyMetadata.Arn
 	} else {
 		// Assume raw key ID, construct ARN
