@@ -142,26 +142,21 @@ var AllCloudSQLTypes = []string{DiscoverCloudSQLPostgreSQL, DiscoverCloudSQLSQLS
 func getDiscoveryTargets(config *inventory.Config) []string {
 	targets := config.Discover.Targets
 
-	if len(targets) == 0 {
-		return Auto
-	}
-
 	if stringx.ContainsAnyOf(targets, DiscoveryAll) {
 		// return all discovery targets
 		return All
 	}
-	if stringx.ContainsAnyOf(targets, DiscoveryAuto) {
-		for i, target := range targets {
-			if target == DiscoveryAuto {
-				// remove the auto keyword
-				targets = slices.Delete(targets, i, i+1)
-			}
+
+	res := []string{}
+	for _, target := range targets {
+		switch target {
+		case DiscoveryAuto:
+			res = append(res, Auto...)
+		default:
+			res = append(res, target)
 		}
-		// add in the required discovery targets
-		return append(targets, Auto...)
 	}
-	// random assortment of targets
-	return targets
+	return stringx.DedupStringArray(res)
 }
 
 func Discover(runtime *plugin.Runtime) (*inventory.Inventory, error) {

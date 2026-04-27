@@ -96,9 +96,9 @@ func TestGetDiscoveryTargets(t *testing.T) {
 		want    []string
 	}{
 		{
-			name:    "empty defaults to Auto",
+			name:    "empty returns nothing",
 			targets: []string{},
-			want:    Auto,
+			want:    []string{},
 		},
 		{
 			name:    "all",
@@ -116,9 +116,14 @@ func TestGetDiscoveryTargets(t *testing.T) {
 			want:    Auto,
 		},
 		{
-			name:    "auto with extras",
+			name:    "auto with extras already in auto",
 			targets: []string{"auto", "cloud-dns-zones", "compute-images"},
-			want:    append(slices.Clone(Auto), DiscoverCloudDNSZones, DiscoveryComputeImages),
+			want:    Auto,
+		},
+		{
+			name:    "auto with unique extras",
+			targets: []string{"auto", "some-custom-target"},
+			want:    append(slices.Clone(Auto), "some-custom-target"),
 		},
 		{
 			name:    "explicit targets",
