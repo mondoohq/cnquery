@@ -110,6 +110,8 @@
     "drs:GetReplicationConfiguration",
     "ds:DescribeDirectories",
     "ds:ListTagsForResource",
+    "dsql:GetCluster",
+    "dsql:ListClusters",
     "dynamodb:DescribeContinuousBackups",
     "dynamodb:DescribeExport",
     "dynamodb:DescribeGlobalTableSettings",
@@ -393,6 +395,9 @@
     "memorydb:ListTags",
     "mq:DescribeBroker",
     "mq:ListBrokers",
+    "neptune-graph:GetGraph",
+    "neptune-graph:ListGraphs",
+    "neptune-graph:ListTagsForResource",
     "network-firewall:DescribeFirewall",
     "network-firewall:DescribeFirewallPolicy",
     "network-firewall:DescribeRuleGroup",
@@ -1290,6 +1295,18 @@
       "service": "ds",
       "action": "ListTagsForResource",
       "source_file": "aws_directoryservice.go"
+    },
+    {
+      "permission": "dsql:GetCluster",
+      "service": "dsql",
+      "action": "GetCluster",
+      "source_file": "aws_dsql.go"
+    },
+    {
+      "permission": "dsql:ListClusters",
+      "service": "dsql",
+      "action": "ListClusters",
+      "source_file": "aws_dsql.go"
     },
     {
       "permission": "dynamodb:DescribeContinuousBackups",
@@ -3048,6 +3065,24 @@
       "service": "mq",
       "action": "ListBrokers",
       "source_file": "aws_mq.go"
+    },
+    {
+      "permission": "neptune-graph:GetGraph",
+      "service": "neptune-graph",
+      "action": "GetGraph",
+      "source_file": "aws_neptune_analytics.go"
+    },
+    {
+      "permission": "neptune-graph:ListGraphs",
+      "service": "neptune-graph",
+      "action": "ListGraphs",
+      "source_file": "aws_neptune_analytics.go"
+    },
+    {
+      "permission": "neptune-graph:ListTagsForResource",
+      "service": "neptune-graph",
+      "action": "ListTagsForResource",
+      "source_file": "aws_neptune_analytics.go"
     },
     {
       "permission": "network-firewall:DescribeFirewall",

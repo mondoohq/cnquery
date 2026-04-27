@@ -552,6 +552,10 @@ const (
 	ResourceAwsTimestreamInfluxdb                                               string = "aws.timestream.influxdb"
 	ResourceAwsTimestreamInfluxdbInstance                                       string = "aws.timestream.influxdb.instance"
 	ResourceAwsTimestreamInfluxdbCluster                                        string = "aws.timestream.influxdb.cluster"
+	ResourceAwsDsql                                                             string = "aws.dsql"
+	ResourceAwsDsqlCluster                                                      string = "aws.dsql.cluster"
+	ResourceAwsNeptuneAnalytics                                                 string = "aws.neptuneAnalytics"
+	ResourceAwsNeptuneAnalyticsGraph                                            string = "aws.neptuneAnalytics.graph"
 	ResourceAwsGlue                                                             string = "aws.glue"
 	ResourceAwsGlueCrawler                                                      string = "aws.glue.crawler"
 	ResourceAwsGlueJob                                                          string = "aws.glue.job"
@@ -2821,6 +2825,22 @@ func init() {
 		"aws.timestream.influxdb.cluster": {
 			// to override args, implement: initAwsTimestreamInfluxdbCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsTimestreamInfluxdbCluster,
+		},
+		"aws.dsql": {
+			// to override args, implement: initAwsDsql(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDsql,
+		},
+		"aws.dsql.cluster": {
+			// to override args, implement: initAwsDsqlCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDsqlCluster,
+		},
+		"aws.neptuneAnalytics": {
+			// to override args, implement: initAwsNeptuneAnalytics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNeptuneAnalytics,
+		},
+		"aws.neptuneAnalytics.graph": {
+			// to override args, implement: initAwsNeptuneAnalyticsGraph(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNeptuneAnalyticsGraph,
 		},
 		"aws.glue": {
 			// to override args, implement: initAwsGlue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -18864,6 +18884,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.timestream.influxdb.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamInfluxdbCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.dsql.clusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsql).GetClusters()).ToDataRes(types.Array(types.Resource("aws.dsql.cluster")))
+	},
+	"aws.dsql.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetIdentifier()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.dsql.cluster.deletionProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetDeletionProtectionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.dsql.cluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.encryptionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetEncryptionStatus()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.dsql.cluster.multiRegionPeers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetMultiRegionPeers()).ToDataRes(types.Array(types.String))
+	},
+	"aws.dsql.cluster.witnessRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetWitnessRegion()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.neptuneAnalytics.graphs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalytics).GetGraphs()).ToDataRes(types.Array(types.Resource("aws.neptuneAnalytics.graph")))
+	},
+	"aws.neptuneAnalytics.graph.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetArn()).ToDataRes(types.String)
+	},
+	"aws.neptuneAnalytics.graph.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetId()).ToDataRes(types.String)
+	},
+	"aws.neptuneAnalytics.graph.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetName()).ToDataRes(types.String)
+	},
+	"aws.neptuneAnalytics.graph.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.neptuneAnalytics.graph.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.neptuneAnalytics.graph.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.neptuneAnalytics.graph.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"aws.neptuneAnalytics.graph.publicConnectivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetPublicConnectivity()).ToDataRes(types.Bool)
+	},
+	"aws.neptuneAnalytics.graph.provisionedMemory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetProvisionedMemory()).ToDataRes(types.Int)
+	},
+	"aws.neptuneAnalytics.graph.replicaCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetReplicaCount()).ToDataRes(types.Int)
+	},
+	"aws.neptuneAnalytics.graph.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.neptuneAnalytics.graph.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.neptuneAnalytics.graph.buildNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetBuildNumber()).ToDataRes(types.String)
+	},
+	"aws.neptuneAnalytics.graph.statusReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetStatusReason()).ToDataRes(types.String)
+	},
+	"aws.neptuneAnalytics.graph.sourceSnapshotId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetSourceSnapshotId()).ToDataRes(types.String)
+	},
+	"aws.neptuneAnalytics.graph.vectorSearchDimension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetVectorSearchDimension()).ToDataRes(types.Int)
+	},
+	"aws.neptuneAnalytics.graph.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneAnalyticsGraph).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.glue.crawlers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlue).GetCrawlers()).ToDataRes(types.Array(types.Resource("aws.glue.crawler")))
@@ -44879,6 +44995,150 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.timestream.influxdb.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsTimestreamInfluxdbCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsql).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.dsql.clusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsql).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.dsql.cluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).Identifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.deletionProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).DeletionProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.encryptionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).EncryptionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.multiRegionPeers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).MultiRegionPeers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.witnessRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).WitnessRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalytics).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.neptuneAnalytics.graphs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalytics).Graphs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.neptuneAnalytics.graph.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.publicConnectivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).PublicConnectivity, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.provisionedMemory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).ProvisionedMemory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.replicaCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).ReplicaCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.buildNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).BuildNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.statusReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).StatusReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.sourceSnapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).SourceSnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.vectorSearchDimension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).VectorSearchDimension, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.neptuneAnalytics.graph.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneAnalyticsGraph).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.glue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -109307,6 +109567,410 @@ func (c *mqlAwsTimestreamInfluxdbCluster) GetFailoverMode() *plugin.TValue[strin
 }
 
 func (c *mqlAwsTimestreamInfluxdbCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsDsql for the aws.dsql resource
+type mqlAwsDsql struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDsqlInternal it will be used here
+	Clusters plugin.TValue[[]any]
+}
+
+// createAwsDsql creates a new instance of this resource
+func createAwsDsql(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDsql{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dsql", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDsql) MqlName() string {
+	return "aws.dsql"
+}
+
+func (c *mqlAwsDsql) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDsql) GetClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dsql", c.__id, "clusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusters()
+	})
+}
+
+// mqlAwsDsqlCluster for the aws.dsql.cluster resource
+type mqlAwsDsqlCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDsqlClusterInternal
+	Arn                       plugin.TValue[string]
+	Identifier                plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	Status                    plugin.TValue[string]
+	CreatedAt                 plugin.TValue[*time.Time]
+	DeletionProtectionEnabled plugin.TValue[bool]
+	Endpoint                  plugin.TValue[string]
+	EncryptionStatus          plugin.TValue[string]
+	EncryptionType            plugin.TValue[string]
+	KmsKey                    plugin.TValue[*mqlAwsKmsKey]
+	MultiRegionPeers          plugin.TValue[[]any]
+	WitnessRegion             plugin.TValue[string]
+	Tags                      plugin.TValue[map[string]any]
+}
+
+// createAwsDsqlCluster creates a new instance of this resource
+func createAwsDsqlCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDsqlCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dsql.cluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDsqlCluster) MqlName() string {
+	return "aws.dsql.cluster"
+}
+
+func (c *mqlAwsDsqlCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDsqlCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDsqlCluster) GetIdentifier() *plugin.TValue[string] {
+	return &c.Identifier
+}
+
+func (c *mqlAwsDsqlCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDsqlCluster) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsDsqlCluster) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsDsqlCluster) GetDeletionProtectionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DeletionProtectionEnabled, func() (bool, error) {
+		return c.deletionProtectionEnabled()
+	})
+}
+
+func (c *mqlAwsDsqlCluster) GetEndpoint() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Endpoint, func() (string, error) {
+		return c.endpoint()
+	})
+}
+
+func (c *mqlAwsDsqlCluster) GetEncryptionStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionStatus, func() (string, error) {
+		return c.encryptionStatus()
+	})
+}
+
+func (c *mqlAwsDsqlCluster) GetEncryptionType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionType, func() (string, error) {
+		return c.encryptionType()
+	})
+}
+
+func (c *mqlAwsDsqlCluster) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dsql.cluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsDsqlCluster) GetMultiRegionPeers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MultiRegionPeers, func() ([]any, error) {
+		return c.multiRegionPeers()
+	})
+}
+
+func (c *mqlAwsDsqlCluster) GetWitnessRegion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WitnessRegion, func() (string, error) {
+		return c.witnessRegion()
+	})
+}
+
+func (c *mqlAwsDsqlCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsNeptuneAnalytics for the aws.neptuneAnalytics resource
+type mqlAwsNeptuneAnalytics struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsNeptuneAnalyticsInternal it will be used here
+	Graphs plugin.TValue[[]any]
+}
+
+// createAwsNeptuneAnalytics creates a new instance of this resource
+func createAwsNeptuneAnalytics(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNeptuneAnalytics{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.neptuneAnalytics", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNeptuneAnalytics) MqlName() string {
+	return "aws.neptuneAnalytics"
+}
+
+func (c *mqlAwsNeptuneAnalytics) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNeptuneAnalytics) GetGraphs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Graphs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptuneAnalytics", c.__id, "graphs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.graphs()
+	})
+}
+
+// mqlAwsNeptuneAnalyticsGraph for the aws.neptuneAnalytics.graph resource
+type mqlAwsNeptuneAnalyticsGraph struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsNeptuneAnalyticsGraphInternal
+	Arn                   plugin.TValue[string]
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Region                plugin.TValue[string]
+	Status                plugin.TValue[string]
+	Endpoint              plugin.TValue[string]
+	DeletionProtection    plugin.TValue[bool]
+	PublicConnectivity    plugin.TValue[bool]
+	ProvisionedMemory     plugin.TValue[int64]
+	ReplicaCount          plugin.TValue[int64]
+	KmsKey                plugin.TValue[*mqlAwsKmsKey]
+	CreatedAt             plugin.TValue[*time.Time]
+	BuildNumber           plugin.TValue[string]
+	StatusReason          plugin.TValue[string]
+	SourceSnapshotId      plugin.TValue[string]
+	VectorSearchDimension plugin.TValue[int64]
+	Tags                  plugin.TValue[map[string]any]
+}
+
+// createAwsNeptuneAnalyticsGraph creates a new instance of this resource
+func createAwsNeptuneAnalyticsGraph(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNeptuneAnalyticsGraph{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.neptuneAnalytics.graph", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) MqlName() string {
+	return "aws.neptuneAnalytics.graph"
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetPublicConnectivity() *plugin.TValue[bool] {
+	return &c.PublicConnectivity
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetProvisionedMemory() *plugin.TValue[int64] {
+	return &c.ProvisionedMemory
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetReplicaCount() *plugin.TValue[int64] {
+	return &c.ReplicaCount
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.neptuneAnalytics.graph", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetBuildNumber() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BuildNumber, func() (string, error) {
+		return c.buildNumber()
+	})
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetStatusReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StatusReason, func() (string, error) {
+		return c.statusReason()
+	})
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetSourceSnapshotId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SourceSnapshotId, func() (string, error) {
+		return c.sourceSnapshotId()
+	})
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetVectorSearchDimension() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.VectorSearchDimension, func() (int64, error) {
+		return c.vectorSearchDimension()
+	})
+}
+
+func (c *mqlAwsNeptuneAnalyticsGraph) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})

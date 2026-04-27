@@ -290,6 +290,7 @@ var awsServiceNameOverrides = map[string]string{
 	"timestreamwrite":          "timestream",
 	"timestreaminfluxdb":       "timestream-influxdb",
 	"workspacesweb":            "workspaces-web",
+	"neptunegraph":             "neptune-graph",
 	"applicationautoscaling":   "application-autoscaling",
 	"elasticbeanstalk":         "elasticbeanstalk",
 	"elasticache":              "elasticache",
@@ -528,6 +529,8 @@ func awsConnectionMethodToService(method string) string {
 		"workspaces":               "workspaces",
 		"workspacesweb":            "workspacesweb",
 		"codedeploy":               "codedeploy",
+		"dsql":                     "dsql",
+		"neptunegraph":             "neptunegraph",
 	}
 	if svc, ok := knownMethods[lower]; ok {
 		return svc

@@ -147,6 +147,7 @@ eip
 ekm
 eku
 elbv
+embeddings
 endpointslice
 ENIId
 erlang
@@ -324,6 +325,7 @@ myproject
 myvendor
 naflags
 natgateway
+NCUs
 netbios
 netin
 netout

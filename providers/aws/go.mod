@@ -38,6 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.17
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.48.14
 	github.com/aws/aws-sdk-go-v2/service/drs v1.38.1
+	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.9
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.299.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.57.1
@@ -69,6 +70,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.15
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.20
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.44.4
+	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.22
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.51.2

@@ -221,6 +221,8 @@ github.com/aws/aws-sdk-go-v2/service/docdb v1.48.14 h1:uOHt6lFot7qDGnUQ2oCaZ5t+b
 github.com/aws/aws-sdk-go-v2/service/docdb v1.48.14/go.mod h1:Nam6dmbh+Att+iSyAMSH6Aik6IZddW5amsPt00F+XXs=
 github.com/aws/aws-sdk-go-v2/service/drs v1.38.1 h1:RIQn49/Lkqd/d6xYOwmAKVz7g1oc+RcuhPrlmmPvf2M=
 github.com/aws/aws-sdk-go-v2/service/drs v1.38.1/go.mod h1:4lQ5yOUR3oQKsknCq4qpNDoQYTeTuvubRRzlPCM47Ms=
+github.com/aws/aws-sdk-go-v2/service/dsql v1.12.9 h1:hUHzkDkiwcNqW6+sMWyUf4mEy1UcK3gCT/Q9zAbj37o=
+github.com/aws/aws-sdk-go-v2/service/dsql v1.12.9/go.mod h1:a109Ez/FosaEl6mQbw4hxjD6CJmPkDVf6KyshQwhudc=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.2 h1:J2ibOhlMLx1o6QwDFsHHfbQjaZ6t5LXodiLNuK6jbZA=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.2/go.mod h1:Tj8VcffnduuewrM8HN8xQ9wzzez0CJ0FGSGEovq7Sgs=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.299.0 h1:qTozRFl2YFFU2HJGl7ZAywlRQvBnAN591gbAFT5bE0s=
@@ -295,6 +297,8 @@ github.com/aws/aws-sdk-go-v2/service/mq v1.34.20 h1:J1VUpMQhfrwNZmzZuEHiKQErBs/E
 github.com/aws/aws-sdk-go-v2/service/mq v1.34.20/go.mod h1:lT51VT0sm46/nCnu/KHllDVHnNblJSF7cY1MupEkQg4=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.44.4 h1:G7cfE96vHtWTK1fFOmRpperkUjWnUg0Gcd7IDHHUkY4=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.44.4/go.mod h1:/Trrd77PVznZodZiKPhQEhyKXXzxt2eUZFJ5EgVDwt4=
+github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.22 h1:GE/chx3flSIwmoT9PWGy4GPfTeVasXGOy4JpHSIGFR8=
+github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.22/go.mod h1:8n6SiXES2bL2aAr9B4a2B4kNi79Kcq16mv3JHQQABU0=
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.60.0 h1:m4dFEJee5tpnA1qVSlcJbfOOWvsk/iifKxmwOX8nhAc=
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.60.0/go.mod h1:sfJGDHpakN4ZOe1k+DvD/ZVYnfalAJ+GzBrx5FYQN+w=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.67.0 h1:MN68MnFv5ERMdIJEf3/NyDZZXoWoDpG3soQ3yjT+WHA=

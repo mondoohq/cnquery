@@ -12553,6 +12553,86 @@ private aws.timestream.influxdb.cluster @defaults("arn name status") {
   tags() map[string]string
 }
 
+// Amazon Aurora DSQL
+aws.dsql @defaults("clusters") {
+  // List of Aurora DSQL clusters
+  clusters() []aws.dsql.cluster
+}
+
+// Amazon Aurora DSQL cluster
+private aws.dsql.cluster @defaults("arn identifier status region") {
+  // ARN of the cluster
+  arn string
+  // Service-generated unique identifier of the cluster
+  identifier string
+  // Region of the cluster
+  region string
+  // Status of the cluster: CREATING, ACTIVE, IDLE, INACTIVE, UPDATING, DELETING, DELETED, FAILED, PENDING_SETUP, or PENDING_DELETE
+  status() string
+  // Time the cluster was created
+  createdAt() time
+  // Whether deletion protection is enabled
+  deletionProtectionEnabled() bool
+  // Connection endpoint for the cluster
+  endpoint() string
+  // Encryption status: ENABLED, ENABLING, UPDATING, or KMS_KEY_INACCESSIBLE
+  encryptionStatus() string
+  // Encryption type: AWS_OWNED_KMS_KEY or CUSTOMER_MANAGED_KMS_KEY
+  encryptionType() string
+  // KMS key encrypting data in the cluster (only set when using a customer-managed key)
+  kmsKey() aws.kms.key
+  // Peer cluster ARNs that form the multi-Region cluster configuration
+  multiRegionPeers() []string
+  // Region serving as the witness for a multi-Region cluster
+  witnessRegion() string
+  // Tags for the cluster
+  tags() map[string]string
+}
+
+// Amazon Neptune Analytics
+aws.neptuneAnalytics @defaults("graphs") {
+  // List of Neptune Analytics graphs
+  graphs() []aws.neptuneAnalytics.graph
+}
+
+// Amazon Neptune Analytics graph
+private aws.neptuneAnalytics.graph @defaults("arn name status region") {
+  // ARN of the graph
+  arn string
+  // Service-generated unique identifier of the graph
+  id string
+  // Customer-supplied name of the graph
+  name string
+  // Region of the graph
+  region string
+  // Status of the graph: CREATING, AVAILABLE, DELETING, RESETTING, UPDATING, SNAPSHOTTING, FAILED, or IMPORTING
+  status string
+  // Connection endpoint for the graph
+  endpoint string
+  // Whether deletion protection is enabled
+  deletionProtection bool
+  // Whether the graph has a public endpoint
+  publicConnectivity bool
+  // Number of memory-optimized Neptune Capacity Units (m-NCUs) allocated to the graph
+  provisionedMemory int
+  // Number of replicas for the graph
+  replicaCount int
+  // KMS key encrypting and decrypting graph data (only set when using a customer-managed key)
+  kmsKey() aws.kms.key
+  // Time the graph was created
+  createdAt() time
+  // Build number of the graph
+  buildNumber() string
+  // Reason for the current status
+  statusReason() string
+  // ID of the snapshot from which the graph was created, if any
+  sourceSnapshotId() string
+  // Number of dimensions for vector embeddings, or 0 if vector search is not configured
+  vectorSearchDimension() int
+  // Tags for the graph
+  tags() map[string]string
+}
+
 // AWS Glue
 aws.glue @defaults("crawlers") {
   // List of Glue crawlers
