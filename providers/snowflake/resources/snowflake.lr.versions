@@ -54,7 +54,7 @@ snowflake.database.roles 13.1.1
 snowflake.database.transient 11.0.0
 snowflake.databaseRole 13.1.1
 snowflake.databaseRole.comment 13.1.1
-snowflake.databaseRole.createdOn 13.1.1
+snowflake.databaseRole.createdAt 13.1.1
 snowflake.databaseRole.databaseName 13.1.1
 snowflake.databaseRole.grantedDatabaseRoles 13.1.1
 snowflake.databaseRole.grantedToDatabaseRoles 13.1.1

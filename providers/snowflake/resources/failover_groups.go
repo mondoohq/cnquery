@@ -49,12 +49,21 @@ func newMqlSnowflakeFailoverGroup(runtime *plugin.Runtime, g sdk.FailoverGroup) 
 		accounts = append(accounts, a.FullyQualifiedName())
 	}
 
+	// SHOW FAILOVER GROUPS returns an empty primary column for the primary group
+	// itself (a primary doesn't reference another primary). The SDK still constructs
+	// an ExternalObjectIdentifier from the empty string, whose FullyQualifiedName()
+	// renders as "." — guard against that misleading value.
+	primary := ""
+	if !g.IsPrimary && g.Primary.Name() != "" {
+		primary = g.Primary.FullyQualifiedName()
+	}
+
 	r, err := CreateResource(runtime, "snowflake.failoverGroup", map[string]*llx.RawData{
 		"__id":                    llx.StringData(g.ID().FullyQualifiedName()),
 		"name":                    llx.StringData(g.Name),
 		"type":                    llx.StringData(g.Type),
 		"isPrimary":               llx.BoolData(g.IsPrimary),
-		"primary":                 llx.StringData(g.Primary.FullyQualifiedName()),
+		"primary":                 llx.StringData(primary),
 		"objectTypes":             llx.ArrayData(objectTypes, types.String),
 		"allowedIntegrationTypes": llx.ArrayData(integrationTypes, types.String),
 		"allowedAccounts":         llx.ArrayData(accounts, types.String),

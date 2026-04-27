@@ -572,8 +572,8 @@ snowflake.databaseRole @defaults("databaseName name owner") {
   grantedToDatabaseRoles int
   // Number of database roles granted to this role (role chain depth)
   grantedDatabaseRoles int
-  // Created-on timestamp as reported by SHOW DATABASE ROLES (free-form per Snowflake)
-  createdOn string
+  // When the role was created
+  createdAt time
 }
 
 // Snowflake View

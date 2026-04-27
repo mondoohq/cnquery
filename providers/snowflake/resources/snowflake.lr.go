@@ -922,8 +922,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.databaseRole.grantedDatabaseRoles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeDatabaseRole).GetGrantedDatabaseRoles()).ToDataRes(types.Int)
 	},
-	"snowflake.databaseRole.createdOn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeDatabaseRole).GetCreatedOn()).ToDataRes(types.String)
+	"snowflake.databaseRole.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeDatabaseRole).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"snowflake.view.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeView).GetName()).ToDataRes(types.String)
@@ -2021,8 +2021,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlSnowflakeDatabaseRole).GrantedDatabaseRoles, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"snowflake.databaseRole.createdOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeDatabaseRole).CreatedOn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"snowflake.databaseRole.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeDatabaseRole).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"snowflake.view.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4333,7 +4333,7 @@ type mqlSnowflakeDatabaseRole struct {
 	GrantedToRoles         plugin.TValue[int64]
 	GrantedToDatabaseRoles plugin.TValue[int64]
 	GrantedDatabaseRoles   plugin.TValue[int64]
-	CreatedOn              plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
 }
 
 // createSnowflakeDatabaseRole creates a new instance of this resource
@@ -4408,8 +4408,8 @@ func (c *mqlSnowflakeDatabaseRole) GetGrantedDatabaseRoles() *plugin.TValue[int6
 	return &c.GrantedDatabaseRoles
 }
 
-func (c *mqlSnowflakeDatabaseRole) GetCreatedOn() *plugin.TValue[string] {
-	return &c.CreatedOn
+func (c *mqlSnowflakeDatabaseRole) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlSnowflakeView for the snowflake.view resource
