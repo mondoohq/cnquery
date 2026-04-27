@@ -224,9 +224,10 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 			return nil, err
 		}
 		for _, issue := range issues.Issues {
-			var created time.Time
+			var createdAt *time.Time
 			if issue.Fields.Created != nil {
-				created = time.Time(*issue.Fields.Created)
+				t := time.Time(*issue.Fields.Created).UTC()
+				createdAt = &t
 			}
 
 			creator := issue.Fields.Creator
@@ -248,7 +249,7 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 					"projectKey":  llx.StringData(issue.Fields.Project.Key),
 					"status":      llx.StringData(issue.Fields.Status.Name),
 					"description": llx.StringData(issue.Fields.Description),
-					"createdAt":   llx.TimeData(created.UTC()),
+					"createdAt":   llx.TimeDataPtr(createdAt),
 					"creator":     llx.AnyData(mqlAtlassianJiraUser),
 					"typeName":    llx.StringData(issue.Fields.IssueType.Name),
 				})
