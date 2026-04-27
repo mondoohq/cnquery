@@ -20,6 +20,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -360,23 +361,45 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]any, error)
 			return nil, err
 		}
 
+		// Resolve auto-rotation status concurrently. Azure Key Vault has no
+		// batch endpoint for rotation policies, so we fan out per-key
+		// GetKeyRotationPolicy calls within a bounded errgroup.
+		enabledByKid := make(map[string]bool, len(page.Value))
+		var mu sync.Mutex
+		g, gctx := errgroup.WithContext(ctx)
+		g.SetLimit(10)
 		for _, entry := range page.Value {
-			autoRotationEnabled := false
-
-			if entry.KID != nil {
-				keyID := string(*entry.KID)
-				kvid, err := parseKeyVaultId(keyID)
-				if err == nil && kvid.Type == "keys" {
-					policyResp, err := client.GetKeyRotationPolicy(ctx, kvid.Name, nil)
-					if err == nil && policyResp.LifetimeActions != nil {
-						for _, action := range policyResp.LifetimeActions {
-							if action.Action != nil && string(*action.Action.Type) == "Rotate" {
-								autoRotationEnabled = true
-								break
-							}
-						}
+			if entry.KID == nil {
+				continue
+			}
+			kid := string(*entry.KID)
+			kvid, err := parseKeyVaultId(kid)
+			if err != nil || kvid.Type != "keys" {
+				continue
+			}
+			keyName := kvid.Name
+			g.Go(func() error {
+				policyResp, err := client.GetKeyRotationPolicy(gctx, keyName, nil)
+				if err != nil || policyResp.LifetimeActions == nil {
+					return nil
+				}
+				for _, action := range policyResp.LifetimeActions {
+					if action.Action != nil && string(*action.Action.Type) == "Rotate" {
+						mu.Lock()
+						enabledByKid[kid] = true
+						mu.Unlock()
+						return nil
 					}
 				}
+				return nil
+			})
+		}
+		_ = g.Wait()
+
+		for _, entry := range page.Value {
+			autoRotationEnabled := false
+			if entry.KID != nil {
+				autoRotationEnabled = enabledByKid[string(*entry.KID)]
 			}
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.key.autorotation",
