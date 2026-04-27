@@ -135,9 +135,13 @@ atlassian.jira.auditRecord @defaults("summary createdAt") {
 }
 
 // Jira issue (ticket)
-atlassian.jira.issue @defaults("id createdAt") {
+atlassian.jira.issue @defaults("key summary status") {
   // Issue ID
   id string
+  // Issue key (e.g., PROJ-123)
+  key string
+  // Issue summary (title)
+  summary string
   // Parent project name
   project string
   // Project key (e.g., PROJ)
@@ -146,10 +150,26 @@ atlassian.jira.issue @defaults("id createdAt") {
   status string
   // Issue description text
   description string
+  // Priority name (e.g., High, Medium, Low). Empty when no priority is set.
+  priority string
+  // Resolution name (e.g., Done, Won't Do). Empty when the issue is unresolved.
+  resolution string
+  // Labels attached to the issue
+  labels []string
   // Creation timestamp (UTC)
   createdAt time
+  // Last update timestamp (UTC)
+  updatedAt time
+  // Resolution timestamp (UTC). Null when the issue is unresolved.
+  resolvedAt time
+  // Due date. Null when no due date is set.
+  dueDate time
   // User who created the issue
   creator atlassian.jira.user
+  // User assigned to the issue. Null when the issue is unassigned.
+  assignee atlassian.jira.user
+  // User who reported the issue. Null when no reporter is set.
+  reporter atlassian.jira.user
   // Issue type (e.g., Bug, Story, Task)
   typeName string
 }

@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/atlassian/connection/jira"
@@ -211,7 +212,11 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 	jira := conn.Client()
 	validate := ""
 	jql := "order by created DESC"
-	fields := []string{"created", "creator", "status", "project", "description", "issuetype"}
+	fields := []string{
+		"summary", "status", "project", "issuetype", "description", "labels",
+		"priority", "resolution", "creator", "assignee", "reporter",
+		"created", "updated", "resolutiondate", "duedate",
+	}
 	expands := []string{"changelog", "renderedFields", "names", "schema", "transitions", "operations", "editmeta"}
 
 	res := []any{}
@@ -224,33 +229,44 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 			return nil, err
 		}
 		for _, issue := range issues.Issues {
-			var createdAt *time.Time
-			if issue.Fields.Created != nil {
-				t := time.Time(*issue.Fields.Created).UTC()
-				createdAt = &t
-			}
-
-			creator := issue.Fields.Creator
-			mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
-				map[string]*llx.RawData{
-					"id":      llx.StringData(creator.AccountID),
-					"name":    llx.StringData(creator.DisplayName),
-					"type":    llx.StringData(creator.AccountType),
-					"picture": llx.StringData(creator.AvatarURLs.One6X16),
-				})
+			creator, err := mqlJiraUser(a.MqlRuntime, issue.Fields.Creator)
 			if err != nil {
 				return nil, err
+			}
+			assignee, err := mqlJiraUser(a.MqlRuntime, issue.Fields.Assignee)
+			if err != nil {
+				return nil, err
+			}
+			reporter, err := mqlJiraUser(a.MqlRuntime, issue.Fields.Reporter)
+			if err != nil {
+				return nil, err
+			}
+
+			var dueDate *time.Time
+			if issue.Fields.DueDate != nil {
+				t := time.Time(*issue.Fields.DueDate).UTC()
+				dueDate = &t
 			}
 
 			mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
 				map[string]*llx.RawData{
 					"id":          llx.StringData(issue.ID),
+					"key":         llx.StringData(issue.Key),
+					"summary":     llx.StringData(issue.Fields.Summary),
 					"project":     llx.StringData(issue.Fields.Project.Name),
 					"projectKey":  llx.StringData(issue.Fields.Project.Key),
 					"status":      llx.StringData(issue.Fields.Status.Name),
 					"description": llx.StringData(issue.Fields.Description),
-					"createdAt":   llx.TimeDataPtr(createdAt),
-					"creator":     llx.AnyData(mqlAtlassianJiraUser),
+					"priority":    llx.StringData(jiraPriorityName(issue.Fields.Priority)),
+					"resolution":  llx.StringData(jiraResolutionName(issue.Fields.Resolution)),
+					"labels":      llx.ArrayData(stringsToAny(issue.Fields.Labels), types.String),
+					"createdAt":   llx.TimeDataPtr(jiraDateTime(issue.Fields.Created)),
+					"updatedAt":   llx.TimeDataPtr(jiraDateTime(issue.Fields.Updated)),
+					"resolvedAt":  llx.TimeDataPtr(jiraDateTime(issue.Fields.ResolutionDate)),
+					"dueDate":     llx.TimeDataPtr(dueDate),
+					"creator":     creator,
+					"assignee":    assignee,
+					"reporter":    reporter,
 					"typeName":    llx.StringData(issue.Fields.IssueType.Name),
 				})
 			if err != nil {
@@ -264,6 +280,57 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func mqlJiraUser(runtime *plugin.Runtime, user *models.UserScheme) (*llx.RawData, error) {
+	if user == nil {
+		return llx.NilData, nil
+	}
+	picture := ""
+	if user.AvatarURLs != nil {
+		picture = user.AvatarURLs.One6X16
+	}
+	resource, err := CreateResource(runtime, "atlassian.jira.user",
+		map[string]*llx.RawData{
+			"id":      llx.StringData(user.AccountID),
+			"name":    llx.StringData(user.DisplayName),
+			"type":    llx.StringData(user.AccountType),
+			"picture": llx.StringData(picture),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return llx.AnyData(resource), nil
+}
+
+func jiraPriorityName(p *models.PriorityScheme) string {
+	if p == nil {
+		return ""
+	}
+	return p.Name
+}
+
+func jiraResolutionName(r *models.ResolutionScheme) string {
+	if r == nil {
+		return ""
+	}
+	return r.Name
+}
+
+func jiraDateTime(d *models.DateTimeScheme) *time.Time {
+	if d == nil {
+		return nil
+	}
+	t := time.Time(*d).UTC()
+	return &t
+}
+
+func stringsToAny(in []string) []any {
+	out := make([]any, len(in))
+	for i, v := range in {
+		out[i] = v
+	}
+	return out
 }
 
 func (a *mqlAtlassianJiraIssue) id() (string, error) {

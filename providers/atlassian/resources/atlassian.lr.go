@@ -357,6 +357,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.issue.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetId()).ToDataRes(types.String)
 	},
+	"atlassian.jira.issue.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetKey()).ToDataRes(types.String)
+	},
+	"atlassian.jira.issue.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetSummary()).ToDataRes(types.String)
+	},
 	"atlassian.jira.issue.project": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetProject()).ToDataRes(types.String)
 	},
@@ -369,11 +375,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.jira.issue.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetDescription()).ToDataRes(types.String)
 	},
+	"atlassian.jira.issue.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetPriority()).ToDataRes(types.String)
+	},
+	"atlassian.jira.issue.resolution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetResolution()).ToDataRes(types.String)
+	},
+	"atlassian.jira.issue.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetLabels()).ToDataRes(types.Array(types.String))
+	},
 	"atlassian.jira.issue.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"atlassian.jira.issue.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"atlassian.jira.issue.resolvedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetResolvedAt()).ToDataRes(types.Time)
+	},
+	"atlassian.jira.issue.dueDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetDueDate()).ToDataRes(types.Time)
+	},
 	"atlassian.jira.issue.creator": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetCreator()).ToDataRes(types.Resource("atlassian.jira.user"))
+	},
+	"atlassian.jira.issue.assignee": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetAssignee()).ToDataRes(types.Resource("atlassian.jira.user"))
+	},
+	"atlassian.jira.issue.reporter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraIssue).GetReporter()).ToDataRes(types.Resource("atlassian.jira.user"))
 	},
 	"atlassian.jira.issue.typeName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraIssue).GetTypeName()).ToDataRes(types.String)
@@ -817,6 +847,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianJiraIssue).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.issue.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.issue.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraIssue).Project, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -833,12 +871,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianJiraIssue).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.issue.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Priority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.resolution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Resolution, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.issue.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraIssue).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"atlassian.jira.issue.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.resolvedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).ResolvedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.dueDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).DueDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"atlassian.jira.issue.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraIssue).Creator, ok = plugin.RawToTValue[*mqlAtlassianJiraUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.assignee": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Assignee, ok = plugin.RawToTValue[*mqlAtlassianJiraUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.issue.reporter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraIssue).Reporter, ok = plugin.RawToTValue[*mqlAtlassianJiraUser](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.issue.typeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1954,12 +2024,22 @@ type mqlAtlassianJiraIssue struct {
 	__id       string
 	// optional: if you define mqlAtlassianJiraIssueInternal it will be used here
 	Id          plugin.TValue[string]
+	Key         plugin.TValue[string]
+	Summary     plugin.TValue[string]
 	Project     plugin.TValue[string]
 	ProjectKey  plugin.TValue[string]
 	Status      plugin.TValue[string]
 	Description plugin.TValue[string]
+	Priority    plugin.TValue[string]
+	Resolution  plugin.TValue[string]
+	Labels      plugin.TValue[[]any]
 	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+	ResolvedAt  plugin.TValue[*time.Time]
+	DueDate     plugin.TValue[*time.Time]
 	Creator     plugin.TValue[*mqlAtlassianJiraUser]
+	Assignee    plugin.TValue[*mqlAtlassianJiraUser]
+	Reporter    plugin.TValue[*mqlAtlassianJiraUser]
 	TypeName    plugin.TValue[string]
 }
 
@@ -2004,6 +2084,14 @@ func (c *mqlAtlassianJiraIssue) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
+func (c *mqlAtlassianJiraIssue) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAtlassianJiraIssue) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
 func (c *mqlAtlassianJiraIssue) GetProject() *plugin.TValue[string] {
 	return &c.Project
 }
@@ -2020,12 +2108,44 @@ func (c *mqlAtlassianJiraIssue) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
+func (c *mqlAtlassianJiraIssue) GetPriority() *plugin.TValue[string] {
+	return &c.Priority
+}
+
+func (c *mqlAtlassianJiraIssue) GetResolution() *plugin.TValue[string] {
+	return &c.Resolution
+}
+
+func (c *mqlAtlassianJiraIssue) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
 func (c *mqlAtlassianJiraIssue) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
+func (c *mqlAtlassianJiraIssue) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAtlassianJiraIssue) GetResolvedAt() *plugin.TValue[*time.Time] {
+	return &c.ResolvedAt
+}
+
+func (c *mqlAtlassianJiraIssue) GetDueDate() *plugin.TValue[*time.Time] {
+	return &c.DueDate
+}
+
 func (c *mqlAtlassianJiraIssue) GetCreator() *plugin.TValue[*mqlAtlassianJiraUser] {
 	return &c.Creator
+}
+
+func (c *mqlAtlassianJiraIssue) GetAssignee() *plugin.TValue[*mqlAtlassianJiraUser] {
+	return &c.Assignee
+}
+
+func (c *mqlAtlassianJiraIssue) GetReporter() *plugin.TValue[*mqlAtlassianJiraUser] {
+	return &c.Reporter
 }
 
 func (c *mqlAtlassianJiraIssue) GetTypeName() *plugin.TValue[string] {
