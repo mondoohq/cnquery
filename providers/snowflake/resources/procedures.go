@@ -45,7 +45,7 @@ func newMqlSnowflakeProcedure(runtime *plugin.Runtime, procedure sdk.Procedure) 
 		"isAnsi":               llx.BoolData(procedure.IsAnsi),
 		"minNumberOfArguments": llx.IntData(procedure.MinNumArguments),
 		"maxNumberOfArguments": llx.IntData(procedure.MaxNumArguments),
-		"arguments":            llx.StringData(procedure.Arguments),
+		"arguments":            llx.StringData(procedure.ArgumentsRaw),
 		"catalogName":          llx.StringData(procedure.CatalogName),
 		"isTableFunction":      llx.BoolData(procedure.IsTableFunction),
 		"validForClustering":   llx.BoolData(procedure.ValidForClustering),

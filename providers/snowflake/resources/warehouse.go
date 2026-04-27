@@ -58,7 +58,7 @@ func newMqlSnowflakeWarehouse(runtime *plugin.Runtime, warehouse sdk.Warehouse) 
 		"comment":                         llx.StringData(warehouse.Comment),
 		"enableQueryAcceleration":         llx.BoolData(warehouse.EnableQueryAcceleration),
 		"queryAccelerationMaxScaleFactor": llx.IntData(warehouse.QueryAccelerationMaxScaleFactor),
-		"resourceMonitor":                 llx.StringData(warehouse.ResourceMonitor),
+		"resourceMonitor":                 llx.StringData(warehouse.ResourceMonitor.Name()),
 		"scalingPolicy":                   llx.StringData(string(warehouse.ScalingPolicy)),
 		"createdAt":                       llx.TimeData(warehouse.CreatedOn),
 		"resumedAt":                       llx.TimeData(warehouse.ResumedOn),

@@ -35,12 +35,16 @@ func (r *mqlSnowflakeAccount) databases() ([]any, error) {
 }
 
 func newMqlSnowflakeDatabase(runtime *plugin.Runtime, database sdk.Database) (*mqlSnowflakeDatabase, error) {
+	var origin string
+	if database.Origin != nil {
+		origin = database.Origin.FullyQualifiedName()
+	}
 	r, err := CreateResource(runtime, "snowflake.database", map[string]*llx.RawData{
 		"__id":          llx.StringData(database.ID().FullyQualifiedName()),
 		"name":          llx.StringData(database.Name),
 		"isDefault":     llx.BoolData(database.IsDefault),
 		"isCurrent":     llx.BoolData(database.IsCurrent),
-		"origin":        llx.StringData(database.Origin),
+		"origin":        llx.StringData(origin),
 		"owner":         llx.StringData(database.Owner),
 		"comment":       llx.StringData(database.Comment),
 		"options":       llx.StringData(database.Options),
