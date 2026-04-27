@@ -333,7 +333,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 func (r *Runtime) AssetUpdated(asset *inventory.Asset) {
 	rec := r.Recording()
 	rec.EnsureAsset(
-		r.Provider.Connection.Asset,
+		asset,
 		r.Provider.Instance.ID,
 		r.Provider.Connection.Id,
 		asset.Connections[0])
