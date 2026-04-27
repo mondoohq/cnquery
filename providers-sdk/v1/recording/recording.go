@@ -394,7 +394,7 @@ func (r *recording) resyncAsset(recordingAsset *Asset) {
 }
 
 func (r *recording) AddData(req llx.AddDataReq) {
-	asset, ok := r.assets.Get(connIdKey(req.ConnectionID))
+	asset, ok := r.resolveAsset(llx.AssetRecordingLookup{ConnectionId: req.ConnectionID})
 	if !ok {
 		return
 	}
