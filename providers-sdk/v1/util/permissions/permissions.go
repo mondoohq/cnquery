@@ -1417,10 +1417,12 @@ var azurePermissionOverrides = map[string]string{
 	"Microsoft.DBforMySQL/databases/read":      "Microsoft.DBforMySQL/servers/databases/read",
 	"Microsoft.DBforMySQL/firewallRules/read":  "Microsoft.DBforMySQL/servers/firewallRules/read",
 
-	// PostgreSQL: sub-resources need servers/ parent path
-	"Microsoft.DBforPostgreSQL/configurations/read": "Microsoft.DBforPostgreSQL/servers/configurations/read",
-	"Microsoft.DBforPostgreSQL/databases/read":      "Microsoft.DBforPostgreSQL/servers/databases/read",
-	"Microsoft.DBforPostgreSQL/firewallRules/read":  "Microsoft.DBforPostgreSQL/servers/firewallRules/read",
+	// PostgreSQL: sub-resources need servers/ parent path; threat protection
+	// settings only exist on flexibleServers/
+	"Microsoft.DBforPostgreSQL/configurations/read":                   "Microsoft.DBforPostgreSQL/servers/configurations/read",
+	"Microsoft.DBforPostgreSQL/databases/read":                        "Microsoft.DBforPostgreSQL/servers/databases/read",
+	"Microsoft.DBforPostgreSQL/firewallRules/read":                    "Microsoft.DBforPostgreSQL/servers/firewallRules/read",
+	"Microsoft.DBforPostgreSQL/advancedThreatProtectionSettings/read": "Microsoft.DBforPostgreSQL/flexibleServers/advancedThreatProtectionSettings/read",
 
 	// Network: client names don't match ARM resource types
 	"Microsoft.Network/interfaces/read":                       "Microsoft.Network/networkInterfaces/read",
@@ -1467,10 +1469,13 @@ var azurePermissionOverrides = map[string]string{
 	"Microsoft.Cdn/aFDOrigins/read":       "Microsoft.Cdn/profiles/origingroups/origins/read",
 
 	// ContainerRegistry: sub-resources need registries/ parent path
-	"Microsoft.ContainerRegistry/replications/read": "Microsoft.ContainerRegistry/registries/replications/read",
-	"Microsoft.ContainerRegistry/scopeMaps/read":    "Microsoft.ContainerRegistry/registries/scopeMaps/read",
-	"Microsoft.ContainerRegistry/tokens/read":       "Microsoft.ContainerRegistry/registries/tokens/read",
-	"Microsoft.ContainerRegistry/webhooks/read":     "Microsoft.ContainerRegistry/registries/webhooks/read",
+	"Microsoft.ContainerRegistry/cacheRules/read":          "Microsoft.ContainerRegistry/registries/cacheRules/read",
+	"Microsoft.ContainerRegistry/connectedRegistries/read": "Microsoft.ContainerRegistry/registries/connectedRegistries/read",
+	"Microsoft.ContainerRegistry/credentialSets/read":      "Microsoft.ContainerRegistry/registries/credentialSets/read",
+	"Microsoft.ContainerRegistry/replications/read":        "Microsoft.ContainerRegistry/registries/replications/read",
+	"Microsoft.ContainerRegistry/scopeMaps/read":           "Microsoft.ContainerRegistry/registries/scopeMaps/read",
+	"Microsoft.ContainerRegistry/tokens/read":              "Microsoft.ContainerRegistry/registries/tokens/read",
+	"Microsoft.ContainerRegistry/webhooks/read":            "Microsoft.ContainerRegistry/registries/webhooks/read",
 
 	// DNS: Azure DNS lives under Microsoft.Network, not Microsoft.Dns
 	"Microsoft.Dns/recordSets/read": "Microsoft.Network/dnszones/recordsets/read",
@@ -1480,16 +1485,21 @@ var azurePermissionOverrides = map[string]string{
 	"Microsoft.Privatedns/privateZones/read":        "Microsoft.Network/privateDnsZones/read",
 	"Microsoft.Privatedns/virtualNetworkLinks/read": "Microsoft.Network/privateDnsZones/virtualNetworkLinks/read",
 
-	// EventHub: sub-resources need namespaces/ (or namespaces/eventHubs/) parent path
-	"Microsoft.EventHub/consumerGroups/read": "Microsoft.EventHub/namespaces/eventHubs/consumergroups/read",
+	// EventHub: sub-resources need namespaces/ (or namespaces/eventhubs/) parent path
+	"Microsoft.EventHub/consumerGroups/read": "Microsoft.EventHub/namespaces/eventhubs/consumergroups/read",
 	"Microsoft.EventHub/eventHubs/read":      "Microsoft.EventHub/namespaces/eventhubs/read",
 
 	// Network: SDK calls Application Gateway WAF, which has a longer ARM type name
 	"Microsoft.Network/webApplicationFirewallPolicies/read": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
 
-	// OperationalInsights: sub-resources need workspaces/ parent path
+	// OperationalInsights: sub-resources need workspaces/ parent path;
+	// queryPacks is the standalone resource and uses lowercase querypacks;
+	// log queries map to workspaces/savedSearches
 	"Microsoft.OperationalInsights/dataExports/read":    "Microsoft.OperationalInsights/workspaces/dataexports/read",
 	"Microsoft.OperationalInsights/linkedServices/read": "Microsoft.OperationalInsights/workspaces/linkedservices/read",
+	"Microsoft.OperationalInsights/queries/read":        "Microsoft.OperationalInsights/workspaces/savedSearches/read",
+	"Microsoft.OperationalInsights/queryPacks/read":     "Microsoft.OperationalInsights/querypacks/read",
+	"Microsoft.OperationalInsights/tables/read":         "Microsoft.OperationalInsights/workspaces/tables/read",
 
 	// RecoveryServices: backup sub-resources need Vaults/ parent path; backupResourceVaultConfigs
 	// is the SDK client name but the ARM operation is called backupconfig
@@ -1505,9 +1515,17 @@ var azurePermissionOverrides = map[string]string{
 	"Microsoft.ServiceBus/topics/read":        "Microsoft.ServiceBus/namespaces/topics/read",
 	"Microsoft.ServiceBus/subscriptions/read": "Microsoft.ServiceBus/namespaces/topics/subscriptions/read",
 
-	// Storage: encryption/management policy sub-resources need storageAccounts/ parent path
+	// Storage: encryption/management policy and local user sub-resources need
+	// storageAccounts/ parent path
 	"Microsoft.Storage/encryptionScopes/read":   "Microsoft.Storage/storageAccounts/encryptionScopes/read",
+	"Microsoft.Storage/localUsers/read":         "Microsoft.Storage/storageAccounts/localUsers/read",
 	"Microsoft.Storage/managementPolicies/read": "Microsoft.Storage/storageAccounts/managementPolicies/read",
+
+	// CDN: AFD routes are nested under profiles/afdendpoints/
+	"Microsoft.Cdn/routes/read": "Microsoft.Cdn/profiles/afdendpoints/routes/read",
+
+	// Network: privateDnsZoneGroups are nested under privateEndpoints/
+	"Microsoft.Network/privateDNSZoneGroups/read": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups/read",
 }
 
 // azurePermission constructs the RBAC permission string.
