@@ -45,6 +45,25 @@ func TestJiraDateTime(t *testing.T) {
 	})
 }
 
+func TestJiraDate(t *testing.T) {
+	t.Run("nil returns nil", func(t *testing.T) {
+		assert.Nil(t, jiraDate(nil))
+	})
+
+	t.Run("converts to UTC", func(t *testing.T) {
+		ny, err := time.LoadLocation("America/New_York")
+		require.NoError(t, err)
+
+		local := time.Date(2026, 4, 27, 12, 0, 0, 0, ny)
+		scheme := models.DateScheme(local)
+
+		got := jiraDate(&scheme)
+		require.NotNil(t, got)
+		assert.Equal(t, time.UTC, got.Location())
+		assert.True(t, got.Equal(local), "UTC conversion must preserve the instant")
+	})
+}
+
 func TestStringsToAny(t *testing.T) {
 	assert.Equal(t, []any{}, stringsToAny(nil))
 	assert.Equal(t, []any{}, stringsToAny([]string{}))

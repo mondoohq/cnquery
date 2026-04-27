@@ -242,12 +242,6 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 				return nil, err
 			}
 
-			var dueDate *time.Time
-			if issue.Fields.DueDate != nil {
-				t := time.Time(*issue.Fields.DueDate).UTC()
-				dueDate = &t
-			}
-
 			mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
 				map[string]*llx.RawData{
 					"id":          llx.StringData(issue.ID),
@@ -263,7 +257,7 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 					"createdAt":   llx.TimeDataPtr(jiraDateTime(issue.Fields.Created)),
 					"updatedAt":   llx.TimeDataPtr(jiraDateTime(issue.Fields.Updated)),
 					"resolvedAt":  llx.TimeDataPtr(jiraDateTime(issue.Fields.ResolutionDate)),
-					"dueDate":     llx.TimeDataPtr(dueDate),
+					"dueDate":     llx.TimeDataPtr(jiraDate(issue.Fields.DueDate)),
 					"creator":     creator,
 					"assignee":    assignee,
 					"reporter":    reporter,
@@ -315,6 +309,14 @@ func jiraResolutionName(r *models.ResolutionScheme) string {
 		return ""
 	}
 	return r.Name
+}
+
+func jiraDate(d *models.DateScheme) *time.Time {
+	if d == nil {
+		return nil
+	}
+	t := time.Time(*d).UTC()
+	return &t
 }
 
 func jiraDateTime(d *models.DateTimeScheme) *time.Time {
