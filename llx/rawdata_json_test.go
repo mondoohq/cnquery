@@ -73,3 +73,92 @@ func TestRawDataJson_Umlauts(t *testing.T) {
 	require.Equal(t, res.String(), "\"Systemintegrit\\ufffdt\"")
 	require.True(t, json.Valid(res.Bytes()))
 }
+
+// Two block entries can resolve to the same human-readable label (e.g.
+// `package("apparmor").installed` and `package("apparmor-utils").installed`
+// both label as `package.installed`). The JSON output must still parse — and
+// in particular must not contain duplicate map keys, which downstream
+// consumers reject when unmarshaling into proto map fields.
+func TestRawDataJson_refMapJSON_collidingLabels(t *testing.T) {
+	tests := []struct {
+		name   string
+		labels map[string]string
+		data   map[string]any
+	}{
+		{
+			name: "two colliding",
+			labels: map[string]string{
+				"sum-a": "package.installed",
+				"sum-b": "package.installed",
+			},
+			data: map[string]any{
+				"sum-a": BoolData(true),
+				"sum-b": BoolData(false),
+			},
+		},
+		{
+			name: "three colliding",
+			labels: map[string]string{
+				"sum-a": "package.installed",
+				"sum-b": "package.installed",
+				"sum-c": "package.installed",
+			},
+			data: map[string]any{
+				"sum-a": BoolData(true),
+				"sum-b": BoolData(false),
+				"sum-c": BoolData(true),
+			},
+		},
+		{
+			name: "mixed collisions and unique",
+			labels: map[string]string{
+				"sum-a": "package.installed",
+				"sum-b": "package.installed",
+				"sum-c": "asset.family",
+			},
+			data: map[string]any{
+				"sum-a": BoolData(true),
+				"sum-b": BoolData(false),
+				"sum-c": StringData("debian"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			bundle := &CodeBundle{Labels: &Labels{Labels: tc.labels}}
+			var buf bytes.Buffer
+			require.NoError(t, refMapJSON(types.Block, tc.data, "", bundle, &buf))
+			require.True(t, json.Valid(buf.Bytes()), "output is not valid JSON: %s", buf.String())
+
+			// json.Unmarshal silently drops duplicate keys, so walk the raw
+			// token stream to assert all top-level keys are unique.
+			dec := json.NewDecoder(bytes.NewReader(buf.Bytes()))
+			seen := map[string]struct{}{}
+			var depth int
+			for {
+				tok, err := dec.Token()
+				if err != nil {
+					break
+				}
+				switch v := tok.(type) {
+				case json.Delim:
+					if v == '{' {
+						depth++
+					}
+					if v == '}' {
+						depth--
+					}
+				case string:
+					if depth == 1 && dec.More() {
+						if _, dup := seen[v]; dup {
+							t.Fatalf("duplicate JSON key %q in %s", v, buf.String())
+						}
+						seen[v] = struct{}{}
+					}
+				}
+			}
+			require.Equal(t, len(tc.data), len(seen), "every entry must be present in JSON: %s", buf.String())
+		})
+	}
+}

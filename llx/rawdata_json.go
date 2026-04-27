@@ -96,11 +96,22 @@ func refMapJSON(typ types.Type, data map[string]any, codeID string, bundle *Code
 	// What is the best explanation for why we do this?
 	keys = removeUnderscoreKeys(keys)
 
+	// Multiple entrypoints in a block can resolve to the same label (e.g.
+	// `package("a").installed` and `package("b").installed` both label as
+	// `package.installed`). Disambiguate so the resulting JSON has unique
+	// keys — downstream consumers reject duplicates when unmarshaling into
+	// proto map fields.
+	seen := make(map[string]int, len(keys))
 	last := len(keys) - 1
 	for i, k := range keys {
 		v := data[k]
-		label := label(k, bundle, true)
-		str, err := string2json(label)
+		base := label(k, bundle, true)
+		jsonKey := base
+		if n := seen[base]; n > 0 {
+			jsonKey = fmt.Sprintf("%s (%d)", base, n+1)
+		}
+		seen[base]++
+		str, err := string2json(jsonKey)
 		if err != nil {
 			return err
 		}
