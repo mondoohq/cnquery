@@ -30,6 +30,9 @@ func (o *mqlOciObjectStorage) namespace() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if tenant.HomeRegionKey == nil {
+		return "", errors.New("tenancy has no home region configured")
+	}
 
 	region := *tenant.HomeRegionKey
 	client, err := conn.ObjectStorageClient(region)
