@@ -186,36 +186,38 @@ func (a *mqlAwsAccount) alternateContacts() ([]any, error) {
 			AlternateContactType: cType,
 		})
 
+		// Treat both ResourceNotFoundException and a 200-with-nil-body as
+		// "contact not configured" — the only signal MQL needs is exists=false.
+		notConfigured := false
 		if err != nil {
-			// Check if contact not configured (ResourceNotFoundException)
 			var notFoundErr *types.ResourceNotFoundException
-			if errors.As(err, &notFoundErr) {
-				// Contact not configured - create resource with exists=false
-				contact, resErr := CreateResource(a.MqlRuntime, ResourceAwsAccountAlternateContact,
-					map[string]*llx.RawData{
-						"accountId":    llx.StringData(a.Id.Data),
-						"contactType":  llx.StringData(string(cType)),
-						"emailAddress": llx.StringData(""),
-						"name":         llx.StringData(""),
-						"phoneNumber":  llx.StringData(""),
-						"title":        llx.StringData(""),
-						"exists":       llx.BoolData(false),
-					})
-				if resErr != nil {
-					return nil, resErr
-				}
-				contacts = append(contacts, contact)
-				continue
+			if !errors.As(err, &notFoundErr) {
+				return nil, err
 			}
-			// Other error - return it
-			return nil, err
+			notConfigured = true
+		} else if resp.AlternateContact == nil {
+			notConfigured = true
 		}
 
-		// Contact is configured - create resource with data
-		ac := resp.AlternateContact
-		if ac == nil {
-			ac = &types.AlternateContact{}
+		if notConfigured {
+			contact, resErr := CreateResource(a.MqlRuntime, ResourceAwsAccountAlternateContact,
+				map[string]*llx.RawData{
+					"accountId":    llx.StringData(a.Id.Data),
+					"contactType":  llx.StringData(string(cType)),
+					"emailAddress": llx.StringData(""),
+					"name":         llx.StringData(""),
+					"phoneNumber":  llx.StringData(""),
+					"title":        llx.StringData(""),
+					"exists":       llx.BoolData(false),
+				})
+			if resErr != nil {
+				return nil, resErr
+			}
+			contacts = append(contacts, contact)
+			continue
 		}
+
+		ac := resp.AlternateContact
 		contact, err := CreateResource(a.MqlRuntime, ResourceAwsAccountAlternateContact,
 			map[string]*llx.RawData{
 				"accountId":    llx.StringData(a.Id.Data),

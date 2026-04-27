@@ -92,6 +92,10 @@ func (a *mqlAwsLambda) getFunctions(conn *connection.AwsConnection) []*jobpool.J
 					}
 					var tags map[string]string
 					if conn.Filters.General.HasTags() {
+						// nil means batchFetchLambdaTags hit a per-function error;
+						// IsFilteredOutByTags treats nil identically to an empty map
+						// (no include-filter match → drop), preserving the
+						// pre-parallelization best-effort behavior.
 						tags = tagsByArn[convert.ToValue(function.FunctionArn)]
 						if conn.Filters.General.IsFilteredOutByTags(tags) {
 							log.Debug().Interface("function", function.FunctionArn).Msg("excluding function due to filters")
