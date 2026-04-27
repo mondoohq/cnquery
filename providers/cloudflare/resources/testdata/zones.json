@@ -1,0 +1,110 @@
+{
+  "result": [
+    {
+      "id": "d56084adb405e0b7e32c52321bf07be6",
+      "name": "example.com",
+      "status": "active",
+      "paused": false,
+      "type": "full",
+      "development_mode": 0,
+      "name_servers": [
+        "ns1.example.com",
+        "ns2.example.com"
+      ],
+      "original_name_servers": [
+        "ns-old.registrar.example.net"
+      ],
+      "original_registrar": "Example Registrar",
+      "original_dnshost": null,
+      "modified_on": "2026-04-01T10:00:00.000000Z",
+      "created_on": "2024-09-15T08:00:00.000000Z",
+      "activated_on": "2024-09-15T08:30:00.000000Z",
+      "meta": {
+        "step": 4,
+        "custom_certificate_quota": 0,
+        "page_rule_quota": 3,
+        "phishing_detected": false,
+        "multiple_railguns_allowed": false
+      },
+      "owner": {
+        "id": "owner-001",
+        "type": "user",
+        "email": "owner@example.com"
+      },
+      "account": {
+        "id": "01a7362d577a6c3019a474fd6f485823",
+        "name": "Test Account"
+      },
+      "tenant": {
+        "id": null,
+        "name": null
+      },
+      "tenant_unit": {
+        "id": null
+      },
+      "permissions": ["#zone:read", "#zone:edit"],
+      "plan": {
+        "id": "plan-free",
+        "name": "Free Website",
+        "price": 0,
+        "currency": "USD",
+        "frequency": "",
+        "is_subscribed": true,
+        "can_subscribe": false,
+        "legacy_id": "free",
+        "legacy_discount": false,
+        "externally_managed": false
+      }
+    },
+    {
+      "id": "abcdef1234567890abcdef1234567890",
+      "name": "internal.test",
+      "status": "pending",
+      "paused": false,
+      "type": "partial",
+      "development_mode": 0,
+      "name_servers": [],
+      "original_name_servers": [],
+      "original_registrar": null,
+      "original_dnshost": null,
+      "modified_on": "2026-04-20T09:00:00.000000Z",
+      "created_on": "2026-04-20T09:00:00.000000Z",
+      "activated_on": null,
+      "meta": {
+        "step": 1,
+        "custom_certificate_quota": 0,
+        "page_rule_quota": 3,
+        "phishing_detected": false
+      },
+      "owner": {
+        "id": "owner-001",
+        "type": "user",
+        "email": "owner@example.com"
+      },
+      "account": {
+        "id": "01a7362d577a6c3019a474fd6f485823",
+        "name": "Test Account"
+      },
+      "permissions": ["#zone:read"],
+      "plan": {
+        "id": "plan-free",
+        "name": "Free Website",
+        "price": 0,
+        "currency": "USD",
+        "frequency": "",
+        "is_subscribed": true,
+        "can_subscribe": false
+      }
+    }
+  ],
+  "result_info": {
+    "page": 1,
+    "per_page": 20,
+    "total_pages": 1,
+    "count": 2,
+    "total_count": 2
+  },
+  "success": true,
+  "errors": [],
+  "messages": []
+}

@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": {
+    "id": "rs-custom-1",
+    "name": "Custom WAF Rules",
+    "description": "",
+    "kind": "zone",
+    "phase": "http_request_firewall_custom",
+    "version": "1",
+    "last_updated": "2024-02-20T10:00:00Z",
+    "rules": [
+      {
+        "id": "rule-custom-001",
+        "ref": "rule-custom-001",
+        "version": "1",
+        "action": "block",
+        "expression": "(http.request.uri.path contains \"/admin\" and not ip.src in {1.2.3.4})",
+        "description": "Restrict /admin to allowlisted IPs",
+        "enabled": true,
+        "last_updated": "2024-02-20T10:00:00Z"
+      }
+    ]
+  }
+}

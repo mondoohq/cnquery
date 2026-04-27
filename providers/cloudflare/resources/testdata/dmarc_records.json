@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "dmarc-record-id",
+      "type": "TXT",
+      "name": "_dmarc.example.com",
+      "content": "v=DMARC1; p=reject; rua=mailto:dmarc@example.com",
+      "ttl": 1,
+      "proxiable": false,
+      "proxied": false,
+      "locked": false,
+      "zone_id": "d56084adb405e0b7e32c52321bf07be6",
+      "zone_name": "example.com"
+    }
+  ],
+  "result_info": {
+    "page": 1,
+    "per_page": 100,
+    "total_pages": 1,
+    "count": 1,
+    "total_count": 1
+  }
+}

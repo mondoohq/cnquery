@@ -1,0 +1,45 @@
+{
+  "result": [
+    {
+      "id": "01a7362d577a6c3019a474fd6f485823",
+      "name": "Test Account",
+      "type": "standard",
+      "settings": {
+        "enforce_twofactor": false,
+        "api_access_enabled": null,
+        "access_approval_expiry": null,
+        "abuse_contact_email": null
+      },
+      "legacy_flags": {
+        "enterprise_zone_quota": {
+          "maximum": 0,
+          "current": 0,
+          "available": 0
+        }
+      },
+      "created_on": "2026-02-06T23:00:08.752650Z"
+    },
+    {
+      "id": "9d4e6c8f0a2b1d3f5e7c9b1a8f6e4d2c",
+      "name": "Production Account",
+      "type": "enterprise",
+      "settings": {
+        "enforce_twofactor": true,
+        "api_access_enabled": true,
+        "access_approval_expiry": null,
+        "abuse_contact_email": "abuse@example.com"
+      },
+      "created_on": "2024-08-15T12:00:00.000000Z"
+    }
+  ],
+  "result_info": {
+    "page": 1,
+    "per_page": 20,
+    "total_pages": 1,
+    "count": 2,
+    "total_count": 2
+  },
+  "success": true,
+  "errors": [],
+  "messages": []
+}

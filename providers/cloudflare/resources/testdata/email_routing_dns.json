@@ -1,0 +1,34 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "type": "MX",
+      "name": "example.com",
+      "content": "isaac.mx.cloudflare.net",
+      "priority": 11,
+      "ttl": 1
+    },
+    {
+      "type": "MX",
+      "name": "example.com",
+      "content": "linda.mx.cloudflare.net",
+      "priority": 22,
+      "ttl": 1
+    },
+    {
+      "type": "MX",
+      "name": "example.com",
+      "content": "amir.mx.cloudflare.net",
+      "priority": 33,
+      "ttl": 1
+    },
+    {
+      "type": "TXT",
+      "name": "example.com",
+      "content": "v=spf1 include:_spf.mx.cloudflare.net ~all",
+      "ttl": 1
+    }
+  ]
+}

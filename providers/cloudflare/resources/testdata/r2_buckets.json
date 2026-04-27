@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": {
+    "buckets": [
+      {
+        "name": "logs-archive",
+        "creation_date": "2024-11-01T08:00:00.000Z",
+        "location": "ENAM"
+      },
+      {
+        "name": "public-assets",
+        "creation_date": "2024-12-15T14:22:00.000Z",
+        "location": "WNAM"
+      },
+      {
+        "name": "backups",
+        "creation_date": "2025-03-10T09:00:00.000Z",
+        "location": "WEUR"
+      }
+    ]
+  },
+  "result_info": {
+    "cursor": "",
+    "per_page": 100
+  }
+}

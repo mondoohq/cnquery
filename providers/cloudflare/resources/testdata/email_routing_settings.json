@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": {
+    "tag": "75610dab884e4eaf9c2cf4d2ac9eaa30",
+    "name": "example.com",
+    "enabled": true,
+    "status": "ready",
+    "created": "2026-01-15T10:00:00Z",
+    "modified": "2026-04-10T14:30:00Z",
+    "skip_wizard": false
+  }
+}

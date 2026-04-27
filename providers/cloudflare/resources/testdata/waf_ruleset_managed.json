@@ -1,0 +1,38 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": {
+    "id": "rs-managed-1",
+    "name": "Cloudflare Managed Ruleset",
+    "description": "Managed rules by Cloudflare",
+    "kind": "managed",
+    "phase": "http_request_firewall_managed",
+    "version": "3",
+    "last_updated": "2024-03-01T00:00:00Z",
+    "rules": [
+      {
+        "id": "rule-mgd-001",
+        "ref": "rule-mgd-001",
+        "version": "3",
+        "action": "block",
+        "expression": "cf.threat_score gt 50",
+        "description": "Block high-threat traffic",
+        "enabled": true,
+        "score_threshold": 50,
+        "last_updated": "2024-03-01T00:00:00Z"
+      },
+      {
+        "id": "rule-mgd-002",
+        "ref": "rule-mgd-002",
+        "version": "3",
+        "action": "challenge",
+        "expression": "ip.geoip.country eq \"XX\"",
+        "description": "Challenge anonymous proxies",
+        "enabled": false,
+        "score_threshold": 0,
+        "last_updated": "2024-03-01T00:00:00Z"
+      }
+    ]
+  }
+}
