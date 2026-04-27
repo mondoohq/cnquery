@@ -1901,11 +1901,14 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways()
 
 	gatewaysList := gateways.([]any)
 
-	// Fetch the referenced application gateways in parallel; there is no
-	// batch endpoint, so a bounded errgroup is the cheapest fix.
-	results := make([]network.ApplicationGateway, len(gatewaysList))
-	g, gctx := errgroup.WithContext(ctx)
-	g.SetLimit(10)
+	// Pre-validate all gateway IDs before launching any goroutines so that an
+	// early parse error can't leak in-flight workers.
+	type gwFetch struct {
+		rg    string
+		name  string
+		index int
+	}
+	fetches := make([]gwFetch, 0, len(gatewaysList))
 	for i, gw := range gatewaysList {
 		idVal, ok := gw.(map[string]any)["id"]
 		if !ok {
@@ -1923,14 +1926,21 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy) gateways()
 		if err != nil {
 			return nil, err
 		}
-		i := i
-		rg := azureId.ResourceGroup
+		fetches = append(fetches, gwFetch{rg: azureId.ResourceGroup, name: gatewayName, index: i})
+	}
+
+	// Fetch the referenced application gateways in parallel; there is no
+	// batch endpoint, so a bounded errgroup is the cheapest fix.
+	results := make([]network.ApplicationGateway, len(gatewaysList))
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(10)
+	for _, f := range fetches {
 		g.Go(func() error {
-			resp, err := client.Get(gctx, rg, gatewayName, &network.ApplicationGatewaysClientGetOptions{})
+			resp, err := client.Get(gctx, f.rg, f.name, &network.ApplicationGatewaysClientGetOptions{})
 			if err != nil {
 				return err
 			}
-			results[i] = resp.ApplicationGateway
+			results[f.index] = resp.ApplicationGateway
 			return nil
 		})
 	}

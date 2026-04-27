@@ -468,12 +468,17 @@ func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]any, error) {
 
 	dataDisks := properties.StorageProfile.DataDisks
 
-	// Fetch each attached disk in parallel. Azure has no batch get-by-id
-	// endpoint for disks, so concurrent per-disk Gets is the cheapest fix.
-	ctx := context.Background()
+	// Pre-validate all disks (parse IDs, build clients) before spawning any
+	// goroutines so that an early error can't leak in-flight workers.
+	type diskFetch struct {
+		client *compute.DisksClient
+		rg     string
+		name   string
+		index  int
+	}
+	clientsBySub := map[string]*compute.DisksClient{}
 	disks := make([]compute.Disk, len(dataDisks))
-	g, gctx := errgroup.WithContext(ctx)
-	g.SetLimit(10)
+	fetches := make([]diskFetch, 0, len(dataDisks))
 	for i, dd := range dataDisks {
 		if dd.ManagedDisk == nil || dd.ManagedDisk.ID == nil {
 			continue
@@ -486,20 +491,31 @@ func (a *mqlAzureSubscriptionComputeServiceVm) dataDisks() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		client, err := compute.NewDisksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-			ClientOptions: conn.ClientOptions(),
-		})
-		if err != nil {
-			return nil, err
+		client, ok := clientsBySub[resourceID.SubscriptionID]
+		if !ok {
+			client, err = compute.NewDisksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+				ClientOptions: conn.ClientOptions(),
+			})
+			if err != nil {
+				return nil, err
+			}
+			clientsBySub[resourceID.SubscriptionID] = client
 		}
-		i := i
-		rg := resourceID.ResourceGroup
+		fetches = append(fetches, diskFetch{client: client, rg: resourceID.ResourceGroup, name: diskName, index: i})
+	}
+
+	// Azure has no batch get-by-id endpoint for disks, so concurrent per-disk
+	// Gets in a bounded errgroup is the cheapest fix.
+	ctx := context.Background()
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(10)
+	for _, f := range fetches {
 		g.Go(func() error {
-			resp, err := client.Get(gctx, rg, diskName, &compute.DisksClientGetOptions{})
+			resp, err := f.client.Get(gctx, f.rg, f.name, &compute.DisksClientGetOptions{})
 			if err != nil {
 				return err
 			}
-			disks[i] = resp.Disk
+			disks[f.index] = resp.Disk
 			return nil
 		})
 	}
@@ -573,12 +589,15 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 	if err != nil {
 		return nil, err
 	}
-	// Phase 1: fetch all NICs concurrently. Per-NIC Get is the only API
-	// option here (no batch endpoint), so a bounded errgroup is the cheapest
-	// fix that preserves semantics.
-	nics := make([]network.Interface, len(networkInterfaces.NetworkInterfaces))
-	g1, gctx1 := errgroup.WithContext(ctx)
-	g1.SetLimit(10)
+	// Phase 1: pre-validate NIC IDs, then fetch all NICs concurrently. Per-NIC
+	// Get is the only API option here (no batch endpoint), so a bounded
+	// errgroup is the cheapest fix that preserves semantics.
+	type nicFetch struct {
+		rg    string
+		name  string
+		index int
+	}
+	nicFetches := make([]nicFetch, 0, len(networkInterfaces.NetworkInterfaces))
 	for i, iface := range networkInterfaces.NetworkInterfaces {
 		if iface.ID == nil {
 			continue
@@ -591,14 +610,19 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 		if err != nil {
 			return nil, err
 		}
-		i := i
-		rg := resource.ResourceGroup
+		nicFetches = append(nicFetches, nicFetch{rg: resource.ResourceGroup, name: name, index: i})
+	}
+
+	nics := make([]network.Interface, len(networkInterfaces.NetworkInterfaces))
+	g1, gctx1 := errgroup.WithContext(ctx)
+	g1.SetLimit(10)
+	for _, f := range nicFetches {
 		g1.Go(func() error {
-			resp, err := nicClient.Get(gctx1, rg, name, &network.InterfacesClientGetOptions{})
+			resp, err := nicClient.Get(gctx1, f.rg, f.name, &network.InterfacesClientGetOptions{})
 			if err != nil {
 				return err
 			}
-			nics[i] = resp.Interface
+			nics[f.index] = resp.Interface
 			return nil
 		})
 	}
@@ -637,8 +661,6 @@ func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error
 	g2, gctx2 := errgroup.WithContext(ctx)
 	g2.SetLimit(10)
 	for i, f := range fetches {
-		i := i
-		f := f
 		g2.Go(func() error {
 			resp, err := ipClient.Get(gctx2, f.rg, f.name, &network.PublicIPAddressesClientGetOptions{})
 			if err != nil {
