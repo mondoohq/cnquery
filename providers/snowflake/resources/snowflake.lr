@@ -47,6 +47,10 @@ snowflake.account {
   grants() []snowflake.grant
   // Users that hold the ACCOUNTADMIN role (directly or indirectly via role grants)
   accountAdmins() []snowflake.user
+  // Tags defined in the account (governance / classification)
+  tags() []snowflake.tag
+  // Failover/replication groups in the account
+  failoverGroups() []snowflake.failoverGroup
 }
 
 // Snowflake User
@@ -325,6 +329,8 @@ snowflake.database @defaults("name") {
   createdAt time
   // When the database was dropped
   droppedAt time
+  // Database-scoped roles (SHOW DATABASE ROLES IN DATABASE)
+  roles() []snowflake.databaseRole
 }
 
 // Snowflake Warehouse
@@ -479,6 +485,95 @@ snowflake.apiIntegration @defaults("name type enabled") {
   azureTenantId() string
   // Azure AD application ID (for Azure API Management integrations)
   azureAdApplicationId() string
+}
+
+// Snowflake Tag. Used for governance, data classification, and policy attachment.
+// See https://docs.snowflake.com/en/sql-reference/sql/create-tag
+snowflake.tag @defaults("name databaseName schemaName") {
+  // Tag name (object name, not database-qualified)
+  name string
+  // Database that owns the tag
+  databaseName string
+  // Schema that owns the tag
+  schemaName string
+  // Owning role
+  owner string
+  // Owner role type (ROLE | DATABASE_ROLE)
+  ownerRoleType string
+  // Optional comment
+  comment string
+  // Allowed string values for the tag (empty if unrestricted)
+  allowedValues []string
+  // When the tag was created
+  createdAt time
+}
+
+// Snowflake Failover/Replication Group. Used to replicate account objects (databases,
+// shares, integrations, etc.) to one or more secondary accounts for disaster recovery.
+// See https://docs.snowflake.com/en/sql-reference/sql/create-failover-group
+snowflake.failoverGroup @defaults("name type isPrimary secondaryState") {
+  // Group name
+  name string
+  // Group type (ACCOUNT for failover, BUSINESS_CONTINUITY for replication)
+  type string
+  // True for the primary group, false for replicas
+  isPrimary bool
+  // Fully-qualified primary group identifier (org.account.name)
+  primary string
+  // Object types replicated by this group (e.g., DATABASES, SHARES, INTEGRATIONS)
+  objectTypes []string
+  // Integration types allowed for replication (e.g., SECURITY INTEGRATIONS, API INTEGRATIONS)
+  allowedIntegrationTypes []string
+  // Account identifiers (org.account) allowed to host secondaries
+  allowedAccounts []string
+  // Cron-style replication schedule (empty if manual refresh)
+  replicationSchedule string
+  // Secondary refresh state (e.g., SUSPENDED, STARTED)
+  secondaryState string
+  // Next scheduled refresh time as reported by Snowflake (free-form)
+  nextScheduledRefresh string
+  // Region group (for multi-region deployments)
+  regionGroup string
+  // Snowflake region (e.g., AWS_US_WEST_2)
+  snowflakeRegion string
+  // Owning role
+  owner string
+  // Optional comment
+  comment string
+  // When the group was created
+  createdAt time
+  // Databases included in the group (lazy: SHOW DATABASES IN FAILOVER GROUP)
+  databases() []string
+  // Shares included in the group (lazy: SHOW SHARES IN FAILOVER GROUP)
+  shares() []string
+}
+
+// Snowflake Database-Scoped Role. Like a regular role but scoped to a single database;
+// used for least-privilege access patterns within a database.
+// See https://docs.snowflake.com/en/sql-reference/sql/create-database-role
+snowflake.databaseRole @defaults("databaseName name owner") {
+  // Role name (not database-qualified)
+  name string
+  // Database that owns the role
+  databaseName string
+  // Owning role
+  owner string
+  // Owner role type (ROLE | DATABASE_ROLE)
+  ownerRoleType string
+  // Optional comment
+  comment string
+  // Whether the role is the current session's active role
+  isCurrent bool
+  // Whether the role is inherited via another granted role
+  isInherited bool
+  // Number of account roles this database role has been granted to
+  grantedToRoles int
+  // Number of database roles this database role has been granted to
+  grantedToDatabaseRoles int
+  // Number of database roles granted to this role (role chain depth)
+  grantedDatabaseRoles int
+  // Created-on timestamp as reported by SHOW DATABASE ROLES (free-form per Snowflake)
+  createdOn string
 }
 
 // Snowflake View
