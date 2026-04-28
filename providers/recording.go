@@ -146,10 +146,17 @@ func (s *recordingProvider) detect(asset *inventory.Asset) (*inventory.Inventory
 
 	assets := []*inventory.Asset{}
 	for _, a := range s.recording.GetAssets() {
+		// we do not allow assets with no connection as they will wont work with getting/storing data
+		if len(a.Connections) == 0 {
+			continue
+		}
+		id := a.Connections[0].Id
 		a.Connections = []*inventory.Config{
 			{
 				Type:           "recording",
 				DelayDiscovery: true,
+				// preserve conn id so it can consistenbly be looked up from the recording
+				Id: id,
 			},
 		}
 		assets = append(assets, a)
@@ -200,5 +207,26 @@ func (s *recordingProvider) GetData(req *plugin.DataReq) (*plugin.DataRes, error
 }
 
 func (s *recordingProvider) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
-	return nil, errors.New("the recording provider does not support storing data, this is an internal error")
+	if s.selectedAsset == nil {
+		return nil, errors.New("no asset selected, cannot store data")
+	}
+	if len(s.selectedAsset.Connections) == 0 {
+		return nil, errors.New("selected asset has no connections, cannot store data")
+	}
+
+	connID := s.selectedAsset.Connections[0].Id
+	for _, info := range req.Resources {
+		for field, result := range info.Fields {
+			s.recording.AddData(llx.AddDataReq{
+				ConnectionID:      connID,
+				Resource:          info.Name,
+				ResourceID:        info.Id,
+				Field:             field,
+				Data:              result.RawData(),
+				RequestResourceId: info.Id,
+			})
+		}
+	}
+
+	return &plugin.StoreRes{}, nil
 }
