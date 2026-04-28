@@ -12,6 +12,7 @@ on:
 
 concurrency:
   group: pr-extended-linting-${{ github.event.pull_request.number || github.ref }}
+  # Unconditional: this workflow only triggers on pull_request, never on main.
   cancel-in-progress: true
 
 permissions:

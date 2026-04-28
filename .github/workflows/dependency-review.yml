@@ -9,6 +9,7 @@ on: [pull_request]
 
 concurrency:
   group: dependency-review-${{ github.event.pull_request.number || github.ref }}
+  # Unconditional: this workflow only triggers on pull_request, never on main.
   cancel-in-progress: true
 
 permissions:
