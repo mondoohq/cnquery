@@ -43,8 +43,8 @@ private cloudflare.zone @defaults("name account.name") {
   account cloudflare.zone.account
 	// Zone owner
 	owner cloudflare.zone.owner
-	// Zone plan
-	plan cloudflare.zone.plan
+	// Zone plan. Deprecated and will be removed in the next major release.
+	plan @maturity("deprecated") cloudflare.zone.plan
 
 	// Zone security settings
 	settings() cloudflare.zone.settings
@@ -113,26 +113,27 @@ private cloudflare.zone.account @defaults("name") {
 	id string
 	// Account name
 	name string
-	// Account type
-	type string
-	// Account email
-	email string
+	// Account type. Deprecated and will be removed in the next major release.
+	type @maturity("deprecated") string
+	// Account email. Deprecated and will be removed in the next major release.
+	email @maturity("deprecated") string
 }
 
 // Cloudflare zone owner
 private cloudflare.zone.owner @defaults("name") {
 	// Owner identifier
 	id string
-	// Owner email
-	email string
+	// Owner email. Deprecated and will be removed in the next major release.
+	email @maturity("deprecated") string
 	// Owner name
 	name string
 	// Owner type
 	ownerType string
 }
 
-// Cloudflare zone plan
-private cloudflare.zone.plan @defaults("name") {
+// Cloudflare zone plan. Deprecated and will be removed in the next major
+// release.
+private cloudflare.zone.plan @defaults("name") @maturity("deprecated") {
 	// Plan identifier
 	id string
 	// Plan name
