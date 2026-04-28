@@ -11,6 +11,10 @@ on:
 env:
   PROTO_VERSION: "21.7"
 
+concurrency:
+  group: pr-test-generated-files-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 permissions:
   contents: read
 
