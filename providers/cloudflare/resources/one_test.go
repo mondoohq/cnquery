@@ -91,3 +91,44 @@ func TestOrganization(t *testing.T) {
 	assert.Equal(t, "24h", result.SessionDuration.Data)
 	assert.Equal(t, true, result.AllowAuthenticateViaWarp.Data)
 }
+
+func TestIdentityProviders(t *testing.T) {
+	env := setupTestEnv(t)
+	one := createTestOne(t, env)
+
+	env.Mux.HandleFunc(fmt.Sprintf("/zones/%s/access/identity_providers", testZoneID), func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		jsonResponse(w, loadFixture("identity_providers"))
+	})
+
+	result, err := one.identityProviders()
+	require.NoError(t, err)
+	require.Len(t, result, 3)
+
+	// Okta IdP — type=okta, scim enabled, no SAML fields
+	okta := result[0].(*mqlCloudflareOneIdp)
+	assert.Equal(t, "idp-okta-001", okta.Id.Data)
+	assert.Equal(t, "Corp Okta", okta.Name.Data)
+	assert.Equal(t, "okta", okta.Type.Data)
+	assert.False(t, okta.Saml.Data, "okta should not be flagged saml=true")
+	assert.True(t, okta.ScimEnabled.Data)
+	assert.Equal(t, "email", okta.EmailAttributeName.Data)
+	assert.Equal(t, []any{"groups", "department"}, okta.Attributes.Data)
+
+	// SAML IdP — exercises the saml flag, SSO/issuer URL, signRequest, public cert
+	saml := result[1].(*mqlCloudflareOneIdp)
+	assert.Equal(t, "saml", saml.Type.Data)
+	assert.True(t, saml.Saml.Data, "type=saml should set saml=true")
+	assert.Equal(t, "https://idp.example.com/saml/sso", saml.SsoTargetUrl.Data)
+	assert.Equal(t, "https://idp.example.com/saml/metadata", saml.IssuerUrl.Data)
+	assert.True(t, saml.SignRequest.Data)
+	assert.NotEmpty(t, saml.IdpPublicCert.Data)
+	assert.False(t, saml.ScimEnabled.Data)
+
+	// One-time PIN — minimal config
+	otp := result[2].(*mqlCloudflareOneIdp)
+	assert.Equal(t, "onetimepin", otp.Type.Data)
+	assert.False(t, otp.Saml.Data)
+	assert.False(t, otp.ScimEnabled.Data)
+	assert.Empty(t, otp.SsoTargetUrl.Data)
+}

@@ -1,0 +1,61 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "idp-okta-001",
+      "name": "Corp Okta",
+      "type": "okta",
+      "config": {
+        "okta_account": "https://corp.okta.com",
+        "client_id": "0oa1234567890abcdef",
+        "email_attribute_name": "email",
+        "attributes": ["groups", "department"]
+      },
+      "scim_config": {
+        "enabled": true,
+        "user_deprovision": true,
+        "seat_deprovision": false,
+        "group_member_deprovision": false
+      }
+    },
+    {
+      "id": "idp-saml-001",
+      "name": "Custom SAML",
+      "type": "saml",
+      "config": {
+        "sso_target_url": "https://idp.example.com/saml/sso",
+        "issuer_url": "https://idp.example.com/saml/metadata",
+        "sign_request": true,
+        "idp_public_cert": "MIID...REDACTED...",
+        "email_attribute_name": "EmailAddress",
+        "attributes": ["FirstName", "LastName", "Groups"]
+      },
+      "scim_config": {
+        "enabled": false,
+        "user_deprovision": false,
+        "seat_deprovision": false,
+        "group_member_deprovision": false
+      }
+    },
+    {
+      "id": "idp-onetimepin-001",
+      "name": "One-time PIN",
+      "type": "onetimepin",
+      "config": {
+        "email_attribute_name": "email"
+      },
+      "scim_config": {
+        "enabled": false
+      }
+    }
+  ],
+  "result_info": {
+    "page": 1,
+    "per_page": 25,
+    "total_pages": 1,
+    "count": 3,
+    "total_count": 3
+  }
+}

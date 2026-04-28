@@ -1,0 +1,61 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "rl-001",
+      "description": "Login burst protection",
+      "disabled": false,
+      "threshold": 5,
+      "period": 60,
+      "action": {
+        "mode": "challenge",
+        "timeout": 300,
+        "response": null
+      },
+      "match": {
+        "request": {
+          "url": "*example.com/login",
+          "methods": ["POST"],
+          "schemes": ["HTTPS"]
+        },
+        "response": {
+          "status": [401, 403]
+        }
+      }
+    },
+    {
+      "id": "rl-002",
+      "description": "API throttle",
+      "disabled": true,
+      "threshold": 100,
+      "period": 60,
+      "action": {
+        "mode": "simulate",
+        "timeout": 60,
+        "response": {
+          "content_type": "application/json",
+          "body": "{\"error\":\"rate_limited\"}"
+        }
+      },
+      "match": {
+        "request": {
+          "url": "*example.com/api/*",
+          "methods": ["GET", "POST"],
+          "schemes": ["HTTPS"]
+        },
+        "response": {
+          "status": []
+        }
+      }
+    }
+  ],
+  "result_info": {
+    "page": 1,
+    "per_page": 25,
+    "total_pages": 1,
+    "count": 2,
+    "total_count": 2
+  }
+}

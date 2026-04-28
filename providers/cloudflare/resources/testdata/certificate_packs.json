@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "pack-001",
+      "type": "advanced",
+      "hosts": ["example.com", "*.example.com"],
+      "status": "active",
+      "validation_method": "txt",
+      "validity_days": 90,
+      "certificate_authority": "lets_encrypt"
+    },
+    {
+      "id": "pack-002",
+      "type": "advanced",
+      "hosts": ["edge.example.com"],
+      "status": "pending_validation",
+      "validation_method": "http",
+      "validity_days": 365,
+      "certificate_authority": "google"
+    }
+  ]
+}

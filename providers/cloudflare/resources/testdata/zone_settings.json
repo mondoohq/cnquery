@@ -1,0 +1,33 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    { "id": "ssl", "value": "strict", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "always_use_https", "value": "on", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "min_tls_version", "value": "1.2", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "tls_1_3", "value": "on", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "automatic_https_rewrites", "value": "on", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "security_level", "value": "high", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "waf", "value": "on", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "browser_check", "value": "on", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "opportunistic_encryption", "value": "on", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "email_obfuscation", "value": "on", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "hotlink_protection", "value": "off", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    { "id": "server_side_exclude", "value": "on", "modified_on": "2026-04-01T00:00:00Z", "editable": true },
+    {
+      "id": "security_header",
+      "value": {
+        "strict_transport_security": {
+          "enabled": true,
+          "max_age": 15552000,
+          "include_subdomains": true,
+          "preload": true,
+          "nosniff": true
+        }
+      },
+      "modified_on": "2026-04-01T00:00:00Z",
+      "editable": true
+    }
+  ]
+}

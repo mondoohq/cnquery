@@ -1,0 +1,67 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "rec-a-001",
+      "type": "A",
+      "name": "example.com",
+      "content": "192.0.2.10",
+      "ttl": 1,
+      "proxied": true,
+      "proxiable": true,
+      "comment": "primary apex A",
+      "tags": ["env:prod"],
+      "created_on": "2024-09-15T08:30:00Z",
+      "modified_on": "2026-04-01T09:00:00Z"
+    },
+    {
+      "id": "rec-aaaa-001",
+      "type": "AAAA",
+      "name": "example.com",
+      "content": "2001:db8::1",
+      "ttl": 1,
+      "proxied": true,
+      "proxiable": true,
+      "comment": "",
+      "tags": [],
+      "created_on": "2024-09-15T08:30:00Z",
+      "modified_on": "2024-09-15T08:30:00Z"
+    },
+    {
+      "id": "rec-mx-001",
+      "type": "MX",
+      "name": "example.com",
+      "content": "isaac.mx.cloudflare.net",
+      "priority": 10,
+      "ttl": 300,
+      "proxied": false,
+      "proxiable": false,
+      "comment": "",
+      "tags": [],
+      "created_on": "2026-01-15T10:00:00Z",
+      "modified_on": "2026-01-15T10:00:00Z"
+    },
+    {
+      "id": "rec-cname-001",
+      "type": "CNAME",
+      "name": "www.example.com",
+      "content": "example.com",
+      "ttl": 1,
+      "proxied": true,
+      "proxiable": true,
+      "comment": "redirect www → apex",
+      "tags": ["env:prod"],
+      "created_on": "2024-09-20T14:00:00Z",
+      "modified_on": "2026-03-15T11:00:00Z"
+    }
+  ],
+  "result_info": {
+    "page": 1,
+    "per_page": 100,
+    "total_pages": 1,
+    "count": 4,
+    "total_count": 4
+  }
+}

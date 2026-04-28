@@ -34,6 +34,63 @@ func TestOriginCACertificates(t *testing.T) {
 	assert.False(t, cert.ExpiresAt.Data.IsZero())
 }
 
+func TestCustomCertificates(t *testing.T) {
+	env := setupTestEnv(t)
+	zone := createTestZone(t, env)
+
+	env.Mux.HandleFunc(fmt.Sprintf("/zones/%s/custom_certificates", testZoneID), func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		jsonResponse(w, loadFixture("custom_certificates"))
+	})
+
+	result, err := zone.customCertificates()
+	require.NoError(t, err)
+	require.Len(t, result, 2)
+
+	c1 := result[0].(*mqlCloudflareZoneCustomCertificate)
+	assert.Equal(t, "cust-cert-001", c1.Id.Data)
+	assert.Equal(t, []any{"www.example.com", "example.com"}, c1.Hosts.Data)
+	assert.Equal(t, "DigiCert Inc", c1.Issuer.Data)
+	assert.Equal(t, "SHA256WithRSAEncryption", c1.Signature.Data)
+	assert.Equal(t, "active", c1.Status.Data)
+	assert.Equal(t, "ubiquitous", c1.BundleMethod.Data)
+	assert.Equal(t, int64(10), c1.Priority.Data)
+	assert.False(t, c1.ExpiresAt.Data.IsZero())
+
+	c2 := result[1].(*mqlCloudflareZoneCustomCertificate)
+	assert.Equal(t, "expired", c2.Status.Data, "fixture has an expired cert that must surface as such")
+}
+
+func TestCertificatePacks(t *testing.T) {
+	env := setupTestEnv(t)
+	zone := createTestZone(t, env)
+
+	env.Mux.HandleFunc(fmt.Sprintf("/zones/%s/ssl/certificate_packs", testZoneID), func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		// The v0 SDK adds ?status=all — verify the test handler sees it
+		assert.Equal(t, "all", r.URL.Query().Get("status"))
+		jsonResponse(w, loadFixture("certificate_packs"))
+	})
+
+	result, err := zone.certificatePacks()
+	require.NoError(t, err)
+	require.Len(t, result, 2)
+
+	p1 := result[0].(*mqlCloudflareZoneCertificatePack)
+	assert.Equal(t, "pack-001", p1.Id.Data)
+	assert.Equal(t, "advanced", p1.Type.Data)
+	assert.Equal(t, []any{"example.com", "*.example.com"}, p1.Hosts.Data)
+	assert.Equal(t, "active", p1.Status.Data)
+	assert.Equal(t, "txt", p1.ValidationMethod.Data)
+	assert.Equal(t, int64(90), p1.ValidityDays.Data)
+	assert.Equal(t, "lets_encrypt", p1.CertificateAuthority.Data)
+
+	p2 := result[1].(*mqlCloudflareZoneCertificatePack)
+	assert.Equal(t, "pack-002", p2.Id.Data)
+	assert.Equal(t, "pending_validation", p2.Status.Data)
+	assert.Equal(t, "google", p2.CertificateAuthority.Data)
+}
+
 func TestMtlsCertificates(t *testing.T) {
 	env := setupTestEnv(t)
 	zone := createTestZone(t, env)

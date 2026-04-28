@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": {
+    "status": "active",
+    "flags": 257,
+    "algorithm": "13",
+    "key_type": "ECDSAP256SHA256",
+    "digest_type": "2",
+    "digest_algorithm": "SHA256",
+    "digest": "48E939042E82C22542CB377B580DFDC52A361CEFDC72E7F9107E2B6BD9306A45",
+    "ds": "2371 13 2 48E939042E82C22542CB377B580DFDC52A361CEFDC72E7F9107E2B6BD9306A45",
+    "key_tag": 2371,
+    "public_key": "mdsswUyr3DPW132mOi8V9xESWE8jTo0d5xjjBnNEd84TS65MwxKhRGS+1IIO9k+lNfM3OLXxqQ==",
+    "modified_on": "2026-04-01T08:00:00Z"
+  }
+}

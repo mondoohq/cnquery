@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": [
+    {
+      "id": "cust-cert-001",
+      "hosts": ["www.example.com", "example.com"],
+      "issuer": "DigiCert Inc",
+      "signature": "SHA256WithRSAEncryption",
+      "status": "active",
+      "bundle_method": "ubiquitous",
+      "expires_on": "2027-04-01T00:00:00Z",
+      "uploaded_on": "2026-04-01T08:00:00Z",
+      "modified_on": "2026-04-01T08:00:00Z",
+      "priority": 10
+    },
+    {
+      "id": "cust-cert-002",
+      "hosts": ["api.example.com"],
+      "issuer": "Let's Encrypt",
+      "signature": "SHA256WithRSAEncryption",
+      "status": "expired",
+      "bundle_method": "force",
+      "expires_on": "2025-12-31T23:59:59Z",
+      "uploaded_on": "2025-09-01T00:00:00Z",
+      "modified_on": "2025-09-01T00:00:00Z",
+      "priority": 20
+    }
+  ]
+}

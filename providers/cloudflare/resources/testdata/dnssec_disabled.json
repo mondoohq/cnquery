@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "errors": [],
+  "messages": [],
+  "result": {
+    "status": "disabled",
+    "flags": 0,
+    "algorithm": "",
+    "key_type": "",
+    "digest_type": "",
+    "digest_algorithm": "",
+    "digest": "",
+    "ds": "",
+    "key_tag": 0,
+    "public_key": "",
+    "modified_on": "2024-01-01T00:00:00Z"
+  }
+}
