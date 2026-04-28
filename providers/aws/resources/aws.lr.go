@@ -104410,7 +104410,9 @@ func (c *mqlAwsDocumentdbInstance) GetCluster() *plugin.TValue[*mqlAwsDocumentdb
 }
 
 func (c *mqlAwsDocumentdbInstance) GetIsClusterWriter() *plugin.TValue[bool] {
-	return &c.IsClusterWriter
+	return plugin.GetOrCompute[bool](&c.IsClusterWriter, func() (bool, error) {
+		return c.isClusterWriter()
+	})
 }
 
 func (c *mqlAwsDocumentdbInstance) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {

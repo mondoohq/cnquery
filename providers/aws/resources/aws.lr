@@ -11197,8 +11197,8 @@ private aws.documentdb.instance @defaults("arn name status") {
   clusterIdentifier string
   // Cluster the instance belongs to
   cluster() aws.documentdb.cluster
-  // Whether this instance is the cluster writer
-  isClusterWriter bool
+  // Whether this instance is the cluster writer (computed by looking up the parent cluster's writer member)
+  isClusterWriter() bool
   // Whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
   // Name of the availability zone
@@ -11374,7 +11374,7 @@ private aws.documentdb.globalCluster @defaults("globalClusterIdentifier status")
 }
 
 // Member of a DocumentDB global cluster
-private aws.documentdb.globalCluster.member @defaults("isWriter") {
+private aws.documentdb.globalCluster.member @defaults("isWriter cluster") {
   // Cluster that participates as the global cluster member
   cluster() aws.documentdb.cluster
   // Whether this member is the global writer

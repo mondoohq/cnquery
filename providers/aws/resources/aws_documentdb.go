@@ -54,8 +54,6 @@ type docdbSubnetGroupResolved struct {
 
 // helpers
 
-func docdbStrPtr(s string) *string { return &s }
-
 func docdbIsArn(s string) bool {
 	return len(s) > 4 && s[:4] == "arn:"
 }
@@ -112,10 +110,10 @@ func (a *mqlAwsDocumentdb) getDbClusters(conn *connection.AwsConnection) []*jobp
 			svc := conn.DocumentDB(region)
 			ctx := context.Background()
 			res := []any{}
-			input := &docdb.DescribeDBClustersInput{
-				Filters: []docdb_types.Filter{{Name: docdbStrPtr("engine"), Values: []string{docdbEngine}}},
-			}
-			paginator := docdb.NewDescribeDBClustersPaginator(svc, input)
+			// The docdb client's DescribeDBClusters returns clusters of all engines (RDS Aurora,
+			// Postgres, DocumentDB) because it shares the underlying RDS service. The "engine"
+			// API filter is rejected with "Unrecognized engine name: docdb", so we filter here.
+			paginator := docdb.NewDescribeDBClustersPaginator(svc, &docdb.DescribeDBClustersInput{})
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -126,6 +124,9 @@ func (a *mqlAwsDocumentdb) getDbClusters(conn *connection.AwsConnection) []*jobp
 					return nil, err
 				}
 				for _, cluster := range page.DBClusters {
+					if cluster.Engine == nil || *cluster.Engine != docdbEngine {
+						continue
+					}
 					mqlCluster, err := newMqlAwsDocumentdbCluster(a.MqlRuntime, region, conn.AccountId(), cluster)
 					if err != nil {
 						return nil, err
@@ -601,10 +602,10 @@ func (a *mqlAwsDocumentdb) getDbInstances(conn *connection.AwsConnection) []*job
 			svc := conn.DocumentDB(region)
 			ctx := context.Background()
 			res := []any{}
-			input := &docdb.DescribeDBInstancesInput{
-				Filters: []docdb_types.Filter{{Name: docdbStrPtr("engine"), Values: []string{docdbEngine}}},
-			}
-			paginator := docdb.NewDescribeDBInstancesPaginator(svc, input)
+			// The docdb client's DescribeDBInstances returns instances of all engines (RDS Aurora,
+			// Postgres, DocumentDB) because it shares the underlying RDS service. The "engine"
+			// API filter is rejected with "Unrecognized engine name: docdb", so we filter here.
+			paginator := docdb.NewDescribeDBInstancesPaginator(svc, &docdb.DescribeDBInstancesInput{})
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -615,6 +616,9 @@ func (a *mqlAwsDocumentdb) getDbInstances(conn *connection.AwsConnection) []*job
 					return nil, err
 				}
 				for _, instance := range page.DBInstances {
+					if instance.Engine == nil || *instance.Engine != docdbEngine {
+						continue
+					}
 					mqlInstance, err := newMqlAwsDocumentdbInstance(a.MqlRuntime, region, conn.AccountId(), instance)
 					if err != nil {
 						return nil, err
@@ -835,17 +839,34 @@ func (a *mqlAwsDocumentdbInstance) cluster() (*mqlAwsDocumentdbCluster, error) {
 }
 
 func (a *mqlAwsDocumentdbInstance) isClusterWriter() (bool, error) {
-	c, err := a.cluster()
+	// Look up the parent cluster directly through the global cluster list rather than
+	// going through a.cluster()/NewResource — this avoids a recursive resource lookup
+	// that the MQL runtime cannot serialize when iterating cluster.members.
+	if a.cacheClusterIdentifier == nil || *a.cacheClusterIdentifier == "" {
+		return false, nil
+	}
+	parent, err := docdbGetParent(a.MqlRuntime)
 	if err != nil {
 		return false, err
 	}
-	if c == nil {
-		return false, nil
+	clusters := parent.GetClusters()
+	if clusters.Error != nil {
+		return false, clusters.Error
 	}
-	if c.cacheWriterIdentifier == nil {
-		return false, nil
+	for _, raw := range clusters.Data {
+		c, ok := raw.(*mqlAwsDocumentdbCluster)
+		if !ok {
+			continue
+		}
+		if c.ClusterIdentifier.Data != *a.cacheClusterIdentifier {
+			continue
+		}
+		if c.cacheWriterIdentifier == nil {
+			return false, nil
+		}
+		return *c.cacheWriterIdentifier == a.Name.Data, nil
 	}
-	return *c.cacheWriterIdentifier == a.Name.Data, nil
+	return false, nil
 }
 
 func (a *mqlAwsDocumentdbInstance) tags() (map[string]any, error) {
