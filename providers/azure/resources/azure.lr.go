@@ -29,6 +29,13 @@ const (
 	ResourceAzureSubscriptionComputeServiceSnapshot                                              string = "azure.subscription.computeService.snapshot"
 	ResourceAzureSubscriptionComputeServiceVmScaleSet                                            string = "azure.subscription.computeService.vmScaleSet"
 	ResourceAzureSubscriptionComputeServiceVmScaleSetInstance                                    string = "azure.subscription.computeService.vmScaleSet.instance"
+	ResourceAzureSubscriptionComputeServiceDedicatedHostGroup                                    string = "azure.subscription.computeService.dedicatedHostGroup"
+	ResourceAzureSubscriptionComputeServiceDedicatedHost                                         string = "azure.subscription.computeService.dedicatedHost"
+	ResourceAzureSubscriptionComputeServiceProximityPlacementGroup                               string = "azure.subscription.computeService.proximityPlacementGroup"
+	ResourceAzureSubscriptionComputeServiceImage                                                 string = "azure.subscription.computeService.image"
+	ResourceAzureSubscriptionComputeServiceGallery                                               string = "azure.subscription.computeService.gallery"
+	ResourceAzureSubscriptionComputeServiceGalleryImage                                          string = "azure.subscription.computeService.gallery.image"
+	ResourceAzureSubscriptionComputeServiceGalleryImageVersion                                   string = "azure.subscription.computeService.gallery.image.version"
 	ResourceAzureSubscriptionBatchService                                                        string = "azure.subscription.batchService"
 	ResourceAzureSubscriptionBatchServiceAccount                                                 string = "azure.subscription.batchService.account"
 	ResourceAzureSubscriptionBatchServiceAccountPool                                             string = "azure.subscription.batchService.account.pool"
@@ -320,6 +327,34 @@ func init() {
 		"azure.subscription.computeService.vmScaleSet.instance": {
 			// to override args, implement: initAzureSubscriptionComputeServiceVmScaleSetInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionComputeServiceVmScaleSetInstance,
+		},
+		"azure.subscription.computeService.dedicatedHostGroup": {
+			// to override args, implement: initAzureSubscriptionComputeServiceDedicatedHostGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceDedicatedHostGroup,
+		},
+		"azure.subscription.computeService.dedicatedHost": {
+			// to override args, implement: initAzureSubscriptionComputeServiceDedicatedHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceDedicatedHost,
+		},
+		"azure.subscription.computeService.proximityPlacementGroup": {
+			// to override args, implement: initAzureSubscriptionComputeServiceProximityPlacementGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceProximityPlacementGroup,
+		},
+		"azure.subscription.computeService.image": {
+			// to override args, implement: initAzureSubscriptionComputeServiceImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceImage,
+		},
+		"azure.subscription.computeService.gallery": {
+			// to override args, implement: initAzureSubscriptionComputeServiceGallery(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceGallery,
+		},
+		"azure.subscription.computeService.gallery.image": {
+			// to override args, implement: initAzureSubscriptionComputeServiceGalleryImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceGalleryImage,
+		},
+		"azure.subscription.computeService.gallery.image.version": {
+			// to override args, implement: initAzureSubscriptionComputeServiceGalleryImageVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceGalleryImageVersion,
 		},
 		"azure.subscription.batchService": {
 			Init:   initAzureSubscriptionBatchService,
@@ -1541,6 +1576,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vmScaleSets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeService).GetVmScaleSets()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.vmScaleSet")))
 	},
+	"azure.subscription.computeService.dedicatedHostGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeService).GetDedicatedHostGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.dedicatedHostGroup")))
+	},
+	"azure.subscription.computeService.proximityPlacementGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeService).GetProximityPlacementGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.proximityPlacementGroup")))
+	},
+	"azure.subscription.computeService.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeService).GetImages()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.image")))
+	},
+	"azure.subscription.computeService.galleries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeService).GetGalleries()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.gallery")))
+	},
 	"azure.subscription.computeService.vm.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetId()).ToDataRes(types.String)
 	},
@@ -1576,6 +1623,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.vm.dataDisks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetDataDisks()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.disk")))
+	},
+	"azure.subscription.computeService.vm.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.interface")))
 	},
 	"azure.subscription.computeService.vm.publicIpAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetPublicIpAddresses()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ipAddress")))
@@ -1957,6 +2007,294 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.vmScaleSet.instance.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetSku()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.platformFaultDomainCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetPlatformFaultDomainCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.supportAutomaticPlacement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetSupportAutomaticPlacement()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.additionalCapabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetAdditionalCapabilities()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.instanceView": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetInstanceView()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.hosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).GetHosts()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.dedicatedHost")))
+	},
+	"azure.subscription.computeService.dedicatedHost.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHost.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHost.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHost.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.dedicatedHost.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHost.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetSku()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.dedicatedHost.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.dedicatedHost.platformFaultDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetPlatformFaultDomain()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.dedicatedHost.autoReplaceOnFailure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetAutoReplaceOnFailure()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.dedicatedHost.hostId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetHostId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHost.licenseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetLicenseType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHost.provisioningTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetProvisioningTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.dedicatedHost.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.dedicatedHost.timeCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetTimeCreated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.dedicatedHost.instanceView": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetInstanceView()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.proximityPlacementGroupType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetProximityPlacementGroupType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.intent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetIntent()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.virtualMachineIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetVirtualMachineIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.virtualMachineScaleSetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetVirtualMachineScaleSetIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.availabilitySetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).GetAvailabilitySetIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.computeService.image.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceImage).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.image.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceImage).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.image.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceImage).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.image.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceImage).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.image.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceImage).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.image.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceImage).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.image.sourceVirtualMachineId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceImage).GetSourceVirtualMachineId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.image.storageProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceImage).GetStorageProfile()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.image.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceImage).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.image.hyperVGeneration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceImage).GetHyperVGeneration()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.gallery.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.uniqueName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetUniqueName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.sharingProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetSharingProfile()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.softDeletePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetSoftDeletePolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.sharingStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetSharingStatus()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGallery).GetImages()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.gallery.image")))
+	},
+	"azure.subscription.computeService.gallery.image.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.gallery.image.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.osType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetOsType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.osState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetOsState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.hyperVGeneration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetHyperVGeneration()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.architecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetArchitecture()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.identifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetIdentifier()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.recommended": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetRecommended()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.disallowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetDisallowed()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.features": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetFeatures()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.computeService.gallery.image.purchasePlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetPurchasePlan()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.endOfLifeDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetEndOfLifeDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.gallery.image.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.privacyStatementUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetPrivacyStatementUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.eula": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetEula()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.releaseNoteUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetReleaseNoteUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImage).GetVersions()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.gallery.image.version")))
+	},
+	"azure.subscription.computeService.gallery.image.version.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.version.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.version.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.version.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.gallery.image.version.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.gallery.image.version.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.version.publishingProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetPublishingProfile()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.version.storageProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetStorageProfile()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.version.safetyProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetSafetyProfile()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.version.securityProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetSecurityProfile()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.version.replicationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetReplicationStatus()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.gallery.image.version.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).GetProvisioningState()).ToDataRes(types.String)
 	},
 	"azure.subscription.batchService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchService).GetSubscriptionId()).ToDataRes(types.String)
@@ -8734,6 +9072,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeService).VmScaleSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.dedicatedHostGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeService).DedicatedHostGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeService).ProximityPlacementGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeService).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.galleries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeService).Galleries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).__id, ok = v.Value.(string)
 		return
@@ -8784,6 +9138,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.vm.dataDisks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).DataDisks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.vm.publicIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9316,6 +9674,418 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.vmScaleSet.instance.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.platformFaultDomainCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).PlatformFaultDomainCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.supportAutomaticPlacement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).SupportAutomaticPlacement, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.additionalCapabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).AdditionalCapabilities, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.instanceView": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).InstanceView, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHostGroup.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHostGroup).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.platformFaultDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).PlatformFaultDomain, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.autoReplaceOnFailure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).AutoReplaceOnFailure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.hostId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).HostId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.licenseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).LicenseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.provisioningTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).ProvisioningTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.timeCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).TimeCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.dedicatedHost.instanceView": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).InstanceView, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.proximityPlacementGroupType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).ProximityPlacementGroupType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.intent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).Intent, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.virtualMachineIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).VirtualMachineIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.virtualMachineScaleSetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).VirtualMachineScaleSetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.proximityPlacementGroup.availabilitySetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceProximityPlacementGroup).AvailabilitySetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.image.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.image.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.image.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.image.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.image.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.image.sourceVirtualMachineId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).SourceVirtualMachineId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.image.storageProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).StorageProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.image.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.image.hyperVGeneration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceImage).HyperVGeneration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.gallery.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.uniqueName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).UniqueName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.sharingProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).SharingProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.softDeletePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).SoftDeletePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.sharingStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).SharingStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGallery).Images, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.osType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).OsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.osState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).OsState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.hyperVGeneration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).HyperVGeneration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.identifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Identifier, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.recommended": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Recommended, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.disallowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Disallowed, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.features": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Features, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.purchasePlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).PurchasePlan, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.endOfLifeDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).EndOfLifeDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.privacyStatementUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).PrivacyStatementUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.eula": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Eula, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.releaseNoteUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).ReleaseNoteUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImage).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.publishingProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).PublishingProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.storageProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).StorageProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.safetyProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).SafetyProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.securityProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).SecurityProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.replicationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).ReplicationStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.gallery.image.version.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceGalleryImageVersion).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.batchService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19774,13 +20544,17 @@ type mqlAzureSubscriptionComputeService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionComputeServiceInternal it will be used here
-	SubscriptionId     plugin.TValue[string]
-	Vms                plugin.TValue[[]any]
-	Disks              plugin.TValue[[]any]
-	DiskEncryptionSets plugin.TValue[[]any]
-	DiskAccesses       plugin.TValue[[]any]
-	Snapshots          plugin.TValue[[]any]
-	VmScaleSets        plugin.TValue[[]any]
+	SubscriptionId           plugin.TValue[string]
+	Vms                      plugin.TValue[[]any]
+	Disks                    plugin.TValue[[]any]
+	DiskEncryptionSets       plugin.TValue[[]any]
+	DiskAccesses             plugin.TValue[[]any]
+	Snapshots                plugin.TValue[[]any]
+	VmScaleSets              plugin.TValue[[]any]
+	DedicatedHostGroups      plugin.TValue[[]any]
+	ProximityPlacementGroups plugin.TValue[[]any]
+	Images                   plugin.TValue[[]any]
+	Galleries                plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionComputeService creates a new instance of this resource
@@ -19920,6 +20694,70 @@ func (c *mqlAzureSubscriptionComputeService) GetVmScaleSets() *plugin.TValue[[]a
 	})
 }
 
+func (c *mqlAzureSubscriptionComputeService) GetDedicatedHostGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DedicatedHostGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService", c.__id, "dedicatedHostGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dedicatedHostGroups()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeService) GetProximityPlacementGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProximityPlacementGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService", c.__id, "proximityPlacementGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.proximityPlacementGroups()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeService) GetImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Images, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService", c.__id, "images")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.images()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeService) GetGalleries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Galleries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService", c.__id, "galleries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.galleries()
+	})
+}
+
 // mqlAzureSubscriptionComputeServiceVm for the azure.subscription.computeService.vm resource
 type mqlAzureSubscriptionComputeServiceVm struct {
 	MqlRuntime *plugin.Runtime
@@ -19937,6 +20775,7 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	Extensions                    plugin.TValue[[]any]
 	OsDisk                        plugin.TValue[*mqlAzureSubscriptionComputeServiceDisk]
 	DataDisks                     plugin.TValue[[]any]
+	NetworkInterfaces             plugin.TValue[[]any]
 	PublicIpAddresses             plugin.TValue[[]any]
 	EncryptionAtHost              plugin.TValue[bool]
 	SecurityType                  plugin.TValue[string]
@@ -20070,6 +20909,22 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetDataDisks() *plugin.TValue[[]a
 		}
 
 		return c.dataDisks()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetNetworkInterfaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkInterfaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.vm", c.__id, "networkInterfaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkInterfaces()
 	})
 }
 
@@ -21037,6 +21892,830 @@ func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetProperties() *
 
 func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetSku() *plugin.TValue[any] {
 	return &c.Sku
+}
+
+// mqlAzureSubscriptionComputeServiceDedicatedHostGroup for the azure.subscription.computeService.dedicatedHostGroup resource
+type mqlAzureSubscriptionComputeServiceDedicatedHostGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceDedicatedHostGroupInternal it will be used here
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Location                  plugin.TValue[string]
+	Tags                      plugin.TValue[map[string]any]
+	Type                      plugin.TValue[string]
+	Zones                     plugin.TValue[[]any]
+	Properties                plugin.TValue[any]
+	PlatformFaultDomainCount  plugin.TValue[int64]
+	SupportAutomaticPlacement plugin.TValue[bool]
+	AdditionalCapabilities    plugin.TValue[any]
+	InstanceView              plugin.TValue[any]
+	Hosts                     plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionComputeServiceDedicatedHostGroup creates a new instance of this resource
+func createAzureSubscriptionComputeServiceDedicatedHostGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceDedicatedHostGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.dedicatedHostGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) MqlName() string {
+	return "azure.subscription.computeService.dedicatedHostGroup"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetZones() *plugin.TValue[[]any] {
+	return &c.Zones
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetPlatformFaultDomainCount() *plugin.TValue[int64] {
+	return &c.PlatformFaultDomainCount
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetSupportAutomaticPlacement() *plugin.TValue[bool] {
+	return &c.SupportAutomaticPlacement
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetAdditionalCapabilities() *plugin.TValue[any] {
+	return &c.AdditionalCapabilities
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetInstanceView() *plugin.TValue[any] {
+	return &c.InstanceView
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHostGroup) GetHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.dedicatedHostGroup", c.__id, "hosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hosts()
+	})
+}
+
+// mqlAzureSubscriptionComputeServiceDedicatedHost for the azure.subscription.computeService.dedicatedHost resource
+type mqlAzureSubscriptionComputeServiceDedicatedHost struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceDedicatedHostInternal it will be used here
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Location             plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
+	Type                 plugin.TValue[string]
+	Sku                  plugin.TValue[any]
+	Properties           plugin.TValue[any]
+	PlatformFaultDomain  plugin.TValue[int64]
+	AutoReplaceOnFailure plugin.TValue[bool]
+	HostId               plugin.TValue[string]
+	LicenseType          plugin.TValue[string]
+	ProvisioningTime     plugin.TValue[*time.Time]
+	ProvisioningState    plugin.TValue[string]
+	TimeCreated          plugin.TValue[*time.Time]
+	InstanceView         plugin.TValue[any]
+}
+
+// createAzureSubscriptionComputeServiceDedicatedHost creates a new instance of this resource
+func createAzureSubscriptionComputeServiceDedicatedHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceDedicatedHost{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.dedicatedHost", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) MqlName() string {
+	return "azure.subscription.computeService.dedicatedHost"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetSku() *plugin.TValue[any] {
+	return &c.Sku
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetPlatformFaultDomain() *plugin.TValue[int64] {
+	return &c.PlatformFaultDomain
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetAutoReplaceOnFailure() *plugin.TValue[bool] {
+	return &c.AutoReplaceOnFailure
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetHostId() *plugin.TValue[string] {
+	return &c.HostId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetLicenseType() *plugin.TValue[string] {
+	return &c.LicenseType
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetProvisioningTime() *plugin.TValue[*time.Time] {
+	return &c.ProvisioningTime
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetTimeCreated() *plugin.TValue[*time.Time] {
+	return &c.TimeCreated
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetInstanceView() *plugin.TValue[any] {
+	return &c.InstanceView
+}
+
+// mqlAzureSubscriptionComputeServiceProximityPlacementGroup for the azure.subscription.computeService.proximityPlacementGroup resource
+type mqlAzureSubscriptionComputeServiceProximityPlacementGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceProximityPlacementGroupInternal it will be used here
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Location                    plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	Type                        plugin.TValue[string]
+	Zones                       plugin.TValue[[]any]
+	Properties                  plugin.TValue[any]
+	ProximityPlacementGroupType plugin.TValue[string]
+	Intent                      plugin.TValue[any]
+	VirtualMachineIds           plugin.TValue[[]any]
+	VirtualMachineScaleSetIds   plugin.TValue[[]any]
+	AvailabilitySetIds          plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionComputeServiceProximityPlacementGroup creates a new instance of this resource
+func createAzureSubscriptionComputeServiceProximityPlacementGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceProximityPlacementGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.proximityPlacementGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) MqlName() string {
+	return "azure.subscription.computeService.proximityPlacementGroup"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetZones() *plugin.TValue[[]any] {
+	return &c.Zones
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetProximityPlacementGroupType() *plugin.TValue[string] {
+	return &c.ProximityPlacementGroupType
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetIntent() *plugin.TValue[any] {
+	return &c.Intent
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetVirtualMachineIds() *plugin.TValue[[]any] {
+	return &c.VirtualMachineIds
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetVirtualMachineScaleSetIds() *plugin.TValue[[]any] {
+	return &c.VirtualMachineScaleSetIds
+}
+
+func (c *mqlAzureSubscriptionComputeServiceProximityPlacementGroup) GetAvailabilitySetIds() *plugin.TValue[[]any] {
+	return &c.AvailabilitySetIds
+}
+
+// mqlAzureSubscriptionComputeServiceImage for the azure.subscription.computeService.image resource
+type mqlAzureSubscriptionComputeServiceImage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceImageInternal it will be used here
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Location               plugin.TValue[string]
+	Tags                   plugin.TValue[map[string]any]
+	Type                   plugin.TValue[string]
+	Properties             plugin.TValue[any]
+	SourceVirtualMachineId plugin.TValue[string]
+	StorageProfile         plugin.TValue[any]
+	ProvisioningState      plugin.TValue[string]
+	HyperVGeneration       plugin.TValue[string]
+}
+
+// createAzureSubscriptionComputeServiceImage creates a new instance of this resource
+func createAzureSubscriptionComputeServiceImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceImage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.image", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) MqlName() string {
+	return "azure.subscription.computeService.image"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) GetSourceVirtualMachineId() *plugin.TValue[string] {
+	return &c.SourceVirtualMachineId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) GetStorageProfile() *plugin.TValue[any] {
+	return &c.StorageProfile
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceImage) GetHyperVGeneration() *plugin.TValue[string] {
+	return &c.HyperVGeneration
+}
+
+// mqlAzureSubscriptionComputeServiceGallery for the azure.subscription.computeService.gallery resource
+type mqlAzureSubscriptionComputeServiceGallery struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceGalleryInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	Type              plugin.TValue[string]
+	Properties        plugin.TValue[any]
+	Description       plugin.TValue[string]
+	UniqueName        plugin.TValue[string]
+	ProvisioningState plugin.TValue[string]
+	SharingProfile    plugin.TValue[any]
+	SoftDeletePolicy  plugin.TValue[any]
+	SharingStatus     plugin.TValue[any]
+	Images            plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionComputeServiceGallery creates a new instance of this resource
+func createAzureSubscriptionComputeServiceGallery(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceGallery{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.gallery", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) MqlName() string {
+	return "azure.subscription.computeService.gallery"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetUniqueName() *plugin.TValue[string] {
+	return &c.UniqueName
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetSharingProfile() *plugin.TValue[any] {
+	return &c.SharingProfile
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetSoftDeletePolicy() *plugin.TValue[any] {
+	return &c.SoftDeletePolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetSharingStatus() *plugin.TValue[any] {
+	return &c.SharingStatus
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGallery) GetImages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Images, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.gallery", c.__id, "images")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.images()
+	})
+}
+
+// mqlAzureSubscriptionComputeServiceGalleryImage for the azure.subscription.computeService.gallery.image resource
+type mqlAzureSubscriptionComputeServiceGalleryImage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceGalleryImageInternal it will be used here
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Location            plugin.TValue[string]
+	Tags                plugin.TValue[map[string]any]
+	Type                plugin.TValue[string]
+	Properties          plugin.TValue[any]
+	Description         plugin.TValue[string]
+	OsType              plugin.TValue[string]
+	OsState             plugin.TValue[string]
+	HyperVGeneration    plugin.TValue[string]
+	Architecture        plugin.TValue[string]
+	Identifier          plugin.TValue[any]
+	Recommended         plugin.TValue[any]
+	Disallowed          plugin.TValue[any]
+	Features            plugin.TValue[[]any]
+	PurchasePlan        plugin.TValue[any]
+	EndOfLifeDate       plugin.TValue[*time.Time]
+	ProvisioningState   plugin.TValue[string]
+	PrivacyStatementUri plugin.TValue[string]
+	Eula                plugin.TValue[string]
+	ReleaseNoteUri      plugin.TValue[string]
+	Versions            plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionComputeServiceGalleryImage creates a new instance of this resource
+func createAzureSubscriptionComputeServiceGalleryImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceGalleryImage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.gallery.image", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) MqlName() string {
+	return "azure.subscription.computeService.gallery.image"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetOsType() *plugin.TValue[string] {
+	return &c.OsType
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetOsState() *plugin.TValue[string] {
+	return &c.OsState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetHyperVGeneration() *plugin.TValue[string] {
+	return &c.HyperVGeneration
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetArchitecture() *plugin.TValue[string] {
+	return &c.Architecture
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetIdentifier() *plugin.TValue[any] {
+	return &c.Identifier
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetRecommended() *plugin.TValue[any] {
+	return &c.Recommended
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetDisallowed() *plugin.TValue[any] {
+	return &c.Disallowed
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetFeatures() *plugin.TValue[[]any] {
+	return &c.Features
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetPurchasePlan() *plugin.TValue[any] {
+	return &c.PurchasePlan
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetEndOfLifeDate() *plugin.TValue[*time.Time] {
+	return &c.EndOfLifeDate
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetPrivacyStatementUri() *plugin.TValue[string] {
+	return &c.PrivacyStatementUri
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetEula() *plugin.TValue[string] {
+	return &c.Eula
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetReleaseNoteUri() *plugin.TValue[string] {
+	return &c.ReleaseNoteUri
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImage) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.gallery.image", c.__id, "versions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.versions()
+	})
+}
+
+// mqlAzureSubscriptionComputeServiceGalleryImageVersion for the azure.subscription.computeService.gallery.image.version resource
+type mqlAzureSubscriptionComputeServiceGalleryImageVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceGalleryImageVersionInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	Type              plugin.TValue[string]
+	Properties        plugin.TValue[any]
+	PublishingProfile plugin.TValue[any]
+	StorageProfile    plugin.TValue[any]
+	SafetyProfile     plugin.TValue[any]
+	SecurityProfile   plugin.TValue[any]
+	ReplicationStatus plugin.TValue[any]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionComputeServiceGalleryImageVersion creates a new instance of this resource
+func createAzureSubscriptionComputeServiceGalleryImageVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceGalleryImageVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.gallery.image.version", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) MqlName() string {
+	return "azure.subscription.computeService.gallery.image.version"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetPublishingProfile() *plugin.TValue[any] {
+	return &c.PublishingProfile
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetStorageProfile() *plugin.TValue[any] {
+	return &c.StorageProfile
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetSafetyProfile() *plugin.TValue[any] {
+	return &c.SafetyProfile
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetSecurityProfile() *plugin.TValue[any] {
+	return &c.SecurityProfile
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetReplicationStatus() *plugin.TValue[any] {
+	return &c.ReplicationStatus
+}
+
+func (c *mqlAzureSubscriptionComputeServiceGalleryImageVersion) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
 }
 
 // mqlAzureSubscriptionBatchService for the azure.subscription.batchService resource

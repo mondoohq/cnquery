@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.7.0",
-  "generated_at": "2026-04-28T01:31:01+00:00",
+  "generated_at": "2026-04-27T21:59:52-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/classicAdministrators/read",
@@ -18,9 +18,16 @@
     "Microsoft.Cdn/profiles/origingroups/origins/read",
     "Microsoft.Cdn/profiles/origingroups/read",
     "Microsoft.Cdn/profiles/read",
+    "Microsoft.Compute/dedicatedHostGroups/read",
+    "Microsoft.Compute/dedicatedHosts/read",
     "Microsoft.Compute/diskAccesses/read",
     "Microsoft.Compute/diskEncryptionSets/read",
     "Microsoft.Compute/disks/read",
+    "Microsoft.Compute/galleries/read",
+    "Microsoft.Compute/galleryImageVersions/read",
+    "Microsoft.Compute/galleryImages/read",
+    "Microsoft.Compute/images/read",
+    "Microsoft.Compute/proximityPlacementGroups/read",
     "Microsoft.Compute/snapshots/read",
     "Microsoft.Compute/virtualMachineScaleSetExtensions/read",
     "Microsoft.Compute/virtualMachineScaleSetVMs/read",
@@ -224,6 +231,18 @@
       "source_file": "frontdoor.go"
     },
     {
+      "permission": "Microsoft.Compute/dedicatedHostGroups/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "compute_extras.go"
+    },
+    {
+      "permission": "Microsoft.Compute/dedicatedHosts/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListByHostGroupPager",
+      "source_file": "compute_extras.go"
+    },
+    {
       "permission": "Microsoft.Compute/diskAccesses/read",
       "service": "Microsoft.Compute",
       "action": "NewListPager",
@@ -240,6 +259,36 @@
       "service": "Microsoft.Compute",
       "action": "NewListPager",
       "source_file": "compute.go"
+    },
+    {
+      "permission": "Microsoft.Compute/galleries/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListPager",
+      "source_file": "compute_extras.go"
+    },
+    {
+      "permission": "Microsoft.Compute/galleryImageVersions/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListByGalleryImagePager",
+      "source_file": "compute_extras.go"
+    },
+    {
+      "permission": "Microsoft.Compute/galleryImages/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListByGalleryPager",
+      "source_file": "compute_extras.go"
+    },
+    {
+      "permission": "Microsoft.Compute/images/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListPager",
+      "source_file": "compute_extras.go"
+    },
+    {
+      "permission": "Microsoft.Compute/proximityPlacementGroups/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "compute_extras.go"
     },
     {
       "permission": "Microsoft.Compute/snapshots/read",

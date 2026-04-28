@@ -551,6 +551,99 @@ func (a *mqlAzureSubscriptionComputeServiceDisk) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+// networkInterfaces returns the typed NIC resources attached to the VM via
+// its networkProfile. Resolves each NIC's full state by fetching it from the
+// network API in a bounded errgroup (Azure has no batch get-by-id endpoint).
+func (a *mqlAzureSubscriptionComputeServiceVm) networkInterfaces() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	token := conn.Token()
+	resourceId, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	subId := resourceId.SubscriptionID
+
+	propertiesDict := a.Properties.Data
+	data, err := json.Marshal(propertiesDict)
+	if err != nil {
+		return nil, err
+	}
+	var properties compute.VirtualMachineProperties
+	if err := json.Unmarshal(data, &properties); err != nil {
+		return nil, err
+	}
+	if properties.NetworkProfile == nil {
+		return []any{}, nil
+	}
+
+	ctx := context.Background()
+	nicClient, err := network.NewInterfacesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	type nicFetch struct {
+		rg   string
+		name string
+		slot int
+	}
+	fetches := make([]nicFetch, 0, len(properties.NetworkProfile.NetworkInterfaces))
+	for _, iface := range properties.NetworkProfile.NetworkInterfaces {
+		if iface == nil || iface.ID == nil {
+			continue
+		}
+		parsed, err := ParseResourceID(*iface.ID)
+		if err != nil {
+			return nil, err
+		}
+		name, err := parsed.Component("networkInterfaces")
+		if err != nil {
+			return nil, err
+		}
+		fetches = append(fetches, nicFetch{rg: parsed.ResourceGroup, name: name, slot: len(fetches)})
+	}
+
+	nics := make([]*network.Interface, len(fetches))
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(10)
+	for _, f := range fetches {
+		g.Go(func() error {
+			resp, err := nicClient.Get(gctx, f.rg, f.name, &network.InterfacesClientGetOptions{})
+			if err != nil {
+				// Skip NICs we can't read (403/404) instead of failing the
+				// whole call — matches the per-list pattern used elsewhere
+				// in this provider for partial-permission scenarios.
+				var respErr *azcore.ResponseError
+				if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusForbidden || respErr.StatusCode == http.StatusNotFound) {
+					log.Warn().Err(err).Str("nic", f.name).Msg("could not read network interface, skipping")
+					return nil
+				}
+				return err
+			}
+			nics[f.slot] = &resp.Interface
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(nics))
+	for _, nic := range nics {
+		if nic == nil || nic.ID == nil {
+			continue
+		}
+		mqlNic, err := azureInterfaceToMql(a.MqlRuntime, *nic)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlNic)
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionComputeServiceVm) publicIpAddresses() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	token := conn.Token()

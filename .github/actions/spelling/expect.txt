@@ -152,6 +152,7 @@ endpointslice
 ENIId
 erlang
 ERPCLOUD
+eula
 eventarc
 evs
 Exadata
