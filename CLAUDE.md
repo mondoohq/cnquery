@@ -504,6 +504,16 @@ for {
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
 - **Verify enum values in `.lr` comments:** When listing possible values in field comments, check the SDK/API docs for completeness — don't assume the set is closed.
 - **Skip deprecated SDK fields and methods.** Before exposing a proto field or calling a method, check the SDK's `// Deprecated:` comment. Deprecated fields often return empty/zero on modern instances because the data has moved elsewhere (e.g. GCP Memorystore moved `DiscoveryEndpoints`/`PscAutoConnections` into `Endpoints`). Modeling them anyway adds dead schema that looks queryable but never returns data. Same goes for `Get*`/`List*` methods marked deprecated — pick the replacement. If you genuinely need a deprecated field for backward-compat with old API responses, leave a comment explaining why.
+- **Deprecating fields and resources — use `@maturity`.** When a field or resource is being kept for backward-compat but should not be used by new audits, mark it with `@maturity("deprecated")` in the `.lr` schema and prefix the field's doc comment with `DEPRECATED:`. The comment must explain what to use instead. Don't use a separate `// Deprecated:` line — `@maturity` is the source of truth and the comment is what users see. Also valid: `@maturity("preview")` for fields whose shape may still change. Examples:
+  ```
+  // DEPRECATED: use endpointAddress, endpointPort, and endpointHostedZoneId instead
+  endpoint @maturity("deprecated") dict
+  // DEPRECATED: replaced by aws.foo.bar.newField in 13.20.0
+  legacyField @maturity("deprecated") string
+  // a whole resource can be deprecated too
+  private cloudflare.zone.plan @defaults("name") @maturity("deprecated") { ... }
+  ```
+  Keep the existing `.lr.versions` entry at its original version — deprecation does not bump the version.
 
 ### Provider Modules & Dependencies
 - Each provider in `providers/` has its own `go.mod` for isolation

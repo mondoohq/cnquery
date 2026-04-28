@@ -34,6 +34,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	"github.com/aws/aws-sdk-go-v2/service/drs"
 	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -1860,6 +1861,26 @@ func (t *AwsConnection) DocumentDB(region string) *docdb.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := docdb.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) DocumentDBElastic(region string) *docdbelastic.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_docdbelastic_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached docdbelastic client")
+		return c.Data.(*docdbelastic.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := docdbelastic.NewFromConfig(cfg)
 
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client

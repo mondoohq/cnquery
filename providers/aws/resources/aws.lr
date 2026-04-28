@@ -11077,6 +11077,16 @@ aws.documentdb @defaults("clusters") {
   instances() []aws.documentdb.instance
   // List of DocumentDB cluster snapshots
   snapshots() []aws.documentdb.snapshot
+  // List of DocumentDB cluster parameter groups
+  clusterParameterGroups() []aws.documentdb.clusterParameterGroup
+  // List of DocumentDB global clusters
+  globalClusters() []aws.documentdb.globalCluster
+  // List of pending maintenance actions across DocumentDB clusters and instances
+  pendingMaintenanceActions() []aws.documentdb.pendingMaintenanceAction
+  // List of DocumentDB elastic clusters
+  elasticClusters() []aws.documentdb.elasticCluster
+  // List of DocumentDB elastic cluster snapshots
+  elasticSnapshots() []aws.documentdb.elasticSnapshot
 }
 
 // Amazon DocumentDB cluster
@@ -11101,21 +11111,37 @@ private aws.documentdb.cluster @defaults("arn name status") {
   backupRetentionPeriod int
   // Time when the cluster was created
   createdAt time
-  // DB cluster parameter group for the DB cluster
+  // DB cluster parameter group name for the DB cluster
   clusterParameterGroup string
+  // DB cluster parameter group resource for the DB cluster
+  parameterGroup() aws.documentdb.clusterParameterGroup
   // Subnet group associated with the DB cluster
   subnetGroup string
+  // VPC associated with the DB cluster (resolved from the subnet group)
+  vpc() aws.vpc
+  // Subnets associated with the DB cluster (resolved from the subnet group)
+  subnets() []aws.vpc.subnet
   // Amazon Region-unique, immutable identifier for the DB cluster
   clusterResourceId string
   // Whether the DB cluster has deletion protection enabled
   deletionProtection bool
   // Earliest time to which a database can be restored
   earliestRestorableTime time
+  // Latest time to which a database can be restored using point-in-time restore
+  latestRestorableTime time
   // List of log types that this cluster is configured to export to CloudWatch logs
   enabledCloudwatchLogsExports []string
+  // Whether audit logs are enabled (CloudWatch Logs export contains "audit")
+  auditLogsEnabled bool
+  // Whether profiler logs are enabled (CloudWatch Logs export contains "profiler")
+  profilerLogsEnabled bool
   // Connection endpoint for the primary instance
   endpoint string
-  // Username
+  // Reader endpoint for the cluster, balancing read connections across replicas
+  readerEndpoint string
+  // Hosted zone ID of the cluster endpoint
+  hostedZoneId string
+  // Username for the master user
   masterUsername string
   // Whether the cluster has instances in multiple availability zones
   multiAZ bool
@@ -11125,6 +11151,8 @@ private aws.documentdb.cluster @defaults("arn name status") {
   preferredBackupWindow string
   // Weekly time range during which system maintenance can occur
   preferredMaintenanceWindow string
+  // Identifier of the clone group, when this cluster is a clone
+  cloneGroupId string
   // Status of the cluster
   status string
   // Whether the DB cluster is encrypted
@@ -11139,6 +11167,22 @@ private aws.documentdb.cluster @defaults("arn name status") {
   securityGroups() []aws.ec2.securitygroup
   // Network type for the cluster (IPV4 or DUAL)
   networkType string
+  // Source DB cluster, when this cluster is a read replica (null otherwise)
+  replicationSource() aws.documentdb.cluster
+  // Read replica clusters
+  readReplicas() []aws.documentdb.cluster
+  // User-supplied global cluster identifier, when this cluster participates in a global cluster
+  globalClusterIdentifier() string
+  // Global cluster this cluster participates in (null when not a member)
+  globalCluster() aws.documentdb.globalCluster
+  // Cluster member instances
+  members() []aws.documentdb.instance
+  // Writer instance for the cluster (null when no writer is currently elected)
+  writer() aws.documentdb.instance
+  // IAM roles associated with the cluster
+  iamRoles() []aws.iam.role
+  // Pending maintenance actions scheduled for this cluster
+  pendingMaintenanceActions() []aws.documentdb.pendingMaintenanceAction
 }
 
 // Amazon DocumentDB instance
@@ -11147,8 +11191,14 @@ private aws.documentdb.instance @defaults("arn name status") {
   arn string
   // Name of the instance
   name string
+  // Region-unique, immutable identifier for the DB instance
+  dbiResourceId string
   // User-supplied DB cluster identifier
   clusterIdentifier string
+  // Cluster the instance belongs to
+  cluster() aws.documentdb.cluster
+  // Whether this instance is the cluster writer
+  isClusterWriter bool
   // Whether minor version patches are applied automatically
   autoMinorVersionUpgrade bool
   // Name of the availability zone
@@ -11162,7 +11212,13 @@ private aws.documentdb.instance @defaults("arn name status") {
   // List of log types that this DB instance is configured to export to CloudWatch logs
   enabledCloudwatchLogsExports []string
   // Connection endpoint
-  endpoint dict
+  endpoint @maturity("deprecated") dict
+  // DNS address of the connection endpoint
+  endpointAddress string
+  // Port on which the database engine is listening
+  endpointPort int
+  // Hosted zone ID of the connection endpoint
+  endpointHostedZoneId string
   // Name of the database engine
   engine string
   // Database engine version
@@ -11183,8 +11239,26 @@ private aws.documentdb.instance @defaults("arn name status") {
   storageEncrypted bool
   // ID of the Certificate Authority
   certificateAuthority string
+  // CA certificate identifier currently in use
+  caCertificateDetailsCAIdentifier string
+  // Date through which the CA certificate is valid
+  caCertificateValidTill time
   // Whether the instance is publicly accessible
   publiclyAccessible bool
+  // Whether tags are copied from the instance to snapshots
+  copyTagsToSnapshot bool
+  // Latest time to which a database can be restored using point-in-time restore
+  latestRestorableTime time
+  // Whether Performance Insights is enabled
+  performanceInsightsEnabled bool
+  // KMS key used to encrypt Performance Insights data
+  performanceInsightsKmsKey() aws.kms.key
+  // VPC security groups associated with the instance
+  securityGroups() []aws.ec2.securitygroup
+  // Pending maintenance actions scheduled for this instance
+  pendingMaintenanceActions() []aws.documentdb.pendingMaintenanceAction
+  // Pending modifications applied at the next maintenance window
+  pendingModifiedValues map[string]string
   // Tags for the instance
   tags() map[string]string
 }
@@ -11197,6 +11271,8 @@ private aws.documentdb.snapshot @defaults("arn status createdAt") {
   id string
   // DB cluster identifier
   clusterIdentifier string
+  // Source cluster (null when the source cluster has been deleted)
+  cluster() aws.documentdb.cluster
   // Database engine name
   engine string
   // Database engine version
@@ -11213,6 +11289,12 @@ private aws.documentdb.snapshot @defaults("arn status createdAt") {
   storageType string
   // KMS key used for the encrypted snapshot
   kmsKey() aws.kms.key
+  // Master username from the source cluster
+  masterUsername string
+  // AWS account IDs the snapshot is shared with ("all" indicates the snapshot is public)
+  sharedWith() []string
+  // Whether the snapshot is shared publicly (sharedWith contains "all")
+  isPublic() bool
   // Availability zones for the snapshot
   availabilityZones []string
   // VPC associated with the snapshot
@@ -11225,6 +11307,170 @@ private aws.documentdb.snapshot @defaults("arn status createdAt") {
   clusterCreatedAt time
   // Region where the snapshot exists
   region string
+}
+
+// Amazon DocumentDB cluster parameter group
+private aws.documentdb.clusterParameterGroup @defaults("name family region") {
+  // ARN for the parameter group
+  arn string
+  // Parameter group name
+  name string
+  // DB parameter group family
+  family string
+  // Description of the parameter group
+  description string
+  // Region where the parameter group exists
+  region string
+  // Parameters in the group
+  parameters() []aws.documentdb.clusterParameter
+}
+
+// Parameter belonging to a DocumentDB cluster parameter group
+private aws.documentdb.clusterParameter @defaults("name value") {
+  // Parameter name
+  name string
+  // Parameter value
+  value string
+  // Allowed values for the parameter
+  allowedValues string
+  // When parameter changes are applied (immediate or pending-reboot)
+  applyMethod string
+  // Apply type (static or dynamic)
+  applyType string
+  // Parameter data type
+  dataType string
+  // Parameter description
+  description string
+  // Whether the parameter can be modified
+  isModifiable bool
+  // Earliest engine version that supports the parameter
+  minimumEngineVersion string
+  // Source of the parameter value (system, user, engine-default)
+  source string
+}
+
+// Amazon DocumentDB global cluster
+private aws.documentdb.globalCluster @defaults("globalClusterIdentifier status") {
+  // ARN of the global cluster
+  arn string
+  // User-supplied global cluster identifier
+  globalClusterIdentifier string
+  // Status of the global cluster
+  status string
+  // Database engine name
+  engine string
+  // Database engine version
+  engineVersion string
+  // Whether deletion protection is enabled
+  deletionProtection bool
+  // Default database name (when set at cluster creation)
+  databaseName string
+  // Whether the global cluster is encrypted at rest
+  storageEncrypted bool
+  // Region-unique, immutable identifier for the global cluster
+  globalClusterResourceId string
+  // Members of the global cluster
+  members() []aws.documentdb.globalCluster.member
+}
+
+// Member of a DocumentDB global cluster
+private aws.documentdb.globalCluster.member @defaults("isWriter") {
+  // Cluster that participates as the global cluster member
+  cluster() aws.documentdb.cluster
+  // Whether this member is the global writer
+  isWriter bool
+  // Reader cluster members (typed references to clusters that read from this writer)
+  readers() []aws.documentdb.cluster
+  // Global write forwarding status (one of: enabled, disabled, enabling, disabling, unknown)
+  globalWriteForwardingStatus string
+}
+
+// Pending maintenance action for a DocumentDB cluster or instance
+private aws.documentdb.pendingMaintenanceAction @defaults("resourceArn action") {
+  // ARN of the resource the action targets
+  resourceArn string
+  // Action to be performed (for example, system-update)
+  action string
+  // Description of the action
+  description string
+  // Date after which the action is automatically applied
+  autoAppliedAfterDate time
+  // Date the action is currently scheduled for
+  currentApplyDate time
+  // Date the action is forced to apply, regardless of opt-in status
+  forcedApplyDate time
+  // Opt-in status for the action (immediate, next-maintenance, undecided)
+  optInStatus string
+}
+
+// Amazon DocumentDB elastic cluster
+private aws.documentdb.elasticCluster @defaults("name status region") {
+  // ARN of the elastic cluster
+  arn string
+  // Cluster name
+  name string
+  // Status of the cluster
+  status string
+  // Username of the admin user
+  adminUserName string
+  // Authentication type for the admin user (PLAIN_TEXT or SECRET_ARN). PLAIN_TEXT is an audit signal.
+  authType string
+  // KMS key used to encrypt cluster data at rest
+  kmsKey() aws.kms.key
+  // Capacity (vCPUs) of each shard
+  shardCapacity int
+  // Number of shards in the cluster
+  shardCount int
+  // Number of replica instances per shard
+  shardInstanceCount int
+  // Number of days automatic backups are retained
+  backupRetentionPeriod int
+  // Daily time range during which automated backups are created
+  preferredBackupWindow string
+  // Weekly time range during which system maintenance can occur
+  preferredMaintenanceWindow string
+  // Subnets the cluster is deployed into
+  subnets() []aws.vpc.subnet
+  // VPC security groups associated with the cluster
+  securityGroups() []aws.ec2.securitygroup
+  // Time when the cluster was created (string as returned by the elastic SDK)
+  createdAt string
+  // Cluster connection endpoint
+  endpoint string
+  // Region where the cluster exists
+  region string
+  // Tags for the cluster
+  tags() map[string]string
+  // Snapshots of this cluster
+  snapshots() []aws.documentdb.elasticSnapshot
+}
+
+// Amazon DocumentDB elastic cluster snapshot
+private aws.documentdb.elasticSnapshot @defaults("name status snapshotType") {
+  // ARN of the snapshot
+  arn string
+  // Snapshot name
+  name string
+  // Source elastic cluster (null when the source cluster has been deleted)
+  cluster() aws.documentdb.elasticCluster
+  // Snapshot status
+  status string
+  // Snapshot type (MANUAL or AUTOMATED)
+  snapshotType string
+  // Time when the snapshot was created (string as returned by the elastic SDK)
+  snapshotCreationTime string
+  // KMS key used to encrypt the snapshot
+  kmsKey() aws.kms.key
+  // Admin user name from the source cluster
+  adminUserName string
+  // Subnets from the source cluster
+  subnets() []aws.vpc.subnet
+  // VPC security groups from the source cluster
+  securityGroups() []aws.ec2.securitygroup
+  // Region where the snapshot exists
+  region string
+  // Tags for the snapshot
+  tags() map[string]string
 }
 
 // Amazon Timestream for LiveAnalytics

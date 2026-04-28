@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.18.0",
-  "generated_at": "2026-04-27T14:12:24-07:00",
+  "version": "13.19.0",
+  "generated_at": "2026-04-28T08:46:40-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -104,6 +104,8 @@
     "dax:DescribeClusters",
     "dax:ListTags",
     "dms:DescribeReplicationInstances",
+    "docdbelastic:ListClusterSnapshots",
+    "docdbelastic:ListClusters",
     "drs:DescribeJobs",
     "drs:DescribeSourceServers",
     "drs:GetLaunchConfiguration",
@@ -430,7 +432,9 @@
     "rds:DescribeDBProxies",
     "rds:DescribeDBSnapshotAttributes",
     "rds:DescribeDBSnapshots",
+    "rds:DescribeDBSubnetGroups",
     "rds:DescribeEventSubscriptions",
+    "rds:DescribeGlobalClusters",
     "rds:DescribePendingMaintenanceActions",
     "rds:ListTagsForResource",
     "redshift:DescribeClusterParameters",
@@ -1259,6 +1263,18 @@
       "service": "dms",
       "action": "DescribeReplicationInstances",
       "source_file": "aws_dms.go"
+    },
+    {
+      "permission": "docdbelastic:ListClusterSnapshots",
+      "service": "docdbelastic",
+      "action": "ListClusterSnapshots",
+      "source_file": "aws_documentdb.go"
+    },
+    {
+      "permission": "docdbelastic:ListClusters",
+      "service": "docdbelastic",
+      "action": "ListClusters",
+      "source_file": "aws_documentdb.go"
     },
     {
       "permission": "drs:DescribeJobs",
@@ -3208,13 +3224,31 @@
       "permission": "rds:DescribeDBClusterParameterGroups",
       "service": "rds",
       "action": "DescribeDBClusterParameterGroups",
+      "source_file": "aws_documentdb.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusterParameterGroups",
+      "service": "rds",
+      "action": "DescribeDBClusterParameterGroups",
       "source_file": "aws_rds.go"
     },
     {
       "permission": "rds:DescribeDBClusterParameters",
       "service": "rds",
       "action": "DescribeDBClusterParameters",
+      "source_file": "aws_documentdb.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusterParameters",
+      "service": "rds",
+      "action": "DescribeDBClusterParameters",
       "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeDBClusterSnapshotAttributes",
+      "service": "rds",
+      "action": "DescribeDBClusterSnapshotAttributes",
+      "source_file": "aws_documentdb.go"
     },
     {
       "permission": "rds:DescribeDBClusterSnapshotAttributes",
@@ -3313,10 +3347,28 @@
       "source_file": "aws_rds.go"
     },
     {
+      "permission": "rds:DescribeDBSubnetGroups",
+      "service": "rds",
+      "action": "DescribeDBSubnetGroups",
+      "source_file": "aws_documentdb.go"
+    },
+    {
       "permission": "rds:DescribeEventSubscriptions",
       "service": "rds",
       "action": "DescribeEventSubscriptions",
       "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeGlobalClusters",
+      "service": "rds",
+      "action": "DescribeGlobalClusters",
+      "source_file": "aws_documentdb.go"
+    },
+    {
+      "permission": "rds:DescribePendingMaintenanceActions",
+      "service": "rds",
+      "action": "DescribePendingMaintenanceActions",
+      "source_file": "aws_documentdb.go"
     },
     {
       "permission": "rds:DescribePendingMaintenanceActions",

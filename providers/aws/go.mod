@@ -37,6 +37,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.17
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.17
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.48.14
+	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.20.14
 	github.com/aws/aws-sdk-go-v2/service/drs v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.9
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.2

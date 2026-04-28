@@ -498,6 +498,13 @@ const (
 	ResourceAwsDocumentdbCluster                                                string = "aws.documentdb.cluster"
 	ResourceAwsDocumentdbInstance                                               string = "aws.documentdb.instance"
 	ResourceAwsDocumentdbSnapshot                                               string = "aws.documentdb.snapshot"
+	ResourceAwsDocumentdbClusterParameterGroup                                  string = "aws.documentdb.clusterParameterGroup"
+	ResourceAwsDocumentdbClusterParameter                                       string = "aws.documentdb.clusterParameter"
+	ResourceAwsDocumentdbGlobalCluster                                          string = "aws.documentdb.globalCluster"
+	ResourceAwsDocumentdbGlobalClusterMember                                    string = "aws.documentdb.globalCluster.member"
+	ResourceAwsDocumentdbPendingMaintenanceAction                               string = "aws.documentdb.pendingMaintenanceAction"
+	ResourceAwsDocumentdbElasticCluster                                         string = "aws.documentdb.elasticCluster"
+	ResourceAwsDocumentdbElasticSnapshot                                        string = "aws.documentdb.elasticSnapshot"
 	ResourceAwsTimestreamLiveanalytics                                          string = "aws.timestream.liveanalytics"
 	ResourceAwsTimestreamLiveanalyticsDatabase                                  string = "aws.timestream.liveanalytics.database"
 	ResourceAwsTimestreamLiveanalyticsTable                                     string = "aws.timestream.liveanalytics.table"
@@ -2609,6 +2616,34 @@ func init() {
 		"aws.documentdb.snapshot": {
 			// to override args, implement: initAwsDocumentdbSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDocumentdbSnapshot,
+		},
+		"aws.documentdb.clusterParameterGroup": {
+			Init:   initAwsDocumentdbClusterParameterGroup,
+			Create: createAwsDocumentdbClusterParameterGroup,
+		},
+		"aws.documentdb.clusterParameter": {
+			// to override args, implement: initAwsDocumentdbClusterParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDocumentdbClusterParameter,
+		},
+		"aws.documentdb.globalCluster": {
+			Init:   initAwsDocumentdbGlobalCluster,
+			Create: createAwsDocumentdbGlobalCluster,
+		},
+		"aws.documentdb.globalCluster.member": {
+			// to override args, implement: initAwsDocumentdbGlobalClusterMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDocumentdbGlobalClusterMember,
+		},
+		"aws.documentdb.pendingMaintenanceAction": {
+			// to override args, implement: initAwsDocumentdbPendingMaintenanceAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDocumentdbPendingMaintenanceAction,
+		},
+		"aws.documentdb.elasticCluster": {
+			Init:   initAwsDocumentdbElasticCluster,
+			Create: createAwsDocumentdbElasticCluster,
+		},
+		"aws.documentdb.elasticSnapshot": {
+			// to override args, implement: initAwsDocumentdbElasticSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDocumentdbElasticSnapshot,
 		},
 		"aws.timestream.liveanalytics": {
 			// to override args, implement: initAwsTimestreamLiveanalytics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -17034,6 +17069,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.documentdb.snapshots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdb).GetSnapshots()).ToDataRes(types.Array(types.Resource("aws.documentdb.snapshot")))
 	},
+	"aws.documentdb.clusterParameterGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdb).GetClusterParameterGroups()).ToDataRes(types.Array(types.Resource("aws.documentdb.clusterParameterGroup")))
+	},
+	"aws.documentdb.globalClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdb).GetGlobalClusters()).ToDataRes(types.Array(types.Resource("aws.documentdb.globalCluster")))
+	},
+	"aws.documentdb.pendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdb).GetPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.documentdb.pendingMaintenanceAction")))
+	},
+	"aws.documentdb.elasticClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdb).GetElasticClusters()).ToDataRes(types.Array(types.Resource("aws.documentdb.elasticCluster")))
+	},
+	"aws.documentdb.elasticSnapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdb).GetElasticSnapshots()).ToDataRes(types.Array(types.Resource("aws.documentdb.elasticSnapshot")))
+	},
 	"aws.documentdb.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetArn()).ToDataRes(types.String)
 	},
@@ -17067,8 +17117,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.documentdb.cluster.clusterParameterGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetClusterParameterGroup()).ToDataRes(types.String)
 	},
+	"aws.documentdb.cluster.parameterGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetParameterGroup()).ToDataRes(types.Resource("aws.documentdb.clusterParameterGroup"))
+	},
 	"aws.documentdb.cluster.subnetGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetSubnetGroup()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.documentdb.cluster.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
 	},
 	"aws.documentdb.cluster.clusterResourceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetClusterResourceId()).ToDataRes(types.String)
@@ -17079,11 +17138,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.documentdb.cluster.earliestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetEarliestRestorableTime()).ToDataRes(types.Time)
 	},
+	"aws.documentdb.cluster.latestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetLatestRestorableTime()).ToDataRes(types.Time)
+	},
 	"aws.documentdb.cluster.enabledCloudwatchLogsExports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetEnabledCloudwatchLogsExports()).ToDataRes(types.Array(types.String))
 	},
+	"aws.documentdb.cluster.auditLogsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetAuditLogsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.cluster.profilerLogsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetProfilerLogsEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.documentdb.cluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.readerEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetReaderEndpoint()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetHostedZoneId()).ToDataRes(types.String)
 	},
 	"aws.documentdb.cluster.masterUsername": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetMasterUsername()).ToDataRes(types.String)
@@ -17099,6 +17173,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.documentdb.cluster.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.cloneGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetCloneGroupId()).ToDataRes(types.String)
 	},
 	"aws.documentdb.cluster.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetStatus()).ToDataRes(types.String)
@@ -17121,14 +17198,47 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.documentdb.cluster.networkType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbCluster).GetNetworkType()).ToDataRes(types.String)
 	},
+	"aws.documentdb.cluster.replicationSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetReplicationSource()).ToDataRes(types.Resource("aws.documentdb.cluster"))
+	},
+	"aws.documentdb.cluster.readReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetReadReplicas()).ToDataRes(types.Array(types.Resource("aws.documentdb.cluster")))
+	},
+	"aws.documentdb.cluster.globalClusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetGlobalClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.documentdb.cluster.globalCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetGlobalCluster()).ToDataRes(types.Resource("aws.documentdb.globalCluster"))
+	},
+	"aws.documentdb.cluster.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetMembers()).ToDataRes(types.Array(types.Resource("aws.documentdb.instance")))
+	},
+	"aws.documentdb.cluster.writer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetWriter()).ToDataRes(types.Resource("aws.documentdb.instance"))
+	},
+	"aws.documentdb.cluster.iamRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetIamRoles()).ToDataRes(types.Array(types.Resource("aws.iam.role")))
+	},
+	"aws.documentdb.cluster.pendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbCluster).GetPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.documentdb.pendingMaintenanceAction")))
+	},
 	"aws.documentdb.instance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetArn()).ToDataRes(types.String)
 	},
 	"aws.documentdb.instance.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetName()).ToDataRes(types.String)
 	},
+	"aws.documentdb.instance.dbiResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetDbiResourceId()).ToDataRes(types.String)
+	},
 	"aws.documentdb.instance.clusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetCluster()).ToDataRes(types.Resource("aws.documentdb.cluster"))
+	},
+	"aws.documentdb.instance.isClusterWriter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetIsClusterWriter()).ToDataRes(types.Bool)
 	},
 	"aws.documentdb.instance.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
@@ -17150,6 +17260,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.documentdb.instance.endpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetEndpoint()).ToDataRes(types.Dict)
+	},
+	"aws.documentdb.instance.endpointAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetEndpointAddress()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.endpointPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetEndpointPort()).ToDataRes(types.Int)
+	},
+	"aws.documentdb.instance.endpointHostedZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetEndpointHostedZoneId()).ToDataRes(types.String)
 	},
 	"aws.documentdb.instance.engine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetEngine()).ToDataRes(types.String)
@@ -17181,8 +17300,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.documentdb.instance.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetCertificateAuthority()).ToDataRes(types.String)
 	},
+	"aws.documentdb.instance.caCertificateDetailsCAIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetCaCertificateDetailsCAIdentifier()).ToDataRes(types.String)
+	},
+	"aws.documentdb.instance.caCertificateValidTill": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetCaCertificateValidTill()).ToDataRes(types.Time)
+	},
 	"aws.documentdb.instance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.instance.copyTagsToSnapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetCopyTagsToSnapshot()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.instance.latestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetLatestRestorableTime()).ToDataRes(types.Time)
+	},
+	"aws.documentdb.instance.performanceInsightsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetPerformanceInsightsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.instance.performanceInsightsKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetPerformanceInsightsKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.documentdb.instance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.documentdb.instance.pendingMaintenanceActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetPendingMaintenanceActions()).ToDataRes(types.Array(types.Resource("aws.documentdb.pendingMaintenanceAction")))
+	},
+	"aws.documentdb.instance.pendingModifiedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbInstance).GetPendingModifiedValues()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.documentdb.instance.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -17195,6 +17341,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.documentdb.snapshot.clusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbSnapshot).GetClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.documentdb.snapshot.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbSnapshot).GetCluster()).ToDataRes(types.Resource("aws.documentdb.cluster"))
 	},
 	"aws.documentdb.snapshot.engine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbSnapshot).GetEngine()).ToDataRes(types.String)
@@ -17220,6 +17369,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.documentdb.snapshot.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbSnapshot).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
+	"aws.documentdb.snapshot.masterUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbSnapshot).GetMasterUsername()).ToDataRes(types.String)
+	},
+	"aws.documentdb.snapshot.sharedWith": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbSnapshot).GetSharedWith()).ToDataRes(types.Array(types.String))
+	},
+	"aws.documentdb.snapshot.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbSnapshot).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.documentdb.snapshot.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbSnapshot).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
 	},
@@ -17237,6 +17395,210 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.documentdb.snapshot.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbSnapshot).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameterGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameterGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameterGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameterGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameterGroup.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameterGroup).GetFamily()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameterGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameterGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameterGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameterGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameterGroup.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameterGroup).GetParameters()).ToDataRes(types.Array(types.Resource("aws.documentdb.clusterParameter")))
+	},
+	"aws.documentdb.clusterParameter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameter).GetName()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameter.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameter).GetValue()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameter.allowedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameter).GetAllowedValues()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameter.applyMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameter).GetApplyMethod()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameter.applyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameter).GetApplyType()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameter.dataType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameter).GetDataType()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameter.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameter).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameter.isModifiable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameter).GetIsModifiable()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.clusterParameter.minimumEngineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameter).GetMinimumEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.documentdb.clusterParameter.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbClusterParameter).GetSource()).ToDataRes(types.String)
+	},
+	"aws.documentdb.globalCluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.documentdb.globalCluster.globalClusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalCluster).GetGlobalClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.documentdb.globalCluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.documentdb.globalCluster.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalCluster).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.documentdb.globalCluster.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalCluster).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.documentdb.globalCluster.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalCluster).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.globalCluster.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalCluster).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"aws.documentdb.globalCluster.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalCluster).GetStorageEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.globalCluster.globalClusterResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalCluster).GetGlobalClusterResourceId()).ToDataRes(types.String)
+	},
+	"aws.documentdb.globalCluster.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalCluster).GetMembers()).ToDataRes(types.Array(types.Resource("aws.documentdb.globalCluster.member")))
+	},
+	"aws.documentdb.globalCluster.member.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalClusterMember).GetCluster()).ToDataRes(types.Resource("aws.documentdb.cluster"))
+	},
+	"aws.documentdb.globalCluster.member.isWriter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalClusterMember).GetIsWriter()).ToDataRes(types.Bool)
+	},
+	"aws.documentdb.globalCluster.member.readers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalClusterMember).GetReaders()).ToDataRes(types.Array(types.Resource("aws.documentdb.cluster")))
+	},
+	"aws.documentdb.globalCluster.member.globalWriteForwardingStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbGlobalClusterMember).GetGlobalWriteForwardingStatus()).ToDataRes(types.String)
+	},
+	"aws.documentdb.pendingMaintenanceAction.resourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbPendingMaintenanceAction).GetResourceArn()).ToDataRes(types.String)
+	},
+	"aws.documentdb.pendingMaintenanceAction.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbPendingMaintenanceAction).GetAction()).ToDataRes(types.String)
+	},
+	"aws.documentdb.pendingMaintenanceAction.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbPendingMaintenanceAction).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.documentdb.pendingMaintenanceAction.autoAppliedAfterDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbPendingMaintenanceAction).GetAutoAppliedAfterDate()).ToDataRes(types.Time)
+	},
+	"aws.documentdb.pendingMaintenanceAction.currentApplyDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbPendingMaintenanceAction).GetCurrentApplyDate()).ToDataRes(types.Time)
+	},
+	"aws.documentdb.pendingMaintenanceAction.forcedApplyDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbPendingMaintenanceAction).GetForcedApplyDate()).ToDataRes(types.Time)
+	},
+	"aws.documentdb.pendingMaintenanceAction.optInStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbPendingMaintenanceAction).GetOptInStatus()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetName()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.adminUserName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetAdminUserName()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetAuthType()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.documentdb.elasticCluster.shardCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetShardCapacity()).ToDataRes(types.Int)
+	},
+	"aws.documentdb.elasticCluster.shardCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetShardCount()).ToDataRes(types.Int)
+	},
+	"aws.documentdb.elasticCluster.shardInstanceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetShardInstanceCount()).ToDataRes(types.Int)
+	},
+	"aws.documentdb.elasticCluster.backupRetentionPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetBackupRetentionPeriod()).ToDataRes(types.Int)
+	},
+	"aws.documentdb.elasticCluster.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetPreferredBackupWindow()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.documentdb.elasticCluster.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.documentdb.elasticCluster.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetCreatedAt()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticCluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.documentdb.elasticCluster.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticCluster).GetSnapshots()).ToDataRes(types.Array(types.Resource("aws.documentdb.elasticSnapshot")))
+	},
+	"aws.documentdb.elasticSnapshot.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetArn()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticSnapshot.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetName()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticSnapshot.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetCluster()).ToDataRes(types.Resource("aws.documentdb.elasticCluster"))
+	},
+	"aws.documentdb.elasticSnapshot.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticSnapshot.snapshotType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetSnapshotType()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticSnapshot.snapshotCreationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetSnapshotCreationTime()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticSnapshot.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.documentdb.elasticSnapshot.adminUserName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetAdminUserName()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticSnapshot.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.documentdb.elasticSnapshot.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.documentdb.elasticSnapshot.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.documentdb.elasticSnapshot.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDocumentdbElasticSnapshot).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.timestream.liveanalytics.databases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsTimestreamLiveanalytics).GetDatabases()).ToDataRes(types.Array(types.Resource("aws.timestream.liveanalytics.database")))
@@ -42301,6 +42663,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDocumentdb).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.documentdb.clusterParameterGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdb).ClusterParameterGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdb).GlobalClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.pendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdb).PendingMaintenanceActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdb).ElasticClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdb).ElasticSnapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.documentdb.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbCluster).__id, ok = v.Value.(string)
 		return
@@ -42349,8 +42731,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDocumentdbCluster).ClusterParameterGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.documentdb.cluster.parameterGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).ParameterGroup, ok = plugin.RawToTValue[*mqlAwsDocumentdbClusterParameterGroup](v.Value, v.Error)
+		return
+	},
 	"aws.documentdb.cluster.subnetGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbCluster).SubnetGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.cluster.clusterResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42365,12 +42759,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDocumentdbCluster).EarliestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.documentdb.cluster.latestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).LatestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.documentdb.cluster.enabledCloudwatchLogsExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbCluster).EnabledCloudwatchLogsExports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.documentdb.cluster.auditLogsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).AuditLogsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.profilerLogsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).ProfilerLogsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.documentdb.cluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbCluster).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.readerEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).ReaderEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).HostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.cluster.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42391,6 +42805,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.documentdb.cluster.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbCluster).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.cloneGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).CloneGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.cluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42421,6 +42839,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDocumentdbCluster).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.documentdb.cluster.replicationSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).ReplicationSource, ok = plugin.RawToTValue[*mqlAwsDocumentdbCluster](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.readReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).ReadReplicas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.globalClusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).GlobalClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.globalCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).GlobalCluster, ok = plugin.RawToTValue[*mqlAwsDocumentdbGlobalCluster](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.writer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).Writer, ok = plugin.RawToTValue[*mqlAwsDocumentdbInstance](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.iamRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).IamRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.cluster.pendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbCluster).PendingMaintenanceActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.documentdb.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbInstance).__id, ok = v.Value.(string)
 		return
@@ -42433,8 +42883,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDocumentdbInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.documentdb.instance.dbiResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).DbiResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.documentdb.instance.clusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbInstance).ClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).Cluster, ok = plugin.RawToTValue[*mqlAwsDocumentdbCluster](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.isClusterWriter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).IsClusterWriter, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.instance.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42463,6 +42925,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.documentdb.instance.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbInstance).Endpoint, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.endpointAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).EndpointAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.endpointPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).EndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.endpointHostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).EndpointHostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.instance.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42505,8 +42979,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDocumentdbInstance).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.documentdb.instance.caCertificateDetailsCAIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).CaCertificateDetailsCAIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.caCertificateValidTill": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).CaCertificateValidTill, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.documentdb.instance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbInstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.copyTagsToSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).CopyTagsToSnapshot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.latestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).LatestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.performanceInsightsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).PerformanceInsightsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.performanceInsightsKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).PerformanceInsightsKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.pendingMaintenanceActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).PendingMaintenanceActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.instance.pendingModifiedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbInstance).PendingModifiedValues, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42527,6 +43037,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.documentdb.snapshot.clusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbSnapshot).ClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.snapshot.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbSnapshot).Cluster, ok = plugin.RawToTValue[*mqlAwsDocumentdbCluster](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.snapshot.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42561,6 +43075,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDocumentdbSnapshot).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
+	"aws.documentdb.snapshot.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbSnapshot).MasterUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.snapshot.sharedWith": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbSnapshot).SharedWith, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.snapshot.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbSnapshot).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.documentdb.snapshot.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbSnapshot).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -42583,6 +43109,306 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.documentdb.snapshot.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbSnapshot).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameterGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameterGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.documentdb.clusterParameterGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameterGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameterGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameterGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameterGroup.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameterGroup).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameterGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameterGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameterGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameterGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameterGroup.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameterGroup).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.documentdb.clusterParameter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameter.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameter.allowedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).AllowedValues, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameter.applyMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).ApplyMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameter.applyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).ApplyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameter.dataType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).DataType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameter.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameter.isModifiable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).IsModifiable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameter.minimumEngineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).MinimumEngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.clusterParameter.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbClusterParameter).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.documentdb.globalCluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.globalClusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).GlobalClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.globalClusterResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).GlobalClusterResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalCluster).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalClusterMember).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.documentdb.globalCluster.member.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalClusterMember).Cluster, ok = plugin.RawToTValue[*mqlAwsDocumentdbCluster](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.member.isWriter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalClusterMember).IsWriter, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.member.readers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalClusterMember).Readers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.globalCluster.member.globalWriteForwardingStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbGlobalClusterMember).GlobalWriteForwardingStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.pendingMaintenanceAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbPendingMaintenanceAction).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.documentdb.pendingMaintenanceAction.resourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbPendingMaintenanceAction).ResourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.pendingMaintenanceAction.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbPendingMaintenanceAction).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.pendingMaintenanceAction.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbPendingMaintenanceAction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.pendingMaintenanceAction.autoAppliedAfterDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbPendingMaintenanceAction).AutoAppliedAfterDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.pendingMaintenanceAction.currentApplyDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbPendingMaintenanceAction).CurrentApplyDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.pendingMaintenanceAction.forcedApplyDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbPendingMaintenanceAction).ForcedApplyDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.pendingMaintenanceAction.optInStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbPendingMaintenanceAction).OptInStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.documentdb.elasticCluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.adminUserName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).AdminUserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.shardCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).ShardCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.shardCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).ShardCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.shardInstanceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).ShardInstanceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.backupRetentionPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).BackupRetentionPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).PreferredBackupWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).CreatedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticCluster.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticCluster).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).Cluster, ok = plugin.RawToTValue[*mqlAwsDocumentdbElasticCluster](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.snapshotType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).SnapshotType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.snapshotCreationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).SnapshotCreationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.adminUserName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).AdminUserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.documentdb.elasticSnapshot.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDocumentdbElasticSnapshot).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.timestream.liveanalytics.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -102877,10 +103703,15 @@ func (c *mqlAwsCognitoIdentityPool) GetTags() *plugin.TValue[map[string]any] {
 type mqlAwsDocumentdb struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsDocumentdbInternal it will be used here
-	Clusters  plugin.TValue[[]any]
-	Instances plugin.TValue[[]any]
-	Snapshots plugin.TValue[[]any]
+	mqlAwsDocumentdbInternal
+	Clusters                  plugin.TValue[[]any]
+	Instances                 plugin.TValue[[]any]
+	Snapshots                 plugin.TValue[[]any]
+	ClusterParameterGroups    plugin.TValue[[]any]
+	GlobalClusters            plugin.TValue[[]any]
+	PendingMaintenanceActions plugin.TValue[[]any]
+	ElasticClusters           plugin.TValue[[]any]
+	ElasticSnapshots          plugin.TValue[[]any]
 }
 
 // createAwsDocumentdb creates a new instance of this resource
@@ -102968,6 +103799,86 @@ func (c *mqlAwsDocumentdb) GetSnapshots() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsDocumentdb) GetClusterParameterGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClusterParameterGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb", c.__id, "clusterParameterGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clusterParameterGroups()
+	})
+}
+
+func (c *mqlAwsDocumentdb) GetGlobalClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GlobalClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb", c.__id, "globalClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.globalClusters()
+	})
+}
+
+func (c *mqlAwsDocumentdb) GetPendingMaintenanceActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PendingMaintenanceActions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb", c.__id, "pendingMaintenanceActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pendingMaintenanceActions()
+	})
+}
+
+func (c *mqlAwsDocumentdb) GetElasticClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ElasticClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb", c.__id, "elasticClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.elasticClusters()
+	})
+}
+
+func (c *mqlAwsDocumentdb) GetElasticSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ElasticSnapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb", c.__id, "elasticSnapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.elasticSnapshots()
+	})
+}
+
 // mqlAwsDocumentdbCluster for the aws.documentdb.cluster resource
 type mqlAwsDocumentdbCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -102984,17 +103895,26 @@ type mqlAwsDocumentdbCluster struct {
 	BackupRetentionPeriod        plugin.TValue[int64]
 	CreatedAt                    plugin.TValue[*time.Time]
 	ClusterParameterGroup        plugin.TValue[string]
+	ParameterGroup               plugin.TValue[*mqlAwsDocumentdbClusterParameterGroup]
 	SubnetGroup                  plugin.TValue[string]
+	Vpc                          plugin.TValue[*mqlAwsVpc]
+	Subnets                      plugin.TValue[[]any]
 	ClusterResourceId            plugin.TValue[string]
 	DeletionProtection           plugin.TValue[bool]
 	EarliestRestorableTime       plugin.TValue[*time.Time]
+	LatestRestorableTime         plugin.TValue[*time.Time]
 	EnabledCloudwatchLogsExports plugin.TValue[[]any]
+	AuditLogsEnabled             plugin.TValue[bool]
+	ProfilerLogsEnabled          plugin.TValue[bool]
 	Endpoint                     plugin.TValue[string]
+	ReaderEndpoint               plugin.TValue[string]
+	HostedZoneId                 plugin.TValue[string]
 	MasterUsername               plugin.TValue[string]
 	MultiAZ                      plugin.TValue[bool]
 	Port                         plugin.TValue[int64]
 	PreferredBackupWindow        plugin.TValue[string]
 	PreferredMaintenanceWindow   plugin.TValue[string]
+	CloneGroupId                 plugin.TValue[string]
 	Status                       plugin.TValue[string]
 	StorageEncrypted             plugin.TValue[bool]
 	StorageType                  plugin.TValue[string]
@@ -103002,6 +103922,14 @@ type mqlAwsDocumentdbCluster struct {
 	Snapshots                    plugin.TValue[[]any]
 	SecurityGroups               plugin.TValue[[]any]
 	NetworkType                  plugin.TValue[string]
+	ReplicationSource            plugin.TValue[*mqlAwsDocumentdbCluster]
+	ReadReplicas                 plugin.TValue[[]any]
+	GlobalClusterIdentifier      plugin.TValue[string]
+	GlobalCluster                plugin.TValue[*mqlAwsDocumentdbGlobalCluster]
+	Members                      plugin.TValue[[]any]
+	Writer                       plugin.TValue[*mqlAwsDocumentdbInstance]
+	IamRoles                     plugin.TValue[[]any]
+	PendingMaintenanceActions    plugin.TValue[[]any]
 }
 
 // createAwsDocumentdbCluster creates a new instance of this resource
@@ -103092,8 +104020,56 @@ func (c *mqlAwsDocumentdbCluster) GetClusterParameterGroup() *plugin.TValue[stri
 	return &c.ClusterParameterGroup
 }
 
+func (c *mqlAwsDocumentdbCluster) GetParameterGroup() *plugin.TValue[*mqlAwsDocumentdbClusterParameterGroup] {
+	return plugin.GetOrCompute[*mqlAwsDocumentdbClusterParameterGroup](&c.ParameterGroup, func() (*mqlAwsDocumentdbClusterParameterGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "parameterGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDocumentdbClusterParameterGroup), nil
+			}
+		}
+
+		return c.parameterGroup()
+	})
+}
+
 func (c *mqlAwsDocumentdbCluster) GetSubnetGroup() *plugin.TValue[string] {
 	return &c.SubnetGroup
+}
+
+func (c *mqlAwsDocumentdbCluster) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
 }
 
 func (c *mqlAwsDocumentdbCluster) GetClusterResourceId() *plugin.TValue[string] {
@@ -103108,12 +104084,32 @@ func (c *mqlAwsDocumentdbCluster) GetEarliestRestorableTime() *plugin.TValue[*ti
 	return &c.EarliestRestorableTime
 }
 
+func (c *mqlAwsDocumentdbCluster) GetLatestRestorableTime() *plugin.TValue[*time.Time] {
+	return &c.LatestRestorableTime
+}
+
 func (c *mqlAwsDocumentdbCluster) GetEnabledCloudwatchLogsExports() *plugin.TValue[[]any] {
 	return &c.EnabledCloudwatchLogsExports
 }
 
+func (c *mqlAwsDocumentdbCluster) GetAuditLogsEnabled() *plugin.TValue[bool] {
+	return &c.AuditLogsEnabled
+}
+
+func (c *mqlAwsDocumentdbCluster) GetProfilerLogsEnabled() *plugin.TValue[bool] {
+	return &c.ProfilerLogsEnabled
+}
+
 func (c *mqlAwsDocumentdbCluster) GetEndpoint() *plugin.TValue[string] {
 	return &c.Endpoint
+}
+
+func (c *mqlAwsDocumentdbCluster) GetReaderEndpoint() *plugin.TValue[string] {
+	return &c.ReaderEndpoint
+}
+
+func (c *mqlAwsDocumentdbCluster) GetHostedZoneId() *plugin.TValue[string] {
+	return &c.HostedZoneId
 }
 
 func (c *mqlAwsDocumentdbCluster) GetMasterUsername() *plugin.TValue[string] {
@@ -103134,6 +104130,10 @@ func (c *mqlAwsDocumentdbCluster) GetPreferredBackupWindow() *plugin.TValue[stri
 
 func (c *mqlAwsDocumentdbCluster) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
 	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsDocumentdbCluster) GetCloneGroupId() *plugin.TValue[string] {
+	return &c.CloneGroupId
 }
 
 func (c *mqlAwsDocumentdbCluster) GetStatus() *plugin.TValue[string] {
@@ -103190,33 +104190,166 @@ func (c *mqlAwsDocumentdbCluster) GetNetworkType() *plugin.TValue[string] {
 	return &c.NetworkType
 }
 
+func (c *mqlAwsDocumentdbCluster) GetReplicationSource() *plugin.TValue[*mqlAwsDocumentdbCluster] {
+	return plugin.GetOrCompute[*mqlAwsDocumentdbCluster](&c.ReplicationSource, func() (*mqlAwsDocumentdbCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "replicationSource")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDocumentdbCluster), nil
+			}
+		}
+
+		return c.replicationSource()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetReadReplicas() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReadReplicas, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "readReplicas")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.readReplicas()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetGlobalClusterIdentifier() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.GlobalClusterIdentifier, func() (string, error) {
+		return c.globalClusterIdentifier()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetGlobalCluster() *plugin.TValue[*mqlAwsDocumentdbGlobalCluster] {
+	return plugin.GetOrCompute[*mqlAwsDocumentdbGlobalCluster](&c.GlobalCluster, func() (*mqlAwsDocumentdbGlobalCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "globalCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDocumentdbGlobalCluster), nil
+			}
+		}
+
+		return c.globalCluster()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetWriter() *plugin.TValue[*mqlAwsDocumentdbInstance] {
+	return plugin.GetOrCompute[*mqlAwsDocumentdbInstance](&c.Writer, func() (*mqlAwsDocumentdbInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "writer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDocumentdbInstance), nil
+			}
+		}
+
+		return c.writer()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetIamRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "iamRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamRoles()
+	})
+}
+
+func (c *mqlAwsDocumentdbCluster) GetPendingMaintenanceActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PendingMaintenanceActions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.cluster", c.__id, "pendingMaintenanceActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pendingMaintenanceActions()
+	})
+}
+
 // mqlAwsDocumentdbInstance for the aws.documentdb.instance resource
 type mqlAwsDocumentdbInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsDocumentdbInstanceInternal
-	Arn                          plugin.TValue[string]
-	Name                         plugin.TValue[string]
-	ClusterIdentifier            plugin.TValue[string]
-	AutoMinorVersionUpgrade      plugin.TValue[bool]
-	AvailabilityZone             plugin.TValue[string]
-	BackupRetentionPeriod        plugin.TValue[int64]
-	InstanceClass                plugin.TValue[string]
-	Status                       plugin.TValue[string]
-	EnabledCloudwatchLogsExports plugin.TValue[[]any]
-	Endpoint                     plugin.TValue[any]
-	Engine                       plugin.TValue[string]
-	EngineVersion                plugin.TValue[string]
-	CreatedAt                    plugin.TValue[*time.Time]
-	KmsKey                       plugin.TValue[*mqlAwsKmsKey]
-	PreferredBackupWindow        plugin.TValue[string]
-	PreferredMaintenanceWindow   plugin.TValue[string]
-	PromotionTier                plugin.TValue[int64]
-	Region                       plugin.TValue[string]
-	StorageEncrypted             plugin.TValue[bool]
-	CertificateAuthority         plugin.TValue[string]
-	PubliclyAccessible           plugin.TValue[bool]
-	Tags                         plugin.TValue[map[string]any]
+	Arn                              plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	DbiResourceId                    plugin.TValue[string]
+	ClusterIdentifier                plugin.TValue[string]
+	Cluster                          plugin.TValue[*mqlAwsDocumentdbCluster]
+	IsClusterWriter                  plugin.TValue[bool]
+	AutoMinorVersionUpgrade          plugin.TValue[bool]
+	AvailabilityZone                 plugin.TValue[string]
+	BackupRetentionPeriod            plugin.TValue[int64]
+	InstanceClass                    plugin.TValue[string]
+	Status                           plugin.TValue[string]
+	EnabledCloudwatchLogsExports     plugin.TValue[[]any]
+	Endpoint                         plugin.TValue[any]
+	EndpointAddress                  plugin.TValue[string]
+	EndpointPort                     plugin.TValue[int64]
+	EndpointHostedZoneId             plugin.TValue[string]
+	Engine                           plugin.TValue[string]
+	EngineVersion                    plugin.TValue[string]
+	CreatedAt                        plugin.TValue[*time.Time]
+	KmsKey                           plugin.TValue[*mqlAwsKmsKey]
+	PreferredBackupWindow            plugin.TValue[string]
+	PreferredMaintenanceWindow       plugin.TValue[string]
+	PromotionTier                    plugin.TValue[int64]
+	Region                           plugin.TValue[string]
+	StorageEncrypted                 plugin.TValue[bool]
+	CertificateAuthority             plugin.TValue[string]
+	CaCertificateDetailsCAIdentifier plugin.TValue[string]
+	CaCertificateValidTill           plugin.TValue[*time.Time]
+	PubliclyAccessible               plugin.TValue[bool]
+	CopyTagsToSnapshot               plugin.TValue[bool]
+	LatestRestorableTime             plugin.TValue[*time.Time]
+	PerformanceInsightsEnabled       plugin.TValue[bool]
+	PerformanceInsightsKmsKey        plugin.TValue[*mqlAwsKmsKey]
+	SecurityGroups                   plugin.TValue[[]any]
+	PendingMaintenanceActions        plugin.TValue[[]any]
+	PendingModifiedValues            plugin.TValue[map[string]any]
+	Tags                             plugin.TValue[map[string]any]
 }
 
 // createAwsDocumentdbInstance creates a new instance of this resource
@@ -103259,8 +104392,32 @@ func (c *mqlAwsDocumentdbInstance) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
+func (c *mqlAwsDocumentdbInstance) GetDbiResourceId() *plugin.TValue[string] {
+	return &c.DbiResourceId
+}
+
 func (c *mqlAwsDocumentdbInstance) GetClusterIdentifier() *plugin.TValue[string] {
 	return &c.ClusterIdentifier
+}
+
+func (c *mqlAwsDocumentdbInstance) GetCluster() *plugin.TValue[*mqlAwsDocumentdbCluster] {
+	return plugin.GetOrCompute[*mqlAwsDocumentdbCluster](&c.Cluster, func() (*mqlAwsDocumentdbCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.instance", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDocumentdbCluster), nil
+			}
+		}
+
+		return c.cluster()
+	})
+}
+
+func (c *mqlAwsDocumentdbInstance) GetIsClusterWriter() *plugin.TValue[bool] {
+	return &c.IsClusterWriter
 }
 
 func (c *mqlAwsDocumentdbInstance) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
@@ -103289,6 +104446,18 @@ func (c *mqlAwsDocumentdbInstance) GetEnabledCloudwatchLogsExports() *plugin.TVa
 
 func (c *mqlAwsDocumentdbInstance) GetEndpoint() *plugin.TValue[any] {
 	return &c.Endpoint
+}
+
+func (c *mqlAwsDocumentdbInstance) GetEndpointAddress() *plugin.TValue[string] {
+	return &c.EndpointAddress
+}
+
+func (c *mqlAwsDocumentdbInstance) GetEndpointPort() *plugin.TValue[int64] {
+	return &c.EndpointPort
+}
+
+func (c *mqlAwsDocumentdbInstance) GetEndpointHostedZoneId() *plugin.TValue[string] {
+	return &c.EndpointHostedZoneId
 }
 
 func (c *mqlAwsDocumentdbInstance) GetEngine() *plugin.TValue[string] {
@@ -103343,8 +104512,80 @@ func (c *mqlAwsDocumentdbInstance) GetCertificateAuthority() *plugin.TValue[stri
 	return &c.CertificateAuthority
 }
 
+func (c *mqlAwsDocumentdbInstance) GetCaCertificateDetailsCAIdentifier() *plugin.TValue[string] {
+	return &c.CaCertificateDetailsCAIdentifier
+}
+
+func (c *mqlAwsDocumentdbInstance) GetCaCertificateValidTill() *plugin.TValue[*time.Time] {
+	return &c.CaCertificateValidTill
+}
+
 func (c *mqlAwsDocumentdbInstance) GetPubliclyAccessible() *plugin.TValue[bool] {
 	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsDocumentdbInstance) GetCopyTagsToSnapshot() *plugin.TValue[bool] {
+	return &c.CopyTagsToSnapshot
+}
+
+func (c *mqlAwsDocumentdbInstance) GetLatestRestorableTime() *plugin.TValue[*time.Time] {
+	return &c.LatestRestorableTime
+}
+
+func (c *mqlAwsDocumentdbInstance) GetPerformanceInsightsEnabled() *plugin.TValue[bool] {
+	return &c.PerformanceInsightsEnabled
+}
+
+func (c *mqlAwsDocumentdbInstance) GetPerformanceInsightsKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.PerformanceInsightsKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.instance", c.__id, "performanceInsightsKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.performanceInsightsKmsKey()
+	})
+}
+
+func (c *mqlAwsDocumentdbInstance) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.instance", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsDocumentdbInstance) GetPendingMaintenanceActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PendingMaintenanceActions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.instance", c.__id, "pendingMaintenanceActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pendingMaintenanceActions()
+	})
+}
+
+func (c *mqlAwsDocumentdbInstance) GetPendingModifiedValues() *plugin.TValue[map[string]any] {
+	return &c.PendingModifiedValues
 }
 
 func (c *mqlAwsDocumentdbInstance) GetTags() *plugin.TValue[map[string]any] {
@@ -103361,6 +104602,7 @@ type mqlAwsDocumentdbSnapshot struct {
 	Arn               plugin.TValue[string]
 	Id                plugin.TValue[string]
 	ClusterIdentifier plugin.TValue[string]
+	Cluster           plugin.TValue[*mqlAwsDocumentdbCluster]
 	Engine            plugin.TValue[string]
 	EngineVersion     plugin.TValue[string]
 	Status            plugin.TValue[string]
@@ -103369,6 +104611,9 @@ type mqlAwsDocumentdbSnapshot struct {
 	StorageEncrypted  plugin.TValue[bool]
 	StorageType       plugin.TValue[string]
 	KmsKey            plugin.TValue[*mqlAwsKmsKey]
+	MasterUsername    plugin.TValue[string]
+	SharedWith        plugin.TValue[[]any]
+	IsPublic          plugin.TValue[bool]
 	AvailabilityZones plugin.TValue[[]any]
 	Vpc               plugin.TValue[*mqlAwsVpc]
 	PercentProgress   plugin.TValue[int64]
@@ -103426,6 +104671,22 @@ func (c *mqlAwsDocumentdbSnapshot) GetClusterIdentifier() *plugin.TValue[string]
 	return &c.ClusterIdentifier
 }
 
+func (c *mqlAwsDocumentdbSnapshot) GetCluster() *plugin.TValue[*mqlAwsDocumentdbCluster] {
+	return plugin.GetOrCompute[*mqlAwsDocumentdbCluster](&c.Cluster, func() (*mqlAwsDocumentdbCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.snapshot", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDocumentdbCluster), nil
+			}
+		}
+
+		return c.cluster()
+	})
+}
+
 func (c *mqlAwsDocumentdbSnapshot) GetEngine() *plugin.TValue[string] {
 	return &c.Engine
 }
@@ -103470,6 +104731,22 @@ func (c *mqlAwsDocumentdbSnapshot) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	})
 }
 
+func (c *mqlAwsDocumentdbSnapshot) GetMasterUsername() *plugin.TValue[string] {
+	return &c.MasterUsername
+}
+
+func (c *mqlAwsDocumentdbSnapshot) GetSharedWith() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SharedWith, func() ([]any, error) {
+		return c.sharedWith()
+	})
+}
+
+func (c *mqlAwsDocumentdbSnapshot) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
+}
+
 func (c *mqlAwsDocumentdbSnapshot) GetAvailabilityZones() *plugin.TValue[[]any] {
 	return &c.AvailabilityZones
 }
@@ -103504,6 +104781,767 @@ func (c *mqlAwsDocumentdbSnapshot) GetClusterCreatedAt() *plugin.TValue[*time.Ti
 
 func (c *mqlAwsDocumentdbSnapshot) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsDocumentdbClusterParameterGroup for the aws.documentdb.clusterParameterGroup resource
+type mqlAwsDocumentdbClusterParameterGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDocumentdbClusterParameterGroupInternal it will be used here
+	Arn         plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Family      plugin.TValue[string]
+	Description plugin.TValue[string]
+	Region      plugin.TValue[string]
+	Parameters  plugin.TValue[[]any]
+}
+
+// createAwsDocumentdbClusterParameterGroup creates a new instance of this resource
+func createAwsDocumentdbClusterParameterGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDocumentdbClusterParameterGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.documentdb.clusterParameterGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDocumentdbClusterParameterGroup) MqlName() string {
+	return "aws.documentdb.clusterParameterGroup"
+}
+
+func (c *mqlAwsDocumentdbClusterParameterGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDocumentdbClusterParameterGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDocumentdbClusterParameterGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDocumentdbClusterParameterGroup) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+func (c *mqlAwsDocumentdbClusterParameterGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsDocumentdbClusterParameterGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDocumentdbClusterParameterGroup) GetParameters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Parameters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.clusterParameterGroup", c.__id, "parameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.parameters()
+	})
+}
+
+// mqlAwsDocumentdbClusterParameter for the aws.documentdb.clusterParameter resource
+type mqlAwsDocumentdbClusterParameter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDocumentdbClusterParameterInternal it will be used here
+	Name                 plugin.TValue[string]
+	Value                plugin.TValue[string]
+	AllowedValues        plugin.TValue[string]
+	ApplyMethod          plugin.TValue[string]
+	ApplyType            plugin.TValue[string]
+	DataType             plugin.TValue[string]
+	Description          plugin.TValue[string]
+	IsModifiable         plugin.TValue[bool]
+	MinimumEngineVersion plugin.TValue[string]
+	Source               plugin.TValue[string]
+}
+
+// createAwsDocumentdbClusterParameter creates a new instance of this resource
+func createAwsDocumentdbClusterParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDocumentdbClusterParameter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.documentdb.clusterParameter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) MqlName() string {
+	return "aws.documentdb.clusterParameter"
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) GetAllowedValues() *plugin.TValue[string] {
+	return &c.AllowedValues
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) GetApplyMethod() *plugin.TValue[string] {
+	return &c.ApplyMethod
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) GetApplyType() *plugin.TValue[string] {
+	return &c.ApplyType
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) GetDataType() *plugin.TValue[string] {
+	return &c.DataType
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) GetIsModifiable() *plugin.TValue[bool] {
+	return &c.IsModifiable
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) GetMinimumEngineVersion() *plugin.TValue[string] {
+	return &c.MinimumEngineVersion
+}
+
+func (c *mqlAwsDocumentdbClusterParameter) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+// mqlAwsDocumentdbGlobalCluster for the aws.documentdb.globalCluster resource
+type mqlAwsDocumentdbGlobalCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDocumentdbGlobalClusterInternal
+	Arn                     plugin.TValue[string]
+	GlobalClusterIdentifier plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	Engine                  plugin.TValue[string]
+	EngineVersion           plugin.TValue[string]
+	DeletionProtection      plugin.TValue[bool]
+	DatabaseName            plugin.TValue[string]
+	StorageEncrypted        plugin.TValue[bool]
+	GlobalClusterResourceId plugin.TValue[string]
+	Members                 plugin.TValue[[]any]
+}
+
+// createAwsDocumentdbGlobalCluster creates a new instance of this resource
+func createAwsDocumentdbGlobalCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDocumentdbGlobalCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.documentdb.globalCluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) MqlName() string {
+	return "aws.documentdb.globalCluster"
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) GetGlobalClusterIdentifier() *plugin.TValue[string] {
+	return &c.GlobalClusterIdentifier
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) GetStorageEncrypted() *plugin.TValue[bool] {
+	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) GetGlobalClusterResourceId() *plugin.TValue[string] {
+	return &c.GlobalClusterResourceId
+}
+
+func (c *mqlAwsDocumentdbGlobalCluster) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.globalCluster", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+// mqlAwsDocumentdbGlobalClusterMember for the aws.documentdb.globalCluster.member resource
+type mqlAwsDocumentdbGlobalClusterMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDocumentdbGlobalClusterMemberInternal
+	Cluster                     plugin.TValue[*mqlAwsDocumentdbCluster]
+	IsWriter                    plugin.TValue[bool]
+	Readers                     plugin.TValue[[]any]
+	GlobalWriteForwardingStatus plugin.TValue[string]
+}
+
+// createAwsDocumentdbGlobalClusterMember creates a new instance of this resource
+func createAwsDocumentdbGlobalClusterMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDocumentdbGlobalClusterMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.documentdb.globalCluster.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDocumentdbGlobalClusterMember) MqlName() string {
+	return "aws.documentdb.globalCluster.member"
+}
+
+func (c *mqlAwsDocumentdbGlobalClusterMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDocumentdbGlobalClusterMember) GetCluster() *plugin.TValue[*mqlAwsDocumentdbCluster] {
+	return plugin.GetOrCompute[*mqlAwsDocumentdbCluster](&c.Cluster, func() (*mqlAwsDocumentdbCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.globalCluster.member", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDocumentdbCluster), nil
+			}
+		}
+
+		return c.cluster()
+	})
+}
+
+func (c *mqlAwsDocumentdbGlobalClusterMember) GetIsWriter() *plugin.TValue[bool] {
+	return &c.IsWriter
+}
+
+func (c *mqlAwsDocumentdbGlobalClusterMember) GetReaders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Readers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.globalCluster.member", c.__id, "readers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.readers()
+	})
+}
+
+func (c *mqlAwsDocumentdbGlobalClusterMember) GetGlobalWriteForwardingStatus() *plugin.TValue[string] {
+	return &c.GlobalWriteForwardingStatus
+}
+
+// mqlAwsDocumentdbPendingMaintenanceAction for the aws.documentdb.pendingMaintenanceAction resource
+type mqlAwsDocumentdbPendingMaintenanceAction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDocumentdbPendingMaintenanceActionInternal it will be used here
+	ResourceArn          plugin.TValue[string]
+	Action               plugin.TValue[string]
+	Description          plugin.TValue[string]
+	AutoAppliedAfterDate plugin.TValue[*time.Time]
+	CurrentApplyDate     plugin.TValue[*time.Time]
+	ForcedApplyDate      plugin.TValue[*time.Time]
+	OptInStatus          plugin.TValue[string]
+}
+
+// createAwsDocumentdbPendingMaintenanceAction creates a new instance of this resource
+func createAwsDocumentdbPendingMaintenanceAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDocumentdbPendingMaintenanceAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.documentdb.pendingMaintenanceAction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDocumentdbPendingMaintenanceAction) MqlName() string {
+	return "aws.documentdb.pendingMaintenanceAction"
+}
+
+func (c *mqlAwsDocumentdbPendingMaintenanceAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDocumentdbPendingMaintenanceAction) GetResourceArn() *plugin.TValue[string] {
+	return &c.ResourceArn
+}
+
+func (c *mqlAwsDocumentdbPendingMaintenanceAction) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAwsDocumentdbPendingMaintenanceAction) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsDocumentdbPendingMaintenanceAction) GetAutoAppliedAfterDate() *plugin.TValue[*time.Time] {
+	return &c.AutoAppliedAfterDate
+}
+
+func (c *mqlAwsDocumentdbPendingMaintenanceAction) GetCurrentApplyDate() *plugin.TValue[*time.Time] {
+	return &c.CurrentApplyDate
+}
+
+func (c *mqlAwsDocumentdbPendingMaintenanceAction) GetForcedApplyDate() *plugin.TValue[*time.Time] {
+	return &c.ForcedApplyDate
+}
+
+func (c *mqlAwsDocumentdbPendingMaintenanceAction) GetOptInStatus() *plugin.TValue[string] {
+	return &c.OptInStatus
+}
+
+// mqlAwsDocumentdbElasticCluster for the aws.documentdb.elasticCluster resource
+type mqlAwsDocumentdbElasticCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDocumentdbElasticClusterInternal
+	Arn                        plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	AdminUserName              plugin.TValue[string]
+	AuthType                   plugin.TValue[string]
+	KmsKey                     plugin.TValue[*mqlAwsKmsKey]
+	ShardCapacity              plugin.TValue[int64]
+	ShardCount                 plugin.TValue[int64]
+	ShardInstanceCount         plugin.TValue[int64]
+	BackupRetentionPeriod      plugin.TValue[int64]
+	PreferredBackupWindow      plugin.TValue[string]
+	PreferredMaintenanceWindow plugin.TValue[string]
+	Subnets                    plugin.TValue[[]any]
+	SecurityGroups             plugin.TValue[[]any]
+	CreatedAt                  plugin.TValue[string]
+	Endpoint                   plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	Snapshots                  plugin.TValue[[]any]
+}
+
+// createAwsDocumentdbElasticCluster creates a new instance of this resource
+func createAwsDocumentdbElasticCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDocumentdbElasticCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.documentdb.elasticCluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) MqlName() string {
+	return "aws.documentdb.elasticCluster"
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetAdminUserName() *plugin.TValue[string] {
+	return &c.AdminUserName
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetAuthType() *plugin.TValue[string] {
+	return &c.AuthType
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.elasticCluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetShardCapacity() *plugin.TValue[int64] {
+	return &c.ShardCapacity
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetShardCount() *plugin.TValue[int64] {
+	return &c.ShardCount
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetShardInstanceCount() *plugin.TValue[int64] {
+	return &c.ShardInstanceCount
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetBackupRetentionPeriod() *plugin.TValue[int64] {
+	return &c.BackupRetentionPeriod
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetPreferredBackupWindow() *plugin.TValue[string] {
+	return &c.PreferredBackupWindow
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
+	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.elasticCluster", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.elasticCluster", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetCreatedAt() *plugin.TValue[string] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+func (c *mqlAwsDocumentdbElasticCluster) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.elasticCluster", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshots()
+	})
+}
+
+// mqlAwsDocumentdbElasticSnapshot for the aws.documentdb.elasticSnapshot resource
+type mqlAwsDocumentdbElasticSnapshot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDocumentdbElasticSnapshotInternal
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Cluster              plugin.TValue[*mqlAwsDocumentdbElasticCluster]
+	Status               plugin.TValue[string]
+	SnapshotType         plugin.TValue[string]
+	SnapshotCreationTime plugin.TValue[string]
+	KmsKey               plugin.TValue[*mqlAwsKmsKey]
+	AdminUserName        plugin.TValue[string]
+	Subnets              plugin.TValue[[]any]
+	SecurityGroups       plugin.TValue[[]any]
+	Region               plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
+}
+
+// createAwsDocumentdbElasticSnapshot creates a new instance of this resource
+func createAwsDocumentdbElasticSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDocumentdbElasticSnapshot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.documentdb.elasticSnapshot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) MqlName() string {
+	return "aws.documentdb.elasticSnapshot"
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetCluster() *plugin.TValue[*mqlAwsDocumentdbElasticCluster] {
+	return plugin.GetOrCompute[*mqlAwsDocumentdbElasticCluster](&c.Cluster, func() (*mqlAwsDocumentdbElasticCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.elasticSnapshot", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDocumentdbElasticCluster), nil
+			}
+		}
+
+		return c.cluster()
+	})
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetSnapshotType() *plugin.TValue[string] {
+	return &c.SnapshotType
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetSnapshotCreationTime() *plugin.TValue[string] {
+	return &c.SnapshotCreationTime
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.elasticSnapshot", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetAdminUserName() *plugin.TValue[string] {
+	return &c.AdminUserName
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.elasticSnapshot", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.documentdb.elasticSnapshot", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDocumentdbElasticSnapshot) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsTimestreamLiveanalytics for the aws.timestream.liveanalytics resource
