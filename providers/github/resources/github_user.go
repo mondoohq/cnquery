@@ -11,6 +11,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v85/github"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/logger"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -51,9 +52,16 @@ func initGithubUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		userLogin = userId.Name
 	}
 
-	// finally grab the user from github
+	// finally grab the user from github. Bot accounts (e.g. "Copilot",
+	// "github-actions[bot]") and deleted/suspended users return 404 from
+	// /users/{login}, but we still want a usable resource — fall back to a bare
+	// resource populated only from the args we already have.
 	githubUser, err := getUser(conn.Context(), runtime, conn, userLogin)
 	if err != nil {
+		if isAccessDeniedOrNotFound(err) {
+			log.Debug().Str("login", userLogin).Msg("github user not retrievable; using bare resource")
+			return args, nil, nil
+		}
 		return nil, nil, err
 	}
 

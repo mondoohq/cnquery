@@ -1522,6 +1522,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.webhook.active": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubWebhook).GetActive()).ToDataRes(types.Bool)
 	},
+	"github.webhook.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubWebhook).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"github.webhook.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubWebhook).GetUpdatedAt()).ToDataRes(types.Time)
+	},
 	"github.workflow.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubWorkflow).GetId()).ToDataRes(types.Int)
 	},
@@ -1669,6 +1675,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.mergeRequest.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"github.mergeRequest.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"github.mergeRequest.closedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetClosedAt()).ToDataRes(types.Time)
+	},
 	"github.mergeRequest.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetLabels()).ToDataRes(types.Array(types.Dict))
 	},
@@ -1680,6 +1692,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.mergeRequest.assignees": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetAssignees()).ToDataRes(types.Array(types.Resource("github.user")))
+	},
+	"github.mergeRequest.requestedReviewers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetRequestedReviewers()).ToDataRes(types.Array(types.Resource("github.user")))
 	},
 	"github.mergeRequest.commits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetCommits()).ToDataRes(types.Array(types.Resource("github.commit")))
@@ -1693,8 +1708,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.mergeRequest.milestone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetMilestone()).ToDataRes(types.Resource("github.milestone"))
 	},
+	"github.mergeRequest.merged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetMerged()).ToDataRes(types.Bool)
+	},
 	"github.mergeRequest.mergedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubMergeRequest).GetMergedAt()).ToDataRes(types.Time)
+	},
+	"github.mergeRequest.mergedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubMergeRequest).GetMergedBy()).ToDataRes(types.Resource("github.user"))
 	},
 	"github.review.url": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubReview).GetUrl()).ToDataRes(types.String)
@@ -1854,6 +1875,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.issue.closedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubIssue).GetClosedAt()).ToDataRes(types.Time)
+	},
+	"github.issue.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubIssue).GetUser()).ToDataRes(types.Resource("github.user"))
+	},
+	"github.issue.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubIssue).GetLabels()).ToDataRes(types.Array(types.Dict))
 	},
 	"github.issue.assignees": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubIssue).GetAssignees()).ToDataRes(types.Array(types.Resource("github.user")))
@@ -2094,6 +2121,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.runner.busy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRunner).GetBusy()).ToDataRes(types.Bool)
+	},
+	"github.runner.ephemeral": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRunner).GetEphemeral()).ToDataRes(types.Bool)
+	},
+	"github.runner.architecture": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRunner).GetArchitecture()).ToDataRes(types.String)
 	},
 	"github.runner.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRunner).GetLabels()).ToDataRes(types.Array(types.Resource("github.runnerLabel")))
@@ -3970,6 +4003,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubWebhook).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"github.webhook.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubWebhook).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.webhook.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubWebhook).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"github.workflow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubWorkflow).__id, ok = v.Value.(string)
 		return
@@ -4186,6 +4227,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubMergeRequest).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"github.mergeRequest.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.closedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).ClosedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"github.mergeRequest.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubMergeRequest).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -4200,6 +4249,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.mergeRequest.assignees": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubMergeRequest).Assignees, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.requestedReviewers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).RequestedReviewers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.mergeRequest.commits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4218,8 +4271,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubMergeRequest).Milestone, ok = plugin.RawToTValue[*mqlGithubMilestone](v.Value, v.Error)
 		return
 	},
+	"github.mergeRequest.merged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).Merged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"github.mergeRequest.mergedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubMergeRequest).MergedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.mergeRequest.mergedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubMergeRequest).MergedBy, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
 		return
 	},
 	"github.review.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4456,6 +4517,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.issue.closedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubIssue).ClosedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.issue.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubIssue).User, ok = plugin.RawToTValue[*mqlGithubUser](v.Value, v.Error)
+		return
+	},
+	"github.issue.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubIssue).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.issue.assignees": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4796,6 +4865,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.runner.busy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRunner).Busy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.runner.ephemeral": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRunner).Ephemeral, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.runner.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRunner).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"github.runner.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9384,12 +9461,14 @@ type mqlGithubWebhook struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGithubWebhookInternal it will be used here
-	Id     plugin.TValue[int64]
-	Name   plugin.TValue[string]
-	Url    plugin.TValue[string]
-	Events plugin.TValue[[]any]
-	Config plugin.TValue[any]
-	Active plugin.TValue[bool]
+	Id        plugin.TValue[int64]
+	Name      plugin.TValue[string]
+	Url       plugin.TValue[string]
+	Events    plugin.TValue[[]any]
+	Config    plugin.TValue[any]
+	Active    plugin.TValue[bool]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
 }
 
 // createGithubWebhook creates a new instance of this resource
@@ -9451,6 +9530,14 @@ func (c *mqlGithubWebhook) GetConfig() *plugin.TValue[any] {
 
 func (c *mqlGithubWebhook) GetActive() *plugin.TValue[bool] {
 	return &c.Active
+}
+
+func (c *mqlGithubWebhook) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGithubWebhook) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlGithubWorkflow for the github.workflow resource
@@ -9897,19 +9984,24 @@ type mqlGithubMergeRequest struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGithubMergeRequestInternal it will be used here
-	Id        plugin.TValue[int64]
-	Number    plugin.TValue[int64]
-	State     plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	Labels    plugin.TValue[[]any]
-	Title     plugin.TValue[string]
-	Owner     plugin.TValue[*mqlGithubUser]
-	Assignees plugin.TValue[[]any]
-	Commits   plugin.TValue[[]any]
-	Reviews   plugin.TValue[[]any]
-	RepoName  plugin.TValue[string]
-	Milestone plugin.TValue[*mqlGithubMilestone]
-	MergedAt  plugin.TValue[*time.Time]
+	Id                 plugin.TValue[int64]
+	Number             plugin.TValue[int64]
+	State              plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	UpdatedAt          plugin.TValue[*time.Time]
+	ClosedAt           plugin.TValue[*time.Time]
+	Labels             plugin.TValue[[]any]
+	Title              plugin.TValue[string]
+	Owner              plugin.TValue[*mqlGithubUser]
+	Assignees          plugin.TValue[[]any]
+	RequestedReviewers plugin.TValue[[]any]
+	Commits            plugin.TValue[[]any]
+	Reviews            plugin.TValue[[]any]
+	RepoName           plugin.TValue[string]
+	Milestone          plugin.TValue[*mqlGithubMilestone]
+	Merged             plugin.TValue[bool]
+	MergedAt           plugin.TValue[*time.Time]
+	MergedBy           plugin.TValue[*mqlGithubUser]
 }
 
 // createGithubMergeRequest creates a new instance of this resource
@@ -9965,6 +10057,14 @@ func (c *mqlGithubMergeRequest) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
+func (c *mqlGithubMergeRequest) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGithubMergeRequest) GetClosedAt() *plugin.TValue[*time.Time] {
+	return &c.ClosedAt
+}
+
 func (c *mqlGithubMergeRequest) GetLabels() *plugin.TValue[[]any] {
 	return &c.Labels
 }
@@ -9979,6 +10079,10 @@ func (c *mqlGithubMergeRequest) GetOwner() *plugin.TValue[*mqlGithubUser] {
 
 func (c *mqlGithubMergeRequest) GetAssignees() *plugin.TValue[[]any] {
 	return &c.Assignees
+}
+
+func (c *mqlGithubMergeRequest) GetRequestedReviewers() *plugin.TValue[[]any] {
+	return &c.RequestedReviewers
 }
 
 func (c *mqlGithubMergeRequest) GetCommits() *plugin.TValue[[]any] {
@@ -10021,8 +10125,16 @@ func (c *mqlGithubMergeRequest) GetMilestone() *plugin.TValue[*mqlGithubMileston
 	return &c.Milestone
 }
 
+func (c *mqlGithubMergeRequest) GetMerged() *plugin.TValue[bool] {
+	return &c.Merged
+}
+
 func (c *mqlGithubMergeRequest) GetMergedAt() *plugin.TValue[*time.Time] {
 	return &c.MergedAt
+}
+
+func (c *mqlGithubMergeRequest) GetMergedBy() *plugin.TValue[*mqlGithubUser] {
+	return &c.MergedBy
 }
 
 // mqlGithubReview for the github.review resource
@@ -10493,6 +10605,8 @@ type mqlGithubIssue struct {
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
 	ClosedAt  plugin.TValue[*time.Time]
+	User      plugin.TValue[*mqlGithubUser]
+	Labels    plugin.TValue[[]any]
 	Assignees plugin.TValue[[]any]
 	ClosedBy  plugin.TValue[*mqlGithubUser]
 	Draft     plugin.TValue[bool]
@@ -10571,6 +10685,14 @@ func (c *mqlGithubIssue) GetUpdatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlGithubIssue) GetClosedAt() *plugin.TValue[*time.Time] {
 	return &c.ClosedAt
+}
+
+func (c *mqlGithubIssue) GetUser() *plugin.TValue[*mqlGithubUser] {
+	return &c.User
+}
+
+func (c *mqlGithubIssue) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
 }
 
 func (c *mqlGithubIssue) GetAssignees() *plugin.TValue[[]any] {
@@ -11124,12 +11246,14 @@ type mqlGithubRunner struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGithubRunnerInternal it will be used here
-	Id     plugin.TValue[int64]
-	Name   plugin.TValue[string]
-	Os     plugin.TValue[string]
-	Status plugin.TValue[string]
-	Busy   plugin.TValue[bool]
-	Labels plugin.TValue[[]any]
+	Id           plugin.TValue[int64]
+	Name         plugin.TValue[string]
+	Os           plugin.TValue[string]
+	Status       plugin.TValue[string]
+	Busy         plugin.TValue[bool]
+	Ephemeral    plugin.TValue[bool]
+	Architecture plugin.TValue[string]
+	Labels       plugin.TValue[[]any]
 }
 
 // createGithubRunner creates a new instance of this resource
@@ -11187,6 +11311,14 @@ func (c *mqlGithubRunner) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlGithubRunner) GetBusy() *plugin.TValue[bool] {
 	return &c.Busy
+}
+
+func (c *mqlGithubRunner) GetEphemeral() *plugin.TValue[bool] {
+	return &c.Ephemeral
+}
+
+func (c *mqlGithubRunner) GetArchitecture() *plugin.TValue[string] {
+	return &c.Architecture
 }
 
 func (c *mqlGithubRunner) GetLabels() *plugin.TValue[[]any] {

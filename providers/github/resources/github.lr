@@ -900,6 +900,10 @@ private github.webhook @defaults("id name") {
   config dict
   // Whether the webhook is active
   active bool
+  // Webhook creation time
+  createdAt time
+  // Webhook last update time
+  updatedAt time
 }
 
 // GitHub workflow
@@ -1018,6 +1022,10 @@ private github.mergeRequest @defaults("id state") {
   state string
   // Pull request creation time (in UTC)
   createdAt time
+  // Pull request last update time (in UTC)
+  updatedAt time
+  // Pull request close time (in UTC); null if the pull request is still open
+  closedAt time
   // Pull request labels
   labels []dict
   // Pull request title
@@ -1026,6 +1034,8 @@ private github.mergeRequest @defaults("id state") {
   owner github.user
   // Pull request assignees
   assignees []github.user
+  // Users requested to review this pull request
+  requestedReviewers []github.user
   // Pull request commits
   commits() []github.commit
   // Pull request reviews
@@ -1034,8 +1044,12 @@ private github.mergeRequest @defaults("id state") {
   repoName string
   // Pull request milestone
   milestone github.milestone
+  // Whether the pull request has been merged
+  merged bool
   // Time when the pull request was merged
   mergedAt time
+  // User who merged the pull request
+  mergedBy github.user
 }
 
 // GitHub repository review
@@ -1166,6 +1180,10 @@ private github.issue @defaults("title") {
   updatedAt time
   // Issue closed time
   closedAt time
+  // User who opened the issue
+  user github.user
+  // Issue labels
+  labels []dict
   // Users to whom the issue is assigned
   assignees []github.user
   // User who closed the issue
@@ -1346,6 +1364,10 @@ private github.runner @defaults("id name os status") {
   status string
   // Whether the runner is currently executing a job
   busy bool
+  // Whether the runner is ephemeral (one-shot job execution, then deregistered)
+  ephemeral bool
+  // Runner architecture (e.g., x64, arm64); empty for self-hosted runners that don't report architecture
+  architecture string
   // Labels assigned to the runner
   labels []github.runnerLabel
 }

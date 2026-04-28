@@ -392,18 +392,47 @@ func (g *mqlGithubRepository) getMergeRequests(state string) ([]any, error) {
 			milestone = m
 		}
 
+		requestedReviewers := make([]any, 0, len(pr.RequestedReviewers))
+		for _, reviewer := range pr.RequestedReviewers {
+			r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(reviewer.ID),
+				"login": llx.StringDataPtr(reviewer.Login),
+			})
+			if err != nil {
+				return nil, err
+			}
+			requestedReviewers = append(requestedReviewers, r)
+		}
+
+		var mergedBy any
+		if pr.MergedBy != nil {
+			r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(pr.MergedBy.ID),
+				"login": llx.StringDataPtr(pr.MergedBy.Login),
+			})
+			if err != nil {
+				return nil, err
+			}
+			mergedBy = r
+		}
+
 		r, err := CreateResource(g.MqlRuntime, "github.mergeRequest", map[string]*llx.RawData{
-			"id":        llx.IntDataPtr(pr.ID),
-			"number":    llx.IntData(int64(*pr.Number)),
-			"state":     llx.StringDataPtr(pr.State),
-			"labels":    llx.ArrayData(labels, types.Any),
-			"createdAt": llx.TimeDataPtr(githubTimestamp(pr.CreatedAt)),
-			"title":     llx.StringDataPtr(pr.Title),
-			"owner":     llx.ResourceData(owner, owner.MqlName()),
-			"assignees": llx.ArrayData(assigneesRes, types.Any),
-			"repoName":  llx.StringData(repoName),
-			"milestone": llx.ResourceData(milestone, "github.milestone"),
-			"mergedAt":  llx.TimeDataPtr(githubTimestamp(pr.MergedAt)),
+			"id":                 llx.IntDataPtr(pr.ID),
+			"number":             llx.IntData(int64(*pr.Number)),
+			"state":              llx.StringDataPtr(pr.State),
+			"labels":             llx.ArrayData(labels, types.Any),
+			"createdAt":          llx.TimeDataPtr(githubTimestamp(pr.CreatedAt)),
+			"updatedAt":          llx.TimeDataPtr(githubTimestamp(pr.UpdatedAt)),
+			"closedAt":           llx.TimeDataPtr(githubTimestamp(pr.ClosedAt)),
+			"title":              llx.StringDataPtr(pr.Title),
+			"owner":              llx.ResourceData(owner, owner.MqlName()),
+			"assignees":          llx.ArrayData(assigneesRes, types.Any),
+			"requestedReviewers": llx.ArrayData(requestedReviewers, types.Resource("github.user")),
+			"repoName":           llx.StringData(repoName),
+			"milestone":          llx.ResourceData(milestone, "github.milestone"),
+			"merged":             llx.BoolDataPtr(pr.Merged),
+			"mergedAt":           llx.TimeDataPtr(githubTimestamp(pr.MergedAt)),
+			"mergedBy":           llx.AnyData(mergedBy),
 		})
 		if err != nil {
 			return nil, err
@@ -1298,12 +1327,14 @@ func (g *mqlGithubRepository) webhooks() ([]any, error) {
 		}
 
 		mqlWebhook, err := CreateResource(g.MqlRuntime, "github.webhook", map[string]*llx.RawData{
-			"id":     llx.IntDataPtr(h.ID),
-			"name":   llx.StringDataPtr(h.Name),
-			"events": llx.ArrayData(convert.SliceAnyToInterface[string](h.Events), types.String),
-			"config": llx.MapData(config, types.Any),
-			"url":    llx.StringDataPtr(h.URL),
-			"active": llx.BoolDataPtr(h.Active),
+			"id":        llx.IntDataPtr(h.ID),
+			"name":      llx.StringDataPtr(h.Name),
+			"events":    llx.ArrayData(convert.SliceAnyToInterface[string](h.Events), types.String),
+			"config":    llx.MapData(config, types.Any),
+			"url":       llx.StringDataPtr(h.URL),
+			"active":    llx.BoolDataPtr(h.Active),
+			"createdAt": llx.TimeDataPtr(githubTimestamp(h.CreatedAt)),
+			"updatedAt": llx.TimeDataPtr(githubTimestamp(h.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err
@@ -1800,6 +1831,27 @@ func (g *mqlGithubRepository) getIssues(state string) ([]any, error) {
 			milestone = m
 		}
 
+		var user any
+		if issue.User != nil {
+			u, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+				"id":    llx.IntDataPtr(issue.User.ID),
+				"login": llx.StringDataPtr(issue.User.Login),
+			})
+			if err != nil {
+				return nil, err
+			}
+			user = u
+		}
+
+		labels := make([]any, 0, len(issue.Labels))
+		for _, l := range issue.Labels {
+			labelDict, err := convert.JsonToDict(l)
+			if err != nil {
+				return nil, err
+			}
+			labels = append(labels, labelDict)
+		}
+
 		r, err := CreateResource(g.MqlRuntime, "github.issue", map[string]*llx.RawData{
 			"id":        llx.IntData(issue.GetID()),
 			"number":    llx.IntData(int64(issue.GetNumber())),
@@ -1810,6 +1862,8 @@ func (g *mqlGithubRepository) getIssues(state string) ([]any, error) {
 			"createdAt": llx.TimeDataPtr(githubTimestamp(issue.CreatedAt)),
 			"updatedAt": llx.TimeDataPtr(githubTimestamp(issue.UpdatedAt)),
 			"closedAt":  llx.TimeDataPtr(githubTimestamp(issue.ClosedAt)),
+			"user":      llx.AnyData(user),
+			"labels":    llx.ArrayData(labels, types.Dict),
 			"assignees": llx.ArrayData(assignees, types.Any),
 			"closedBy":  llx.AnyData(closedBy),
 			"draft":     llx.BoolData(issue.GetDraft()),
