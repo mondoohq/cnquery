@@ -88,11 +88,16 @@ func (g *mqlGithubRepository) environments() ([]any, error) {
 		opts.Page = resp.NextPage
 	}
 
-	return environmentsToMql(g.MqlRuntime, allEnvironments)
+	var repoID int64
+	if g.Id.Error == nil {
+		repoID = g.Id.Data
+	}
+
+	return environmentsToMql(g.MqlRuntime, ownerLogin, repoName, repoID, allEnvironments)
 }
 
 // environmentsToMql converts a list of GitHub environments to MQL resources.
-func environmentsToMql(runtime *plugin.Runtime, environments []*github.Environment) ([]any, error) {
+func environmentsToMql(runtime *plugin.Runtime, ownerLogin, repoName string, repoID int64, environments []*github.Environment) ([]any, error) {
 	res := []any{}
 	for _, env := range environments {
 		// Extract branch policy fields
@@ -153,10 +158,20 @@ func environmentsToMql(runtime *plugin.Runtime, environments []*github.Environme
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, envRes)
+		mqlEnv := envRes.(*mqlGithubEnvironment)
+		mqlEnv.ownerLogin = ownerLogin
+		mqlEnv.repoName = repoName
+		mqlEnv.repoID = repoID
+		res = append(res, mqlEnv)
 	}
 
 	return res, nil
+}
+
+type mqlGithubEnvironmentInternal struct {
+	ownerLogin string
+	repoName   string
+	repoID     int64
 }
 
 // deployments returns the deployments for a repository.

@@ -73,6 +73,8 @@ const (
 	ResourceGithubEnvironmentProtectionRule        string = "github.environmentProtectionRule"
 	ResourceGithubDeployment                       string = "github.deployment"
 	ResourceGithubDeploymentStatus                 string = "github.deploymentStatus"
+	ResourceGithubActionsSecret                    string = "github.actionsSecret"
+	ResourceGithubActionsVariable                  string = "github.actionsVariable"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -306,6 +308,14 @@ func init() {
 		"github.deploymentStatus": {
 			// to override args, implement: initGithubDeploymentStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGithubDeploymentStatus,
+		},
+		"github.actionsSecret": {
+			// to override args, implement: initGithubActionsSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubActionsSecret,
+		},
+		"github.actionsVariable": {
+			// to override args, implement: initGithubActionsVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGithubActionsVariable,
 		},
 	}
 }
@@ -629,6 +639,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.organization.auditLogStreamConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetAuditLogStreamConfig()).ToDataRes(types.Resource("github.organization.auditLogStreamConfig"))
+	},
+	"github.organization.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetSecrets()).ToDataRes(types.Array(types.Resource("github.actionsSecret")))
+	},
+	"github.organization.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetVariables()).ToDataRes(types.Array(types.Resource("github.actionsVariable")))
 	},
 	"github.organization.samlConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganizationSamlConfig).GetEnabled()).ToDataRes(types.Bool)
@@ -1211,6 +1227,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.repository.codeowners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetCodeowners()).ToDataRes(types.Resource("github.repository.codeowners"))
+	},
+	"github.repository.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetSecrets()).ToDataRes(types.Array(types.Resource("github.actionsSecret")))
+	},
+	"github.repository.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetVariables()).ToDataRes(types.Array(types.Resource("github.actionsVariable")))
 	},
 	"github.deployKey.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubDeployKey).GetId()).ToDataRes(types.Int)
@@ -2118,6 +2140,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.environment.protectionRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubEnvironment).GetProtectionRules()).ToDataRes(types.Array(types.Resource("github.environmentProtectionRule")))
 	},
+	"github.environment.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubEnvironment).GetSecrets()).ToDataRes(types.Array(types.Resource("github.actionsSecret")))
+	},
+	"github.environment.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubEnvironment).GetVariables()).ToDataRes(types.Array(types.Resource("github.actionsVariable")))
+	},
 	"github.environmentProtectionRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubEnvironmentProtectionRule).GetId()).ToDataRes(types.Int)
 	},
@@ -2204,6 +2232,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"github.deploymentStatus.environmentUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubDeploymentStatus).GetEnvironmentUrl()).ToDataRes(types.String)
+	},
+	"github.actionsSecret.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetName()).ToDataRes(types.String)
+	},
+	"github.actionsSecret.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetScope()).ToDataRes(types.String)
+	},
+	"github.actionsSecret.organizationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetOrganizationName()).ToDataRes(types.String)
+	},
+	"github.actionsSecret.repositoryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetRepositoryName()).ToDataRes(types.String)
+	},
+	"github.actionsSecret.repositoryOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetRepositoryOwner()).ToDataRes(types.String)
+	},
+	"github.actionsSecret.environmentName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetEnvironmentName()).ToDataRes(types.String)
+	},
+	"github.actionsSecret.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"github.actionsSecret.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"github.actionsSecret.visibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetVisibility()).ToDataRes(types.String)
+	},
+	"github.actionsSecret.selectedRepositoriesUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetSelectedRepositoriesUrl()).ToDataRes(types.String)
+	},
+	"github.actionsSecret.selectedRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsSecret).GetSelectedRepositories()).ToDataRes(types.Array(types.Resource("github.repository")))
+	},
+	"github.actionsVariable.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetName()).ToDataRes(types.String)
+	},
+	"github.actionsVariable.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetValue()).ToDataRes(types.String)
+	},
+	"github.actionsVariable.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetScope()).ToDataRes(types.String)
+	},
+	"github.actionsVariable.organizationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetOrganizationName()).ToDataRes(types.String)
+	},
+	"github.actionsVariable.repositoryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetRepositoryName()).ToDataRes(types.String)
+	},
+	"github.actionsVariable.repositoryOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetRepositoryOwner()).ToDataRes(types.String)
+	},
+	"github.actionsVariable.environmentName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetEnvironmentName()).ToDataRes(types.String)
+	},
+	"github.actionsVariable.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"github.actionsVariable.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"github.actionsVariable.visibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetVisibility()).ToDataRes(types.String)
+	},
+	"github.actionsVariable.selectedRepositoriesUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetSelectedRepositoriesUrl()).ToDataRes(types.String)
+	},
+	"github.actionsVariable.selectedRepositories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubActionsVariable).GetSelectedRepositories()).ToDataRes(types.Array(types.Resource("github.repository")))
 	},
 }
 
@@ -2571,6 +2668,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.organization.auditLogStreamConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganization).AuditLogStreamConfig, ok = plugin.RawToTValue[*mqlGithubOrganizationAuditLogStreamConfig](v.Value, v.Error)
+		return
+	},
+	"github.organization.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.organization.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.samlConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3411,6 +3516,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.repository.codeowners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).Codeowners, ok = plugin.RawToTValue[*mqlGithubRepositoryCodeowners](v.Value, v.Error)
+		return
+	},
+	"github.repository.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.deployKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4753,6 +4866,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubEnvironment).ProtectionRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"github.environment.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubEnvironment).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.environment.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubEnvironment).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"github.environmentProtectionRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubEnvironmentProtectionRule).__id, ok = v.Value.(string)
 		return
@@ -4879,6 +5000,106 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.deploymentStatus.environmentUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubDeploymentStatus).EnvironmentUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).__id, ok = v.Value.(string)
+		return
+	},
+	"github.actionsSecret.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.organizationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).OrganizationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.repositoryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).RepositoryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.repositoryOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).RepositoryOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.environmentName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).EnvironmentName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).Visibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.selectedRepositoriesUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).SelectedRepositoriesUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsSecret.selectedRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsSecret).SelectedRepositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).__id, ok = v.Value.(string)
+		return
+	},
+	"github.actionsVariable.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.organizationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).OrganizationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.repositoryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).RepositoryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.repositoryOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).RepositoryOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.environmentName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).EnvironmentName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).Visibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.selectedRepositoriesUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).SelectedRepositoriesUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"github.actionsVariable.selectedRepositories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubActionsVariable).SelectedRepositories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 }
@@ -5221,6 +5442,8 @@ type mqlGithubOrganization struct {
 	OauthApps                                      plugin.TValue[[]any]
 	PersonalAccessTokens                           plugin.TValue[[]any]
 	AuditLogStreamConfig                           plugin.TValue[*mqlGithubOrganizationAuditLogStreamConfig]
+	Secrets                                        plugin.TValue[[]any]
+	Variables                                      plugin.TValue[[]any]
 }
 
 // createGithubOrganization creates a new instance of this resource
@@ -5753,6 +5976,38 @@ func (c *mqlGithubOrganization) GetAuditLogStreamConfig() *plugin.TValue[*mqlGit
 		}
 
 		return c.auditLogStreamConfig()
+	})
+}
+
+func (c *mqlGithubOrganization) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
+}
+
+func (c *mqlGithubOrganization) GetVariables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Variables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "variables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.variables()
 	})
 }
 
@@ -7255,6 +7510,8 @@ type mqlGithubRepository struct {
 	ActionsSettings                     plugin.TValue[*mqlGithubRepositoryActionsSettings]
 	DeployKeys                          plugin.TValue[[]any]
 	Codeowners                          plugin.TValue[*mqlGithubRepositoryCodeowners]
+	Secrets                             plugin.TValue[[]any]
+	Variables                           plugin.TValue[[]any]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -7991,6 +8248,38 @@ func (c *mqlGithubRepository) GetCodeowners() *plugin.TValue[*mqlGithubRepositor
 		}
 
 		return c.codeowners()
+	})
+}
+
+func (c *mqlGithubRepository) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
+}
+
+func (c *mqlGithubRepository) GetVariables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Variables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "variables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.variables()
 	})
 }
 
@@ -10967,7 +11256,7 @@ func (c *mqlGithubRunnerLabel) GetType() *plugin.TValue[string] {
 type mqlGithubEnvironment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGithubEnvironmentInternal it will be used here
+	mqlGithubEnvironmentInternal
 	Id                   plugin.TValue[int64]
 	Name                 plugin.TValue[string]
 	Url                  plugin.TValue[string]
@@ -10979,6 +11268,8 @@ type mqlGithubEnvironment struct {
 	ProtectedBranches    plugin.TValue[bool]
 	CustomBranchPolicies plugin.TValue[bool]
 	ProtectionRules      plugin.TValue[[]any]
+	Secrets              plugin.TValue[[]any]
+	Variables            plugin.TValue[[]any]
 }
 
 // createGithubEnvironment creates a new instance of this resource
@@ -11060,6 +11351,38 @@ func (c *mqlGithubEnvironment) GetCustomBranchPolicies() *plugin.TValue[bool] {
 
 func (c *mqlGithubEnvironment) GetProtectionRules() *plugin.TValue[[]any] {
 	return &c.ProtectionRules
+}
+
+func (c *mqlGithubEnvironment) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.environment", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
+}
+
+func (c *mqlGithubEnvironment) GetVariables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Variables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.environment", c.__id, "variables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.variables()
+	})
 }
 
 // mqlGithubEnvironmentProtectionRule for the github.environmentProtectionRule resource
@@ -11349,4 +11672,231 @@ func (c *mqlGithubDeploymentStatus) GetLogUrl() *plugin.TValue[string] {
 
 func (c *mqlGithubDeploymentStatus) GetEnvironmentUrl() *plugin.TValue[string] {
 	return &c.EnvironmentUrl
+}
+
+// mqlGithubActionsSecret for the github.actionsSecret resource
+type mqlGithubActionsSecret struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGithubActionsSecretInternal
+	Name                    plugin.TValue[string]
+	Scope                   plugin.TValue[string]
+	OrganizationName        plugin.TValue[string]
+	RepositoryName          plugin.TValue[string]
+	RepositoryOwner         plugin.TValue[string]
+	EnvironmentName         plugin.TValue[string]
+	CreatedAt               plugin.TValue[*time.Time]
+	UpdatedAt               plugin.TValue[*time.Time]
+	Visibility              plugin.TValue[string]
+	SelectedRepositoriesUrl plugin.TValue[string]
+	SelectedRepositories    plugin.TValue[[]any]
+}
+
+// createGithubActionsSecret creates a new instance of this resource
+func createGithubActionsSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubActionsSecret{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.actionsSecret", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubActionsSecret) MqlName() string {
+	return "github.actionsSecret"
+}
+
+func (c *mqlGithubActionsSecret) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubActionsSecret) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGithubActionsSecret) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlGithubActionsSecret) GetOrganizationName() *plugin.TValue[string] {
+	return &c.OrganizationName
+}
+
+func (c *mqlGithubActionsSecret) GetRepositoryName() *plugin.TValue[string] {
+	return &c.RepositoryName
+}
+
+func (c *mqlGithubActionsSecret) GetRepositoryOwner() *plugin.TValue[string] {
+	return &c.RepositoryOwner
+}
+
+func (c *mqlGithubActionsSecret) GetEnvironmentName() *plugin.TValue[string] {
+	return &c.EnvironmentName
+}
+
+func (c *mqlGithubActionsSecret) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGithubActionsSecret) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGithubActionsSecret) GetVisibility() *plugin.TValue[string] {
+	return &c.Visibility
+}
+
+func (c *mqlGithubActionsSecret) GetSelectedRepositoriesUrl() *plugin.TValue[string] {
+	return &c.SelectedRepositoriesUrl
+}
+
+func (c *mqlGithubActionsSecret) GetSelectedRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SelectedRepositories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.actionsSecret", c.__id, "selectedRepositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.selectedRepositories()
+	})
+}
+
+// mqlGithubActionsVariable for the github.actionsVariable resource
+type mqlGithubActionsVariable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGithubActionsVariableInternal
+	Name                    plugin.TValue[string]
+	Value                   plugin.TValue[string]
+	Scope                   plugin.TValue[string]
+	OrganizationName        plugin.TValue[string]
+	RepositoryName          plugin.TValue[string]
+	RepositoryOwner         plugin.TValue[string]
+	EnvironmentName         plugin.TValue[string]
+	CreatedAt               plugin.TValue[*time.Time]
+	UpdatedAt               plugin.TValue[*time.Time]
+	Visibility              plugin.TValue[string]
+	SelectedRepositoriesUrl plugin.TValue[string]
+	SelectedRepositories    plugin.TValue[[]any]
+}
+
+// createGithubActionsVariable creates a new instance of this resource
+func createGithubActionsVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGithubActionsVariable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("github.actionsVariable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGithubActionsVariable) MqlName() string {
+	return "github.actionsVariable"
+}
+
+func (c *mqlGithubActionsVariable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGithubActionsVariable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGithubActionsVariable) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlGithubActionsVariable) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlGithubActionsVariable) GetOrganizationName() *plugin.TValue[string] {
+	return &c.OrganizationName
+}
+
+func (c *mqlGithubActionsVariable) GetRepositoryName() *plugin.TValue[string] {
+	return &c.RepositoryName
+}
+
+func (c *mqlGithubActionsVariable) GetRepositoryOwner() *plugin.TValue[string] {
+	return &c.RepositoryOwner
+}
+
+func (c *mqlGithubActionsVariable) GetEnvironmentName() *plugin.TValue[string] {
+	return &c.EnvironmentName
+}
+
+func (c *mqlGithubActionsVariable) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlGithubActionsVariable) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlGithubActionsVariable) GetVisibility() *plugin.TValue[string] {
+	return &c.Visibility
+}
+
+func (c *mqlGithubActionsVariable) GetSelectedRepositoriesUrl() *plugin.TValue[string] {
+	return &c.SelectedRepositoriesUrl
+}
+
+func (c *mqlGithubActionsVariable) GetSelectedRepositories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SelectedRepositories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.actionsVariable", c.__id, "selectedRepositories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.selectedRepositories()
+	})
 }

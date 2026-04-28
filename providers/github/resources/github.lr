@@ -188,6 +188,10 @@ github.organization @defaults("login name") {
   personalAccessTokens() []github.organization.personalAccessToken
   // Audit log streaming destination configuration (requires GitHub Enterprise Cloud)
   auditLogStreamConfig() github.organization.auditLogStreamConfig
+  // GitHub Actions secrets configured at the organization level (values are not exposed)
+  secrets() []github.actionsSecret
+  // GitHub Actions variables configured at the organization level
+  variables() []github.actionsVariable
 }
 
 // SAML SSO configuration for a GitHub organization (requires GitHub Enterprise Cloud)
@@ -640,6 +644,10 @@ github.repository @defaults("fullName") {
   deployKeys() []github.deployKey
   // Parsed CODEOWNERS rules (from .github/CODEOWNERS, CODEOWNERS, or docs/CODEOWNERS)
   codeowners() github.repository.codeowners
+  // GitHub Actions secrets configured at the repository level (values are not exposed)
+  secrets() []github.actionsSecret
+  // GitHub Actions variables configured at the repository level
+  variables() []github.actionsVariable
 }
 
 // A repository deploy key
@@ -1376,6 +1384,10 @@ private github.environment @defaults("name id") {
   customBranchPolicies bool
   // Protection rules for this environment
   protectionRules []github.environmentProtectionRule
+  // GitHub Actions secrets configured at the environment level (values are not exposed)
+  secrets() []github.actionsSecret
+  // GitHub Actions variables configured at the environment level
+  variables() []github.actionsVariable
 }
 
 // GitHub environment protection rule
@@ -1446,4 +1458,58 @@ private github.deploymentStatus @defaults("id state") {
   logUrl string
   // Environment URL
   environmentUrl string
+}
+
+// GitHub Actions secret. Values are never exposed by the API; this resource lists metadata only.
+private github.actionsSecret @defaults("name scope visibility") {
+  // Secret name
+  name string
+  // Scope of the secret (organization, repository, environment)
+  scope string
+  // Owning organization login (set for organization scope)
+  organizationName string
+  // Owning repository name (set for repository and environment scope)
+  repositoryName string
+  // Owning repository owner login (set for repository and environment scope)
+  repositoryOwner string
+  // Environment name (set for environment scope)
+  environmentName string
+  // Secret create time
+  createdAt time
+  // Secret last update time
+  updatedAt time
+  // Visibility of an organization secret (all, private, selected); empty for repository or environment scope
+  visibility string
+  // URL to the list of selected repositories for an organization secret with visibility "selected"
+  selectedRepositoriesUrl string
+  // Repositories that have access to this organization secret (only when visibility is "selected")
+  selectedRepositories() []github.repository
+}
+
+// GitHub Actions variable. Variable values are readable by anyone with read access to the scope.
+private github.actionsVariable @defaults("name scope visibility") {
+  // Variable name
+  name string
+  // Variable value
+  value string
+  // Scope of the variable (organization, repository, environment)
+  scope string
+  // Owning organization login (set for organization scope)
+  organizationName string
+  // Owning repository name (set for repository and environment scope)
+  repositoryName string
+  // Owning repository owner login (set for repository and environment scope)
+  repositoryOwner string
+  // Environment name (set for environment scope)
+  environmentName string
+  // Variable create time
+  createdAt time
+  // Variable last update time
+  updatedAt time
+  // Visibility of an organization variable (all, private, selected); empty for repository or environment scope
+  visibility string
+  // URL to the list of selected repositories for an organization variable with visibility "selected"
+  selectedRepositoriesUrl string
+  // Repositories that have access to this organization variable (only when visibility is "selected")
+  selectedRepositories() []github.repository
 }
