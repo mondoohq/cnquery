@@ -4,8 +4,6 @@
 package resources
 
 import (
-	"strings"
-
 	"github.com/google/go-github/v85/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -264,7 +262,7 @@ func (g *mqlGithubEnvironment) secrets() ([]any, error) {
 	repo := g.repoName
 	repoID := g.repoID
 
-	if repoID == 0 || envName == "" {
+	if owner == "" || repo == "" || repoID == 0 || envName == "" {
 		return nil, nil
 	}
 
@@ -315,8 +313,9 @@ func (g *mqlGithubEnvironment) variables() ([]any, error) {
 	envName := g.Name.Data
 	owner := g.ownerLogin
 	repo := g.repoName
+	repoID := g.repoID
 
-	if owner == "" || repo == "" || envName == "" {
+	if owner == "" || repo == "" || repoID == 0 || envName == "" {
 		return nil, nil
 	}
 
@@ -467,15 +466,13 @@ func reposToMql(runtime *plugin.Runtime, repos []*github.Repository) ([]any, err
 	return res, nil
 }
 
-// handleActionsListErr maps common GitHub permission errors to nil results so a query
-// against an unauthorized scope (no admin:org / admin:repo) doesn't fail the whole run.
+// handleActionsListErr maps inaccessible GitHub Actions endpoints (404/403) to nil
+// results so a query against an unauthorized scope (no admin:org / admin:repo)
+// doesn't fail the whole run. Uses the typed *github.ErrorResponse via the shared
+// isAccessDeniedOrNotFound helper rather than fragile string matching.
 func handleActionsListErr(err error, what string) ([]any, error) {
-	msg := err.Error()
-	if strings.Contains(msg, "404") {
-		return nil, nil
-	}
-	if strings.Contains(msg, "403") {
-		log.Debug().Str("scope", what).Msg("not accessible with current credentials")
+	if isAccessDeniedOrNotFound(err) {
+		log.Debug().Str("scope", what).Err(err).Msg("not accessible with current credentials")
 		return nil, nil
 	}
 	return nil, err
