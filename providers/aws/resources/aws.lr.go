@@ -2610,7 +2610,7 @@ func init() {
 			Create: createAwsDocumentdbCluster,
 		},
 		"aws.documentdb.instance": {
-			// to override args, implement: initAwsDocumentdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsDocumentdbInstance,
 			Create: createAwsDocumentdbInstance,
 		},
 		"aws.documentdb.snapshot": {
@@ -17482,9 +17482,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.documentdb.globalCluster.member.readers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbGlobalClusterMember).GetReaders()).ToDataRes(types.Array(types.Resource("aws.documentdb.cluster")))
-	},
-	"aws.documentdb.globalCluster.member.globalWriteForwardingStatus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDocumentdbGlobalClusterMember).GetGlobalWriteForwardingStatus()).ToDataRes(types.String)
 	},
 	"aws.documentdb.pendingMaintenanceAction.resourceArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDocumentdbPendingMaintenanceAction).GetResourceArn()).ToDataRes(types.String)
@@ -43241,10 +43238,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.documentdb.globalCluster.member.readers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDocumentdbGlobalClusterMember).Readers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"aws.documentdb.globalCluster.member.globalWriteForwardingStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDocumentdbGlobalClusterMember).GlobalWriteForwardingStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.documentdb.pendingMaintenanceAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -105059,10 +105052,9 @@ type mqlAwsDocumentdbGlobalClusterMember struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsDocumentdbGlobalClusterMemberInternal
-	Cluster                     plugin.TValue[*mqlAwsDocumentdbCluster]
-	IsWriter                    plugin.TValue[bool]
-	Readers                     plugin.TValue[[]any]
-	GlobalWriteForwardingStatus plugin.TValue[string]
+	Cluster  plugin.TValue[*mqlAwsDocumentdbCluster]
+	IsWriter plugin.TValue[bool]
+	Readers  plugin.TValue[[]any]
 }
 
 // createAwsDocumentdbGlobalClusterMember creates a new instance of this resource
@@ -105131,10 +105123,6 @@ func (c *mqlAwsDocumentdbGlobalClusterMember) GetReaders() *plugin.TValue[[]any]
 
 		return c.readers()
 	})
-}
-
-func (c *mqlAwsDocumentdbGlobalClusterMember) GetGlobalWriteForwardingStatus() *plugin.TValue[string] {
-	return &c.GlobalWriteForwardingStatus
 }
 
 // mqlAwsDocumentdbPendingMaintenanceAction for the aws.documentdb.pendingMaintenanceAction resource

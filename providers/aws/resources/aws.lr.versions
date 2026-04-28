@@ -1291,7 +1291,6 @@ aws.documentdb.globalCluster.globalClusterIdentifier 13.19.1
 aws.documentdb.globalCluster.globalClusterResourceId 13.19.1
 aws.documentdb.globalCluster.member 13.19.1
 aws.documentdb.globalCluster.member.cluster 13.19.1
-aws.documentdb.globalCluster.member.globalWriteForwardingStatus 13.19.1
 aws.documentdb.globalCluster.member.isWriter 13.19.1
 aws.documentdb.globalCluster.member.readers 13.19.1
 aws.documentdb.globalCluster.members 13.19.1

@@ -11211,7 +11211,7 @@ private aws.documentdb.instance @defaults("arn name status") {
   status string
   // List of log types that this DB instance is configured to export to CloudWatch logs
   enabledCloudwatchLogsExports []string
-  // Connection endpoint
+  // DEPRECATED: use endpointAddress, endpointPort, and endpointHostedZoneId instead
   endpoint @maturity("deprecated") dict
   // DNS address of the connection endpoint
   endpointAddress string
@@ -11381,8 +11381,6 @@ private aws.documentdb.globalCluster.member @defaults("isWriter") {
   isWriter bool
   // Reader cluster members (typed references to clusters that read from this writer)
   readers() []aws.documentdb.cluster
-  // Global write forwarding status (one of: enabled, disabled, enabling, disabling, unknown)
-  globalWriteForwardingStatus string
 }
 
 // Pending maintenance action for a DocumentDB cluster or instance

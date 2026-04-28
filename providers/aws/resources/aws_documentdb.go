@@ -140,16 +140,22 @@ func (a *mqlAwsDocumentdb) getDbClusters(conn *connection.AwsConnection) []*jobp
 	return tasks
 }
 
-func newMqlAwsDocumentdbCluster(runtime *plugin.Runtime, region, accountID string, cluster docdb_types.DBCluster) (*mqlAwsDocumentdbCluster, error) {
-	auditEnabled, profilerEnabled := false, false
-	for _, l := range cluster.EnabledCloudwatchLogsExports {
-		if l == docdbAuditLogType {
-			auditEnabled = true
-		}
-		if l == docdbProfilerLogType {
-			profilerEnabled = true
+// docdbLogExportsEnabled scans EnabledCloudwatchLogsExports for the audit and
+// profiler log types and reports which are present.
+func docdbLogExportsEnabled(exports []string) (audit, profiler bool) {
+	for _, l := range exports {
+		switch l {
+		case docdbAuditLogType:
+			audit = true
+		case docdbProfilerLogType:
+			profiler = true
 		}
 	}
+	return
+}
+
+func newMqlAwsDocumentdbCluster(runtime *plugin.Runtime, region, accountID string, cluster docdb_types.DBCluster) (*mqlAwsDocumentdbCluster, error) {
+	auditEnabled, profilerEnabled := docdbLogExportsEnabled(cluster.EnabledCloudwatchLogsExports)
 
 	memberIds := []string{}
 	var writerId *string
@@ -716,6 +722,36 @@ type mqlAwsDocumentdbInstanceInternal struct {
 	cacheClusterIdentifier           *string
 }
 
+func initAwsDocumentdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if len(args) == 0 {
+		if ids := getAssetIdentifier(runtime); ids != nil {
+			args["arn"] = llx.StringData(ids.arn)
+		}
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch documentdb instance")
+	}
+	d, err := docdbGetParent(runtime)
+	if err != nil {
+		return nil, nil, err
+	}
+	rawResources := d.GetInstances()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+	arnVal := args["arn"].Value.(string)
+	for _, raw := range rawResources.Data {
+		i := raw.(*mqlAwsDocumentdbInstance)
+		if i.Arn.Data == arnVal {
+			return args, i, nil
+		}
+	}
+	return args, nil, nil
+}
+
 func docdbInstancePendingModifiedValues(p *docdb_types.PendingModifiedValues) map[string]any {
 	out := map[string]any{}
 	if p == nil {
@@ -793,8 +829,7 @@ func (a *mqlAwsDocumentdbInstance) cluster() (*mqlAwsDocumentdbCluster, error) {
 		"arn": llx.StringData(clusterArn),
 	})
 	if err != nil {
-		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+		return nil, err
 	}
 	return mqlCluster.(*mqlAwsDocumentdbCluster), nil
 }
@@ -977,8 +1012,7 @@ func (a *mqlAwsDocumentdbSnapshot) cluster() (*mqlAwsDocumentdbCluster, error) {
 		"arn": llx.StringData(fmt.Sprintf(docdbClusterArnPattern, a.region, a.accountID, *a.cacheClusterIdentifier)),
 	})
 	if err != nil {
-		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+		return nil, err
 	}
 	return mqlCluster.(*mqlAwsDocumentdbCluster), nil
 }
@@ -1200,11 +1234,16 @@ func (a *mqlAwsDocumentdb) fetchGlobalClusters() ([]docdb_types.GlobalCluster, e
 			svc := conn.DocumentDB(region)
 			ctx := context.Background()
 			paginator := docdb.NewDescribeGlobalClustersPaginator(svc, &docdb.DescribeGlobalClustersInput{})
+		regionLoop:
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					log.Debug().Str("region", region).Err(err).Msg("describe global clusters failed")
-					break
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("access denied describing global clusters")
+						break regionLoop
+					}
+					a.globalClustersErrCache = err
+					return
 				}
 				for _, gc := range page.GlobalClusters {
 					if gc.GlobalClusterArn == nil || seen[*gc.GlobalClusterArn] {
@@ -1272,20 +1311,19 @@ type mqlAwsDocumentdbGlobalClusterInternal struct {
 
 func (a *mqlAwsDocumentdbGlobalCluster) members() ([]any, error) {
 	res := []any{}
-	for i, m := range a.cacheMembers {
+	for _, m := range a.cacheMembers {
 		writerArn := ""
 		if m.DBClusterArn != nil {
 			writerArn = *m.DBClusterArn
 		}
-		memberId := a.Arn.Data + fmt.Sprintf("/member/%d/%s", i, writerArn)
+		memberId := a.Arn.Data + "/member/" + writerArn
 		isWriter := false
 		if m.IsWriter != nil {
 			isWriter = *m.IsWriter
 		}
 		r, err := CreateResource(a.MqlRuntime, "aws.documentdb.globalCluster.member", map[string]*llx.RawData{
-			"__id":                        llx.StringData(memberId),
-			"isWriter":                    llx.BoolData(isWriter),
-			"globalWriteForwardingStatus": llx.StringData(""),
+			"__id":     llx.StringData(memberId),
+			"isWriter": llx.BoolData(isWriter),
 		})
 		if err != nil {
 			return nil, err
@@ -1312,8 +1350,7 @@ func (a *mqlAwsDocumentdbGlobalClusterMember) cluster() (*mqlAwsDocumentdbCluste
 		"arn": llx.StringData(a.cacheClusterArn),
 	})
 	if err != nil {
-		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+		return nil, err
 	}
 	return mqlCluster.(*mqlAwsDocumentdbCluster), nil
 }
@@ -1325,7 +1362,7 @@ func (a *mqlAwsDocumentdbGlobalClusterMember) readers() ([]any, error) {
 			"arn": llx.StringData(arn),
 		})
 		if err != nil {
-			continue
+			return nil, err
 		}
 		res = append(res, ref)
 	}
@@ -1363,11 +1400,16 @@ func (a *mqlAwsDocumentdb) fetchPendingMaintenanceActions() ([]docdb_types.Resou
 			svc := conn.DocumentDB(region)
 			ctx := context.Background()
 			paginator := docdb.NewDescribePendingMaintenanceActionsPaginator(svc, &docdb.DescribePendingMaintenanceActionsInput{})
+		regionLoop:
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
-					log.Debug().Str("region", region).Err(err).Msg("pending maintenance actions describe failed")
-					break
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("access denied describing pending maintenance actions")
+						break regionLoop
+					}
+					a.pendingActionsErr = err
+					return
 				}
 				out = append(out, page.PendingMaintenanceActions...)
 			}
@@ -1453,17 +1495,21 @@ func (a *mqlAwsDocumentdb) getElasticClusters(conn *connection.AwsConnection) []
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("access denied listing elastic clusters")
 						return res, nil
 					}
-					log.Debug().Str("region", region).Err(err).Msg("list elastic clusters failed")
-					return res, nil
+					return nil, err
 				}
 				for _, summary := range page.Clusters {
 					if summary.ClusterArn == nil {
 						continue
 					}
 					detail, err := svc.GetCluster(ctx, &docdbelastic.GetClusterInput{ClusterArn: summary.ClusterArn})
-					if err != nil || detail.Cluster == nil {
+					if err != nil {
+						log.Warn().Str("region", region).Str("clusterArn", *summary.ClusterArn).Err(err).Msg("get elastic cluster failed; skipping")
+						continue
+					}
+					if detail.Cluster == nil {
 						continue
 					}
 					mqlEc, err := newMqlAwsDocumentdbElasticCluster(a.MqlRuntime, region, conn.AccountId(), *detail.Cluster)
@@ -1615,7 +1661,11 @@ func (a *mqlAwsDocumentdbElasticCluster) snapshots() ([]any, error) {
 			detail, err := svc.GetClusterSnapshot(ctx, &docdbelastic.GetClusterSnapshotInput{
 				SnapshotArn: summary.SnapshotArn,
 			})
-			if err != nil || detail.Snapshot == nil {
+			if err != nil {
+				log.Warn().Str("region", a.Region.Data).Str("snapshotArn", *summary.SnapshotArn).Err(err).Msg("get elastic snapshot failed; skipping")
+				continue
+			}
+			if detail.Snapshot == nil {
 				continue
 			}
 			mqlSnap, err := newMqlAwsDocumentdbElasticSnapshot(a.MqlRuntime, a.Region.Data, conn.AccountId(), *detail.Snapshot)
@@ -1662,10 +1712,10 @@ func (a *mqlAwsDocumentdb) getElasticSnapshots(conn *connection.AwsConnection) [
 				page, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("access denied listing elastic snapshots")
 						return res, nil
 					}
-					log.Debug().Str("region", region).Err(err).Msg("list elastic snapshots failed")
-					return res, nil
+					return nil, err
 				}
 				for _, summary := range page.Snapshots {
 					if summary.SnapshotArn == nil {
@@ -1674,7 +1724,11 @@ func (a *mqlAwsDocumentdb) getElasticSnapshots(conn *connection.AwsConnection) [
 					detail, err := svc.GetClusterSnapshot(ctx, &docdbelastic.GetClusterSnapshotInput{
 						SnapshotArn: summary.SnapshotArn,
 					})
-					if err != nil || detail.Snapshot == nil {
+					if err != nil {
+						log.Warn().Str("region", region).Str("snapshotArn", *summary.SnapshotArn).Err(err).Msg("get elastic snapshot failed; skipping")
+						continue
+					}
+					if detail.Snapshot == nil {
 						continue
 					}
 					mqlSnap, err := newMqlAwsDocumentdbElasticSnapshot(a.MqlRuntime, region, conn.AccountId(), *detail.Snapshot)
@@ -1741,8 +1795,7 @@ func (a *mqlAwsDocumentdbElasticSnapshot) cluster() (*mqlAwsDocumentdbElasticClu
 		"arn": llx.StringData(a.cacheClusterArn),
 	})
 	if err != nil {
-		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
+		return nil, err
 	}
 	return mqlCluster.(*mqlAwsDocumentdbElasticCluster), nil
 }
