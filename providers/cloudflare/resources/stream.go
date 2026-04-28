@@ -41,9 +41,9 @@ func fetchLiveInputs(runtime *plugin.Runtime, account_id string) ([]any, error) 
 	conn := runtime.Connection.(*connection.CloudflareConnection)
 
 	req, _ := http.NewRequest(
-		"GET", fmt.Sprintf("%s/accounts/%s/stream/live_inputs", conn.Cf.BaseURL, account_id), nil,
+		"GET", fmt.Sprintf("%s/accounts/%s/stream/live_inputs", conn.LegacyCf.BaseURL, account_id), nil,
 	)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", conn.Cf.APIToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", conn.LegacyCf.APIToken))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -100,7 +100,7 @@ func (c *mqlCloudflareAccount) videos() ([]any, error) {
 func fetchVideos(runtime *plugin.Runtime, account_id string) ([]any, error) {
 	conn := runtime.Connection.(*connection.CloudflareConnection)
 
-	results, err := conn.Cf.StreamListVideos(context.Background(), cloudflare.StreamListParameters{
+	results, err := conn.LegacyCf.StreamListVideos(context.Background(), cloudflare.StreamListParameters{
 		AccountID: account_id,
 	})
 	if err != nil {

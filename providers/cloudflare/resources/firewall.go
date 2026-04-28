@@ -25,7 +25,7 @@ func (c *mqlCloudflareZone) firewallRules() ([]any, error) {
 	cursor := &cloudflare.ResultInfo{}
 	var result []any
 	for {
-		records, info, err := conn.Cf.FirewallRules(context.TODO(), &cloudflare.ResourceContainer{
+		records, info, err := conn.LegacyCf.FirewallRules(context.TODO(), &cloudflare.ResourceContainer{
 			Identifier: c.Id.Data,
 			Level:      cloudflare.ZoneRouteLevel,
 		}, cloudflare.FirewallRuleListParams{
@@ -76,7 +76,7 @@ func (c *mqlCloudflareZoneRuleset) id() (string, error) {
 func (c *mqlCloudflareZone) rulesets() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := conn.Cf.ListRulesets(context.TODO(), &cloudflare.ResourceContainer{
+	records, err := conn.LegacyCf.ListRulesets(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.Id.Data,
 		Level:      cloudflare.ZoneRouteLevel,
 	}, cloudflare.ListRulesetsParams{})
@@ -117,7 +117,7 @@ func (c *mqlCloudflareZonePageRule) id() (string, error) {
 func (c *mqlCloudflareZone) pageRules() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := conn.Cf.ListPageRules(context.TODO(), c.Id.Data)
+	records, err := conn.LegacyCf.ListPageRules(context.TODO(), c.Id.Data)
 	if err != nil {
 		return nil, err
 	}

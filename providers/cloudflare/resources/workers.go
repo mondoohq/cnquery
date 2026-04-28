@@ -48,7 +48,7 @@ func (c *mqlCloudflareWorkers) fetchWorkerList() ([]cloudflare.WorkerMetaData, e
 	}
 
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	resp, _, err := conn.Cf.ListWorkers(context.TODO(), &cloudflare.ResourceContainer{
+	resp, _, err := conn.LegacyCf.ListWorkers(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.mqlCloudflareWorkersInternal.AccountID,
 		Level:      cloudflare.AccountRouteLevel,
 	}, cloudflare.ListWorkersParams{})
@@ -128,7 +128,7 @@ func (c *mqlCloudflareWorkers) secrets() ([]any, error) {
 	var result []any
 	for i := range workerList {
 		w := workerList[i]
-		secrets, err := conn.Cf.ListWorkersSecrets(context.TODO(), rc, cloudflare.ListWorkersSecretsParams{
+		secrets, err := conn.LegacyCf.ListWorkersSecrets(context.TODO(), rc, cloudflare.ListWorkersSecretsParams{
 			ScriptName: w.ID,
 		})
 		if err != nil {
@@ -200,7 +200,7 @@ func (c *mqlCloudflareWorkers) pageEnvVars() ([]any, error) {
 		params := cloudflare.ListPagesProjectsParams{
 			PaginationOptions: cloudflare.PaginationOptions{Page: page, PerPage: 50},
 		}
-		projects, info, err := conn.Cf.ListPagesProjects(context.TODO(), rc, params)
+		projects, info, err := conn.LegacyCf.ListPagesProjects(context.TODO(), rc, params)
 		if err != nil {
 			var notFound *cloudflare.NotFoundError
 			var authN *cloudflare.AuthenticationError

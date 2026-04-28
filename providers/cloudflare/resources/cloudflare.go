@@ -5,7 +5,8 @@ package resources
 import (
 	"context"
 
-	"github.com/cloudflare/cloudflare-go"
+	"github.com/cloudflare/cloudflare-go/v6/accounts"
+	"github.com/cloudflare/cloudflare-go/v6/zones"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -19,29 +20,28 @@ func (r *mqlCloudflare) id() (string, error) {
 func (c *mqlCloudflare) zones() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	zones, err := conn.Cf.ListZones(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
 	var res []any
-	for i := range zones {
-		zone := zones[i]
+	iter := conn.Cf.Zones.ListAutoPaging(context.Background(), zones.ZoneListParams{})
+	for iter.Next() {
+		zone := iter.Current()
 
 		acc, err := NewResource(c.MqlRuntime, "cloudflare.zone.account", map[string]*llx.RawData{
 			"id":   llx.StringData(zone.Account.ID),
 			"name": llx.StringData(zone.Account.Name),
-			"type": llx.StringData(zone.Account.Type),
+			// v6 ZoneAccount has no Type field; surface empty for schema compatibility.
+			"type": llx.StringData(""),
 		})
 		if err != nil {
 			return nil, err
 		}
 
 		owner, err := NewResource(c.MqlRuntime, "cloudflare.zone.owner", map[string]*llx.RawData{
-			"id":        llx.StringData(zone.Owner.ID),
-			"email":     llx.StringData(zone.Owner.Email),
+			"id": llx.StringData(zone.Owner.ID),
+			// v6 ZoneOwner has no Email field — the OpenAPI spec doesn't expose
+			// it at the zone level. Surface empty for schema compatibility.
+			"email":     llx.StringData(""),
 			"name":      llx.StringData(zone.Owner.Name),
-			"ownerType": llx.StringData(zone.Owner.OwnerType),
+			"ownerType": llx.StringData(zone.Owner.Type),
 		})
 		if err != nil {
 			return nil, err
@@ -50,7 +50,7 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 		plan, err := NewResource(c.MqlRuntime, "cloudflare.zone.plan", map[string]*llx.RawData{
 			"id":           llx.StringData(zone.Plan.ID),
 			"name":         llx.StringData(zone.Plan.Name),
-			"price":        llx.IntData(zone.Plan.Price),
+			"price":        llx.IntData(int64(zone.Plan.Price)),
 			"currency":     llx.StringData(zone.Plan.Currency),
 			"frequency":    llx.StringData(zone.Plan.Frequency),
 			"isSubscribed": llx.BoolData(zone.Plan.IsSubscribed),
@@ -64,11 +64,11 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 			"name": llx.StringData(zone.Name),
 
 			"nameServers":         llx.ArrayData(convert.SliceAnyToInterface(zone.NameServers), types.String),
-			"originalNameServers": llx.ArrayData(convert.SliceAnyToInterface(zone.OriginalNS), types.String),
+			"originalNameServers": llx.ArrayData(convert.SliceAnyToInterface(zone.OriginalNameServers), types.String),
 
-			"status": llx.StringData(zone.Status),
+			"status": llx.StringData(string(zone.Status)),
 			"paused": llx.BoolData(zone.Paused),
-			"type":   llx.StringData(zone.Type),
+			"type":   llx.StringData(string(zone.Type)),
 
 			"account": llx.ResourceData(acc, acc.MqlName()),
 			"owner":   llx.ResourceData(owner, owner.MqlName()),
@@ -82,6 +82,9 @@ func (c *mqlCloudflare) zones() ([]any, error) {
 		}
 		res = append(res, r)
 	}
+	if err := iter.Err(); err != nil {
+		return nil, err
+	}
 
 	return res, nil
 }
@@ -90,49 +93,33 @@ func (c *mqlCloudflare) accounts() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	var result []any
-	cursor := cloudflare.ResultInfo{}
+	iter := conn.Cf.Accounts.ListAutoPaging(context.Background(), accounts.AccountListParams{})
+	for iter.Next() {
+		acc := iter.Current()
 
-	for {
-		_accounts, info, err := conn.Cf.Accounts(context.Background(), cloudflare.AccountsListParams{
-			PaginationOptions: cloudflare.PaginationOptions{
-				Page:    cursor.Page,
-				PerPage: cursor.PerPage,
-			},
+		settings, err := NewResource(c.MqlRuntime, "cloudflare.account.settings", map[string]*llx.RawData{
+			"__id":             llx.StringData("cloudflare.account.settings@" + acc.ID),
+			"enforceTwoFactor": llx.BoolData(acc.Settings.EnforceTwofactor),
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		cursor = info
-
-		for i := range _accounts {
-			acc := _accounts[i]
-
-			settings, err := NewResource(c.MqlRuntime, "cloudflare.account.settings", map[string]*llx.RawData{
-				"__id":             llx.StringData("cloudflare.account.settings@" + acc.ID),
-				"enforceTwoFactor": llx.BoolData(acc.Settings.EnforceTwoFactor),
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			res, err := NewResource(c.MqlRuntime, "cloudflare.account", map[string]*llx.RawData{
-				"id":        llx.StringData(acc.ID),
-				"name":      llx.StringData(acc.Name),
-				"type":      llx.StringData(acc.Type),
-				"settings":  llx.ResourceData(settings, settings.MqlName()),
-				"createdOn": llx.TimeData(acc.CreatedOn),
-			})
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, res)
+		res, err := NewResource(c.MqlRuntime, "cloudflare.account", map[string]*llx.RawData{
+			"id":        llx.StringData(acc.ID),
+			"name":      llx.StringData(acc.Name),
+			"type":      llx.StringData(string(acc.Type)),
+			"settings":  llx.ResourceData(settings, settings.MqlName()),
+			"createdOn": llx.TimeData(acc.CreatedOn),
+		})
+		if err != nil {
+			return nil, err
 		}
 
-		if !cursor.HasMorePages() {
-			break
-		}
+		result = append(result, res)
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
 	}
 
 	return result, nil

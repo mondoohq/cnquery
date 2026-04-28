@@ -29,7 +29,7 @@ func (c *mqlCloudflareZone) mtlsCertificates() ([]any, error) {
 	var result []any
 	params := cloudflare.ListMTLSCertificatesParams{}
 	for {
-		records, info, err := conn.Cf.ListMTLSCertificates(context.TODO(), &cloudflare.ResourceContainer{
+		records, info, err := conn.LegacyCf.ListMTLSCertificates(context.TODO(), &cloudflare.ResourceContainer{
 			Identifier: accountID,
 			Level:      cloudflare.AccountRouteLevel,
 		}, params)

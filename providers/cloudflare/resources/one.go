@@ -70,7 +70,7 @@ func (c *mqlCloudflareOne) apps() ([]any, error) {
 
 	var result []any
 	for {
-		records, info, err := conn.Cf.ListAccessApplications(context.TODO(), &cloudflare.ResourceContainer{
+		records, info, err := conn.LegacyCf.ListAccessApplications(context.TODO(), &cloudflare.ResourceContainer{
 			Identifier: c.ZoneID,
 			Level:      cloudflare.ZoneRouteLevel,
 		}, cloudflare.ListAccessApplicationsParams{
@@ -164,7 +164,7 @@ func (c *mqlCloudflareOne) accessPolicies() ([]any, error) {
 	cursor := &cloudflare.ResultInfo{}
 	var result []any
 	for {
-		records, info, err := conn.Cf.ListAccessPolicies(context.TODO(), &cloudflare.ResourceContainer{
+		records, info, err := conn.LegacyCf.ListAccessPolicies(context.TODO(), &cloudflare.ResourceContainer{
 			Identifier: c.AccountID,
 			Level:      cloudflare.AccountRouteLevel,
 		}, cloudflare.ListAccessPoliciesParams{
@@ -215,7 +215,7 @@ func (c *mqlCloudflareOne) accessGroups() ([]any, error) {
 	cursor := &cloudflare.ResultInfo{}
 	var result []any
 	for {
-		records, info, err := conn.Cf.ListAccessGroups(context.TODO(), &cloudflare.ResourceContainer{
+		records, info, err := conn.LegacyCf.ListAccessGroups(context.TODO(), &cloudflare.ResourceContainer{
 			Identifier: c.AccountID,
 			Level:      cloudflare.AccountRouteLevel,
 		}, cloudflare.ListAccessGroupsParams{
@@ -272,7 +272,7 @@ func (c *mqlCloudflareOne) serviceTokens() ([]any, error) {
 
 	for {
 		uri := fmt.Sprintf("/accounts/%s/access/service_tokens?page=%d&per_page=%d", c.AccountID, page, perPage)
-		raw, err := conn.Cf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
+		raw, err := conn.LegacyCf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -316,7 +316,7 @@ func (c *mqlCloudflareOne) serviceTokens() ([]any, error) {
 func (c *mqlCloudflareOne) organization() (*mqlCloudflareOneOrganization, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	org, _, err := conn.Cf.GetAccessOrganization(context.TODO(), &cloudflare.ResourceContainer{
+	org, _, err := conn.LegacyCf.GetAccessOrganization(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.AccountID,
 		Level:      cloudflare.AccountRouteLevel,
 	}, cloudflare.GetAccessOrganizationParams{})
@@ -364,7 +364,7 @@ func (c *mqlCloudflareOne) identityProviders() ([]any, error) {
 	cursor := &cloudflare.ResultInfo{}
 	var result []any
 	for {
-		records, info, err := conn.Cf.ListAccessIdentityProviders(context.TODO(), &cloudflare.ResourceContainer{
+		records, info, err := conn.LegacyCf.ListAccessIdentityProviders(context.TODO(), &cloudflare.ResourceContainer{
 			Identifier: c.ZoneID,
 			Level:      cloudflare.ZoneRouteLevel,
 		}, cloudflare.ListAccessIdentityProvidersParams{

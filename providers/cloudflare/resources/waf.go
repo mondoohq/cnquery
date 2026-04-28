@@ -31,7 +31,7 @@ func (c *mqlCloudflareZone) wafRules() ([]any, error) {
 		Level:      cloudflare.ZoneRouteLevel,
 	}
 
-	rulesets, err := conn.Cf.ListRulesets(context.TODO(), zone, cloudflare.ListRulesetsParams{})
+	rulesets, err := conn.LegacyCf.ListRulesets(context.TODO(), zone, cloudflare.ListRulesetsParams{})
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (c *mqlCloudflareZone) wafRules() ([]any, error) {
 		// get its rules. Skip individual rulesets that the caller can't read
 		// (e.g., managed rulesets requiring extra entitlements) but surface
 		// transient/unknown errors so they aren't silently swallowed.
-		full, err := conn.Cf.GetRuleset(context.TODO(), zone, rs.ID)
+		full, err := conn.LegacyCf.GetRuleset(context.TODO(), zone, rs.ID)
 		if err != nil {
 			var notFound *cloudflare.NotFoundError
 			var authN *cloudflare.AuthenticationError

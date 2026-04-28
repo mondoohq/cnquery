@@ -44,7 +44,7 @@ func (c *mqlCloudflareDns) records() ([]any, error) {
 
 	var result []any
 	for {
-		records, info, err := conn.Cf.ListDNSRecords(
+		records, info, err := conn.LegacyCf.ListDNSRecords(
 			context.Background(),
 			&cloudflare.ResourceContainer{Identifier: c.ZoneID}, cloudflare.ListDNSRecordsParams{
 				ResultInfo: *cursor,

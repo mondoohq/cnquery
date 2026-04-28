@@ -58,7 +58,7 @@ func (c *mqlCloudflareAccountRole) id() (string, error) {
 func (c *mqlCloudflareAccount) roles() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := conn.Cf.ListAccountRoles(context.TODO(), &cloudflare.ResourceContainer{
+	records, err := conn.LegacyCf.ListAccountRoles(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.Id.Data,
 		Level:      cloudflare.AccountRouteLevel,
 	}, cloudflare.ListAccountRolesParams{})

@@ -29,7 +29,7 @@ func (c *mqlCloudflareZoneCertificatePack) id() (string, error) {
 func (c *mqlCloudflareZone) customCertificates() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	certs, err := conn.Cf.ListSSL(context.Background(), c.Id.Data)
+	certs, err := conn.LegacyCf.ListSSL(context.Background(), c.Id.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (c *mqlCloudflareZone) customCertificates() ([]any, error) {
 func (c *mqlCloudflareZone) certificatePacks() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	packs, err := conn.Cf.ListCertificatePacks(context.Background(), c.Id.Data)
+	packs, err := conn.LegacyCf.ListCertificatePacks(context.Background(), c.Id.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (c *mqlCloudflareZoneOriginCACertificate) id() (string, error) {
 func (c *mqlCloudflareZone) originCACertificates() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	certs, err := conn.Cf.ListOriginCACertificates(context.TODO(), cloudflare.ListOriginCertificatesParams{
+	certs, err := conn.LegacyCf.ListOriginCACertificates(context.TODO(), cloudflare.ListOriginCertificatesParams{
 		ZoneID: c.Id.Data,
 	})
 	if err != nil {

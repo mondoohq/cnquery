@@ -65,7 +65,7 @@ func extractHSTS(settings []cloudflare.ZoneSetting) (enabled bool, maxAge int64,
 func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	resp, err := conn.Cf.ZoneSettings(context.Background(), c.Id.Data)
+	resp, err := conn.LegacyCf.ZoneSettings(context.Background(), c.Id.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 func (c *mqlCloudflareZone) botManagement() (*mqlCloudflareZoneBotManagement, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	bm, err := conn.Cf.GetBotManagement(context.TODO(), &cloudflare.ResourceContainer{
+	bm, err := conn.LegacyCf.GetBotManagement(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.Id.Data,
 	})
 	if err != nil {

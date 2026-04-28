@@ -6,7 +6,9 @@ import (
 	"errors"
 	"os"
 
-	"github.com/cloudflare/cloudflare-go"
+	v0cloudflare "github.com/cloudflare/cloudflare-go"
+	cloudflare "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/option"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -20,7 +22,13 @@ type CloudflareConnection struct {
 	Conf  *inventory.Config
 	asset *inventory.Asset
 
-	Cf *cloudflare.API
+	// Cf is the cloudflare-go v6 client. New resource code should use this.
+	Cf *cloudflare.Client
+	// LegacyCf is the cloudflare-go v0 client kept alongside Cf during the
+	// staged v0→v6 migration tracked in #7385. Resource files that haven't
+	// been migrated yet use this; once a file is migrated, its usages move
+	// to Cf. The field will be dropped once the last migration PR lands.
+	LegacyCf *v0cloudflare.API
 }
 
 func NewCloudflareConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*CloudflareConnection, error) {
@@ -30,7 +38,6 @@ func NewCloudflareConnection(id uint32, asset *inventory.Asset, conf *inventory.
 		asset:      asset,
 	}
 
-	// initialize your connection here
 	token := conf.Options[OPTION_API_TOKEN]
 	if token == "" {
 		token = os.Getenv("CLOUDFLARE_TOKEN")
@@ -39,11 +46,13 @@ func NewCloudflareConnection(id uint32, asset *inventory.Asset, conf *inventory.
 		}
 	}
 
-	api, err := cloudflare.NewWithAPIToken(token)
+	conn.Cf = cloudflare.NewClient(option.WithAPIToken(token))
+
+	legacy, err := v0cloudflare.NewWithAPIToken(token)
 	if err != nil {
 		return nil, err
 	}
-	conn.Cf = api
+	conn.LegacyCf = legacy
 
 	return conn, nil
 }

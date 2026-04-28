@@ -29,7 +29,7 @@ type mqlCloudflareZoneEmailRoutingInternal struct {
 func (c *mqlCloudflareZone) emailRouting() (*mqlCloudflareZoneEmailRouting, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	settings, err := conn.Cf.GetEmailRoutingSettings(context.TODO(), &cloudflare.ResourceContainer{
+	settings, err := conn.LegacyCf.GetEmailRoutingSettings(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.Id.Data,
 	})
 	if err != nil {
@@ -138,7 +138,7 @@ func (c *mqlCloudflareZoneEmailRouting) dmarcConfigured() (bool, error) {
 		dmarcName = "_dmarc." + zoneName
 	}
 
-	records, _, err := conn.Cf.ListDNSRecords(context.TODO(),
+	records, _, err := conn.LegacyCf.ListDNSRecords(context.TODO(),
 		&cloudflare.ResourceContainer{Identifier: c.zoneID},
 		cloudflare.ListDNSRecordsParams{Type: "TXT", Name: dmarcName})
 	if err != nil {
@@ -167,7 +167,7 @@ func (c *mqlCloudflareZoneEmailRouting) resolveZoneName() (string, error) {
 		}
 
 		conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-		zone, err := conn.Cf.ZoneDetails(context.TODO(), c.zoneID)
+		zone, err := conn.LegacyCf.ZoneDetails(context.TODO(), c.zoneID)
 		if err != nil {
 			var notFound *cloudflare.NotFoundError
 			var authN *cloudflare.AuthenticationError
@@ -199,7 +199,7 @@ func (c *mqlCloudflareZoneEmailRouting) fetchSuggestedDNSRecords() ([]cloudflare
 	}
 
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
-	records, err := conn.Cf.GetEmailRoutingDNSSettings(context.TODO(), &cloudflare.ResourceContainer{
+	records, err := conn.LegacyCf.GetEmailRoutingDNSSettings(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.zoneID,
 	})
 	if err != nil {

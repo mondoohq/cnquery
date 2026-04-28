@@ -28,7 +28,7 @@ func (c *mqlCloudflareApiToken) id() (string, error) {
 func (c *mqlCloudflare) apiTokens() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	tokens, err := conn.Cf.APITokens(context.TODO())
+	tokens, err := conn.LegacyCf.APITokens(context.TODO())
 	if err != nil {
 		var notFound *cloudflare.NotFoundError
 		var authN *cloudflare.AuthenticationError

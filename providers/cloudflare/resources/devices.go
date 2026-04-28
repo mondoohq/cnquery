@@ -20,7 +20,7 @@ func (c *mqlCloudflareOneDevice) id() (string, error) {
 func (c *mqlCloudflareOne) devices() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := conn.Cf.ListTeamsDevices(context.TODO(), c.AccountID)
+	records, err := conn.LegacyCf.ListTeamsDevices(context.TODO(), c.AccountID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (c *mqlCloudflareOneDevicePostureRule) id() (string, error) {
 func (c *mqlCloudflareOne) devicePostureRules() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, _, err := conn.Cf.DevicePostureRules(context.TODO(), c.AccountID)
+	records, _, err := conn.LegacyCf.DevicePostureRules(context.TODO(), c.AccountID)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (c *mqlCloudflareOneDevicePostureIntegration) id() (string, error) {
 func (c *mqlCloudflareOne) devicePostureIntegrations() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, _, err := conn.Cf.DevicePostureIntegrations(context.TODO(), c.AccountID)
+	records, _, err := conn.LegacyCf.DevicePostureIntegrations(context.TODO(), c.AccountID)
 	if err != nil {
 		return nil, err
 	}

@@ -74,7 +74,7 @@ func (c *mqlCloudflareR2) buckets() ([]any, error) {
 		if cursor != "" {
 			uri += "&cursor=" + cursor
 		}
-		raw, err := conn.Cf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
+		raw, err := conn.LegacyCf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +145,7 @@ func (c *mqlCloudflareR2Bucket) fetchPublicAccess() (available, enabled bool, do
 
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 	uri := fmt.Sprintf("/accounts/%s/r2/buckets/%s/domains/managed", c.accountID, c.GetName().Data)
-	raw, rerr := conn.Cf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
+	raw, rerr := conn.LegacyCf.Raw(context.TODO(), http.MethodGet, uri, nil, nil)
 	if rerr != nil {
 		var notFound *cloudflare.NotFoundError
 		var authN *cloudflare.AuthenticationError

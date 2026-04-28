@@ -22,7 +22,7 @@ func (c *mqlCloudflareOne) gatewayRules() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
 	// TeamsRules does not support pagination in the SDK; it returns all rules.
-	records, err := conn.Cf.TeamsRules(context.TODO(), c.AccountID)
+	records, err := conn.LegacyCf.TeamsRules(context.TODO(), c.AccountID)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c *mqlCloudflareOneList) id() (string, error) {
 func (c *mqlCloudflareOne) lists() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, _, err := conn.Cf.ListTeamsLists(context.TODO(), &cloudflare.ResourceContainer{
+	records, _, err := conn.LegacyCf.ListTeamsLists(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.AccountID,
 		Level:      cloudflare.AccountRouteLevel,
 	}, cloudflare.ListTeamListsParams{})
@@ -112,7 +112,7 @@ func (c *mqlCloudflareOneLocation) id() (string, error) {
 func (c *mqlCloudflareOne) locations() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, _, err := conn.Cf.TeamsLocations(context.TODO(), c.AccountID)
+	records, _, err := conn.LegacyCf.TeamsLocations(context.TODO(), c.AccountID)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (c *mqlCloudflareOneDlpProfile) id() (string, error) {
 func (c *mqlCloudflareOne) dlpProfiles() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := conn.Cf.ListDLPProfiles(context.TODO(), &cloudflare.ResourceContainer{
+	records, err := conn.LegacyCf.ListDLPProfiles(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.AccountID,
 		Level:      cloudflare.AccountRouteLevel,
 	}, cloudflare.ListDLPProfilesParams{})

@@ -15,7 +15,7 @@ import (
 func (c *mqlCloudflareZone) dnssec() (*mqlCloudflareZoneDnssec, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	ds, err := conn.Cf.ZoneDNSSECSetting(context.TODO(), c.Id.Data)
+	ds, err := conn.LegacyCf.ZoneDNSSECSetting(context.TODO(), c.Id.Data)
 	if err != nil {
 		// DNSSEC may not be available on all plans (403/404)
 		var notFound *cloudflare.NotFoundError

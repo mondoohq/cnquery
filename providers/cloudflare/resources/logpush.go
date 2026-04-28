@@ -25,7 +25,7 @@ func (c *mqlCloudflareZoneLogpushJob) id() (string, error) {
 func (c *mqlCloudflareZone) logpushJobs() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	records, err := conn.Cf.ListLogpushJobs(context.TODO(), &cloudflare.ResourceContainer{
+	records, err := conn.LegacyCf.ListLogpushJobs(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: c.Id.Data,
 		Level:      cloudflare.ZoneRouteLevel,
 	}, cloudflare.ListLogpushJobsParams{})

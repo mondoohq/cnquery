@@ -21,7 +21,7 @@ func (c *mqlCloudflareZoneRateLimitRule) id() (string, error) {
 func (c *mqlCloudflareZone) rateLimitRules() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
 
-	limits, err := conn.Cf.ListAllRateLimits(context.TODO(), c.Id.Data)
+	limits, err := conn.LegacyCf.ListAllRateLimits(context.TODO(), c.Id.Data)
 	if err != nil {
 		return nil, err
 	}

@@ -11,7 +11,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cloudflare/cloudflare-go"
+	v0cloudflare "github.com/cloudflare/cloudflare-go"
+	cloudflarev6 "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/option"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
@@ -64,15 +66,24 @@ func setupTestEnv(t *testing.T) *testEnv {
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 
-	// Create a Cloudflare API client pointed at the mock server.
-	api, err := cloudflare.New("test-key", "test@example.com")
+	// Create both v0 and v6 clients pointed at the mock server. During the
+	// staged v0→v6 migration tracked in #7385, resource files use whichever
+	// client they have been migrated to; the test harness wires up both so
+	// existing tests keep working as files migrate one at a time.
+	legacyApi, err := v0cloudflare.New("test-key", "test@example.com")
 	if err != nil {
-		t.Fatalf("failed to create cloudflare api: %v", err)
+		t.Fatalf("failed to create cloudflare v0 api: %v", err)
 	}
-	api.BaseURL = server.URL
+	legacyApi.BaseURL = server.URL
+
+	v6Client := cloudflarev6.NewClient(
+		option.WithAPIToken("test-key"),
+		option.WithBaseURL(server.URL+"/"),
+	)
 
 	conn := &connection.CloudflareConnection{
-		Cf: api,
+		Cf:       v6Client,
+		LegacyCf: legacyApi,
 	}
 
 	runtime := &plugin.Runtime{

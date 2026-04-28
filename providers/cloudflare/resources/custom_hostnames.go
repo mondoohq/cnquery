@@ -23,7 +23,7 @@ func (c *mqlCloudflareZone) customHostnames() ([]any, error) {
 	var result []any
 	page := 1
 	for {
-		records, info, err := conn.Cf.CustomHostnames(context.TODO(), c.Id.Data, page, cloudflare.CustomHostname{})
+		records, info, err := conn.LegacyCf.CustomHostnames(context.TODO(), c.Id.Data, page, cloudflare.CustomHostname{})
 		if err != nil {
 			return nil, err
 		}

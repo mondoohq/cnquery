@@ -37,7 +37,7 @@ func (c *mqlCloudflareZone) tunnels() ([]any, error) {
 	cursor := &cloudflare.ResultInfo{}
 	var result []any
 	for {
-		records, info, err := conn.Cf.ListTunnels(context.TODO(), &cloudflare.ResourceContainer{
+		records, info, err := conn.LegacyCf.ListTunnels(context.TODO(), &cloudflare.ResourceContainer{
 			Identifier: accountID,
 			Level:      cloudflare.AccountRouteLevel,
 		}, cloudflare.TunnelListParams{
@@ -133,7 +133,7 @@ func (c *mqlCloudflareZone) tunnelRoutes() ([]any, error) {
 	}
 	accountID := acc.Data.GetId().Data
 
-	records, err := conn.Cf.ListTunnelRoutes(context.TODO(), &cloudflare.ResourceContainer{
+	records, err := conn.LegacyCf.ListTunnelRoutes(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: accountID,
 		Level:      cloudflare.AccountRouteLevel,
 	}, cloudflare.TunnelRoutesListParams{})
@@ -184,7 +184,7 @@ func (c *mqlCloudflareZone) tunnelVirtualNetworks() ([]any, error) {
 	}
 	accountID := acc.Data.GetId().Data
 
-	records, err := conn.Cf.ListTunnelVirtualNetworks(context.TODO(), &cloudflare.ResourceContainer{
+	records, err := conn.LegacyCf.ListTunnelVirtualNetworks(context.TODO(), &cloudflare.ResourceContainer{
 		Identifier: accountID,
 		Level:      cloudflare.AccountRouteLevel,
 	}, cloudflare.TunnelVirtualNetworksListParams{})
