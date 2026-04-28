@@ -234,18 +234,6 @@ make test/lint/extended
 make race/go
 ```
 
-### Running a Single Test
-```bash
-# Run a specific test file
-go test ./llx/builtin_array_test.go
-
-# Run a specific test function
-go test ./llx -run TestArrayContains
-
-# Run tests in a specific package with verbose output
-go test -v ./providers/core/...
-```
-
 ### Tips
 *   **MCP Tools**: Use the GitHub MCP to check tickets/PRs. Use Notion MCP for internal docs. We're going to be talking about tickets and PRs (so that's github mcp), and there's also notion for company-wide docs (focus on Engineering stuff, infra, dev env, etc)
 *   **Auth**: The environment usually has AWS/Azure CLI tools authenticated (so you can use them when needed). If they're not present or logged in, stop and let me know so I can setup the provider's needs (tools, auth, whatever)
@@ -254,27 +242,17 @@ go test -v ./providers/core/...
 
 ## 4. Debugging & Profiling
 
-### Local Provider Debugging (main dev workflow for provider changes)
+### Local Provider Debugging
 
-**Why builtin mode exists:** Providers normally run as **separate subprocesses** (via `hashicorp/go-plugin` + gRPC). This isolation is great for production:
-- Crash isolation (provider crash doesn't kill mql)
-- Separate memory spaces
-- Dynamic loading without recompilation
+Providers run as separate gRPC subprocesses, so debuggers can't step into them. Mark the provider as `builtin` in `providers.yaml` to compile it into the main `mql` binary for in-process debugging:
 
-**But debuggers can't step into subprocess code.** Marking a provider as `builtin` in `providers.yaml` **compiles it directly into the main mql binary**, enabling seamless debugging.
+1. Add to `builtin:` list in `providers.yaml` (e.g. `builtin: [aws]`)
+2. `make providers/config` (regenerates `builtin_dev.go`)
+3. `make mql/install`
+4. `go run apps/mql/mql.go run aws -c "aws.ec2.instances"` (or attach IDE debugger to `apps/mql/mql.go`)
+5. Revert: set `builtin: []` and re-run `make providers/config`
 
-**Workflow:**
-1.  **Edit `providers.yaml`**: Add provider to `builtin` (e.g., `builtin: [aws]`).
-2.  **Config**: `make providers/config` (generates `builtin_dev.go` with in-process provider loading).
-3.  **Build/Install**: `make mql/install`.
-4.  **Run/Debug**:
-    ```bash
-    go run apps/mql/mql.go run aws -c "aws.ec2.instances"
-    # Or use your IDE debugger with entry point: apps/mql/mql.go
-    ```
-5.  **Revert**: Clean up `providers.yaml` (set `builtin: []`) and run `make providers/config`.
-
-Step 3 is the core of the work here (e.g. doing the ticket's local dev work). The start and end should wrap 3.
+The middle step (3) is where the actual ticket work happens; 1–2 and 5 just toggle the mode.
 
 ### Remote Debugging
 For providers that need to run on specific VMs (e.g., GCP snapshot scanning):
@@ -654,13 +632,13 @@ CI runs [check-spelling/check-spelling](https://github.com/check-spelling/check-
 
 ## 9. Commit Conventions
 
-Use emojis in commit messages (but don't worry about it, since you're NEVER going to commit anything; that's my job):
+When committing or opening a PR, **start the title with one of these emoji** to mark the change kind:
 - 🛑 breaking changes
 - 🐛 bugfix
 - 🧹 cleanup/internals
 - ⚡ speed improvements
 - 📄 docs
-- ✨⭐🌟🌠 features (smaller to larger)
+- ✨⭐🌟🌠 features (smaller to larger; pick by ambition)
 - 🌈 visual changes
 - 🐎 race condition fixes
 - 🌙 MQL changes
@@ -668,29 +646,6 @@ Use emojis in commit messages (but don't worry about it, since you're NEVER goin
 - 🎫 auth
 - 🐳 container
 
-## 10. Additional Resources
-
-### External Documentation
-- [Official Documentation](https://mondoo.com/docs/llms.txt)
-- [MQL Introduction](https://mondoohq.github.io/mql-intro/index.html)
-- [MQL Language Reference](https://mondoo.com/docs/mql/resources/)
-- [GitHub Repository](https://github.com/mondoohq/mql)
-- [Community Discussions](https://github.com/orgs/mondoohq/discussions)
-
-### Provider-Specific Documentation
-Many providers include detailed README files with authentication, examples, and troubleshooting:
-- [ansible](providers/ansible/README.md) - Playbook scanning with query/policy examples
-- [ipinfo](providers/ipinfo/README.md) - IP address information and geolocation
-- [ms365](providers/ms365/README.md) - Microsoft 365 with PowerShell requirements
-- [os](providers/os/README.md) - Operating system provider (Linux, macOS, Windows)
-- [shodan](providers/shodan/README.md) - Shodan search engine integration
-- [snowflake](providers/snowflake/README.md) - Snowflake data warehouse
-- [tailscale](providers/tailscale/README.md) - Tailscale network information
-
-Run `find providers -name "README.md" -type f` to discover all provider documentation.
-
-### Related Projects
-- **cnspec**: Cloud-native security scanner built on mql (includes `scan` and `sbom` commands)
-- **Mondoo Platform**: Web-based console for infrastructure exploration
+Use these in `git commit -m`, `gh pr create --title`, and any commit-message HEREDOCs. Match recent commits in `git log --oneline` if a change spans multiple kinds — pick the dominant one.
 
 Anticipate needs, offer options when it applies, think in the context of ticket-solution-in-codebase.
