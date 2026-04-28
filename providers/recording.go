@@ -146,7 +146,7 @@ func (s *recordingProvider) detect(asset *inventory.Asset) (*inventory.Inventory
 
 	assets := []*inventory.Asset{}
 	for _, a := range s.recording.GetAssets() {
-		// we do not allow assets with no connection as they will wont work with getting/storing data
+		// we do not allow assets with no connection as they wont work with getting/storing data
 		if len(a.Connections) == 0 {
 			continue
 		}
@@ -155,7 +155,7 @@ func (s *recordingProvider) detect(asset *inventory.Asset) (*inventory.Inventory
 			{
 				Type:           "recording",
 				DelayDiscovery: true,
-				// preserve conn id so it can consistenbly be looked up from the recording
+				// preserve conn id so it can consistently be looked up from the recording
 				Id: id,
 			},
 		}
