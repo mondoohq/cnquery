@@ -26,6 +26,9 @@ const (
 	ResourceAzureSubscriptionComputeServiceDisk                                                  string = "azure.subscription.computeService.disk"
 	ResourceAzureSubscriptionComputeServiceDiskEncryptionSet                                     string = "azure.subscription.computeService.diskEncryptionSet"
 	ResourceAzureSubscriptionComputeServiceDiskAccess                                            string = "azure.subscription.computeService.diskAccess"
+	ResourceAzureSubscriptionComputeServiceSnapshot                                              string = "azure.subscription.computeService.snapshot"
+	ResourceAzureSubscriptionComputeServiceVmScaleSet                                            string = "azure.subscription.computeService.vmScaleSet"
+	ResourceAzureSubscriptionComputeServiceVmScaleSetInstance                                    string = "azure.subscription.computeService.vmScaleSet.instance"
 	ResourceAzureSubscriptionBatchService                                                        string = "azure.subscription.batchService"
 	ResourceAzureSubscriptionBatchServiceAccount                                                 string = "azure.subscription.batchService.account"
 	ResourceAzureSubscriptionBatchServiceAccountPool                                             string = "azure.subscription.batchService.account.pool"
@@ -295,16 +298,28 @@ func init() {
 			Create: createAzureSubscriptionComputeServiceVm,
 		},
 		"azure.subscription.computeService.disk": {
-			// to override args, implement: initAzureSubscriptionComputeServiceDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionComputeServiceDisk,
 			Create: createAzureSubscriptionComputeServiceDisk,
 		},
 		"azure.subscription.computeService.diskEncryptionSet": {
-			// to override args, implement: initAzureSubscriptionComputeServiceDiskEncryptionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionComputeServiceDiskEncryptionSet,
 			Create: createAzureSubscriptionComputeServiceDiskEncryptionSet,
 		},
 		"azure.subscription.computeService.diskAccess": {
 			// to override args, implement: initAzureSubscriptionComputeServiceDiskAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionComputeServiceDiskAccess,
+		},
+		"azure.subscription.computeService.snapshot": {
+			// to override args, implement: initAzureSubscriptionComputeServiceSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceSnapshot,
+		},
+		"azure.subscription.computeService.vmScaleSet": {
+			Init:   initAzureSubscriptionComputeServiceVmScaleSet,
+			Create: createAzureSubscriptionComputeServiceVmScaleSet,
+		},
+		"azure.subscription.computeService.vmScaleSet.instance": {
+			// to override args, implement: initAzureSubscriptionComputeServiceVmScaleSetInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceVmScaleSetInstance,
 		},
 		"azure.subscription.batchService": {
 			Init:   initAzureSubscriptionBatchService,
@@ -1520,6 +1535,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.diskAccesses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeService).GetDiskAccesses()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.diskAccess")))
 	},
+	"azure.subscription.computeService.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeService).GetSnapshots()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.snapshot")))
+	},
+	"azure.subscription.computeService.vmScaleSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeService).GetVmScaleSets()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.vmScaleSet")))
+	},
 	"azure.subscription.computeService.vm.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetId()).ToDataRes(types.String)
 	},
@@ -1610,6 +1631,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vm.patchMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetPatchMode()).ToDataRes(types.String)
 	},
+	"azure.subscription.computeService.vm.vmScaleSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetVmScaleSet()).ToDataRes(types.Resource("azure.subscription.computeService.vmScaleSet"))
+	},
 	"azure.subscription.computeService.disk.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetId()).ToDataRes(types.String)
 	},
@@ -1651,6 +1675,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.disk.diskEncryptionSetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskEncryptionSetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.disk.diskEncryptionSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskEncryptionSet()).ToDataRes(types.Resource("azure.subscription.computeService.diskEncryptionSet"))
 	},
 	"azure.subscription.computeService.disk.dataAccessAuthMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDataAccessAuthMode()).ToDataRes(types.String)
@@ -1759,6 +1786,177 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.diskAccess.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDiskAccess).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
+	"azure.subscription.computeService.snapshot.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.snapshot.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetSku()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.snapshot.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.snapshot.creationData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetCreationData()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.snapshot.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.timeCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetTimeCreated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.snapshot.uniqueId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetUniqueId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.diskSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetDiskSizeBytes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.snapshot.hyperVGeneration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetHyperVGeneration()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.osType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetOsType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.diskState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetDiskState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.incremental": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetIncremental()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.snapshot.incrementalSnapshotFamilyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetIncrementalSnapshotFamilyId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.supportsHibernation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetSupportsHibernation()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.snapshot.networkAccessPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetNetworkAccessPolicy()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.dataAccessAuthMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetDataAccessAuthMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.diskAccessId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetDiskAccessId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.sourceDisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetSourceDisk()).ToDataRes(types.Resource("azure.subscription.computeService.disk"))
+	},
+	"azure.subscription.computeService.snapshot.diskEncryptionSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetDiskEncryptionSet()).ToDataRes(types.Resource("azure.subscription.computeService.diskEncryptionSet"))
+	},
+	"azure.subscription.computeService.vmScaleSet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.vmScaleSet.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.computeService.vmScaleSet.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetSku()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.orchestrationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetOrchestrationMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.timeCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetTimeCreated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.vmScaleSet.uniqueId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetUniqueId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.singlePlacementGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetSinglePlacementGroup()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.vmScaleSet.overprovision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetOverprovision()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.vmScaleSet.platformFaultDomainCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetPlatformFaultDomainCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.vmScaleSet.upgradePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetUpgradePolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.automaticRepairsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetAutomaticRepairsPolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.instances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetInstances()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.vmScaleSet.instance")))
+	},
+	"azure.subscription.computeService.vmScaleSet.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetExtensions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetInstanceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.latestModelApplied": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetLatestModelApplied()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.modelDefinitionApplied": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetModelDefinitionApplied()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.vmId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetVmId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.timeCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetTimeCreated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetSku()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.batchService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchService).GetSubscriptionId()).ToDataRes(types.String)
@@ -8528,6 +8726,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeService).DiskAccesses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeService).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeService).VmScaleSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).__id, ok = v.Value.(string)
 		return
@@ -8652,6 +8858,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVm).PatchMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.vm.vmScaleSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).VmScaleSet, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceVmScaleSet](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.disk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceDisk).__id, ok = v.Value.(string)
 		return
@@ -8710,6 +8920,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.disk.diskEncryptionSetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskEncryptionSetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.diskEncryptionSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskEncryptionSet, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.disk.dataAccessAuthMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8862,6 +9076,246 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.diskAccess.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceDiskAccess).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.snapshot.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.creationData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).CreationData, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.timeCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).TimeCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.uniqueId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).UniqueId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.diskSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).DiskSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.hyperVGeneration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).HyperVGeneration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.osType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).OsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.diskState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).DiskState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.incremental": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).Incremental, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.incrementalSnapshotFamilyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).IncrementalSnapshotFamilyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.supportsHibernation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).SupportsHibernation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.networkAccessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).NetworkAccessPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.dataAccessAuthMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).DataAccessAuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.diskAccessId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).DiskAccessId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.sourceDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).SourceDisk, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceDisk](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.diskEncryptionSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).DiskEncryptionSet, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.orchestrationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).OrchestrationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.timeCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).TimeCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.uniqueId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).UniqueId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.singlePlacementGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).SinglePlacementGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.overprovision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Overprovision, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.platformFaultDomainCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).PlatformFaultDomainCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.upgradePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).UpgradePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.automaticRepairsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).AutomaticRepairsPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Instances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.latestModelApplied": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).LatestModelApplied, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.modelDefinitionApplied": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).ModelDefinitionApplied, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.vmId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).VmId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.timeCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).TimeCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.instance.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.batchService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19325,6 +19779,8 @@ type mqlAzureSubscriptionComputeService struct {
 	Disks              plugin.TValue[[]any]
 	DiskEncryptionSets plugin.TValue[[]any]
 	DiskAccesses       plugin.TValue[[]any]
+	Snapshots          plugin.TValue[[]any]
+	VmScaleSets        plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionComputeService creates a new instance of this resource
@@ -19432,6 +19888,38 @@ func (c *mqlAzureSubscriptionComputeService) GetDiskAccesses() *plugin.TValue[[]
 	})
 }
 
+func (c *mqlAzureSubscriptionComputeService) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshots()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeService) GetVmScaleSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VmScaleSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService", c.__id, "vmScaleSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vmScaleSets()
+	})
+}
+
 // mqlAzureSubscriptionComputeServiceVm for the azure.subscription.computeService.vm resource
 type mqlAzureSubscriptionComputeServiceVm struct {
 	MqlRuntime *plugin.Runtime
@@ -19467,6 +19955,7 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	ProvisionVMAgent              plugin.TValue[bool]
 	EnableAutomaticUpdates        plugin.TValue[bool]
 	PatchMode                     plugin.TValue[string]
+	VmScaleSet                    plugin.TValue[*mqlAzureSubscriptionComputeServiceVmScaleSet]
 }
 
 // createAzureSubscriptionComputeServiceVm creates a new instance of this resource
@@ -19668,6 +20157,22 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetPatchMode() *plugin.TValue[str
 	return &c.PatchMode
 }
 
+func (c *mqlAzureSubscriptionComputeServiceVm) GetVmScaleSet() *plugin.TValue[*mqlAzureSubscriptionComputeServiceVmScaleSet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionComputeServiceVmScaleSet](&c.VmScaleSet, func() (*mqlAzureSubscriptionComputeServiceVmScaleSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.vm", c.__id, "vmScaleSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionComputeServiceVmScaleSet), nil
+			}
+		}
+
+		return c.vmScaleSet()
+	})
+}
+
 // mqlAzureSubscriptionComputeServiceDisk for the azure.subscription.computeService.disk resource
 type mqlAzureSubscriptionComputeServiceDisk struct {
 	MqlRuntime *plugin.Runtime
@@ -19687,6 +20192,7 @@ type mqlAzureSubscriptionComputeServiceDisk struct {
 	PublicNetworkAccess plugin.TValue[string]
 	EncryptionType      plugin.TValue[string]
 	DiskEncryptionSetId plugin.TValue[string]
+	DiskEncryptionSet   plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet]
 	DataAccessAuthMode  plugin.TValue[string]
 	DiskState           plugin.TValue[string]
 	ProvisioningState   plugin.TValue[string]
@@ -19796,6 +20302,22 @@ func (c *mqlAzureSubscriptionComputeServiceDisk) GetEncryptionType() *plugin.TVa
 
 func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskEncryptionSetId() *plugin.TValue[string] {
 	return &c.DiskEncryptionSetId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskEncryptionSet() *plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet](&c.DiskEncryptionSet, func() (*mqlAzureSubscriptionComputeServiceDiskEncryptionSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.disk", c.__id, "diskEncryptionSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
+			}
+		}
+
+		return c.diskEncryptionSet()
+	})
 }
 
 func (c *mqlAzureSubscriptionComputeServiceDisk) GetDataAccessAuthMode() *plugin.TValue[string] {
@@ -20060,6 +20582,461 @@ func (c *mqlAzureSubscriptionComputeServiceDiskAccess) GetPrivateEndpointConnect
 
 		return c.privateEndpointConnections()
 	})
+}
+
+// mqlAzureSubscriptionComputeServiceSnapshot for the azure.subscription.computeService.snapshot resource
+type mqlAzureSubscriptionComputeServiceSnapshot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionComputeServiceSnapshotInternal
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Location                    plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	Type                        plugin.TValue[string]
+	Sku                         plugin.TValue[any]
+	Properties                  plugin.TValue[any]
+	CreationData                plugin.TValue[any]
+	ProvisioningState           plugin.TValue[string]
+	TimeCreated                 plugin.TValue[*time.Time]
+	UniqueId                    plugin.TValue[string]
+	DiskSizeBytes               plugin.TValue[int64]
+	HyperVGeneration            plugin.TValue[string]
+	OsType                      plugin.TValue[string]
+	DiskState                   plugin.TValue[string]
+	Incremental                 plugin.TValue[bool]
+	IncrementalSnapshotFamilyId plugin.TValue[string]
+	SupportsHibernation         plugin.TValue[bool]
+	NetworkAccessPolicy         plugin.TValue[string]
+	PublicNetworkAccess         plugin.TValue[string]
+	EncryptionType              plugin.TValue[string]
+	DataAccessAuthMode          plugin.TValue[string]
+	DiskAccessId                plugin.TValue[string]
+	SourceDisk                  plugin.TValue[*mqlAzureSubscriptionComputeServiceDisk]
+	DiskEncryptionSet           plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet]
+}
+
+// createAzureSubscriptionComputeServiceSnapshot creates a new instance of this resource
+func createAzureSubscriptionComputeServiceSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceSnapshot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.snapshot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) MqlName() string {
+	return "azure.subscription.computeService.snapshot"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSku() *plugin.TValue[any] {
+	return &c.Sku
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetCreationData() *plugin.TValue[any] {
+	return &c.CreationData
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetTimeCreated() *plugin.TValue[*time.Time] {
+	return &c.TimeCreated
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetUniqueId() *plugin.TValue[string] {
+	return &c.UniqueId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetDiskSizeBytes() *plugin.TValue[int64] {
+	return &c.DiskSizeBytes
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetHyperVGeneration() *plugin.TValue[string] {
+	return &c.HyperVGeneration
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetOsType() *plugin.TValue[string] {
+	return &c.OsType
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetDiskState() *plugin.TValue[string] {
+	return &c.DiskState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetIncremental() *plugin.TValue[bool] {
+	return &c.Incremental
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetIncrementalSnapshotFamilyId() *plugin.TValue[string] {
+	return &c.IncrementalSnapshotFamilyId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSupportsHibernation() *plugin.TValue[bool] {
+	return &c.SupportsHibernation
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetNetworkAccessPolicy() *plugin.TValue[string] {
+	return &c.NetworkAccessPolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetEncryptionType() *plugin.TValue[string] {
+	return &c.EncryptionType
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetDataAccessAuthMode() *plugin.TValue[string] {
+	return &c.DataAccessAuthMode
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetDiskAccessId() *plugin.TValue[string] {
+	return &c.DiskAccessId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSourceDisk() *plugin.TValue[*mqlAzureSubscriptionComputeServiceDisk] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionComputeServiceDisk](&c.SourceDisk, func() (*mqlAzureSubscriptionComputeServiceDisk, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.snapshot", c.__id, "sourceDisk")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionComputeServiceDisk), nil
+			}
+		}
+
+		return c.sourceDisk()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetDiskEncryptionSet() *plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet](&c.DiskEncryptionSet, func() (*mqlAzureSubscriptionComputeServiceDiskEncryptionSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.snapshot", c.__id, "diskEncryptionSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
+			}
+		}
+
+		return c.diskEncryptionSet()
+	})
+}
+
+// mqlAzureSubscriptionComputeServiceVmScaleSet for the azure.subscription.computeService.vmScaleSet resource
+type mqlAzureSubscriptionComputeServiceVmScaleSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceVmScaleSetInternal it will be used here
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Location                 plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
+	Type                     plugin.TValue[string]
+	Zones                    plugin.TValue[[]any]
+	Sku                      plugin.TValue[any]
+	Properties               plugin.TValue[any]
+	OrchestrationMode        plugin.TValue[string]
+	ProvisioningState        plugin.TValue[string]
+	TimeCreated              plugin.TValue[*time.Time]
+	UniqueId                 plugin.TValue[string]
+	SinglePlacementGroup     plugin.TValue[bool]
+	Overprovision            plugin.TValue[bool]
+	PlatformFaultDomainCount plugin.TValue[int64]
+	UpgradePolicy            plugin.TValue[any]
+	AutomaticRepairsPolicy   plugin.TValue[any]
+	Instances                plugin.TValue[[]any]
+	Extensions               plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionComputeServiceVmScaleSet creates a new instance of this resource
+func createAzureSubscriptionComputeServiceVmScaleSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceVmScaleSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.vmScaleSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) MqlName() string {
+	return "azure.subscription.computeService.vmScaleSet"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetZones() *plugin.TValue[[]any] {
+	return &c.Zones
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetSku() *plugin.TValue[any] {
+	return &c.Sku
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetOrchestrationMode() *plugin.TValue[string] {
+	return &c.OrchestrationMode
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetTimeCreated() *plugin.TValue[*time.Time] {
+	return &c.TimeCreated
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetUniqueId() *plugin.TValue[string] {
+	return &c.UniqueId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetSinglePlacementGroup() *plugin.TValue[bool] {
+	return &c.SinglePlacementGroup
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetOverprovision() *plugin.TValue[bool] {
+	return &c.Overprovision
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetPlatformFaultDomainCount() *plugin.TValue[int64] {
+	return &c.PlatformFaultDomainCount
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetUpgradePolicy() *plugin.TValue[any] {
+	return &c.UpgradePolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetAutomaticRepairsPolicy() *plugin.TValue[any] {
+	return &c.AutomaticRepairsPolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Instances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService.vmScaleSet", c.__id, "instances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.instances()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		return c.extensions()
+	})
+}
+
+// mqlAzureSubscriptionComputeServiceVmScaleSetInstance for the azure.subscription.computeService.vmScaleSet.instance resource
+type mqlAzureSubscriptionComputeServiceVmScaleSetInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceVmScaleSetInstanceInternal it will be used here
+	Id                     plugin.TValue[string]
+	InstanceId             plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Location               plugin.TValue[string]
+	Tags                   plugin.TValue[map[string]any]
+	Zones                  plugin.TValue[[]any]
+	LatestModelApplied     plugin.TValue[bool]
+	ProvisioningState      plugin.TValue[string]
+	ModelDefinitionApplied plugin.TValue[string]
+	VmId                   plugin.TValue[string]
+	TimeCreated            plugin.TValue[*time.Time]
+	Properties             plugin.TValue[any]
+	Sku                    plugin.TValue[any]
+}
+
+// createAzureSubscriptionComputeServiceVmScaleSetInstance creates a new instance of this resource
+func createAzureSubscriptionComputeServiceVmScaleSetInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceVmScaleSetInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.vmScaleSet.instance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) MqlName() string {
+	return "azure.subscription.computeService.vmScaleSet.instance"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetZones() *plugin.TValue[[]any] {
+	return &c.Zones
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetLatestModelApplied() *plugin.TValue[bool] {
+	return &c.LatestModelApplied
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetModelDefinitionApplied() *plugin.TValue[string] {
+	return &c.ModelDefinitionApplied
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetVmId() *plugin.TValue[string] {
+	return &c.VmId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetTimeCreated() *plugin.TValue[*time.Time] {
+	return &c.TimeCreated
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetSku() *plugin.TValue[any] {
+	return &c.Sku
 }
 
 // mqlAzureSubscriptionBatchService for the azure.subscription.batchService resource

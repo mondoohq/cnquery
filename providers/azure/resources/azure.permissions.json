@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.5.0",
-  "generated_at": "2026-04-27T09:19:49-07:00",
+  "version": "13.7.0",
+  "generated_at": "2026-04-28T01:31:01+00:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/classicAdministrators/read",
@@ -21,6 +21,10 @@
     "Microsoft.Compute/diskAccesses/read",
     "Microsoft.Compute/diskEncryptionSets/read",
     "Microsoft.Compute/disks/read",
+    "Microsoft.Compute/snapshots/read",
+    "Microsoft.Compute/virtualMachineScaleSetExtensions/read",
+    "Microsoft.Compute/virtualMachineScaleSetVMs/read",
+    "Microsoft.Compute/virtualMachineScaleSets/read",
     "Microsoft.Compute/virtualMachines/read",
     "Microsoft.ContainerRegistry/registries/cacheRules/read",
     "Microsoft.ContainerRegistry/registries/connectedRegistries/read",
@@ -238,6 +242,30 @@
       "source_file": "compute.go"
     },
     {
+      "permission": "Microsoft.Compute/snapshots/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListPager",
+      "source_file": "compute.go"
+    },
+    {
+      "permission": "Microsoft.Compute/virtualMachineScaleSetExtensions/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListPager",
+      "source_file": "compute_vmss.go"
+    },
+    {
+      "permission": "Microsoft.Compute/virtualMachineScaleSetVMs/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListPager",
+      "source_file": "compute_vmss.go"
+    },
+    {
+      "permission": "Microsoft.Compute/virtualMachineScaleSets/read",
+      "service": "Microsoft.Compute",
+      "action": "NewListAllPager",
+      "source_file": "compute_vmss.go"
+    },
+    {
       "permission": "Microsoft.Compute/virtualMachines/read",
       "service": "Microsoft.Compute",
       "action": "NewListAllPager",
@@ -438,7 +466,7 @@
     {
       "permission": "Microsoft.Network/applicationGateways/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -450,7 +478,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -894,7 +922,7 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListFunctionsPager",
+      "action": "NewListPager",
       "source_file": "functions.go"
     },
     {

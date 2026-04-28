@@ -24,6 +24,19 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// stringEnumPtr converts a pointer to an SDK string-enum value into a *string
+// so callers can pass it to llx.StringDataPtr without losing type information
+// when the enum is nil. Without this, conditional `args["x"] = llx.StringData(...)`
+// patterns leave the field absent from the args map, which causes accessors
+// to fail with "cannot convert primitive with NO type information".
+func stringEnumPtr[T ~string](e *T) *string {
+	if e == nil {
+		return nil
+	}
+	s := string(*e)
+	return &s
+}
+
 func (a *mqlAzureSubscriptionComputeService) id() (string, error) {
 	return "azure.subscription.compute/" + a.SubscriptionId.Data, nil
 }
@@ -358,24 +371,18 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 	}
 
 	if disk.Properties != nil {
-		if disk.Properties.NetworkAccessPolicy != nil {
-			args["networkAccessPolicy"] = llx.StringData(string(*disk.Properties.NetworkAccessPolicy))
-		}
-		if disk.Properties.PublicNetworkAccess != nil {
-			args["publicNetworkAccess"] = llx.StringData(string(*disk.Properties.PublicNetworkAccess))
-		}
+		args["networkAccessPolicy"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.NetworkAccessPolicy))
+		args["publicNetworkAccess"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.PublicNetworkAccess))
+		var encryptionType *compute.EncryptionType
+		var desID *string
 		if disk.Properties.Encryption != nil {
-			if disk.Properties.Encryption.Type != nil {
-				args["encryptionType"] = llx.StringData(string(*disk.Properties.Encryption.Type))
-			}
-			args["diskEncryptionSetId"] = llx.StringDataPtr(disk.Properties.Encryption.DiskEncryptionSetID)
+			encryptionType = disk.Properties.Encryption.Type
+			desID = disk.Properties.Encryption.DiskEncryptionSetID
 		}
-		if disk.Properties.DataAccessAuthMode != nil {
-			args["dataAccessAuthMode"] = llx.StringData(string(*disk.Properties.DataAccessAuthMode))
-		}
-		if disk.Properties.DiskState != nil {
-			args["diskState"] = llx.StringData(string(*disk.Properties.DiskState))
-		}
+		args["encryptionType"] = llx.StringDataPtr(stringEnumPtr(encryptionType))
+		args["diskEncryptionSetId"] = llx.StringDataPtr(desID)
+		args["dataAccessAuthMode"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.DataAccessAuthMode))
+		args["diskState"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.DiskState))
 		args["provisioningState"] = llx.StringDataPtr(disk.Properties.ProvisioningState)
 		args["timeCreated"] = llx.TimeDataPtr(disk.Properties.TimeCreated)
 		args["uniqueId"] = llx.StringDataPtr(disk.Properties.UniqueID)
@@ -386,9 +393,7 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		args["diskIopsReadOnly"] = llx.IntDataPtr(disk.Properties.DiskIOPSReadOnly)
 		args["diskMbpsReadOnly"] = llx.IntDataPtr(disk.Properties.DiskMBpsReadOnly)
 		args["maxShares"] = llx.IntDataPtr(disk.Properties.MaxShares)
-		if disk.Properties.HyperVGeneration != nil {
-			args["hyperVGeneration"] = llx.StringData(string(*disk.Properties.HyperVGeneration))
-		}
+		args["hyperVGeneration"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.HyperVGeneration))
 		args["tier"] = llx.StringDataPtr(disk.Properties.Tier)
 		args["supportsHibernation"] = llx.BoolDataPtr(disk.Properties.SupportsHibernation)
 		args["diskAccessId"] = llx.StringDataPtr(disk.Properties.DiskAccessID)
@@ -975,4 +980,235 @@ func (a *mqlAzureSubscriptionComputeServiceDiskAccess) privateEndpointConnection
 	}
 
 	return res, nil
+}
+
+func initAzureSubscriptionComputeServiceDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure compute disk")
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	res, err := NewResource(runtime, "azure.subscription.computeService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := res.(*mqlAzureSubscriptionComputeService)
+	disks := computeSvc.GetDisks()
+	if disks.Error != nil {
+		return nil, nil, disks.Error
+	}
+	id := strings.ToLower(args["id"].Value.(string))
+	for _, entry := range disks.Data {
+		disk := entry.(*mqlAzureSubscriptionComputeServiceDisk)
+		if strings.ToLower(disk.Id.Data) == id {
+			return args, disk, nil
+		}
+	}
+	return nil, nil, errors.New("azure compute disk does not exist")
+}
+
+func initAzureSubscriptionComputeServiceDiskEncryptionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure compute disk encryption set")
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	res, err := NewResource(runtime, "azure.subscription.computeService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := res.(*mqlAzureSubscriptionComputeService)
+	sets := computeSvc.GetDiskEncryptionSets()
+	if sets.Error != nil {
+		return nil, nil, sets.Error
+	}
+	id := strings.ToLower(args["id"].Value.(string))
+	for _, entry := range sets.Data {
+		des := entry.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet)
+		if strings.ToLower(des.Id.Data) == id {
+			return args, des, nil
+		}
+	}
+	return nil, nil, errors.New("azure disk encryption set does not exist")
+}
+
+type mqlAzureSubscriptionComputeServiceSnapshotInternal struct {
+	cacheSourceDiskId *string
+	cacheDESId        *string
+}
+
+func (a *mqlAzureSubscriptionComputeServiceSnapshot) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionComputeService) snapshots() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := compute.NewSnapshotsClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list snapshots due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, snap := range page.Value {
+			if snap == nil {
+				continue
+			}
+			mqlSnap, err := snapshotToMql(a.MqlRuntime, *snap)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSnap)
+		}
+	}
+
+	return res, nil
+}
+
+func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSubscriptionComputeServiceSnapshot, error) {
+	properties, err := convert.JsonToDict(snap.Properties)
+	if err != nil {
+		return nil, err
+	}
+	sku, err := convert.JsonToDict(snap.SKU)
+	if err != nil {
+		return nil, err
+	}
+
+	args := map[string]*llx.RawData{
+		"id":         llx.StringDataPtr(snap.ID),
+		"name":       llx.StringDataPtr(snap.Name),
+		"location":   llx.StringDataPtr(snap.Location),
+		"tags":       llx.MapData(convert.PtrMapStrToInterface(snap.Tags), types.String),
+		"type":       llx.StringDataPtr(snap.Type),
+		"sku":        llx.DictData(sku),
+		"properties": llx.DictData(properties),
+	}
+
+	var cacheSourceDiskId, cacheDESId *string
+	if snap.Properties != nil {
+		props := snap.Properties
+		creationData, err := convert.JsonToDict(props.CreationData)
+		if err != nil {
+			return nil, err
+		}
+		args["creationData"] = llx.DictData(creationData)
+		args["provisioningState"] = llx.StringDataPtr(props.ProvisioningState)
+		args["timeCreated"] = llx.TimeDataPtr(props.TimeCreated)
+		args["uniqueId"] = llx.StringDataPtr(props.UniqueID)
+		args["diskSizeBytes"] = llx.IntDataPtr(props.DiskSizeBytes)
+		args["hyperVGeneration"] = llx.StringDataPtr(stringEnumPtr(props.HyperVGeneration))
+		args["osType"] = llx.StringDataPtr(stringEnumPtr(props.OSType))
+		args["diskState"] = llx.StringDataPtr(stringEnumPtr(props.DiskState))
+		args["incremental"] = llx.BoolDataPtr(props.Incremental)
+		args["incrementalSnapshotFamilyId"] = llx.StringDataPtr(props.IncrementalSnapshotFamilyID)
+		args["supportsHibernation"] = llx.BoolDataPtr(props.SupportsHibernation)
+		args["networkAccessPolicy"] = llx.StringDataPtr(stringEnumPtr(props.NetworkAccessPolicy))
+		args["publicNetworkAccess"] = llx.StringDataPtr(stringEnumPtr(props.PublicNetworkAccess))
+		var encryptionType *compute.EncryptionType
+		if props.Encryption != nil {
+			encryptionType = props.Encryption.Type
+			cacheDESId = props.Encryption.DiskEncryptionSetID
+		}
+		args["encryptionType"] = llx.StringDataPtr(stringEnumPtr(encryptionType))
+		args["dataAccessAuthMode"] = llx.StringDataPtr(stringEnumPtr(props.DataAccessAuthMode))
+		args["diskAccessId"] = llx.StringDataPtr(props.DiskAccessID)
+
+		if props.CreationData != nil {
+			cacheSourceDiskId = props.CreationData.SourceResourceID
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.computeService.snapshot", args)
+	if err != nil {
+		return nil, err
+	}
+	mqlSnap := res.(*mqlAzureSubscriptionComputeServiceSnapshot)
+	mqlSnap.cacheSourceDiskId = cacheSourceDiskId
+	mqlSnap.cacheDESId = cacheDESId
+	return mqlSnap, nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceSnapshot) sourceDisk() (*mqlAzureSubscriptionComputeServiceDisk, error) {
+	if a.cacheSourceDiskId == nil || *a.cacheSourceDiskId == "" {
+		a.SourceDisk.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	// CreationData.SourceResourceID can also point to another snapshot or a
+	// gallery image. Filter to managed disks only.
+	parsed, err := ParseResourceID(*a.cacheSourceDiskId)
+	if err != nil {
+		a.SourceDisk.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	if _, ok := parsed.Path["disks"]; !ok {
+		a.SourceDisk.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.disk", map[string]*llx.RawData{
+		"id": llx.StringData(strings.ToLower(*a.cacheSourceDiskId)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceDisk), nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceSnapshot) diskEncryptionSet() (*mqlAzureSubscriptionComputeServiceDiskEncryptionSet, error) {
+	if a.cacheDESId == nil || *a.cacheDESId == "" {
+		a.DiskEncryptionSet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.diskEncryptionSet", map[string]*llx.RawData{
+		"id": llx.StringData(strings.ToLower(*a.cacheDESId)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDisk) diskEncryptionSet() (*mqlAzureSubscriptionComputeServiceDiskEncryptionSet, error) {
+	id := a.DiskEncryptionSetId.Data
+	if id == "" {
+		a.DiskEncryptionSet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.computeService.diskEncryptionSet", map[string]*llx.RawData{
+		"id": llx.StringData(strings.ToLower(id)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
 }

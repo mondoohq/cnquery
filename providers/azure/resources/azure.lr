@@ -164,6 +164,10 @@ private azure.subscription.computeService {
   diskEncryptionSets() []azure.subscription.computeService.diskEncryptionSet
   // All disk access resources under a subscription
   diskAccesses() []azure.subscription.computeService.diskAccess
+  // All managed disk snapshots under a subscription
+  snapshots() []azure.subscription.computeService.snapshot
+  // All Virtual Machine Scale Sets under a subscription
+  vmScaleSets() []azure.subscription.computeService.vmScaleSet
 }
 
 // Azure Compute virtual machine
@@ -228,6 +232,8 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   enableAutomaticUpdates bool
   // Patch mode for the OS ("Manual", "AutomaticByOS", "AutomaticByPlatform", "ImageDefault")
   patchMode string
+  // Virtual Machine Scale Set that manages this VM, if any (resolved from managedBy)
+  vmScaleSet() azure.subscription.computeService.vmScaleSet
 }
 
 // Azure compute disk resource
@@ -260,6 +266,8 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   encryptionType string
   // ID of the disk encryption set used for customer-managed key encryption
   diskEncryptionSetId string
+  // Disk encryption set used for customer-managed key encryption
+  diskEncryptionSet() azure.subscription.computeService.diskEncryptionSet
   // Data access authentication mode (AzureActiveDirectory, None)
   dataAccessAuthMode string
   // Current state of the disk (Unattached, Attached, Reserved, ActiveSAS, ReadyToUpload, ActiveUpload, ActiveSASFrozen)
@@ -340,6 +348,132 @@ azure.subscription.computeService.diskAccess @defaults("name location") {
   timeCreated time
   // Private endpoint connections
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
+}
+
+// Azure managed disk snapshot
+azure.subscription.computeService.snapshot @defaults("name location diskSizeBytes diskState incremental") {
+  // Snapshot ID
+  id string
+  // Snapshot name
+  name string
+  // Snapshot location
+  location string
+  // Snapshot tags
+  tags map[string]string
+  // Snapshot type
+  type string
+  // The snapshot SKU name and tier
+  sku dict
+  // Snapshot resource properties
+  properties dict
+  // Disk creation source information (createOption, sourceResourceId, sourceUri, etc.)
+  creationData dict
+  // Provisioning state of the snapshot
+  provisioningState string
+  // When the snapshot was created
+  timeCreated time
+  // Unique identifier of the snapshot (128-bit GUID)
+  uniqueId string
+  // Exact size of the snapshot in bytes
+  diskSizeBytes int
+  // Hyper-V generation of the snapshot (V1, V2)
+  hyperVGeneration string
+  // Operating system type of the source disk (Windows, Linux)
+  osType string
+  // Current state of the snapshot (Unattached, Attached, Reserved, ActiveSAS, ReadyToUpload, ActiveUpload, ActiveSASFrozen)
+  diskState string
+  // Whether this is an incremental snapshot
+  incremental bool
+  // Family ID shared by incremental snapshots of the same disk
+  incrementalSnapshotFamilyId string
+  // Whether the source disk supports hibernation
+  supportsHibernation bool
+  // Network access policy (AllowAll, AllowPrivate, DenyAll)
+  networkAccessPolicy string
+  // Whether public network access is enabled (Enabled, Disabled)
+  publicNetworkAccess string
+  // Snapshot encryption type (EncryptionAtRestWithPlatformKey, EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys)
+  encryptionType string
+  // Data access authentication mode (AzureActiveDirectory, None)
+  dataAccessAuthMode string
+  // ARM ID of the DiskAccess resource for private endpoint access
+  diskAccessId string
+  // Source disk for this snapshot (resolved from creationData.sourceResourceId when it points to a managed disk)
+  sourceDisk() azure.subscription.computeService.disk
+  // Disk encryption set used for customer-managed key encryption
+  diskEncryptionSet() azure.subscription.computeService.diskEncryptionSet
+}
+
+// Azure Virtual Machine Scale Set
+azure.subscription.computeService.vmScaleSet @defaults("name location orchestrationMode sku") {
+  // VMSS ARM resource ID
+  id string
+  // VMSS name
+  name string
+  // VMSS location
+  location string
+  // VMSS tags
+  tags map[string]string
+  // VMSS resource type
+  type string
+  // Availability zones for the VMSS
+  zones []string
+  // VMSS SKU (name, tier, capacity)
+  sku dict
+  // VMSS resource properties
+  properties dict
+  // Orchestration mode ("Uniform" or "Flexible")
+  orchestrationMode string
+  // Provisioning state
+  provisioningState string
+  // When the scale set was created
+  timeCreated time
+  // Unique identifier of the scale set
+  uniqueId string
+  // Whether the scale set is limited to a single placement group of max 100 VMs
+  singlePlacementGroup bool
+  // Whether the scale set should be overprovisioned
+  overprovision bool
+  // Fault Domain count for each placement group
+  platformFaultDomainCount int
+  // Upgrade policy for the scale set
+  upgradePolicy dict
+  // Automatic repairs policy for the scale set
+  automaticRepairsPolicy dict
+  // VMs that belong to this scale set
+  instances() []azure.subscription.computeService.vmScaleSet.instance
+  // VMSS extensions (raw)
+  extensions() []dict
+}
+
+// Azure Virtual Machine Scale Set virtual machine instance
+azure.subscription.computeService.vmScaleSet.instance @defaults("name instanceId provisioningState") {
+  // Instance ARM resource ID
+  id string
+  // Instance ID within the scale set (e.g. "0", "1", ...)
+  instanceId string
+  // Instance name
+  name string
+  // Instance location
+  location string
+  // Instance tags
+  tags map[string]string
+  // Availability zones
+  zones []string
+  // Whether the latest model has been applied to this instance
+  latestModelApplied bool
+  // Provisioning state
+  provisioningState string
+  // Whether the model applied to the VM is the scale set's model or a customized model
+  modelDefinitionApplied string
+  // Azure VM unique 128-bit identifier
+  vmId string
+  // When the instance was created
+  timeCreated time
+  // Instance properties
+  properties dict
+  // Instance SKU (name, tier, capacity)
+  sku dict
 }
 
 // Azure Batch
