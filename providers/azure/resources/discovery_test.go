@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"slices"
 	"testing"
 
@@ -249,12 +250,8 @@ func TestGetInstancesLabels(t *testing.T) {
 
 func TestGetInstancesLabels_PropertiesError(t *testing.T) {
 	vm := &mqlAzureSubscriptionComputeServiceVm{
-		Properties: plugin.TValue[any]{Error: assertErr("boom"), State: plugin.StateIsSet},
+		Properties: plugin.TValue[any]{Error: errors.New("boom"), State: plugin.StateIsSet},
 	}
 	_, err := getInstancesLabels(vm)
 	require.Error(t, err)
 }
-
-type assertErr string
-
-func (e assertErr) Error() string { return string(e) }
