@@ -29,6 +29,13 @@ const (
 	OptionTimeout = "timeout"
 
 	DefaultTimeoutSeconds = 10
+
+	endpointProbeWorkers = 8
+	maxProbeBody         = 64 << 10
+	maxVersionBody       = 1 << 20
+
+	corsProbeOrigin  = "https://mondoo.example"
+	corsProbeHeaders = "authorization,content-type"
 )
 
 type EndpointSpec struct {
@@ -111,9 +118,15 @@ func NewVllmConnection(id uint32, asset *inventory.Asset, conf *inventory.Config
 		Connection: plugin.NewConnection(id, asset),
 		Conf:       conf,
 		asset:      asset,
-		client:     &http.Client{Transport: transport, Timeout: timeout},
-		baseURL:    baseURL,
-		apiKey:     apiKeyFromConfig(conf),
+		client: &http.Client{
+			Transport: transport,
+			Timeout:   timeout,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		},
+		baseURL: baseURL,
+		apiKey:  apiKeyFromConfig(conf),
 	}
 
 	return conn, nil
@@ -125,6 +138,12 @@ func (c *VllmConnection) Name() string {
 
 func (c *VllmConnection) Asset() *inventory.Asset {
 	return c.asset
+}
+
+func (c *VllmConnection) Close() {
+	if c.client != nil {
+		c.client.CloseIdleConnections()
+	}
 }
 
 func (c *VllmConnection) BaseURL() string {
@@ -163,9 +182,9 @@ func (c *VllmConnection) Reachable(ctx context.Context) bool {
 	if err != nil {
 		return false
 	}
-	io.Copy(io.Discard, resp.Body)
-	resp.Body.Close()
-	return resp.StatusCode < 500
+	defer resp.Body.Close()
+	discardProbeBody(resp.Body)
+	return resp.StatusCode >= 200 && resp.StatusCode < 400
 }
 
 func (c *VllmConnection) Version(ctx context.Context) (string, error) {
@@ -179,11 +198,11 @@ func (c *VllmConnection) Version(ctx context.Context) (string, error) {
 		if resp.StatusCode == http.StatusNotFound {
 			return
 		}
-		if resp.StatusCode >= 500 {
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 			c.versionErr = fmt.Errorf("vllm: /version returned HTTP %d", resp.StatusCode)
 			return
 		}
-		raw, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+		raw, err := io.ReadAll(io.LimitReader(resp.Body, maxVersionBody))
 		if err != nil {
 			c.versionErr = err
 			return
@@ -195,7 +214,6 @@ func (c *VllmConnection) Version(ctx context.Context) (string, error) {
 			c.version = parsed.Version
 			return
 		}
-		c.version = strings.TrimSpace(string(raw))
 	})
 	return c.version, c.versionErr
 }
@@ -203,10 +221,34 @@ func (c *VllmConnection) Version(ctx context.Context) (string, error) {
 func (c *VllmConnection) EndpointObservations(ctx context.Context) ([]EndpointObservation, error) {
 	c.endpointsOnce.Do(func() {
 		specs := DefaultEndpointSpecs()
-		c.endpoints = make([]EndpointObservation, 0, len(specs))
-		for _, spec := range specs {
-			c.endpoints = append(c.endpoints, c.ProbeEndpoint(ctx, spec))
+		c.endpoints = make([]EndpointObservation, len(specs))
+		workers := endpointProbeWorkers
+		if len(specs) < workers {
+			workers = len(specs)
 		}
+		jobs := make(chan int)
+		var wg sync.WaitGroup
+		wg.Add(workers)
+		for i := 0; i < workers; i++ {
+			go func() {
+				defer wg.Done()
+				for idx := range jobs {
+					c.endpoints[idx] = c.ProbeEndpoint(ctx, specs[idx])
+				}
+			}()
+		}
+		for i := range specs {
+			select {
+			case <-ctx.Done():
+				c.endpointsErr = ctx.Err()
+				close(jobs)
+				wg.Wait()
+				return
+			case jobs <- i:
+			}
+		}
+		close(jobs)
+		wg.Wait()
 	})
 	return c.endpoints, c.endpointsErr
 }
@@ -235,10 +277,9 @@ func (c *VllmConnection) CORS(ctx context.Context) (CORSObservation, error) {
 			c.corsErr = err
 			return
 		}
-		const probeOrigin = "https://mondoo.example"
-		req.Header.Set("Origin", probeOrigin)
+		req.Header.Set("Origin", corsProbeOrigin)
 		req.Header.Set("Access-Control-Request-Method", http.MethodPost)
-		req.Header.Set("Access-Control-Request-Headers", "authorization,content-type")
+		req.Header.Set("Access-Control-Request-Headers", corsProbeHeaders)
 
 		resp, err := c.client.Do(req)
 		if err != nil {
@@ -246,7 +287,7 @@ func (c *VllmConnection) CORS(ctx context.Context) (CORSObservation, error) {
 			return
 		}
 		defer resp.Body.Close()
-		io.Copy(io.Discard, resp.Body)
+		discardProbeBody(resp.Body)
 
 		status := resp.StatusCode
 		allowOrigin := resp.Header.Get("Access-Control-Allow-Origin")
@@ -271,10 +312,14 @@ func (c *VllmConnection) probe(ctx context.Context, spec EndpointSpec, authentic
 		return nil, err.Error()
 	}
 	defer resp.Body.Close()
-	io.Copy(io.Discard, resp.Body)
+	discardProbeBody(resp.Body)
 
 	status := resp.StatusCode
 	return &status, ""
+}
+
+func discardProbeBody(body io.Reader) {
+	_, _ = io.CopyN(io.Discard, body, maxProbeBody)
 }
 
 func (c *VllmConnection) urlForPath(path string) string {

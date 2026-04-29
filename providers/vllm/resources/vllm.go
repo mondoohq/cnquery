@@ -56,8 +56,10 @@ func (r *mqlVllm) endpoints() ([]any, error) {
 			return nil, err
 		}
 		if e, ok := endpoint.(*mqlVllmEndpoint); ok {
-			e.obs = obs
-			e.once.Do(func() {})
+			primed := obs
+			e.once.Do(func() {
+				e.obs = primed
+			})
 		}
 		res = append(res, endpoint)
 	}

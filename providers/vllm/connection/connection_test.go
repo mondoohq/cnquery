@@ -179,6 +179,49 @@ func TestCORSWildcardAllowsAnyOrigin(t *testing.T) {
 	}
 }
 
+func TestProbeEndpointDoesNotFollowRedirects(t *testing.T) {
+	loginHit := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/models":
+			http.Redirect(w, r, "/login", http.StatusFound)
+		case "/login":
+			loginHit = true
+			if r.Header.Get("Authorization") != "" {
+				t.Fatal("authorization header was forwarded to redirect target")
+			}
+			w.WriteHeader(http.StatusOK)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	conn, err := NewVllmConnection(1, &inventory.Asset{}, &inventory.Config{
+		Options: map[string]string{
+			OptionBaseURL: server.URL,
+			OptionAPIKey:  "test-token",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	obs := conn.ProbeEndpoint(context.Background(), EndpointSpec{
+		Method: http.MethodGet,
+		Path:   "/v1/models",
+	})
+	if obs.AnonymousStatusCode == nil || *obs.AnonymousStatusCode != http.StatusFound {
+		t.Fatalf("anonymous status = %v, want 302", obs.AnonymousStatusCode)
+	}
+	if obs.AuthenticatedStatusCode == nil || *obs.AuthenticatedStatusCode != http.StatusFound {
+		t.Fatalf("authenticated status = %v, want 302", obs.AuthenticatedStatusCode)
+	}
+	if loginHit {
+		t.Fatal("probe followed redirect target")
+	}
+}
+
 func TestVersionParsesJSONResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/version" {
@@ -203,6 +246,97 @@ func TestVersionParsesJSONResponse(t *testing.T) {
 	}
 	if version != "0.17.0" {
 		t.Fatalf("version = %q, want 0.17.0", version)
+	}
+}
+
+func TestVersionRejectsNonSuccessResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/version" {
+			http.NotFound(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"detail":"Not authenticated"}`))
+	}))
+	defer server.Close()
+
+	conn, err := NewVllmConnection(1, &inventory.Asset{}, &inventory.Config{
+		Options: map[string]string{OptionBaseURL: server.URL},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	version, err := conn.Version(context.Background())
+	if err == nil {
+		t.Fatal("expected /version error")
+	}
+	if version != "" {
+		t.Fatalf("version = %q, want empty", version)
+	}
+}
+
+func TestVersionIgnoresNonJSONSuccessResponse(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/version" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		_, _ = w.Write([]byte("not a version"))
+	}))
+	defer server.Close()
+
+	conn, err := NewVllmConnection(1, &inventory.Asset{}, &inventory.Config{
+		Options: map[string]string{OptionBaseURL: server.URL},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	version, err := conn.Version(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if version != "" {
+		t.Fatalf("version = %q, want empty", version)
+	}
+}
+
+func TestReachableRequiresSuccessOrRedirect(t *testing.T) {
+	tests := []struct {
+		name   string
+		status int
+		want   bool
+	}{
+		{name: "success", status: http.StatusNoContent, want: true},
+		{name: "redirect", status: http.StatusFound, want: true},
+		{name: "not found", status: http.StatusNotFound, want: false},
+		{name: "forbidden", status: http.StatusForbidden, want: false},
+		{name: "server error", status: http.StatusInternalServerError, want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != "/health" {
+					http.NotFound(w, r)
+					return
+				}
+				w.WriteHeader(tt.status)
+			}))
+			defer server.Close()
+
+			conn, err := NewVllmConnection(1, &inventory.Asset{}, &inventory.Config{
+				Options: map[string]string{OptionBaseURL: server.URL},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := conn.Reachable(context.Background()); got != tt.want {
+				t.Fatalf("reachable = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 

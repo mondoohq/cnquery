@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/url"
 	"os"
 	"strconv"
@@ -208,12 +207,6 @@ func parseEndpoint(raw string) (baseURL string, host string, scheme string, path
 	u.Fragment = ""
 	baseURL = strings.TrimRight(u.String(), "/")
 
-	if host == "" && strings.Contains(u.Host, ":") {
-		host, _, err = net.SplitHostPort(u.Host)
-		if err != nil {
-			return "", "", "", "", 0, err
-		}
-	}
 	return baseURL, host, scheme, path, port, nil
 }
 
@@ -231,7 +224,6 @@ func boolFlag(flags map[string]*llx.Primitive, name string) bool {
 				return v
 			}
 		}
-		return strings.EqualFold(string(found.Value), "true")
 	}
 	return false
 }
@@ -246,8 +238,6 @@ func intFlag(flags map[string]*llx.Primitive, name string) int {
 				return int(v)
 			}
 		}
-		parsed, _ := strconv.Atoi(string(found.Value))
-		return parsed
 	}
 	return 0
 }

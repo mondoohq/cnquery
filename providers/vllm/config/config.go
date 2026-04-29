@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "vllm",
 	ID:              "go.mondoo.com/mql/providers/vllm",
-	Version:         "13.0.0",
+	Version:         "13.0.1",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
@@ -30,6 +30,12 @@ Notes:
   The provider probes remote HTTP routes only. Host-local flags, environment
   variables, LoRA resolver state, media allowlists, and internode network
   controls are outside this connector's observable scope.
+
+Security:
+  Only scan vLLM endpoints you are authorized to assess. The connector sends
+  HTTP requests to the supplied URL, so templating that URL from untrusted data
+  can create server-side request forgery risk. Explicit API-key credentials
+  override VLLM_API_KEY from the environment.
 `,
 			MinArgs:   1,
 			MaxArgs:   1,
