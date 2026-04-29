@@ -6280,7 +6280,8 @@ private aws.eventbridge.schedule.target.kinesisParameters @defaults("partitionKe
 
 // SageMaker pipeline StartPipelineExecution parameters
 private aws.eventbridge.schedule.target.sagemakerParameters {
-  // Pipeline execution parameters. Values may contain PII or operational data —
+  // Pipeline execution parameters
+  // Note: Values may contain PII or operational data —
   // audit accordingly. AWS Scheduler enforces unique parameter names per pipeline,
   // so a map preserves all data without loss.
   pipelineParameters() map[string]string

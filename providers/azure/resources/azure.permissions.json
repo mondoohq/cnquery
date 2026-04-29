@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.7.0",
-  "generated_at": "2026-04-27T21:59:52-07:00",
+  "version": "13.8.1",
+  "generated_at": "2026-04-29T09:56:02-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/classicAdministrators/read",
@@ -257,7 +257,7 @@
     {
       "permission": "Microsoft.Compute/disks/read",
       "service": "Microsoft.Compute",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "compute.go"
     },
     {
@@ -425,7 +425,7 @@
     {
       "permission": "Microsoft.DBforPostgreSQL/servers/read",
       "service": "Microsoft.DBforPostgreSQL",
-      "action": "NewListPager",
+      "action": "NewListBySubscriptionPager",
       "source_file": "postgresql.go"
     },
     {
@@ -509,7 +509,7 @@
     {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -701,7 +701,7 @@
     {
       "permission": "Microsoft.OperationalInsights/workspaces/read",
       "service": "Microsoft.OperationalInsights",
-      "action": "Get",
+      "action": "NewListNSPPager",
       "source_file": "loganalytics.go"
     },
     {
@@ -971,7 +971,7 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListPager",
+      "action": "NewListFunctionsPager",
       "source_file": "functions.go"
     },
     {

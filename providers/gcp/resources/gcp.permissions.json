@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.11.1",
-  "generated_at": "2026-04-25T18:24:35-07:00",
+  "version": "13.12.1",
+  "generated_at": "2026-04-29T09:56:02-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
