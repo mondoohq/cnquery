@@ -1,0 +1,34 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: BUSL-1.1
+
+vllm 13.0.1
+vllm.endpoint 13.0.1
+vllm.endpoint.anonymousAccessible 13.0.1
+vllm.endpoint.anonymousStatusCode 13.0.1
+vllm.endpoint.authenticatedStatusCode 13.0.1
+vllm.endpoint.category 13.0.1
+vllm.endpoint.method 13.0.1
+vllm.endpoint.notes 13.0.1
+vllm.endpoint.path 13.0.1
+vllm.endpoint.present 13.0.1
+vllm.endpoint.requiresAuth 13.0.1
+vllm.endpoints 13.0.1
+vllm.metrics 13.0.1
+vllm.metrics.loadEndpointExposed 13.0.1
+vllm.metrics.loadTrackingVisible 13.0.1
+vllm.metrics.prometheusExposed 13.0.1
+vllm.server 13.0.1
+vllm.server.baseUrl 13.0.1
+vllm.server.corsAllowsAnyOrigin 13.0.1
+vllm.server.corsConfigured 13.0.1
+vllm.server.devEndpointsExposed 13.0.1
+vllm.server.docsExposed 13.0.1
+vllm.server.loadEndpointExposed 13.0.1
+vllm.server.metricsExposed 13.0.1
+vllm.server.openapiExposed 13.0.1
+vllm.server.profilerEndpointsExposed 13.0.1
+vllm.server.reachable 13.0.1
+vllm.server.tokenizerInfoExposed 13.0.1
+vllm.server.usesTls 13.0.1
+vllm.server.version 13.0.1
+vllm.version 13.0.1

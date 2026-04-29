@@ -1,0 +1,80 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/vllm"
+option go_package = "go.mondoo.com/mql/v13/providers/vllm/resources"
+
+// vLLM inference server
+vllm {
+  // Server-level HTTP posture summary
+  server() vllm.server
+  // Observed HTTP endpoint posture
+  endpoints() []vllm.endpoint
+  // Minimal exposed metrics posture
+  metrics() vllm.metrics
+  // vLLM server version, if the /version endpoint is observable
+  version() string
+}
+
+// vLLM server-level HTTP posture
+vllm.server @defaults("baseUrl reachable version") {
+  // Base URL used by this connection
+  baseUrl() string
+  // Whether the server responded to a basic health probe
+  reachable() bool
+  // vLLM software version, if exposed by /version
+  version() string
+  // Whether FastAPI documentation is anonymously exposed
+  docsExposed() bool
+  // Whether the OpenAPI document is anonymously exposed
+  openapiExposed() bool
+  // Whether Prometheus metrics are anonymously exposed
+  metricsExposed() bool
+  // Whether the /load endpoint is anonymously exposed
+  loadEndpointExposed() bool
+  // Whether tokenizer information is anonymously exposed
+  tokenizerInfoExposed() bool
+  // Whether development-only routes are anonymously exposed
+  devEndpointsExposed() bool
+  // Whether profiler routes are anonymously exposed
+  profilerEndpointsExposed() bool
+  // Whether CORS behavior could be observed
+  corsConfigured() bool
+  // Whether a random origin is accepted by CORS preflight
+  corsAllowsAnyOrigin() bool
+  // Whether the target URL uses HTTPS
+  usesTls() bool
+}
+
+// vLLM HTTP endpoint posture
+vllm.endpoint @defaults("method path category present anonymousAccessible requiresAuth") {
+  init(path string, method string)
+  // HTTP method used by the probe
+  method string
+  // URL path of the probed endpoint
+  path string
+  // Endpoint category
+  category() string
+  // Whether the route was observed by HTTP status behavior
+  present() bool
+  // Status code returned by the anonymous probe
+  anonymousStatusCode() int
+  // Status code returned by the authenticated probe, if an API key was provided
+  authenticatedStatusCode() int
+  // Whether an anonymous request reached the route without an auth-like rejection
+  anonymousAccessible() bool
+  // Whether an anonymous request was rejected with an auth-like response
+  requiresAuth() bool
+  // Human-readable probe notes
+  notes() []string
+}
+
+// Minimal vLLM metrics exposure posture
+vllm.metrics @defaults("prometheusExposed loadEndpointExposed") {
+  // Whether /metrics is anonymously exposed
+  prometheusExposed() bool
+  // Whether /load is anonymously exposed
+  loadEndpointExposed() bool
+  // Whether /load appears reachable enough to expose load-tracking state
+  loadTrackingVisible() bool
+}

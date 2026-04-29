@@ -233,6 +233,7 @@ PROVIDERS := \
 	tailscale \
 	terraform \
 	vcd \
+	vllm \
 	vsphere
 
 .PHONY: providers/build
@@ -303,6 +304,7 @@ providers/test:
 	@$(call testGoModProvider, providers/tailscale)
 	@$(call testGoModProvider, providers/terraform)
 	@$(call testGoModProvider, providers/vcd)
+	@$(call testGoModProvider, providers/vllm)
 	@$(call testGoModProvider, providers/vsphere)
 
 lr/test:
