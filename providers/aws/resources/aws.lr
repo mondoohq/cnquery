@@ -12347,7 +12347,7 @@ private aws.kinesis.firehoseDeliveryStream @defaults("name status region") {
   encryption @maturity("deprecated") dict
   // Server-side encryption configuration for the delivery stream
   serverSideEncryption() aws.kinesis.firehoseDeliveryStream.encryption
-  // DEPRECATED: use kinesisStream() and kinesisStreamArn instead
+  // DEPRECATED: use kinesisStream() instead
   source @maturity("deprecated") dict
   // Source Kinesis data stream when deliveryStreamType is KinesisStreamAsSource (null otherwise)
   kinesisStream() aws.kinesis.stream

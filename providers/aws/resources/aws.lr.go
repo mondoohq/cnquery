@@ -2783,7 +2783,7 @@ func init() {
 			Create: createAwsKinesis,
 		},
 		"aws.kinesis.stream": {
-			// to override args, implement: initAwsKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsKinesisStream,
 			Create: createAwsKinesisStream,
 		},
 		"aws.kinesis.streamConsumer": {

@@ -86,6 +86,56 @@ func (a *mqlAwsKinesis) getStreams(conn *connection.AwsConnection) []*jobpool.Jo
 	return tasks
 }
 
+// initAwsKinesisStream allows typed refs (e.g. from
+// aws.kinesis.firehoseDeliveryStream.kinesisStream or
+// aws.kinesis.streamConsumer.stream) to resolve a stream by ARN. Without it
+// NewResource would yield a shell with no fields populated. Falls back to an
+// arn-only shell on access-denied or describe failure.
+func initAwsKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) >= 2 {
+		return args, nil, nil
+	}
+	if args["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws kinesis stream")
+	}
+	arnVal := args["arn"].Value.(string)
+	parsed, err := arn.Parse(arnVal)
+	if err != nil {
+		args["__id"] = llx.StringData(arnVal)
+		return args, nil, nil
+	}
+	// resource portion is "stream/<name>"
+	name := strings.TrimPrefix(parsed.Resource, "stream/")
+	if name == "" || name == parsed.Resource {
+		return nil, nil, fmt.Errorf("unexpected kinesis stream arn format: %s", arnVal)
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Kinesis(parsed.Region)
+	out, err := svc.DescribeStreamSummary(context.Background(), &kinesis.DescribeStreamSummaryInput{
+		StreamARN: &arnVal,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			args["__id"] = llx.StringData(arnVal)
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if out.StreamDescriptionSummary == nil {
+		args["__id"] = llx.StringData(arnVal)
+		return args, nil, nil
+	}
+	desc := out.StreamDescriptionSummary
+	args["__id"] = llx.StringData(arnVal)
+	args["arn"] = llx.StringData(arnVal)
+	args["name"] = llx.StringDataPtr(desc.StreamName)
+	args["status"] = llx.StringData(string(desc.StreamStatus))
+	args["streamModeDetails"] = llx.NilData
+	args["createdAt"] = llx.TimeDataPtr(desc.StreamCreationTimestamp)
+	args["region"] = llx.StringData(parsed.Region)
+	return args, nil, nil
+}
+
 func newMqlAwsKinesisStream(runtime *plugin.Runtime, region string, summary *kinesis_types.StreamSummary) (*mqlAwsKinesisStream, error) {
 	// Use fields available from ListStreams StreamSummary
 	streamModeDetails, err := convert.JsonToDict(summary.StreamModeDetails)
