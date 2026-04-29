@@ -673,11 +673,16 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	arnVal := args["arn"].Value.(string)
+	// CloudWatch's DescribeLogGroups returns ARNs with a trailing ":*" suffix;
+	// other AWS services (e.g. EventBridge Pipes LogConfiguration) return the
+	// bare ARN without it. Compare both with and without the suffix so init
+	// resolves correctly regardless of which form the caller passes.
+	arnNoStar := strings.TrimSuffix(arnVal, ":*")
 	for _, rawResource := range rawResources.Data {
 		logGroup := rawResource.(*mqlAwsCloudwatchLoggroup)
 		mqlLgArn := logGroup.Arn.Data
 
-		if mqlLgArn == arnVal {
+		if mqlLgArn == arnVal || strings.TrimSuffix(mqlLgArn, ":*") == arnNoStar {
 			return args, logGroup, nil
 		}
 	}

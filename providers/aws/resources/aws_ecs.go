@@ -1272,10 +1272,22 @@ func (a *mqlAwsEcsTaskDefinition) fetchDetail() error {
 	}
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Ecs(a.Region.Data)
+	arnVal := a.Arn.Data
+
+	// When the resource is initialised with only an ARN (e.g. from a typed-ref
+	// accessor in another resource), Region.Data is empty. Fall back to the
+	// region encoded in the ARN so DescribeTaskDefinition has a valid endpoint.
+	region := a.Region.Data
+	if region == "" {
+		if parsed, err := arn.Parse(arnVal); err == nil {
+			region = parsed.Region
+			a.Region = plugin.TValue[string]{Data: region, State: plugin.StateIsSet}
+		}
+	}
+
+	svc := conn.Ecs(region)
 	ctx := context.Background()
 
-	arnVal := a.Arn.Data
 	describeResp, err := svc.DescribeTaskDefinition(ctx, &ecsservice.DescribeTaskDefinitionInput{
 		TaskDefinition: &arnVal,
 	})
