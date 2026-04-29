@@ -311,6 +311,16 @@ const (
 	ResourceAwsEventbridgePipeLogConfigurationS3                                string = "aws.eventbridge.pipe.logConfiguration.s3"
 	ResourceAwsEventbridgePipeDeadLetterConfig                                  string = "aws.eventbridge.pipe.deadLetterConfig"
 	ResourceAwsEventbridgeSchedule                                              string = "aws.eventbridge.schedule"
+	ResourceAwsEventbridgeScheduleRetryPolicy                                   string = "aws.eventbridge.schedule.retryPolicy"
+	ResourceAwsEventbridgeScheduleFlexibleTimeWindow                            string = "aws.eventbridge.schedule.flexibleTimeWindow"
+	ResourceAwsEventbridgeScheduleTarget                                        string = "aws.eventbridge.schedule.target"
+	ResourceAwsEventbridgeScheduleTargetEcsParameters                           string = "aws.eventbridge.schedule.target.ecsParameters"
+	ResourceAwsEventbridgeScheduleTargetEventBridgeParameters                   string = "aws.eventbridge.schedule.target.eventBridgeParameters"
+	ResourceAwsEventbridgeScheduleTargetKinesisParameters                       string = "aws.eventbridge.schedule.target.kinesisParameters"
+	ResourceAwsEventbridgeScheduleTargetSagemakerParameters                     string = "aws.eventbridge.schedule.target.sagemakerParameters"
+	ResourceAwsEventbridgeScheduleTargetSagemakerParametersParameter            string = "aws.eventbridge.schedule.target.sagemakerParameters.parameter"
+	ResourceAwsEventbridgeScheduleTargetSqsParameters                           string = "aws.eventbridge.schedule.target.sqsParameters"
+	ResourceAwsEventbridgeScheduleTargetUniversalTarget                         string = "aws.eventbridge.schedule.target.universalTarget"
 	ResourceAwsEventbridgeScheduleGroup                                         string = "aws.eventbridge.scheduleGroup"
 	ResourceAwsCloudwatch                                                       string = "aws.cloudwatch"
 	ResourceAwsCloudwatchMetricsalarm                                           string = "aws.cloudwatch.metricsalarm"
@@ -1898,6 +1908,46 @@ func init() {
 		"aws.eventbridge.schedule": {
 			// to override args, implement: initAwsEventbridgeSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEventbridgeSchedule,
+		},
+		"aws.eventbridge.schedule.retryPolicy": {
+			// to override args, implement: initAwsEventbridgeScheduleRetryPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeScheduleRetryPolicy,
+		},
+		"aws.eventbridge.schedule.flexibleTimeWindow": {
+			// to override args, implement: initAwsEventbridgeScheduleFlexibleTimeWindow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeScheduleFlexibleTimeWindow,
+		},
+		"aws.eventbridge.schedule.target": {
+			// to override args, implement: initAwsEventbridgeScheduleTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeScheduleTarget,
+		},
+		"aws.eventbridge.schedule.target.ecsParameters": {
+			// to override args, implement: initAwsEventbridgeScheduleTargetEcsParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeScheduleTargetEcsParameters,
+		},
+		"aws.eventbridge.schedule.target.eventBridgeParameters": {
+			// to override args, implement: initAwsEventbridgeScheduleTargetEventBridgeParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeScheduleTargetEventBridgeParameters,
+		},
+		"aws.eventbridge.schedule.target.kinesisParameters": {
+			// to override args, implement: initAwsEventbridgeScheduleTargetKinesisParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeScheduleTargetKinesisParameters,
+		},
+		"aws.eventbridge.schedule.target.sagemakerParameters": {
+			// to override args, implement: initAwsEventbridgeScheduleTargetSagemakerParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeScheduleTargetSagemakerParameters,
+		},
+		"aws.eventbridge.schedule.target.sagemakerParameters.parameter": {
+			// to override args, implement: initAwsEventbridgeScheduleTargetSagemakerParametersParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeScheduleTargetSagemakerParametersParameter,
+		},
+		"aws.eventbridge.schedule.target.sqsParameters": {
+			// to override args, implement: initAwsEventbridgeScheduleTargetSqsParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeScheduleTargetSqsParameters,
+		},
+		"aws.eventbridge.schedule.target.universalTarget": {
+			// to override args, implement: initAwsEventbridgeScheduleTargetUniversalTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgeScheduleTargetUniversalTarget,
 		},
 		"aws.eventbridge.scheduleGroup": {
 			// to override args, implement: initAwsEventbridgeScheduleGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11000,6 +11050,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eventbridge.schedule.scheduleExpression": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeSchedule).GetScheduleExpression()).ToDataRes(types.String)
 	},
+	"aws.eventbridge.schedule.scheduleExpressionTimezone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeSchedule).GetScheduleExpressionTimezone()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.startDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeSchedule).GetStartDate()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.schedule.endDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeSchedule).GetEndDate()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.schedule.actionAfterCompletion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeSchedule).GetActionAfterCompletion()).ToDataRes(types.String)
+	},
 	"aws.eventbridge.schedule.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeSchedule).GetDescription()).ToDataRes(types.String)
 	},
@@ -11012,11 +11074,155 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eventbridge.schedule.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeSchedule).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
+	"aws.eventbridge.schedule.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeSchedule).GetGroup()).ToDataRes(types.Resource("aws.eventbridge.scheduleGroup"))
+	},
+	"aws.eventbridge.schedule.deadLetterQueue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeSchedule).GetDeadLetterQueue()).ToDataRes(types.Resource("aws.sqs.queue"))
+	},
+	"aws.eventbridge.schedule.retryPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeSchedule).GetRetryPolicy()).ToDataRes(types.Resource("aws.eventbridge.schedule.retryPolicy"))
+	},
+	"aws.eventbridge.schedule.flexibleTimeWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeSchedule).GetFlexibleTimeWindow()).ToDataRes(types.Resource("aws.eventbridge.schedule.flexibleTimeWindow"))
+	},
+	"aws.eventbridge.schedule.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeSchedule).GetTarget()).ToDataRes(types.Resource("aws.eventbridge.schedule.target"))
+	},
+	"aws.eventbridge.schedule.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeSchedule).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.eventbridge.schedule.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeSchedule).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.eventbridge.schedule.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeSchedule).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.schedule.retryPolicy.maximumEventAgeInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleRetryPolicy).GetMaximumEventAgeInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.schedule.retryPolicy.maximumRetryAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleRetryPolicy).GetMaximumRetryAttempts()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.schedule.flexibleTimeWindow.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleFlexibleTimeWindow).GetMode()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.flexibleTimeWindow.maximumWindowInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleFlexibleTimeWindow).GetMaximumWindowInMinutes()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.schedule.target.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.input": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetInput()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.targetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetTargetType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetEcsParameters()).ToDataRes(types.Resource("aws.eventbridge.schedule.target.ecsParameters"))
+	},
+	"aws.eventbridge.schedule.target.eventBridgeParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetEventBridgeParameters()).ToDataRes(types.Resource("aws.eventbridge.schedule.target.eventBridgeParameters"))
+	},
+	"aws.eventbridge.schedule.target.kinesisParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetKinesisParameters()).ToDataRes(types.Resource("aws.eventbridge.schedule.target.kinesisParameters"))
+	},
+	"aws.eventbridge.schedule.target.sagemakerParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetSagemakerParameters()).ToDataRes(types.Resource("aws.eventbridge.schedule.target.sagemakerParameters"))
+	},
+	"aws.eventbridge.schedule.target.sqsParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetSqsParameters()).ToDataRes(types.Resource("aws.eventbridge.schedule.target.sqsParameters"))
+	},
+	"aws.eventbridge.schedule.target.universalTarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTarget).GetUniversalTarget()).ToDataRes(types.Resource("aws.eventbridge.schedule.target.universalTarget"))
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.taskDefinitionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetTaskDefinitionArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.taskDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetTaskDefinition()).ToDataRes(types.Resource("aws.ecs.taskDefinition"))
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.taskCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetTaskCount()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.launchType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetLaunchType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.enableExecuteCommand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetEnableExecuteCommand()).ToDataRes(types.Bool)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.enableEcsManagedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetEnableEcsManagedTags()).ToDataRes(types.Bool)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetGroup()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.platformVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetPlatformVersion()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.propagateTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetPropagateTags()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.referenceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetReferenceId()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.subnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.assignPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetAssignPublicIp()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.capacityProviderStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetCapacityProviderStrategy()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.placementConstraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetPlacementConstraints()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.placementStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetPlacementStrategy()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eventbridge.schedule.target.eventBridgeParameters.detailType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEventBridgeParameters).GetDetailType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.eventBridgeParameters.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetEventBridgeParameters).GetSource()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.kinesisParameters.partitionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetKinesisParameters).GetPartitionKey()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.sagemakerParameters.pipelineParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetSagemakerParameters).GetPipelineParameters()).ToDataRes(types.Array(types.Resource("aws.eventbridge.schedule.target.sagemakerParameters.parameter")))
+	},
+	"aws.eventbridge.schedule.target.sagemakerParameters.parameter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter).GetName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.sagemakerParameters.parameter.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter).GetValue()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.sqsParameters.messageGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetSqsParameters).GetMessageGroupId()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.universalTarget.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetUniversalTarget).GetService()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.schedule.target.universalTarget.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleTargetUniversalTarget).GetAction()).ToDataRes(types.String)
 	},
 	"aws.eventbridge.scheduleGroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeScheduleGroup).GetArn()).ToDataRes(types.String)
@@ -11029,6 +11235,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eventbridge.scheduleGroup.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeScheduleGroup).GetState()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.scheduleGroup.schedules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleGroup).GetSchedules()).ToDataRes(types.Array(types.Resource("aws.eventbridge.schedule")))
+	},
+	"aws.eventbridge.scheduleGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeScheduleGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.eventbridge.scheduleGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeScheduleGroup).GetCreatedAt()).ToDataRes(types.Time)
@@ -34268,6 +34480,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEventbridgeSchedule).ScheduleExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.eventbridge.schedule.scheduleExpressionTimezone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeSchedule).ScheduleExpressionTimezone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.startDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeSchedule).StartDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.endDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeSchedule).EndDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.actionAfterCompletion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeSchedule).ActionAfterCompletion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.eventbridge.schedule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgeSchedule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -34284,12 +34512,244 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEventbridgeSchedule).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
+	"aws.eventbridge.schedule.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeSchedule).Group, ok = plugin.RawToTValue[*mqlAwsEventbridgeScheduleGroup](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.deadLetterQueue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeSchedule).DeadLetterQueue, ok = plugin.RawToTValue[*mqlAwsSqsQueue](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.retryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeSchedule).RetryPolicy, ok = plugin.RawToTValue[*mqlAwsEventbridgeScheduleRetryPolicy](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.flexibleTimeWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeSchedule).FlexibleTimeWindow, ok = plugin.RawToTValue[*mqlAwsEventbridgeScheduleFlexibleTimeWindow](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeSchedule).Target, ok = plugin.RawToTValue[*mqlAwsEventbridgeScheduleTarget](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeSchedule).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.eventbridge.schedule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgeSchedule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.schedule.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgeSchedule).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.retryPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleRetryPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.schedule.retryPolicy.maximumEventAgeInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleRetryPolicy).MaximumEventAgeInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.retryPolicy.maximumRetryAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleRetryPolicy).MaximumRetryAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.flexibleTimeWindow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleFlexibleTimeWindow).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.schedule.flexibleTimeWindow.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleFlexibleTimeWindow).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.flexibleTimeWindow.maximumWindowInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleFlexibleTimeWindow).MaximumWindowInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.schedule.target.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.input": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).Input, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.targetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).TargetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).EcsParameters, ok = plugin.RawToTValue[*mqlAwsEventbridgeScheduleTargetEcsParameters](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.eventBridgeParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).EventBridgeParameters, ok = plugin.RawToTValue[*mqlAwsEventbridgeScheduleTargetEventBridgeParameters](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.kinesisParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).KinesisParameters, ok = plugin.RawToTValue[*mqlAwsEventbridgeScheduleTargetKinesisParameters](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.sagemakerParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).SagemakerParameters, ok = plugin.RawToTValue[*mqlAwsEventbridgeScheduleTargetSagemakerParameters](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.sqsParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).SqsParameters, ok = plugin.RawToTValue[*mqlAwsEventbridgeScheduleTargetSqsParameters](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.universalTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTarget).UniversalTarget, ok = plugin.RawToTValue[*mqlAwsEventbridgeScheduleTargetUniversalTarget](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.taskDefinitionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).TaskDefinitionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.taskDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).TaskDefinition, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinition](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.taskCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).TaskCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.launchType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).LaunchType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.enableExecuteCommand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).EnableExecuteCommand, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.enableEcsManagedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).EnableEcsManagedTags, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.platformVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).PlatformVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.propagateTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).PropagateTags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.referenceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).ReferenceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.assignPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).AssignPublicIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.capacityProviderStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).CapacityProviderStrategy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.placementConstraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).PlacementConstraints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.placementStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).PlacementStrategy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.ecsParameters.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEcsParameters).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.eventBridgeParameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEventBridgeParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.schedule.target.eventBridgeParameters.detailType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEventBridgeParameters).DetailType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.eventBridgeParameters.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetEventBridgeParameters).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.kinesisParameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetKinesisParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.schedule.target.kinesisParameters.partitionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetKinesisParameters).PartitionKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.sagemakerParameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetSagemakerParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.schedule.target.sagemakerParameters.pipelineParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetSagemakerParameters).PipelineParameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.sagemakerParameters.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.schedule.target.sagemakerParameters.parameter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.sagemakerParameters.parameter.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.sqsParameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetSqsParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.schedule.target.sqsParameters.messageGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetSqsParameters).MessageGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.universalTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetUniversalTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.schedule.target.universalTarget.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetUniversalTarget).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.schedule.target.universalTarget.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleTargetUniversalTarget).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.scheduleGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34310,6 +34770,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eventbridge.scheduleGroup.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgeScheduleGroup).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.scheduleGroup.schedules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleGroup).Schedules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.scheduleGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeScheduleGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.scheduleGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83121,18 +83589,28 @@ type mqlAwsEventbridgeSchedule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEventbridgeScheduleInternal
-	Arn                plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Region             plugin.TValue[string]
-	GroupName          plugin.TValue[string]
-	State              plugin.TValue[string]
-	ScheduleExpression plugin.TValue[string]
-	Description        plugin.TValue[string]
-	TargetArn          plugin.TValue[string]
-	IamRole            plugin.TValue[*mqlAwsIamRole]
-	KmsKey             plugin.TValue[*mqlAwsKmsKey]
-	CreatedAt          plugin.TValue[*time.Time]
-	UpdatedAt          plugin.TValue[*time.Time]
+	Arn                        plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	GroupName                  plugin.TValue[string]
+	State                      plugin.TValue[string]
+	ScheduleExpression         plugin.TValue[string]
+	ScheduleExpressionTimezone plugin.TValue[string]
+	StartDate                  plugin.TValue[*time.Time]
+	EndDate                    plugin.TValue[*time.Time]
+	ActionAfterCompletion      plugin.TValue[string]
+	Description                plugin.TValue[string]
+	TargetArn                  plugin.TValue[string]
+	IamRole                    plugin.TValue[*mqlAwsIamRole]
+	KmsKey                     plugin.TValue[*mqlAwsKmsKey]
+	Group                      plugin.TValue[*mqlAwsEventbridgeScheduleGroup]
+	DeadLetterQueue            plugin.TValue[*mqlAwsSqsQueue]
+	RetryPolicy                plugin.TValue[*mqlAwsEventbridgeScheduleRetryPolicy]
+	FlexibleTimeWindow         plugin.TValue[*mqlAwsEventbridgeScheduleFlexibleTimeWindow]
+	Target                     plugin.TValue[*mqlAwsEventbridgeScheduleTarget]
+	Tags                       plugin.TValue[map[string]any]
+	CreatedAt                  plugin.TValue[*time.Time]
+	UpdatedAt                  plugin.TValue[*time.Time]
 }
 
 // createAwsEventbridgeSchedule creates a new instance of this resource
@@ -83193,6 +83671,30 @@ func (c *mqlAwsEventbridgeSchedule) GetScheduleExpression() *plugin.TValue[strin
 	})
 }
 
+func (c *mqlAwsEventbridgeSchedule) GetScheduleExpressionTimezone() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ScheduleExpressionTimezone, func() (string, error) {
+		return c.scheduleExpressionTimezone()
+	})
+}
+
+func (c *mqlAwsEventbridgeSchedule) GetStartDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.StartDate, func() (*time.Time, error) {
+		return c.startDate()
+	})
+}
+
+func (c *mqlAwsEventbridgeSchedule) GetEndDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.EndDate, func() (*time.Time, error) {
+		return c.endDate()
+	})
+}
+
+func (c *mqlAwsEventbridgeSchedule) GetActionAfterCompletion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ActionAfterCompletion, func() (string, error) {
+		return c.actionAfterCompletion()
+	})
+}
+
 func (c *mqlAwsEventbridgeSchedule) GetDescription() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
 		return c.description()
@@ -83237,6 +83739,92 @@ func (c *mqlAwsEventbridgeSchedule) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	})
 }
 
+func (c *mqlAwsEventbridgeSchedule) GetGroup() *plugin.TValue[*mqlAwsEventbridgeScheduleGroup] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeScheduleGroup](&c.Group, func() (*mqlAwsEventbridgeScheduleGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule", c.__id, "group")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeScheduleGroup), nil
+			}
+		}
+
+		return c.group()
+	})
+}
+
+func (c *mqlAwsEventbridgeSchedule) GetDeadLetterQueue() *plugin.TValue[*mqlAwsSqsQueue] {
+	return plugin.GetOrCompute[*mqlAwsSqsQueue](&c.DeadLetterQueue, func() (*mqlAwsSqsQueue, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule", c.__id, "deadLetterQueue")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSqsQueue), nil
+			}
+		}
+
+		return c.deadLetterQueue()
+	})
+}
+
+func (c *mqlAwsEventbridgeSchedule) GetRetryPolicy() *plugin.TValue[*mqlAwsEventbridgeScheduleRetryPolicy] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeScheduleRetryPolicy](&c.RetryPolicy, func() (*mqlAwsEventbridgeScheduleRetryPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule", c.__id, "retryPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeScheduleRetryPolicy), nil
+			}
+		}
+
+		return c.retryPolicy()
+	})
+}
+
+func (c *mqlAwsEventbridgeSchedule) GetFlexibleTimeWindow() *plugin.TValue[*mqlAwsEventbridgeScheduleFlexibleTimeWindow] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeScheduleFlexibleTimeWindow](&c.FlexibleTimeWindow, func() (*mqlAwsEventbridgeScheduleFlexibleTimeWindow, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule", c.__id, "flexibleTimeWindow")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeScheduleFlexibleTimeWindow), nil
+			}
+		}
+
+		return c.flexibleTimeWindow()
+	})
+}
+
+func (c *mqlAwsEventbridgeSchedule) GetTarget() *plugin.TValue[*mqlAwsEventbridgeScheduleTarget] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeScheduleTarget](&c.Target, func() (*mqlAwsEventbridgeScheduleTarget, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule", c.__id, "target")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeScheduleTarget), nil
+			}
+		}
+
+		return c.target()
+	})
+}
+
+func (c *mqlAwsEventbridgeSchedule) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
 func (c *mqlAwsEventbridgeSchedule) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -83245,15 +83833,737 @@ func (c *mqlAwsEventbridgeSchedule) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
 }
 
+// mqlAwsEventbridgeScheduleRetryPolicy for the aws.eventbridge.schedule.retryPolicy resource
+type mqlAwsEventbridgeScheduleRetryPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeScheduleRetryPolicyInternal it will be used here
+	MaximumEventAgeInSeconds plugin.TValue[int64]
+	MaximumRetryAttempts     plugin.TValue[int64]
+}
+
+// createAwsEventbridgeScheduleRetryPolicy creates a new instance of this resource
+func createAwsEventbridgeScheduleRetryPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeScheduleRetryPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.retryPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeScheduleRetryPolicy) MqlName() string {
+	return "aws.eventbridge.schedule.retryPolicy"
+}
+
+func (c *mqlAwsEventbridgeScheduleRetryPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeScheduleRetryPolicy) GetMaximumEventAgeInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumEventAgeInSeconds
+}
+
+func (c *mqlAwsEventbridgeScheduleRetryPolicy) GetMaximumRetryAttempts() *plugin.TValue[int64] {
+	return &c.MaximumRetryAttempts
+}
+
+// mqlAwsEventbridgeScheduleFlexibleTimeWindow for the aws.eventbridge.schedule.flexibleTimeWindow resource
+type mqlAwsEventbridgeScheduleFlexibleTimeWindow struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeScheduleFlexibleTimeWindowInternal it will be used here
+	Mode                   plugin.TValue[string]
+	MaximumWindowInMinutes plugin.TValue[int64]
+}
+
+// createAwsEventbridgeScheduleFlexibleTimeWindow creates a new instance of this resource
+func createAwsEventbridgeScheduleFlexibleTimeWindow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeScheduleFlexibleTimeWindow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.flexibleTimeWindow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeScheduleFlexibleTimeWindow) MqlName() string {
+	return "aws.eventbridge.schedule.flexibleTimeWindow"
+}
+
+func (c *mqlAwsEventbridgeScheduleFlexibleTimeWindow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeScheduleFlexibleTimeWindow) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAwsEventbridgeScheduleFlexibleTimeWindow) GetMaximumWindowInMinutes() *plugin.TValue[int64] {
+	return &c.MaximumWindowInMinutes
+}
+
+// mqlAwsEventbridgeScheduleTarget for the aws.eventbridge.schedule.target resource
+type mqlAwsEventbridgeScheduleTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgeScheduleTargetInternal
+	Arn                   plugin.TValue[string]
+	RoleArn               plugin.TValue[string]
+	Input                 plugin.TValue[string]
+	TargetType            plugin.TValue[string]
+	EcsParameters         plugin.TValue[*mqlAwsEventbridgeScheduleTargetEcsParameters]
+	EventBridgeParameters plugin.TValue[*mqlAwsEventbridgeScheduleTargetEventBridgeParameters]
+	KinesisParameters     plugin.TValue[*mqlAwsEventbridgeScheduleTargetKinesisParameters]
+	SagemakerParameters   plugin.TValue[*mqlAwsEventbridgeScheduleTargetSagemakerParameters]
+	SqsParameters         plugin.TValue[*mqlAwsEventbridgeScheduleTargetSqsParameters]
+	UniversalTarget       plugin.TValue[*mqlAwsEventbridgeScheduleTargetUniversalTarget]
+}
+
+// createAwsEventbridgeScheduleTarget creates a new instance of this resource
+func createAwsEventbridgeScheduleTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeScheduleTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.target", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) MqlName() string {
+	return "aws.eventbridge.schedule.target"
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetRoleArn() *plugin.TValue[string] {
+	return &c.RoleArn
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetInput() *plugin.TValue[string] {
+	return &c.Input
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetTargetType() *plugin.TValue[string] {
+	return &c.TargetType
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetEcsParameters() *plugin.TValue[*mqlAwsEventbridgeScheduleTargetEcsParameters] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeScheduleTargetEcsParameters](&c.EcsParameters, func() (*mqlAwsEventbridgeScheduleTargetEcsParameters, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target", c.__id, "ecsParameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeScheduleTargetEcsParameters), nil
+			}
+		}
+
+		return c.ecsParameters()
+	})
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetEventBridgeParameters() *plugin.TValue[*mqlAwsEventbridgeScheduleTargetEventBridgeParameters] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeScheduleTargetEventBridgeParameters](&c.EventBridgeParameters, func() (*mqlAwsEventbridgeScheduleTargetEventBridgeParameters, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target", c.__id, "eventBridgeParameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeScheduleTargetEventBridgeParameters), nil
+			}
+		}
+
+		return c.eventBridgeParameters()
+	})
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetKinesisParameters() *plugin.TValue[*mqlAwsEventbridgeScheduleTargetKinesisParameters] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeScheduleTargetKinesisParameters](&c.KinesisParameters, func() (*mqlAwsEventbridgeScheduleTargetKinesisParameters, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target", c.__id, "kinesisParameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeScheduleTargetKinesisParameters), nil
+			}
+		}
+
+		return c.kinesisParameters()
+	})
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetSagemakerParameters() *plugin.TValue[*mqlAwsEventbridgeScheduleTargetSagemakerParameters] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeScheduleTargetSagemakerParameters](&c.SagemakerParameters, func() (*mqlAwsEventbridgeScheduleTargetSagemakerParameters, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target", c.__id, "sagemakerParameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeScheduleTargetSagemakerParameters), nil
+			}
+		}
+
+		return c.sagemakerParameters()
+	})
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetSqsParameters() *plugin.TValue[*mqlAwsEventbridgeScheduleTargetSqsParameters] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeScheduleTargetSqsParameters](&c.SqsParameters, func() (*mqlAwsEventbridgeScheduleTargetSqsParameters, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target", c.__id, "sqsParameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeScheduleTargetSqsParameters), nil
+			}
+		}
+
+		return c.sqsParameters()
+	})
+}
+
+func (c *mqlAwsEventbridgeScheduleTarget) GetUniversalTarget() *plugin.TValue[*mqlAwsEventbridgeScheduleTargetUniversalTarget] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeScheduleTargetUniversalTarget](&c.UniversalTarget, func() (*mqlAwsEventbridgeScheduleTargetUniversalTarget, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target", c.__id, "universalTarget")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeScheduleTargetUniversalTarget), nil
+			}
+		}
+
+		return c.universalTarget()
+	})
+}
+
+// mqlAwsEventbridgeScheduleTargetEcsParameters for the aws.eventbridge.schedule.target.ecsParameters resource
+type mqlAwsEventbridgeScheduleTargetEcsParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgeScheduleTargetEcsParametersInternal
+	TaskDefinitionArn        plugin.TValue[string]
+	TaskDefinition           plugin.TValue[*mqlAwsEcsTaskDefinition]
+	TaskCount                plugin.TValue[int64]
+	LaunchType               plugin.TValue[string]
+	EnableExecuteCommand     plugin.TValue[bool]
+	EnableEcsManagedTags     plugin.TValue[bool]
+	Group                    plugin.TValue[string]
+	PlatformVersion          plugin.TValue[string]
+	PropagateTags            plugin.TValue[string]
+	ReferenceId              plugin.TValue[string]
+	SubnetIds                plugin.TValue[[]any]
+	Subnets                  plugin.TValue[[]any]
+	SecurityGroupIds         plugin.TValue[[]any]
+	SecurityGroups           plugin.TValue[[]any]
+	AssignPublicIp           plugin.TValue[string]
+	CapacityProviderStrategy plugin.TValue[[]any]
+	PlacementConstraints     plugin.TValue[[]any]
+	PlacementStrategy        plugin.TValue[[]any]
+	Tags                     plugin.TValue[map[string]any]
+}
+
+// createAwsEventbridgeScheduleTargetEcsParameters creates a new instance of this resource
+func createAwsEventbridgeScheduleTargetEcsParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeScheduleTargetEcsParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.target.ecsParameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) MqlName() string {
+	return "aws.eventbridge.schedule.target.ecsParameters"
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetTaskDefinitionArn() *plugin.TValue[string] {
+	return &c.TaskDefinitionArn
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetTaskDefinition() *plugin.TValue[*mqlAwsEcsTaskDefinition] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinition](&c.TaskDefinition, func() (*mqlAwsEcsTaskDefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target.ecsParameters", c.__id, "taskDefinition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskDefinition), nil
+			}
+		}
+
+		return c.taskDefinition()
+	})
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetTaskCount() *plugin.TValue[int64] {
+	return &c.TaskCount
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetLaunchType() *plugin.TValue[string] {
+	return &c.LaunchType
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetEnableExecuteCommand() *plugin.TValue[bool] {
+	return &c.EnableExecuteCommand
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetEnableEcsManagedTags() *plugin.TValue[bool] {
+	return &c.EnableEcsManagedTags
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetPlatformVersion() *plugin.TValue[string] {
+	return &c.PlatformVersion
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetPropagateTags() *plugin.TValue[string] {
+	return &c.PropagateTags
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetReferenceId() *plugin.TValue[string] {
+	return &c.ReferenceId
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetSubnetIds() *plugin.TValue[[]any] {
+	return &c.SubnetIds
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target.ecsParameters", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetSecurityGroupIds() *plugin.TValue[[]any] {
+	return &c.SecurityGroupIds
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target.ecsParameters", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetAssignPublicIp() *plugin.TValue[string] {
+	return &c.AssignPublicIp
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetCapacityProviderStrategy() *plugin.TValue[[]any] {
+	return &c.CapacityProviderStrategy
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetPlacementConstraints() *plugin.TValue[[]any] {
+	return &c.PlacementConstraints
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetPlacementStrategy() *plugin.TValue[[]any] {
+	return &c.PlacementStrategy
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEcsParameters) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsEventbridgeScheduleTargetEventBridgeParameters for the aws.eventbridge.schedule.target.eventBridgeParameters resource
+type mqlAwsEventbridgeScheduleTargetEventBridgeParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeScheduleTargetEventBridgeParametersInternal it will be used here
+	DetailType plugin.TValue[string]
+	Source     plugin.TValue[string]
+}
+
+// createAwsEventbridgeScheduleTargetEventBridgeParameters creates a new instance of this resource
+func createAwsEventbridgeScheduleTargetEventBridgeParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeScheduleTargetEventBridgeParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.target.eventBridgeParameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEventBridgeParameters) MqlName() string {
+	return "aws.eventbridge.schedule.target.eventBridgeParameters"
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEventBridgeParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEventBridgeParameters) GetDetailType() *plugin.TValue[string] {
+	return &c.DetailType
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetEventBridgeParameters) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+// mqlAwsEventbridgeScheduleTargetKinesisParameters for the aws.eventbridge.schedule.target.kinesisParameters resource
+type mqlAwsEventbridgeScheduleTargetKinesisParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeScheduleTargetKinesisParametersInternal it will be used here
+	PartitionKey plugin.TValue[string]
+}
+
+// createAwsEventbridgeScheduleTargetKinesisParameters creates a new instance of this resource
+func createAwsEventbridgeScheduleTargetKinesisParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeScheduleTargetKinesisParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.target.kinesisParameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetKinesisParameters) MqlName() string {
+	return "aws.eventbridge.schedule.target.kinesisParameters"
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetKinesisParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetKinesisParameters) GetPartitionKey() *plugin.TValue[string] {
+	return &c.PartitionKey
+}
+
+// mqlAwsEventbridgeScheduleTargetSagemakerParameters for the aws.eventbridge.schedule.target.sagemakerParameters resource
+type mqlAwsEventbridgeScheduleTargetSagemakerParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgeScheduleTargetSagemakerParametersInternal
+	PipelineParameters plugin.TValue[[]any]
+}
+
+// createAwsEventbridgeScheduleTargetSagemakerParameters creates a new instance of this resource
+func createAwsEventbridgeScheduleTargetSagemakerParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeScheduleTargetSagemakerParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.target.sagemakerParameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetSagemakerParameters) MqlName() string {
+	return "aws.eventbridge.schedule.target.sagemakerParameters"
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetSagemakerParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetSagemakerParameters) GetPipelineParameters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PipelineParameters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target.sagemakerParameters", c.__id, "pipelineParameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pipelineParameters()
+	})
+}
+
+// mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter for the aws.eventbridge.schedule.target.sagemakerParameters.parameter resource
+type mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeScheduleTargetSagemakerParametersParameterInternal it will be used here
+	Name  plugin.TValue[string]
+	Value plugin.TValue[string]
+}
+
+// createAwsEventbridgeScheduleTargetSagemakerParametersParameter creates a new instance of this resource
+func createAwsEventbridgeScheduleTargetSagemakerParametersParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.target.sagemakerParameters.parameter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter) MqlName() string {
+	return "aws.eventbridge.schedule.target.sagemakerParameters.parameter"
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+// mqlAwsEventbridgeScheduleTargetSqsParameters for the aws.eventbridge.schedule.target.sqsParameters resource
+type mqlAwsEventbridgeScheduleTargetSqsParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeScheduleTargetSqsParametersInternal it will be used here
+	MessageGroupId plugin.TValue[string]
+}
+
+// createAwsEventbridgeScheduleTargetSqsParameters creates a new instance of this resource
+func createAwsEventbridgeScheduleTargetSqsParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeScheduleTargetSqsParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.target.sqsParameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetSqsParameters) MqlName() string {
+	return "aws.eventbridge.schedule.target.sqsParameters"
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetSqsParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetSqsParameters) GetMessageGroupId() *plugin.TValue[string] {
+	return &c.MessageGroupId
+}
+
+// mqlAwsEventbridgeScheduleTargetUniversalTarget for the aws.eventbridge.schedule.target.universalTarget resource
+type mqlAwsEventbridgeScheduleTargetUniversalTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeScheduleTargetUniversalTargetInternal it will be used here
+	Service plugin.TValue[string]
+	Action  plugin.TValue[string]
+}
+
+// createAwsEventbridgeScheduleTargetUniversalTarget creates a new instance of this resource
+func createAwsEventbridgeScheduleTargetUniversalTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeScheduleTargetUniversalTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.target.universalTarget", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetUniversalTarget) MqlName() string {
+	return "aws.eventbridge.schedule.target.universalTarget"
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetUniversalTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetUniversalTarget) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlAwsEventbridgeScheduleTargetUniversalTarget) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
 // mqlAwsEventbridgeScheduleGroup for the aws.eventbridge.scheduleGroup resource
 type mqlAwsEventbridgeScheduleGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEventbridgeScheduleGroupInternal it will be used here
+	mqlAwsEventbridgeScheduleGroupInternal
 	Arn       plugin.TValue[string]
 	Name      plugin.TValue[string]
 	Region    plugin.TValue[string]
 	State     plugin.TValue[string]
+	Schedules plugin.TValue[[]any]
+	Tags      plugin.TValue[map[string]any]
 	CreatedAt plugin.TValue[*time.Time]
 	UpdatedAt plugin.TValue[*time.Time]
 }
@@ -83304,6 +84614,28 @@ func (c *mqlAwsEventbridgeScheduleGroup) GetRegion() *plugin.TValue[string] {
 
 func (c *mqlAwsEventbridgeScheduleGroup) GetState() *plugin.TValue[string] {
 	return &c.State
+}
+
+func (c *mqlAwsEventbridgeScheduleGroup) GetSchedules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Schedules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.scheduleGroup", c.__id, "schedules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.schedules()
+	})
+}
+
+func (c *mqlAwsEventbridgeScheduleGroup) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlAwsEventbridgeScheduleGroup) GetCreatedAt() *plugin.TValue[*time.Time] {

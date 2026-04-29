@@ -6148,18 +6148,162 @@ private aws.eventbridge.schedule @defaults("arn name state") {
   state string
   // Schedule expression (cron, rate, or at)
   scheduleExpression() string
+  // IANA timezone the schedule expression is evaluated in (e.g. "America/Los_Angeles")
+  scheduleExpressionTimezone() string
+  // Date and time the schedule starts being evaluated (null when not bounded)
+  startDate() time
+  // Date and time the schedule stops being evaluated (null when not bounded)
+  endDate() time
+  // Behavior after the last invocation: NONE or DELETE — DELETE makes the schedule self-destructing
+  actionAfterCompletion() string
   // Description of the schedule
   description() string
   // Target ARN
   targetArn() string
-  // IAM role used for the target
+  // IAM role used for the target. Audit signal: an over-broad role makes the schedule a privilege-escalation primitive.
   iamRole() aws.iam.role
-  // KMS key used for encryption
+  // KMS key wrapping Target.Input at rest in scheduler-managed storage. Not the key used by the target service.
   kmsKey() aws.kms.key
+  // Schedule group this schedule belongs to
+  group() aws.eventbridge.scheduleGroup
+  // Dead-letter queue receiving failed invocation events (always SQS per AWS Scheduler SDK; null when not configured)
+  deadLetterQueue() aws.sqs.queue
+  // Retry policy applied to invocation failures
+  retryPolicy() aws.eventbridge.schedule.retryPolicy
+  // Flexible time window (jitter) configuration
+  flexibleTimeWindow() aws.eventbridge.schedule.flexibleTimeWindow
+  // Target invocation configuration (typed reference + templated parameters per target type)
+  target() aws.eventbridge.schedule.target
+  // Tags for the schedule
+  tags() map[string]string
   // Date the schedule was created
   createdAt time
   // Date the schedule was last modified
   updatedAt time
+}
+
+// Retry policy for failed schedule invocations
+private aws.eventbridge.schedule.retryPolicy @defaults("maximumRetryAttempts maximumEventAgeInSeconds") {
+  // Maximum age of an event before it is dropped (seconds; default 86400)
+  maximumEventAgeInSeconds int
+  // Maximum number of retry attempts before sending to the dead-letter queue (default 185)
+  maximumRetryAttempts int
+}
+
+// Flexible time window (jitter) configuration
+private aws.eventbridge.schedule.flexibleTimeWindow @defaults("mode maximumWindowInMinutes") {
+  // OFF (exact-time invocation) or FLEXIBLE (jittered window)
+  mode string
+  // Maximum jitter window in minutes (1-15 when mode is FLEXIBLE; 0 when OFF)
+  maximumWindowInMinutes int
+}
+
+// Schedule target invocation configuration
+private aws.eventbridge.schedule.target @defaults("targetType arn") {
+  // Raw target ARN
+  arn string
+  // IAM role assumed when invoking the target (raw ARN; parent schedule also exposes typed iamRole())
+  roleArn string
+  // Target.Input payload sent to the target. WARNING: may contain sensitive data — audit carefully for credentials, tokens, or PII.
+  input string
+  // Target type discriminator: lambda, sqs, sns, stepFunction, kinesis, firehose, ecs, eventBridge, sagemakerPipeline, codebuild, universal, unknown
+  targetType string
+  // ECS task invocation parameters (null unless targetType == ecs)
+  ecsParameters() aws.eventbridge.schedule.target.ecsParameters
+  // EventBridge event-bus invocation parameters (null unless targetType == eventBridge)
+  eventBridgeParameters() aws.eventbridge.schedule.target.eventBridgeParameters
+  // Kinesis stream invocation parameters (null unless targetType == kinesis)
+  kinesisParameters() aws.eventbridge.schedule.target.kinesisParameters
+  // SageMaker pipeline invocation parameters (null unless targetType == sagemakerPipeline)
+  sagemakerParameters() aws.eventbridge.schedule.target.sagemakerParameters
+  // SQS queue invocation parameters (null unless targetType == sqs and a message-group is configured)
+  sqsParameters() aws.eventbridge.schedule.target.sqsParameters
+  // Universal target — populated only when arn matches arn:aws:scheduler:::aws-sdk:<service>:<action>
+  universalTarget() aws.eventbridge.schedule.target.universalTarget
+}
+
+// ECS RunTask invocation parameters
+private aws.eventbridge.schedule.target.ecsParameters @defaults("launchType taskCount") {
+  // ARN of the task definition referenced
+  taskDefinitionArn string
+  // Task definition resource
+  taskDefinition() aws.ecs.taskDefinition
+  // Number of tasks to start
+  taskCount int
+  // Launch type: EC2, FARGATE, EXTERNAL
+  launchType string
+  // Whether ECS Exec is enabled. Audit signal: allows shell access into running tasks.
+  enableExecuteCommand bool
+  // Whether ECS-managed tags are enabled
+  enableEcsManagedTags bool
+  // Task group identifier
+  group string
+  // Fargate platform version (e.g. LATEST or 1.4.0)
+  platformVersion string
+  // Tag propagation: TASK_DEFINITION
+  propagateTags string
+  // Reference ID for tracking
+  referenceId string
+  // Subnet IDs the task ENI is placed in
+  subnetIds []string
+  // Subnets the task ENI is placed in
+  subnets() []aws.vpc.subnet
+  // Security group IDs attached to the task ENI
+  securityGroupIds []string
+  // Security groups attached to the task ENI
+  securityGroups() []aws.ec2.securitygroup
+  // Whether the task ENI is assigned a public IP: ENABLED or DISABLED. Audit signal.
+  assignPublicIp string
+  // Capacity provider strategy entries
+  capacityProviderStrategy []dict
+  // Placement constraint expressions
+  placementConstraints []dict
+  // Placement strategy entries
+  placementStrategy []dict
+  // Tags applied to launched tasks
+  tags map[string]string
+}
+
+// EventBridge event-bus PutEvents parameters
+private aws.eventbridge.schedule.target.eventBridgeParameters @defaults("source detailType") {
+  // Detail-type of the emitted event
+  detailType string
+  // Source field of the emitted event
+  source string
+}
+
+// Kinesis stream PutRecord parameters
+private aws.eventbridge.schedule.target.kinesisParameters @defaults("partitionKey") {
+  // Partition key for the record
+  partitionKey string
+}
+
+// SageMaker pipeline StartPipelineExecution parameters
+private aws.eventbridge.schedule.target.sagemakerParameters {
+  // Pipeline execution parameters
+  pipelineParameters() []aws.eventbridge.schedule.target.sagemakerParameters.parameter
+}
+
+// One key/value pair passed to a SageMaker pipeline execution
+private aws.eventbridge.schedule.target.sagemakerParameters.parameter @defaults("name value") {
+  // Parameter name
+  name string
+  // Parameter value (may contain PII or operational data)
+  value string
+}
+
+// SQS SendMessage parameters
+private aws.eventbridge.schedule.target.sqsParameters @defaults("messageGroupId") {
+  // Message group ID for FIFO queues
+  messageGroupId string
+}
+
+// Universal target — invokes any AWS-SDK API via arn:aws:scheduler:::aws-sdk:<service>:<action>
+private aws.eventbridge.schedule.target.universalTarget @defaults("service action") {
+  // AWS service name (e.g. "s3") parsed from the universal target ARN
+  service string
+  // API action name (e.g. "PutObject") parsed from the universal target ARN
+  action string
 }
 
 // Amazon EventBridge Scheduler schedule group
@@ -6172,6 +6316,10 @@ private aws.eventbridge.scheduleGroup @defaults("arn name state") {
   region string
   // State: ACTIVE or DELETING
   state string
+  // Schedules belonging to this group (filtered backref over the top-level schedules list)
+  schedules() []aws.eventbridge.schedule
+  // Tags for the schedule group
+  tags() map[string]string
   // Date the schedule group was created
   createdAt time
   // Date the schedule group was last modified

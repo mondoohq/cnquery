@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.19.1",
-  "generated_at": "2026-04-28T17:00:02-07:00",
+  "generated_at": "2026-04-28T18:08:11-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -574,6 +574,7 @@
     "scheduler:GetSchedule",
     "scheduler:ListScheduleGroups",
     "scheduler:ListSchedules",
+    "scheduler:ListTagsForResource",
     "secretsmanager:DescribeSecret",
     "secretsmanager:GetResourcePolicy",
     "secretsmanager:ListSecretVersionIds",
@@ -4214,6 +4215,12 @@
       "permission": "scheduler:ListSchedules",
       "service": "scheduler",
       "action": "ListSchedules",
+      "source_file": "aws_eventbridge_scheduler.go"
+    },
+    {
+      "permission": "scheduler:ListTagsForResource",
+      "service": "scheduler",
+      "action": "ListTagsForResource",
       "source_file": "aws_eventbridge_scheduler.go"
     },
     {
