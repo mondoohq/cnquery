@@ -648,6 +648,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"vllm": {
+		Provider: &plugin.Provider{
+			Name:            "vllm",
+			ID:              "go.mondoo.com/mql/providers/vllm",
+			ConnectionTypes: []string{"vllm"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "vllm",
+					Use:   "vllm ENDPOINT",
+					Short: "a vLLM inference server",
+				},
+			},
+		},
+	},
+
 	"vsphere": {
 		Provider: &plugin.Provider{
 			Name:            "vsphere",

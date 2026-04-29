@@ -23,8 +23,8 @@ var Config = plugin.Provider{
 			Long: `Use the vllm provider to assess the externally observable HTTP posture of a vLLM inference server.
 
 Examples:
-  cnspec shell vllm http://localhost:8000
-  cnspec shell vllm https://vllm.example.com --api-key <token>
+  mql shell vllm http://localhost:8000
+  mql shell vllm https://vllm.example.com --api-key <token>
 
 Notes:
   The provider probes remote HTTP routes only. Host-local flags, environment

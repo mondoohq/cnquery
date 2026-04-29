@@ -151,6 +151,29 @@ func TestCORSUsesRealPreflightHeaders(t *testing.T) {
 	if obs.Configured == nil || !*obs.Configured {
 		t.Fatalf("configured = %v, want true", obs.Configured)
 	}
+	if obs.AllowsAnyOrigin == nil || *obs.AllowsAnyOrigin {
+		t.Fatalf("allows any origin = %v, want false", obs.AllowsAnyOrigin)
+	}
+}
+
+func TestCORSWildcardAllowsAnyOrigin(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	conn, err := NewVllmConnection(1, &inventory.Asset{}, &inventory.Config{
+		Options: map[string]string{OptionBaseURL: server.URL},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	obs, err := conn.CORS(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
 	if obs.AllowsAnyOrigin == nil || !*obs.AllowsAnyOrigin {
 		t.Fatalf("allows any origin = %v, want true", obs.AllowsAnyOrigin)
 	}

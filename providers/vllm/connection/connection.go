@@ -251,7 +251,7 @@ func (c *VllmConnection) CORS(ctx context.Context) (CORSObservation, error) {
 		status := resp.StatusCode
 		allowOrigin := resp.Header.Get("Access-Control-Allow-Origin")
 		configured := allowOrigin != "" || resp.Header.Get("Access-Control-Allow-Methods") != "" || resp.Header.Get("Access-Control-Allow-Headers") != ""
-		allowsAny := allowOrigin == "*" || allowOrigin == probeOrigin
+		allowsAny := allowOrigin == "*"
 
 		c.cors.StatusCode = &status
 		c.cors.AllowOrigin = allowOrigin

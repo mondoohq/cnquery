@@ -155,6 +155,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Terraform state               | `terraform state`          | `mql shell terraform state state.json`                                                                                                          |
 | UniFi network controllers     | `unifi`                    | `mql shell unifi --hostname HOST --api-key YOUR_API_KEY`                                                                                        |
 | Vagrant virtual machines      | `vagrant`                  | `mql shell vagrant HOST`                                                                                                                        |
+| vLLM inference servers        | `vllm`                     | `mql shell vllm http://localhost:8000`                                                                                                          |
 | VMware Cloud Director         | `vcd`                      | `mql shell vcd user@domain@host --ask-pass`                                                                                                     |
 | VMware vSphere                | `vsphere`                  | `mql shell vsphere user@domain@host --ask-pass`                                                                                                 |
 | Windows hosts                 | `local`, `ssh`, `winrm`    | `mql shell local`,<br></br>`mql shell ssh Administrator@IP_ADDRESS --ask-pass` or<br></br>`mql shell winrm Administrator@IP_ADDRESS --ask-pass` |

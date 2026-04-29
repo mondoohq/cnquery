@@ -245,7 +245,7 @@ func initVllmEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		args["method"] = llx.StringData(http.MethodGet)
 	}
 	if method, ok := args["method"]; ok {
-		method.Value = strings.ToUpper(method.Value.(string))
+		args["method"] = llx.StringData(strings.ToUpper(method.Value.(string)))
 	}
 	return args, nil, nil
 }
@@ -398,11 +398,6 @@ func vllmConnection(runtime *plugin.Runtime) (*connection.VllmConnection, error)
 	return conn, nil
 }
 
-func endpointAnonymousAccessible(runtime *plugin.Runtime, method string, path string) (bool, error) {
-	val, _, err := endpointAnonymousAccessibleKnown(runtime, method, path)
-	return val, err
-}
-
 func endpointAnonymousAccessibleKnown(runtime *plugin.Runtime, method string, path string) (bool, bool, error) {
 	obs, err := endpointObservation(runtime, method, path)
 	if err != nil {
@@ -410,11 +405,6 @@ func endpointAnonymousAccessibleKnown(runtime *plugin.Runtime, method string, pa
 	}
 	val, known := connection.ObservationAnonymousAccessible(obs)
 	return val, known, nil
-}
-
-func categoryAnonymousAccessible(runtime *plugin.Runtime, category string) (bool, error) {
-	val, _, err := categoryAnonymousAccessibleKnown(runtime, category)
-	return val, err
 }
 
 func categoryAnonymousAccessibleKnown(runtime *plugin.Runtime, category string) (bool, bool, error) {
