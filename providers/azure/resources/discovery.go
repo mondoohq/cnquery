@@ -505,31 +505,30 @@ func getInstancesLabels(vm *mqlAzureSubscriptionComputeServiceVm) (map[string]st
 		return nil, props.Error
 	}
 
-	propsDict := props.Data.(map[string]any)
-	osProfile, ok := propsDict["osProfile"]
-	if ok {
+	propsDict, ok := props.Data.(map[string]any)
+	if !ok {
+		propsDict = map[string]any{}
+	}
+	if osProfile, ok := propsDict["osProfile"]; ok {
 		if osProfileDict, ok := osProfile.(map[string]any); ok {
-			labels["azure.mondoo.com/computername"] = osProfileDict["computerName"].(string)
+			if computerName, ok := osProfileDict["computerName"].(string); ok {
+				labels["azure.mondoo.com/computername"] = computerName
+			}
 		}
 	}
-	storageProfile, ok := propsDict["storageProfile"]
-	if ok {
+	if storageProfile, ok := propsDict["storageProfile"]; ok {
 		if storageProfile, ok := storageProfile.(map[string]any); ok {
-			osDisk, ok := storageProfile["osDisk"]
-			if ok {
+			if osDisk, ok := storageProfile["osDisk"]; ok {
 				if osDisk, ok := osDisk.(map[string]any); ok {
-					if osType, ok := osDisk["osType"]; ok {
-						labels["azure.mondoo.com/ostype"] = osType.(string)
+					if osType, ok := osDisk["osType"].(string); ok {
+						labels["azure.mondoo.com/ostype"] = osType
 					}
 				}
 			}
 		}
 	}
-	vmId, ok := propsDict["vmId"]
-	if ok {
-		if casted, ok := vmId.(string); ok {
-			labels["mondoo.com/instance"] = casted
-		}
+	if vmId, ok := propsDict["vmId"].(string); ok {
+		labels["mondoo.com/instance"] = vmId
 	}
 
 	res, err := ParseResourceID(vm.Id.Data)
