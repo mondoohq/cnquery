@@ -3528,8 +3528,16 @@ aws.kinesis.firehoseDeliveryStream.destination.splunk.s3BackupMode 13.0.2
 aws.kinesis.firehoseDeliveryStream.destination.type 13.0.2
 aws.kinesis.firehoseDeliveryStream.destinations 11.16.1
 aws.kinesis.firehoseDeliveryStream.encryption 11.16.1
+aws.kinesis.firehoseDeliveryStream.encryption.failureDetails 13.19.2
+aws.kinesis.firehoseDeliveryStream.encryption.failureType 13.19.2
+aws.kinesis.firehoseDeliveryStream.encryption.keyType 13.19.2
+aws.kinesis.firehoseDeliveryStream.encryption.kmsKey 13.19.2
+aws.kinesis.firehoseDeliveryStream.encryption.status 13.19.2
+aws.kinesis.firehoseDeliveryStream.kinesisStream 13.19.2
+aws.kinesis.firehoseDeliveryStream.lastUpdatedAt 13.19.2
 aws.kinesis.firehoseDeliveryStream.name 11.16.1
 aws.kinesis.firehoseDeliveryStream.region 11.16.1
+aws.kinesis.firehoseDeliveryStream.serverSideEncryption 13.19.2
 aws.kinesis.firehoseDeliveryStream.source 11.16.1
 aws.kinesis.firehoseDeliveryStream.status 11.16.1
 aws.kinesis.firehoseDeliveryStream.tags 11.16.1

@@ -454,8 +454,10 @@ func (a *mqlAwsKinesis) getFirehoseDeliveryStreams(conn *connection.AwsConnectio
 }
 
 type mqlAwsKinesisFirehoseDeliveryStreamInternal struct {
-	cacheDestinations []firehose_types.DestinationDescription
-	cacheRegion       string
+	cacheDestinations     []firehose_types.DestinationDescription
+	cacheRegion           string
+	cacheEncryption       *firehose_types.DeliveryStreamEncryptionConfiguration
+	cacheKinesisStreamArn string
 }
 
 func newMqlAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, region string, stream *firehose_types.DeliveryStreamDescription) (*mqlAwsKinesisFirehoseDeliveryStream, error) {
@@ -469,6 +471,12 @@ func newMqlAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, region stri
 		return nil, err
 	}
 
+	kinesisStreamArn := ""
+	if stream.Source != nil && stream.Source.KinesisStreamSourceDescription != nil &&
+		stream.Source.KinesisStreamSourceDescription.KinesisStreamARN != nil {
+		kinesisStreamArn = *stream.Source.KinesisStreamSourceDescription.KinesisStreamARN
+	}
+
 	resource, err := CreateResource(runtime, "aws.kinesis.firehoseDeliveryStream",
 		map[string]*llx.RawData{
 			"__id":               llx.StringDataPtr(stream.DeliveryStreamARN),
@@ -479,6 +487,7 @@ func newMqlAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, region stri
 			"encryption":         llx.DictData(encryption),
 			"source":             llx.DictData(source),
 			"createdAt":          llx.TimeDataPtr(stream.CreateTimestamp),
+			"lastUpdatedAt":      llx.TimeDataPtr(stream.LastUpdateTimestamp),
 			"region":             llx.StringData(region),
 		})
 	if err != nil {
@@ -487,7 +496,70 @@ func newMqlAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, region stri
 	mqlStream := resource.(*mqlAwsKinesisFirehoseDeliveryStream)
 	mqlStream.cacheDestinations = stream.Destinations
 	mqlStream.cacheRegion = region
+	mqlStream.cacheEncryption = stream.DeliveryStreamEncryptionConfiguration
+	mqlStream.cacheKinesisStreamArn = kinesisStreamArn
 	return mqlStream, nil
+}
+
+func (a *mqlAwsKinesisFirehoseDeliveryStream) serverSideEncryption() (*mqlAwsKinesisFirehoseDeliveryStreamEncryption, error) {
+	enc := a.cacheEncryption
+	if enc == nil {
+		a.ServerSideEncryption.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	failureType := ""
+	failureDetails := ""
+	if enc.FailureDescription != nil {
+		failureType = string(enc.FailureDescription.Type)
+		failureDetails = convert.ToValue(enc.FailureDescription.Details)
+	}
+	encId := a.Arn.Data + "/encryption"
+	res, err := CreateResource(a.MqlRuntime, "aws.kinesis.firehoseDeliveryStream.encryption",
+		map[string]*llx.RawData{
+			"__id":           llx.StringData(encId),
+			"status":         llx.StringData(string(enc.Status)),
+			"keyType":        llx.StringData(string(enc.KeyType)),
+			"failureType":    llx.StringData(failureType),
+			"failureDetails": llx.StringData(failureDetails),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlEnc := res.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption)
+	mqlEnc.cacheKmsKeyArn = enc.KeyARN
+	return mqlEnc, nil
+}
+
+type mqlAwsKinesisFirehoseDeliveryStreamEncryptionInternal struct {
+	cacheKmsKeyArn *string
+}
+
+func (a *mqlAwsKinesisFirehoseDeliveryStreamEncryption) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyArn == nil || *a.cacheKmsKeyArn == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey, map[string]*llx.RawData{
+		"arn": llx.StringDataPtr(a.cacheKmsKeyArn),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsKinesisFirehoseDeliveryStream) kinesisStream() (*mqlAwsKinesisStream, error) {
+	if a.cacheKinesisStreamArn == "" {
+		a.KinesisStream.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlStream, err := NewResource(a.MqlRuntime, "aws.kinesis.stream", map[string]*llx.RawData{
+		"arn": llx.StringData(a.cacheKinesisStreamArn),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlStream.(*mqlAwsKinesisStream), nil
 }
 
 // initAwsKinesisFirehoseDeliveryStream allows typed refs (e.g. from

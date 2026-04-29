@@ -12343,18 +12343,38 @@ private aws.kinesis.firehoseDeliveryStream @defaults("name status region") {
   status string
   // Type of the delivery stream (DirectPut or KinesisStreamAsSource)
   deliveryStreamType string
-  // Server-side encryption configuration
-  encryption dict
-  // Source configuration if the stream reads from a Kinesis data stream
-  source dict
+  // DEPRECATED: use serverSideEncryption instead
+  encryption @maturity("deprecated") dict
+  // Server-side encryption configuration for the delivery stream
+  serverSideEncryption() aws.kinesis.firehoseDeliveryStream.encryption
+  // DEPRECATED: use kinesisStream() and kinesisStreamArn instead
+  source @maturity("deprecated") dict
+  // Source Kinesis data stream when deliveryStreamType is KinesisStreamAsSource (null otherwise)
+  kinesisStream() aws.kinesis.stream
   // Destinations for the delivery stream
   destinations() []aws.kinesis.firehoseDeliveryStream.destination
   // Date and time the delivery stream was created
   createdAt time
+  // Date and time the delivery stream was last updated
+  lastUpdatedAt time
   // Region where the delivery stream exists
   region string
   // Tags for the delivery stream
   tags() map[string]string
+}
+
+// Server-side encryption configuration for a Firehose delivery stream
+private aws.kinesis.firehoseDeliveryStream.encryption @defaults("status keyType") {
+  // Encryption status: ENABLED, ENABLING, ENABLING_FAILED, DISABLED, DISABLING, DISABLING_FAILED
+  status string
+  // Key type: AWS_OWNED_CMK or CUSTOMER_MANAGED_CMK
+  keyType string
+  // KMS key used for encryption (null when keyType is AWS_OWNED_CMK)
+  kmsKey() aws.kms.key
+  // Failure type when status is ENABLING_FAILED or DISABLING_FAILED
+  failureType string
+  // Failure details when status is ENABLING_FAILED or DISABLING_FAILED
+  failureDetails string
 }
 
 // Amazon Kinesis Firehose delivery stream destination

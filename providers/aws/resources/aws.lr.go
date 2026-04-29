@@ -542,6 +542,7 @@ const (
 	ResourceAwsKinesisStream                                                    string = "aws.kinesis.stream"
 	ResourceAwsKinesisStreamConsumer                                            string = "aws.kinesis.streamConsumer"
 	ResourceAwsKinesisFirehoseDeliveryStream                                    string = "aws.kinesis.firehoseDeliveryStream"
+	ResourceAwsKinesisFirehoseDeliveryStreamEncryption                          string = "aws.kinesis.firehoseDeliveryStream.encryption"
 	ResourceAwsKinesisFirehoseDeliveryStreamDestination                         string = "aws.kinesis.firehoseDeliveryStream.destination"
 	ResourceAwsKinesisFirehoseDeliveryStreamCloudWatchLogging                   string = "aws.kinesis.firehoseDeliveryStream.cloudWatchLogging"
 	ResourceAwsKinesisFirehoseDeliveryStreamDestinationS3                       string = "aws.kinesis.firehoseDeliveryStream.destination.s3"
@@ -2792,6 +2793,10 @@ func init() {
 		"aws.kinesis.firehoseDeliveryStream": {
 			Init:   initAwsKinesisFirehoseDeliveryStream,
 			Create: createAwsKinesisFirehoseDeliveryStream,
+		},
+		"aws.kinesis.firehoseDeliveryStream.encryption": {
+			// to override args, implement: initAwsKinesisFirehoseDeliveryStreamEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKinesisFirehoseDeliveryStreamEncryption,
 		},
 		"aws.kinesis.firehoseDeliveryStream.destination": {
 			// to override args, implement: initAwsKinesisFirehoseDeliveryStreamDestination(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -18671,8 +18676,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kinesis.firehoseDeliveryStream.encryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetEncryption()).ToDataRes(types.Dict)
 	},
+	"aws.kinesis.firehoseDeliveryStream.serverSideEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetServerSideEncryption()).ToDataRes(types.Resource("aws.kinesis.firehoseDeliveryStream.encryption"))
+	},
 	"aws.kinesis.firehoseDeliveryStream.source": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetSource()).ToDataRes(types.Dict)
+	},
+	"aws.kinesis.firehoseDeliveryStream.kinesisStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetKinesisStream()).ToDataRes(types.Resource("aws.kinesis.stream"))
 	},
 	"aws.kinesis.firehoseDeliveryStream.destinations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetDestinations()).ToDataRes(types.Array(types.Resource("aws.kinesis.firehoseDeliveryStream.destination")))
@@ -18680,11 +18691,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kinesis.firehoseDeliveryStream.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.kinesis.firehoseDeliveryStream.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
 	"aws.kinesis.firehoseDeliveryStream.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.kinesis.firehoseDeliveryStream.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStream).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.keyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).GetKeyType()).ToDataRes(types.String)
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.failureType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).GetFailureType()).ToDataRes(types.String)
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.failureDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).GetFailureDetails()).ToDataRes(types.String)
 	},
 	"aws.kinesis.firehoseDeliveryStream.destination.destinationId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisFirehoseDeliveryStreamDestination).GetDestinationId()).ToDataRes(types.String)
@@ -44984,8 +45013,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKinesisFirehoseDeliveryStream).Encryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.kinesis.firehoseDeliveryStream.serverSideEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).ServerSideEncryption, ok = plugin.RawToTValue[*mqlAwsKinesisFirehoseDeliveryStreamEncryption](v.Value, v.Error)
+		return
+	},
 	"aws.kinesis.firehoseDeliveryStream.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisFirehoseDeliveryStream).Source, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.kinesisStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).KinesisStream, ok = plugin.RawToTValue[*mqlAwsKinesisStream](v.Value, v.Error)
 		return
 	},
 	"aws.kinesis.firehoseDeliveryStream.destinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44996,12 +45033,40 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKinesisFirehoseDeliveryStream).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.kinesis.firehoseDeliveryStream.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStream).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.kinesis.firehoseDeliveryStream.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisFirehoseDeliveryStream).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.kinesis.firehoseDeliveryStream.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisFirehoseDeliveryStream).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.keyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).KeyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.failureType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).FailureType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.firehoseDeliveryStream.encryption.failureDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption).FailureDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.kinesis.firehoseDeliveryStream.destination.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -109497,16 +109562,19 @@ type mqlAwsKinesisFirehoseDeliveryStream struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsKinesisFirehoseDeliveryStreamInternal
-	Arn                plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Status             plugin.TValue[string]
-	DeliveryStreamType plugin.TValue[string]
-	Encryption         plugin.TValue[any]
-	Source             plugin.TValue[any]
-	Destinations       plugin.TValue[[]any]
-	CreatedAt          plugin.TValue[*time.Time]
-	Region             plugin.TValue[string]
-	Tags               plugin.TValue[map[string]any]
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Status               plugin.TValue[string]
+	DeliveryStreamType   plugin.TValue[string]
+	Encryption           plugin.TValue[any]
+	ServerSideEncryption plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStreamEncryption]
+	Source               plugin.TValue[any]
+	KinesisStream        plugin.TValue[*mqlAwsKinesisStream]
+	Destinations         plugin.TValue[[]any]
+	CreatedAt            plugin.TValue[*time.Time]
+	LastUpdatedAt        plugin.TValue[*time.Time]
+	Region               plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
 }
 
 // createAwsKinesisFirehoseDeliveryStream creates a new instance of this resource
@@ -109561,8 +109629,40 @@ func (c *mqlAwsKinesisFirehoseDeliveryStream) GetEncryption() *plugin.TValue[any
 	return &c.Encryption
 }
 
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetServerSideEncryption() *plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStreamEncryption] {
+	return plugin.GetOrCompute[*mqlAwsKinesisFirehoseDeliveryStreamEncryption](&c.ServerSideEncryption, func() (*mqlAwsKinesisFirehoseDeliveryStreamEncryption, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.firehoseDeliveryStream", c.__id, "serverSideEncryption")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKinesisFirehoseDeliveryStreamEncryption), nil
+			}
+		}
+
+		return c.serverSideEncryption()
+	})
+}
+
 func (c *mqlAwsKinesisFirehoseDeliveryStream) GetSource() *plugin.TValue[any] {
 	return &c.Source
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetKinesisStream() *plugin.TValue[*mqlAwsKinesisStream] {
+	return plugin.GetOrCompute[*mqlAwsKinesisStream](&c.KinesisStream, func() (*mqlAwsKinesisStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.firehoseDeliveryStream", c.__id, "kinesisStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKinesisStream), nil
+			}
+		}
+
+		return c.kinesisStream()
+	})
 }
 
 func (c *mqlAwsKinesisFirehoseDeliveryStream) GetDestinations() *plugin.TValue[[]any] {
@@ -109585,6 +109685,10 @@ func (c *mqlAwsKinesisFirehoseDeliveryStream) GetCreatedAt() *plugin.TValue[*tim
 	return &c.CreatedAt
 }
 
+func (c *mqlAwsKinesisFirehoseDeliveryStream) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
 func (c *mqlAwsKinesisFirehoseDeliveryStream) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
@@ -109593,6 +109697,82 @@ func (c *mqlAwsKinesisFirehoseDeliveryStream) GetTags() *plugin.TValue[map[strin
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+// mqlAwsKinesisFirehoseDeliveryStreamEncryption for the aws.kinesis.firehoseDeliveryStream.encryption resource
+type mqlAwsKinesisFirehoseDeliveryStreamEncryption struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsKinesisFirehoseDeliveryStreamEncryptionInternal
+	Status         plugin.TValue[string]
+	KeyType        plugin.TValue[string]
+	KmsKey         plugin.TValue[*mqlAwsKmsKey]
+	FailureType    plugin.TValue[string]
+	FailureDetails plugin.TValue[string]
+}
+
+// createAwsKinesisFirehoseDeliveryStreamEncryption creates a new instance of this resource
+func createAwsKinesisFirehoseDeliveryStreamEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKinesisFirehoseDeliveryStreamEncryption{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kinesis.firehoseDeliveryStream.encryption", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStreamEncryption) MqlName() string {
+	return "aws.kinesis.firehoseDeliveryStream.encryption"
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStreamEncryption) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStreamEncryption) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStreamEncryption) GetKeyType() *plugin.TValue[string] {
+	return &c.KeyType
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStreamEncryption) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kinesis.firehoseDeliveryStream.encryption", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStreamEncryption) GetFailureType() *plugin.TValue[string] {
+	return &c.FailureType
+}
+
+func (c *mqlAwsKinesisFirehoseDeliveryStreamEncryption) GetFailureDetails() *plugin.TValue[string] {
+	return &c.FailureDetails
 }
 
 // mqlAwsKinesisFirehoseDeliveryStreamDestination for the aws.kinesis.firehoseDeliveryStream.destination resource
