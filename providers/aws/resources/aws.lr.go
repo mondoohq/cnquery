@@ -281,6 +281,35 @@ const (
 	ResourceAwsEventbridgeEventBus                                              string = "aws.eventbridge.eventBus"
 	ResourceAwsEventbridgeRule                                                  string = "aws.eventbridge.rule"
 	ResourceAwsEventbridgePipe                                                  string = "aws.eventbridge.pipe"
+	ResourceAwsEventbridgePipeFilterCriteria                                    string = "aws.eventbridge.pipe.filterCriteria"
+	ResourceAwsEventbridgePipeSourceParameters                                  string = "aws.eventbridge.pipe.sourceParameters"
+	ResourceAwsEventbridgePipeSourceParametersSqs                               string = "aws.eventbridge.pipe.sourceParameters.sqs"
+	ResourceAwsEventbridgePipeSourceParametersKinesisStream                     string = "aws.eventbridge.pipe.sourceParameters.kinesisStream"
+	ResourceAwsEventbridgePipeSourceParametersDynamodbStream                    string = "aws.eventbridge.pipe.sourceParameters.dynamodbStream"
+	ResourceAwsEventbridgePipeSourceParametersActiveMQ                          string = "aws.eventbridge.pipe.sourceParameters.activeMQ"
+	ResourceAwsEventbridgePipeSourceParametersRabbitMQ                          string = "aws.eventbridge.pipe.sourceParameters.rabbitMQ"
+	ResourceAwsEventbridgePipeSourceParametersMsk                               string = "aws.eventbridge.pipe.sourceParameters.msk"
+	ResourceAwsEventbridgePipeSourceParametersSelfManagedKafka                  string = "aws.eventbridge.pipe.sourceParameters.selfManagedKafka"
+	ResourceAwsEventbridgePipeEnrichmentParameters                              string = "aws.eventbridge.pipe.enrichmentParameters"
+	ResourceAwsEventbridgePipeTargetParameters                                  string = "aws.eventbridge.pipe.targetParameters"
+	ResourceAwsEventbridgePipeTargetParametersLambda                            string = "aws.eventbridge.pipe.targetParameters.lambda"
+	ResourceAwsEventbridgePipeTargetParametersStepFunctions                     string = "aws.eventbridge.pipe.targetParameters.stepFunctions"
+	ResourceAwsEventbridgePipeTargetParametersSqs                               string = "aws.eventbridge.pipe.targetParameters.sqs"
+	ResourceAwsEventbridgePipeTargetParametersKinesisStream                     string = "aws.eventbridge.pipe.targetParameters.kinesisStream"
+	ResourceAwsEventbridgePipeTargetParametersEcsTask                           string = "aws.eventbridge.pipe.targetParameters.ecsTask"
+	ResourceAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration       string = "aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration"
+	ResourceAwsEventbridgePipeTargetParametersBatchJob                          string = "aws.eventbridge.pipe.targetParameters.batchJob"
+	ResourceAwsEventbridgePipeTargetParametersCloudwatchLogs                    string = "aws.eventbridge.pipe.targetParameters.cloudwatchLogs"
+	ResourceAwsEventbridgePipeTargetParametersEventBridge                       string = "aws.eventbridge.pipe.targetParameters.eventBridge"
+	ResourceAwsEventbridgePipeTargetParametersRedshiftData                      string = "aws.eventbridge.pipe.targetParameters.redshiftData"
+	ResourceAwsEventbridgePipeTargetParametersSagemakerPipeline                 string = "aws.eventbridge.pipe.targetParameters.sagemakerPipeline"
+	ResourceAwsEventbridgePipeTargetParametersTimestream                        string = "aws.eventbridge.pipe.targetParameters.timestream"
+	ResourceAwsEventbridgePipeTargetParametersHttp                              string = "aws.eventbridge.pipe.targetParameters.http"
+	ResourceAwsEventbridgePipeLogConfiguration                                  string = "aws.eventbridge.pipe.logConfiguration"
+	ResourceAwsEventbridgePipeLogConfigurationCloudwatchLogs                    string = "aws.eventbridge.pipe.logConfiguration.cloudwatchLogs"
+	ResourceAwsEventbridgePipeLogConfigurationFirehose                          string = "aws.eventbridge.pipe.logConfiguration.firehose"
+	ResourceAwsEventbridgePipeLogConfigurationS3                                string = "aws.eventbridge.pipe.logConfiguration.s3"
+	ResourceAwsEventbridgePipeDeadLetterConfig                                  string = "aws.eventbridge.pipe.deadLetterConfig"
 	ResourceAwsEventbridgeSchedule                                              string = "aws.eventbridge.schedule"
 	ResourceAwsEventbridgeScheduleGroup                                         string = "aws.eventbridge.scheduleGroup"
 	ResourceAwsCloudwatch                                                       string = "aws.cloudwatch"
@@ -1749,6 +1778,122 @@ func init() {
 		"aws.eventbridge.pipe": {
 			// to override args, implement: initAwsEventbridgePipe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEventbridgePipe,
+		},
+		"aws.eventbridge.pipe.filterCriteria": {
+			// to override args, implement: initAwsEventbridgePipeFilterCriteria(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeFilterCriteria,
+		},
+		"aws.eventbridge.pipe.sourceParameters": {
+			// to override args, implement: initAwsEventbridgePipeSourceParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeSourceParameters,
+		},
+		"aws.eventbridge.pipe.sourceParameters.sqs": {
+			// to override args, implement: initAwsEventbridgePipeSourceParametersSqs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeSourceParametersSqs,
+		},
+		"aws.eventbridge.pipe.sourceParameters.kinesisStream": {
+			// to override args, implement: initAwsEventbridgePipeSourceParametersKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeSourceParametersKinesisStream,
+		},
+		"aws.eventbridge.pipe.sourceParameters.dynamodbStream": {
+			// to override args, implement: initAwsEventbridgePipeSourceParametersDynamodbStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeSourceParametersDynamodbStream,
+		},
+		"aws.eventbridge.pipe.sourceParameters.activeMQ": {
+			// to override args, implement: initAwsEventbridgePipeSourceParametersActiveMQ(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeSourceParametersActiveMQ,
+		},
+		"aws.eventbridge.pipe.sourceParameters.rabbitMQ": {
+			// to override args, implement: initAwsEventbridgePipeSourceParametersRabbitMQ(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeSourceParametersRabbitMQ,
+		},
+		"aws.eventbridge.pipe.sourceParameters.msk": {
+			// to override args, implement: initAwsEventbridgePipeSourceParametersMsk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeSourceParametersMsk,
+		},
+		"aws.eventbridge.pipe.sourceParameters.selfManagedKafka": {
+			// to override args, implement: initAwsEventbridgePipeSourceParametersSelfManagedKafka(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeSourceParametersSelfManagedKafka,
+		},
+		"aws.eventbridge.pipe.enrichmentParameters": {
+			// to override args, implement: initAwsEventbridgePipeEnrichmentParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeEnrichmentParameters,
+		},
+		"aws.eventbridge.pipe.targetParameters": {
+			// to override args, implement: initAwsEventbridgePipeTargetParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParameters,
+		},
+		"aws.eventbridge.pipe.targetParameters.lambda": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersLambda(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersLambda,
+		},
+		"aws.eventbridge.pipe.targetParameters.stepFunctions": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersStepFunctions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersStepFunctions,
+		},
+		"aws.eventbridge.pipe.targetParameters.sqs": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersSqs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersSqs,
+		},
+		"aws.eventbridge.pipe.targetParameters.kinesisStream": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersKinesisStream,
+		},
+		"aws.eventbridge.pipe.targetParameters.ecsTask": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersEcsTask,
+		},
+		"aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration,
+		},
+		"aws.eventbridge.pipe.targetParameters.batchJob": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersBatchJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersBatchJob,
+		},
+		"aws.eventbridge.pipe.targetParameters.cloudwatchLogs": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersCloudwatchLogs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersCloudwatchLogs,
+		},
+		"aws.eventbridge.pipe.targetParameters.eventBridge": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersEventBridge(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersEventBridge,
+		},
+		"aws.eventbridge.pipe.targetParameters.redshiftData": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersRedshiftData(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersRedshiftData,
+		},
+		"aws.eventbridge.pipe.targetParameters.sagemakerPipeline": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersSagemakerPipeline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersSagemakerPipeline,
+		},
+		"aws.eventbridge.pipe.targetParameters.timestream": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersTimestream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersTimestream,
+		},
+		"aws.eventbridge.pipe.targetParameters.http": {
+			// to override args, implement: initAwsEventbridgePipeTargetParametersHttp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeTargetParametersHttp,
+		},
+		"aws.eventbridge.pipe.logConfiguration": {
+			// to override args, implement: initAwsEventbridgePipeLogConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeLogConfiguration,
+		},
+		"aws.eventbridge.pipe.logConfiguration.cloudwatchLogs": {
+			// to override args, implement: initAwsEventbridgePipeLogConfigurationCloudwatchLogs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeLogConfigurationCloudwatchLogs,
+		},
+		"aws.eventbridge.pipe.logConfiguration.firehose": {
+			// to override args, implement: initAwsEventbridgePipeLogConfigurationFirehose(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeLogConfigurationFirehose,
+		},
+		"aws.eventbridge.pipe.logConfiguration.s3": {
+			// to override args, implement: initAwsEventbridgePipeLogConfigurationS3(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeLogConfigurationS3,
+		},
+		"aws.eventbridge.pipe.deadLetterConfig": {
+			// to override args, implement: initAwsEventbridgePipeDeadLetterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEventbridgePipeDeadLetterConfig,
 		},
 		"aws.eventbridge.schedule": {
 			// to override args, implement: initAwsEventbridgeSchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -10366,6 +10511,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eventbridge.pipe.iamRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgePipe).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
+	"aws.eventbridge.pipe.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipe).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.eventbridge.pipe.hasFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipe).GetHasFilters()).ToDataRes(types.Bool)
+	},
+	"aws.eventbridge.pipe.filterCriteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipe).GetFilterCriteria()).ToDataRes(types.Resource("aws.eventbridge.pipe.filterCriteria"))
+	},
+	"aws.eventbridge.pipe.sourceParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipe).GetSourceParameters()).ToDataRes(types.Resource("aws.eventbridge.pipe.sourceParameters"))
+	},
+	"aws.eventbridge.pipe.enrichmentParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipe).GetEnrichmentParameters()).ToDataRes(types.Resource("aws.eventbridge.pipe.enrichmentParameters"))
+	},
+	"aws.eventbridge.pipe.targetParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipe).GetTargetParameters()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters"))
+	},
+	"aws.eventbridge.pipe.logConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipe).GetLogConfiguration()).ToDataRes(types.Resource("aws.eventbridge.pipe.logConfiguration"))
+	},
 	"aws.eventbridge.pipe.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgePipe).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -10374,6 +10540,447 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eventbridge.pipe.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgePipe).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.pipe.filterCriteria.filters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeFilterCriteria).GetFilters()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.pipe.filterCriteria.count": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeFilterCriteria).GetCount()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParameters).GetType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.sqs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParameters).GetSqs()).ToDataRes(types.Resource("aws.eventbridge.pipe.sourceParameters.sqs"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParameters).GetKinesisStream()).ToDataRes(types.Resource("aws.eventbridge.pipe.sourceParameters.kinesisStream"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParameters).GetDynamodbStream()).ToDataRes(types.Resource("aws.eventbridge.pipe.sourceParameters.dynamodbStream"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParameters).GetActiveMQ()).ToDataRes(types.Resource("aws.eventbridge.pipe.sourceParameters.activeMQ"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParameters).GetRabbitMQ()).ToDataRes(types.Resource("aws.eventbridge.pipe.sourceParameters.rabbitMQ"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParameters).GetMsk()).ToDataRes(types.Resource("aws.eventbridge.pipe.sourceParameters.msk"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParameters).GetSelfManagedKafka()).ToDataRes(types.Resource("aws.eventbridge.pipe.sourceParameters.selfManagedKafka"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.filterCriteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParameters).GetFilterCriteria()).ToDataRes(types.Resource("aws.eventbridge.pipe.filterCriteria"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.sqs.batchSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSqs).GetBatchSize()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.sqs.maximumBatchingWindowInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSqs).GetMaximumBatchingWindowInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.startingPosition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).GetStartingPosition()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.startingPositionTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).GetStartingPositionTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.batchSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).GetBatchSize()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.maximumBatchingWindowInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).GetMaximumBatchingWindowInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.maximumRecordAgeInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).GetMaximumRecordAgeInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.maximumRetryAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).GetMaximumRetryAttempts()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.parallelizationFactor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).GetParallelizationFactor()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.onPartialBatchItemFailure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).GetOnPartialBatchItemFailure()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.deadLetterConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).GetDeadLetterConfig()).ToDataRes(types.Resource("aws.eventbridge.pipe.deadLetterConfig"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.startingPosition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).GetStartingPosition()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.batchSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).GetBatchSize()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.maximumBatchingWindowInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).GetMaximumBatchingWindowInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.maximumRecordAgeInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).GetMaximumRecordAgeInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.maximumRetryAttempts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).GetMaximumRetryAttempts()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.parallelizationFactor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).GetParallelizationFactor()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.onPartialBatchItemFailure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).GetOnPartialBatchItemFailure()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.deadLetterConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).GetDeadLetterConfig()).ToDataRes(types.Resource("aws.eventbridge.pipe.deadLetterConfig"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ.queueName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersActiveMQ).GetQueueName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ.batchSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersActiveMQ).GetBatchSize()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ.maximumBatchingWindowInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersActiveMQ).GetMaximumBatchingWindowInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ.credentialsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersActiveMQ).GetCredentialsSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.queueName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).GetQueueName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.virtualHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).GetVirtualHost()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.batchSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).GetBatchSize()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.maximumBatchingWindowInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).GetMaximumBatchingWindowInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.credentialsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).GetCredentialsSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.topicName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersMsk).GetTopicName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.consumerGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersMsk).GetConsumerGroupId()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.startingPosition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersMsk).GetStartingPosition()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.batchSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersMsk).GetBatchSize()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.maximumBatchingWindowInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersMsk).GetMaximumBatchingWindowInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.credentialsType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersMsk).GetCredentialsType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.credentialsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersMsk).GetCredentialsSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.topicName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetTopicName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.consumerGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetConsumerGroupId()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.startingPosition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetStartingPosition()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.batchSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetBatchSize()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.maximumBatchingWindowInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetMaximumBatchingWindowInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.additionalBootstrapServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetAdditionalBootstrapServers()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.serverRootCaCertificateSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetServerRootCaCertificateSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.credentialsType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetCredentialsType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.credentialsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetCredentialsSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.eventbridge.pipe.enrichmentParameters.inputTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeEnrichmentParameters).GetInputTemplate()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.enrichmentParameters.http": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeEnrichmentParameters).GetHttp()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.http"))
+	},
+	"aws.eventbridge.pipe.targetParameters.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.inputTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetInputTemplate()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.lambda": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetLambda()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.lambda"))
+	},
+	"aws.eventbridge.pipe.targetParameters.stepFunctions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetStepFunctions()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.stepFunctions"))
+	},
+	"aws.eventbridge.pipe.targetParameters.sqs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetSqs()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.sqs"))
+	},
+	"aws.eventbridge.pipe.targetParameters.kinesisStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetKinesisStream()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.kinesisStream"))
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetEcsTask()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.ecsTask"))
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetBatchJob()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.batchJob"))
+	},
+	"aws.eventbridge.pipe.targetParameters.cloudwatchLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetCloudwatchLogs()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.cloudwatchLogs"))
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetEventBridge()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.eventBridge"))
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetRedshiftData()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.redshiftData"))
+	},
+	"aws.eventbridge.pipe.targetParameters.sagemakerPipeline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetSagemakerPipeline()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.sagemakerPipeline"))
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetTimestream()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.timestream"))
+	},
+	"aws.eventbridge.pipe.targetParameters.http": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParameters).GetHttp()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.http"))
+	},
+	"aws.eventbridge.pipe.targetParameters.lambda.invocationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersLambda).GetInvocationType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.stepFunctions.invocationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersStepFunctions).GetInvocationType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.sqs.messageGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersSqs).GetMessageGroupId()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.sqs.messageDeduplicationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersSqs).GetMessageDeduplicationId()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.kinesisStream.partitionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersKinesisStream).GetPartitionKey()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.launchType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetLaunchType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.platformVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetPlatformVersion()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.enableExecuteCommand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetEnableExecuteCommand()).ToDataRes(types.Bool)
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.enableECSManagedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetEnableECSManagedTags()).ToDataRes(types.Bool)
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.propagateTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetPropagateTags()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.taskCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetTaskCount()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.taskDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetTaskDefinition()).ToDataRes(types.Resource("aws.ecs.taskDefinition"))
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.referenceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetReferenceId()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetGroup()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetNetworkConfiguration()).ToDataRes(types.Resource("aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration"))
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.capacityProviderStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetCapacityProviderStrategy()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.placementConstraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetPlacementConstraints()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.placementStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetPlacementStrategy()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration.assignPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration).GetAssignPublicIp()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.jobDefinition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).GetJobDefinition()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.jobName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).GetJobName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.dependsOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).GetDependsOn()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.arrayProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).GetArrayProperties()).ToDataRes(types.Dict)
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.retryStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).GetRetryStrategy()).ToDataRes(types.Dict)
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.hasContainerOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).GetHasContainerOverrides()).ToDataRes(types.Bool)
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.hasEnvironmentOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).GetHasEnvironmentOverrides()).ToDataRes(types.Bool)
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.environmentVariableNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).GetEnvironmentVariableNames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.eventbridge.pipe.targetParameters.cloudwatchLogs.logStreamName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs).GetLogStreamName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.cloudwatchLogs.timestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs).GetTimestamp()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).GetSource()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.detailType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).GetDetailType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.endpointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).GetEndpointId()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).GetResources()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.time": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).GetTime()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).GetDatabase()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.dbUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).GetDbUser()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.statementName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).GetStatementName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.withEvent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).GetWithEvent()).ToDataRes(types.Bool)
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.sqlStatementCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).GetSqlStatementCount()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.hasSqlStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).GetHasSqlStatements()).ToDataRes(types.Bool)
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.sqlStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).GetSqlStatements()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.credentialsSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).GetCredentialsSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.eventbridge.pipe.targetParameters.sagemakerPipeline.pipelineParameterNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersSagemakerPipeline).GetPipelineParameterNames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersTimestream).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.tableName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersTimestream).GetTableName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.timeFieldType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersTimestream).GetTimeFieldType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.versionValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersTimestream).GetVersionValue()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.timeValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersTimestream).GetTimeValue()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.epochTimeUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersTimestream).GetEpochTimeUnit()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.dimensionMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersTimestream).GetDimensionMappings()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.multiMeasureMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersTimestream).GetMultiMeasureMappings()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.singleMeasureMappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersTimestream).GetSingleMeasureMappings()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.pipe.targetParameters.http.headerParameterKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersHttp).GetHeaderParameterKeys()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.pipe.targetParameters.http.queryStringParameterKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersHttp).GetQueryStringParameterKeys()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.pipe.targetParameters.http.pathParameterValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeTargetParametersHttp).GetPathParameterValues()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.pipe.logConfiguration.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfiguration).GetLevel()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.logConfiguration.includeExecutionData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfiguration).GetIncludeExecutionData()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.pipe.logConfiguration.hasAnyDestination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfiguration).GetHasAnyDestination()).ToDataRes(types.Bool)
+	},
+	"aws.eventbridge.pipe.logConfiguration.cloudwatchLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfiguration).GetCloudwatchLogs()).ToDataRes(types.Resource("aws.eventbridge.pipe.logConfiguration.cloudwatchLogs"))
+	},
+	"aws.eventbridge.pipe.logConfiguration.firehose": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfiguration).GetFirehose()).ToDataRes(types.Resource("aws.eventbridge.pipe.logConfiguration.firehose"))
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfiguration).GetS3()).ToDataRes(types.Resource("aws.eventbridge.pipe.logConfiguration.s3"))
+	},
+	"aws.eventbridge.pipe.logConfiguration.cloudwatchLogs.logGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs).GetLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.eventbridge.pipe.logConfiguration.firehose.deliveryStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfigurationFirehose).GetDeliveryStream()).ToDataRes(types.Resource("aws.kinesis.firehoseDeliveryStream"))
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfigurationS3).GetBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3.bucketOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfigurationS3).GetBucketOwner()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3.prefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfigurationS3).GetPrefix()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3.outputFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeLogConfigurationS3).GetOutputFormat()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.deadLetterConfig.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeDeadLetterConfig).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.pipe.deadLetterConfig.queue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeDeadLetterConfig).GetQueue()).ToDataRes(types.Resource("aws.sqs.queue"))
+	},
+	"aws.eventbridge.pipe.deadLetterConfig.topic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgePipeDeadLetterConfig).GetTopic()).ToDataRes(types.Resource("aws.sns.topic"))
 	},
 	"aws.eventbridge.schedule.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeSchedule).GetArn()).ToDataRes(types.String)
@@ -32889,6 +33496,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEventbridgePipe).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
+	"aws.eventbridge.pipe.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipe).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.hasFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipe).HasFilters, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.filterCriteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipe).FilterCriteria, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeFilterCriteria](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipe).SourceParameters, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeSourceParameters](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.enrichmentParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipe).EnrichmentParameters, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeEnrichmentParameters](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipe).TargetParameters, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParameters](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipe).LogConfiguration, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeLogConfiguration](v.Value, v.Error)
+		return
+	},
 	"aws.eventbridge.pipe.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgePipe).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -32899,6 +33534,710 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eventbridge.pipe.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgePipe).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.filterCriteria.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeFilterCriteria).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.filterCriteria.filters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeFilterCriteria).Filters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.filterCriteria.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeFilterCriteria).Count, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParameters).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.sqs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParameters).Sqs, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeSourceParametersSqs](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParameters).KinesisStream, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeSourceParametersKinesisStream](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParameters).DynamodbStream, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeSourceParametersDynamodbStream](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParameters).ActiveMQ, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeSourceParametersActiveMQ](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParameters).RabbitMQ, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeSourceParametersRabbitMQ](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParameters).Msk, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeSourceParametersMsk](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParameters).SelfManagedKafka, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.filterCriteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParameters).FilterCriteria, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeFilterCriteria](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.sqs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSqs).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.sqs.batchSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSqs).BatchSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.sqs.maximumBatchingWindowInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSqs).MaximumBatchingWindowInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.startingPosition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).StartingPosition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.startingPositionTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).StartingPositionTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.batchSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).BatchSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.maximumBatchingWindowInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).MaximumBatchingWindowInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.maximumRecordAgeInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).MaximumRecordAgeInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.maximumRetryAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).MaximumRetryAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.parallelizationFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).ParallelizationFactor, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.onPartialBatchItemFailure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).OnPartialBatchItemFailure, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.kinesisStream.deadLetterConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersKinesisStream).DeadLetterConfig, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeDeadLetterConfig](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.startingPosition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).StartingPosition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.batchSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).BatchSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.maximumBatchingWindowInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).MaximumBatchingWindowInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.maximumRecordAgeInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).MaximumRecordAgeInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.maximumRetryAttempts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).MaximumRetryAttempts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.parallelizationFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).ParallelizationFactor, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.onPartialBatchItemFailure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).OnPartialBatchItemFailure, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.dynamodbStream.deadLetterConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream).DeadLetterConfig, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeDeadLetterConfig](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersActiveMQ).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ.queueName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersActiveMQ).QueueName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ.batchSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersActiveMQ).BatchSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ.maximumBatchingWindowInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersActiveMQ).MaximumBatchingWindowInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.activeMQ.credentialsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersActiveMQ).CredentialsSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.queueName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).QueueName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.virtualHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).VirtualHost, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.batchSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).BatchSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.maximumBatchingWindowInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).MaximumBatchingWindowInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.rabbitMQ.credentialsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ).CredentialsSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersMsk).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.topicName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersMsk).TopicName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.consumerGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersMsk).ConsumerGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.startingPosition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersMsk).StartingPosition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.batchSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersMsk).BatchSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.maximumBatchingWindowInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersMsk).MaximumBatchingWindowInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.credentialsType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersMsk).CredentialsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.msk.credentialsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersMsk).CredentialsSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.topicName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).TopicName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.consumerGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).ConsumerGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.startingPosition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).StartingPosition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.batchSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).BatchSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.maximumBatchingWindowInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).MaximumBatchingWindowInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.additionalBootstrapServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).AdditionalBootstrapServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.serverRootCaCertificateSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).ServerRootCaCertificateSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.credentialsType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).CredentialsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.credentialsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).CredentialsSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.sourceParameters.selfManagedKafka.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.enrichmentParameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeEnrichmentParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.enrichmentParameters.inputTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeEnrichmentParameters).InputTemplate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.enrichmentParameters.http": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeEnrichmentParameters).Http, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersHttp](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.inputTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).InputTemplate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.lambda": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).Lambda, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersLambda](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.stepFunctions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).StepFunctions, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersStepFunctions](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.sqs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).Sqs, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersSqs](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.kinesisStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).KinesisStream, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersKinesisStream](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).EcsTask, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersEcsTask](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).BatchJob, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersBatchJob](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.cloudwatchLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).CloudwatchLogs, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).EventBridge, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersEventBridge](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).RedshiftData, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersRedshiftData](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.sagemakerPipeline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).SagemakerPipeline, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersSagemakerPipeline](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).Timestream, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersTimestream](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.http": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParameters).Http, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersHttp](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.lambda.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersLambda).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.lambda.invocationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersLambda).InvocationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.stepFunctions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersStepFunctions).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.stepFunctions.invocationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersStepFunctions).InvocationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.sqs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersSqs).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.sqs.messageGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersSqs).MessageGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.sqs.messageDeduplicationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersSqs).MessageDeduplicationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.kinesisStream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersKinesisStream).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.kinesisStream.partitionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersKinesisStream).PartitionKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.launchType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).LaunchType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.platformVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).PlatformVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.enableExecuteCommand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).EnableExecuteCommand, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.enableECSManagedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).EnableECSManagedTags, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.propagateTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).PropagateTags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.taskCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).TaskCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.taskDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).TaskDefinition, ok = plugin.RawToTValue[*mqlAwsEcsTaskDefinition](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.referenceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).ReferenceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).NetworkConfiguration, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.capacityProviderStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).CapacityProviderStrategy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.placementConstraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).PlacementConstraints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.placementStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).PlacementStrategy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTask).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration.assignPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration).AssignPublicIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.jobDefinition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).JobDefinition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.jobName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).JobName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.dependsOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).DependsOn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.arrayProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).ArrayProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.retryStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).RetryStrategy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.hasContainerOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).HasContainerOverrides, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.hasEnvironmentOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).HasEnvironmentOverrides, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.environmentVariableNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).EnvironmentVariableNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.batchJob.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersBatchJob).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.cloudwatchLogs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.cloudwatchLogs.logStreamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs).LogStreamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.cloudwatchLogs.timestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs).Timestamp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.detailType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).DetailType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.endpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).EndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).Resources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.eventBridge.time": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersEventBridge).Time, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).Database, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.dbUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).DbUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.statementName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).StatementName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.withEvent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).WithEvent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.sqlStatementCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).SqlStatementCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.hasSqlStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).HasSqlStatements, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.sqlStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).SqlStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.redshiftData.credentialsSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersRedshiftData).CredentialsSecret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.sagemakerPipeline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersSagemakerPipeline).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.sagemakerPipeline.pipelineParameterNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersSagemakerPipeline).PipelineParameterNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersTimestream).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersTimestream).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.tableName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersTimestream).TableName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.timeFieldType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersTimestream).TimeFieldType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.versionValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersTimestream).VersionValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.timeValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersTimestream).TimeValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.epochTimeUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersTimestream).EpochTimeUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.dimensionMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersTimestream).DimensionMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.multiMeasureMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersTimestream).MultiMeasureMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.timestream.singleMeasureMappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersTimestream).SingleMeasureMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.http.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersHttp).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.http.headerParameterKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersHttp).HeaderParameterKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.http.queryStringParameterKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersHttp).QueryStringParameterKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.targetParameters.http.pathParameterValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeTargetParametersHttp).PathParameterValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfiguration).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.includeExecutionData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfiguration).IncludeExecutionData, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.hasAnyDestination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfiguration).HasAnyDestination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.cloudwatchLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfiguration).CloudwatchLogs, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.firehose": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfiguration).Firehose, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeLogConfigurationFirehose](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfiguration).S3, ok = plugin.RawToTValue[*mqlAwsEventbridgePipeLogConfigurationS3](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.cloudwatchLogs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.cloudwatchLogs.logGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs).LogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.firehose.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfigurationFirehose).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.firehose.deliveryStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfigurationFirehose).DeliveryStream, ok = plugin.RawToTValue[*mqlAwsKinesisFirehoseDeliveryStream](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfigurationS3).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfigurationS3).Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3.bucketOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfigurationS3).BucketOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfigurationS3).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.logConfiguration.s3.outputFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeLogConfigurationS3).OutputFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.deadLetterConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeDeadLetterConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.pipe.deadLetterConfig.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeDeadLetterConfig).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.deadLetterConfig.queue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeDeadLetterConfig).Queue, ok = plugin.RawToTValue[*mqlAwsSqsQueue](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.pipe.deadLetterConfig.topic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgePipeDeadLetterConfig).Topic, ok = plugin.RawToTValue[*mqlAwsSnsTopic](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.schedule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79166,20 +80505,27 @@ type mqlAwsEventbridgePipe struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEventbridgePipeInternal
-	Arn          plugin.TValue[string]
-	Name         plugin.TValue[string]
-	Region       plugin.TValue[string]
-	Source       plugin.TValue[string]
-	Target       plugin.TValue[string]
-	Enrichment   plugin.TValue[string]
-	CurrentState plugin.TValue[string]
-	DesiredState plugin.TValue[string]
-	StateReason  plugin.TValue[string]
-	Description  plugin.TValue[string]
-	IamRole      plugin.TValue[*mqlAwsIamRole]
-	Tags         plugin.TValue[map[string]any]
-	CreatedAt    plugin.TValue[*time.Time]
-	UpdatedAt    plugin.TValue[*time.Time]
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Source               plugin.TValue[string]
+	Target               plugin.TValue[string]
+	Enrichment           plugin.TValue[string]
+	CurrentState         plugin.TValue[string]
+	DesiredState         plugin.TValue[string]
+	StateReason          plugin.TValue[string]
+	Description          plugin.TValue[string]
+	IamRole              plugin.TValue[*mqlAwsIamRole]
+	KmsKey               plugin.TValue[*mqlAwsKmsKey]
+	HasFilters           plugin.TValue[bool]
+	FilterCriteria       plugin.TValue[*mqlAwsEventbridgePipeFilterCriteria]
+	SourceParameters     plugin.TValue[*mqlAwsEventbridgePipeSourceParameters]
+	EnrichmentParameters plugin.TValue[*mqlAwsEventbridgePipeEnrichmentParameters]
+	TargetParameters     plugin.TValue[*mqlAwsEventbridgePipeTargetParameters]
+	LogConfiguration     plugin.TValue[*mqlAwsEventbridgePipeLogConfiguration]
+	Tags                 plugin.TValue[map[string]any]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
 }
 
 // createAwsEventbridgePipe creates a new instance of this resource
@@ -79272,6 +80618,108 @@ func (c *mqlAwsEventbridgePipe) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
 	})
 }
 
+func (c *mqlAwsEventbridgePipe) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsEventbridgePipe) GetHasFilters() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasFilters, func() (bool, error) {
+		return c.hasFilters()
+	})
+}
+
+func (c *mqlAwsEventbridgePipe) GetFilterCriteria() *plugin.TValue[*mqlAwsEventbridgePipeFilterCriteria] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeFilterCriteria](&c.FilterCriteria, func() (*mqlAwsEventbridgePipeFilterCriteria, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe", c.__id, "filterCriteria")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeFilterCriteria), nil
+			}
+		}
+
+		return c.filterCriteria()
+	})
+}
+
+func (c *mqlAwsEventbridgePipe) GetSourceParameters() *plugin.TValue[*mqlAwsEventbridgePipeSourceParameters] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeSourceParameters](&c.SourceParameters, func() (*mqlAwsEventbridgePipeSourceParameters, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe", c.__id, "sourceParameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeSourceParameters), nil
+			}
+		}
+
+		return c.sourceParameters()
+	})
+}
+
+func (c *mqlAwsEventbridgePipe) GetEnrichmentParameters() *plugin.TValue[*mqlAwsEventbridgePipeEnrichmentParameters] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeEnrichmentParameters](&c.EnrichmentParameters, func() (*mqlAwsEventbridgePipeEnrichmentParameters, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe", c.__id, "enrichmentParameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeEnrichmentParameters), nil
+			}
+		}
+
+		return c.enrichmentParameters()
+	})
+}
+
+func (c *mqlAwsEventbridgePipe) GetTargetParameters() *plugin.TValue[*mqlAwsEventbridgePipeTargetParameters] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParameters](&c.TargetParameters, func() (*mqlAwsEventbridgePipeTargetParameters, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe", c.__id, "targetParameters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParameters), nil
+			}
+		}
+
+		return c.targetParameters()
+	})
+}
+
+func (c *mqlAwsEventbridgePipe) GetLogConfiguration() *plugin.TValue[*mqlAwsEventbridgePipeLogConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeLogConfiguration](&c.LogConfiguration, func() (*mqlAwsEventbridgePipeLogConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe", c.__id, "logConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeLogConfiguration), nil
+			}
+		}
+
+		return c.logConfiguration()
+	})
+}
+
 func (c *mqlAwsEventbridgePipe) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
@@ -79284,6 +80732,2388 @@ func (c *mqlAwsEventbridgePipe) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsEventbridgePipe) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlAwsEventbridgePipeFilterCriteria for the aws.eventbridge.pipe.filterCriteria resource
+type mqlAwsEventbridgePipeFilterCriteria struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeFilterCriteriaInternal it will be used here
+	Filters plugin.TValue[[]any]
+	Count   plugin.TValue[int64]
+}
+
+// createAwsEventbridgePipeFilterCriteria creates a new instance of this resource
+func createAwsEventbridgePipeFilterCriteria(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeFilterCriteria{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.filterCriteria", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeFilterCriteria) MqlName() string {
+	return "aws.eventbridge.pipe.filterCriteria"
+}
+
+func (c *mqlAwsEventbridgePipeFilterCriteria) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeFilterCriteria) GetFilters() *plugin.TValue[[]any] {
+	return &c.Filters
+}
+
+func (c *mqlAwsEventbridgePipeFilterCriteria) GetCount() *plugin.TValue[int64] {
+	return &c.Count
+}
+
+// mqlAwsEventbridgePipeSourceParameters for the aws.eventbridge.pipe.sourceParameters resource
+type mqlAwsEventbridgePipeSourceParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeSourceParametersInternal
+	Type             plugin.TValue[string]
+	Sqs              plugin.TValue[*mqlAwsEventbridgePipeSourceParametersSqs]
+	KinesisStream    plugin.TValue[*mqlAwsEventbridgePipeSourceParametersKinesisStream]
+	DynamodbStream   plugin.TValue[*mqlAwsEventbridgePipeSourceParametersDynamodbStream]
+	ActiveMQ         plugin.TValue[*mqlAwsEventbridgePipeSourceParametersActiveMQ]
+	RabbitMQ         plugin.TValue[*mqlAwsEventbridgePipeSourceParametersRabbitMQ]
+	Msk              plugin.TValue[*mqlAwsEventbridgePipeSourceParametersMsk]
+	SelfManagedKafka plugin.TValue[*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka]
+	FilterCriteria   plugin.TValue[*mqlAwsEventbridgePipeFilterCriteria]
+}
+
+// createAwsEventbridgePipeSourceParameters creates a new instance of this resource
+func createAwsEventbridgePipeSourceParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeSourceParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.sourceParameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) MqlName() string {
+	return "aws.eventbridge.pipe.sourceParameters"
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) GetSqs() *plugin.TValue[*mqlAwsEventbridgePipeSourceParametersSqs] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeSourceParametersSqs](&c.Sqs, func() (*mqlAwsEventbridgePipeSourceParametersSqs, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters", c.__id, "sqs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeSourceParametersSqs), nil
+			}
+		}
+
+		return c.sqs()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) GetKinesisStream() *plugin.TValue[*mqlAwsEventbridgePipeSourceParametersKinesisStream] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeSourceParametersKinesisStream](&c.KinesisStream, func() (*mqlAwsEventbridgePipeSourceParametersKinesisStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters", c.__id, "kinesisStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeSourceParametersKinesisStream), nil
+			}
+		}
+
+		return c.kinesisStream()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) GetDynamodbStream() *plugin.TValue[*mqlAwsEventbridgePipeSourceParametersDynamodbStream] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeSourceParametersDynamodbStream](&c.DynamodbStream, func() (*mqlAwsEventbridgePipeSourceParametersDynamodbStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters", c.__id, "dynamodbStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeSourceParametersDynamodbStream), nil
+			}
+		}
+
+		return c.dynamodbStream()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) GetActiveMQ() *plugin.TValue[*mqlAwsEventbridgePipeSourceParametersActiveMQ] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeSourceParametersActiveMQ](&c.ActiveMQ, func() (*mqlAwsEventbridgePipeSourceParametersActiveMQ, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters", c.__id, "activeMQ")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeSourceParametersActiveMQ), nil
+			}
+		}
+
+		return c.activeMQ()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) GetRabbitMQ() *plugin.TValue[*mqlAwsEventbridgePipeSourceParametersRabbitMQ] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeSourceParametersRabbitMQ](&c.RabbitMQ, func() (*mqlAwsEventbridgePipeSourceParametersRabbitMQ, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters", c.__id, "rabbitMQ")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeSourceParametersRabbitMQ), nil
+			}
+		}
+
+		return c.rabbitMQ()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) GetMsk() *plugin.TValue[*mqlAwsEventbridgePipeSourceParametersMsk] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeSourceParametersMsk](&c.Msk, func() (*mqlAwsEventbridgePipeSourceParametersMsk, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters", c.__id, "msk")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeSourceParametersMsk), nil
+			}
+		}
+
+		return c.msk()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) GetSelfManagedKafka() *plugin.TValue[*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka](&c.SelfManagedKafka, func() (*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters", c.__id, "selfManagedKafka")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeSourceParametersSelfManagedKafka), nil
+			}
+		}
+
+		return c.selfManagedKafka()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeSourceParameters) GetFilterCriteria() *plugin.TValue[*mqlAwsEventbridgePipeFilterCriteria] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeFilterCriteria](&c.FilterCriteria, func() (*mqlAwsEventbridgePipeFilterCriteria, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters", c.__id, "filterCriteria")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeFilterCriteria), nil
+			}
+		}
+
+		return c.filterCriteria()
+	})
+}
+
+// mqlAwsEventbridgePipeSourceParametersSqs for the aws.eventbridge.pipe.sourceParameters.sqs resource
+type mqlAwsEventbridgePipeSourceParametersSqs struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeSourceParametersSqsInternal it will be used here
+	BatchSize                      plugin.TValue[int64]
+	MaximumBatchingWindowInSeconds plugin.TValue[int64]
+}
+
+// createAwsEventbridgePipeSourceParametersSqs creates a new instance of this resource
+func createAwsEventbridgePipeSourceParametersSqs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeSourceParametersSqs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.sourceParameters.sqs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSqs) MqlName() string {
+	return "aws.eventbridge.pipe.sourceParameters.sqs"
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSqs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSqs) GetBatchSize() *plugin.TValue[int64] {
+	return &c.BatchSize
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSqs) GetMaximumBatchingWindowInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumBatchingWindowInSeconds
+}
+
+// mqlAwsEventbridgePipeSourceParametersKinesisStream for the aws.eventbridge.pipe.sourceParameters.kinesisStream resource
+type mqlAwsEventbridgePipeSourceParametersKinesisStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeSourceParametersKinesisStreamInternal
+	StartingPosition               plugin.TValue[string]
+	StartingPositionTimestamp      plugin.TValue[*time.Time]
+	BatchSize                      plugin.TValue[int64]
+	MaximumBatchingWindowInSeconds plugin.TValue[int64]
+	MaximumRecordAgeInSeconds      plugin.TValue[int64]
+	MaximumRetryAttempts           plugin.TValue[int64]
+	ParallelizationFactor          plugin.TValue[int64]
+	OnPartialBatchItemFailure      plugin.TValue[string]
+	DeadLetterConfig               plugin.TValue[*mqlAwsEventbridgePipeDeadLetterConfig]
+}
+
+// createAwsEventbridgePipeSourceParametersKinesisStream creates a new instance of this resource
+func createAwsEventbridgePipeSourceParametersKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeSourceParametersKinesisStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.sourceParameters.kinesisStream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) MqlName() string {
+	return "aws.eventbridge.pipe.sourceParameters.kinesisStream"
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) GetStartingPosition() *plugin.TValue[string] {
+	return &c.StartingPosition
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) GetStartingPositionTimestamp() *plugin.TValue[*time.Time] {
+	return &c.StartingPositionTimestamp
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) GetBatchSize() *plugin.TValue[int64] {
+	return &c.BatchSize
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) GetMaximumBatchingWindowInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumBatchingWindowInSeconds
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) GetMaximumRecordAgeInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumRecordAgeInSeconds
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) GetMaximumRetryAttempts() *plugin.TValue[int64] {
+	return &c.MaximumRetryAttempts
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) GetParallelizationFactor() *plugin.TValue[int64] {
+	return &c.ParallelizationFactor
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) GetOnPartialBatchItemFailure() *plugin.TValue[string] {
+	return &c.OnPartialBatchItemFailure
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersKinesisStream) GetDeadLetterConfig() *plugin.TValue[*mqlAwsEventbridgePipeDeadLetterConfig] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeDeadLetterConfig](&c.DeadLetterConfig, func() (*mqlAwsEventbridgePipeDeadLetterConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters.kinesisStream", c.__id, "deadLetterConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeDeadLetterConfig), nil
+			}
+		}
+
+		return c.deadLetterConfig()
+	})
+}
+
+// mqlAwsEventbridgePipeSourceParametersDynamodbStream for the aws.eventbridge.pipe.sourceParameters.dynamodbStream resource
+type mqlAwsEventbridgePipeSourceParametersDynamodbStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeSourceParametersDynamodbStreamInternal
+	StartingPosition               plugin.TValue[string]
+	BatchSize                      plugin.TValue[int64]
+	MaximumBatchingWindowInSeconds plugin.TValue[int64]
+	MaximumRecordAgeInSeconds      plugin.TValue[int64]
+	MaximumRetryAttempts           plugin.TValue[int64]
+	ParallelizationFactor          plugin.TValue[int64]
+	OnPartialBatchItemFailure      plugin.TValue[string]
+	DeadLetterConfig               plugin.TValue[*mqlAwsEventbridgePipeDeadLetterConfig]
+}
+
+// createAwsEventbridgePipeSourceParametersDynamodbStream creates a new instance of this resource
+func createAwsEventbridgePipeSourceParametersDynamodbStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeSourceParametersDynamodbStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.sourceParameters.dynamodbStream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersDynamodbStream) MqlName() string {
+	return "aws.eventbridge.pipe.sourceParameters.dynamodbStream"
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersDynamodbStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersDynamodbStream) GetStartingPosition() *plugin.TValue[string] {
+	return &c.StartingPosition
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersDynamodbStream) GetBatchSize() *plugin.TValue[int64] {
+	return &c.BatchSize
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersDynamodbStream) GetMaximumBatchingWindowInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumBatchingWindowInSeconds
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersDynamodbStream) GetMaximumRecordAgeInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumRecordAgeInSeconds
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersDynamodbStream) GetMaximumRetryAttempts() *plugin.TValue[int64] {
+	return &c.MaximumRetryAttempts
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersDynamodbStream) GetParallelizationFactor() *plugin.TValue[int64] {
+	return &c.ParallelizationFactor
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersDynamodbStream) GetOnPartialBatchItemFailure() *plugin.TValue[string] {
+	return &c.OnPartialBatchItemFailure
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersDynamodbStream) GetDeadLetterConfig() *plugin.TValue[*mqlAwsEventbridgePipeDeadLetterConfig] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeDeadLetterConfig](&c.DeadLetterConfig, func() (*mqlAwsEventbridgePipeDeadLetterConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters.dynamodbStream", c.__id, "deadLetterConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeDeadLetterConfig), nil
+			}
+		}
+
+		return c.deadLetterConfig()
+	})
+}
+
+// mqlAwsEventbridgePipeSourceParametersActiveMQ for the aws.eventbridge.pipe.sourceParameters.activeMQ resource
+type mqlAwsEventbridgePipeSourceParametersActiveMQ struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeSourceParametersActiveMQInternal
+	QueueName                      plugin.TValue[string]
+	BatchSize                      plugin.TValue[int64]
+	MaximumBatchingWindowInSeconds plugin.TValue[int64]
+	CredentialsSecret              plugin.TValue[*mqlAwsSecretsmanagerSecret]
+}
+
+// createAwsEventbridgePipeSourceParametersActiveMQ creates a new instance of this resource
+func createAwsEventbridgePipeSourceParametersActiveMQ(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeSourceParametersActiveMQ{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.sourceParameters.activeMQ", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersActiveMQ) MqlName() string {
+	return "aws.eventbridge.pipe.sourceParameters.activeMQ"
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersActiveMQ) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersActiveMQ) GetQueueName() *plugin.TValue[string] {
+	return &c.QueueName
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersActiveMQ) GetBatchSize() *plugin.TValue[int64] {
+	return &c.BatchSize
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersActiveMQ) GetMaximumBatchingWindowInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumBatchingWindowInSeconds
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersActiveMQ) GetCredentialsSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.CredentialsSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters.activeMQ", c.__id, "credentialsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.credentialsSecret()
+	})
+}
+
+// mqlAwsEventbridgePipeSourceParametersRabbitMQ for the aws.eventbridge.pipe.sourceParameters.rabbitMQ resource
+type mqlAwsEventbridgePipeSourceParametersRabbitMQ struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeSourceParametersRabbitMQInternal
+	QueueName                      plugin.TValue[string]
+	VirtualHost                    plugin.TValue[string]
+	BatchSize                      plugin.TValue[int64]
+	MaximumBatchingWindowInSeconds plugin.TValue[int64]
+	CredentialsSecret              plugin.TValue[*mqlAwsSecretsmanagerSecret]
+}
+
+// createAwsEventbridgePipeSourceParametersRabbitMQ creates a new instance of this resource
+func createAwsEventbridgePipeSourceParametersRabbitMQ(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeSourceParametersRabbitMQ{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.sourceParameters.rabbitMQ", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersRabbitMQ) MqlName() string {
+	return "aws.eventbridge.pipe.sourceParameters.rabbitMQ"
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersRabbitMQ) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersRabbitMQ) GetQueueName() *plugin.TValue[string] {
+	return &c.QueueName
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersRabbitMQ) GetVirtualHost() *plugin.TValue[string] {
+	return &c.VirtualHost
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersRabbitMQ) GetBatchSize() *plugin.TValue[int64] {
+	return &c.BatchSize
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersRabbitMQ) GetMaximumBatchingWindowInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumBatchingWindowInSeconds
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersRabbitMQ) GetCredentialsSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.CredentialsSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters.rabbitMQ", c.__id, "credentialsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.credentialsSecret()
+	})
+}
+
+// mqlAwsEventbridgePipeSourceParametersMsk for the aws.eventbridge.pipe.sourceParameters.msk resource
+type mqlAwsEventbridgePipeSourceParametersMsk struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeSourceParametersMskInternal
+	TopicName                      plugin.TValue[string]
+	ConsumerGroupId                plugin.TValue[string]
+	StartingPosition               plugin.TValue[string]
+	BatchSize                      plugin.TValue[int64]
+	MaximumBatchingWindowInSeconds plugin.TValue[int64]
+	CredentialsType                plugin.TValue[string]
+	CredentialsSecret              plugin.TValue[*mqlAwsSecretsmanagerSecret]
+}
+
+// createAwsEventbridgePipeSourceParametersMsk creates a new instance of this resource
+func createAwsEventbridgePipeSourceParametersMsk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeSourceParametersMsk{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.sourceParameters.msk", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersMsk) MqlName() string {
+	return "aws.eventbridge.pipe.sourceParameters.msk"
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersMsk) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersMsk) GetTopicName() *plugin.TValue[string] {
+	return &c.TopicName
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersMsk) GetConsumerGroupId() *plugin.TValue[string] {
+	return &c.ConsumerGroupId
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersMsk) GetStartingPosition() *plugin.TValue[string] {
+	return &c.StartingPosition
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersMsk) GetBatchSize() *plugin.TValue[int64] {
+	return &c.BatchSize
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersMsk) GetMaximumBatchingWindowInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumBatchingWindowInSeconds
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersMsk) GetCredentialsType() *plugin.TValue[string] {
+	return &c.CredentialsType
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersMsk) GetCredentialsSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.CredentialsSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters.msk", c.__id, "credentialsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.credentialsSecret()
+	})
+}
+
+// mqlAwsEventbridgePipeSourceParametersSelfManagedKafka for the aws.eventbridge.pipe.sourceParameters.selfManagedKafka resource
+type mqlAwsEventbridgePipeSourceParametersSelfManagedKafka struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeSourceParametersSelfManagedKafkaInternal
+	TopicName                      plugin.TValue[string]
+	ConsumerGroupId                plugin.TValue[string]
+	StartingPosition               plugin.TValue[string]
+	BatchSize                      plugin.TValue[int64]
+	MaximumBatchingWindowInSeconds plugin.TValue[int64]
+	AdditionalBootstrapServers     plugin.TValue[[]any]
+	ServerRootCaCertificateSecret  plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	CredentialsType                plugin.TValue[string]
+	CredentialsSecret              plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	Subnets                        plugin.TValue[[]any]
+	SecurityGroups                 plugin.TValue[[]any]
+}
+
+// createAwsEventbridgePipeSourceParametersSelfManagedKafka creates a new instance of this resource
+func createAwsEventbridgePipeSourceParametersSelfManagedKafka(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeSourceParametersSelfManagedKafka{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.sourceParameters.selfManagedKafka", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) MqlName() string {
+	return "aws.eventbridge.pipe.sourceParameters.selfManagedKafka"
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetTopicName() *plugin.TValue[string] {
+	return &c.TopicName
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetConsumerGroupId() *plugin.TValue[string] {
+	return &c.ConsumerGroupId
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetStartingPosition() *plugin.TValue[string] {
+	return &c.StartingPosition
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetBatchSize() *plugin.TValue[int64] {
+	return &c.BatchSize
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetMaximumBatchingWindowInSeconds() *plugin.TValue[int64] {
+	return &c.MaximumBatchingWindowInSeconds
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetAdditionalBootstrapServers() *plugin.TValue[[]any] {
+	return &c.AdditionalBootstrapServers
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetServerRootCaCertificateSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.ServerRootCaCertificateSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters.selfManagedKafka", c.__id, "serverRootCaCertificateSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.serverRootCaCertificateSecret()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetCredentialsType() *plugin.TValue[string] {
+	return &c.CredentialsType
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetCredentialsSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.CredentialsSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters.selfManagedKafka", c.__id, "credentialsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.credentialsSecret()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters.selfManagedKafka", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeSourceParametersSelfManagedKafka) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.sourceParameters.selfManagedKafka", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+// mqlAwsEventbridgePipeEnrichmentParameters for the aws.eventbridge.pipe.enrichmentParameters resource
+type mqlAwsEventbridgePipeEnrichmentParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeEnrichmentParametersInternal
+	InputTemplate plugin.TValue[string]
+	Http          plugin.TValue[*mqlAwsEventbridgePipeTargetParametersHttp]
+}
+
+// createAwsEventbridgePipeEnrichmentParameters creates a new instance of this resource
+func createAwsEventbridgePipeEnrichmentParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeEnrichmentParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.enrichmentParameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeEnrichmentParameters) MqlName() string {
+	return "aws.eventbridge.pipe.enrichmentParameters"
+}
+
+func (c *mqlAwsEventbridgePipeEnrichmentParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeEnrichmentParameters) GetInputTemplate() *plugin.TValue[string] {
+	return &c.InputTemplate
+}
+
+func (c *mqlAwsEventbridgePipeEnrichmentParameters) GetHttp() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersHttp] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersHttp](&c.Http, func() (*mqlAwsEventbridgePipeTargetParametersHttp, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.enrichmentParameters", c.__id, "http")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersHttp), nil
+			}
+		}
+
+		return c.http()
+	})
+}
+
+// mqlAwsEventbridgePipeTargetParameters for the aws.eventbridge.pipe.targetParameters resource
+type mqlAwsEventbridgePipeTargetParameters struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeTargetParametersInternal
+	Type              plugin.TValue[string]
+	InputTemplate     plugin.TValue[string]
+	Lambda            plugin.TValue[*mqlAwsEventbridgePipeTargetParametersLambda]
+	StepFunctions     plugin.TValue[*mqlAwsEventbridgePipeTargetParametersStepFunctions]
+	Sqs               plugin.TValue[*mqlAwsEventbridgePipeTargetParametersSqs]
+	KinesisStream     plugin.TValue[*mqlAwsEventbridgePipeTargetParametersKinesisStream]
+	EcsTask           plugin.TValue[*mqlAwsEventbridgePipeTargetParametersEcsTask]
+	BatchJob          plugin.TValue[*mqlAwsEventbridgePipeTargetParametersBatchJob]
+	CloudwatchLogs    plugin.TValue[*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs]
+	EventBridge       plugin.TValue[*mqlAwsEventbridgePipeTargetParametersEventBridge]
+	RedshiftData      plugin.TValue[*mqlAwsEventbridgePipeTargetParametersRedshiftData]
+	SagemakerPipeline plugin.TValue[*mqlAwsEventbridgePipeTargetParametersSagemakerPipeline]
+	Timestream        plugin.TValue[*mqlAwsEventbridgePipeTargetParametersTimestream]
+	Http              plugin.TValue[*mqlAwsEventbridgePipeTargetParametersHttp]
+}
+
+// createAwsEventbridgePipeTargetParameters creates a new instance of this resource
+func createAwsEventbridgePipeTargetParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParameters{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetInputTemplate() *plugin.TValue[string] {
+	return &c.InputTemplate
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetLambda() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersLambda] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersLambda](&c.Lambda, func() (*mqlAwsEventbridgePipeTargetParametersLambda, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "lambda")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersLambda), nil
+			}
+		}
+
+		return c.lambda()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetStepFunctions() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersStepFunctions] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersStepFunctions](&c.StepFunctions, func() (*mqlAwsEventbridgePipeTargetParametersStepFunctions, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "stepFunctions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersStepFunctions), nil
+			}
+		}
+
+		return c.stepFunctions()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetSqs() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersSqs] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersSqs](&c.Sqs, func() (*mqlAwsEventbridgePipeTargetParametersSqs, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "sqs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersSqs), nil
+			}
+		}
+
+		return c.sqs()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetKinesisStream() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersKinesisStream] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersKinesisStream](&c.KinesisStream, func() (*mqlAwsEventbridgePipeTargetParametersKinesisStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "kinesisStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersKinesisStream), nil
+			}
+		}
+
+		return c.kinesisStream()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetEcsTask() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersEcsTask] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersEcsTask](&c.EcsTask, func() (*mqlAwsEventbridgePipeTargetParametersEcsTask, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "ecsTask")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersEcsTask), nil
+			}
+		}
+
+		return c.ecsTask()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetBatchJob() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersBatchJob] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersBatchJob](&c.BatchJob, func() (*mqlAwsEventbridgePipeTargetParametersBatchJob, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "batchJob")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersBatchJob), nil
+			}
+		}
+
+		return c.batchJob()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetCloudwatchLogs() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs](&c.CloudwatchLogs, func() (*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "cloudwatchLogs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersCloudwatchLogs), nil
+			}
+		}
+
+		return c.cloudwatchLogs()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetEventBridge() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersEventBridge] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersEventBridge](&c.EventBridge, func() (*mqlAwsEventbridgePipeTargetParametersEventBridge, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "eventBridge")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersEventBridge), nil
+			}
+		}
+
+		return c.eventBridge()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetRedshiftData() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersRedshiftData] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersRedshiftData](&c.RedshiftData, func() (*mqlAwsEventbridgePipeTargetParametersRedshiftData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "redshiftData")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersRedshiftData), nil
+			}
+		}
+
+		return c.redshiftData()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetSagemakerPipeline() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersSagemakerPipeline] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersSagemakerPipeline](&c.SagemakerPipeline, func() (*mqlAwsEventbridgePipeTargetParametersSagemakerPipeline, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "sagemakerPipeline")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersSagemakerPipeline), nil
+			}
+		}
+
+		return c.sagemakerPipeline()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetTimestream() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersTimestream] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersTimestream](&c.Timestream, func() (*mqlAwsEventbridgePipeTargetParametersTimestream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "timestream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersTimestream), nil
+			}
+		}
+
+		return c.timestream()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParameters) GetHttp() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersHttp] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersHttp](&c.Http, func() (*mqlAwsEventbridgePipeTargetParametersHttp, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters", c.__id, "http")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersHttp), nil
+			}
+		}
+
+		return c.http()
+	})
+}
+
+// mqlAwsEventbridgePipeTargetParametersLambda for the aws.eventbridge.pipe.targetParameters.lambda resource
+type mqlAwsEventbridgePipeTargetParametersLambda struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeTargetParametersLambdaInternal it will be used here
+	InvocationType plugin.TValue[string]
+}
+
+// createAwsEventbridgePipeTargetParametersLambda creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersLambda(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersLambda{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.lambda", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersLambda) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.lambda"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersLambda) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersLambda) GetInvocationType() *plugin.TValue[string] {
+	return &c.InvocationType
+}
+
+// mqlAwsEventbridgePipeTargetParametersStepFunctions for the aws.eventbridge.pipe.targetParameters.stepFunctions resource
+type mqlAwsEventbridgePipeTargetParametersStepFunctions struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeTargetParametersStepFunctionsInternal it will be used here
+	InvocationType plugin.TValue[string]
+}
+
+// createAwsEventbridgePipeTargetParametersStepFunctions creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersStepFunctions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersStepFunctions{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.stepFunctions", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersStepFunctions) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.stepFunctions"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersStepFunctions) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersStepFunctions) GetInvocationType() *plugin.TValue[string] {
+	return &c.InvocationType
+}
+
+// mqlAwsEventbridgePipeTargetParametersSqs for the aws.eventbridge.pipe.targetParameters.sqs resource
+type mqlAwsEventbridgePipeTargetParametersSqs struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeTargetParametersSqsInternal it will be used here
+	MessageGroupId         plugin.TValue[string]
+	MessageDeduplicationId plugin.TValue[string]
+}
+
+// createAwsEventbridgePipeTargetParametersSqs creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersSqs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersSqs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.sqs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersSqs) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.sqs"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersSqs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersSqs) GetMessageGroupId() *plugin.TValue[string] {
+	return &c.MessageGroupId
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersSqs) GetMessageDeduplicationId() *plugin.TValue[string] {
+	return &c.MessageDeduplicationId
+}
+
+// mqlAwsEventbridgePipeTargetParametersKinesisStream for the aws.eventbridge.pipe.targetParameters.kinesisStream resource
+type mqlAwsEventbridgePipeTargetParametersKinesisStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeTargetParametersKinesisStreamInternal it will be used here
+	PartitionKey plugin.TValue[string]
+}
+
+// createAwsEventbridgePipeTargetParametersKinesisStream creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersKinesisStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.kinesisStream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersKinesisStream) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.kinesisStream"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersKinesisStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersKinesisStream) GetPartitionKey() *plugin.TValue[string] {
+	return &c.PartitionKey
+}
+
+// mqlAwsEventbridgePipeTargetParametersEcsTask for the aws.eventbridge.pipe.targetParameters.ecsTask resource
+type mqlAwsEventbridgePipeTargetParametersEcsTask struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeTargetParametersEcsTaskInternal
+	LaunchType               plugin.TValue[string]
+	PlatformVersion          plugin.TValue[string]
+	EnableExecuteCommand     plugin.TValue[bool]
+	EnableECSManagedTags     plugin.TValue[bool]
+	PropagateTags            plugin.TValue[string]
+	TaskCount                plugin.TValue[int64]
+	TaskDefinition           plugin.TValue[*mqlAwsEcsTaskDefinition]
+	ReferenceId              plugin.TValue[string]
+	Group                    plugin.TValue[string]
+	NetworkConfiguration     plugin.TValue[*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration]
+	CapacityProviderStrategy plugin.TValue[[]any]
+	PlacementConstraints     plugin.TValue[[]any]
+	PlacementStrategy        plugin.TValue[[]any]
+	Tags                     plugin.TValue[map[string]any]
+}
+
+// createAwsEventbridgePipeTargetParametersEcsTask creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersEcsTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersEcsTask{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.ecsTask", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.ecsTask"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetLaunchType() *plugin.TValue[string] {
+	return &c.LaunchType
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetPlatformVersion() *plugin.TValue[string] {
+	return &c.PlatformVersion
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetEnableExecuteCommand() *plugin.TValue[bool] {
+	return &c.EnableExecuteCommand
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetEnableECSManagedTags() *plugin.TValue[bool] {
+	return &c.EnableECSManagedTags
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetPropagateTags() *plugin.TValue[string] {
+	return &c.PropagateTags
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetTaskCount() *plugin.TValue[int64] {
+	return &c.TaskCount
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetTaskDefinition() *plugin.TValue[*mqlAwsEcsTaskDefinition] {
+	return plugin.GetOrCompute[*mqlAwsEcsTaskDefinition](&c.TaskDefinition, func() (*mqlAwsEcsTaskDefinition, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters.ecsTask", c.__id, "taskDefinition")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsTaskDefinition), nil
+			}
+		}
+
+		return c.taskDefinition()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetReferenceId() *plugin.TValue[string] {
+	return &c.ReferenceId
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetNetworkConfiguration() *plugin.TValue[*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration](&c.NetworkConfiguration, func() (*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters.ecsTask", c.__id, "networkConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration), nil
+			}
+		}
+
+		return c.networkConfiguration()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetCapacityProviderStrategy() *plugin.TValue[[]any] {
+	return &c.CapacityProviderStrategy
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetPlacementConstraints() *plugin.TValue[[]any] {
+	return &c.PlacementConstraints
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetPlacementStrategy() *plugin.TValue[[]any] {
+	return &c.PlacementStrategy
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTask) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration for the aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration resource
+type mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfigurationInternal
+	AssignPublicIp plugin.TValue[string]
+	Subnets        plugin.TValue[[]any]
+	SecurityGroups plugin.TValue[[]any]
+}
+
+// createAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration) GetAssignPublicIp() *plugin.TValue[string] {
+	return &c.AssignPublicIp
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEcsTaskNetworkConfiguration) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+// mqlAwsEventbridgePipeTargetParametersBatchJob for the aws.eventbridge.pipe.targetParameters.batchJob resource
+type mqlAwsEventbridgePipeTargetParametersBatchJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeTargetParametersBatchJobInternal it will be used here
+	JobDefinition            plugin.TValue[string]
+	JobName                  plugin.TValue[string]
+	DependsOn                plugin.TValue[[]any]
+	ArrayProperties          plugin.TValue[any]
+	RetryStrategy            plugin.TValue[any]
+	HasContainerOverrides    plugin.TValue[bool]
+	HasEnvironmentOverrides  plugin.TValue[bool]
+	EnvironmentVariableNames plugin.TValue[[]any]
+	Parameters               plugin.TValue[map[string]any]
+}
+
+// createAwsEventbridgePipeTargetParametersBatchJob creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersBatchJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersBatchJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.batchJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.batchJob"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) GetJobDefinition() *plugin.TValue[string] {
+	return &c.JobDefinition
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) GetJobName() *plugin.TValue[string] {
+	return &c.JobName
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) GetDependsOn() *plugin.TValue[[]any] {
+	return &c.DependsOn
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) GetArrayProperties() *plugin.TValue[any] {
+	return &c.ArrayProperties
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) GetRetryStrategy() *plugin.TValue[any] {
+	return &c.RetryStrategy
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) GetHasContainerOverrides() *plugin.TValue[bool] {
+	return &c.HasContainerOverrides
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) GetHasEnvironmentOverrides() *plugin.TValue[bool] {
+	return &c.HasEnvironmentOverrides
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) GetEnvironmentVariableNames() *plugin.TValue[[]any] {
+	return &c.EnvironmentVariableNames
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersBatchJob) GetParameters() *plugin.TValue[map[string]any] {
+	return &c.Parameters
+}
+
+// mqlAwsEventbridgePipeTargetParametersCloudwatchLogs for the aws.eventbridge.pipe.targetParameters.cloudwatchLogs resource
+type mqlAwsEventbridgePipeTargetParametersCloudwatchLogs struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeTargetParametersCloudwatchLogsInternal it will be used here
+	LogStreamName plugin.TValue[string]
+	Timestamp     plugin.TValue[string]
+}
+
+// createAwsEventbridgePipeTargetParametersCloudwatchLogs creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersCloudwatchLogs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersCloudwatchLogs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.cloudwatchLogs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersCloudwatchLogs) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.cloudwatchLogs"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersCloudwatchLogs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersCloudwatchLogs) GetLogStreamName() *plugin.TValue[string] {
+	return &c.LogStreamName
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersCloudwatchLogs) GetTimestamp() *plugin.TValue[string] {
+	return &c.Timestamp
+}
+
+// mqlAwsEventbridgePipeTargetParametersEventBridge for the aws.eventbridge.pipe.targetParameters.eventBridge resource
+type mqlAwsEventbridgePipeTargetParametersEventBridge struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeTargetParametersEventBridgeInternal it will be used here
+	Source     plugin.TValue[string]
+	DetailType plugin.TValue[string]
+	EndpointId plugin.TValue[string]
+	Resources  plugin.TValue[[]any]
+	Time       plugin.TValue[string]
+}
+
+// createAwsEventbridgePipeTargetParametersEventBridge creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersEventBridge(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersEventBridge{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.eventBridge", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEventBridge) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.eventBridge"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEventBridge) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEventBridge) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEventBridge) GetDetailType() *plugin.TValue[string] {
+	return &c.DetailType
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEventBridge) GetEndpointId() *plugin.TValue[string] {
+	return &c.EndpointId
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEventBridge) GetResources() *plugin.TValue[[]any] {
+	return &c.Resources
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersEventBridge) GetTime() *plugin.TValue[string] {
+	return &c.Time
+}
+
+// mqlAwsEventbridgePipeTargetParametersRedshiftData for the aws.eventbridge.pipe.targetParameters.redshiftData resource
+type mqlAwsEventbridgePipeTargetParametersRedshiftData struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeTargetParametersRedshiftDataInternal
+	Database          plugin.TValue[string]
+	DbUser            plugin.TValue[string]
+	StatementName     plugin.TValue[string]
+	WithEvent         plugin.TValue[bool]
+	SqlStatementCount plugin.TValue[int64]
+	HasSqlStatements  plugin.TValue[bool]
+	SqlStatements     plugin.TValue[[]any]
+	CredentialsSecret plugin.TValue[*mqlAwsSecretsmanagerSecret]
+}
+
+// createAwsEventbridgePipeTargetParametersRedshiftData creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersRedshiftData(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersRedshiftData{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.redshiftData", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersRedshiftData) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.redshiftData"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersRedshiftData) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersRedshiftData) GetDatabase() *plugin.TValue[string] {
+	return &c.Database
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersRedshiftData) GetDbUser() *plugin.TValue[string] {
+	return &c.DbUser
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersRedshiftData) GetStatementName() *plugin.TValue[string] {
+	return &c.StatementName
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersRedshiftData) GetWithEvent() *plugin.TValue[bool] {
+	return &c.WithEvent
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersRedshiftData) GetSqlStatementCount() *plugin.TValue[int64] {
+	return &c.SqlStatementCount
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersRedshiftData) GetHasSqlStatements() *plugin.TValue[bool] {
+	return &c.HasSqlStatements
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersRedshiftData) GetSqlStatements() *plugin.TValue[[]any] {
+	return &c.SqlStatements
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersRedshiftData) GetCredentialsSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.CredentialsSecret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.targetParameters.redshiftData", c.__id, "credentialsSecret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.credentialsSecret()
+	})
+}
+
+// mqlAwsEventbridgePipeTargetParametersSagemakerPipeline for the aws.eventbridge.pipe.targetParameters.sagemakerPipeline resource
+type mqlAwsEventbridgePipeTargetParametersSagemakerPipeline struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeTargetParametersSagemakerPipelineInternal it will be used here
+	PipelineParameterNames plugin.TValue[[]any]
+}
+
+// createAwsEventbridgePipeTargetParametersSagemakerPipeline creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersSagemakerPipeline(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersSagemakerPipeline{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.sagemakerPipeline", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersSagemakerPipeline) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.sagemakerPipeline"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersSagemakerPipeline) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersSagemakerPipeline) GetPipelineParameterNames() *plugin.TValue[[]any] {
+	return &c.PipelineParameterNames
+}
+
+// mqlAwsEventbridgePipeTargetParametersTimestream for the aws.eventbridge.pipe.targetParameters.timestream resource
+type mqlAwsEventbridgePipeTargetParametersTimestream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeTargetParametersTimestreamInternal it will be used here
+	DatabaseName          plugin.TValue[string]
+	TableName             plugin.TValue[string]
+	TimeFieldType         plugin.TValue[string]
+	VersionValue          plugin.TValue[string]
+	TimeValue             plugin.TValue[string]
+	EpochTimeUnit         plugin.TValue[string]
+	DimensionMappings     plugin.TValue[[]any]
+	MultiMeasureMappings  plugin.TValue[[]any]
+	SingleMeasureMappings plugin.TValue[[]any]
+}
+
+// createAwsEventbridgePipeTargetParametersTimestream creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersTimestream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersTimestream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.timestream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.timestream"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) GetTableName() *plugin.TValue[string] {
+	return &c.TableName
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) GetTimeFieldType() *plugin.TValue[string] {
+	return &c.TimeFieldType
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) GetVersionValue() *plugin.TValue[string] {
+	return &c.VersionValue
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) GetTimeValue() *plugin.TValue[string] {
+	return &c.TimeValue
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) GetEpochTimeUnit() *plugin.TValue[string] {
+	return &c.EpochTimeUnit
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) GetDimensionMappings() *plugin.TValue[[]any] {
+	return &c.DimensionMappings
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) GetMultiMeasureMappings() *plugin.TValue[[]any] {
+	return &c.MultiMeasureMappings
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersTimestream) GetSingleMeasureMappings() *plugin.TValue[[]any] {
+	return &c.SingleMeasureMappings
+}
+
+// mqlAwsEventbridgePipeTargetParametersHttp for the aws.eventbridge.pipe.targetParameters.http resource
+type mqlAwsEventbridgePipeTargetParametersHttp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgePipeTargetParametersHttpInternal it will be used here
+	HeaderParameterKeys      plugin.TValue[[]any]
+	QueryStringParameterKeys plugin.TValue[[]any]
+	PathParameterValues      plugin.TValue[[]any]
+}
+
+// createAwsEventbridgePipeTargetParametersHttp creates a new instance of this resource
+func createAwsEventbridgePipeTargetParametersHttp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeTargetParametersHttp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.targetParameters.http", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersHttp) MqlName() string {
+	return "aws.eventbridge.pipe.targetParameters.http"
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersHttp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersHttp) GetHeaderParameterKeys() *plugin.TValue[[]any] {
+	return &c.HeaderParameterKeys
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersHttp) GetQueryStringParameterKeys() *plugin.TValue[[]any] {
+	return &c.QueryStringParameterKeys
+}
+
+func (c *mqlAwsEventbridgePipeTargetParametersHttp) GetPathParameterValues() *plugin.TValue[[]any] {
+	return &c.PathParameterValues
+}
+
+// mqlAwsEventbridgePipeLogConfiguration for the aws.eventbridge.pipe.logConfiguration resource
+type mqlAwsEventbridgePipeLogConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeLogConfigurationInternal
+	Level                plugin.TValue[string]
+	IncludeExecutionData plugin.TValue[[]any]
+	HasAnyDestination    plugin.TValue[bool]
+	CloudwatchLogs       plugin.TValue[*mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs]
+	Firehose             plugin.TValue[*mqlAwsEventbridgePipeLogConfigurationFirehose]
+	S3                   plugin.TValue[*mqlAwsEventbridgePipeLogConfigurationS3]
+}
+
+// createAwsEventbridgePipeLogConfiguration creates a new instance of this resource
+func createAwsEventbridgePipeLogConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeLogConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.logConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeLogConfiguration) MqlName() string {
+	return "aws.eventbridge.pipe.logConfiguration"
+}
+
+func (c *mqlAwsEventbridgePipeLogConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeLogConfiguration) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlAwsEventbridgePipeLogConfiguration) GetIncludeExecutionData() *plugin.TValue[[]any] {
+	return &c.IncludeExecutionData
+}
+
+func (c *mqlAwsEventbridgePipeLogConfiguration) GetHasAnyDestination() *plugin.TValue[bool] {
+	return &c.HasAnyDestination
+}
+
+func (c *mqlAwsEventbridgePipeLogConfiguration) GetCloudwatchLogs() *plugin.TValue[*mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs](&c.CloudwatchLogs, func() (*mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.logConfiguration", c.__id, "cloudwatchLogs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs), nil
+			}
+		}
+
+		return c.cloudwatchLogs()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeLogConfiguration) GetFirehose() *plugin.TValue[*mqlAwsEventbridgePipeLogConfigurationFirehose] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeLogConfigurationFirehose](&c.Firehose, func() (*mqlAwsEventbridgePipeLogConfigurationFirehose, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.logConfiguration", c.__id, "firehose")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeLogConfigurationFirehose), nil
+			}
+		}
+
+		return c.firehose()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeLogConfiguration) GetS3() *plugin.TValue[*mqlAwsEventbridgePipeLogConfigurationS3] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgePipeLogConfigurationS3](&c.S3, func() (*mqlAwsEventbridgePipeLogConfigurationS3, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.logConfiguration", c.__id, "s3")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgePipeLogConfigurationS3), nil
+			}
+		}
+
+		return c.s3()
+	})
+}
+
+// mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs for the aws.eventbridge.pipe.logConfiguration.cloudwatchLogs resource
+type mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeLogConfigurationCloudwatchLogsInternal
+	LogGroup plugin.TValue[*mqlAwsCloudwatchLoggroup]
+}
+
+// createAwsEventbridgePipeLogConfigurationCloudwatchLogs creates a new instance of this resource
+func createAwsEventbridgePipeLogConfigurationCloudwatchLogs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.logConfiguration.cloudwatchLogs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs) MqlName() string {
+	return "aws.eventbridge.pipe.logConfiguration.cloudwatchLogs"
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationCloudwatchLogs) GetLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.LogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.logConfiguration.cloudwatchLogs", c.__id, "logGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.logGroup()
+	})
+}
+
+// mqlAwsEventbridgePipeLogConfigurationFirehose for the aws.eventbridge.pipe.logConfiguration.firehose resource
+type mqlAwsEventbridgePipeLogConfigurationFirehose struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeLogConfigurationFirehoseInternal
+	DeliveryStream plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStream]
+}
+
+// createAwsEventbridgePipeLogConfigurationFirehose creates a new instance of this resource
+func createAwsEventbridgePipeLogConfigurationFirehose(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeLogConfigurationFirehose{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.logConfiguration.firehose", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationFirehose) MqlName() string {
+	return "aws.eventbridge.pipe.logConfiguration.firehose"
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationFirehose) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationFirehose) GetDeliveryStream() *plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStream] {
+	return plugin.GetOrCompute[*mqlAwsKinesisFirehoseDeliveryStream](&c.DeliveryStream, func() (*mqlAwsKinesisFirehoseDeliveryStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.logConfiguration.firehose", c.__id, "deliveryStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKinesisFirehoseDeliveryStream), nil
+			}
+		}
+
+		return c.deliveryStream()
+	})
+}
+
+// mqlAwsEventbridgePipeLogConfigurationS3 for the aws.eventbridge.pipe.logConfiguration.s3 resource
+type mqlAwsEventbridgePipeLogConfigurationS3 struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeLogConfigurationS3Internal
+	Bucket       plugin.TValue[*mqlAwsS3Bucket]
+	BucketOwner  plugin.TValue[string]
+	Prefix       plugin.TValue[string]
+	OutputFormat plugin.TValue[string]
+}
+
+// createAwsEventbridgePipeLogConfigurationS3 creates a new instance of this resource
+func createAwsEventbridgePipeLogConfigurationS3(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeLogConfigurationS3{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.logConfiguration.s3", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationS3) MqlName() string {
+	return "aws.eventbridge.pipe.logConfiguration.s3"
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationS3) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationS3) GetBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.logConfiguration.s3", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationS3) GetBucketOwner() *plugin.TValue[string] {
+	return &c.BucketOwner
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationS3) GetPrefix() *plugin.TValue[string] {
+	return &c.Prefix
+}
+
+func (c *mqlAwsEventbridgePipeLogConfigurationS3) GetOutputFormat() *plugin.TValue[string] {
+	return &c.OutputFormat
+}
+
+// mqlAwsEventbridgePipeDeadLetterConfig for the aws.eventbridge.pipe.deadLetterConfig resource
+type mqlAwsEventbridgePipeDeadLetterConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgePipeDeadLetterConfigInternal
+	Arn   plugin.TValue[string]
+	Queue plugin.TValue[*mqlAwsSqsQueue]
+	Topic plugin.TValue[*mqlAwsSnsTopic]
+}
+
+// createAwsEventbridgePipeDeadLetterConfig creates a new instance of this resource
+func createAwsEventbridgePipeDeadLetterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgePipeDeadLetterConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.pipe.deadLetterConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgePipeDeadLetterConfig) MqlName() string {
+	return "aws.eventbridge.pipe.deadLetterConfig"
+}
+
+func (c *mqlAwsEventbridgePipeDeadLetterConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgePipeDeadLetterConfig) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgePipeDeadLetterConfig) GetQueue() *plugin.TValue[*mqlAwsSqsQueue] {
+	return plugin.GetOrCompute[*mqlAwsSqsQueue](&c.Queue, func() (*mqlAwsSqsQueue, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.deadLetterConfig", c.__id, "queue")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSqsQueue), nil
+			}
+		}
+
+		return c.queue()
+	})
+}
+
+func (c *mqlAwsEventbridgePipeDeadLetterConfig) GetTopic() *plugin.TValue[*mqlAwsSnsTopic] {
+	return plugin.GetOrCompute[*mqlAwsSnsTopic](&c.Topic, func() (*mqlAwsSnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.pipe.deadLetterConfig", c.__id, "topic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSnsTopic), nil
+			}
+		}
+
+		return c.topic()
+	})
 }
 
 // mqlAwsEventbridgeSchedule for the aws.eventbridge.schedule resource

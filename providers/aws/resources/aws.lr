@@ -5712,7 +5712,7 @@ private aws.eventbridge.pipe @defaults("arn name currentState") {
   source string
   // Target resource ARN
   target string
-  // Enrichment resource ARN
+  // Enrichment resource ARN (empty string when no enrichment configured)
   enrichment string
   // Current state: RUNNING, STOPPED, CREATING, UPDATING, DELETING, STARTING, STOPPING, CREATE_FAILED, UPDATE_FAILED, START_FAILED, STOP_FAILED, DELETE_FAILED, CREATE_ROLLBACK_FAILED, DELETE_ROLLBACK_FAILED, UPDATE_ROLLBACK_FAILED
   currentState string
@@ -5724,12 +5724,414 @@ private aws.eventbridge.pipe @defaults("arn name currentState") {
   description() string
   // IAM role associated with the pipe
   iamRole() aws.iam.role
+  // KMS key used for pipe data encryption (null when AWS-managed)
+  kmsKey() aws.kms.key
+  // Whether the pipe has any source filter criteria configured
+  hasFilters() bool
+  // Source filter criteria
+  filterCriteria() aws.eventbridge.pipe.filterCriteria
+  // Source-specific configuration parameters (sqs/kinesisStream/dynamodbStream/activeMQ/rabbitMQ/msk/selfManagedKafka)
+  sourceParameters() aws.eventbridge.pipe.sourceParameters
+  // Enrichment-specific configuration parameters
+  enrichmentParameters() aws.eventbridge.pipe.enrichmentParameters
+  // Target-specific configuration parameters
+  targetParameters() aws.eventbridge.pipe.targetParameters
+  // Log configuration (CloudWatch / Firehose / S3 destinations and verbosity level)
+  logConfiguration() aws.eventbridge.pipe.logConfiguration
   // Tags for the pipe
   tags() map[string]string
   // Date the pipe was created
   createdAt time
   // Date the pipe was last modified
   updatedAt time
+}
+
+// Filter criteria applied to events read from the pipe source
+private aws.eventbridge.pipe.filterCriteria @defaults("count") {
+  // Raw JSON event-pattern strings (one per filter)
+  filters []string
+  // Number of filter patterns
+  count int
+}
+
+// Source parameters discriminated by source type
+private aws.eventbridge.pipe.sourceParameters @defaults("type") {
+  // Source variant type: sqs, kinesisStream, dynamodbStream, activeMQ, rabbitMQ, msk, selfManagedKafka
+  type string
+  // SQS source parameters (null unless type == sqs)
+  sqs() aws.eventbridge.pipe.sourceParameters.sqs
+  // Kinesis stream source parameters (null unless type == kinesisStream)
+  kinesisStream() aws.eventbridge.pipe.sourceParameters.kinesisStream
+  // DynamoDB stream source parameters (null unless type == dynamodbStream)
+  dynamodbStream() aws.eventbridge.pipe.sourceParameters.dynamodbStream
+  // Amazon MQ ActiveMQ source parameters (null unless type == activeMQ)
+  activeMQ() aws.eventbridge.pipe.sourceParameters.activeMQ
+  // Amazon MQ RabbitMQ source parameters (null unless type == rabbitMQ)
+  rabbitMQ() aws.eventbridge.pipe.sourceParameters.rabbitMQ
+  // Amazon MSK source parameters (null unless type == msk)
+  msk() aws.eventbridge.pipe.sourceParameters.msk
+  // Self-managed Apache Kafka source parameters (null unless type == selfManagedKafka)
+  selfManagedKafka() aws.eventbridge.pipe.sourceParameters.selfManagedKafka
+  // Source filter criteria
+  filterCriteria() aws.eventbridge.pipe.filterCriteria
+}
+
+private aws.eventbridge.pipe.sourceParameters.sqs @defaults("batchSize") {
+  // Maximum messages per batch
+  batchSize int
+  // Maximum batching window in seconds
+  maximumBatchingWindowInSeconds int
+}
+
+private aws.eventbridge.pipe.sourceParameters.kinesisStream @defaults("startingPosition batchSize") {
+  // Starting position: TRIM_HORIZON, LATEST, AT_TIMESTAMP
+  startingPosition string
+  // Required when startingPosition == AT_TIMESTAMP
+  startingPositionTimestamp time
+  // Maximum records per batch
+  batchSize int
+  // Maximum batching window in seconds
+  maximumBatchingWindowInSeconds int
+  // Maximum age of a record (seconds) before being skipped
+  maximumRecordAgeInSeconds int
+  // Maximum retry attempts before sending to DLQ
+  maximumRetryAttempts int
+  // Number of concurrent batches per shard
+  parallelizationFactor int
+  // Behavior on partial batch failure: AUTOMATIC_BISECT
+  onPartialBatchItemFailure string
+  // Source dead-letter queue (null when not configured)
+  deadLetterConfig() aws.eventbridge.pipe.deadLetterConfig
+}
+
+private aws.eventbridge.pipe.sourceParameters.dynamodbStream @defaults("startingPosition batchSize") {
+  // Starting position: TRIM_HORIZON or LATEST
+  startingPosition string
+  // Maximum records per batch
+  batchSize int
+  // Maximum batching window in seconds
+  maximumBatchingWindowInSeconds int
+  // Maximum age of a record (seconds) before being skipped
+  maximumRecordAgeInSeconds int
+  // Maximum retry attempts before sending to DLQ
+  maximumRetryAttempts int
+  // Number of concurrent batches per shard
+  parallelizationFactor int
+  // Behavior on partial batch failure: AUTOMATIC_BISECT
+  onPartialBatchItemFailure string
+  // Source dead-letter queue (null when not configured)
+  deadLetterConfig() aws.eventbridge.pipe.deadLetterConfig
+}
+
+private aws.eventbridge.pipe.sourceParameters.activeMQ @defaults("queueName batchSize") {
+  // Source queue name on the broker
+  queueName string
+  // Maximum messages per batch
+  batchSize int
+  // Maximum batching window in seconds
+  maximumBatchingWindowInSeconds int
+  // Secrets Manager secret holding broker credentials (BasicAuth)
+  credentialsSecret() aws.secretsmanager.secret
+}
+
+private aws.eventbridge.pipe.sourceParameters.rabbitMQ @defaults("queueName virtualHost batchSize") {
+  // Source queue name on the broker
+  queueName string
+  // RabbitMQ virtual host
+  virtualHost string
+  // Maximum messages per batch
+  batchSize int
+  // Maximum batching window in seconds
+  maximumBatchingWindowInSeconds int
+  // Secrets Manager secret holding broker credentials (BasicAuth)
+  credentialsSecret() aws.secretsmanager.secret
+}
+
+private aws.eventbridge.pipe.sourceParameters.msk @defaults("topicName credentialsType batchSize") {
+  // Kafka topic to consume
+  topicName string
+  // Consumer group ID
+  consumerGroupId string
+  // Starting position: TRIM_HORIZON or LATEST
+  startingPosition string
+  // Maximum messages per batch
+  batchSize int
+  // Maximum batching window in seconds
+  maximumBatchingWindowInSeconds int
+  // Authentication type: ClientCertificateTlsAuth, SaslScram512Auth, or iam (when no secret-based auth)
+  credentialsType string
+  // Secrets Manager secret holding credentials (null for IAM auth)
+  credentialsSecret() aws.secretsmanager.secret
+}
+
+private aws.eventbridge.pipe.sourceParameters.selfManagedKafka @defaults("topicName credentialsType batchSize") {
+  // Kafka topic to consume
+  topicName string
+  // Consumer group ID
+  consumerGroupId string
+  // Starting position: TRIM_HORIZON or LATEST
+  startingPosition string
+  // Maximum messages per batch
+  batchSize int
+  // Maximum batching window in seconds
+  maximumBatchingWindowInSeconds int
+  // Bootstrap servers other than the primary
+  additionalBootstrapServers []string
+  // Server root CA certificate stored in Secrets Manager (null when not configured)
+  serverRootCaCertificateSecret() aws.secretsmanager.secret
+  // Authentication type: BasicAuth, SaslScram256Auth, SaslScram512Auth, ClientCertificateTlsAuth
+  credentialsType string
+  // Secrets Manager secret holding credentials
+  credentialsSecret() aws.secretsmanager.secret
+  // VPC subnets the Kafka brokers reach via
+  subnets() []aws.vpc.subnet
+  // VPC security groups protecting the Kafka brokers
+  securityGroups() []aws.ec2.securitygroup
+}
+
+// Enrichment parameters
+private aws.eventbridge.pipe.enrichmentParameters @defaults("inputTemplate") {
+  // JSON input template for the enrichment payload
+  inputTemplate string
+  // HTTP API parameters when enriching via API Gateway / EventBridge API destination
+  http() aws.eventbridge.pipe.targetParameters.http
+}
+
+// Target parameters discriminated by target type
+private aws.eventbridge.pipe.targetParameters @defaults("type") {
+  // Target variant type: lambda, stepFunctions, sqs, kinesisStream, ecsTask, batchJob, cloudwatchLogs, eventBridge, redshiftData, sagemakerPipeline, timestream, http, none
+  type string
+  // JSON input template applied to events before sending to the target
+  inputTemplate string
+  // Lambda invocation parameters (null unless type == lambda)
+  lambda() aws.eventbridge.pipe.targetParameters.lambda
+  // Step Functions invocation parameters (null unless type == stepFunctions)
+  stepFunctions() aws.eventbridge.pipe.targetParameters.stepFunctions
+  // SQS send parameters (null unless type == sqs)
+  sqs() aws.eventbridge.pipe.targetParameters.sqs
+  // Kinesis stream put parameters (null unless type == kinesisStream)
+  kinesisStream() aws.eventbridge.pipe.targetParameters.kinesisStream
+  // ECS task run parameters (null unless type == ecsTask)
+  ecsTask() aws.eventbridge.pipe.targetParameters.ecsTask
+  // Batch job submit parameters (null unless type == batchJob)
+  batchJob() aws.eventbridge.pipe.targetParameters.batchJob
+  // CloudWatch Logs put parameters (null unless type == cloudwatchLogs)
+  cloudwatchLogs() aws.eventbridge.pipe.targetParameters.cloudwatchLogs
+  // EventBridge bus put parameters (null unless type == eventBridge)
+  eventBridge() aws.eventbridge.pipe.targetParameters.eventBridge
+  // Redshift Data API parameters (null unless type == redshiftData)
+  redshiftData() aws.eventbridge.pipe.targetParameters.redshiftData
+  // SageMaker pipeline start parameters (null unless type == sagemakerPipeline)
+  sagemakerPipeline() aws.eventbridge.pipe.targetParameters.sagemakerPipeline
+  // Timestream write parameters (null unless type == timestream)
+  timestream() aws.eventbridge.pipe.targetParameters.timestream
+  // HTTP API destination parameters (null unless type == http)
+  http() aws.eventbridge.pipe.targetParameters.http
+}
+
+private aws.eventbridge.pipe.targetParameters.lambda @defaults("invocationType") {
+  // Invocation type: REQUEST_RESPONSE or FIRE_AND_FORGET
+  invocationType string
+}
+
+private aws.eventbridge.pipe.targetParameters.stepFunctions @defaults("invocationType") {
+  // Invocation type: REQUEST_RESPONSE or FIRE_AND_FORGET
+  invocationType string
+}
+
+private aws.eventbridge.pipe.targetParameters.sqs @defaults("messageGroupId") {
+  // Message group ID for FIFO queues
+  messageGroupId string
+  // Message deduplication ID for FIFO queues
+  messageDeduplicationId string
+}
+
+private aws.eventbridge.pipe.targetParameters.kinesisStream @defaults("partitionKey") {
+  // Partition key for the record
+  partitionKey string
+}
+
+private aws.eventbridge.pipe.targetParameters.ecsTask @defaults("launchType taskCount") {
+  // Launch type: EC2, FARGATE, EXTERNAL
+  launchType string
+  // Fargate platform version
+  platformVersion string
+  // Whether ECS Exec is enabled — audit signal: allows shell access into running tasks
+  enableExecuteCommand bool
+  // Whether ECS-managed tags are enabled
+  enableECSManagedTags bool
+  // Tag propagation: TASK_DEFINITION
+  propagateTags string
+  // Number of tasks to start
+  taskCount int
+  // Task definition referenced
+  taskDefinition() aws.ecs.taskDefinition
+  // Reference ID for tracking
+  referenceId string
+  // Task group identifier
+  group string
+  // Network configuration (subnets, security groups, public-IP setting)
+  networkConfiguration() aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration
+  // Capacity provider strategy entries
+  capacityProviderStrategy []dict
+  // Placement constraints
+  placementConstraints []dict
+  // Placement strategies
+  placementStrategy []dict
+  // Tags applied to launched tasks
+  tags map[string]string
+}
+
+private aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration @defaults("assignPublicIp") {
+  // Whether to assign a public IP to the task ENI: ENABLED or DISABLED — audit signal
+  assignPublicIp string
+  // Subnets the task ENI is placed in
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the task ENI
+  securityGroups() []aws.ec2.securitygroup
+}
+
+private aws.eventbridge.pipe.targetParameters.batchJob @defaults("jobDefinition jobName") {
+  // Batch job definition (name or ARN)
+  jobDefinition string
+  // Job name
+  jobName string
+  // Job dependencies
+  dependsOn []dict
+  // Array properties (null when not an array job)
+  arrayProperties dict
+  // Retry strategy
+  retryStrategy dict
+  // Whether the job has container property overrides
+  hasContainerOverrides bool
+  // Whether the job overrides container environment variables
+  hasEnvironmentOverrides bool
+  // Names of overridden environment variables (keys only — values may contain credentials)
+  environmentVariableNames []string
+  // Job parameters
+  parameters map[string]string
+}
+
+private aws.eventbridge.pipe.targetParameters.cloudwatchLogs @defaults("logStreamName") {
+  // Log stream name
+  logStreamName string
+  // Timestamp expression
+  timestamp string
+}
+
+private aws.eventbridge.pipe.targetParameters.eventBridge @defaults("source detailType") {
+  // Source field of the emitted event
+  source string
+  // Detail-type of the emitted event
+  detailType string
+  // Endpoint ID for cross-region delivery
+  endpointId string
+  // Resources field of the emitted event
+  resources []string
+  // Time field of the emitted event
+  time string
+}
+
+private aws.eventbridge.pipe.targetParameters.redshiftData @defaults("database statementName") {
+  // Target database
+  database string
+  // Database user (null when using IAM auth)
+  dbUser string
+  // Statement name
+  statementName string
+  // Whether an event is sent on completion
+  withEvent bool
+  // Number of SQL statements
+  sqlStatementCount int
+  // Whether the target has any SQL statements configured
+  hasSqlStatements bool
+  // Raw SQL statements. WARNING: may contain sensitive data via string interpolation
+  sqlStatements []string
+  // Secrets Manager secret holding database credentials
+  credentialsSecret() aws.secretsmanager.secret
+}
+
+private aws.eventbridge.pipe.targetParameters.sagemakerPipeline {
+  // Pipeline parameter names (keys only — values may contain PII)
+  pipelineParameterNames []string
+}
+
+private aws.eventbridge.pipe.targetParameters.timestream @defaults("databaseName tableName") {
+  // Target database
+  databaseName string
+  // Target table
+  tableName string
+  // Time field type
+  timeFieldType string
+  // Version expression
+  versionValue string
+  // Time expression
+  timeValue string
+  // Epoch time unit
+  epochTimeUnit string
+  // Dimension mappings
+  dimensionMappings []dict
+  // Multi-measure mappings
+  multiMeasureMappings []dict
+  // Single-measure mappings
+  singleMeasureMappings []dict
+}
+
+// HTTP destination parameters (used by both target and enrichment)
+private aws.eventbridge.pipe.targetParameters.http {
+  // Header parameter names (keys only — bearer tokens routinely set in values)
+  headerParameterKeys []string
+  // Query string parameter names (keys only)
+  queryStringParameterKeys []string
+  // Path parameter values
+  pathParameterValues []string
+}
+
+// Pipe log configuration
+private aws.eventbridge.pipe.logConfiguration @defaults("level hasAnyDestination") {
+  // Verbosity level: OFF, ERROR, INFO, TRACE
+  level string
+  // Execution data sections included in logs (ALL = full event payloads in logs — audit signal)
+  includeExecutionData []string
+  // Whether at least one log destination is configured
+  hasAnyDestination bool
+  // CloudWatch Logs destination (null when not configured)
+  cloudwatchLogs() aws.eventbridge.pipe.logConfiguration.cloudwatchLogs
+  // Firehose destination (null when not configured)
+  firehose() aws.eventbridge.pipe.logConfiguration.firehose
+  // S3 destination (null when not configured)
+  s3() aws.eventbridge.pipe.logConfiguration.s3
+}
+
+private aws.eventbridge.pipe.logConfiguration.cloudwatchLogs {
+  // CloudWatch log group receiving pipe logs
+  logGroup() aws.cloudwatch.loggroup
+}
+
+private aws.eventbridge.pipe.logConfiguration.firehose {
+  // Firehose delivery stream receiving pipe logs
+  deliveryStream() aws.kinesis.firehoseDeliveryStream
+}
+
+private aws.eventbridge.pipe.logConfiguration.s3 @defaults("bucketOwner prefix outputFormat") {
+  // S3 bucket receiving pipe logs
+  bucket() aws.s3.bucket
+  // Expected bucket owner account ID
+  bucketOwner string
+  // Object key prefix
+  prefix string
+  // Output format: json, plain, or w3c
+  outputFormat string
+}
+
+// Dead-letter configuration: target may be SQS or SNS; exactly one populated
+private aws.eventbridge.pipe.deadLetterConfig @defaults("arn") {
+  // ARN of the DLQ resource
+  arn string
+  // SQS queue when arn is an SQS queue ARN (null otherwise)
+  queue() aws.sqs.queue
+  // SNS topic when arn is an SNS topic ARN (null otherwise)
+  topic() aws.sns.topic
 }
 
 // Amazon EventBridge Scheduler schedule
