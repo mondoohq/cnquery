@@ -318,7 +318,6 @@ const (
 	ResourceAwsEventbridgeScheduleTargetEventBridgeParameters                   string = "aws.eventbridge.schedule.target.eventBridgeParameters"
 	ResourceAwsEventbridgeScheduleTargetKinesisParameters                       string = "aws.eventbridge.schedule.target.kinesisParameters"
 	ResourceAwsEventbridgeScheduleTargetSagemakerParameters                     string = "aws.eventbridge.schedule.target.sagemakerParameters"
-	ResourceAwsEventbridgeScheduleTargetSagemakerParametersParameter            string = "aws.eventbridge.schedule.target.sagemakerParameters.parameter"
 	ResourceAwsEventbridgeScheduleTargetSqsParameters                           string = "aws.eventbridge.schedule.target.sqsParameters"
 	ResourceAwsEventbridgeScheduleTargetUniversalTarget                         string = "aws.eventbridge.schedule.target.universalTarget"
 	ResourceAwsEventbridgeScheduleGroup                                         string = "aws.eventbridge.scheduleGroup"
@@ -1936,10 +1935,6 @@ func init() {
 		"aws.eventbridge.schedule.target.sagemakerParameters": {
 			// to override args, implement: initAwsEventbridgeScheduleTargetSagemakerParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEventbridgeScheduleTargetSagemakerParameters,
-		},
-		"aws.eventbridge.schedule.target.sagemakerParameters.parameter": {
-			// to override args, implement: initAwsEventbridgeScheduleTargetSagemakerParametersParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAwsEventbridgeScheduleTargetSagemakerParametersParameter,
 		},
 		"aws.eventbridge.schedule.target.sqsParameters": {
 			// to override args, implement: initAwsEventbridgeScheduleTargetSqsParameters(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11207,13 +11202,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsEventbridgeScheduleTargetKinesisParameters).GetPartitionKey()).ToDataRes(types.String)
 	},
 	"aws.eventbridge.schedule.target.sagemakerParameters.pipelineParameters": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEventbridgeScheduleTargetSagemakerParameters).GetPipelineParameters()).ToDataRes(types.Array(types.Resource("aws.eventbridge.schedule.target.sagemakerParameters.parameter")))
-	},
-	"aws.eventbridge.schedule.target.sagemakerParameters.parameter.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter).GetName()).ToDataRes(types.String)
-	},
-	"aws.eventbridge.schedule.target.sagemakerParameters.parameter.value": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter).GetValue()).ToDataRes(types.String)
+		return (r.(*mqlAwsEventbridgeScheduleTargetSagemakerParameters).GetPipelineParameters()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.eventbridge.schedule.target.sqsParameters.messageGroupId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeScheduleTargetSqsParameters).GetMessageGroupId()).ToDataRes(types.String)
@@ -34717,19 +34706,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.eventbridge.schedule.target.sagemakerParameters.pipelineParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEventbridgeScheduleTargetSagemakerParameters).PipelineParameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"aws.eventbridge.schedule.target.sagemakerParameters.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter).__id, ok = v.Value.(string)
-		return
-	},
-	"aws.eventbridge.schedule.target.sagemakerParameters.parameter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.eventbridge.schedule.target.sagemakerParameters.parameter.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsEventbridgeScheduleTargetSagemakerParameters).PipelineParameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.schedule.target.sqsParameters.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -84360,7 +84337,7 @@ type mqlAwsEventbridgeScheduleTargetSagemakerParameters struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEventbridgeScheduleTargetSagemakerParametersInternal
-	PipelineParameters plugin.TValue[[]any]
+	PipelineParameters plugin.TValue[map[string]any]
 }
 
 // createAwsEventbridgeScheduleTargetSagemakerParameters creates a new instance of this resource
@@ -84395,69 +84372,10 @@ func (c *mqlAwsEventbridgeScheduleTargetSagemakerParameters) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAwsEventbridgeScheduleTargetSagemakerParameters) GetPipelineParameters() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.PipelineParameters, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.schedule.target.sagemakerParameters", c.__id, "pipelineParameters")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
+func (c *mqlAwsEventbridgeScheduleTargetSagemakerParameters) GetPipelineParameters() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.PipelineParameters, func() (map[string]any, error) {
 		return c.pipelineParameters()
 	})
-}
-
-// mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter for the aws.eventbridge.schedule.target.sagemakerParameters.parameter resource
-type mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlAwsEventbridgeScheduleTargetSagemakerParametersParameterInternal it will be used here
-	Name  plugin.TValue[string]
-	Value plugin.TValue[string]
-}
-
-// createAwsEventbridgeScheduleTargetSagemakerParametersParameter creates a new instance of this resource
-func createAwsEventbridgeScheduleTargetSagemakerParametersParameter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("aws.eventbridge.schedule.target.sagemakerParameters.parameter", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter) MqlName() string {
-	return "aws.eventbridge.schedule.target.sagemakerParameters.parameter"
-}
-
-func (c *mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlAwsEventbridgeScheduleTargetSagemakerParametersParameter) GetValue() *plugin.TValue[string] {
-	return &c.Value
 }
 
 // mqlAwsEventbridgeScheduleTargetSqsParameters for the aws.eventbridge.schedule.target.sqsParameters resource

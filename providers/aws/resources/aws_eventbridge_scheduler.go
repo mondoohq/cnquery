@@ -457,6 +457,9 @@ func (a *mqlAwsEventbridgeScheduleTarget) ecsParameters() (*mqlAwsEventbridgeSch
 			sgIds = append(sgIds, sg)
 		}
 	}
+	// p.Tags is []map[string]string. The Scheduler SDK returns one key per
+	// inner map, so a flat merge is safe; if AWS ever changes that contract,
+	// later entries will overwrite earlier ones with the same key.
 	tags := map[string]any{}
 	for _, m := range p.Tags {
 		for k, v := range m {
@@ -512,6 +515,9 @@ type mqlAwsEventbridgeScheduleTargetEcsParametersInternal struct {
 	cacheSGIds      []string
 }
 
+// Assumes the ECS task runs in the same region as the schedule. Cross-region
+// targets are unsupported by Scheduler today; if AWS ever allows them, this
+// will need to dispatch on per-target region instead of cacheRegion.
 const scheduleSubnetArnFmt = "arn:aws:ec2:%s:%s:subnet/%s"
 
 func (a *mqlAwsEventbridgeScheduleTargetEcsParameters) taskDefinition() (*mqlAwsEcsTaskDefinition, error) {
@@ -620,28 +626,19 @@ type mqlAwsEventbridgeScheduleTargetSagemakerParametersInternal struct {
 	cacheParams      []scheduler_types.SageMakerPipelineParameter
 }
 
-func (a *mqlAwsEventbridgeScheduleTargetSagemakerParameters) pipelineParameters() ([]any, error) {
-	res := []any{}
+func (a *mqlAwsEventbridgeScheduleTargetSagemakerParameters) pipelineParameters() (map[string]any, error) {
+	out := map[string]any{}
 	for _, p := range a.cacheParams {
-		name := ""
-		if p.Name != nil {
-			name = *p.Name
+		if p.Name == nil {
+			continue
 		}
 		val := ""
 		if p.Value != nil {
 			val = *p.Value
 		}
-		r, err := CreateResource(a.MqlRuntime, "aws.eventbridge.schedule.target.sagemakerParameters.parameter", map[string]*llx.RawData{
-			"__id":  llx.StringData(a.cacheScheduleArn + "/target/sagemakerParameters/" + name),
-			"name":  llx.StringData(name),
-			"value": llx.StringData(val),
-		})
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, r)
+		out[*p.Name] = val
 	}
-	return res, nil
+	return out, nil
 }
 
 func (a *mqlAwsEventbridgeScheduleTarget) sqsParameters() (*mqlAwsEventbridgeScheduleTargetSqsParameters, error) {

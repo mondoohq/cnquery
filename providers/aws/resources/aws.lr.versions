@@ -3065,9 +3065,6 @@ aws.eventbridge.schedule.target.kinesisParameters 13.19.2
 aws.eventbridge.schedule.target.kinesisParameters.partitionKey 13.19.2
 aws.eventbridge.schedule.target.roleArn 13.19.2
 aws.eventbridge.schedule.target.sagemakerParameters 13.19.2
-aws.eventbridge.schedule.target.sagemakerParameters.parameter 13.19.2
-aws.eventbridge.schedule.target.sagemakerParameters.parameter.name 13.19.2
-aws.eventbridge.schedule.target.sagemakerParameters.parameter.value 13.19.2
 aws.eventbridge.schedule.target.sagemakerParameters.pipelineParameters 13.19.2
 aws.eventbridge.schedule.target.sqsParameters 13.19.2
 aws.eventbridge.schedule.target.sqsParameters.messageGroupId 13.19.2
