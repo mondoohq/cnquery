@@ -104,9 +104,8 @@ func initAwsKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		args["__id"] = llx.StringData(arnVal)
 		return args, nil, nil
 	}
-	// resource portion is "stream/<name>"
-	name := strings.TrimPrefix(parsed.Resource, "stream/")
-	if name == "" || name == parsed.Resource {
+	// resource portion must be "stream/<name>"
+	if !strings.HasPrefix(parsed.Resource, "stream/") || parsed.Resource == "stream/" {
 		return nil, nil, fmt.Errorf("unexpected kinesis stream arn format: %s", arnVal)
 	}
 	conn := runtime.Connection.(*connection.AwsConnection)
