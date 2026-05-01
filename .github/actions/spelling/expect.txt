@@ -16,7 +16,6 @@ alamofire
 alloydb
 alpm
 alpn
-antigravity
 antispam
 aof
 apm
@@ -32,7 +31,6 @@ ASGs
 aspnet
 atlassian
 auditlog
-augment
 Auths
 autoaccept
 autoclass
@@ -43,7 +41,6 @@ autoprovision
 autoreplace
 Autoscalers
 autotrim
-AVRO
 awsapps
 AWSCURRENT
 awsfirelens
@@ -108,7 +105,6 @@ cowlib
 cpe
 CPWn
 cpx
-cran
 crowdstrike
 cryptokey
 ctx
@@ -148,7 +144,6 @@ DRdf
 dsse
 Duf
 eas
-ebuild
 ecc
 Ecmp
 EDNS
@@ -181,8 +176,6 @@ fips
 firefox
 firestore
 firstname
-flathub
-flatpak
 FLEXGROUP
 FLEXVOL
 flink
@@ -229,7 +222,6 @@ hostkeys
 hotlink
 hpi
 hsts
-httpbin
 hvm
 Iaa
 iana
@@ -301,9 +293,6 @@ logstream
 LONGTERM
 longtermretentionpolicy
 lsp
-luafilesystem
-luarocks
-luasocket
 lvm
 lvmthin
 MACSEC
@@ -358,7 +347,6 @@ NFSv
 nft
 NINEl
 nio
-nixpkgs
 nmap
 noc
 nocerts
@@ -416,7 +404,6 @@ pipefail
 pki
 podfile
 Policer
-portage
 portgroup
 posix
 postgre
@@ -453,7 +440,6 @@ rbcd
 recaptcha
 regexmatchstatement
 regexpatternsetreferencestatement
-rehydration
 renv
 replicators
 reshard
@@ -461,16 +447,12 @@ resourcegroup
 resourcepolicy
 resourcequota
 richrule
-rockspec
-RODC
 roku
 rootdir
 rpo
 RRULE
-RSAES
 RSASSA
 RSession
-RStudio
 rtl
 rtsp
 rulegroup
@@ -527,7 +509,6 @@ swi
 switchports
 SYMANTEC
 symfony
-synthetics
 tacacs
 tailnets
 tailscale
