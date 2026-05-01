@@ -7215,7 +7215,7 @@ aws.workspaces.workspace.volumeEncryptionKey 11.16.1
 aws.workspaces.workspace.workspaceId 11.16.1
 aws.workspacesweb 11.16.1
 aws.workspacesweb.ipAccessSettings 13.20.1
-aws.workspacesweb.ipAccessSettings.associatedPortalArns 13.20.1
+aws.workspacesweb.ipAccessSettings.associatedPortals 13.20.1
 aws.workspacesweb.ipAccessSettings.creationDate 13.20.1
 aws.workspacesweb.ipAccessSettings.customerManagedKey 13.20.1
 aws.workspacesweb.ipAccessSettings.description 13.20.1
@@ -7251,7 +7251,7 @@ aws.workspacesweb.portal.userSettings 13.20.1
 aws.workspacesweb.portal.userSettingsArn 11.16.1
 aws.workspacesweb.portals 11.16.1
 aws.workspacesweb.trustStore 13.20.1
-aws.workspacesweb.trustStore.associatedPortalArns 13.20.1
+aws.workspacesweb.trustStore.associatedPortals 13.20.1
 aws.workspacesweb.trustStore.region 13.20.1
 aws.workspacesweb.trustStore.trustStoreArn 13.20.1
 aws.workspacesweb.trustStores 13.20.1
@@ -7262,7 +7262,7 @@ aws.workspacesweb.userAccessLoggingSetting.region 11.16.1
 aws.workspacesweb.userAccessLoggingSetting.userAccessLoggingSettingsArn 11.16.1
 aws.workspacesweb.userAccessLoggingSettings 11.16.1
 aws.workspacesweb.userSettings 13.20.1
-aws.workspacesweb.userSettings.associatedPortalArns 13.20.1
+aws.workspacesweb.userSettings.associatedPortals 13.20.1
 aws.workspacesweb.userSettings.copyAllowed 13.20.1
 aws.workspacesweb.userSettings.customerManagedKey 13.20.1
 aws.workspacesweb.userSettings.deepLinkAllowed 13.20.1

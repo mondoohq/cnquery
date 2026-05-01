@@ -12752,8 +12752,8 @@ private aws.workspacesweb.ipAccessSettings @defaults("displayName region") {
   customerManagedKey string
   // IP rules that gate portal access (each is {ipRange, description})
   ipRules []dict
-  // Web portal ARNs that this IP access settings resource is associated with
-  associatedPortalArns []string
+  // Web portals that this IP access settings resource is associated with
+  associatedPortals() []aws.workspacesweb.portal
   // Creation timestamp
   creationDate time
   // AWS region
@@ -12764,8 +12764,8 @@ private aws.workspacesweb.ipAccessSettings @defaults("displayName region") {
 private aws.workspacesweb.trustStore @defaults("trustStoreArn region") {
   // ARN of the trust store
   trustStoreArn string
-  // Web portal ARNs that this trust store is associated with
-  associatedPortalArns []string
+  // Web portals that this trust store is associated with
+  associatedPortals() []aws.workspacesweb.portal
   // AWS region
   region string
 }
@@ -12794,8 +12794,8 @@ private aws.workspacesweb.userSettings @defaults("userSettingsArn region") {
   idleDisconnectTimeoutInMinutes int
   // Customer-managed KMS key ARN used to encrypt sensitive data
   customerManagedKey string
-  // Web portal ARNs that this user settings resource is associated with
-  associatedPortalArns []string
+  // Web portals that this user settings resource is associated with
+  associatedPortals() []aws.workspacesweb.portal
   // AWS region
   region string
 }

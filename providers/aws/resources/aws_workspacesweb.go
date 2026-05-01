@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
@@ -294,18 +295,23 @@ func (a *mqlAwsWorkspacesweb) getIpAccessSettings(conn *connection.AwsConnection
 	return tasks
 }
 
+type mqlAwsWorkspaceswebIpAccessSettingsInternal struct {
+	associatedFetched bool
+	associatedLock    sync.Mutex
+	associatedArns    []string
+}
+
 func newMqlAwsWorkspaceswebIpAccessSettingsFromSummary(runtime *plugin.Runtime, region string, summary workspaceswebtypes.IpAccessSettingsSummary) (*mqlAwsWorkspaceswebIpAccessSettings, error) {
 	res, err := CreateResource(runtime, "aws.workspacesweb.ipAccessSettings",
 		map[string]*llx.RawData{
-			"__id":                 llx.StringDataPtr(summary.IpAccessSettingsArn),
-			"ipAccessSettingsArn":  llx.StringDataPtr(summary.IpAccessSettingsArn),
-			"displayName":          llx.StringDataPtr(summary.DisplayName),
-			"description":          llx.StringDataPtr(summary.Description),
-			"customerManagedKey":   llx.StringData(""),
-			"ipRules":              llx.ArrayData([]any{}, types.Dict),
-			"associatedPortalArns": llx.ArrayData([]any{}, types.String),
-			"creationDate":         llx.TimeDataPtr(summary.CreationDate),
-			"region":               llx.StringData(region),
+			"__id":                llx.StringDataPtr(summary.IpAccessSettingsArn),
+			"ipAccessSettingsArn": llx.StringDataPtr(summary.IpAccessSettingsArn),
+			"displayName":         llx.StringDataPtr(summary.DisplayName),
+			"description":         llx.StringDataPtr(summary.Description),
+			"customerManagedKey":  llx.StringData(""),
+			"ipRules":             llx.ArrayData([]any{}, types.Dict),
+			"creationDate":        llx.TimeDataPtr(summary.CreationDate),
+			"region":              llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
@@ -324,26 +330,51 @@ func newMqlAwsWorkspaceswebIpAccessSettingsFromDetail(runtime *plugin.Runtime, r
 			"description": awsString(r.Description),
 		})
 	}
-	associated := make([]any, 0, len(ipas.AssociatedPortalArns))
-	for _, p := range ipas.AssociatedPortalArns {
-		associated = append(associated, p)
-	}
 	res, err := CreateResource(runtime, "aws.workspacesweb.ipAccessSettings",
 		map[string]*llx.RawData{
-			"__id":                 llx.StringDataPtr(ipas.IpAccessSettingsArn),
-			"ipAccessSettingsArn":  llx.StringDataPtr(ipas.IpAccessSettingsArn),
-			"displayName":          llx.StringDataPtr(ipas.DisplayName),
-			"description":          llx.StringDataPtr(ipas.Description),
-			"customerManagedKey":   llx.StringDataPtr(ipas.CustomerManagedKey),
-			"ipRules":              llx.ArrayData(rules, types.Dict),
-			"associatedPortalArns": llx.ArrayData(associated, types.String),
-			"creationDate":         llx.TimeDataPtr(ipas.CreationDate),
-			"region":               llx.StringData(region),
+			"__id":                llx.StringDataPtr(ipas.IpAccessSettingsArn),
+			"ipAccessSettingsArn": llx.StringDataPtr(ipas.IpAccessSettingsArn),
+			"displayName":         llx.StringDataPtr(ipas.DisplayName),
+			"description":         llx.StringDataPtr(ipas.Description),
+			"customerManagedKey":  llx.StringDataPtr(ipas.CustomerManagedKey),
+			"ipRules":             llx.ArrayData(rules, types.Dict),
+			"creationDate":        llx.TimeDataPtr(ipas.CreationDate),
+			"region":              llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsWorkspaceswebIpAccessSettings), nil
+	mql := res.(*mqlAwsWorkspaceswebIpAccessSettings)
+	mql.associatedArns = append([]string(nil), ipas.AssociatedPortalArns...)
+	mql.associatedFetched = true
+	return mql, nil
+}
+
+func (a *mqlAwsWorkspaceswebIpAccessSettings) associatedPortals() ([]any, error) {
+	if !a.associatedFetched {
+		a.associatedLock.Lock()
+		defer a.associatedLock.Unlock()
+		if !a.associatedFetched {
+			conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+			svc := conn.WorkspacesWeb(a.Region.Data)
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			arn := a.IpAccessSettingsArn.Data
+			resp, err := svc.GetIpAccessSettings(ctx, &workspacesweb.GetIpAccessSettingsInput{IpAccessSettingsArn: &arn})
+			if err != nil {
+				if isWorkspacesWebRegionError(err) {
+					a.associatedFetched = true
+					return []any{}, nil
+				}
+				return nil, err
+			}
+			if resp.IpAccessSettings != nil {
+				a.associatedArns = append([]string(nil), resp.IpAccessSettings.AssociatedPortalArns...)
+			}
+			a.associatedFetched = true
+		}
+	}
+	return associatedPortalsFromArns(a.MqlRuntime, a.associatedArns)
 }
 
 func (a *mqlAwsWorkspaceswebIpAccessSettings) id() (string, error) {
@@ -415,13 +446,18 @@ func (a *mqlAwsWorkspacesweb) getTrustStores(conn *connection.AwsConnection) []*
 	return tasks
 }
 
+type mqlAwsWorkspaceswebTrustStoreInternal struct {
+	associatedFetched bool
+	associatedLock    sync.Mutex
+	associatedArns    []string
+}
+
 func newMqlAwsWorkspaceswebTrustStoreFromSummary(runtime *plugin.Runtime, region string, summary workspaceswebtypes.TrustStoreSummary) (*mqlAwsWorkspaceswebTrustStore, error) {
 	res, err := CreateResource(runtime, "aws.workspacesweb.trustStore",
 		map[string]*llx.RawData{
-			"__id":                 llx.StringDataPtr(summary.TrustStoreArn),
-			"trustStoreArn":        llx.StringDataPtr(summary.TrustStoreArn),
-			"associatedPortalArns": llx.ArrayData([]any{}, types.String),
-			"region":               llx.StringData(region),
+			"__id":          llx.StringDataPtr(summary.TrustStoreArn),
+			"trustStoreArn": llx.StringDataPtr(summary.TrustStoreArn),
+			"region":        llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
@@ -433,21 +469,46 @@ func newMqlAwsWorkspaceswebTrustStoreFromDetail(runtime *plugin.Runtime, region 
 	if ts == nil {
 		return nil, nil
 	}
-	associated := make([]any, 0, len(ts.AssociatedPortalArns))
-	for _, p := range ts.AssociatedPortalArns {
-		associated = append(associated, p)
-	}
 	res, err := CreateResource(runtime, "aws.workspacesweb.trustStore",
 		map[string]*llx.RawData{
-			"__id":                 llx.StringDataPtr(ts.TrustStoreArn),
-			"trustStoreArn":        llx.StringDataPtr(ts.TrustStoreArn),
-			"associatedPortalArns": llx.ArrayData(associated, types.String),
-			"region":               llx.StringData(region),
+			"__id":          llx.StringDataPtr(ts.TrustStoreArn),
+			"trustStoreArn": llx.StringDataPtr(ts.TrustStoreArn),
+			"region":        llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsWorkspaceswebTrustStore), nil
+	mql := res.(*mqlAwsWorkspaceswebTrustStore)
+	mql.associatedArns = append([]string(nil), ts.AssociatedPortalArns...)
+	mql.associatedFetched = true
+	return mql, nil
+}
+
+func (a *mqlAwsWorkspaceswebTrustStore) associatedPortals() ([]any, error) {
+	if !a.associatedFetched {
+		a.associatedLock.Lock()
+		defer a.associatedLock.Unlock()
+		if !a.associatedFetched {
+			conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+			svc := conn.WorkspacesWeb(a.Region.Data)
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			arn := a.TrustStoreArn.Data
+			resp, err := svc.GetTrustStore(ctx, &workspacesweb.GetTrustStoreInput{TrustStoreArn: &arn})
+			if err != nil {
+				if isWorkspacesWebRegionError(err) {
+					a.associatedFetched = true
+					return []any{}, nil
+				}
+				return nil, err
+			}
+			if resp.TrustStore != nil {
+				a.associatedArns = append([]string(nil), resp.TrustStore.AssociatedPortalArns...)
+			}
+			a.associatedFetched = true
+		}
+	}
+	return associatedPortalsFromArns(a.MqlRuntime, a.associatedArns)
 }
 
 func (a *mqlAwsWorkspaceswebTrustStore) id() (string, error) {
@@ -519,6 +580,12 @@ func (a *mqlAwsWorkspacesweb) getUserSettings(conn *connection.AwsConnection) []
 	return tasks
 }
 
+type mqlAwsWorkspaceswebUserSettingsInternal struct {
+	associatedFetched bool
+	associatedLock    sync.Mutex
+	associatedArns    []string
+}
+
 func newMqlAwsWorkspaceswebUserSettingsFromSummary(runtime *plugin.Runtime, region string, summary workspaceswebtypes.UserSettingsSummary) (*mqlAwsWorkspaceswebUserSettings, error) {
 	res, err := CreateResource(runtime, "aws.workspacesweb.userSettings",
 		map[string]*llx.RawData{
@@ -534,7 +601,6 @@ func newMqlAwsWorkspaceswebUserSettingsFromSummary(runtime *plugin.Runtime, regi
 			"disconnectTimeoutInMinutes":     llx.IntDataDefault(summary.DisconnectTimeoutInMinutes, 0),
 			"idleDisconnectTimeoutInMinutes": llx.IntDataDefault(summary.IdleDisconnectTimeoutInMinutes, 0),
 			"customerManagedKey":             llx.StringData(""),
-			"associatedPortalArns":           llx.ArrayData([]any{}, types.String),
 			"region":                         llx.StringData(region),
 		})
 	if err != nil {
@@ -546,10 +612,6 @@ func newMqlAwsWorkspaceswebUserSettingsFromSummary(runtime *plugin.Runtime, regi
 func newMqlAwsWorkspaceswebUserSettingsFromDetail(runtime *plugin.Runtime, region string, us *workspaceswebtypes.UserSettings) (*mqlAwsWorkspaceswebUserSettings, error) {
 	if us == nil {
 		return nil, nil
-	}
-	associated := make([]any, 0, len(us.AssociatedPortalArns))
-	for _, p := range us.AssociatedPortalArns {
-		associated = append(associated, p)
 	}
 	res, err := CreateResource(runtime, "aws.workspacesweb.userSettings",
 		map[string]*llx.RawData{
@@ -565,7 +627,6 @@ func newMqlAwsWorkspaceswebUserSettingsFromDetail(runtime *plugin.Runtime, regio
 			"disconnectTimeoutInMinutes":     llx.IntDataDefault(us.DisconnectTimeoutInMinutes, 0),
 			"idleDisconnectTimeoutInMinutes": llx.IntDataDefault(us.IdleDisconnectTimeoutInMinutes, 0),
 			"customerManagedKey":             llx.StringDataPtr(us.CustomerManagedKey),
-			"associatedPortalArns":           llx.ArrayData(associated, types.String),
 			"region":                         llx.StringData(region),
 		})
 	if err != nil {
@@ -576,6 +637,33 @@ func newMqlAwsWorkspaceswebUserSettingsFromDetail(runtime *plugin.Runtime, regio
 
 func (a *mqlAwsWorkspaceswebUserSettings) id() (string, error) {
 	return a.UserSettingsArn.Data, nil
+}
+
+func (a *mqlAwsWorkspaceswebUserSettings) associatedPortals() ([]any, error) {
+	if !a.associatedFetched {
+		a.associatedLock.Lock()
+		defer a.associatedLock.Unlock()
+		if !a.associatedFetched {
+			conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+			svc := conn.WorkspacesWeb(a.Region.Data)
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			arn := a.UserSettingsArn.Data
+			resp, err := svc.GetUserSettings(ctx, &workspacesweb.GetUserSettingsInput{UserSettingsArn: &arn})
+			if err != nil {
+				if isWorkspacesWebRegionError(err) {
+					a.associatedFetched = true
+					return []any{}, nil
+				}
+				return nil, err
+			}
+			if resp.UserSettings != nil {
+				a.associatedArns = append([]string(nil), resp.UserSettings.AssociatedPortalArns...)
+			}
+			a.associatedFetched = true
+		}
+	}
+	return associatedPortalsFromArns(a.MqlRuntime, a.associatedArns)
 }
 
 // Portal typed references — call Get* for the linked sub-resource so the
@@ -653,4 +741,64 @@ func awsString(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+// associatedPortalsFromArns returns typed aws.workspacesweb.portal references
+// for each ARN. The resulting resources may be bare (just portalArn) until a
+// caller traverses an attribute that triggers initAwsWorkspaceswebPortal.
+func associatedPortalsFromArns(runtime *plugin.Runtime, arns []string) ([]any, error) {
+	res := make([]any, 0, len(arns))
+	for _, arn := range arns {
+		if arn == "" {
+			continue
+		}
+		portal, err := NewResource(runtime, "aws.workspacesweb.portal",
+			map[string]*llx.RawData{"portalArn": llx.StringData(arn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, portal)
+	}
+	return res, nil
+}
+
+// initAwsWorkspaceswebPortal resolves a portal looked up by ARN — typically
+// from associatedPortals() on ipAccessSettings/trustStore/userSettings. When
+// the portal hasn't been listed yet, fall back to ListPortals across all
+// regions to find the matching ARN. If found, returns the populated portal;
+// if not, returns the bare {portalArn} so callers can still render the ARN.
+func initAwsWorkspaceswebPortal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// already resolved
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	arnArg, ok := args["portalArn"]
+	if !ok || arnArg == nil {
+		return args, nil, nil
+	}
+	arnVal, ok := arnArg.Value.(string)
+	if !ok || arnVal == "" {
+		return args, nil, nil
+	}
+
+	obj, err := CreateResource(runtime, "aws.workspacesweb", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	wsweb := obj.(*mqlAwsWorkspacesweb)
+	rawPortals := wsweb.GetPortals()
+	if rawPortals.Error != nil {
+		// portals could not be listed — return bare resource
+		args["__id"] = llx.StringData(arnVal)
+		return args, nil, nil
+	}
+	for _, p := range rawPortals.Data {
+		portal := p.(*mqlAwsWorkspaceswebPortal)
+		if portal.PortalArn.Data == arnVal {
+			return nil, portal, nil
+		}
+	}
+	// no match — return bare resource so the ARN is still queryable
+	args["__id"] = llx.StringData(arnVal)
+	return args, nil, nil
 }

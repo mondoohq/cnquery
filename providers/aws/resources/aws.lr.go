@@ -2957,7 +2957,7 @@ func init() {
 			Create: createAwsWorkspacesweb,
 		},
 		"aws.workspacesweb.portal": {
-			// to override args, implement: initAwsWorkspaceswebPortal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsWorkspaceswebPortal,
 			Create: createAwsWorkspaceswebPortal,
 		},
 		"aws.workspacesweb.ipAccessSettings": {
@@ -19362,8 +19362,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspacesweb.ipAccessSettings.ipRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebIpAccessSettings).GetIpRules()).ToDataRes(types.Array(types.Dict))
 	},
-	"aws.workspacesweb.ipAccessSettings.associatedPortalArns": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWorkspaceswebIpAccessSettings).GetAssociatedPortalArns()).ToDataRes(types.Array(types.String))
+	"aws.workspacesweb.ipAccessSettings.associatedPortals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebIpAccessSettings).GetAssociatedPortals()).ToDataRes(types.Array(types.Resource("aws.workspacesweb.portal")))
 	},
 	"aws.workspacesweb.ipAccessSettings.creationDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebIpAccessSettings).GetCreationDate()).ToDataRes(types.Time)
@@ -19374,8 +19374,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspacesweb.trustStore.trustStoreArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebTrustStore).GetTrustStoreArn()).ToDataRes(types.String)
 	},
-	"aws.workspacesweb.trustStore.associatedPortalArns": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWorkspaceswebTrustStore).GetAssociatedPortalArns()).ToDataRes(types.Array(types.String))
+	"aws.workspacesweb.trustStore.associatedPortals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebTrustStore).GetAssociatedPortals()).ToDataRes(types.Array(types.Resource("aws.workspacesweb.portal")))
 	},
 	"aws.workspacesweb.trustStore.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebTrustStore).GetRegion()).ToDataRes(types.String)
@@ -19413,8 +19413,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspacesweb.userSettings.customerManagedKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebUserSettings).GetCustomerManagedKey()).ToDataRes(types.String)
 	},
-	"aws.workspacesweb.userSettings.associatedPortalArns": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWorkspaceswebUserSettings).GetAssociatedPortalArns()).ToDataRes(types.Array(types.String))
+	"aws.workspacesweb.userSettings.associatedPortals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebUserSettings).GetAssociatedPortals()).ToDataRes(types.Array(types.Resource("aws.workspacesweb.portal")))
 	},
 	"aws.workspacesweb.userSettings.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebUserSettings).GetRegion()).ToDataRes(types.String)
@@ -46854,8 +46854,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkspaceswebIpAccessSettings).IpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.workspacesweb.ipAccessSettings.associatedPortalArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWorkspaceswebIpAccessSettings).AssociatedPortalArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.workspacesweb.ipAccessSettings.associatedPortals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebIpAccessSettings).AssociatedPortals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.workspacesweb.ipAccessSettings.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46874,8 +46874,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkspaceswebTrustStore).TrustStoreArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.workspacesweb.trustStore.associatedPortalArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWorkspaceswebTrustStore).AssociatedPortalArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.workspacesweb.trustStore.associatedPortals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebTrustStore).AssociatedPortals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.workspacesweb.trustStore.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46930,8 +46930,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkspaceswebUserSettings).CustomerManagedKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.workspacesweb.userSettings.associatedPortalArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWorkspaceswebUserSettings).AssociatedPortalArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.workspacesweb.userSettings.associatedPortals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebUserSettings).AssociatedPortals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.workspacesweb.userSettings.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -114732,15 +114732,15 @@ func (c *mqlAwsWorkspaceswebPortal) GetRegion() *plugin.TValue[string] {
 type mqlAwsWorkspaceswebIpAccessSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsWorkspaceswebIpAccessSettingsInternal it will be used here
-	IpAccessSettingsArn  plugin.TValue[string]
-	DisplayName          plugin.TValue[string]
-	Description          plugin.TValue[string]
-	CustomerManagedKey   plugin.TValue[string]
-	IpRules              plugin.TValue[[]any]
-	AssociatedPortalArns plugin.TValue[[]any]
-	CreationDate         plugin.TValue[*time.Time]
-	Region               plugin.TValue[string]
+	mqlAwsWorkspaceswebIpAccessSettingsInternal
+	IpAccessSettingsArn plugin.TValue[string]
+	DisplayName         plugin.TValue[string]
+	Description         plugin.TValue[string]
+	CustomerManagedKey  plugin.TValue[string]
+	IpRules             plugin.TValue[[]any]
+	AssociatedPortals   plugin.TValue[[]any]
+	CreationDate        plugin.TValue[*time.Time]
+	Region              plugin.TValue[string]
 }
 
 // createAwsWorkspaceswebIpAccessSettings creates a new instance of this resource
@@ -114800,8 +114800,20 @@ func (c *mqlAwsWorkspaceswebIpAccessSettings) GetIpRules() *plugin.TValue[[]any]
 	return &c.IpRules
 }
 
-func (c *mqlAwsWorkspaceswebIpAccessSettings) GetAssociatedPortalArns() *plugin.TValue[[]any] {
-	return &c.AssociatedPortalArns
+func (c *mqlAwsWorkspaceswebIpAccessSettings) GetAssociatedPortals() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssociatedPortals, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspacesweb.ipAccessSettings", c.__id, "associatedPortals")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.associatedPortals()
+	})
 }
 
 func (c *mqlAwsWorkspaceswebIpAccessSettings) GetCreationDate() *plugin.TValue[*time.Time] {
@@ -114816,10 +114828,10 @@ func (c *mqlAwsWorkspaceswebIpAccessSettings) GetRegion() *plugin.TValue[string]
 type mqlAwsWorkspaceswebTrustStore struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsWorkspaceswebTrustStoreInternal it will be used here
-	TrustStoreArn        plugin.TValue[string]
-	AssociatedPortalArns plugin.TValue[[]any]
-	Region               plugin.TValue[string]
+	mqlAwsWorkspaceswebTrustStoreInternal
+	TrustStoreArn     plugin.TValue[string]
+	AssociatedPortals plugin.TValue[[]any]
+	Region            plugin.TValue[string]
 }
 
 // createAwsWorkspaceswebTrustStore creates a new instance of this resource
@@ -114863,8 +114875,20 @@ func (c *mqlAwsWorkspaceswebTrustStore) GetTrustStoreArn() *plugin.TValue[string
 	return &c.TrustStoreArn
 }
 
-func (c *mqlAwsWorkspaceswebTrustStore) GetAssociatedPortalArns() *plugin.TValue[[]any] {
-	return &c.AssociatedPortalArns
+func (c *mqlAwsWorkspaceswebTrustStore) GetAssociatedPortals() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssociatedPortals, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspacesweb.trustStore", c.__id, "associatedPortals")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.associatedPortals()
+	})
 }
 
 func (c *mqlAwsWorkspaceswebTrustStore) GetRegion() *plugin.TValue[string] {
@@ -114875,7 +114899,7 @@ func (c *mqlAwsWorkspaceswebTrustStore) GetRegion() *plugin.TValue[string] {
 type mqlAwsWorkspaceswebUserSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsWorkspaceswebUserSettingsInternal it will be used here
+	mqlAwsWorkspaceswebUserSettingsInternal
 	UserSettingsArn                plugin.TValue[string]
 	CopyAllowed                    plugin.TValue[string]
 	PasteAllowed                   plugin.TValue[string]
@@ -114887,7 +114911,7 @@ type mqlAwsWorkspaceswebUserSettings struct {
 	DisconnectTimeoutInMinutes     plugin.TValue[int64]
 	IdleDisconnectTimeoutInMinutes plugin.TValue[int64]
 	CustomerManagedKey             plugin.TValue[string]
-	AssociatedPortalArns           plugin.TValue[[]any]
+	AssociatedPortals              plugin.TValue[[]any]
 	Region                         plugin.TValue[string]
 }
 
@@ -114972,8 +114996,20 @@ func (c *mqlAwsWorkspaceswebUserSettings) GetCustomerManagedKey() *plugin.TValue
 	return &c.CustomerManagedKey
 }
 
-func (c *mqlAwsWorkspaceswebUserSettings) GetAssociatedPortalArns() *plugin.TValue[[]any] {
-	return &c.AssociatedPortalArns
+func (c *mqlAwsWorkspaceswebUserSettings) GetAssociatedPortals() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AssociatedPortals, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspacesweb.userSettings", c.__id, "associatedPortals")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.associatedPortals()
+	})
 }
 
 func (c *mqlAwsWorkspaceswebUserSettings) GetRegion() *plugin.TValue[string] {
