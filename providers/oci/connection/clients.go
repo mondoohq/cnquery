@@ -28,6 +28,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/networkfirewall"
 	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 	"github.com/oracle/oci-go-sdk/v65/ons"
+	"github.com/oracle/oci-go-sdk/v65/redis"
 	"github.com/oracle/oci-go-sdk/v65/vault"
 	"github.com/oracle/oci-go-sdk/v65/waf"
 )
@@ -370,6 +371,15 @@ func (c *OciConnection) ApiGatewayDeploymentClient(region string) (*apigateway.D
 
 func (c *OciConnection) CertificatesManagementClient(region string) (*certificatesmanagement.CertificatesManagementClient, error) {
 	client, err := certificatesmanagement.NewCertificatesManagementClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) RedisClusterClient(region string) (*redis.RedisClusterClient, error) {
+	client, err := redis.NewRedisClusterClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
