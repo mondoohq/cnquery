@@ -160,6 +160,23 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		}
 	}
 
+	// Flatpak is cross-distro — check for its presence on any Linux platform.
+	if asset.Platform.IsFamily("linux") {
+		hasFlatpak := false
+		if _, err := conn.FileSystem().Stat("/var/lib/flatpak"); err == nil {
+			hasFlatpak = true
+		}
+		if !hasFlatpak && conn.Capabilities().Has(shared.Capability_RunCommand) {
+			cmd, err := conn.RunCommand("which flatpak")
+			if err == nil && cmd.ExitStatus == 0 {
+				hasFlatpak = true
+			}
+		}
+		if hasFlatpak {
+			pms = append(pms, &FlatpakPkgManager{conn: conn, platform: asset.Platform})
+		}
+	}
+
 	if len(pms) == 0 {
 		return nil, errors.New("could not detect suitable package manager for platform: " + asset.Platform.Name)
 	}

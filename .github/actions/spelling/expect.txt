@@ -180,6 +180,8 @@ fips
 firefox
 firestore
 firstname
+flathub
+flatpak
 FLEXGROUP
 FLEXVOL
 flink
