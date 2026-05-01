@@ -2968,6 +2968,12 @@ gcp.project.redisService.cluster 11.1.0
 gcp.project.redisService.cluster.authorizationMode 11.1.0
 gcp.project.redisService.cluster.automatedBackupConfig 11.1.0
 gcp.project.redisService.cluster.backup 11.1.0
+gcp.project.redisService.cluster.backup.backupFile 13.12.2
+gcp.project.redisService.cluster.backup.backupFile.backupName 13.12.2
+gcp.project.redisService.cluster.backup.backupFile.createTime 13.12.2
+gcp.project.redisService.cluster.backup.backupFile.fileName 13.12.2
+gcp.project.redisService.cluster.backup.backupFile.projectId 13.12.2
+gcp.project.redisService.cluster.backup.backupFile.sizeBytes 13.12.2
 gcp.project.redisService.cluster.backup.backupFiles 11.1.0
 gcp.project.redisService.cluster.backup.backupType 11.1.0
 gcp.project.redisService.cluster.backup.cluster 11.1.0
@@ -3047,6 +3053,7 @@ gcp.project.redisService.cluster.serverCaPool 13.3.5
 gcp.project.redisService.cluster.shardCount 11.1.0
 gcp.project.redisService.cluster.sizeGb 11.1.0
 gcp.project.redisService.cluster.state 11.1.0
+gcp.project.redisService.cluster.stateInfo 13.12.2
 gcp.project.redisService.cluster.transitEncryptionMode 11.1.0
 gcp.project.redisService.cluster.uid 11.1.0
 gcp.project.redisService.cluster.zoneDistributionConfig 11.1.0

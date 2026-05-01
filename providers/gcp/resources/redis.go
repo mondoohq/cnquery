@@ -523,6 +523,10 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		stateInfo, err := protoToDict(cluster.StateInfo)
+		if err != nil {
+			return nil, err
+		}
 
 		var replicaCount int64
 		if cluster.ReplicaCount != nil {
@@ -577,6 +581,7 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 			"name":                          llx.StringData(cluster.Name),
 			"uid":                           llx.StringData(cluster.Uid),
 			"state":                         llx.StringData(cluster.State.String()),
+			"stateInfo":                     llx.DictData(stateInfo),
 			"createTime":                    llx.TimeData(cluster.CreateTime.AsTime()),
 			"authorizationMode":             llx.StringData(cluster.AuthorizationMode.String()),
 			"transitEncryptionMode":         llx.StringData(cluster.TransitEncryptionMode.String()),
@@ -987,7 +992,7 @@ func (g *mqlGcpProjectRedisServiceCluster) backups() ([]any, error) {
 			return nil, err
 		}
 
-		backupFiles, err := clusterConvertBackupFiles(backup.BackupFiles)
+		backupFiles, err := clusterConvertBackupFiles(g.MqlRuntime, projectId, backup.Name, backup.BackupFiles)
 		if err != nil {
 			return nil, err
 		}
@@ -1019,7 +1024,7 @@ func (g *mqlGcpProjectRedisServiceCluster) backups() ([]any, error) {
 			"backupType":     llx.StringData(backup.BackupType.String()),
 			"state":          llx.StringData(backup.State.String()),
 			"encryptionInfo": llx.DictData(encryptionInfo),
-			"backupFiles":    llx.ArrayData(backupFiles, types.Dict),
+			"backupFiles":    llx.ArrayData(backupFiles, types.Resource("gcp.project.redisService.cluster.backup.backupFile")),
 		})
 		if err != nil {
 			return nil, err
@@ -1030,22 +1035,41 @@ func (g *mqlGcpProjectRedisServiceCluster) backups() ([]any, error) {
 	return res, nil
 }
 
-func clusterConvertBackupFiles(files []*clusterpb.BackupFile) ([]any, error) {
-	res := []any{}
+func clusterConvertBackupFiles(runtime *plugin.Runtime, projectId, backupName string, files []*clusterpb.BackupFile) ([]any, error) {
+	res := make([]any, 0, len(files))
 	for _, f := range files {
 		if f == nil {
 			continue
 		}
-		file := map[string]any{
-			"fileName":  f.FileName,
-			"sizeBytes": f.SizeBytes,
-		}
+		var createTime *llx.RawData
 		if f.CreateTime != nil {
-			file["createTime"] = f.CreateTime.AsTime().Format(time.RFC3339)
+			createTime = llx.TimeData(f.CreateTime.AsTime())
+		} else {
+			createTime = llx.NilData
 		}
-		res = append(res, file)
+		mqlFile, err := CreateResource(runtime, "gcp.project.redisService.cluster.backup.backupFile", map[string]*llx.RawData{
+			"projectId":  llx.StringData(projectId),
+			"backupName": llx.StringData(backupName),
+			"fileName":   llx.StringData(f.FileName),
+			"sizeBytes":  llx.IntData(f.SizeBytes),
+			"createTime": createTime,
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFile)
 	}
 	return res, nil
+}
+
+func (c *mqlGcpProjectRedisServiceClusterBackupBackupFile) id() (string, error) {
+	if c.BackupName.Error != nil {
+		return "", c.BackupName.Error
+	}
+	if c.FileName.Error != nil {
+		return "", c.FileName.Error
+	}
+	return fmt.Sprintf("%s/backupFiles/%s", c.BackupName.Data, c.FileName.Data), nil
 }
 
 // ===== Cluster endpoint converters =====

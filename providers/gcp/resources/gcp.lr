@@ -209,6 +209,8 @@ private gcp.project.redisService.cluster @defaults("name") {
   createTime time
   // The current state of the cluster
   state string
+  // Additional information about the state of the cluster (e.g. updateInfo with target shard/replica counts during reshard)
+  stateInfo dict
   // The authorization mode of the cluster
   authorizationMode string
   // The in-transit encryption mode of the cluster
@@ -344,7 +346,21 @@ private gcp.project.redisService.cluster.backup @defaults("name state") {
   // Encryption information of the backup
   encryptionInfo dict
   // The list of backup files
-  backupFiles []dict
+  backupFiles []gcp.project.redisService.cluster.backup.backupFile
+}
+
+// Google Cloud (GCP) Redis Cluster backup file
+private gcp.project.redisService.cluster.backup.backupFile @defaults("fileName sizeBytes") {
+  // Project ID
+  projectId string
+  // Parent backup resource name
+  backupName string
+  // File name within the backup
+  fileName string
+  // File size in bytes
+  sizeBytes int
+  // File creation time
+  createTime time
 }
 
 // Google Cloud (GCP) Redis Cluster endpoint
