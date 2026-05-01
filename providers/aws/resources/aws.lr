@@ -6548,7 +6548,7 @@ private aws.cloudfront.trustStore @defaults("name status numberOfCaCertificates"
   // Reason describing the current status
   reason string
   // Last modified timestamp
-  lastModifiedTime time
+  lastModifiedAt time
 }
 
 // Amazon CloudFront Anycast static IP list

@@ -11538,8 +11538,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudfront.trustStore.reason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontTrustStore).GetReason()).ToDataRes(types.String)
 	},
-	"aws.cloudfront.trustStore.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCloudfrontTrustStore).GetLastModifiedTime()).ToDataRes(types.Time)
+	"aws.cloudfront.trustStore.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontTrustStore).GetLastModifiedAt()).ToDataRes(types.Time)
 	},
 	"aws.cloudfront.anycastIpList.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontAnycastIpList).GetArn()).ToDataRes(types.String)
@@ -35466,8 +35466,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudfrontTrustStore).Reason, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.cloudfront.trustStore.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCloudfrontTrustStore).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"aws.cloudfront.trustStore.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontTrustStore).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.anycastIpList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -86407,7 +86407,7 @@ type mqlAwsCloudfrontTrustStore struct {
 	Status                 plugin.TValue[string]
 	NumberOfCaCertificates plugin.TValue[int64]
 	Reason                 plugin.TValue[string]
-	LastModifiedTime       plugin.TValue[*time.Time]
+	LastModifiedAt         plugin.TValue[*time.Time]
 }
 
 // createAwsCloudfrontTrustStore creates a new instance of this resource
@@ -86471,8 +86471,8 @@ func (c *mqlAwsCloudfrontTrustStore) GetReason() *plugin.TValue[string] {
 	return &c.Reason
 }
 
-func (c *mqlAwsCloudfrontTrustStore) GetLastModifiedTime() *plugin.TValue[*time.Time] {
-	return &c.LastModifiedTime
+func (c *mqlAwsCloudfrontTrustStore) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
 }
 
 // mqlAwsCloudfrontAnycastIpList for the aws.cloudfront.anycastIpList resource

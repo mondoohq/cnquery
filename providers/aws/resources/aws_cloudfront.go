@@ -448,7 +448,7 @@ func (a *mqlAwsCloudfront) trustStores() ([]any, error) {
 					"status":                 llx.StringData(string(ts.Status)),
 					"numberOfCaCertificates": llx.IntDataDefault(ts.NumberOfCaCertificates, 0),
 					"reason":                 llx.StringDataPtr(ts.Reason),
-					"lastModifiedTime":       llx.TimeDataPtr(ts.LastModifiedTime),
+					"lastModifiedAt":         llx.TimeDataPtr(ts.LastModifiedTime),
 				})
 			if err != nil {
 				return nil, err

@@ -733,7 +733,7 @@ aws.cloudfront.functions 11.15.2
 aws.cloudfront.trustStore 13.20.1
 aws.cloudfront.trustStore.arn 13.20.1
 aws.cloudfront.trustStore.id 13.20.1
-aws.cloudfront.trustStore.lastModifiedTime 13.20.1
+aws.cloudfront.trustStore.lastModifiedAt 13.20.1
 aws.cloudfront.trustStore.name 13.20.1
 aws.cloudfront.trustStore.numberOfCaCertificates 13.20.1
 aws.cloudfront.trustStore.reason 13.20.1
