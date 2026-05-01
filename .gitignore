@@ -28,3 +28,4 @@ settings.local.json
 *.lr.manifest.json
 .claude/worktrees/
 .claude/scheduled_tasks.lock
+.worktrees/
