@@ -15504,9 +15504,9 @@ private aws.transfer.connector @defaults("arn connectorId status") {
   errorMessage() string
   // Name of the security policy attached to the connector
   securityPolicyName() string
-  // IAM role ARN that grants the connector permissions to invoke AWS APIs
+  // IAM role that grants the connector permissions to invoke AWS APIs
   accessRole() aws.iam.role
-  // IAM role ARN used for CloudWatch logging (null when logging is not configured)
+  // IAM role used for CloudWatch logging (null when logging is not configured)
   loggingRole() aws.iam.role
   // List of egress IP addresses assigned to the connector when egress type is SERVICE_MANAGED
   serviceManagedEgressIpAddresses() []string
