@@ -788,7 +788,7 @@ func init() {
 			Create: createGcpProjectPubsubServiceSnapshot,
 		},
 		"gcp.project.pubsubService.schema": {
-			// to override args, implement: initGcpProjectPubsubServiceSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectPubsubServiceSchema,
 			Create: createGcpProjectPubsubServiceSchema,
 		},
 		"gcp.project.kmsService": {

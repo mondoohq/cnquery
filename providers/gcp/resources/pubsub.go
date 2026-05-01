@@ -872,6 +872,71 @@ func (g *mqlGcpProjectPubsubServiceSchema) id() (string, error) {
 	return fmt.Sprintf("gcp.project/%s/pubsubService.schema/%s", g.ProjectId.Data, g.Name.Data), nil
 }
 
+// initGcpProjectPubsubServiceSchema resolves a schema reference by fetching it
+// from the Pub/Sub API. Required so typed references (e.g. topic.config.
+// schemaSettings.schemaResource) work without first listing every schema in
+// the project.
+func initGcpProjectPubsubServiceSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if args == nil {
+		args = make(map[string]*llx.RawData)
+	}
+	// Already fully populated (e.g. from the schemas() listing) — nothing to do.
+	if _, ok := args["definition"]; ok {
+		return args, nil, nil
+	}
+
+	nameArg, ok := args["name"]
+	if !ok || nameArg == nil {
+		return nil, nil, errors.New("gcp.project.pubsubService.schema requires a name")
+	}
+	fullName := nameArg.Value.(string)
+
+	// Schema names are always projects/{project}/schemas/{schema}.
+	parts := strings.Split(fullName, "/")
+	if len(parts) != 4 || parts[0] != "projects" || parts[2] != "schemas" {
+		return nil, nil, fmt.Errorf("invalid pubsub schema name %q (want projects/<project>/schemas/<schema>)", fullName)
+	}
+	projectId := parts[1]
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(pubsub.ScopePubSub)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx := context.Background()
+	schemaClient, err := pubsubadmin.NewSchemaClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer schemaClient.Close()
+
+	schema, err := schemaClient.GetSchema(ctx, &pubsubpb.GetSchemaRequest{
+		Name: fullName,
+		View: pubsubpb.SchemaView_FULL,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var revisionCreateTime *time.Time
+	if schema.RevisionCreateTime != nil {
+		t := schema.RevisionCreateTime.AsTime()
+		revisionCreateTime = &t
+	}
+
+	args["projectId"] = llx.StringData(projectId)
+	args["name"] = llx.StringData(schema.Name)
+	args["type"] = llx.StringData(pubsubSchemaTypeString(schema.Type))
+	args["definition"] = llx.StringData(schema.Definition)
+	args["revisionId"] = llx.StringData(schema.RevisionId)
+	args["revisionCreateTime"] = llx.TimeDataPtr(revisionCreateTime)
+	return args, nil, nil
+}
+
 func pubsubSchemaEncodingString(e pubsubpb.Encoding) string {
 	switch e {
 	case pubsubpb.Encoding_JSON:
@@ -916,9 +981,15 @@ func (g *mqlGcpProjectPubsubServiceTopicConfigSchemaSettings) schemaResource() (
 		g.SchemaResource.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.schema", map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"name": llx.StringData(schema),
-	})
+	}
+	// Schema names are always projects/{project}/schemas/{schema} — extract the
+	// project so the resource's id() can resolve without listing all schemas first.
+	if parts := strings.Split(schema, "/"); len(parts) == 4 && parts[0] == "projects" && parts[2] == "schemas" {
+		args["projectId"] = llx.StringData(parts[1])
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.pubsubService.schema", args)
 	if err != nil {
 		return nil, err
 	}

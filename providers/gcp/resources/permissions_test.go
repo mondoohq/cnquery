@@ -168,6 +168,7 @@ var validatedGCPPermissions = []string{
 	"privateca.caPools.list",
 	"privateca.certificateAuthorities.list",
 	"privateca.certificates.list",
+	"pubsub.schemas.get",
 	"pubsub.schemas.list",
 	"redis.backups.list",
 	"redis.clusters.list",

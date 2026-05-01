@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.12.1",
-  "generated_at": "2026-05-01T22:18:30+02:00",
+  "generated_at": "2026-05-01T13:50:33-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -154,6 +154,7 @@
     "privateca.caPools.list",
     "privateca.certificateAuthorities.list",
     "privateca.certificates.list",
+    "pubsub.schemas.get",
     "pubsub.schemas.list",
     "redis.backups.list",
     "redis.clusters.list",
@@ -1117,6 +1118,12 @@
       "source_file": "privateca.go"
     },
     {
+      "permission": "pubsub.schemas.get",
+      "service": "pubsub",
+      "action": "GetSchema",
+      "source_file": "pubsub.go"
+    },
+    {
       "permission": "pubsub.schemas.list",
       "service": "pubsub",
       "action": "ListSchemas",
@@ -1150,7 +1157,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.List",
+      "action": "Folders.Search",
       "source_file": "folder.go",
       "scope": "org"
     },

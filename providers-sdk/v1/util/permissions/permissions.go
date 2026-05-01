@@ -1019,6 +1019,11 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		"GetInstance":         "memorystore.instances.get",
 		"GetBackupCollection": "memorystore.backupCollections.get",
 	},
+	"pubsub": {
+		// SchemaClient.GetSchema → singular "schema" by default; real IAM
+		// permission is plural.
+		"GetSchema": "pubsub.schemas.get",
+	},
 }
 
 // gcpOrgLevelPermissions are permissions that only apply at the organization
