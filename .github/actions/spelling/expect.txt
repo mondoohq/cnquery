@@ -301,6 +301,9 @@ logstream
 LONGTERM
 longtermretentionpolicy
 lsp
+luafilesystem
+luarocks
+luasocket
 lvm
 lvmthin
 MACSEC
@@ -457,6 +460,7 @@ resourcegroup
 resourcepolicy
 resourcequota
 richrule
+rockspec
 RODC
 roku
 rootdir

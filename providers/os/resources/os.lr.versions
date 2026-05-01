@@ -887,6 +887,16 @@ lsblk.entry.mountpoints 9.0.1
 lsblk.entry.name 9.0.1
 lsblk.entry.uuid 9.0.1
 lsblk.list 9.0.1
+lua.package 13.15.2
+lua.package.files 13.15.2
+lua.package.id 13.15.2
+lua.package.name 13.15.2
+lua.package.purl 13.15.2
+lua.package.version 13.15.2
+lua.packages 13.15.2
+lua.packages.files 13.15.2
+lua.packages.list 13.15.2
+lua.packages.path 13.15.2
 machine 9.0.0
 machine.baseboard 9.0.0
 machine.baseboard.assetTag 9.0.0

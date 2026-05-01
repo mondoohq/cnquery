@@ -70,6 +70,7 @@ type BomFields struct {
 	JuliaPackages         []BomPackage      `json:"julia.packages.list,omitempty"`
 	CondaPackages         []BomPackage      `json:"conda.packages.list,omitempty"`
 	RPackages             []BomPackage      `json:"r.packages.list,omitempty"`
+	LuaPackages           []BomPackage      `json:"lua.packages.list,omitempty"`
 	KernelInstalled       []KernelInstalled `json:"kernel.installed,omitempty"`
 }
 

@@ -226,6 +226,8 @@ const (
 	ResourceJuliaPackage                 string = "julia.package"
 	ResourceRPackages                    string = "r.packages"
 	ResourceRPackage                     string = "r.package"
+	ResourceLuaPackages                  string = "lua.packages"
+	ResourceLuaPackage                   string = "lua.package"
 	ResourceMacos                        string = "macos"
 	ResourceMacosHardware                string = "macos.hardware"
 	ResourceMacosAlf                     string = "macos.alf"
@@ -1191,6 +1193,14 @@ func init() {
 		"r.package": {
 			// to override args, implement: initRPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createRPackage,
+		},
+		"lua.packages": {
+			Init:   initLuaPackages,
+			Create: createLuaPackages,
+		},
+		"lua.package": {
+			// to override args, implement: initLuaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLuaPackage,
 		},
 		"macos": {
 			// to override args, implement: initMacos(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4778,6 +4788,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"r.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"lua.packages.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuaPackages).GetPath()).ToDataRes(types.String)
+	},
+	"lua.packages.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuaPackages).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
+	},
+	"lua.packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuaPackages).GetList()).ToDataRes(types.Array(types.Resource("lua.package")))
+	},
+	"lua.package.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuaPackage).GetId()).ToDataRes(types.String)
+	},
+	"lua.package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuaPackage).GetName()).ToDataRes(types.String)
+	},
+	"lua.package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuaPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"lua.package.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuaPackage).GetPurl()).ToDataRes(types.String)
+	},
+	"lua.package.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLuaPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
 	"macos.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMacos).GetComputerName()).ToDataRes(types.String)
@@ -11846,6 +11880,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"r.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"lua.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuaPackages).__id, ok = v.Value.(string)
+		return
+	},
+	"lua.packages.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuaPackages).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lua.packages.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuaPackages).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"lua.packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuaPackages).List, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"lua.package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuaPackage).__id, ok = v.Value.(string)
+		return
+	},
+	"lua.package.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuaPackage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lua.package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuaPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lua.package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuaPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lua.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuaPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lua.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLuaPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"macos.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32748,6 +32822,176 @@ func (c *mqlRPackage) GetFiles() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("r.package", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+// mqlLuaPackages for the lua.packages resource
+type mqlLuaPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlLuaPackagesInternal
+	Path  plugin.TValue[string]
+	Files plugin.TValue[[]any]
+	List  plugin.TValue[[]any]
+}
+
+// createLuaPackages creates a new instance of this resource
+func createLuaPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLuaPackages{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("lua.packages", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLuaPackages) MqlName() string {
+	return "lua.packages"
+}
+
+func (c *mqlLuaPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLuaPackages) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlLuaPackages) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("lua.packages", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlLuaPackages) GetList() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.List, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("lua.packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlLuaPackage for the lua.package resource
+type mqlLuaPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlLuaPackageInternal it will be used here
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Version plugin.TValue[string]
+	Purl    plugin.TValue[string]
+	Files   plugin.TValue[[]any]
+}
+
+// createLuaPackage creates a new instance of this resource
+func createLuaPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLuaPackage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("lua.package", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLuaPackage) MqlName() string {
+	return "lua.package"
+}
+
+func (c *mqlLuaPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLuaPackage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlLuaPackage) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlLuaPackage) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlLuaPackage) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
+	})
+}
+
+func (c *mqlLuaPackage) GetFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Files, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("lua.package", c.__id, "files")
 			if err != nil {
 				return nil, err
 			}

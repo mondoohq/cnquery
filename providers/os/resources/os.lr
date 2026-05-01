@@ -2979,6 +2979,33 @@ private r.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
+// Lua packages (LuaRocks)
+lua.packages {
+  []lua.package
+
+  init(path? string)
+
+  // Path to search for LuaRocks packages
+  path string
+
+  // Files used to determine the packages
+  files() []pkgFileInfo
+}
+
+// Lua package dependency
+private lua.package @defaults("name version purl") {
+  // ID is the lua.package unique identifier
+  id string
+  // Package name
+  name() string
+  // Package version
+  version() string
+  // Package URL
+  purl() string
+  // Package files
+  files() []pkgFileInfo
+}
+
 // macOS specific resources
 macos {
   // macOS computer name
