@@ -38,7 +38,7 @@ require (
 	cloud.google.com/go/modelarmor v0.9.0
 	cloud.google.com/go/monitoring v1.27.0
 	cloud.google.com/go/orgpolicy v1.18.0
-	cloud.google.com/go/pubsub v1.50.2
+	cloud.google.com/go/pubsub/v2 v2.6.0
 	cloud.google.com/go/recommender v1.16.0
 	cloud.google.com/go/redis v1.21.0
 	cloud.google.com/go/run v1.19.0
@@ -65,7 +65,6 @@ require (
 require (
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go/grafeas v0.3.17 // indirect
-	cloud.google.com/go/pubsub/v2 v2.6.0 // indirect
 	github.com/CycloneDX/cyclonedx-go v0.10.0 // indirect
 	github.com/GoogleCloudPlatform/berglas/v2 v2.0.10 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect

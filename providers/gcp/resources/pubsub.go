@@ -8,9 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
-	"cloud.google.com/go/pubsub"
+	iampb "cloud.google.com/go/iam/apiv1/iampb"
+	"cloud.google.com/go/pubsub/v2"
+	pubsubadmin "cloud.google.com/go/pubsub/v2/apiv1"
+	"cloud.google.com/go/pubsub/v2/apiv1/pubsubpb"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -21,6 +25,7 @@ import (
 	"google.golang.org/api/option"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func (g *mqlGcpProjectPubsubService) id() (string, error) {
@@ -302,7 +307,9 @@ func (g *mqlGcpProjectPubsubService) topics() ([]any, error) {
 
 	var topics []any
 
-	it := pubsubSvc.Topics(ctx)
+	it := pubsubSvc.TopicAdminClient.ListTopics(ctx, &pubsubpb.ListTopicsRequest{
+		Project: projectPath(projectId),
+	})
 	for {
 		t, err := it.Next()
 		if err == iterator.Done {
@@ -313,7 +320,7 @@ func (g *mqlGcpProjectPubsubService) topics() ([]any, error) {
 		}
 		mqlTopic, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
 			"projectId": llx.StringData(projectId),
-			"name":      llx.StringData(t.ID()),
+			"name":      llx.StringData(lastPathSegment(t.Name)),
 		})
 		if err != nil {
 			return nil, err
@@ -350,32 +357,39 @@ func (g *mqlGcpProjectPubsubServiceTopic) config() (*mqlGcpProjectPubsubServiceT
 	}
 	defer pubsubSvc.Close()
 
-	t := pubsubSvc.Topic(name)
-	cfg, err := t.Config(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	messageStoragePolicy, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic.config.messagestoragepolicy", map[string]*llx.RawData{
-		"configId":                  llx.StringData(pubsubConfigId(projectId, t.ID())),
-		"allowedPersistenceRegions": llx.ArrayData(convert.SliceAnyToInterface(cfg.MessageStoragePolicy.AllowedPersistenceRegions), types.String),
+	cfg, err := pubsubSvc.TopicAdminClient.GetTopic(ctx, &pubsubpb.GetTopicRequest{
+		Topic: topicPath(projectId, name),
 	})
 	if err != nil {
 		return nil, err
 	}
-	schemaSettings, err := buildTopicSchemaSettings(g.MqlRuntime, pubsubConfigId(projectId, t.ID()), cfg.SchemaSettings)
+
+	configId := pubsubConfigId(projectId, name)
+
+	var allowedRegions []string
+	if cfg.MessageStoragePolicy != nil {
+		allowedRegions = cfg.MessageStoragePolicy.AllowedPersistenceRegions
+	}
+	messageStoragePolicy, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic.config.messagestoragepolicy", map[string]*llx.RawData{
+		"configId":                  llx.StringData(configId),
+		"allowedPersistenceRegions": llx.ArrayData(convert.SliceAnyToInterface(allowedRegions), types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	schemaSettings, err := buildTopicSchemaSettings(g.MqlRuntime, configId, cfg.SchemaSettings)
 	if err != nil {
 		return nil, err
 	}
 
 	args := map[string]*llx.RawData{
 		"projectId":            llx.StringData(projectId),
-		"topicName":            llx.StringData(t.ID()),
+		"topicName":            llx.StringData(name),
 		"labels":               llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
-		"kmsKeyName":           llx.StringData(cfg.KMSKeyName),
+		"kmsKeyName":           llx.StringData(cfg.KmsKeyName),
 		"messageStoragePolicy": llx.ResourceData(messageStoragePolicy, "gcp.project.pubsubService.topic.config.messagestoragepolicy"),
 		"state":                llx.StringData(topicStateToString(cfg.State)),
-		"retentionDuration":    llx.TimeData(optionalDurationToTime(cfg.RetentionDuration)),
+		"retentionDuration":    llx.TimeData(pbDurationToTime(cfg.MessageRetentionDuration)),
 	}
 	if schemaSettings != nil {
 		args["schemaSettings"] = llx.ResourceData(schemaSettings, "gcp.project.pubsubService.topic.config.schemaSettings")
@@ -418,7 +432,9 @@ func (g *mqlGcpProjectPubsubService) subscriptions() ([]any, error) {
 
 	var subs []any
 
-	it := pubsubSvc.Subscriptions(ctx)
+	it := pubsubSvc.SubscriptionAdminClient.ListSubscriptions(ctx, &pubsubpb.ListSubscriptionsRequest{
+		Project: projectPath(projectId),
+	})
 	for {
 		s, err := it.Next()
 		if err == iterator.Done {
@@ -429,7 +445,7 @@ func (g *mqlGcpProjectPubsubService) subscriptions() ([]any, error) {
 		}
 		mqlSub, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.subscription", map[string]*llx.RawData{
 			"projectId": llx.StringData(projectId),
-			"name":      llx.StringData(s.ID()),
+			"name":      llx.StringData(lastPathSegment(s.Name)),
 		})
 		if err != nil {
 			return nil, err
@@ -466,31 +482,39 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 	}
 	defer pubsubSvc.Close()
 
-	s := pubsubSvc.Subscription(name)
-	cfg, err := s.Config(ctx)
+	cfg, err := pubsubSvc.SubscriptionAdminClient.GetSubscription(ctx, &pubsubpb.GetSubscriptionRequest{
+		Subscription: subscriptionPath(projectId, name),
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	topic, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),
-		"name":      llx.StringData(cfg.Topic.ID()),
+		"name":      llx.StringData(lastPathSegment(cfg.Topic)),
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	var pushEndpoint string
+	var pushAttributes map[string]string
+	if cfg.PushConfig != nil {
+		pushEndpoint = cfg.PushConfig.PushEndpoint
+		pushAttributes = cfg.PushConfig.Attributes
+	}
 	pushConfig, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.subscription.config.pushconfig", map[string]*llx.RawData{
-		"configId":   llx.StringData(pubsubConfigId(projectId, s.ID())),
-		"endpoint":   llx.StringData(cfg.PushConfig.Endpoint),
-		"attributes": llx.MapData(convert.MapToInterfaceMap(cfg.PushConfig.Attributes), types.String),
+		"configId":   llx.StringData(pubsubConfigId(projectId, name)),
+		"endpoint":   llx.StringData(pushEndpoint),
+		"attributes": llx.MapData(convert.MapToInterfaceMap(pushAttributes), types.String),
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	var expPolicy time.Time
-	if exp, ok := cfg.ExpirationPolicy.(time.Duration); ok {
-		expPolicy = llx.DurationToTime(int64(exp.Seconds()))
+	if cfg.ExpirationPolicy != nil && cfg.ExpirationPolicy.Ttl != nil {
+		expPolicy = llx.DurationToTime(int64(cfg.ExpirationPolicy.Ttl.AsDuration().Seconds()))
 	}
 
 	var deadLetterDict map[string]any
@@ -504,11 +528,11 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 	var retryDict map[string]any
 	if cfg.RetryPolicy != nil {
 		var minBackoff, maxBackoff string
-		if d, ok := cfg.RetryPolicy.MinimumBackoff.(time.Duration); ok {
-			minBackoff = d.String()
+		if cfg.RetryPolicy.MinimumBackoff != nil {
+			minBackoff = cfg.RetryPolicy.MinimumBackoff.AsDuration().String()
 		}
-		if d, ok := cfg.RetryPolicy.MaximumBackoff.(time.Duration); ok {
-			maxBackoff = d.String()
+		if cfg.RetryPolicy.MaximumBackoff != nil {
+			maxBackoff = cfg.RetryPolicy.MaximumBackoff.AsDuration().String()
 		}
 		retryDict = map[string]any{
 			"minimumBackoff": minBackoff,
@@ -518,12 +542,12 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.subscription.config", map[string]*llx.RawData{
 		"projectId":                     llx.StringData(projectId),
-		"subscriptionName":              llx.StringData(s.ID()),
+		"subscriptionName":              llx.StringData(name),
 		"topic":                         llx.ResourceData(topic, "gcp.project.pubsubService.topic"),
 		"pushConfig":                    llx.ResourceData(pushConfig, "gcp.project.pubsubService.subscription.config.pushconfig"),
-		"ackDeadline":                   llx.TimeData(llx.DurationToTime(int64(cfg.AckDeadline.Seconds()))),
+		"ackDeadline":                   llx.TimeData(llx.DurationToTime(int64(cfg.AckDeadlineSeconds))),
 		"retainAckedMessages":           llx.BoolData(cfg.RetainAckedMessages),
-		"retentionDuration":             llx.TimeData(llx.DurationToTime(int64(cfg.RetentionDuration.Seconds()))),
+		"retentionDuration":             llx.TimeData(pbDurationToTime(cfg.MessageRetentionDuration)),
 		"expirationPolicy":              llx.TimeData(expPolicy),
 		"labels":                        llx.MapData(convert.MapToInterfaceMap(cfg.Labels), types.String),
 		"enableMessageOrdering":         llx.BoolData(cfg.EnableMessageOrdering),
@@ -531,7 +555,7 @@ func (g *mqlGcpProjectPubsubServiceSubscription) config() (*mqlGcpProjectPubsubS
 		"filter":                        llx.StringData(cfg.Filter),
 		"detached":                      llx.BoolData(cfg.Detached),
 		"state":                         llx.StringData(subscriptionStateToString(cfg.State)),
-		"topicMessageRetentionDuration": llx.TimeData(llx.DurationToTime(int64(cfg.TopicMessageRetentionDuration.Seconds()))),
+		"topicMessageRetentionDuration": llx.TimeData(pbDurationToTime(cfg.TopicMessageRetentionDuration)),
 		"deadLetterPolicy":              llx.DictData(deadLetterDict),
 		"retryPolicy":                   llx.DictData(retryDict),
 	})
@@ -568,7 +592,9 @@ func (g *mqlGcpProjectPubsubService) snapshots() ([]any, error) {
 
 	var subs []any
 
-	it := pubsubSvc.Snapshots(ctx)
+	it := pubsubSvc.SubscriptionAdminClient.ListSnapshots(ctx, &pubsubpb.ListSnapshotsRequest{
+		Project: projectPath(projectId),
+	})
 	for {
 		s, err := it.Next()
 		if err == iterator.Done {
@@ -578,21 +604,29 @@ func (g *mqlGcpProjectPubsubService) snapshots() ([]any, error) {
 			return nil, err
 		}
 
+		snapshotName := lastPathSegment(s.Name)
+		topicName := lastPathSegment(s.Topic)
+
 		topic, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
-			"id":        llx.StringData(s.Topic.ID()),
+			"id":        llx.StringData(topicName),
 			"projectId": llx.StringData(projectId),
-			"name":      llx.StringData(s.Topic.ID()),
+			"name":      llx.StringData(topicName),
 		})
 		if err != nil {
 			return nil, err
 		}
 
+		var expiration time.Time
+		if s.ExpireTime != nil {
+			expiration = s.ExpireTime.AsTime()
+		}
+
 		mqlSub, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.snapshot", map[string]*llx.RawData{
-			"id":         llx.StringData(s.ID()),
+			"id":         llx.StringData(snapshotName),
 			"projectId":  llx.StringData(projectId),
-			"name":       llx.StringData(s.ID()),
+			"name":       llx.StringData(snapshotName),
 			"topic":      llx.ResourceData(topic, "gcp.project.pubsubService.topic"),
-			"expiration": llx.TimeData(s.Expiration),
+			"expiration": llx.TimeData(expiration),
 		})
 		if err != nil {
 			return nil, err
@@ -629,7 +663,8 @@ func (g *mqlGcpProjectPubsubServiceTopic) iamPolicy() ([]any, error) {
 	}
 	defer pubsubSvc.Close()
 
-	policy, err := pubsubSvc.Topic(name).IAM().Policy(ctx)
+	resourcePath := topicPath(projectId, name)
+	policy, err := pubsubSvc.TopicAdminClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
 			log.Warn().Str("project", projectId).Str("topic", name).Err(err).Msg("could not retrieve topic IAM policy")
@@ -638,12 +673,11 @@ func (g *mqlGcpProjectPubsubServiceTopic) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 
-	bindings := policy.InternalProto.Bindings
+	bindings := policy.Bindings
 	res := make([]any, 0, len(bindings))
-	topicPath := fmt.Sprintf("projects/%s/topics/%s", projectId, name)
 	for i, b := range bindings {
 		mqlBinding, err := CreateResource(g.MqlRuntime, ResourceGcpResourcemanagerBinding, map[string]*llx.RawData{
-			"id":      llx.StringData(topicPath + "-" + strconv.Itoa(i)),
+			"id":      llx.StringData(resourcePath + "-" + strconv.Itoa(i)),
 			"role":    llx.StringData(b.Role),
 			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
 		})
@@ -681,7 +715,8 @@ func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
 	}
 	defer pubsubSvc.Close()
 
-	policy, err := pubsubSvc.Subscription(name).IAM().Policy(ctx)
+	resourcePath := subscriptionPath(projectId, name)
+	policy, err := pubsubSvc.SubscriptionAdminClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: resourcePath})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.PermissionDenied {
 			log.Warn().Str("project", projectId).Str("subscription", name).Err(err).Msg("could not retrieve subscription IAM policy")
@@ -690,12 +725,11 @@ func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
 		return nil, err
 	}
 
-	bindings := policy.InternalProto.Bindings
+	bindings := policy.Bindings
 	res := make([]any, 0, len(bindings))
-	subPath := fmt.Sprintf("projects/%s/subscriptions/%s", projectId, name)
 	for i, b := range bindings {
 		mqlBinding, err := CreateResource(g.MqlRuntime, ResourceGcpResourcemanagerBinding, map[string]*llx.RawData{
-			"id":      llx.StringData(subPath + "-" + strconv.Itoa(i)),
+			"id":      llx.StringData(resourcePath + "-" + strconv.Itoa(i)),
 			"role":    llx.StringData(b.Role),
 			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
 		})
@@ -707,40 +741,56 @@ func (g *mqlGcpProjectPubsubServiceSubscription) iamPolicy() ([]any, error) {
 	return res, nil
 }
 
-func topicStateToString(state pubsub.TopicState) string {
+func topicStateToString(state pubsubpb.Topic_State) string {
 	switch state {
-	case pubsub.TopicStateActive:
+	case pubsubpb.Topic_ACTIVE:
 		return "ACTIVE"
-	case pubsub.TopicStateIngestionResourceError:
+	case pubsubpb.Topic_INGESTION_RESOURCE_ERROR:
 		return "INGESTION_RESOURCE_ERROR"
 	default:
 		return "STATE_UNSPECIFIED"
 	}
 }
 
-func subscriptionStateToString(state pubsub.SubscriptionState) string {
+func subscriptionStateToString(state pubsubpb.Subscription_State) string {
 	switch state {
-	case pubsub.SubscriptionStateActive:
+	case pubsubpb.Subscription_ACTIVE:
 		return "ACTIVE"
-	case pubsub.SubscriptionStateResourceError:
+	case pubsubpb.Subscription_RESOURCE_ERROR:
 		return "RESOURCE_ERROR"
 	default:
 		return "STATE_UNSPECIFIED"
 	}
 }
 
-func optionalDurationToTime(d any) time.Time {
+func pbDurationToTime(d *durationpb.Duration) time.Time {
 	if d == nil {
 		return llx.DurationToTime(0)
 	}
-	if dur, ok := d.(time.Duration); ok {
-		return llx.DurationToTime(int64(dur.Seconds()))
-	}
-	return llx.DurationToTime(0)
+	return llx.DurationToTime(int64(d.AsDuration().Seconds()))
 }
 
 func pubsubConfigId(projectId, parentName string) string {
 	return fmt.Sprintf("%s/%s/config", projectId, parentName)
+}
+
+func projectPath(projectID string) string {
+	return "projects/" + projectID
+}
+
+func topicPath(projectID, name string) string {
+	return fmt.Sprintf("projects/%s/topics/%s", projectID, name)
+}
+
+func subscriptionPath(projectID, name string) string {
+	return fmt.Sprintf("projects/%s/subscriptions/%s", projectID, name)
+}
+
+func lastPathSegment(s string) string {
+	if i := strings.LastIndex(s, "/"); i >= 0 {
+		return s[i+1:]
+	}
+	return s
 }
 
 func (g *mqlGcpProjectPubsubService) schemas() ([]any, error) {
@@ -756,13 +806,16 @@ func (g *mqlGcpProjectPubsubService) schemas() ([]any, error) {
 	}
 
 	ctx := context.Background()
-	schemaClient, err := pubsub.NewSchemaClient(ctx, projectId, option.WithCredentials(creds))
+	schemaClient, err := pubsubadmin.NewSchemaClient(ctx, option.WithCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
 	defer schemaClient.Close()
 
-	it := schemaClient.Schemas(ctx, pubsub.SchemaViewFull)
+	it := schemaClient.ListSchemas(ctx, &pubsubpb.ListSchemasRequest{
+		Parent: projectPath(projectId),
+		View:   pubsubpb.SchemaView_FULL,
+	})
 
 	var res []any
 	for {
@@ -778,8 +831,9 @@ func (g *mqlGcpProjectPubsubService) schemas() ([]any, error) {
 		}
 
 		var revisionCreateTime *time.Time
-		if !schema.RevisionCreateTime.IsZero() {
-			revisionCreateTime = &schema.RevisionCreateTime
+		if schema.RevisionCreateTime != nil {
+			t := schema.RevisionCreateTime.AsTime()
+			revisionCreateTime = &t
 		}
 
 		mqlSchema, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.schema", map[string]*llx.RawData{
@@ -787,7 +841,7 @@ func (g *mqlGcpProjectPubsubService) schemas() ([]any, error) {
 			"name":               llx.StringData(schema.Name),
 			"type":               llx.StringData(pubsubSchemaTypeString(schema.Type)),
 			"definition":         llx.StringData(schema.Definition),
-			"revisionId":         llx.StringData(schema.RevisionID),
+			"revisionId":         llx.StringData(schema.RevisionId),
 			"revisionCreateTime": llx.TimeDataPtr(revisionCreateTime),
 		})
 		if err != nil {
@@ -799,11 +853,11 @@ func (g *mqlGcpProjectPubsubService) schemas() ([]any, error) {
 	return res, nil
 }
 
-func pubsubSchemaTypeString(t pubsub.SchemaType) string {
+func pubsubSchemaTypeString(t pubsubpb.Schema_Type) string {
 	switch t {
-	case pubsub.SchemaProtocolBuffer:
+	case pubsubpb.Schema_PROTOCOL_BUFFER:
 		return "PROTOCOL_BUFFER"
-	case pubsub.SchemaAvro:
+	case pubsubpb.Schema_AVRO:
 		return "AVRO"
 	default:
 		return "TYPE_UNSPECIFIED"
@@ -820,18 +874,18 @@ func (g *mqlGcpProjectPubsubServiceSchema) id() (string, error) {
 	return fmt.Sprintf("gcp.project/%s/pubsubService.schema/%s", g.ProjectId.Data, g.Name.Data), nil
 }
 
-func pubsubSchemaEncodingString(e pubsub.SchemaEncoding) string {
+func pubsubSchemaEncodingString(e pubsubpb.Encoding) string {
 	switch e {
-	case pubsub.EncodingJSON:
+	case pubsubpb.Encoding_JSON:
 		return "JSON"
-	case pubsub.EncodingBinary:
+	case pubsubpb.Encoding_BINARY:
 		return "BINARY"
 	default:
 		return "ENCODING_UNSPECIFIED"
 	}
 }
 
-func buildTopicSchemaSettings(runtime *plugin.Runtime, parentId string, ss *pubsub.SchemaSettings) (*mqlGcpProjectPubsubServiceTopicConfigSchemaSettings, error) {
+func buildTopicSchemaSettings(runtime *plugin.Runtime, parentId string, ss *pubsubpb.SchemaSettings) (*mqlGcpProjectPubsubServiceTopicConfigSchemaSettings, error) {
 	if ss == nil {
 		return nil, nil
 	}
@@ -839,8 +893,8 @@ func buildTopicSchemaSettings(runtime *plugin.Runtime, parentId string, ss *pubs
 		"id":              llx.StringData(parentId + "/schemaSettings"),
 		"schema":          llx.StringData(ss.Schema),
 		"encoding":        llx.StringData(pubsubSchemaEncodingString(ss.Encoding)),
-		"firstRevisionId": llx.StringData(ss.FirstRevisionID),
-		"lastRevisionId":  llx.StringData(ss.LastRevisionID),
+		"firstRevisionId": llx.StringData(ss.FirstRevisionId),
+		"lastRevisionId":  llx.StringData(ss.LastRevisionId),
 	})
 	if err != nil {
 		return nil, err
