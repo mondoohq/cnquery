@@ -4388,6 +4388,8 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   versionDestroyTtl time
   // Customer-managed encryption key names from all replication locations
   customerManagedEncryption []string
+  // Resource manager tags used to organize and group resources, and to control policy evaluation
+  tags map[string]string
   // List of secret versions
   versions() []gcp.project.secretmanagerService.secret.version
   // IAM policy for this secret
@@ -4806,6 +4808,8 @@ private gcp.project.bigtableService.table @defaults("name") {
   automatedBackupPolicy dict
   // Change stream configuration
   changeStreamConfig dict
+  // Tiered storage configuration controlling movement of data between SSD and HDD tiers
+  tieredStorageConfig dict
 }
 
 // Google Cloud (GCP) Bigtable app profile
@@ -4952,6 +4956,10 @@ private gcp.project.alloydbService.instance @defaults("name") {
   clientConnectionConfig dict
   // Private Service Connect instance configuration
   pscInstanceConfig dict
+  // Policy that controls whether the instance is up and running (ALWAYS, NEVER)
+  activationPolicy string
+  // Managed connection pool configuration for the instance
+  connectionPoolConfig dict
   // List of available nodes
   nodes []dict
   // Writable node information

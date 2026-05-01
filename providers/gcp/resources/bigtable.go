@@ -357,6 +357,17 @@ func (g *mqlGcpProjectBigtableServiceInstance) tables() ([]any, error) {
 			}
 		}
 
+		var tieredStorageConfig map[string]any
+		if tsc := tableInfo.TieredStorageConfig; tsc != nil {
+			if rule, ok := tsc.InfrequentAccess.(*bigtable.TieredStorageIncludeIfOlderThan); ok && rule != nil {
+				tieredStorageConfig = map[string]any{
+					"infrequentAccess": map[string]any{
+						"includeIfOlderThan": fmt.Sprintf("%v", rule.Duration),
+					},
+				}
+			}
+		}
+
 		deletionProtection := false
 		if tableInfo.DeletionProtection == bigtable.Protected {
 			deletionProtection = true
@@ -371,6 +382,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) tables() ([]any, error) {
 			"deletionProtection":    llx.BoolData(deletionProtection),
 			"automatedBackupPolicy": llx.DictData(automatedBackupPolicy),
 			"changeStreamConfig":    llx.DictData(changeStreamConfig),
+			"tieredStorageConfig":   llx.DictData(tieredStorageConfig),
 		})
 		if err != nil {
 			return nil, err

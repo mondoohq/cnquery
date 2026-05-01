@@ -154,9 +154,11 @@ gcp.project.alloydbService.cluster.uid 11.3.1
 gcp.project.alloydbService.cluster.updatedAt 11.3.1
 gcp.project.alloydbService.clusters 11.3.1
 gcp.project.alloydbService.instance 11.3.1
+gcp.project.alloydbService.instance.activationPolicy 13.12.2
 gcp.project.alloydbService.instance.availabilityType 11.3.1
 gcp.project.alloydbService.instance.clientConnectionConfig 11.3.1
 gcp.project.alloydbService.instance.clusterName 11.3.1
+gcp.project.alloydbService.instance.connectionPoolConfig 13.12.2
 gcp.project.alloydbService.instance.createdAt 11.3.1
 gcp.project.alloydbService.instance.databaseFlags 11.3.1
 gcp.project.alloydbService.instance.displayName 11.3.1
@@ -543,6 +545,7 @@ gcp.project.bigtableService.table.granularity 11.3.1
 gcp.project.bigtableService.table.instanceName 11.3.1
 gcp.project.bigtableService.table.name 11.3.1
 gcp.project.bigtableService.table.projectId 11.3.1
+gcp.project.bigtableService.table.tieredStorageConfig 13.12.2
 gcp.project.binaryAuthorization 9.0.0
 gcp.project.binaryAuthorizationControl 11.0.15
 gcp.project.binaryAuthorizationControl.admissionRule 11.0.15
@@ -3118,6 +3121,7 @@ gcp.project.secretmanagerService.secret.projectId 11.1.0
 gcp.project.secretmanagerService.secret.replication 11.1.0
 gcp.project.secretmanagerService.secret.resourcePath 11.1.0
 gcp.project.secretmanagerService.secret.rotation 11.1.0
+gcp.project.secretmanagerService.secret.tags 13.12.2
 gcp.project.secretmanagerService.secret.topics 11.1.0
 gcp.project.secretmanagerService.secret.version 11.1.0
 gcp.project.secretmanagerService.secret.version.clientSpecifiedPayloadChecksum 11.1.0

@@ -174,6 +174,7 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			"annotations":               llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
 			"versionDestroyTtl":         llx.TimeDataPtr(mqlVersionDestroyTtl),
 			"customerManagedEncryption": llx.ArrayData(cmeKeys, types.String),
+			"tags":                      llx.MapData(convert.MapToInterfaceMap(s.Tags), types.String),
 		})
 		if err != nil {
 			return nil, err

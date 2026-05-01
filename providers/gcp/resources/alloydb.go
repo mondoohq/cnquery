@@ -329,6 +329,10 @@ func (g *mqlGcpProjectAlloydbServiceCluster) instances() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		connectionPoolConfig, err := protoToDict(inst.ConnectionPoolConfig)
+		if err != nil {
+			return nil, err
+		}
 		writableNode, err := protoToDict(inst.WritableNode)
 		if err != nil {
 			return nil, err
@@ -376,6 +380,8 @@ func (g *mqlGcpProjectAlloydbServiceCluster) instances() ([]any, error) {
 			"readPoolConfig":         llx.DictData(readPoolConfig),
 			"clientConnectionConfig": llx.DictData(clientConnectionConfig),
 			"pscInstanceConfig":      llx.DictData(pscInstanceConfig),
+			"activationPolicy":       llx.StringData(inst.ActivationPolicy.String()),
+			"connectionPoolConfig":   llx.DictData(connectionPoolConfig),
 			"nodes":                  llx.ArrayData(nodes, types.Dict),
 			"writableNode":           llx.DictData(writableNode),
 			"reconciling":            llx.BoolData(inst.Reconciling),
