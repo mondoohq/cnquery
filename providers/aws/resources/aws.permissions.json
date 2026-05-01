@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.20.0",
-  "generated_at": "2026-04-29T09:56:02-07:00",
+  "generated_at": "2026-05-01T11:29:19-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -60,6 +60,7 @@
     "cloudfront:ListDistributions",
     "cloudfront:ListFunctions",
     "cloudfront:ListTagsForResource",
+    "cloudfront:ListTrustStores",
     "cloudtrail:DescribeTrails",
     "cloudtrail:GetChannel",
     "cloudtrail:GetEventDataStore",
@@ -621,6 +622,7 @@
     "ssm:ListTagsForResource",
     "sso:ListAccountAssignments",
     "sso:ListAccountsForProvisionedPermissionSet",
+    "sso:ListApplications",
     "sso:ListCustomerManagedPolicyReferencesInPermissionSet",
     "sso:ListInstances",
     "sso:ListManagedPoliciesInPermissionSet",
@@ -636,7 +638,10 @@
     "timestream:ListDatabases",
     "timestream:ListTables",
     "timestream:ListTagsForResource",
+    "transfer:ListConnectors",
     "transfer:ListServers",
+    "transfer:ListWebApps",
+    "transfer:ListWorkflows",
     "wafv2:GetIPSet",
     "wafv2:GetLoggingConfiguration",
     "wafv2:GetRegexPatternSet",
@@ -648,8 +653,14 @@
     "wafv2:ListRuleGroups",
     "wafv2:ListWebACLs",
     "workdocs:DescribeUsers",
+    "workspaces-web:GetIpAccessSettings",
+    "workspaces-web:GetTrustStore",
+    "workspaces-web:GetUserSettings",
+    "workspaces-web:ListIpAccessSettings",
     "workspaces-web:ListPortals",
+    "workspaces-web:ListTrustStores",
     "workspaces-web:ListUserAccessLoggingSettings",
+    "workspaces-web:ListUserSettings",
     "workspaces:DescribeIpGroups",
     "workspaces:DescribeTags",
     "workspaces:DescribeWorkspaceBundles",
@@ -999,6 +1010,12 @@
       "permission": "cloudfront:ListTagsForResource",
       "service": "cloudfront",
       "action": "ListTagsForResource",
+      "source_file": "aws_cloudfront.go"
+    },
+    {
+      "permission": "cloudfront:ListTrustStores",
+      "service": "cloudfront",
+      "action": "ListTrustStores",
       "source_file": "aws_cloudfront.go"
     },
     {
@@ -4506,6 +4523,12 @@
       "source_file": "aws_identitycenter.go"
     },
     {
+      "permission": "sso:ListApplications",
+      "service": "sso",
+      "action": "ListApplications",
+      "source_file": "aws_identitycenter.go"
+    },
+    {
       "permission": "sso:ListCustomerManagedPolicyReferencesInPermissionSet",
       "service": "sso",
       "action": "ListCustomerManagedPolicyReferencesInPermissionSet",
@@ -4602,9 +4625,27 @@
       "source_file": "aws_timestream.go"
     },
     {
+      "permission": "transfer:ListConnectors",
+      "service": "transfer",
+      "action": "ListConnectors",
+      "source_file": "aws_transfer.go"
+    },
+    {
       "permission": "transfer:ListServers",
       "service": "transfer",
       "action": "ListServers",
+      "source_file": "aws_transfer.go"
+    },
+    {
+      "permission": "transfer:ListWebApps",
+      "service": "transfer",
+      "action": "ListWebApps",
+      "source_file": "aws_transfer.go"
+    },
+    {
+      "permission": "transfer:ListWorkflows",
+      "service": "transfer",
+      "action": "ListWorkflows",
       "source_file": "aws_transfer.go"
     },
     {
@@ -4674,15 +4715,51 @@
       "source_file": "aws_workdocs.go"
     },
     {
+      "permission": "workspaces-web:GetIpAccessSettings",
+      "service": "workspaces-web",
+      "action": "GetIpAccessSettings",
+      "source_file": "aws_workspacesweb.go"
+    },
+    {
+      "permission": "workspaces-web:GetTrustStore",
+      "service": "workspaces-web",
+      "action": "GetTrustStore",
+      "source_file": "aws_workspacesweb.go"
+    },
+    {
+      "permission": "workspaces-web:GetUserSettings",
+      "service": "workspaces-web",
+      "action": "GetUserSettings",
+      "source_file": "aws_workspacesweb.go"
+    },
+    {
+      "permission": "workspaces-web:ListIpAccessSettings",
+      "service": "workspaces-web",
+      "action": "ListIpAccessSettings",
+      "source_file": "aws_workspacesweb.go"
+    },
+    {
       "permission": "workspaces-web:ListPortals",
       "service": "workspaces-web",
       "action": "ListPortals",
       "source_file": "aws_workspacesweb.go"
     },
     {
+      "permission": "workspaces-web:ListTrustStores",
+      "service": "workspaces-web",
+      "action": "ListTrustStores",
+      "source_file": "aws_workspacesweb.go"
+    },
+    {
       "permission": "workspaces-web:ListUserAccessLoggingSettings",
       "service": "workspaces-web",
       "action": "ListUserAccessLoggingSettings",
+      "source_file": "aws_workspacesweb.go"
+    },
+    {
+      "permission": "workspaces-web:ListUserSettings",
+      "service": "workspaces-web",
+      "action": "ListUserSettings",
       "source_file": "aws_workspacesweb.go"
     },
     {

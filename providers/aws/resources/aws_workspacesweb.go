@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // isWorkspacesWebRegionError checks if the error indicates the WorkSpaces Web
@@ -101,11 +102,14 @@ func newMqlAwsWorkspaceswebPortal(runtime *plugin.Runtime, region string, portal
 			"portalArn":                    llx.StringDataPtr(portal.PortalArn),
 			"displayName":                  llx.StringDataPtr(portal.DisplayName),
 			"portalEndpoint":               llx.StringDataPtr(portal.PortalEndpoint),
+			"portalCustomDomain":           llx.StringData(""),
 			"portalStatus":                 llx.StringData(string(portal.PortalStatus)),
+			"statusReason":                 llx.StringData(""),
 			"authenticationType":           llx.StringData(string(portal.AuthenticationType)),
 			"browserType":                  llx.StringData(string(portal.BrowserType)),
 			"instanceType":                 llx.StringData(string(portal.InstanceType)),
 			"rendererType":                 llx.StringData(string(portal.RendererType)),
+			"customerManagedKey":           llx.StringData(""),
 			"browserSettingsArn":           llx.StringDataPtr(portal.BrowserSettingsArn),
 			"networkSettingsArn":           llx.StringDataPtr(portal.NetworkSettingsArn),
 			"userSettingsArn":              llx.StringDataPtr(portal.UserSettingsArn),
@@ -113,6 +117,7 @@ func newMqlAwsWorkspaceswebPortal(runtime *plugin.Runtime, region string, portal
 			"ipAccessSettingsArn":          llx.StringDataPtr(portal.IpAccessSettingsArn),
 			"userAccessLoggingSettingsArn": llx.StringDataPtr(portal.UserAccessLoggingSettingsArn),
 			"dataProtectionSettingsArn":    llx.StringDataPtr(portal.DataProtectionSettingsArn),
+			"sessionLoggerArn":             llx.StringData(""),
 			"maxConcurrentSessions":        llx.IntDataDefault(portal.MaxConcurrentSessions, 0),
 			"creationDate":                 llx.TimeDataPtr(portal.CreationDate),
 			"region":                       llx.StringData(region),
@@ -222,4 +227,430 @@ func (a *mqlAwsWorkspaceswebUserAccessLoggingSetting) kinesisStream() (*mqlAwsKi
 		return nil, err
 	}
 	return res.(*mqlAwsKinesisStream), nil
+}
+
+// IP Access Settings
+
+func (a *mqlAwsWorkspacesweb) ipAccessSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getIpAccessSettings(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsWorkspacesweb) getIpAccessSettings(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("workspacesweb>getIpAccessSettings>calling aws with region %s", region)
+			svc := conn.WorkspacesWeb(region)
+			res := []any{}
+
+			var nextToken *string
+			for {
+				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+				resp, err := svc.ListIpAccessSettings(ctx, &workspacesweb.ListIpAccessSettingsInput{
+					NextToken: nextToken,
+				})
+				cancel()
+				if err != nil {
+					if isWorkspacesWebRegionError(err) {
+						log.Debug().Str("region", region).Msg("error accessing region for AWS WorkSpaces Web IP access settings API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, summary := range resp.IpAccessSettings {
+					mql, err := newMqlAwsWorkspaceswebIpAccessSettingsFromSummary(a.MqlRuntime, region, summary)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mql)
+				}
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsWorkspaceswebIpAccessSettingsFromSummary(runtime *plugin.Runtime, region string, summary workspaceswebtypes.IpAccessSettingsSummary) (*mqlAwsWorkspaceswebIpAccessSettings, error) {
+	res, err := CreateResource(runtime, "aws.workspacesweb.ipAccessSettings",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringDataPtr(summary.IpAccessSettingsArn),
+			"ipAccessSettingsArn":  llx.StringDataPtr(summary.IpAccessSettingsArn),
+			"displayName":          llx.StringDataPtr(summary.DisplayName),
+			"description":          llx.StringDataPtr(summary.Description),
+			"customerManagedKey":   llx.StringData(""),
+			"ipRules":              llx.ArrayData([]any{}, types.Dict),
+			"associatedPortalArns": llx.ArrayData([]any{}, types.String),
+			"creationDate":         llx.TimeDataPtr(summary.CreationDate),
+			"region":               llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWorkspaceswebIpAccessSettings), nil
+}
+
+func newMqlAwsWorkspaceswebIpAccessSettingsFromDetail(runtime *plugin.Runtime, region string, ipas *workspaceswebtypes.IpAccessSettings) (*mqlAwsWorkspaceswebIpAccessSettings, error) {
+	if ipas == nil {
+		return nil, nil
+	}
+	rules := make([]any, 0, len(ipas.IpRules))
+	for _, r := range ipas.IpRules {
+		rules = append(rules, map[string]any{
+			"ipRange":     awsString(r.IpRange),
+			"description": awsString(r.Description),
+		})
+	}
+	associated := make([]any, 0, len(ipas.AssociatedPortalArns))
+	for _, p := range ipas.AssociatedPortalArns {
+		associated = append(associated, p)
+	}
+	res, err := CreateResource(runtime, "aws.workspacesweb.ipAccessSettings",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringDataPtr(ipas.IpAccessSettingsArn),
+			"ipAccessSettingsArn":  llx.StringDataPtr(ipas.IpAccessSettingsArn),
+			"displayName":          llx.StringDataPtr(ipas.DisplayName),
+			"description":          llx.StringDataPtr(ipas.Description),
+			"customerManagedKey":   llx.StringDataPtr(ipas.CustomerManagedKey),
+			"ipRules":              llx.ArrayData(rules, types.Dict),
+			"associatedPortalArns": llx.ArrayData(associated, types.String),
+			"creationDate":         llx.TimeDataPtr(ipas.CreationDate),
+			"region":               llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWorkspaceswebIpAccessSettings), nil
+}
+
+func (a *mqlAwsWorkspaceswebIpAccessSettings) id() (string, error) {
+	return a.IpAccessSettingsArn.Data, nil
+}
+
+// Trust Stores
+
+func (a *mqlAwsWorkspacesweb) trustStores() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getTrustStores(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsWorkspacesweb) getTrustStores(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("workspacesweb>getTrustStores>calling aws with region %s", region)
+			svc := conn.WorkspacesWeb(region)
+			res := []any{}
+
+			var nextToken *string
+			for {
+				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+				resp, err := svc.ListTrustStores(ctx, &workspacesweb.ListTrustStoresInput{
+					NextToken: nextToken,
+				})
+				cancel()
+				if err != nil {
+					if isWorkspacesWebRegionError(err) {
+						log.Debug().Str("region", region).Msg("error accessing region for AWS WorkSpaces Web trust store API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, summary := range resp.TrustStores {
+					mql, err := newMqlAwsWorkspaceswebTrustStoreFromSummary(a.MqlRuntime, region, summary)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mql)
+				}
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsWorkspaceswebTrustStoreFromSummary(runtime *plugin.Runtime, region string, summary workspaceswebtypes.TrustStoreSummary) (*mqlAwsWorkspaceswebTrustStore, error) {
+	res, err := CreateResource(runtime, "aws.workspacesweb.trustStore",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringDataPtr(summary.TrustStoreArn),
+			"trustStoreArn":        llx.StringDataPtr(summary.TrustStoreArn),
+			"associatedPortalArns": llx.ArrayData([]any{}, types.String),
+			"region":               llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWorkspaceswebTrustStore), nil
+}
+
+func newMqlAwsWorkspaceswebTrustStoreFromDetail(runtime *plugin.Runtime, region string, ts *workspaceswebtypes.TrustStore) (*mqlAwsWorkspaceswebTrustStore, error) {
+	if ts == nil {
+		return nil, nil
+	}
+	associated := make([]any, 0, len(ts.AssociatedPortalArns))
+	for _, p := range ts.AssociatedPortalArns {
+		associated = append(associated, p)
+	}
+	res, err := CreateResource(runtime, "aws.workspacesweb.trustStore",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringDataPtr(ts.TrustStoreArn),
+			"trustStoreArn":        llx.StringDataPtr(ts.TrustStoreArn),
+			"associatedPortalArns": llx.ArrayData(associated, types.String),
+			"region":               llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWorkspaceswebTrustStore), nil
+}
+
+func (a *mqlAwsWorkspaceswebTrustStore) id() (string, error) {
+	return a.TrustStoreArn.Data, nil
+}
+
+// User Settings
+
+func (a *mqlAwsWorkspacesweb) userSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getUserSettings(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsWorkspacesweb) getUserSettings(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("workspacesweb>getUserSettings>calling aws with region %s", region)
+			svc := conn.WorkspacesWeb(region)
+			res := []any{}
+
+			var nextToken *string
+			for {
+				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+				resp, err := svc.ListUserSettings(ctx, &workspacesweb.ListUserSettingsInput{
+					NextToken: nextToken,
+				})
+				cancel()
+				if err != nil {
+					if isWorkspacesWebRegionError(err) {
+						log.Debug().Str("region", region).Msg("error accessing region for AWS WorkSpaces Web user settings API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, summary := range resp.UserSettings {
+					mql, err := newMqlAwsWorkspaceswebUserSettingsFromSummary(a.MqlRuntime, region, summary)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mql)
+				}
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsWorkspaceswebUserSettingsFromSummary(runtime *plugin.Runtime, region string, summary workspaceswebtypes.UserSettingsSummary) (*mqlAwsWorkspaceswebUserSettings, error) {
+	res, err := CreateResource(runtime, "aws.workspacesweb.userSettings",
+		map[string]*llx.RawData{
+			"__id":                           llx.StringDataPtr(summary.UserSettingsArn),
+			"userSettingsArn":                llx.StringDataPtr(summary.UserSettingsArn),
+			"copyAllowed":                    llx.StringData(string(summary.CopyAllowed)),
+			"pasteAllowed":                   llx.StringData(string(summary.PasteAllowed)),
+			"downloadAllowed":                llx.StringData(string(summary.DownloadAllowed)),
+			"uploadAllowed":                  llx.StringData(string(summary.UploadAllowed)),
+			"printAllowed":                   llx.StringData(string(summary.PrintAllowed)),
+			"deepLinkAllowed":                llx.StringData(string(summary.DeepLinkAllowed)),
+			"webAuthnAllowed":                llx.StringData(""),
+			"disconnectTimeoutInMinutes":     llx.IntDataDefault(summary.DisconnectTimeoutInMinutes, 0),
+			"idleDisconnectTimeoutInMinutes": llx.IntDataDefault(summary.IdleDisconnectTimeoutInMinutes, 0),
+			"customerManagedKey":             llx.StringData(""),
+			"associatedPortalArns":           llx.ArrayData([]any{}, types.String),
+			"region":                         llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWorkspaceswebUserSettings), nil
+}
+
+func newMqlAwsWorkspaceswebUserSettingsFromDetail(runtime *plugin.Runtime, region string, us *workspaceswebtypes.UserSettings) (*mqlAwsWorkspaceswebUserSettings, error) {
+	if us == nil {
+		return nil, nil
+	}
+	associated := make([]any, 0, len(us.AssociatedPortalArns))
+	for _, p := range us.AssociatedPortalArns {
+		associated = append(associated, p)
+	}
+	res, err := CreateResource(runtime, "aws.workspacesweb.userSettings",
+		map[string]*llx.RawData{
+			"__id":                           llx.StringDataPtr(us.UserSettingsArn),
+			"userSettingsArn":                llx.StringDataPtr(us.UserSettingsArn),
+			"copyAllowed":                    llx.StringData(string(us.CopyAllowed)),
+			"pasteAllowed":                   llx.StringData(string(us.PasteAllowed)),
+			"downloadAllowed":                llx.StringData(string(us.DownloadAllowed)),
+			"uploadAllowed":                  llx.StringData(string(us.UploadAllowed)),
+			"printAllowed":                   llx.StringData(string(us.PrintAllowed)),
+			"deepLinkAllowed":                llx.StringData(string(us.DeepLinkAllowed)),
+			"webAuthnAllowed":                llx.StringData(string(us.WebAuthnAllowed)),
+			"disconnectTimeoutInMinutes":     llx.IntDataDefault(us.DisconnectTimeoutInMinutes, 0),
+			"idleDisconnectTimeoutInMinutes": llx.IntDataDefault(us.IdleDisconnectTimeoutInMinutes, 0),
+			"customerManagedKey":             llx.StringDataPtr(us.CustomerManagedKey),
+			"associatedPortalArns":           llx.ArrayData(associated, types.String),
+			"region":                         llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWorkspaceswebUserSettings), nil
+}
+
+func (a *mqlAwsWorkspaceswebUserSettings) id() (string, error) {
+	return a.UserSettingsArn.Data, nil
+}
+
+// Portal typed references — call Get* for the linked sub-resource so the
+// returned object reflects current state instead of an init-stub. (List* on
+// these resources doesn't surface portal associations.)
+
+func (a *mqlAwsWorkspaceswebPortal) ipAccessSettings() (*mqlAwsWorkspaceswebIpAccessSettings, error) {
+	arnVal := a.IpAccessSettingsArn.Data
+	if arnVal == "" {
+		a.IpAccessSettings.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	svc := conn.WorkspacesWeb(region)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	resp, err := svc.GetIpAccessSettings(ctx, &workspacesweb.GetIpAccessSettingsInput{IpAccessSettingsArn: &arnVal})
+	if err != nil {
+		if isWorkspacesWebRegionError(err) {
+			a.IpAccessSettings.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	return newMqlAwsWorkspaceswebIpAccessSettingsFromDetail(a.MqlRuntime, region, resp.IpAccessSettings)
+}
+
+func (a *mqlAwsWorkspaceswebPortal) trustStore() (*mqlAwsWorkspaceswebTrustStore, error) {
+	arnVal := a.TrustStoreArn.Data
+	if arnVal == "" {
+		a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	svc := conn.WorkspacesWeb(region)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	resp, err := svc.GetTrustStore(ctx, &workspacesweb.GetTrustStoreInput{TrustStoreArn: &arnVal})
+	if err != nil {
+		if isWorkspacesWebRegionError(err) {
+			a.TrustStore.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	return newMqlAwsWorkspaceswebTrustStoreFromDetail(a.MqlRuntime, region, resp.TrustStore)
+}
+
+func (a *mqlAwsWorkspaceswebPortal) userSettings() (*mqlAwsWorkspaceswebUserSettings, error) {
+	arnVal := a.UserSettingsArn.Data
+	if arnVal == "" {
+		a.UserSettings.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	svc := conn.WorkspacesWeb(region)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	resp, err := svc.GetUserSettings(ctx, &workspacesweb.GetUserSettingsInput{UserSettingsArn: &arnVal})
+	if err != nil {
+		if isWorkspacesWebRegionError(err) {
+			a.UserSettings.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	return newMqlAwsWorkspaceswebUserSettingsFromDetail(a.MqlRuntime, region, resp.UserSettings)
+}
+
+func awsString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

@@ -6529,6 +6529,26 @@ aws.cloudfront @defaults("distributions functions") {
   functions() []aws.cloudfront.function
   // List of CloudFront Anycast static IP lists
   anycastIpLists() []aws.cloudfront.anycastIpList
+  // List of CloudFront trust stores (used for origin mTLS and Distribution Tenants)
+  trustStores() []aws.cloudfront.trustStore
+}
+
+// Amazon CloudFront trust store (set of CA certificates for origin mTLS / Distribution Tenants)
+private aws.cloudfront.trustStore @defaults("name status numberOfCaCertificates") {
+  // Trust store ID
+  id string
+  // Trust store ARN
+  arn string
+  // Trust store name
+  name string
+  // Trust store status: ACTIVE, IN_USE, DELETED
+  status string
+  // Number of CA certificates currently in the trust store
+  numberOfCaCertificates int
+  // Reason describing the current status
+  reason string
+  // Last modified timestamp
+  lastModifiedTime time
 }
 
 // Amazon CloudFront Anycast static IP list
@@ -6621,6 +6641,8 @@ private aws.cloudfront.distribution.origin @defaults("id originPath") {
   originPath string
   // Account ID where the origin exists
   account string
+  // ACM certificate that CloudFront uses for mutual TLS to the origin (null when origin mTLS is disabled)
+  originMtlsClientCertificate() aws.acm.certificate
 }
 
 // Amazon CloudFront function
@@ -12656,6 +12678,12 @@ aws.workspacesweb @defaults("portals") {
   portals() []aws.workspacesweb.portal
   // List of user access logging settings across all enabled regions
   userAccessLoggingSettings() []aws.workspacesweb.userAccessLoggingSetting
+  // List of IP access settings across all enabled regions
+  ipAccessSettings() []aws.workspacesweb.ipAccessSettings
+  // List of trust stores across all enabled regions
+  trustStores() []aws.workspacesweb.trustStore
+  // List of user settings across all enabled regions
+  userSettings() []aws.workspacesweb.userSettings
 }
 
 // Amazon WorkSpaces Web portal
@@ -12666,8 +12694,12 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   displayName string
   // Portal endpoint URL
   portalEndpoint string
+  // Custom domain that users access in order to start streaming sessions
+  portalCustomDomain string
   // Portal status: Incomplete, Pending, Active
   portalStatus string
+  // Reason for the current portal status
+  statusReason string
   // Authentication type: Standard or IAM_Identity_Center
   authenticationType string
   // Browser type
@@ -12676,24 +12708,94 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   instanceType string
   // Renderer type
   rendererType string
+  // Customer-managed KMS key ARN that encrypts sensitive portal data
+  customerManagedKey string
   // Associated browser settings ARN
   browserSettingsArn string
   // Associated network settings ARN
   networkSettingsArn string
   // Associated user settings ARN
   userSettingsArn string
+  // Associated user settings (typed reference, null if not configured)
+  userSettings() aws.workspacesweb.userSettings
   // Associated trust store ARN
   trustStoreArn string
+  // Associated trust store (typed reference, null if not configured)
+  trustStore() aws.workspacesweb.trustStore
   // Associated IP access settings ARN
   ipAccessSettingsArn string
+  // Associated IP access settings (typed reference, null if not configured)
+  ipAccessSettings() aws.workspacesweb.ipAccessSettings
   // Associated user access logging settings ARN
   userAccessLoggingSettingsArn string
   // Associated data protection settings ARN
   dataProtectionSettingsArn string
+  // Associated session logger ARN
+  sessionLoggerArn string
   // Maximum concurrent sessions
   maxConcurrentSessions int
   // Portal creation timestamp
   creationDate time
+  // AWS region
+  region string
+}
+
+// Amazon WorkSpaces Web IP access settings
+private aws.workspacesweb.ipAccessSettings @defaults("displayName region") {
+  // ARN of the IP access settings
+  ipAccessSettingsArn string
+  // Display name of the IP access settings
+  displayName string
+  // Description of the IP access settings
+  description string
+  // Customer-managed KMS key ARN used to encrypt sensitive data
+  customerManagedKey string
+  // IP rules that gate portal access (each is {ipRange, description})
+  ipRules []dict
+  // Web portal ARNs that this IP access settings resource is associated with
+  associatedPortalArns []string
+  // Creation timestamp
+  creationDate time
+  // AWS region
+  region string
+}
+
+// Amazon WorkSpaces Web trust store
+private aws.workspacesweb.trustStore @defaults("trustStoreArn region") {
+  // ARN of the trust store
+  trustStoreArn string
+  // Web portal ARNs that this trust store is associated with
+  associatedPortalArns []string
+  // AWS region
+  region string
+}
+
+// Amazon WorkSpaces Web user settings
+private aws.workspacesweb.userSettings @defaults("userSettingsArn region") {
+  // ARN of the user settings
+  userSettingsArn string
+  // Whether users can copy text from the streaming session: Enabled or Disabled
+  copyAllowed string
+  // Whether users can paste text into the streaming session: Enabled or Disabled
+  pasteAllowed string
+  // Whether users can download files from the streaming session: Enabled or Disabled
+  downloadAllowed string
+  // Whether users can upload files to the streaming session: Enabled or Disabled
+  uploadAllowed string
+  // Whether users can print to the local device: Enabled or Disabled
+  printAllowed string
+  // Whether users can use deep links: Enabled or Disabled
+  deepLinkAllowed string
+  // Whether users can use WebAuthn passwordless authentication: Enabled or Disabled
+  webAuthnAllowed string
+  // Time in minutes a streaming session remains active after disconnect
+  disconnectTimeoutInMinutes int
+  // Idle disconnect timeout in minutes
+  idleDisconnectTimeoutInMinutes int
+  // Customer-managed KMS key ARN used to encrypt sensitive data
+  customerManagedKey string
+  // Web portal ARNs that this user settings resource is associated with
+  associatedPortalArns []string
   // AWS region
   region string
 }
@@ -15374,6 +15476,78 @@ private aws.ram.resourceShare @defaults("arn name status") {
 aws.transfer @defaults("servers") {
   // List of Transfer Family servers
   servers() []aws.transfer.server
+  // List of Transfer Family connectors (outbound AS2/SFTP transfer endpoints)
+  connectors() []aws.transfer.connector
+  // List of Transfer Family web apps
+  webApps() []aws.transfer.webApp
+  // List of Transfer Family workflows
+  workflows() []aws.transfer.workflow
+}
+
+// AWS Transfer Family connector (sends files via AS2 or SFTP to an external endpoint)
+private aws.transfer.connector @defaults("arn connectorId status") {
+  // ARN of the connector
+  arn string
+  // Connector identifier
+  connectorId string
+  // Region where the connector exists
+  region string
+  // URL of the partner's AS2 or SFTP endpoint
+  url string
+  // Connector status: PENDING, ACTIVE, ERRORED
+  status() string
+  // Egress configuration type: SERVICE_MANAGED or VPC_LATTICE
+  egressType() string
+  // IP address type for the connector: IPV4, DUALSTACK
+  ipAddressType() string
+  // Error message when status is ERRORED
+  errorMessage() string
+  // Name of the security policy attached to the connector
+  securityPolicyName() string
+  // IAM role ARN that grants the connector permissions to invoke AWS APIs
+  accessRole() aws.iam.role
+  // IAM role ARN used for CloudWatch logging (null when logging is not configured)
+  loggingRole() aws.iam.role
+  // List of egress IP addresses assigned to the connector when egress type is SERVICE_MANAGED
+  serviceManagedEgressIpAddresses() []string
+  // Tags for the connector
+  tags() map[string]string
+}
+
+// AWS Transfer Family web app
+private aws.transfer.webApp @defaults("arn webAppId endpointType") {
+  // ARN of the web app
+  arn string
+  // Web app identifier
+  webAppId string
+  // Region where the web app exists
+  region string
+  // Endpoint type: PUBLIC or VPC
+  endpointType string
+  // The URL provided to users to interact with the web app
+  accessEndpoint string
+  // The unique URL for the web app (used as a CloudFront origin)
+  webAppEndpoint string
+  // Tags for the web app
+  tags() map[string]string
+}
+
+// AWS Transfer Family workflow
+private aws.transfer.workflow @defaults("arn workflowId description") {
+  // ARN of the workflow
+  arn string
+  // Workflow identifier
+  workflowId string
+  // Region where the workflow exists
+  region string
+  // Description for the workflow
+  description string
+  // Steps that run on workflow execution (each is a dict shaped like the SDK WorkflowStep)
+  steps() []dict
+  // Steps that run when an exception is encountered (each is a dict shaped like the SDK WorkflowStep)
+  onExceptionSteps() []dict
+  // Tags for the workflow
+  tags() map[string]string
 }
 
 // AWS Transfer Family server
@@ -15550,6 +15724,38 @@ private aws.identitycenter.instance @defaults("arn name status") {
   groups() []aws.identitycenter.group
   // Users in the identity store
   users() []aws.identitycenter.user
+  // Applications configured for this Identity Center instance
+  applications() []aws.identitycenter.application
+}
+
+// AWS IAM Identity Center application
+private aws.identitycenter.application @defaults("name status applicationProviderArn") {
+  // ARN of the application
+  arn string
+  // Name of the application
+  name string
+  // Description of the application
+  description string
+  // Status of the application: ENABLED or DISABLED
+  status string
+  // ARN of the Identity Center instance this application is configured under
+  instanceArn string
+  // ARN of the identity store associated with the application
+  identityStoreArn string
+  // ARN of the application provider that backs this application
+  applicationProviderArn string
+  // AWS account ID that owns the application
+  applicationAccount string
+  // AWS region where the application was created in IAM Identity Center
+  createdFrom string
+  // Date the application was created
+  createdDate time
+  // Whether the application is visible in the access portal: ENABLED or DISABLED
+  portalVisibility string
+  // How the user is signed into the target application: APPLICATION or IDENTITY_CENTER
+  signInOrigin string
+  // URL that accepts authentication requests for the application (set when signInOrigin is APPLICATION)
+  applicationUrl string
 }
 
 // AWS IAM Identity Center permission set

@@ -65,6 +65,10 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 					if err != nil {
 						return nil, err
 					}
+					mqlOrigin := mqlAwsCloudfrontOrigin.(*mqlAwsCloudfrontDistributionOrigin)
+					if origin.CustomOriginConfig != nil && origin.CustomOriginConfig.OriginMtlsConfig != nil {
+						mqlOrigin.cacheOriginMtlsCertArn = convert.ToValue(origin.CustomOriginConfig.OriginMtlsConfig.ClientCertificateArn)
+					}
 					origins = append(origins, mqlAwsCloudfrontOrigin)
 				}
 			}
@@ -390,4 +394,71 @@ func initAwsCloudfrontDistribution(runtime *plugin.Runtime, args map[string]*llx
 		}
 	}
 	return nil, nil, errors.New("cloudfront distribution does not exist")
+}
+
+// Origin mTLS client certificate (typed reference)
+
+type mqlAwsCloudfrontDistributionOriginInternal struct {
+	cacheOriginMtlsCertArn string
+}
+
+func (a *mqlAwsCloudfrontDistributionOrigin) originMtlsClientCertificate() (*mqlAwsAcmCertificate, error) {
+	if a.cacheOriginMtlsCertArn == "" {
+		a.OriginMtlsClientCertificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlCert, err := NewResource(a.MqlRuntime, "aws.acm.certificate",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheOriginMtlsCertArn)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlCert.(*mqlAwsAcmCertificate), nil
+}
+
+// Trust stores
+
+func (a *mqlAwsCloudfrontTrustStore) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsCloudfront) trustStores() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudfront("") // global service
+	ctx := context.Background()
+	res := []any{}
+
+	var marker *string
+	for {
+		resp, err := svc.ListTrustStores(ctx, &cloudfront.ListTrustStoresInput{
+			Marker: marker,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, errors.Wrap(err, "could not gather aws cloudfront trust stores")
+		}
+		for _, ts := range resp.TrustStoreList {
+			mqlTs, err := CreateResource(a.MqlRuntime, "aws.cloudfront.trustStore",
+				map[string]*llx.RawData{
+					"__id":                   llx.StringDataPtr(ts.Arn),
+					"id":                     llx.StringDataPtr(ts.Id),
+					"arn":                    llx.StringDataPtr(ts.Arn),
+					"name":                   llx.StringDataPtr(ts.Name),
+					"status":                 llx.StringData(string(ts.Status)),
+					"numberOfCaCertificates": llx.IntDataDefault(ts.NumberOfCaCertificates, 0),
+					"reason":                 llx.StringDataPtr(ts.Reason),
+					"lastModifiedTime":       llx.TimeDataPtr(ts.LastModifiedTime),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlTs)
+		}
+		if resp.NextMarker == nil {
+			break
+		}
+		marker = resp.NextMarker
+	}
+	return res, nil
 }
