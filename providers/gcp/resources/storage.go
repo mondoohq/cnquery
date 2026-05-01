@@ -482,6 +482,9 @@ func (g *mqlGcpProjectStorageServiceBucket) defaultObjectAcl() ([]any, error) {
 }
 
 func (g *mqlGcpProjectStorageServiceBucket) public() (bool, error) {
+	if g.PublicAccessPrevention.Error != nil {
+		return false, g.PublicAccessPrevention.Error
+	}
 	// PAP=enforced is GCS's hard block — short-circuit before any IAM/ACL fetch.
 	if g.PublicAccessPrevention.Data == "enforced" {
 		return false, nil
@@ -491,7 +494,6 @@ func (g *mqlGcpProjectStorageServiceBucket) public() (bool, error) {
 	if bindings.Error != nil {
 		return false, bindings.Error
 	}
-	var iamMembers []string
 	for _, raw := range bindings.Data {
 		binding, ok := raw.(*mqlGcpResourcemanagerBinding)
 		if !ok || binding == nil {
@@ -502,24 +504,21 @@ func (g *mqlGcpProjectStorageServiceBucket) public() (bool, error) {
 			return false, members.Error
 		}
 		for _, m := range members.Data {
-			if s, ok := m.(string); ok {
-				iamMembers = append(iamMembers, s)
+			if s, ok := m.(string); ok && isPublicEntity(s) {
+				return true, nil
 			}
 		}
-	}
-	if anyPublicEntity(iamMembers) {
-		return true, nil
 	}
 
 	if err := g.fetchAcls(); err != nil {
 		return false, err
 	}
-	return evaluateBucketPublic(g.PublicAccessPrevention.Data, nil, g.cacheAcl, g.cacheDefaultObjAcl), nil
+	return aclsHavePublicEntity(g.cacheAcl, g.cacheDefaultObjAcl), nil
 }
 
-// evaluateBucketPublic is the pure logic behind bucket.public(). It returns true
-// when public access prevention is not enforced AND any of (IAM members, bucket
-// ACL, default object ACL) grants allUsers or allAuthenticatedUsers.
+// evaluateBucketPublic is the canonical logic behind bucket.public(), used for
+// unit testing. The bucket.public() method itself short-circuits on PAP and IAM
+// before fetching ACLs to avoid an unnecessary Buckets.Get call.
 func evaluateBucketPublic(pap string, iamMembers []string, acl []*storage.BucketAccessControl, defaultObjectAcl []*storage.ObjectAccessControl) bool {
 	if pap == "enforced" {
 		return false
@@ -527,6 +526,10 @@ func evaluateBucketPublic(pap string, iamMembers []string, acl []*storage.Bucket
 	if anyPublicEntity(iamMembers) {
 		return true
 	}
+	return aclsHavePublicEntity(acl, defaultObjectAcl)
+}
+
+func aclsHavePublicEntity(acl []*storage.BucketAccessControl, defaultObjectAcl []*storage.ObjectAccessControl) bool {
 	for _, entry := range acl {
 		if entry != nil && isPublicEntity(entry.Entity) {
 			return true
