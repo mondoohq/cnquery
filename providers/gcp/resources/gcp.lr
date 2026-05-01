@@ -1497,7 +1497,7 @@ private gcp.project.storageService {
 }
 
 // Google Cloud (GCP) Storage bucket
-private gcp.project.storageService.bucket @defaults("id") {
+private gcp.project.storageService.bucket @defaults("id name public") {
   // Bucket ID
   id string
   // Project ID
@@ -1550,6 +1550,12 @@ private gcp.project.storageService.bucket @defaults("id") {
   objectRetentionMode string
   // Automatic storage class management (enabled, toggleTime, terminalStorageClass)
   autoclass dict
+  // Bucket-level access control list (legacy, only populated when uniform bucket-level access is disabled)
+  acl() []dict
+  // Default access control list applied to newly-created objects (legacy, only populated when uniform bucket-level access is disabled)
+  defaultObjectAcl() []dict
+  // Whether the bucket is publicly accessible via any mechanism (IAM policy, bucket ACL, or default object ACL); returns false when iamConfiguration.publicAccessPrevention is "enforced"
+  public() bool
 }
 
 // Google Cloud bucket's lifecycle configuration

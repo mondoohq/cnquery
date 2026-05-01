@@ -3826,6 +3826,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.autoclass": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetAutoclass()).ToDataRes(types.Dict)
 	},
+	"gcp.project.storageService.bucket.acl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetAcl()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.storageService.bucket.defaultObjectAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetDefaultObjectAcl()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.storageService.bucket.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetPublic()).ToDataRes(types.Bool)
+	},
 	"gcp.project.storageService.bucket.lifecycleRule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).GetAction()).ToDataRes(types.Resource("gcp.project.storageService.bucket.lifecycleRuleAction"))
 	},
@@ -14925,6 +14934,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.storageService.bucket.autoclass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).Autoclass, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Acl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.defaultObjectAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).DefaultObjectAcl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.storageService.bucket.lifecycleRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33899,6 +33920,9 @@ type mqlGcpProjectStorageServiceBucket struct {
 	SoftDeletePolicy         plugin.TValue[any]
 	ObjectRetentionMode      plugin.TValue[string]
 	Autoclass                plugin.TValue[any]
+	Acl                      plugin.TValue[[]any]
+	DefaultObjectAcl         plugin.TValue[[]any]
+	Public                   plugin.TValue[bool]
 }
 
 // createGcpProjectStorageServiceBucket creates a new instance of this resource
@@ -34064,6 +34088,24 @@ func (c *mqlGcpProjectStorageServiceBucket) GetObjectRetentionMode() *plugin.TVa
 
 func (c *mqlGcpProjectStorageServiceBucket) GetAutoclass() *plugin.TValue[any] {
 	return &c.Autoclass
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetAcl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Acl, func() ([]any, error) {
+		return c.acl()
+	})
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetDefaultObjectAcl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefaultObjectAcl, func() ([]any, error) {
+		return c.defaultObjectAcl()
+	})
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
+	})
 }
 
 // mqlGcpProjectStorageServiceBucketLifecycleRule for the gcp.project.storageService.bucket.lifecycleRule resource

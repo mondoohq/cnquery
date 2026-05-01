@@ -3427,10 +3427,12 @@ gcp.project.state 9.0.0
 gcp.project.storage 9.0.0
 gcp.project.storageService 9.0.0
 gcp.project.storageService.bucket 9.0.0
+gcp.project.storageService.bucket.acl 13.12.2
 gcp.project.storageService.bucket.autoclass 13.7.2
 gcp.project.storageService.bucket.created 9.0.0
 gcp.project.storageService.bucket.defaultEventBasedHold 11.6.6
 gcp.project.storageService.bucket.defaultKmsKey 13.2.3
+gcp.project.storageService.bucket.defaultObjectAcl 13.12.2
 gcp.project.storageService.bucket.encryption 11.0.57
 gcp.project.storageService.bucket.iamConfiguration 9.0.0
 gcp.project.storageService.bucket.iamPolicy 9.0.0
@@ -3463,6 +3465,7 @@ gcp.project.storageService.bucket.name 9.0.0
 gcp.project.storageService.bucket.objectRetentionMode 13.7.2
 gcp.project.storageService.bucket.projectId 9.0.0
 gcp.project.storageService.bucket.projectNumber 9.0.0
+gcp.project.storageService.bucket.public 13.12.2
 gcp.project.storageService.bucket.publicAccessPrevention 13.1.2
 gcp.project.storageService.bucket.retentionPolicy 9.0.0
 gcp.project.storageService.bucket.rpo 11.6.6
