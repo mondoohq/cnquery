@@ -4,14 +4,22 @@
 package resources
 
 import (
+	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/datadog/connection"
 )
+
+// isForbidden checks if an HTTP response indicates a 403 Forbidden error,
+// which typically means the Datadog plan does not include the required feature.
+func isForbidden(resp *http.Response) bool {
+	return resp != nil && resp.StatusCode == http.StatusForbidden
+}
 
 func (r *mqlDatadog) id() (string, error) {
 	return "datadog", nil
@@ -49,13 +57,17 @@ func (r *mqlDatadog) users() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewUsersApi(conn.ApiClient())
 
-	resp, _, err := api.ListUsers(conn.AuthCtx())
-	if err != nil {
-		return nil, err
-	}
-
 	var all []interface{}
-	for _, u := range resp.GetData() {
+	pageSize := int64(100)
+	items, cancel := api.ListUsersWithPagination(conn.AuthCtx(),
+		*datadogV2.NewListUsersOptionalParameters().WithPageSize(pageSize))
+	defer cancel()
+
+	for item := range items {
+		if item.Error != nil {
+			return nil, item.Error
+		}
+		u := item.Item
 		attrs := u.GetAttributes()
 		res, err := CreateResource(r.MqlRuntime, "datadog.user", map[string]*llx.RawData{
 			"id":             llx.StringData(u.GetId()),
@@ -88,8 +100,12 @@ func (r *mqlDatadog) roles() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewRolesApi(conn.ApiClient())
 
-	resp, _, err := api.ListRoles(conn.AuthCtx())
+	resp, httpResp, err := api.ListRoles(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> roles not available (403 Forbidden)")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -121,65 +137,80 @@ func (r *mqlDatadog) monitors() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewMonitorsApi(conn.ApiClient())
 
-	monitors, _, err := api.ListMonitors(conn.AuthCtx())
-	if err != nil {
-		return nil, err
-	}
-
 	var all []interface{}
-	for _, m := range monitors {
-		tags := toAnyStrings(m.GetTags())
+	pageSize := int32(100)
+	page := int64(0)
 
-		creator := ""
-		if c, ok := m.GetCreatorOk(); ok && c != nil {
-			creator = c.GetEmail()
-		}
-
-		priority := int64(0)
-		if p, ok := m.GetPriorityOk(); ok && p != nil {
-			priority = *p
-		}
-
-		notifyNoData := false
-		if opts, ok := m.GetOptionsOk(); ok && opts != nil {
-			notifyNoData = opts.GetNotifyNoData()
-		}
-
-		options := map[string]interface{}{}
-		if opts, ok := m.GetOptionsOk(); ok && opts != nil {
-			if v, ok := opts.GetRenotifyIntervalOk(); ok && v != nil {
-				options["renotifyInterval"] = float64(*v)
-			}
-			if v, ok := opts.GetTimeoutHOk(); ok && v != nil {
-				options["timeoutH"] = float64(*v)
-			}
-			if v, ok := opts.GetEvaluationDelayOk(); ok && v != nil {
-				options["evaluationDelay"] = float64(*v)
-			}
-			if v, ok := opts.GetNotifyAuditOk(); ok {
-				options["notifyAudit"] = *v
-			}
-		}
-
-		res, err := CreateResource(r.MqlRuntime, "datadog.monitor", map[string]*llx.RawData{
-			"id":           llx.IntData(m.GetId()),
-			"name":         llx.StringData(m.GetName()),
-			"type":         llx.StringData(string(m.GetType())),
-			"query":        llx.StringData(m.GetQuery()),
-			"message":      llx.StringData(m.GetMessage()),
-			"overallState": llx.StringData(string(m.GetOverallState())),
-			"tags":         llx.ArrayData(tags, "\x02"),
-			"priority":     llx.IntData(priority),
-			"created":      llx.TimeDataPtr(timePtr(m.GetCreated())),
-			"modified":     llx.TimeDataPtr(timePtr(m.GetModified())),
-			"creator":      llx.StringData(creator),
-			"notifyNoData": llx.BoolData(notifyNoData),
-			"options":      llx.DictData(options),
-		})
+	for {
+		monitors, httpResp, err := api.ListMonitors(conn.AuthCtx(),
+			*datadogV1.NewListMonitorsOptionalParameters().WithPageSize(pageSize).WithPage(page))
 		if err != nil {
+			if isForbidden(httpResp) {
+				log.Warn().Msg("datadog> monitors not available (403 Forbidden)")
+				return nil, nil
+			}
 			return nil, err
 		}
-		all = append(all, res)
+
+		for _, m := range monitors {
+			tags := toAnyStrings(m.GetTags())
+
+			creator := ""
+			if c, ok := m.GetCreatorOk(); ok && c != nil {
+				creator = c.GetEmail()
+			}
+
+			priority := int64(0)
+			if p, ok := m.GetPriorityOk(); ok && p != nil {
+				priority = *p
+			}
+
+			notifyNoData := false
+			if opts, ok := m.GetOptionsOk(); ok && opts != nil {
+				notifyNoData = opts.GetNotifyNoData()
+			}
+
+			options := map[string]interface{}{}
+			if opts, ok := m.GetOptionsOk(); ok && opts != nil {
+				if v, ok := opts.GetRenotifyIntervalOk(); ok && v != nil {
+					options["renotifyInterval"] = float64(*v)
+				}
+				if v, ok := opts.GetTimeoutHOk(); ok && v != nil {
+					options["timeoutH"] = float64(*v)
+				}
+				if v, ok := opts.GetEvaluationDelayOk(); ok && v != nil {
+					options["evaluationDelay"] = float64(*v)
+				}
+				if v, ok := opts.GetNotifyAuditOk(); ok && v != nil {
+					options["notifyAudit"] = *v
+				}
+			}
+
+			res, err := CreateResource(r.MqlRuntime, "datadog.monitor", map[string]*llx.RawData{
+				"id":           llx.IntData(m.GetId()),
+				"name":         llx.StringData(m.GetName()),
+				"type":         llx.StringData(string(m.GetType())),
+				"query":        llx.StringData(m.GetQuery()),
+				"message":      llx.StringData(m.GetMessage()),
+				"overallState": llx.StringData(string(m.GetOverallState())),
+				"tags":         llx.ArrayData(tags, "\x02"),
+				"priority":     llx.IntData(priority),
+				"created":      llx.TimeDataPtr(timePtr(m.GetCreated())),
+				"modified":     llx.TimeDataPtr(timePtr(m.GetModified())),
+				"creator":      llx.StringData(creator),
+				"notifyNoData": llx.BoolData(notifyNoData),
+				"options":      llx.DictData(options),
+			})
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+		}
+
+		if len(monitors) < int(pageSize) {
+			break
+		}
+		page++
 	}
 	return all, nil
 }
@@ -194,8 +225,12 @@ func (r *mqlDatadog) dashboards() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewDashboardsApi(conn.ApiClient())
 
-	resp, _, err := api.ListDashboards(conn.AuthCtx())
+	resp, httpResp, err := api.ListDashboards(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> dashboards not available (403 Forbidden)")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -230,8 +265,12 @@ func (r *mqlDatadog) syntheticsTests() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewSyntheticsApi(conn.ApiClient())
 
-	resp, _, err := api.ListTests(conn.AuthCtx())
+	resp, httpResp, err := api.ListTests(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> synthetics tests not available (403 Forbidden)")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -298,8 +337,12 @@ func (r *mqlDatadog) slos() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewServiceLevelObjectivesApi(conn.ApiClient())
 
-	resp, _, err := api.ListSLOs(conn.AuthCtx())
+	resp, httpResp, err := api.ListSLOs(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> SLOs not available (403 Forbidden)")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -360,8 +403,12 @@ func (r *mqlDatadog) logIndexes() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewLogsIndexesApi(conn.ApiClient())
 
-	resp, _, err := api.ListLogIndexes(conn.AuthCtx())
+	resp, httpResp, err := api.ListLogIndexes(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> log indexes not available (403 Forbidden)")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -433,72 +480,87 @@ func (r *mqlDatadog) securityRules() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewSecurityMonitoringApi(conn.ApiClient())
 
-	resp, _, err := api.ListSecurityMonitoringRules(conn.AuthCtx())
-	if err != nil {
-		return nil, err
-	}
-
 	var all []interface{}
-	for _, ruleWrapper := range resp.GetData() {
-		// The response is a union type; extract the standard rule if present
-		rule := ruleWrapper.SecurityMonitoringStandardRuleResponse
-		if rule == nil {
-			continue
-		}
+	pageSize := int64(100)
+	page := int64(0)
 
-		tags := toAnyStrings(rule.GetTags())
-
-		cases := make([]interface{}, len(rule.GetCases()))
-		for i, c := range rule.GetCases() {
-			cases[i] = map[string]interface{}{
-				"name":      c.GetName(),
-				"status":    string(c.GetStatus()),
-				"condition": c.GetCondition(),
-			}
-		}
-
-		filters := make([]interface{}, len(rule.GetFilters()))
-		for i, f := range rule.GetFilters() {
-			filters[i] = map[string]interface{}{
-				"query":  f.GetQuery(),
-				"action": string(f.GetAction()),
-			}
-		}
-
-		options := map[string]interface{}{}
-		if opts, ok := rule.GetOptionsOk(); ok && opts != nil {
-			options["detectionMethod"] = string(opts.GetDetectionMethod())
-			if v, ok := opts.GetEvaluationWindowOk(); ok {
-				options["evaluationWindow"] = float64(*v)
-			}
-			if v, ok := opts.GetKeepAliveOk(); ok {
-				options["keepAlive"] = float64(*v)
-			}
-			if v, ok := opts.GetMaxSignalDurationOk(); ok {
-				options["maxSignalDuration"] = float64(*v)
-			}
-		}
-
-		res, err := CreateResource(r.MqlRuntime, "datadog.securityRule", map[string]*llx.RawData{
-			"id":               llx.StringData(rule.GetId()),
-			"name":             llx.StringData(rule.GetName()),
-			"type":             llx.StringData(string(rule.GetType())),
-			"message":          llx.StringData(rule.GetMessage()),
-			"isEnabled":        llx.BoolData(rule.GetIsEnabled()),
-			"hasExtendedTitle": llx.BoolData(rule.GetHasExtendedTitle()),
-			"tags":             llx.ArrayData(tags, "\x02"),
-			"isDefault":        llx.BoolData(rule.GetIsDefault()),
-			"isDeleted":        llx.BoolData(rule.GetIsDeleted()),
-			"createdAt":        llx.TimeDataPtr(timePtr(time.UnixMilli(rule.GetCreatedAt()))),
-			"updatedAt":        llx.TimeDataPtr(timePtr(time.UnixMilli(rule.GetUpdatedAt()))),
-			"cases":            llx.ArrayData(cases, "\x13"),
-			"filters":          llx.ArrayData(filters, "\x13"),
-			"options":          llx.DictData(options),
-		})
+	for {
+		resp, httpResp, err := api.ListSecurityMonitoringRules(conn.AuthCtx(),
+			*datadogV2.NewListSecurityMonitoringRulesOptionalParameters().WithPageSize(pageSize).WithPageNumber(page))
 		if err != nil {
+			if isForbidden(httpResp) {
+				log.Warn().Msg("datadog> security monitoring rules not available (403 Forbidden). Your Datadog plan may not include Cloud SIEM")
+				return nil, nil
+			}
 			return nil, err
 		}
-		all = append(all, res)
+
+		for _, ruleWrapper := range resp.GetData() {
+			// The response is a union type; extract the standard rule if present
+			rule := ruleWrapper.SecurityMonitoringStandardRuleResponse
+			if rule == nil {
+				continue
+			}
+
+			tags := toAnyStrings(rule.GetTags())
+
+			cases := make([]interface{}, len(rule.GetCases()))
+			for i, c := range rule.GetCases() {
+				cases[i] = map[string]interface{}{
+					"name":      c.GetName(),
+					"status":    string(c.GetStatus()),
+					"condition": c.GetCondition(),
+				}
+			}
+
+			filters := make([]interface{}, len(rule.GetFilters()))
+			for i, f := range rule.GetFilters() {
+				filters[i] = map[string]interface{}{
+					"query":  f.GetQuery(),
+					"action": string(f.GetAction()),
+				}
+			}
+
+			options := map[string]interface{}{}
+			if opts, ok := rule.GetOptionsOk(); ok && opts != nil {
+				options["detectionMethod"] = string(opts.GetDetectionMethod())
+				if v, ok := opts.GetEvaluationWindowOk(); ok {
+					options["evaluationWindow"] = float64(*v)
+				}
+				if v, ok := opts.GetKeepAliveOk(); ok {
+					options["keepAlive"] = float64(*v)
+				}
+				if v, ok := opts.GetMaxSignalDurationOk(); ok {
+					options["maxSignalDuration"] = float64(*v)
+				}
+			}
+
+			res, err := CreateResource(r.MqlRuntime, "datadog.securityRule", map[string]*llx.RawData{
+				"id":               llx.StringData(rule.GetId()),
+				"name":             llx.StringData(rule.GetName()),
+				"type":             llx.StringData(string(rule.GetType())),
+				"message":          llx.StringData(rule.GetMessage()),
+				"isEnabled":        llx.BoolData(rule.GetIsEnabled()),
+				"hasExtendedTitle": llx.BoolData(rule.GetHasExtendedTitle()),
+				"tags":             llx.ArrayData(tags, "\x02"),
+				"isDefault":        llx.BoolData(rule.GetIsDefault()),
+				"isDeleted":        llx.BoolData(rule.GetIsDeleted()),
+				"createdAt":        llx.TimeDataPtr(timePtr(time.UnixMilli(rule.GetCreatedAt()))),
+				"updatedAt":        llx.TimeDataPtr(timePtr(time.UnixMilli(rule.GetUpdatedAt()))),
+				"cases":            llx.ArrayData(cases, "\x13"),
+				"filters":          llx.ArrayData(filters, "\x13"),
+				"options":          llx.DictData(options),
+			})
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+		}
+
+		if int64(len(resp.GetData())) < pageSize {
+			break
+		}
+		page++
 	}
 	return all, nil
 }
@@ -513,13 +575,15 @@ func (r *mqlDatadog) downtimes() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewDowntimesApi(conn.ApiClient())
 
-	resp, _, err := api.ListDowntimes(conn.AuthCtx())
-	if err != nil {
-		return nil, err
-	}
-
 	var all []interface{}
-	for _, d := range resp.GetData() {
+	items, cancel := api.ListDowntimesWithPagination(conn.AuthCtx())
+	defer cancel()
+
+	for item := range items {
+		if item.Error != nil {
+			return nil, item.Error
+		}
+		d := item.Item
 		attrs := d.GetAttributes()
 
 		notifyEndStates := make([]interface{}, 0)
@@ -533,6 +597,30 @@ func (r *mqlDatadog) downtimes() ([]interface{}, error) {
 		}
 
 		monitorId := map[string]interface{}{}
+		if mi, ok := attrs.GetMonitorIdentifierOk(); ok && mi != nil {
+			if mid := mi.DowntimeMonitorIdentifierId; mid != nil {
+				monitorId["monitorId"] = float64(mid.GetMonitorId())
+			}
+			if mtags := mi.DowntimeMonitorIdentifierTags; mtags != nil {
+				monitorId["monitorTags"] = mtags.GetMonitorTags()
+			}
+		}
+
+		schedule := map[string]interface{}{}
+		if sched, ok := attrs.GetScheduleOk(); ok && sched != nil {
+			if rrule := sched.DowntimeScheduleRecurrencesResponse; rrule != nil {
+				schedule["timezone"] = rrule.GetTimezone()
+			}
+			if oneTime := sched.DowntimeScheduleOneTimeResponse; oneTime != nil {
+				if s, ok := oneTime.GetStartOk(); ok && s != nil {
+					schedule["start"] = s.Format(time.RFC3339)
+				}
+				if e, ok := oneTime.GetEndOk(); ok && e != nil {
+					schedule["end"] = (*e).Format(time.RFC3339)
+				}
+			}
+		}
+
 		scope := attrs.GetScope()
 
 		var canceledAt *time.Time
@@ -552,7 +640,7 @@ func (r *mqlDatadog) downtimes() ([]interface{}, error) {
 			"notifyEndTypes":                llx.ArrayData(notifyEndTypes, "\x02"),
 			"status":                        llx.StringData(string(attrs.GetStatus())),
 			"monitorIdentifier":             llx.DictData(monitorId),
-			"schedule":                      llx.DictData(map[string]interface{}{}),
+			"schedule":                      llx.DictData(schedule),
 			"scope":                         llx.StringData(scope),
 			"createdAt":                     llx.TimeDataPtr(timePtr(attrs.GetCreated())),
 			"modifiedAt":                    llx.TimeDataPtr(timePtr(attrs.GetModified())),
@@ -576,25 +664,40 @@ func (r *mqlDatadog) apiKeys() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewKeyManagementApi(conn.ApiClient())
 
-	resp, _, err := api.ListAPIKeys(conn.AuthCtx())
-	if err != nil {
-		return nil, err
-	}
-
 	var all []interface{}
-	for _, k := range resp.GetData() {
-		attrs := k.GetAttributes()
-		res, err := CreateResource(r.MqlRuntime, "datadog.apiKey", map[string]*llx.RawData{
-			"id":         llx.StringData(k.GetId()),
-			"name":       llx.StringData(attrs.GetName()),
-			"createdAt":  llx.TimeDataPtr(parseTime(attrs.GetCreatedAt())),
-			"modifiedAt": llx.TimeDataPtr(parseTime(attrs.GetModifiedAt())),
-			"last4":      llx.StringData(attrs.GetLast4()),
-		})
+	pageSize := int64(100)
+	page := int64(0)
+
+	for {
+		resp, httpResp, err := api.ListAPIKeys(conn.AuthCtx(),
+			*datadogV2.NewListAPIKeysOptionalParameters().WithPageSize(pageSize).WithPageNumber(page))
 		if err != nil {
+			if isForbidden(httpResp) {
+				log.Warn().Msg("datadog> API keys not available (403 Forbidden)")
+				return nil, nil
+			}
 			return nil, err
 		}
-		all = append(all, res)
+
+		for _, k := range resp.GetData() {
+			attrs := k.GetAttributes()
+			res, err := CreateResource(r.MqlRuntime, "datadog.apiKey", map[string]*llx.RawData{
+				"id":         llx.StringData(k.GetId()),
+				"name":       llx.StringData(attrs.GetName()),
+				"createdAt":  llx.TimeDataPtr(parseTime(attrs.GetCreatedAt())),
+				"modifiedAt": llx.TimeDataPtr(parseTime(attrs.GetModifiedAt())),
+				"last4":      llx.StringData(attrs.GetLast4()),
+			})
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+		}
+
+		if int64(len(resp.GetData())) < pageSize {
+			break
+		}
+		page++
 	}
 	return all, nil
 }
@@ -609,27 +712,42 @@ func (r *mqlDatadog) applicationKeys() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewKeyManagementApi(conn.ApiClient())
 
-	resp, _, err := api.ListApplicationKeys(conn.AuthCtx())
-	if err != nil {
-		return nil, err
-	}
-
 	var all []interface{}
-	for _, k := range resp.GetData() {
-		attrs := k.GetAttributes()
-		scopes := toAnyStrings(attrs.GetScopes())
+	pageSize := int64(100)
+	page := int64(0)
 
-		res, err := CreateResource(r.MqlRuntime, "datadog.applicationKey", map[string]*llx.RawData{
-			"id":        llx.StringData(k.GetId()),
-			"name":      llx.StringData(attrs.GetName()),
-			"createdAt": llx.TimeDataPtr(parseTime(attrs.GetCreatedAt())),
-			"last4":     llx.StringData(attrs.GetLast4()),
-			"scopes":    llx.ArrayData(scopes, "\x02"),
-		})
+	for {
+		resp, httpResp, err := api.ListApplicationKeys(conn.AuthCtx(),
+			*datadogV2.NewListApplicationKeysOptionalParameters().WithPageSize(pageSize).WithPageNumber(page))
 		if err != nil {
+			if isForbidden(httpResp) {
+				log.Warn().Msg("datadog> application keys not available (403 Forbidden)")
+				return nil, nil
+			}
 			return nil, err
 		}
-		all = append(all, res)
+
+		for _, k := range resp.GetData() {
+			attrs := k.GetAttributes()
+			scopes := toAnyStrings(attrs.GetScopes())
+
+			res, err := CreateResource(r.MqlRuntime, "datadog.applicationKey", map[string]*llx.RawData{
+				"id":        llx.StringData(k.GetId()),
+				"name":      llx.StringData(attrs.GetName()),
+				"createdAt": llx.TimeDataPtr(parseTime(attrs.GetCreatedAt())),
+				"last4":     llx.StringData(attrs.GetLast4()),
+				"scopes":    llx.ArrayData(scopes, "\x02"),
+			})
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+		}
+
+		if int64(len(resp.GetData())) < pageSize {
+			break
+		}
+		page++
 	}
 	return all, nil
 }
@@ -640,40 +758,46 @@ func (r *mqlDatadogApplicationKey) id() (string, error) {
 
 // --- IP Allowlist ---
 
-func (r *mqlDatadog) ipAllowlistEnabled() (bool, error) {
+func (r *mqlDatadog) fetchIPAllowlist() (datadogV2.IPAllowlistAttributes, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewIPAllowlistApi(conn.ApiClient())
 
-	resp, _, err := api.GetIPAllowlist(conn.AuthCtx())
+	resp, httpResp, err := api.GetIPAllowlist(conn.AuthCtx())
 	if err != nil {
-		return false, err
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> IP allowlist not available (403 Forbidden)")
+			return datadogV2.IPAllowlistAttributes{}, nil
+		}
+		return datadogV2.IPAllowlistAttributes{}, err
 	}
 
 	data := resp.GetData()
-	attrs := data.GetAttributes()
+	return data.GetAttributes(), nil
+}
+
+func (r *mqlDatadog) ipAllowlistEnabled() (bool, error) {
+	attrs, err := r.fetchIPAllowlist()
+	if err != nil {
+		return false, err
+	}
 	return attrs.GetEnabled(), nil
 }
 
 func (r *mqlDatadog) ipAllowlistEntries() ([]interface{}, error) {
-	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
-	api := datadogV2.NewIPAllowlistApi(conn.ApiClient())
-
-	resp, _, err := api.GetIPAllowlist(conn.AuthCtx())
+	attrs, err := r.fetchIPAllowlist()
 	if err != nil {
 		return nil, err
 	}
 
-	data := resp.GetData()
-	attrs := data.GetAttributes()
 	var all []interface{}
 	for _, entry := range attrs.GetEntries() {
 		entryData := entry.GetData()
-		attrs := entryData.GetAttributes()
+		entryAttrs := entryData.GetAttributes()
 		all = append(all, map[string]interface{}{
-			"cidrBlock":  attrs.GetCidrBlock(),
-			"note":       attrs.GetNote(),
-			"createdAt":  attrs.GetCreatedAt().Format(time.RFC3339),
-			"modifiedAt": attrs.GetModifiedAt().Format(time.RFC3339),
+			"cidrBlock":  entryAttrs.GetCidrBlock(),
+			"note":       entryAttrs.GetNote(),
+			"createdAt":  entryAttrs.GetCreatedAt().Format(time.RFC3339),
+			"modifiedAt": entryAttrs.GetModifiedAt().Format(time.RFC3339),
 		})
 	}
 	return all, nil
@@ -685,8 +809,12 @@ func (r *mqlDatadog) integrationAwsAccounts() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewAWSIntegrationApi(conn.ApiClient())
 
-	resp, _, err := api.ListAWSAccounts(conn.AuthCtx())
+	resp, httpResp, err := api.ListAWSAccounts(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> AWS integrations not available (403 Forbidden)")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -713,13 +841,34 @@ func (r *mqlDatadog) integrationAwsAccounts() ([]interface{}, error) {
 			}
 		}
 
+		// Extract auth config role name
+		roleName := ""
+		if ac, ok := attrs.GetAuthConfigOk(); ok && ac != nil {
+			if arn := ac.AWSAuthConfigRole; arn != nil {
+				roleName = arn.GetRoleName()
+			}
+		}
+
+		// Extract metrics tag filters as filter tags
+		var filterTags []interface{}
+		if mc, ok := attrs.GetMetricsConfigOk(); ok && mc != nil {
+			for _, tf := range mc.GetTagFilters() {
+				for _, tag := range tf.GetTags() {
+					filterTags = append(filterTags, tag)
+				}
+			}
+		}
+		if filterTags == nil {
+			filterTags = []interface{}{}
+		}
+
 		res, err := CreateResource(r.MqlRuntime, "datadog.integration.aws", map[string]*llx.RawData{
 			"accountId":                 llx.StringData(attrs.GetAwsAccountId()),
-			"roleName":                  llx.StringData(""),
+			"roleName":                  llx.StringData(roleName),
 			"metricsEnabled":            llx.BoolData(metricsEnabled),
 			"resourceCollectionEnabled": llx.BoolData(resourceCollectionEnabled),
 			"logsEnabled":               llx.BoolData(logsEnabled),
-			"filterTags":                llx.ArrayData([]interface{}{}, "\x02"),
+			"filterTags":                llx.ArrayData(filterTags, "\x02"),
 			"hostTags":                  llx.ArrayData([]interface{}{}, "\x02"),
 			"accountTags":               llx.ArrayData(accountTags, "\x02"),
 			"excludedRegions":           llx.ArrayData([]interface{}{}, "\x02"),
@@ -742,13 +891,17 @@ func (r *mqlDatadog) teams() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewTeamsApi(conn.ApiClient())
 
-	resp, _, err := api.ListTeams(conn.AuthCtx())
-	if err != nil {
-		return nil, err
-	}
-
 	var all []interface{}
-	for _, t := range resp.GetData() {
+	pageSize := int64(100)
+	items, cancel := api.ListTeamsWithPagination(conn.AuthCtx(),
+		*datadogV2.NewListTeamsOptionalParameters().WithPageSize(pageSize))
+	defer cancel()
+
+	for item := range items {
+		if item.Error != nil {
+			return nil, item.Error
+		}
+		t := item.Item
 		attrs := t.GetAttributes()
 		res, err := CreateResource(r.MqlRuntime, "datadog.team", map[string]*llx.RawData{
 			"id":          llx.StringData(t.GetId()),

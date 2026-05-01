@@ -142,7 +142,12 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.DatadogConnect
 		Title:  "Datadog",
 	}
 
-	asset.PlatformIds = []string{"//platformid.api.mondoo.app/runtime/datadog"}
+	platformId := "//platformid.api.mondoo.app/runtime/datadog"
+	if orgId := conn.OrgPublicId(); orgId != "" {
+		platformId = "//platformid.api.mondoo.app/runtime/datadog/org/" + orgId
+		asset.Name = "Datadog Account " + orgId
+	}
+	asset.PlatformIds = []string{platformId}
 	return nil
 }
 

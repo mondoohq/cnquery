@@ -9,6 +9,7 @@ import (
 
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/datadog/connection"
 )
@@ -19,8 +20,12 @@ func (r *mqlDatadog) sensitiveDataScannerGroups() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewSensitiveDataScannerApi(conn.ApiClient())
 
-	resp, _, err := api.ListScanningGroups(conn.AuthCtx())
+	resp, httpResp, err := api.ListScanningGroups(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> sensitive data scanner not available (403 Forbidden). Your Datadog plan may not include this feature")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -69,8 +74,12 @@ func (r *mqlDatadog) securityFilters() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewSecurityMonitoringApi(conn.ApiClient())
 
-	resp, _, err := api.ListSecurityFilters(conn.AuthCtx())
+	resp, httpResp, err := api.ListSecurityFilters(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> security filters not available (403 Forbidden). Your Datadog plan may not include Cloud SIEM")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -103,8 +112,12 @@ func (r *mqlDatadog) securitySuppressions() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewSecurityMonitoringApi(conn.ApiClient())
 
-	resp, _, err := api.ListSecurityMonitoringSuppressions(conn.AuthCtx())
+	resp, httpResp, err := api.ListSecurityMonitoringSuppressions(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> security suppressions not available (403 Forbidden). Your Datadog plan may not include Cloud SIEM")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -146,13 +159,17 @@ func (r *mqlDatadog) serviceAccounts() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewUsersApi(conn.ApiClient())
 
-	resp, _, err := api.ListUsers(conn.AuthCtx())
-	if err != nil {
-		return nil, err
-	}
-
 	var all []interface{}
-	for _, u := range resp.GetData() {
+	pageSize := int64(100)
+	items, cancel := api.ListUsersWithPagination(conn.AuthCtx(),
+		*datadogV2.NewListUsersOptionalParameters().WithPageSize(pageSize))
+	defer cancel()
+
+	for item := range items {
+		if item.Error != nil {
+			return nil, item.Error
+		}
+		u := item.Item
 		attrs := u.GetAttributes()
 		if !attrs.GetServiceAccount() {
 			continue
@@ -184,8 +201,12 @@ func (r *mqlDatadog) logsArchives() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewLogsArchivesApi(conn.ApiClient())
 
-	resp, _, err := api.ListLogsArchives(conn.AuthCtx())
+	resp, httpResp, err := api.ListLogsArchives(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> logs archives not available (403 Forbidden)")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -267,8 +288,12 @@ func (r *mqlDatadog) rumApplications() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV2.NewRUMApi(conn.ApiClient())
 
-	resp, _, err := api.GetRUMApplications(conn.AuthCtx())
+	resp, httpResp, err := api.GetRUMApplications(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> RUM applications not available (403 Forbidden)")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -303,8 +328,12 @@ func (r *mqlDatadog) syntheticsGlobalVariables() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewSyntheticsApi(conn.ApiClient())
 
-	resp, _, err := api.ListGlobalVariables(conn.AuthCtx())
+	resp, httpResp, err := api.ListGlobalVariables(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> synthetics global variables not available (403 Forbidden)")
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -344,8 +373,12 @@ func (r *mqlDatadog) syntheticsPrivateLocations() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
 	api := datadogV1.NewSyntheticsApi(conn.ApiClient())
 
-	resp, _, err := api.ListLocations(conn.AuthCtx())
+	resp, httpResp, err := api.ListLocations(conn.AuthCtx())
 	if err != nil {
+		if isForbidden(httpResp) {
+			log.Warn().Msg("datadog> synthetics private locations not available (403 Forbidden)")
+			return nil, nil
+		}
 		return nil, err
 	}
 
