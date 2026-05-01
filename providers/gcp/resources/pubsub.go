@@ -608,7 +608,6 @@ func (g *mqlGcpProjectPubsubService) snapshots() ([]any, error) {
 		topicName := lastPathSegment(s.Topic)
 
 		topic, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.topic", map[string]*llx.RawData{
-			"id":        llx.StringData(topicName),
 			"projectId": llx.StringData(projectId),
 			"name":      llx.StringData(topicName),
 		})
@@ -622,7 +621,6 @@ func (g *mqlGcpProjectPubsubService) snapshots() ([]any, error) {
 		}
 
 		mqlSub, err := CreateResource(g.MqlRuntime, "gcp.project.pubsubService.snapshot", map[string]*llx.RawData{
-			"id":         llx.StringData(snapshotName),
 			"projectId":  llx.StringData(projectId),
 			"name":       llx.StringData(snapshotName),
 			"topic":      llx.ResourceData(topic, "gcp.project.pubsubService.topic"),
