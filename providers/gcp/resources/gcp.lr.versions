@@ -3011,6 +3011,7 @@ gcp.project.redisService.cluster.connectionDetail.pscConnectionStatus 11.1.0
 gcp.project.redisService.cluster.connectionDetail.serviceAttachment 11.1.0
 gcp.project.redisService.cluster.createTime 11.1.0
 gcp.project.redisService.cluster.crossClusterReplicationConfig 11.1.0
+gcp.project.redisService.cluster.cryptoKey 13.12.2
 gcp.project.redisService.cluster.deletionProtectionEnabled 11.1.0
 gcp.project.redisService.cluster.discoveryEndpoint 11.1.0
 gcp.project.redisService.cluster.discoveryEndpoint.address 11.1.0
@@ -3069,6 +3070,7 @@ gcp.project.redisService.instance.currentLocationId 11.0.79
 gcp.project.redisService.instance.customerManagedKey 11.0.79
 gcp.project.redisService.instance.displayName 11.0.79
 gcp.project.redisService.instance.host 11.0.79
+gcp.project.redisService.instance.kmsKey 13.12.2
 gcp.project.redisService.instance.labels 11.0.79
 gcp.project.redisService.instance.locationId 11.0.79
 gcp.project.redisService.instance.maintenancePolicy 11.0.79

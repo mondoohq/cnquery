@@ -145,8 +145,10 @@ private gcp.project.redisService.instance @defaults("name") {
   readEndpoint string
   // The port number of the exposed read-only Redis endpoint
   readEndpointPort int
-  // The KMS key reference that the customer provides when trying to create the instance
-  customerManagedKey string
+  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  customerManagedKey @maturity("deprecated") string
+  // Customer-managed encryption key (CMEK) used to encrypt the at-rest data of the instance
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // The self service update maintenance version
   maintenanceVersion string
   // The available maintenance versions that an instance could update to
@@ -227,8 +229,10 @@ private gcp.project.redisService.cluster @defaults("name") {
   preciseSizeGb float
   // Whether delete protection is enabled
   deletionProtectionEnabled bool
-  // The KMS key used to encrypt at-rest data
-  kmsKey string
+  // DEPRECATED: use cryptoKey() for the typed cryptokey reference
+  kmsKey @maturity("deprecated") string
+  // Customer-managed encryption key (CMEK) used to encrypt the at-rest data of the cluster
+  cryptoKey() gcp.project.kmsService.keyring.cryptokey
   // The backup collection full resource name
   backupCollection string
   // Redis configuration parameters

@@ -1953,6 +1953,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.redisService.instance.customerManagedKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceInstance).GetCustomerManagedKey()).ToDataRes(types.String)
 	},
+	"gcp.project.redisService.instance.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceInstance).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.redisService.instance.maintenanceVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceInstance).GetMaintenanceVersion()).ToDataRes(types.String)
 	},
@@ -2057,6 +2060,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.redisService.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceCluster).GetKmsKey()).ToDataRes(types.String)
+	},
+	"gcp.project.redisService.cluster.cryptoKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectRedisServiceCluster).GetCryptoKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.redisService.cluster.backupCollection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectRedisServiceCluster).GetBackupCollection()).ToDataRes(types.String)
@@ -12303,6 +12309,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectRedisServiceInstance).CustomerManagedKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.redisService.instance.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceInstance).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.redisService.instance.maintenanceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceInstance).MaintenanceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -12453,6 +12463,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.redisService.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectRedisServiceCluster).KmsKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.redisService.cluster.cryptoKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectRedisServiceCluster).CryptoKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.redisService.cluster.backupCollection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27644,7 +27658,7 @@ func (c *mqlGcpProjectRedisService) GetClusters() *plugin.TValue[[]any] {
 type mqlGcpProjectRedisServiceInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectRedisServiceInstanceInternal it will be used here
+	mqlGcpProjectRedisServiceInstanceInternal
 	Name                         plugin.TValue[string]
 	ProjectId                    plugin.TValue[string]
 	DisplayName                  plugin.TValue[string]
@@ -27670,6 +27684,7 @@ type mqlGcpProjectRedisServiceInstance struct {
 	ReadEndpoint                 plugin.TValue[string]
 	ReadEndpointPort             plugin.TValue[int64]
 	CustomerManagedKey           plugin.TValue[string]
+	KmsKey                       plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	MaintenanceVersion           plugin.TValue[string]
 	AvailableMaintenanceVersions plugin.TValue[[]any]
 	Tier                         plugin.TValue[string]
@@ -27818,6 +27833,22 @@ func (c *mqlGcpProjectRedisServiceInstance) GetReadEndpointPort() *plugin.TValue
 
 func (c *mqlGcpProjectRedisServiceInstance) GetCustomerManagedKey() *plugin.TValue[string] {
 	return &c.CustomerManagedKey
+}
+
+func (c *mqlGcpProjectRedisServiceInstance) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.redisService.instance", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectRedisServiceInstance) GetMaintenanceVersion() *plugin.TValue[string] {
@@ -28001,7 +28032,7 @@ func (c *mqlGcpProjectRedisServiceInstanceServerCaCert) GetSha1Fingerprint() *pl
 type mqlGcpProjectRedisServiceCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectRedisServiceClusterInternal it will be used here
+	mqlGcpProjectRedisServiceClusterInternal
 	Name                          plugin.TValue[string]
 	ProjectId                     plugin.TValue[string]
 	Uid                           plugin.TValue[string]
@@ -28017,6 +28048,7 @@ type mqlGcpProjectRedisServiceCluster struct {
 	PreciseSizeGb                 plugin.TValue[float64]
 	DeletionProtectionEnabled     plugin.TValue[bool]
 	KmsKey                        plugin.TValue[string]
+	CryptoKey                     plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	BackupCollection              plugin.TValue[string]
 	RedisConfigs                  plugin.TValue[map[string]any]
 	PersistenceConfig             plugin.TValue[any]
@@ -28131,6 +28163,22 @@ func (c *mqlGcpProjectRedisServiceCluster) GetDeletionProtectionEnabled() *plugi
 
 func (c *mqlGcpProjectRedisServiceCluster) GetKmsKey() *plugin.TValue[string] {
 	return &c.KmsKey
+}
+
+func (c *mqlGcpProjectRedisServiceCluster) GetCryptoKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.CryptoKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.redisService.cluster", c.__id, "cryptoKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.cryptoKey()
+	})
 }
 
 func (c *mqlGcpProjectRedisServiceCluster) GetBackupCollection() *plugin.TValue[string] {

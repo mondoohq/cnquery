@@ -28,6 +28,40 @@ type mqlGcpProjectRedisServiceInternal struct {
 	serviceEnabled bool
 }
 
+type mqlGcpProjectRedisServiceInstanceInternal struct {
+	cacheKmsKey string
+}
+
+func (g *mqlGcpProjectRedisServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKey == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKey)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+type mqlGcpProjectRedisServiceClusterInternal struct {
+	cacheKmsKey string
+}
+
+func (g *mqlGcpProjectRedisServiceCluster) cryptoKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKey == "" {
+		g.CryptoKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKey)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
 func (g *mqlGcpProject) redis() (*mqlGcpProjectRedisService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -217,6 +251,7 @@ func (g *mqlGcpProjectRedisService) instances() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlRedisInstance.(*mqlGcpProjectRedisServiceInstance).cacheKmsKey = instance.CustomerManagedKey
 		res = append(res, mqlRedisInstance)
 	}
 
@@ -624,6 +659,7 @@ func (g *mqlGcpProjectRedisService) clusters() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlCluster.(*mqlGcpProjectRedisServiceCluster).cacheKmsKey = kmsKey
 		res = append(res, mqlCluster)
 	}
 

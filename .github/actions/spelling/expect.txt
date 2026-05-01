@@ -456,6 +456,7 @@ regexpatternsetreferencestatement
 rehydration
 renv
 replicators
+reshard
 resourcegroup
 resourcepolicy
 resourcequota
