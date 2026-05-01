@@ -7246,6 +7246,7 @@ aws.workspacesweb.portal.sessionLoggerArn 13.20.1
 aws.workspacesweb.portal.statusReason 13.20.1
 aws.workspacesweb.portal.trustStore 13.20.1
 aws.workspacesweb.portal.trustStoreArn 11.16.1
+aws.workspacesweb.portal.userAccessLoggingSetting 13.20.1
 aws.workspacesweb.portal.userAccessLoggingSettingsArn 11.16.1
 aws.workspacesweb.portal.userSettings 13.20.1
 aws.workspacesweb.portal.userSettingsArn 11.16.1

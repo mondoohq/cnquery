@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -110,7 +111,6 @@ func newMqlAwsWorkspaceswebPortal(runtime *plugin.Runtime, region string, portal
 			"browserType":                  llx.StringData(string(portal.BrowserType)),
 			"instanceType":                 llx.StringData(string(portal.InstanceType)),
 			"rendererType":                 llx.StringData(string(portal.RendererType)),
-			"customerManagedKey":           llx.StringData(""),
 			"browserSettingsArn":           llx.StringDataPtr(portal.BrowserSettingsArn),
 			"networkSettingsArn":           llx.StringDataPtr(portal.NetworkSettingsArn),
 			"userSettingsArn":              llx.StringDataPtr(portal.UserSettingsArn),
@@ -131,6 +131,65 @@ func newMqlAwsWorkspaceswebPortal(runtime *plugin.Runtime, region string, portal
 
 func (a *mqlAwsWorkspaceswebPortal) id() (string, error) {
 	return a.PortalArn.Data, nil
+}
+
+type mqlAwsWorkspaceswebPortalInternal struct {
+	detailFetched           bool
+	detailLock              sync.Mutex
+	cacheCustomerManagedKey string
+}
+
+// fetchDetail calls GetPortal once to populate fields that ListPortals doesn't
+// return (currently: customerManagedKey). Errors that look like "service
+// unavailable in this region" are swallowed so the portal still renders.
+func (a *mqlAwsWorkspaceswebPortal) fetchDetail() error {
+	if a.detailFetched {
+		return nil
+	}
+	a.detailLock.Lock()
+	defer a.detailLock.Unlock()
+	if a.detailFetched {
+		return nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.WorkspacesWeb(a.Region.Data)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	arn := a.PortalArn.Data
+	resp, err := svc.GetPortal(ctx, &workspacesweb.GetPortalInput{PortalArn: &arn})
+	if err != nil {
+		if isWorkspacesWebRegionError(err) {
+			a.detailFetched = true
+			return nil
+		}
+		return err
+	}
+	if resp.Portal != nil {
+		a.cacheCustomerManagedKey = convert.ToValue(resp.Portal.CustomerManagedKey)
+	}
+	a.detailFetched = true
+	return nil
+}
+
+func (a *mqlAwsWorkspaceswebPortal) customerManagedKey() (*mqlAwsKmsKey, error) {
+	if err := a.fetchDetail(); err != nil {
+		return nil, err
+	}
+	return workspaceswebKmsKeyFromArn(a.MqlRuntime, a.cacheCustomerManagedKey, &a.CustomerManagedKey)
+}
+
+func (a *mqlAwsWorkspaceswebPortal) userAccessLoggingSetting() (*mqlAwsWorkspaceswebUserAccessLoggingSetting, error) {
+	arnVal := a.UserAccessLoggingSettingsArn.Data
+	if arnVal == "" {
+		a.UserAccessLoggingSetting.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.workspacesweb.userAccessLoggingSetting",
+		map[string]*llx.RawData{"userAccessLoggingSettingsArn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsWorkspaceswebUserAccessLoggingSetting), nil
 }
 
 // User Access Logging Settings
@@ -296,9 +355,10 @@ func (a *mqlAwsWorkspacesweb) getIpAccessSettings(conn *connection.AwsConnection
 }
 
 type mqlAwsWorkspaceswebIpAccessSettingsInternal struct {
-	associatedFetched bool
-	associatedLock    sync.Mutex
-	associatedArns    []string
+	associatedFetched       bool
+	associatedLock          sync.Mutex
+	associatedArns          []string
+	cacheCustomerManagedKey string
 }
 
 func newMqlAwsWorkspaceswebIpAccessSettingsFromSummary(runtime *plugin.Runtime, region string, summary workspaceswebtypes.IpAccessSettingsSummary) (*mqlAwsWorkspaceswebIpAccessSettings, error) {
@@ -308,7 +368,6 @@ func newMqlAwsWorkspaceswebIpAccessSettingsFromSummary(runtime *plugin.Runtime, 
 			"ipAccessSettingsArn": llx.StringDataPtr(summary.IpAccessSettingsArn),
 			"displayName":         llx.StringDataPtr(summary.DisplayName),
 			"description":         llx.StringDataPtr(summary.Description),
-			"customerManagedKey":  llx.StringData(""),
 			"ipRules":             llx.ArrayData([]any{}, types.Dict),
 			"creationDate":        llx.TimeDataPtr(summary.CreationDate),
 			"region":              llx.StringData(region),
@@ -336,7 +395,6 @@ func newMqlAwsWorkspaceswebIpAccessSettingsFromDetail(runtime *plugin.Runtime, r
 			"ipAccessSettingsArn": llx.StringDataPtr(ipas.IpAccessSettingsArn),
 			"displayName":         llx.StringDataPtr(ipas.DisplayName),
 			"description":         llx.StringDataPtr(ipas.Description),
-			"customerManagedKey":  llx.StringDataPtr(ipas.CustomerManagedKey),
 			"ipRules":             llx.ArrayData(rules, types.Dict),
 			"creationDate":        llx.TimeDataPtr(ipas.CreationDate),
 			"region":              llx.StringData(region),
@@ -347,6 +405,7 @@ func newMqlAwsWorkspaceswebIpAccessSettingsFromDetail(runtime *plugin.Runtime, r
 	mql := res.(*mqlAwsWorkspaceswebIpAccessSettings)
 	mql.associatedArns = append([]string(nil), ipas.AssociatedPortalArns...)
 	mql.associatedFetched = true
+	mql.cacheCustomerManagedKey = convert.ToValue(ipas.CustomerManagedKey)
 	return mql, nil
 }
 
@@ -379,6 +438,10 @@ func (a *mqlAwsWorkspaceswebIpAccessSettings) associatedPortals() ([]any, error)
 
 func (a *mqlAwsWorkspaceswebIpAccessSettings) id() (string, error) {
 	return a.IpAccessSettingsArn.Data, nil
+}
+
+func (a *mqlAwsWorkspaceswebIpAccessSettings) customerManagedKey() (*mqlAwsKmsKey, error) {
+	return workspaceswebKmsKeyFromArn(a.MqlRuntime, a.cacheCustomerManagedKey, &a.CustomerManagedKey)
 }
 
 // Trust Stores
@@ -581,9 +644,10 @@ func (a *mqlAwsWorkspacesweb) getUserSettings(conn *connection.AwsConnection) []
 }
 
 type mqlAwsWorkspaceswebUserSettingsInternal struct {
-	associatedFetched bool
-	associatedLock    sync.Mutex
-	associatedArns    []string
+	associatedFetched       bool
+	associatedLock          sync.Mutex
+	associatedArns          []string
+	cacheCustomerManagedKey string
 }
 
 func newMqlAwsWorkspaceswebUserSettingsFromSummary(runtime *plugin.Runtime, region string, summary workspaceswebtypes.UserSettingsSummary) (*mqlAwsWorkspaceswebUserSettings, error) {
@@ -600,7 +664,6 @@ func newMqlAwsWorkspaceswebUserSettingsFromSummary(runtime *plugin.Runtime, regi
 			"webAuthnAllowed":                llx.StringData(""),
 			"disconnectTimeoutInMinutes":     llx.IntDataDefault(summary.DisconnectTimeoutInMinutes, 0),
 			"idleDisconnectTimeoutInMinutes": llx.IntDataDefault(summary.IdleDisconnectTimeoutInMinutes, 0),
-			"customerManagedKey":             llx.StringData(""),
 			"region":                         llx.StringData(region),
 		})
 	if err != nil {
@@ -626,17 +689,24 @@ func newMqlAwsWorkspaceswebUserSettingsFromDetail(runtime *plugin.Runtime, regio
 			"webAuthnAllowed":                llx.StringData(string(us.WebAuthnAllowed)),
 			"disconnectTimeoutInMinutes":     llx.IntDataDefault(us.DisconnectTimeoutInMinutes, 0),
 			"idleDisconnectTimeoutInMinutes": llx.IntDataDefault(us.IdleDisconnectTimeoutInMinutes, 0),
-			"customerManagedKey":             llx.StringDataPtr(us.CustomerManagedKey),
 			"region":                         llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsWorkspaceswebUserSettings), nil
+	mql := res.(*mqlAwsWorkspaceswebUserSettings)
+	mql.associatedArns = append([]string(nil), us.AssociatedPortalArns...)
+	mql.associatedFetched = true
+	mql.cacheCustomerManagedKey = convert.ToValue(us.CustomerManagedKey)
+	return mql, nil
 }
 
 func (a *mqlAwsWorkspaceswebUserSettings) id() (string, error) {
 	return a.UserSettingsArn.Data, nil
+}
+
+func (a *mqlAwsWorkspaceswebUserSettings) customerManagedKey() (*mqlAwsKmsKey, error) {
+	return workspaceswebKmsKeyFromArn(a.MqlRuntime, a.cacheCustomerManagedKey, &a.CustomerManagedKey)
 }
 
 func (a *mqlAwsWorkspaceswebUserSettings) associatedPortals() ([]any, error) {
@@ -741,6 +811,56 @@ func awsString(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+// workspaceswebKmsKeyFromArn returns a typed aws.kms.key for a customer-managed
+// key ARN, or null when the ARN is empty (i.e. the resource uses an AWS-managed
+// key). Resources that don't pre-cache the ARN call this with "" and get null.
+func workspaceswebKmsKeyFromArn(runtime *plugin.Runtime, arn string, state *plugin.TValue[*mqlAwsKmsKey]) (*mqlAwsKmsKey, error) {
+	if arn == "" {
+		state.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "aws.kms.key", map[string]*llx.RawData{"arn": llx.StringData(arn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
+}
+
+// initAwsWorkspaceswebUserAccessLoggingSetting resolves a setting looked up by
+// ARN. The lister yields these per region, so we list once and find the match.
+// Falls back to a bare resource if the setting can't be listed.
+func initAwsWorkspaceswebUserAccessLoggingSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	arnArg, ok := args["userAccessLoggingSettingsArn"]
+	if !ok || arnArg == nil {
+		return args, nil, nil
+	}
+	arnVal, ok := arnArg.Value.(string)
+	if !ok || arnVal == "" {
+		return args, nil, nil
+	}
+	obj, err := CreateResource(runtime, "aws.workspacesweb", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	wsweb := obj.(*mqlAwsWorkspacesweb)
+	rawSettings := wsweb.GetUserAccessLoggingSettings()
+	if rawSettings.Error != nil {
+		args["__id"] = llx.StringData(arnVal)
+		return args, nil, nil
+	}
+	for _, s := range rawSettings.Data {
+		setting := s.(*mqlAwsWorkspaceswebUserAccessLoggingSetting)
+		if setting.UserAccessLoggingSettingsArn.Data == arnVal {
+			return nil, setting, nil
+		}
+	}
+	args["__id"] = llx.StringData(arnVal)
+	return args, nil, nil
 }
 
 // associatedPortalsFromArns returns typed aws.workspacesweb.portal references

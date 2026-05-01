@@ -2989,7 +2989,7 @@ func init() {
 			Create: createAwsWorkspacesIpGroup,
 		},
 		"aws.workspacesweb.userAccessLoggingSetting": {
-			// to override args, implement: initAwsWorkspaceswebUserAccessLoggingSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsWorkspaceswebUserAccessLoggingSetting,
 			Create: createAwsWorkspaceswebUserAccessLoggingSetting,
 		},
 		"aws.kinesis": {
@@ -19303,7 +19303,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsWorkspaceswebPortal).GetRendererType()).ToDataRes(types.String)
 	},
 	"aws.workspacesweb.portal.customerManagedKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWorkspaceswebPortal).GetCustomerManagedKey()).ToDataRes(types.String)
+		return (r.(*mqlAwsWorkspaceswebPortal).GetCustomerManagedKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.workspacesweb.portal.browserSettingsArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebPortal).GetBrowserSettingsArn()).ToDataRes(types.String)
@@ -19332,6 +19332,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workspacesweb.portal.userAccessLoggingSettingsArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebPortal).GetUserAccessLoggingSettingsArn()).ToDataRes(types.String)
 	},
+	"aws.workspacesweb.portal.userAccessLoggingSetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkspaceswebPortal).GetUserAccessLoggingSetting()).ToDataRes(types.Resource("aws.workspacesweb.userAccessLoggingSetting"))
+	},
 	"aws.workspacesweb.portal.dataProtectionSettingsArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebPortal).GetDataProtectionSettingsArn()).ToDataRes(types.String)
 	},
@@ -19357,7 +19360,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsWorkspaceswebIpAccessSettings).GetDescription()).ToDataRes(types.String)
 	},
 	"aws.workspacesweb.ipAccessSettings.customerManagedKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWorkspaceswebIpAccessSettings).GetCustomerManagedKey()).ToDataRes(types.String)
+		return (r.(*mqlAwsWorkspaceswebIpAccessSettings).GetCustomerManagedKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.workspacesweb.ipAccessSettings.ipRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebIpAccessSettings).GetIpRules()).ToDataRes(types.Array(types.Dict))
@@ -19411,7 +19414,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsWorkspaceswebUserSettings).GetIdleDisconnectTimeoutInMinutes()).ToDataRes(types.Int)
 	},
 	"aws.workspacesweb.userSettings.customerManagedKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWorkspaceswebUserSettings).GetCustomerManagedKey()).ToDataRes(types.String)
+		return (r.(*mqlAwsWorkspaceswebUserSettings).GetCustomerManagedKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.workspacesweb.userSettings.associatedPortals": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkspaceswebUserSettings).GetAssociatedPortals()).ToDataRes(types.Array(types.Resource("aws.workspacesweb.portal")))
@@ -46771,7 +46774,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.workspacesweb.portal.customerManagedKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWorkspaceswebPortal).CustomerManagedKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsWorkspaceswebPortal).CustomerManagedKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.workspacesweb.portal.browserSettingsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46808,6 +46811,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.workspacesweb.portal.userAccessLoggingSettingsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkspaceswebPortal).UserAccessLoggingSettingsArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workspacesweb.portal.userAccessLoggingSetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkspaceswebPortal).UserAccessLoggingSetting, ok = plugin.RawToTValue[*mqlAwsWorkspaceswebUserAccessLoggingSetting](v.Value, v.Error)
 		return
 	},
 	"aws.workspacesweb.portal.dataProtectionSettingsArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46847,7 +46854,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.workspacesweb.ipAccessSettings.customerManagedKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWorkspaceswebIpAccessSettings).CustomerManagedKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsWorkspaceswebIpAccessSettings).CustomerManagedKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.workspacesweb.ipAccessSettings.ipRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46927,7 +46934,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.workspacesweb.userSettings.customerManagedKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWorkspaceswebUserSettings).CustomerManagedKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsWorkspaceswebUserSettings).CustomerManagedKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.workspacesweb.userSettings.associatedPortals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -114527,7 +114534,7 @@ func (c *mqlAwsWorkspacesweb) GetUserSettings() *plugin.TValue[[]any] {
 type mqlAwsWorkspaceswebPortal struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsWorkspaceswebPortalInternal it will be used here
+	mqlAwsWorkspaceswebPortalInternal
 	PortalArn                    plugin.TValue[string]
 	DisplayName                  plugin.TValue[string]
 	PortalEndpoint               plugin.TValue[string]
@@ -114538,7 +114545,7 @@ type mqlAwsWorkspaceswebPortal struct {
 	BrowserType                  plugin.TValue[string]
 	InstanceType                 plugin.TValue[string]
 	RendererType                 plugin.TValue[string]
-	CustomerManagedKey           plugin.TValue[string]
+	CustomerManagedKey           plugin.TValue[*mqlAwsKmsKey]
 	BrowserSettingsArn           plugin.TValue[string]
 	NetworkSettingsArn           plugin.TValue[string]
 	UserSettingsArn              plugin.TValue[string]
@@ -114548,6 +114555,7 @@ type mqlAwsWorkspaceswebPortal struct {
 	IpAccessSettingsArn          plugin.TValue[string]
 	IpAccessSettings             plugin.TValue[*mqlAwsWorkspaceswebIpAccessSettings]
 	UserAccessLoggingSettingsArn plugin.TValue[string]
+	UserAccessLoggingSetting     plugin.TValue[*mqlAwsWorkspaceswebUserAccessLoggingSetting]
 	DataProtectionSettingsArn    plugin.TValue[string]
 	SessionLoggerArn             plugin.TValue[string]
 	MaxConcurrentSessions        plugin.TValue[int64]
@@ -114632,8 +114640,20 @@ func (c *mqlAwsWorkspaceswebPortal) GetRendererType() *plugin.TValue[string] {
 	return &c.RendererType
 }
 
-func (c *mqlAwsWorkspaceswebPortal) GetCustomerManagedKey() *plugin.TValue[string] {
-	return &c.CustomerManagedKey
+func (c *mqlAwsWorkspaceswebPortal) GetCustomerManagedKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.CustomerManagedKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspacesweb.portal", c.__id, "customerManagedKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.customerManagedKey()
+	})
 }
 
 func (c *mqlAwsWorkspaceswebPortal) GetBrowserSettingsArn() *plugin.TValue[string] {
@@ -114708,6 +114728,22 @@ func (c *mqlAwsWorkspaceswebPortal) GetUserAccessLoggingSettingsArn() *plugin.TV
 	return &c.UserAccessLoggingSettingsArn
 }
 
+func (c *mqlAwsWorkspaceswebPortal) GetUserAccessLoggingSetting() *plugin.TValue[*mqlAwsWorkspaceswebUserAccessLoggingSetting] {
+	return plugin.GetOrCompute[*mqlAwsWorkspaceswebUserAccessLoggingSetting](&c.UserAccessLoggingSetting, func() (*mqlAwsWorkspaceswebUserAccessLoggingSetting, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspacesweb.portal", c.__id, "userAccessLoggingSetting")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWorkspaceswebUserAccessLoggingSetting), nil
+			}
+		}
+
+		return c.userAccessLoggingSetting()
+	})
+}
+
 func (c *mqlAwsWorkspaceswebPortal) GetDataProtectionSettingsArn() *plugin.TValue[string] {
 	return &c.DataProtectionSettingsArn
 }
@@ -114736,7 +114772,7 @@ type mqlAwsWorkspaceswebIpAccessSettings struct {
 	IpAccessSettingsArn plugin.TValue[string]
 	DisplayName         plugin.TValue[string]
 	Description         plugin.TValue[string]
-	CustomerManagedKey  plugin.TValue[string]
+	CustomerManagedKey  plugin.TValue[*mqlAwsKmsKey]
 	IpRules             plugin.TValue[[]any]
 	AssociatedPortals   plugin.TValue[[]any]
 	CreationDate        plugin.TValue[*time.Time]
@@ -114792,8 +114828,20 @@ func (c *mqlAwsWorkspaceswebIpAccessSettings) GetDescription() *plugin.TValue[st
 	return &c.Description
 }
 
-func (c *mqlAwsWorkspaceswebIpAccessSettings) GetCustomerManagedKey() *plugin.TValue[string] {
-	return &c.CustomerManagedKey
+func (c *mqlAwsWorkspaceswebIpAccessSettings) GetCustomerManagedKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.CustomerManagedKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspacesweb.ipAccessSettings", c.__id, "customerManagedKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.customerManagedKey()
+	})
 }
 
 func (c *mqlAwsWorkspaceswebIpAccessSettings) GetIpRules() *plugin.TValue[[]any] {
@@ -114910,7 +114958,7 @@ type mqlAwsWorkspaceswebUserSettings struct {
 	WebAuthnAllowed                plugin.TValue[string]
 	DisconnectTimeoutInMinutes     plugin.TValue[int64]
 	IdleDisconnectTimeoutInMinutes plugin.TValue[int64]
-	CustomerManagedKey             plugin.TValue[string]
+	CustomerManagedKey             plugin.TValue[*mqlAwsKmsKey]
 	AssociatedPortals              plugin.TValue[[]any]
 	Region                         plugin.TValue[string]
 }
@@ -114992,8 +115040,20 @@ func (c *mqlAwsWorkspaceswebUserSettings) GetIdleDisconnectTimeoutInMinutes() *p
 	return &c.IdleDisconnectTimeoutInMinutes
 }
 
-func (c *mqlAwsWorkspaceswebUserSettings) GetCustomerManagedKey() *plugin.TValue[string] {
-	return &c.CustomerManagedKey
+func (c *mqlAwsWorkspaceswebUserSettings) GetCustomerManagedKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.CustomerManagedKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workspacesweb.userSettings", c.__id, "customerManagedKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.customerManagedKey()
+	})
 }
 
 func (c *mqlAwsWorkspaceswebUserSettings) GetAssociatedPortals() *plugin.TValue[[]any] {

@@ -12708,8 +12708,8 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   instanceType string
   // Renderer type
   rendererType string
-  // Customer-managed KMS key ARN that encrypts sensitive portal data
-  customerManagedKey string
+  // Customer-managed KMS key that encrypts sensitive portal data (null when AWS-managed)
+  customerManagedKey() aws.kms.key
   // Associated browser settings ARN
   browserSettingsArn string
   // Associated network settings ARN
@@ -12726,8 +12726,10 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   ipAccessSettingsArn @maturity("deprecated") string
   // Associated IP access settings (typed reference, null if not configured)
   ipAccessSettings() aws.workspacesweb.ipAccessSettings
-  // Associated user access logging settings ARN
-  userAccessLoggingSettingsArn string
+  // DEPRECATED: use userAccessLoggingSetting() instead
+  userAccessLoggingSettingsArn @maturity("deprecated") string
+  // Associated user access logging settings (typed reference, null if not configured)
+  userAccessLoggingSetting() aws.workspacesweb.userAccessLoggingSetting
   // Associated data protection settings ARN
   dataProtectionSettingsArn string
   // Associated session logger ARN
@@ -12748,8 +12750,8 @@ private aws.workspacesweb.ipAccessSettings @defaults("displayName region") {
   displayName string
   // Description of the IP access settings
   description string
-  // Customer-managed KMS key ARN used to encrypt sensitive data
-  customerManagedKey string
+  // Customer-managed KMS key used to encrypt sensitive data (null when AWS-managed)
+  customerManagedKey() aws.kms.key
   // IP rules that gate portal access (each is {ipRange, description})
   ipRules []dict
   // Web portals that this IP access settings resource is associated with
@@ -12792,8 +12794,8 @@ private aws.workspacesweb.userSettings @defaults("userSettingsArn region") {
   disconnectTimeoutInMinutes int
   // Idle disconnect timeout in minutes
   idleDisconnectTimeoutInMinutes int
-  // Customer-managed KMS key ARN used to encrypt sensitive data
-  customerManagedKey string
+  // Customer-managed KMS key used to encrypt sensitive data (null when AWS-managed)
+  customerManagedKey() aws.kms.key
   // Web portals that this user settings resource is associated with
   associatedPortals() []aws.workspacesweb.portal
   // AWS region

@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.20.0",
-  "generated_at": "2026-05-01T11:29:19-07:00",
+  "generated_at": "2026-05-01T13:11:17-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -654,6 +654,7 @@
     "wafv2:ListWebACLs",
     "workdocs:DescribeUsers",
     "workspaces-web:GetIpAccessSettings",
+    "workspaces-web:GetPortal",
     "workspaces-web:GetTrustStore",
     "workspaces-web:GetUserSettings",
     "workspaces-web:ListIpAccessSettings",
@@ -4718,6 +4719,12 @@
       "permission": "workspaces-web:GetIpAccessSettings",
       "service": "workspaces-web",
       "action": "GetIpAccessSettings",
+      "source_file": "aws_workspacesweb.go"
+    },
+    {
+      "permission": "workspaces-web:GetPortal",
+      "service": "workspaces-web",
+      "action": "GetPortal",
       "source_file": "aws_workspacesweb.go"
     },
     {
