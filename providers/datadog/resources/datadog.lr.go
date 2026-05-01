@@ -1745,7 +1745,7 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlDatadog struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatadogInternal it will be used here
+	mqlDatadogInternal
 	Users                      plugin.TValue[[]any]
 	Roles                      plugin.TValue[[]any]
 	Monitors                   plugin.TValue[[]any]

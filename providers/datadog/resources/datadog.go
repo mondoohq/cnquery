@@ -6,6 +6,7 @@ package resources
 import (
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
@@ -14,6 +15,12 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers/datadog/connection"
 )
+
+type mqlDatadogInternal struct {
+	ipAllowlistOnce  sync.Once
+	ipAllowlistAttrs datadogV2.IPAllowlistAttributes
+	ipAllowlistErr   error
+}
 
 // isForbidden checks if an HTTP response indicates a 403 Forbidden error,
 // which typically means the Datadog plan does not include the required feature.
@@ -759,20 +766,24 @@ func (r *mqlDatadogApplicationKey) id() (string, error) {
 // --- IP Allowlist ---
 
 func (r *mqlDatadog) fetchIPAllowlist() (datadogV2.IPAllowlistAttributes, error) {
-	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
-	api := datadogV2.NewIPAllowlistApi(conn.ApiClient())
+	r.ipAllowlistOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+		api := datadogV2.NewIPAllowlistApi(conn.ApiClient())
 
-	resp, httpResp, err := api.GetIPAllowlist(conn.AuthCtx())
-	if err != nil {
-		if isForbidden(httpResp) {
-			log.Warn().Msg("datadog> IP allowlist not available (403 Forbidden)")
-			return datadogV2.IPAllowlistAttributes{}, nil
+		resp, httpResp, err := api.GetIPAllowlist(conn.AuthCtx())
+		if err != nil {
+			if isForbidden(httpResp) {
+				log.Warn().Msg("datadog> IP allowlist not available (403 Forbidden)")
+				return
+			}
+			r.ipAllowlistErr = err
+			return
 		}
-		return datadogV2.IPAllowlistAttributes{}, err
-	}
 
-	data := resp.GetData()
-	return data.GetAttributes(), nil
+		data := resp.GetData()
+		r.ipAllowlistAttrs = data.GetAttributes()
+	})
+	return r.ipAllowlistAttrs, r.ipAllowlistErr
 }
 
 func (r *mqlDatadog) ipAllowlistEnabled() (bool, error) {

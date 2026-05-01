@@ -17,6 +17,7 @@ alloydb
 alpn
 antispam
 aof
+apm
 apparmor
 appslot
 armcontainerregistry
@@ -264,6 +265,7 @@ keyspace
 kilocode
 kiro
 kolide
+kotlin
 KQL
 kqueue
 krbtgt
@@ -323,6 +325,7 @@ mongodb
 Mpim
 msk
 mtls
+multiplatform
 MULTIAZ
 myapp
 mychart
@@ -438,6 +441,7 @@ resourcegroup
 resourcepolicy
 resourcequota
 richrule
+roku
 rootdir
 rpo
 RRULE
@@ -511,6 +515,7 @@ tensorboard
 testutils
 tgw
 throughputs
+timeframe
 timestream
 tokenauth
 tokenid

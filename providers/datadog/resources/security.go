@@ -5,6 +5,7 @@ package resources
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
@@ -301,9 +302,10 @@ func (r *mqlDatadog) rumApplications() ([]interface{}, error) {
 	for _, app := range resp.GetData() {
 		attrs := app.GetAttributes()
 		res, err := CreateResource(r.MqlRuntime, "datadog.rumApplication", map[string]*llx.RawData{
-			"id":          llx.StringData(app.GetId()),
-			"name":        llx.StringData(attrs.GetName()),
-			"type":        llx.StringData(attrs.GetType()),
+			"id":   llx.StringData(app.GetId()),
+			"name": llx.StringData(attrs.GetName()),
+			"type": llx.StringData(attrs.GetType()),
+			// clientToken is not available on the list API response (only the create response)
 			"clientToken": llx.StringData(""),
 			"createdAt":   llx.TimeDataPtr(timePtr(time.Unix(attrs.GetCreatedAt(), 0))),
 			"updatedAt":   llx.TimeDataPtr(timePtr(time.Unix(attrs.GetUpdatedAt(), 0))),
@@ -386,7 +388,7 @@ func (r *mqlDatadog) syntheticsPrivateLocations() ([]interface{}, error) {
 	for _, loc := range resp.GetLocations() {
 		id := loc.GetId()
 		// Private locations have IDs starting with "pl:"
-		if len(id) < 3 || id[:3] != "pl:" {
+		if !strings.HasPrefix(id, "pl:") {
 			continue
 		}
 
