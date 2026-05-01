@@ -3503,7 +3503,7 @@ aws.identitycenter.application.createdDate 13.20.1
 aws.identitycenter.application.createdFrom 13.20.1
 aws.identitycenter.application.description 13.20.1
 aws.identitycenter.application.identityStoreArn 13.20.1
-aws.identitycenter.application.instanceArn 13.20.1
+aws.identitycenter.application.instance 13.20.1
 aws.identitycenter.application.name 13.20.1
 aws.identitycenter.application.portalVisibility 13.20.1
 aws.identitycenter.application.signInOrigin 13.20.1

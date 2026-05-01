@@ -618,7 +618,6 @@ func (a *mqlAwsIdentitycenterInstance) applications() ([]any, error) {
 					"name":                   llx.StringDataPtr(app.Name),
 					"description":            llx.StringDataPtr(app.Description),
 					"status":                 llx.StringData(string(app.Status)),
-					"instanceArn":            llx.StringDataPtr(app.InstanceArn),
 					"identityStoreArn":       llx.StringDataPtr(app.IdentityStoreArn),
 					"applicationProviderArn": llx.StringDataPtr(app.ApplicationProviderArn),
 					"applicationAccount":     llx.StringDataPtr(app.ApplicationAccount),
@@ -631,12 +630,26 @@ func (a *mqlAwsIdentitycenterInstance) applications() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			cast := mqlApp.(*mqlAwsIdentitycenterApplication)
+			cast.cacheInstance = a
 			res = append(res, mqlApp)
 		}
 	}
 	return res, nil
 }
 
+type mqlAwsIdentitycenterApplicationInternal struct {
+	cacheInstance *mqlAwsIdentitycenterInstance
+}
+
 func (a *mqlAwsIdentitycenterApplication) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsIdentitycenterApplication) instance() (*mqlAwsIdentitycenterInstance, error) {
+	if a.cacheInstance != nil {
+		return a.cacheInstance, nil
+	}
+	a.Instance.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }

@@ -23055,8 +23055,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.identitycenter.application.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterApplication).GetStatus()).ToDataRes(types.String)
 	},
-	"aws.identitycenter.application.instanceArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsIdentitycenterApplication).GetInstanceArn()).ToDataRes(types.String)
+	"aws.identitycenter.application.instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterApplication).GetInstance()).ToDataRes(types.Resource("aws.identitycenter.instance"))
 	},
 	"aws.identitycenter.application.identityStoreArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterApplication).GetIdentityStoreArn()).ToDataRes(types.String)
@@ -52298,8 +52298,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIdentitycenterApplication).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.identitycenter.application.instanceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsIdentitycenterApplication).InstanceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.identitycenter.application.instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterApplication).Instance, ok = plugin.RawToTValue[*mqlAwsIdentitycenterInstance](v.Value, v.Error)
 		return
 	},
 	"aws.identitycenter.application.identityStoreArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -129029,12 +129029,12 @@ func (c *mqlAwsIdentitycenterInstance) GetApplications() *plugin.TValue[[]any] {
 type mqlAwsIdentitycenterApplication struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsIdentitycenterApplicationInternal it will be used here
+	mqlAwsIdentitycenterApplicationInternal
 	Arn                    plugin.TValue[string]
 	Name                   plugin.TValue[string]
 	Description            plugin.TValue[string]
 	Status                 plugin.TValue[string]
-	InstanceArn            plugin.TValue[string]
+	Instance               plugin.TValue[*mqlAwsIdentitycenterInstance]
 	IdentityStoreArn       plugin.TValue[string]
 	ApplicationProviderArn plugin.TValue[string]
 	ApplicationAccount     plugin.TValue[string]
@@ -129098,8 +129098,20 @@ func (c *mqlAwsIdentitycenterApplication) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
-func (c *mqlAwsIdentitycenterApplication) GetInstanceArn() *plugin.TValue[string] {
-	return &c.InstanceArn
+func (c *mqlAwsIdentitycenterApplication) GetInstance() *plugin.TValue[*mqlAwsIdentitycenterInstance] {
+	return plugin.GetOrCompute[*mqlAwsIdentitycenterInstance](&c.Instance, func() (*mqlAwsIdentitycenterInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.identitycenter.application", c.__id, "instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIdentitycenterInstance), nil
+			}
+		}
+
+		return c.instance()
+	})
 }
 
 func (c *mqlAwsIdentitycenterApplication) GetIdentityStoreArn() *plugin.TValue[string] {

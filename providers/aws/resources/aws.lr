@@ -15738,8 +15738,8 @@ private aws.identitycenter.application @defaults("name status applicationProvide
   description string
   // Status of the application: ENABLED or DISABLED
   status string
-  // ARN of the Identity Center instance this application is configured under
-  instanceArn string
+  // Identity Center instance this application is configured under
+  instance() aws.identitycenter.instance
   // ARN of the identity store associated with the application
   identityStoreArn string
   // ARN of the application provider that backs this application
