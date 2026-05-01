@@ -12679,11 +12679,11 @@ aws.workspacesweb @defaults("portals") {
   // List of user access logging settings across all enabled regions
   userAccessLoggingSettings() []aws.workspacesweb.userAccessLoggingSetting
   // List of IP access settings across all enabled regions
-  ipAccessSettings() []aws.workspacesweb.ipAccessSettings
+  ipAccessSettings() []aws.workspacesweb.ipAccessSetting
   // List of trust stores across all enabled regions
   trustStores() []aws.workspacesweb.trustStore
   // List of user settings across all enabled regions
-  userSettings() []aws.workspacesweb.userSettings
+  userSettings() []aws.workspacesweb.userSetting
 }
 
 // Amazon WorkSpaces Web portal
@@ -12695,11 +12695,12 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   // Portal endpoint URL
   portalEndpoint string
   // Custom domain that users access in order to start streaming sessions
-  portalCustomDomain string
+  // (not in ListPortals; populated lazily via GetPortal)
+  portalCustomDomain() string
   // Portal status: Incomplete, Pending, Active
   portalStatus string
-  // Reason for the current portal status
-  statusReason string
+  // Reason for the current portal status (not in ListPortals; populated lazily via GetPortal)
+  statusReason() string
   // Authentication type: Standard or IAM_Identity_Center
   authenticationType string
   // Browser type
@@ -12717,7 +12718,7 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   // DEPRECATED: use userSettings() instead
   userSettingsArn @maturity("deprecated") string
   // Associated user settings (typed reference, null if not configured)
-  userSettings() aws.workspacesweb.userSettings
+  userSettings() aws.workspacesweb.userSetting
   // DEPRECATED: use trustStore() instead
   trustStoreArn @maturity("deprecated") string
   // Associated trust store (typed reference, null if not configured)
@@ -12725,15 +12726,15 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   // DEPRECATED: use ipAccessSettings() instead
   ipAccessSettingsArn @maturity("deprecated") string
   // Associated IP access settings (typed reference, null if not configured)
-  ipAccessSettings() aws.workspacesweb.ipAccessSettings
+  ipAccessSettings() aws.workspacesweb.ipAccessSetting
   // DEPRECATED: use userAccessLoggingSetting() instead
   userAccessLoggingSettingsArn @maturity("deprecated") string
   // Associated user access logging settings (typed reference, null if not configured)
   userAccessLoggingSetting() aws.workspacesweb.userAccessLoggingSetting
   // Associated data protection settings ARN
   dataProtectionSettingsArn string
-  // Associated session logger ARN
-  sessionLoggerArn string
+  // Associated session logger ARN (not in ListPortals; populated lazily via GetPortal)
+  sessionLoggerArn() string
   // Maximum concurrent sessions
   maxConcurrentSessions int
   // Portal creation timestamp
@@ -12743,7 +12744,7 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
 }
 
 // Amazon WorkSpaces Web IP access settings
-private aws.workspacesweb.ipAccessSettings @defaults("displayName region") {
+private aws.workspacesweb.ipAccessSetting @defaults("displayName region") {
   // ARN of the IP access settings
   ipAccessSettingsArn string
   // Display name of the IP access settings
@@ -12752,8 +12753,9 @@ private aws.workspacesweb.ipAccessSettings @defaults("displayName region") {
   description string
   // Customer-managed KMS key used to encrypt sensitive data (null when AWS-managed)
   customerManagedKey() aws.kms.key
-  // IP rules that gate portal access (each is {ipRange, description})
-  ipRules []dict
+  // IP rules that gate portal access (each is {ipRange, description}). Not in
+  // ListIpAccessSettings; populated lazily via GetIpAccessSettings.
+  ipRules() []dict
   // Web portals that this IP access settings resource is associated with
   associatedPortals() []aws.workspacesweb.portal
   // Creation timestamp
@@ -12773,7 +12775,7 @@ private aws.workspacesweb.trustStore @defaults("trustStoreArn region") {
 }
 
 // Amazon WorkSpaces Web user settings
-private aws.workspacesweb.userSettings @defaults("userSettingsArn region") {
+private aws.workspacesweb.userSetting @defaults("userSettingsArn region") {
   // ARN of the user settings
   userSettingsArn string
   // Whether users can copy text from the streaming session: Enabled or Disabled
@@ -12788,8 +12790,9 @@ private aws.workspacesweb.userSettings @defaults("userSettingsArn region") {
   printAllowed string
   // Whether users can use deep links: Enabled or Disabled
   deepLinkAllowed string
-  // Whether users can use WebAuthn passwordless authentication: Enabled or Disabled
-  webAuthnAllowed string
+  // Whether users can use WebAuthn passwordless authentication: Enabled or Disabled.
+  // Not in ListUserSettings; populated lazily via GetUserSettings.
+  webAuthnAllowed() string
   // Time in minutes a streaming session remains active after disconnect
   disconnectTimeoutInMinutes int
   // Idle disconnect timeout in minutes
