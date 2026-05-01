@@ -13,7 +13,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -98,8 +98,8 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 				return nil, err
 			}
 
-			var encryptionAtHost, secureBootEnabled, vtpmEnabled, proxyAgentEnabled *bool
-			var securityType *string
+			var encryptionAtHost, secureBootEnabled, vtpmEnabled, proxyAgentEnabled, proxyAgentAddExtension *bool
+			var securityType, proxyAgentMode *string
 			if vm.Properties != nil && vm.Properties.SecurityProfile != nil {
 				sp := vm.Properties.SecurityProfile
 				encryptionAtHost = sp.EncryptionAtHost
@@ -110,7 +110,29 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 				}
 				if sp.ProxyAgentSettings != nil {
 					proxyAgentEnabled = sp.ProxyAgentSettings.Enabled
+					proxyAgentAddExtension = sp.ProxyAgentSettings.AddProxyAgentExtension
+					proxyAgentMode = (*string)(sp.ProxyAgentSettings.Mode)
 				}
+			}
+
+			var fipsEncryptionEnabled *bool
+			var resiliencyProfileDict, scheduledEventsPolicyDict map[string]any
+			if vm.Properties != nil {
+				if vm.Properties.AdditionalCapabilities != nil {
+					fipsEncryptionEnabled = vm.Properties.AdditionalCapabilities.EnableFips1403Encryption
+				}
+				resiliencyProfileDict, err = convert.JsonToDict(vm.Properties.ResiliencyProfile)
+				if err != nil {
+					return nil, err
+				}
+				scheduledEventsPolicyDict, err = convert.JsonToDict(vm.Properties.ScheduledEventsPolicy)
+				if err != nil {
+					return nil, err
+				}
+			}
+			systemDataDict, err := convert.JsonToDict(vm.SystemData)
+			if err != nil {
+				return nil, err
 			}
 
 			var computerName, adminUsername, licenseType *string
@@ -178,6 +200,12 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 					"secureBootEnabled":             llx.BoolDataPtr(secureBootEnabled),
 					"vtpmEnabled":                   llx.BoolDataPtr(vtpmEnabled),
 					"proxyAgentEnabled":             llx.BoolDataPtr(proxyAgentEnabled),
+					"proxyAgentMode":                llx.StringDataPtr(proxyAgentMode),
+					"proxyAgentAddExtension":        llx.BoolDataPtr(proxyAgentAddExtension),
+					"fipsEncryptionEnabled":         llx.BoolDataPtr(fipsEncryptionEnabled),
+					"resiliencyProfile":             llx.DictData(resiliencyProfileDict),
+					"scheduledEventsPolicy":         llx.DictData(scheduledEventsPolicyDict),
+					"systemData":                    llx.DictData(systemDataDict),
 					"computerName":                  llx.StringDataPtr(computerName),
 					"adminUsername":                 llx.StringDataPtr(adminUsername),
 					"licenseType":                   llx.StringDataPtr(licenseType),
@@ -357,6 +385,11 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		}
 	}
 
+	systemData, err := convert.JsonToDict(disk.SystemData)
+	if err != nil {
+		return nil, err
+	}
+
 	args := map[string]*llx.RawData{
 		"id":                llx.StringDataPtr(disk.ID),
 		"name":              llx.StringDataPtr(disk.Name),
@@ -368,6 +401,7 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		"zones":             llx.ArrayData(zones, types.String),
 		"sku":               llx.DictData(sku),
 		"properties":        llx.DictData(properties),
+		"systemData":        llx.DictData(systemData),
 	}
 
 	if disk.Properties != nil {
@@ -397,6 +431,11 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		args["tier"] = llx.StringDataPtr(disk.Properties.Tier)
 		args["supportsHibernation"] = llx.BoolDataPtr(disk.Properties.SupportsHibernation)
 		args["diskAccessId"] = llx.StringDataPtr(disk.Properties.DiskAccessID)
+		availabilityPolicy, err := convert.JsonToDict(disk.Properties.AvailabilityPolicy)
+		if err != nil {
+			return nil, err
+		}
+		args["availabilityPolicy"] = llx.DictData(availabilityPolicy)
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.computeService.disk", args)
@@ -1198,6 +1237,11 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 		return nil, err
 	}
 
+	systemData, err := convert.JsonToDict(snap.SystemData)
+	if err != nil {
+		return nil, err
+	}
+
 	args := map[string]*llx.RawData{
 		"id":         llx.StringDataPtr(snap.ID),
 		"name":       llx.StringDataPtr(snap.Name),
@@ -1206,6 +1250,7 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 		"type":       llx.StringDataPtr(snap.Type),
 		"sku":        llx.DictData(sku),
 		"properties": llx.DictData(properties),
+		"systemData": llx.DictData(systemData),
 	}
 
 	var cacheSourceDiskId, cacheDESId *string
@@ -1236,9 +1281,11 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 		args["encryptionType"] = llx.StringDataPtr(stringEnumPtr(encryptionType))
 		args["dataAccessAuthMode"] = llx.StringDataPtr(stringEnumPtr(props.DataAccessAuthMode))
 		args["diskAccessId"] = llx.StringDataPtr(props.DiskAccessID)
+		args["snapshotAccessState"] = llx.StringDataPtr(stringEnumPtr(props.SnapshotAccessState))
 
 		if props.CreationData != nil {
 			cacheSourceDiskId = props.CreationData.SourceResourceID
+			args["instantAccessDurationMinutes"] = llx.IntDataPtr(props.CreationData.InstantAccessDurationMinutes)
 		}
 	}
 

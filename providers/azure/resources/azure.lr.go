@@ -1645,6 +1645,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vm.proxyAgentEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetProxyAgentEnabled()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.computeService.vm.proxyAgentMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetProxyAgentMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.proxyAgentAddExtension": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetProxyAgentAddExtension()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.vm.fipsEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetFipsEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.vm.resiliencyProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetResiliencyProfile()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vm.scheduledEventsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetScheduledEventsPolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vm.systemData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetSystemData()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.computeService.vm.computerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetComputerName()).ToDataRes(types.String)
 	},
@@ -1777,6 +1795,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.disk.diskAccessId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetDiskAccessId()).ToDataRes(types.String)
 	},
+	"azure.subscription.computeService.disk.availabilityPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetAvailabilityPolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.disk.systemData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetSystemData()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.computeService.diskEncryptionSet.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetId()).ToDataRes(types.String)
 	},
@@ -1906,6 +1930,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.snapshot.diskAccessId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetDiskAccessId()).ToDataRes(types.String)
 	},
+	"azure.subscription.computeService.snapshot.snapshotAccessState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetSnapshotAccessState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.snapshot.instantAccessDurationMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetInstantAccessDurationMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.computeService.snapshot.systemData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetSystemData()).ToDataRes(types.Dict)
+	},
 	"azure.subscription.computeService.snapshot.sourceDisk": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetSourceDisk()).ToDataRes(types.Resource("azure.subscription.computeService.disk"))
 	},
@@ -1962,6 +1995,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.vmScaleSet.automaticRepairsPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetAutomaticRepairsPolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.resiliencyPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetResiliencyPolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.scheduledEventsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetScheduledEventsPolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.priorityMixPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetPriorityMixPolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.spotRestorePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetSpotRestorePolicy()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.skuProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetSkuProfile()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.securityPostureReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetSecurityPostureReference()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.vmScaleSet.zonalPlatformFaultDomainAlignMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetZonalPlatformFaultDomainAlignMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vmScaleSet.systemData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetSystemData()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.computeService.vmScaleSet.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetInstances()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.vmScaleSet.instance")))
@@ -9168,6 +9225,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVm).ProxyAgentEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.vm.proxyAgentMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).ProxyAgentMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.proxyAgentAddExtension": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).ProxyAgentAddExtension, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.fipsEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).FipsEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.resiliencyProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).ResiliencyProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.scheduledEventsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).ScheduledEventsPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.systemData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).SystemData, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.vm.computerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).ComputerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -9346,6 +9427,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.disk.diskAccessId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceDisk).DiskAccessId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.availabilityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).AvailabilityPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.disk.systemData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).SystemData, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.diskEncryptionSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9532,6 +9621,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceSnapshot).DiskAccessId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.snapshot.snapshotAccessState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).SnapshotAccessState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.instantAccessDurationMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).InstantAccessDurationMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.snapshot.systemData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).SystemData, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.snapshot.sourceDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceSnapshot).SourceDisk, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceDisk](v.Value, v.Error)
 		return
@@ -9610,6 +9711,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.vmScaleSet.automaticRepairsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).AutomaticRepairsPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.resiliencyPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).ResiliencyPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.scheduledEventsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).ScheduledEventsPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.priorityMixPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).PriorityMixPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.spotRestorePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).SpotRestorePolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.skuProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).SkuProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.securityPostureReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).SecurityPostureReference, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.zonalPlatformFaultDomainAlignMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).ZonalPlatformFaultDomainAlignMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vmScaleSet.systemData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).SystemData, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.vmScaleSet.instances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20782,6 +20915,12 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	SecureBootEnabled             plugin.TValue[bool]
 	VtpmEnabled                   plugin.TValue[bool]
 	ProxyAgentEnabled             plugin.TValue[bool]
+	ProxyAgentMode                plugin.TValue[string]
+	ProxyAgentAddExtension        plugin.TValue[bool]
+	FipsEncryptionEnabled         plugin.TValue[bool]
+	ResiliencyProfile             plugin.TValue[any]
+	ScheduledEventsPolicy         plugin.TValue[any]
+	SystemData                    plugin.TValue[any]
 	ComputerName                  plugin.TValue[string]
 	AdminUsername                 plugin.TValue[string]
 	LicenseType                   plugin.TValue[string]
@@ -20964,6 +21103,30 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetProxyAgentEnabled() *plugin.TV
 	return &c.ProxyAgentEnabled
 }
 
+func (c *mqlAzureSubscriptionComputeServiceVm) GetProxyAgentMode() *plugin.TValue[string] {
+	return &c.ProxyAgentMode
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetProxyAgentAddExtension() *plugin.TValue[bool] {
+	return &c.ProxyAgentAddExtension
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetFipsEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.FipsEncryptionEnabled
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetResiliencyProfile() *plugin.TValue[any] {
+	return &c.ResiliencyProfile
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetScheduledEventsPolicy() *plugin.TValue[any] {
+	return &c.ScheduledEventsPolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetSystemData() *plugin.TValue[any] {
+	return &c.SystemData
+}
+
 func (c *mqlAzureSubscriptionComputeServiceVm) GetComputerName() *plugin.TValue[string] {
 	return &c.ComputerName
 }
@@ -21064,6 +21227,8 @@ type mqlAzureSubscriptionComputeServiceDisk struct {
 	Tier                plugin.TValue[string]
 	SupportsHibernation plugin.TValue[bool]
 	DiskAccessId        plugin.TValue[string]
+	AvailabilityPolicy  plugin.TValue[any]
+	SystemData          plugin.TValue[any]
 }
 
 // createAzureSubscriptionComputeServiceDisk creates a new instance of this resource
@@ -21237,6 +21402,14 @@ func (c *mqlAzureSubscriptionComputeServiceDisk) GetSupportsHibernation() *plugi
 
 func (c *mqlAzureSubscriptionComputeServiceDisk) GetDiskAccessId() *plugin.TValue[string] {
 	return &c.DiskAccessId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetAvailabilityPolicy() *plugin.TValue[any] {
+	return &c.AvailabilityPolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetSystemData() *plugin.TValue[any] {
+	return &c.SystemData
 }
 
 // mqlAzureSubscriptionComputeServiceDiskEncryptionSet for the azure.subscription.computeService.diskEncryptionSet resource
@@ -21444,31 +21617,34 @@ type mqlAzureSubscriptionComputeServiceSnapshot struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionComputeServiceSnapshotInternal
-	Id                          plugin.TValue[string]
-	Name                        plugin.TValue[string]
-	Location                    plugin.TValue[string]
-	Tags                        plugin.TValue[map[string]any]
-	Type                        plugin.TValue[string]
-	Sku                         plugin.TValue[any]
-	Properties                  plugin.TValue[any]
-	CreationData                plugin.TValue[any]
-	ProvisioningState           plugin.TValue[string]
-	TimeCreated                 plugin.TValue[*time.Time]
-	UniqueId                    plugin.TValue[string]
-	DiskSizeBytes               plugin.TValue[int64]
-	HyperVGeneration            plugin.TValue[string]
-	OsType                      plugin.TValue[string]
-	DiskState                   plugin.TValue[string]
-	Incremental                 plugin.TValue[bool]
-	IncrementalSnapshotFamilyId plugin.TValue[string]
-	SupportsHibernation         plugin.TValue[bool]
-	NetworkAccessPolicy         plugin.TValue[string]
-	PublicNetworkAccess         plugin.TValue[string]
-	EncryptionType              plugin.TValue[string]
-	DataAccessAuthMode          plugin.TValue[string]
-	DiskAccessId                plugin.TValue[string]
-	SourceDisk                  plugin.TValue[*mqlAzureSubscriptionComputeServiceDisk]
-	DiskEncryptionSet           plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet]
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Location                     plugin.TValue[string]
+	Tags                         plugin.TValue[map[string]any]
+	Type                         plugin.TValue[string]
+	Sku                          plugin.TValue[any]
+	Properties                   plugin.TValue[any]
+	CreationData                 plugin.TValue[any]
+	ProvisioningState            plugin.TValue[string]
+	TimeCreated                  plugin.TValue[*time.Time]
+	UniqueId                     plugin.TValue[string]
+	DiskSizeBytes                plugin.TValue[int64]
+	HyperVGeneration             plugin.TValue[string]
+	OsType                       plugin.TValue[string]
+	DiskState                    plugin.TValue[string]
+	Incremental                  plugin.TValue[bool]
+	IncrementalSnapshotFamilyId  plugin.TValue[string]
+	SupportsHibernation          plugin.TValue[bool]
+	NetworkAccessPolicy          plugin.TValue[string]
+	PublicNetworkAccess          plugin.TValue[string]
+	EncryptionType               plugin.TValue[string]
+	DataAccessAuthMode           plugin.TValue[string]
+	DiskAccessId                 plugin.TValue[string]
+	SnapshotAccessState          plugin.TValue[string]
+	InstantAccessDurationMinutes plugin.TValue[int64]
+	SystemData                   plugin.TValue[any]
+	SourceDisk                   plugin.TValue[*mqlAzureSubscriptionComputeServiceDisk]
+	DiskEncryptionSet            plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet]
 }
 
 // createAzureSubscriptionComputeServiceSnapshot creates a new instance of this resource
@@ -21600,6 +21776,18 @@ func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetDiskAccessId() *plugin.T
 	return &c.DiskAccessId
 }
 
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSnapshotAccessState() *plugin.TValue[string] {
+	return &c.SnapshotAccessState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetInstantAccessDurationMinutes() *plugin.TValue[int64] {
+	return &c.InstantAccessDurationMinutes
+}
+
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSystemData() *plugin.TValue[any] {
+	return &c.SystemData
+}
+
 func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSourceDisk() *plugin.TValue[*mqlAzureSubscriptionComputeServiceDisk] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionComputeServiceDisk](&c.SourceDisk, func() (*mqlAzureSubscriptionComputeServiceDisk, error) {
 		if c.MqlRuntime.HasRecording {
@@ -21637,25 +21825,33 @@ type mqlAzureSubscriptionComputeServiceVmScaleSet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionComputeServiceVmScaleSetInternal it will be used here
-	Id                       plugin.TValue[string]
-	Name                     plugin.TValue[string]
-	Location                 plugin.TValue[string]
-	Tags                     plugin.TValue[map[string]any]
-	Type                     plugin.TValue[string]
-	Zones                    plugin.TValue[[]any]
-	Sku                      plugin.TValue[any]
-	Properties               plugin.TValue[any]
-	OrchestrationMode        plugin.TValue[string]
-	ProvisioningState        plugin.TValue[string]
-	TimeCreated              plugin.TValue[*time.Time]
-	UniqueId                 plugin.TValue[string]
-	SinglePlacementGroup     plugin.TValue[bool]
-	Overprovision            plugin.TValue[bool]
-	PlatformFaultDomainCount plugin.TValue[int64]
-	UpgradePolicy            plugin.TValue[any]
-	AutomaticRepairsPolicy   plugin.TValue[any]
-	Instances                plugin.TValue[[]any]
-	Extensions               plugin.TValue[[]any]
+	Id                                plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	Location                          plugin.TValue[string]
+	Tags                              plugin.TValue[map[string]any]
+	Type                              plugin.TValue[string]
+	Zones                             plugin.TValue[[]any]
+	Sku                               plugin.TValue[any]
+	Properties                        plugin.TValue[any]
+	OrchestrationMode                 plugin.TValue[string]
+	ProvisioningState                 plugin.TValue[string]
+	TimeCreated                       plugin.TValue[*time.Time]
+	UniqueId                          plugin.TValue[string]
+	SinglePlacementGroup              plugin.TValue[bool]
+	Overprovision                     plugin.TValue[bool]
+	PlatformFaultDomainCount          plugin.TValue[int64]
+	UpgradePolicy                     plugin.TValue[any]
+	AutomaticRepairsPolicy            plugin.TValue[any]
+	ResiliencyPolicy                  plugin.TValue[any]
+	ScheduledEventsPolicy             plugin.TValue[any]
+	PriorityMixPolicy                 plugin.TValue[any]
+	SpotRestorePolicy                 plugin.TValue[any]
+	SkuProfile                        plugin.TValue[any]
+	SecurityPostureReference          plugin.TValue[any]
+	ZonalPlatformFaultDomainAlignMode plugin.TValue[string]
+	SystemData                        plugin.TValue[any]
+	Instances                         plugin.TValue[[]any]
+	Extensions                        plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionComputeServiceVmScaleSet creates a new instance of this resource
@@ -21761,6 +21957,38 @@ func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetUpgradePolicy() *plugi
 
 func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetAutomaticRepairsPolicy() *plugin.TValue[any] {
 	return &c.AutomaticRepairsPolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetResiliencyPolicy() *plugin.TValue[any] {
+	return &c.ResiliencyPolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetScheduledEventsPolicy() *plugin.TValue[any] {
+	return &c.ScheduledEventsPolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetPriorityMixPolicy() *plugin.TValue[any] {
+	return &c.PriorityMixPolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetSpotRestorePolicy() *plugin.TValue[any] {
+	return &c.SpotRestorePolicy
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetSkuProfile() *plugin.TValue[any] {
+	return &c.SkuProfile
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetSecurityPostureReference() *plugin.TValue[any] {
+	return &c.SecurityPostureReference
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetZonalPlatformFaultDomainAlignMode() *plugin.TValue[string] {
+	return &c.ZonalPlatformFaultDomainAlignMode
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetSystemData() *plugin.TValue[any] {
+	return &c.SystemData
 }
 
 func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetInstances() *plugin.TValue[[]any] {

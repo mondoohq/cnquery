@@ -218,6 +218,18 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   vtpmEnabled bool
   // Whether ProxyAgent is enabled on the VM
   proxyAgentEnabled bool
+  // ProxyAgent execution mode ("Audit", "Enforce")
+  proxyAgentMode string
+  // Whether to implicitly install the ProxyAgent extension (Linux only)
+  proxyAgentAddExtension bool
+  // Whether FIPS 140-3 compliant cryptography is enabled for extension protectedSettings
+  fipsEncryptionEnabled bool
+  // Resiliency profile (zone movement configuration)
+  resiliencyProfile dict
+  // Scheduled-events policy (UserInitiatedReboot, UserInitiatedRedeploy, additional publishing targets)
+  scheduledEventsPolicy dict
+  // Azure Resource Manager system metadata (createdBy, createdAt, lastModifiedBy)
+  systemData dict
   // VM computer name (OS hostname)
   computerName string
   // VM admin username
@@ -310,6 +322,10 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   supportsHibernation bool
   // ARM ID of the DiskAccess resource for private endpoint access
   diskAccessId string
+  // Behavior when the disk experiences slow I/O (AutomaticReattach)
+  availabilityPolicy dict
+  // Azure Resource Manager system metadata (createdBy, createdAt, lastModifiedBy)
+  systemData dict
 }
 
 // Azure disk encryption set
@@ -408,6 +424,12 @@ azure.subscription.computeService.snapshot @defaults("name location diskSizeByte
   dataAccessAuthMode string
   // ARM ID of the DiskAccess resource for private endpoint access
   diskAccessId string
+  // Snapshot access state determining availability (Unknown, Pending, Available)
+  snapshotAccessState string
+  // For snapshots of Premium SSD v2 or Ultra disks, time in minutes the snapshot is retained for instant access
+  instantAccessDurationMinutes int
+  // Azure Resource Manager system metadata (createdBy, createdAt, lastModifiedBy)
+  systemData dict
   // Source disk for this snapshot (resolved from creationData.sourceResourceId when it points to a managed disk)
   sourceDisk() azure.subscription.computeService.disk
   // Disk encryption set used for customer-managed key encryption
@@ -450,6 +472,22 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   upgradePolicy dict
   // Automatic repairs policy for the scale set
   automaticRepairsPolicy dict
+  // Resiliency policy (operation recovery, zone allocation, automatic zone rebalancing, resilient VM creation/deletion)
+  resiliencyPolicy dict
+  // Scheduled-events policy (UserInitiatedReboot, UserInitiatedRedeploy, additional publishing targets)
+  scheduledEventsPolicy dict
+  // Spot/Regular priority mix policy for Flex VMSS
+  priorityMixPolicy dict
+  // Spot-Try-Restore policy (whether evicted Spot instances are restored opportunistically)
+  spotRestorePolicy dict
+  // SKU profile listing the candidate VM sizes and allocation strategy
+  skuProfile dict
+  // Security posture reference applied to the scale set (community gallery security posture)
+  securityPostureReference dict
+  // Align mode between VMSS compute and storage Fault Domain count
+  zonalPlatformFaultDomainAlignMode string
+  // Azure Resource Manager system metadata (createdBy, createdAt, lastModifiedBy)
+  systemData dict
   // VMs that belong to this scale set
   instances() []azure.subscription.computeService.vmScaleSet.instance
   // VMSS extensions (raw)

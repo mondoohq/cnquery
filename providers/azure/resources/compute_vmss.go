@@ -12,7 +12,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -125,6 +125,11 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 		return nil, err
 	}
 
+	systemData, err := convert.JsonToDict(vmss.SystemData)
+	if err != nil {
+		return nil, err
+	}
+
 	args := map[string]*llx.RawData{
 		"id":         llx.StringDataPtr(vmss.ID),
 		"name":       llx.StringDataPtr(vmss.Name),
@@ -134,6 +139,7 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 		"zones":      llx.ArrayData(convert.SliceStrPtrToInterface(vmss.Zones), types.String),
 		"sku":        llx.DictData(sku),
 		"properties": llx.DictData(properties),
+		"systemData": llx.DictData(systemData),
 	}
 
 	if vmss.Properties != nil {
@@ -145,6 +151,7 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 		args["singlePlacementGroup"] = llx.BoolDataPtr(props.SinglePlacementGroup)
 		args["overprovision"] = llx.BoolDataPtr(props.Overprovision)
 		args["platformFaultDomainCount"] = llx.IntDataPtr(props.PlatformFaultDomainCount)
+		args["zonalPlatformFaultDomainAlignMode"] = llx.StringDataPtr(stringEnumPtr(props.ZonalPlatformFaultDomainAlignMode))
 		upgradePolicy, err := convert.JsonToDict(props.UpgradePolicy)
 		if err != nil {
 			return nil, err
@@ -155,6 +162,39 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 			return nil, err
 		}
 		args["automaticRepairsPolicy"] = llx.DictData(repairPolicy)
+		resiliencyPolicy, err := convert.JsonToDict(props.ResiliencyPolicy)
+		if err != nil {
+			return nil, err
+		}
+		args["resiliencyPolicy"] = llx.DictData(resiliencyPolicy)
+		scheduledEventsPolicy, err := convert.JsonToDict(props.ScheduledEventsPolicy)
+		if err != nil {
+			return nil, err
+		}
+		args["scheduledEventsPolicy"] = llx.DictData(scheduledEventsPolicy)
+		priorityMixPolicy, err := convert.JsonToDict(props.PriorityMixPolicy)
+		if err != nil {
+			return nil, err
+		}
+		args["priorityMixPolicy"] = llx.DictData(priorityMixPolicy)
+		spotRestorePolicy, err := convert.JsonToDict(props.SpotRestorePolicy)
+		if err != nil {
+			return nil, err
+		}
+		args["spotRestorePolicy"] = llx.DictData(spotRestorePolicy)
+		skuProfile, err := convert.JsonToDict(props.SKUProfile)
+		if err != nil {
+			return nil, err
+		}
+		args["skuProfile"] = llx.DictData(skuProfile)
+		var securityPosture map[string]any
+		if props.VirtualMachineProfile != nil {
+			securityPosture, err = convert.JsonToDict(props.VirtualMachineProfile.SecurityPostureReference)
+			if err != nil {
+				return nil, err
+			}
+		}
+		args["securityPostureReference"] = llx.DictData(securityPosture)
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.computeService.vmScaleSet", args)
