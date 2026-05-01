@@ -3910,7 +3910,7 @@ func (c *mqlDatadogSyntheticsGlobalVariable) GetParseTestPublicId() *plugin.TVal
 type mqlDatadogSyntheticsPrivateLocation struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDatadogSyntheticsPrivateLocationInternal it will be used here
+	mqlDatadogSyntheticsPrivateLocationInternal
 	Id          plugin.TValue[string]
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
@@ -3964,13 +3964,19 @@ func (c *mqlDatadogSyntheticsPrivateLocation) GetName() *plugin.TValue[string] {
 }
 
 func (c *mqlDatadogSyntheticsPrivateLocation) GetDescription() *plugin.TValue[string] {
-	return &c.Description
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
 }
 
 func (c *mqlDatadogSyntheticsPrivateLocation) GetTags() *plugin.TValue[[]any] {
-	return &c.Tags
+	return plugin.GetOrCompute[[]any](&c.Tags, func() ([]any, error) {
+		return c.tags()
+	})
 }
 
 func (c *mqlDatadogSyntheticsPrivateLocation) GetMetadata() *plugin.TValue[any] {
-	return &c.Metadata
+	return plugin.GetOrCompute[any](&c.Metadata, func() (any, error) {
+		return c.metadata()
+	})
 }

@@ -6,6 +6,7 @@ package resources
 import (
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
@@ -157,20 +158,13 @@ func (r *mqlDatadogSecuritySuppression) id() (string, error) {
 // --- Service Accounts ---
 
 func (r *mqlDatadog) serviceAccounts() ([]interface{}, error) {
-	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
-	api := datadogV2.NewUsersApi(conn.ApiClient())
+	usersList, err := r.fetchUsers()
+	if err != nil {
+		return nil, err
+	}
 
 	var all []interface{}
-	pageSize := int64(100)
-	items, cancel := api.ListUsersWithPagination(conn.AuthCtx(),
-		*datadogV2.NewListUsersOptionalParameters().WithPageSize(pageSize))
-	defer cancel()
-
-	for item := range items {
-		if item.Error != nil {
-			return nil, item.Error
-		}
-		u := item.Item
+	for _, u := range usersList {
 		attrs := u.GetAttributes()
 		if !attrs.GetServiceAccount() {
 			continue
@@ -393,11 +387,8 @@ func (r *mqlDatadog) syntheticsPrivateLocations() ([]interface{}, error) {
 		}
 
 		res, err := CreateResource(r.MqlRuntime, "datadog.syntheticsPrivateLocation", map[string]*llx.RawData{
-			"id":          llx.StringData(id),
-			"name":        llx.StringData(loc.GetName()),
-			"description": llx.StringData(""),
-			"tags":        llx.ArrayData([]interface{}{}, "\x02"),
-			"metadata":    llx.DictData(map[string]interface{}{}),
+			"id":   llx.StringData(id),
+			"name": llx.StringData(loc.GetName()),
 		})
 		if err != nil {
 			return nil, err
@@ -409,4 +400,64 @@ func (r *mqlDatadog) syntheticsPrivateLocations() ([]interface{}, error) {
 
 func (r *mqlDatadogSyntheticsPrivateLocation) id() (string, error) {
 	return "datadog.syntheticsPrivateLocation/" + r.Id.Data, nil
+}
+
+type mqlDatadogSyntheticsPrivateLocationInternal struct {
+	fetched        bool
+	cachedDesc     string
+	cachedTags     []string
+	cachedMetadata map[string]interface{}
+	lock           sync.Mutex
+}
+
+func (r *mqlDatadogSyntheticsPrivateLocation) fetchDetails() error {
+	if r.fetched {
+		return nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched {
+		return nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+	api := datadogV1.NewSyntheticsApi(conn.ApiClient())
+
+	loc, _, err := api.GetPrivateLocation(conn.AuthCtx(), r.Id.Data)
+	if err != nil {
+		return err
+	}
+
+	r.cachedDesc = loc.GetDescription()
+	r.cachedTags = loc.GetTags()
+	r.cachedMetadata = map[string]interface{}{}
+	if m, ok := loc.GetMetadataOk(); ok && m != nil {
+		// Extract available metadata fields
+		if v, ok := m.GetRestrictedRolesOk(); ok {
+			r.cachedMetadata["restrictedRoles"] = v
+		}
+	}
+	r.fetched = true
+	return nil
+}
+
+func (r *mqlDatadogSyntheticsPrivateLocation) description() (string, error) {
+	if err := r.fetchDetails(); err != nil {
+		return "", err
+	}
+	return r.cachedDesc, nil
+}
+
+func (r *mqlDatadogSyntheticsPrivateLocation) tags() ([]interface{}, error) {
+	if err := r.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return toAnyStrings(r.cachedTags), nil
+}
+
+func (r *mqlDatadogSyntheticsPrivateLocation) metadata() (map[string]interface{}, error) {
+	if err := r.fetchDetails(); err != nil {
+		return nil, err
+	}
+	return r.cachedMetadata, nil
 }

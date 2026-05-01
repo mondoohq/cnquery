@@ -20,6 +20,10 @@ type mqlDatadogInternal struct {
 	ipAllowlistOnce  sync.Once
 	ipAllowlistAttrs datadogV2.IPAllowlistAttributes
 	ipAllowlistErr   error
+
+	usersOnce sync.Once
+	usersList []datadogV2.User
+	usersErr  error
 }
 
 // isForbidden checks if an HTTP response indicates a 403 Forbidden error,
@@ -58,23 +62,38 @@ func parseTime(s string) *time.Time {
 	return &t
 }
 
+// fetchUsers fetches all users once and caches the result, shared by users() and serviceAccounts().
+func (r *mqlDatadog) fetchUsers() ([]datadogV2.User, error) {
+	r.usersOnce.Do(func() {
+		conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
+		api := datadogV2.NewUsersApi(conn.ApiClient())
+
+		pageSize := int64(100)
+		items, cancel := api.ListUsersWithPagination(conn.AuthCtx(),
+			*datadogV2.NewListUsersOptionalParameters().WithPageSize(pageSize))
+		defer cancel()
+
+		for item := range items {
+			if item.Error != nil {
+				r.usersErr = item.Error
+				return
+			}
+			r.usersList = append(r.usersList, item.Item)
+		}
+	})
+	return r.usersList, r.usersErr
+}
+
 // --- Users ---
 
 func (r *mqlDatadog) users() ([]interface{}, error) {
-	conn := r.MqlRuntime.Connection.(*connection.DatadogConnection)
-	api := datadogV2.NewUsersApi(conn.ApiClient())
+	usersList, err := r.fetchUsers()
+	if err != nil {
+		return nil, err
+	}
 
 	var all []interface{}
-	pageSize := int64(100)
-	items, cancel := api.ListUsersWithPagination(conn.AuthCtx(),
-		*datadogV2.NewListUsersOptionalParameters().WithPageSize(pageSize))
-	defer cancel()
-
-	for item := range items {
-		if item.Error != nil {
-			return nil, item.Error
-		}
-		u := item.Item
+	for _, u := range usersList {
 		attrs := u.GetAttributes()
 		res, err := CreateResource(r.MqlRuntime, "datadog.user", map[string]*llx.RawData{
 			"id":             llx.StringData(u.GetId()),

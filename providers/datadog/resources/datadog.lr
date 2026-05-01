@@ -488,10 +488,10 @@ datadog.syntheticsPrivateLocation @defaults("id name") {
   id string
   // Location name
   name string
-  // Description
-  description string
-  // Tags
-  tags []string
-  // Metadata
-  metadata dict
+  // Description (fetched from detail API)
+  description() string
+  // Tags (fetched from detail API)
+  tags() []string
+  // Metadata (fetched from detail API)
+  metadata() dict
 }

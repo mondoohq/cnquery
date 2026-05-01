@@ -36,9 +36,14 @@ func NewDatadogConnection(id uint32, asset *inventory.Asset, conf *inventory.Con
 	appKey := os.Getenv("DD_APP_KEY")
 	site := os.Getenv("DD_SITE")
 
-	if len(conf.Credentials) > 0 {
-		for _, cred := range conf.Credentials {
-			if cred.Type == vault.CredentialType_password {
+	// Credentials can provide api-key and app-key via the user field
+	for _, cred := range conf.Credentials {
+		if cred.Type == vault.CredentialType_password {
+			switch cred.User {
+			case "app-key":
+				appKey = string(cred.Secret)
+			default:
+				// Default password credential is the API key (backward-compatible)
 				apiKey = string(cred.Secret)
 			}
 		}
