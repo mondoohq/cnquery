@@ -12714,16 +12714,16 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   browserSettingsArn string
   // Associated network settings ARN
   networkSettingsArn string
-  // Associated user settings ARN
-  userSettingsArn string
+  // DEPRECATED: use userSettings() instead
+  userSettingsArn @maturity("deprecated") string
   // Associated user settings (typed reference, null if not configured)
   userSettings() aws.workspacesweb.userSettings
-  // Associated trust store ARN
-  trustStoreArn string
+  // DEPRECATED: use trustStore() instead
+  trustStoreArn @maturity("deprecated") string
   // Associated trust store (typed reference, null if not configured)
   trustStore() aws.workspacesweb.trustStore
-  // Associated IP access settings ARN
-  ipAccessSettingsArn string
+  // DEPRECATED: use ipAccessSettings() instead
+  ipAccessSettingsArn @maturity("deprecated") string
   // Associated IP access settings (typed reference, null if not configured)
   ipAccessSettings() aws.workspacesweb.ipAccessSettings
   // Associated user access logging settings ARN
