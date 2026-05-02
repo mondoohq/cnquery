@@ -1092,8 +1092,11 @@ func cmpArrays(left *RawData, right *RawData, f func(any, any) bool) bool {
 }
 
 func cmpArrayOne(leftArray *RawData, right *RawData, f func(any, any) bool) bool {
-	l := leftArray.Value.([]any)
-	if len(l) != 1 {
+	if leftArray == nil || leftArray.Value == nil {
+		return false
+	}
+	l, ok := leftArray.Value.([]any)
+	if !ok || len(l) != 1 {
 		return false
 	}
 	return f(l[0], right.Value)
