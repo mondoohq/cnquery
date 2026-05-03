@@ -403,7 +403,11 @@ func initAwsAppstreamStack(runtime *plugin.Runtime, args map[string]*llx.RawData
 func parseAppstreamRef(args map[string]*llx.RawData, resourcePrefix string) (string, string, error) {
 	var region, name string
 	if a := args["arn"]; a != nil {
-		parsed, err := arn.Parse(a.Value.(string))
+		s, ok := a.Value.(string)
+		if !ok {
+			return "", "", errors.New("aws appstream init: arn must be a string")
+		}
+		parsed, err := arn.Parse(s)
 		if err != nil {
 			return "", "", err
 		}
@@ -411,10 +415,14 @@ func parseAppstreamRef(args map[string]*llx.RawData, resourcePrefix string) (str
 		name = strings.TrimPrefix(parsed.Resource, resourcePrefix)
 	}
 	if r := args["region"]; r != nil {
-		region = r.Value.(string)
+		if s, ok := r.Value.(string); ok {
+			region = s
+		}
 	}
 	if n := args["name"]; n != nil {
-		name = n.Value.(string)
+		if s, ok := n.Value.(string); ok {
+			name = s
+		}
 	}
 	if region == "" || name == "" {
 		return "", "", errors.New("arn or (name + region) required to fetch aws appstream resource")
@@ -940,6 +948,7 @@ func (a *mqlAwsAppstreamFleet) listAssociatedStackNames() ([]string, error) {
 		cancel()
 		if err != nil {
 			if isAppstreamRegionError(err) {
+				log.Debug().Str("region", a.Region.Data).Str("fleet", fleetName).Int("partial", len(names)).Msg("error accessing region for AWS AppStream associated stacks API; caching partial result")
 				a.stackNamesFetched = true
 				a.stackNames = names
 				return names, nil
