@@ -3191,6 +3191,61 @@ func (g *mqlGcpProjectComputeServiceImage) iamPolicy() ([]any, error) {
 	return computeIamBindingsToResources(g.MqlRuntime, name, policy.Bindings)
 }
 
+func (g *mqlGcpProjectComputeServiceInstance) hasPublicIp() (bool, error) {
+	nics := g.GetNetworkInterfaces()
+	if nics.Error != nil {
+		return false, nics.Error
+	}
+	for _, nic := range nics.Data {
+		nicMap, ok := nic.(map[string]any)
+		if !ok {
+			continue
+		}
+		accessConfigs, ok := nicMap["accessConfigs"].([]any)
+		if !ok {
+			continue
+		}
+		if len(accessConfigs) > 0 {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (g *mqlGcpProjectComputeServiceFirewall) openToInternet() (bool, error) {
+	if g.Disabled.Error != nil {
+		return false, g.Disabled.Error
+	}
+	if g.Disabled.Data {
+		return false, nil
+	}
+	if g.Direction.Error != nil {
+		return false, g.Direction.Error
+	}
+	if !strings.EqualFold(g.Direction.Data, "INGRESS") {
+		return false, nil
+	}
+	if g.Allowed.Error != nil {
+		return false, g.Allowed.Error
+	}
+	if len(g.Allowed.Data) == 0 {
+		return false, nil
+	}
+	if g.SourceRanges.Error != nil {
+		return false, g.SourceRanges.Error
+	}
+	for _, r := range g.SourceRanges.Data {
+		s, ok := r.(string)
+		if !ok {
+			continue
+		}
+		if s == "0.0.0.0/0" || s == "::/0" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (g *mqlGcpProjectComputeServiceSnapshot) iamPolicy() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error

@@ -922,6 +922,8 @@ gcp.project.computeService.instance @defaults("name id") {
   minCpuPlatform string
   // Network configurations for the instance
   networkInterfaces []dict
+  // Whether the instance has at least one external IP attached via a network interface accessConfig
+  hasPublicIp() bool
   // Private IPv6 google access type for the VM
   privateIpv6GoogleAccess string
   // Reservations from which this instance can consume
@@ -1206,6 +1208,8 @@ private gcp.project.computeService.firewall @defaults("name") {
   disabled bool
   // Source ranges
   sourceRanges []string
+  // Whether this rule allows ingress traffic from the public internet (INGRESS, enabled, has allow rules, sourceRanges contains 0.0.0.0/0 or ::/0)
+  openToInternet() bool
   // Source service accounts
   sourceServiceAccounts []string
   // Source tags
@@ -1958,6 +1962,8 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   allocatedIpRange string
   // List of external networks that are allowed to connect to the instance using the IP
   authorizedNetworks []dict
+  // Whether any authorized network entry uses 0.0.0.0/0 or ::/0 (public internet)
+  hasOpenAuthorizedNetworks() bool
   // Whether the instance is assigned a public IP address
   ipv4Enabled bool
   // Resource link for the VPC network from which the private IPs can access the Cloud SQL instance
@@ -2400,8 +2406,16 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   masterAuth dict
   // Master authorized networks configuration
   masterAuthorizedNetworksConfig dict
+  // Whether master authorized networks is enabled (restricts control plane access by source CIDR)
+  masterAuthorizedNetworksEnabled bool
   // Private cluster configuration
   privateClusterConfig dict
+  // Whether nodes have only private IPs (no public internet egress without NAT)
+  privateNodesEnabled bool
+  // Whether the cluster's control plane endpoint is private (no public master endpoint)
+  privateEndpointEnabled bool
+  // Whether the cluster's private control plane is reachable from any region (when private endpoint is enabled)
+  masterGlobalAccessEnabled bool
   // Etcd encryption configuration
   databaseEncryption dict
   // Etcd encryption state (ENCRYPTED, DECRYPTED)

@@ -1162,6 +1162,7 @@ gcp.project.computeService.firewall.logConfig 13.7.2
 gcp.project.computeService.firewall.loggingEnabled 11.6.6
 gcp.project.computeService.firewall.name 9.0.0
 gcp.project.computeService.firewall.network 13.1.2
+gcp.project.computeService.firewall.openToInternet 13.12.2
 gcp.project.computeService.firewall.priority 9.0.0
 gcp.project.computeService.firewall.projectId 9.0.0
 gcp.project.computeService.firewall.sourceRanges 9.0.0
@@ -1287,6 +1288,7 @@ gcp.project.computeService.instance.enableSecureBoot 9.0.0
 gcp.project.computeService.instance.enableVtpm 9.0.0
 gcp.project.computeService.instance.fingerprint 9.0.0
 gcp.project.computeService.instance.guestAccelerators 9.0.0
+gcp.project.computeService.instance.hasPublicIp 13.12.2
 gcp.project.computeService.instance.hostname 9.0.0
 gcp.project.computeService.instance.id 9.0.0
 gcp.project.computeService.instance.keyRevocationActionType 9.0.0
@@ -2352,6 +2354,8 @@ gcp.project.gkeService.cluster.maintenancePolicy.recurringWindowStartTime 11.6.6
 gcp.project.gkeService.cluster.maintenancePolicy.resourceVersion 11.6.6
 gcp.project.gkeService.cluster.masterAuth 9.0.0
 gcp.project.gkeService.cluster.masterAuthorizedNetworksConfig 9.0.0
+gcp.project.gkeService.cluster.masterAuthorizedNetworksEnabled 13.12.2
+gcp.project.gkeService.cluster.masterGlobalAccessEnabled 13.12.2
 gcp.project.gkeService.cluster.meshCertificates 13.7.2
 gcp.project.gkeService.cluster.monitoringService 9.0.0
 gcp.project.gkeService.cluster.name 9.0.0
@@ -2482,6 +2486,8 @@ gcp.project.gkeService.cluster.notificationConfig.pubsubEnabled 13.7.2
 gcp.project.gkeService.cluster.notificationConfig.pubsubTopic 13.7.2
 gcp.project.gkeService.cluster.notificationConfig.topic 13.7.2
 gcp.project.gkeService.cluster.privateClusterConfig 9.0.0
+gcp.project.gkeService.cluster.privateEndpointEnabled 13.12.2
+gcp.project.gkeService.cluster.privateNodesEnabled 13.12.2
 gcp.project.gkeService.cluster.projectId 9.0.0
 gcp.project.gkeService.cluster.releaseChannel 9.0.0
 gcp.project.gkeService.cluster.resourceLabels 9.0.0
@@ -3384,6 +3390,7 @@ gcp.project.sqlService.instance.settings.ipConfiguration 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.allocatedIpRange 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.authorizedNetworks 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.enablePrivatePathForGoogleCloudServices 9.0.0
+gcp.project.sqlService.instance.settings.ipConfiguration.hasOpenAuthorizedNetworks 13.12.2
 gcp.project.sqlService.instance.settings.ipConfiguration.id 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.ipv4Enabled 9.0.0
 gcp.project.sqlService.instance.settings.ipConfiguration.privateNetwork 9.0.0

@@ -2984,6 +2984,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetNetworkInterfaces()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.computeService.instance.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetHasPublicIp()).ToDataRes(types.Bool)
+	},
 	"gcp.project.computeService.instance.privateIpv6GoogleAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetPrivateIpv6GoogleAccess()).ToDataRes(types.String)
 	},
@@ -3367,6 +3370,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.firewall.sourceRanges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewall).GetSourceRanges()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.firewall.openToInternet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewall).GetOpenToInternet()).ToDataRes(types.Bool)
 	},
 	"gcp.project.computeService.firewall.sourceServiceAccounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewall).GetSourceServiceAccounts()).ToDataRes(types.Array(types.String))
@@ -4316,6 +4322,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.settings.ipConfiguration.authorizedNetworks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetAuthorizedNetworks()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.hasOpenAuthorizedNetworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetHasOpenAuthorizedNetworks()).ToDataRes(types.Bool)
+	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.ipv4Enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).GetIpv4Enabled()).ToDataRes(types.Bool)
 	},
@@ -4877,8 +4886,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.masterAuthorizedNetworksConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetMasterAuthorizedNetworksConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.gkeService.cluster.masterAuthorizedNetworksEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetMasterAuthorizedNetworksEnabled()).ToDataRes(types.Bool)
+	},
 	"gcp.project.gkeService.cluster.privateClusterConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetPrivateClusterConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.gkeService.cluster.privateNodesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetPrivateNodesEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.privateEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetPrivateEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.masterGlobalAccessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetMasterGlobalAccessEnabled()).ToDataRes(types.Bool)
 	},
 	"gcp.project.gkeService.cluster.databaseEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetDatabaseEncryption()).ToDataRes(types.Dict)
@@ -13819,6 +13840,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInstance).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instance.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.instance.privateIpv6GoogleAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).PrivateIpv6GoogleAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -14357,6 +14382,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.firewall.sourceRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceFirewall).SourceRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewall.openToInternet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewall).OpenToInternet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.firewall.sourceServiceAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15715,6 +15744,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).AuthorizedNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.sqlService.instance.settings.ipConfiguration.hasOpenAuthorizedNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).HasOpenAuthorizedNetworks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.sqlService.instance.settings.ipConfiguration.ipv4Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration).Ipv4Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -16531,8 +16564,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectGkeServiceCluster).MasterAuthorizedNetworksConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.gkeService.cluster.masterAuthorizedNetworksEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).MasterAuthorizedNetworksEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeService.cluster.privateClusterConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).PrivateClusterConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.privateNodesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).PrivateNodesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.privateEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).PrivateEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.masterGlobalAccessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).MasterGlobalAccessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.databaseEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31828,6 +31877,7 @@ type mqlGcpProjectComputeServiceInstance struct {
 	Metadata                        plugin.TValue[map[string]any]
 	MinCpuPlatform                  plugin.TValue[string]
 	NetworkInterfaces               plugin.TValue[[]any]
+	HasPublicIp                     plugin.TValue[bool]
 	PrivateIpv6GoogleAccess         plugin.TValue[string]
 	ReservationAffinity             plugin.TValue[any]
 	ResourcePolicies                plugin.TValue[[]any]
@@ -31972,6 +32022,12 @@ func (c *mqlGcpProjectComputeServiceInstance) GetMinCpuPlatform() *plugin.TValue
 
 func (c *mqlGcpProjectComputeServiceInstance) GetNetworkInterfaces() *plugin.TValue[[]any] {
 	return &c.NetworkInterfaces
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetHasPublicIp() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasPublicIp, func() (bool, error) {
+		return c.hasPublicIp()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceInstance) GetPrivateIpv6GoogleAccess() *plugin.TValue[string] {
@@ -32955,6 +33011,7 @@ type mqlGcpProjectComputeServiceFirewall struct {
 	Direction             plugin.TValue[string]
 	Disabled              plugin.TValue[bool]
 	SourceRanges          plugin.TValue[[]any]
+	OpenToInternet        plugin.TValue[bool]
 	SourceServiceAccounts plugin.TValue[[]any]
 	SourceTags            plugin.TValue[[]any]
 	DestinationRanges     plugin.TValue[[]any]
@@ -33035,6 +33092,12 @@ func (c *mqlGcpProjectComputeServiceFirewall) GetDisabled() *plugin.TValue[bool]
 
 func (c *mqlGcpProjectComputeServiceFirewall) GetSourceRanges() *plugin.TValue[[]any] {
 	return &c.SourceRanges
+}
+
+func (c *mqlGcpProjectComputeServiceFirewall) GetOpenToInternet() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OpenToInternet, func() (bool, error) {
+		return c.openToInternet()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceFirewall) GetSourceServiceAccounts() *plugin.TValue[[]any] {
@@ -35786,6 +35849,7 @@ type mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration struct {
 	Id                                      plugin.TValue[string]
 	AllocatedIpRange                        plugin.TValue[string]
 	AuthorizedNetworks                      plugin.TValue[[]any]
+	HasOpenAuthorizedNetworks               plugin.TValue[bool]
 	Ipv4Enabled                             plugin.TValue[bool]
 	PrivateNetwork                          plugin.TValue[string]
 	RequireSsl                              plugin.TValue[bool]
@@ -35842,6 +35906,12 @@ func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetAllocatedIpR
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetAuthorizedNetworks() *plugin.TValue[[]any] {
 	return &c.AuthorizedNetworks
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetHasOpenAuthorizedNetworks() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasOpenAuthorizedNetworks, func() (bool, error) {
+		return c.hasOpenAuthorizedNetworks()
+	})
 }
 
 func (c *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) GetIpv4Enabled() *plugin.TValue[bool] {
@@ -37480,58 +37550,62 @@ type mqlGcpProjectGkeServiceCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectGkeServiceClusterInternal
-	ProjectId                      plugin.TValue[string]
-	Id                             plugin.TValue[string]
-	Name                           plugin.TValue[string]
-	Description                    plugin.TValue[string]
-	LoggingService                 plugin.TValue[string]
-	MonitoringService              plugin.TValue[string]
-	Network                        plugin.TValue[string]
-	ClusterIpv4Cidr                plugin.TValue[string]
-	Subnetwork                     plugin.TValue[string]
-	NodePools                      plugin.TValue[[]any]
-	Locations                      plugin.TValue[[]any]
-	EnableKubernetesAlpha          plugin.TValue[bool]
-	AutopilotEnabled               plugin.TValue[bool]
-	Location                       plugin.TValue[string]
-	Endpoint                       plugin.TValue[string]
-	InitialClusterVersion          plugin.TValue[string]
-	CurrentMasterVersion           plugin.TValue[string]
-	Status                         plugin.TValue[string]
-	ResourceLabels                 plugin.TValue[map[string]any]
-	Created                        plugin.TValue[*time.Time]
-	ExpirationTime                 plugin.TValue[*time.Time]
-	AddonsConfig                   plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfig]
-	WorkloadIdentityConfig         plugin.TValue[any]
-	IpAllocationPolicy             plugin.TValue[*mqlGcpProjectGkeServiceClusterIpAllocationPolicy]
-	NetworkConfig                  plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkConfig]
-	BinaryAuthorization            plugin.TValue[any]
-	LegacyAbac                     plugin.TValue[any]
-	MasterAuth                     plugin.TValue[any]
-	MasterAuthorizedNetworksConfig plugin.TValue[any]
-	PrivateClusterConfig           plugin.TValue[any]
-	DatabaseEncryption             plugin.TValue[any]
-	DatabaseEncryptionState        plugin.TValue[string]
-	DatabaseEncryptionKey          plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
-	ShieldedNodesConfig            plugin.TValue[any]
-	CostManagementConfig           plugin.TValue[any]
-	ConfidentialNodesConfig        plugin.TValue[any]
-	IdentityServiceConfig          plugin.TValue[any]
-	NetworkPolicyConfig            plugin.TValue[any]
-	NetworkPolicy                  plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkPolicy]
-	ReleaseChannel                 plugin.TValue[string]
-	EnableTpu                      plugin.TValue[bool]
-	CurrentNodeCount               plugin.TValue[int64]
-	SecurityPostureConfig          plugin.TValue[*mqlGcpProjectGkeServiceClusterSecurityPostureConfig]
-	MaintenancePolicy              plugin.TValue[*mqlGcpProjectGkeServiceClusterMaintenancePolicy]
-	MeshCertificates               plugin.TValue[any]
-	NotificationConfig             plugin.TValue[*mqlGcpProjectGkeServiceClusterNotificationConfig]
-	Etag                           plugin.TValue[string]
-	InitialNodeCount               plugin.TValue[int64]
-	ServicesIpv4Cidr               plugin.TValue[string]
-	NodeIpv4CidrSize               plugin.TValue[int64]
-	TpuIpv4CidrBlock               plugin.TValue[string]
-	EnabledK8sBetaApis             plugin.TValue[[]any]
+	ProjectId                       plugin.TValue[string]
+	Id                              plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Description                     plugin.TValue[string]
+	LoggingService                  plugin.TValue[string]
+	MonitoringService               plugin.TValue[string]
+	Network                         plugin.TValue[string]
+	ClusterIpv4Cidr                 plugin.TValue[string]
+	Subnetwork                      plugin.TValue[string]
+	NodePools                       plugin.TValue[[]any]
+	Locations                       plugin.TValue[[]any]
+	EnableKubernetesAlpha           plugin.TValue[bool]
+	AutopilotEnabled                plugin.TValue[bool]
+	Location                        plugin.TValue[string]
+	Endpoint                        plugin.TValue[string]
+	InitialClusterVersion           plugin.TValue[string]
+	CurrentMasterVersion            plugin.TValue[string]
+	Status                          plugin.TValue[string]
+	ResourceLabels                  plugin.TValue[map[string]any]
+	Created                         plugin.TValue[*time.Time]
+	ExpirationTime                  plugin.TValue[*time.Time]
+	AddonsConfig                    plugin.TValue[*mqlGcpProjectGkeServiceClusterAddonsConfig]
+	WorkloadIdentityConfig          plugin.TValue[any]
+	IpAllocationPolicy              plugin.TValue[*mqlGcpProjectGkeServiceClusterIpAllocationPolicy]
+	NetworkConfig                   plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkConfig]
+	BinaryAuthorization             plugin.TValue[any]
+	LegacyAbac                      plugin.TValue[any]
+	MasterAuth                      plugin.TValue[any]
+	MasterAuthorizedNetworksConfig  plugin.TValue[any]
+	MasterAuthorizedNetworksEnabled plugin.TValue[bool]
+	PrivateClusterConfig            plugin.TValue[any]
+	PrivateNodesEnabled             plugin.TValue[bool]
+	PrivateEndpointEnabled          plugin.TValue[bool]
+	MasterGlobalAccessEnabled       plugin.TValue[bool]
+	DatabaseEncryption              plugin.TValue[any]
+	DatabaseEncryptionState         plugin.TValue[string]
+	DatabaseEncryptionKey           plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	ShieldedNodesConfig             plugin.TValue[any]
+	CostManagementConfig            plugin.TValue[any]
+	ConfidentialNodesConfig         plugin.TValue[any]
+	IdentityServiceConfig           plugin.TValue[any]
+	NetworkPolicyConfig             plugin.TValue[any]
+	NetworkPolicy                   plugin.TValue[*mqlGcpProjectGkeServiceClusterNetworkPolicy]
+	ReleaseChannel                  plugin.TValue[string]
+	EnableTpu                       plugin.TValue[bool]
+	CurrentNodeCount                plugin.TValue[int64]
+	SecurityPostureConfig           plugin.TValue[*mqlGcpProjectGkeServiceClusterSecurityPostureConfig]
+	MaintenancePolicy               plugin.TValue[*mqlGcpProjectGkeServiceClusterMaintenancePolicy]
+	MeshCertificates                plugin.TValue[any]
+	NotificationConfig              plugin.TValue[*mqlGcpProjectGkeServiceClusterNotificationConfig]
+	Etag                            plugin.TValue[string]
+	InitialNodeCount                plugin.TValue[int64]
+	ServicesIpv4Cidr                plugin.TValue[string]
+	NodeIpv4CidrSize                plugin.TValue[int64]
+	TpuIpv4CidrBlock                plugin.TValue[string]
+	EnabledK8sBetaApis              plugin.TValue[[]any]
 }
 
 // createGcpProjectGkeServiceCluster creates a new instance of this resource
@@ -37687,8 +37761,24 @@ func (c *mqlGcpProjectGkeServiceCluster) GetMasterAuthorizedNetworksConfig() *pl
 	return &c.MasterAuthorizedNetworksConfig
 }
 
+func (c *mqlGcpProjectGkeServiceCluster) GetMasterAuthorizedNetworksEnabled() *plugin.TValue[bool] {
+	return &c.MasterAuthorizedNetworksEnabled
+}
+
 func (c *mqlGcpProjectGkeServiceCluster) GetPrivateClusterConfig() *plugin.TValue[any] {
 	return &c.PrivateClusterConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetPrivateNodesEnabled() *plugin.TValue[bool] {
+	return &c.PrivateNodesEnabled
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetPrivateEndpointEnabled() *plugin.TValue[bool] {
+	return &c.PrivateEndpointEnabled
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetMasterGlobalAccessEnabled() *plugin.TValue[bool] {
+	return &c.MasterGlobalAccessEnabled
 }
 
 func (c *mqlGcpProjectGkeServiceCluster) GetDatabaseEncryption() *plugin.TValue[any] {

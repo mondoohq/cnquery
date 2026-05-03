@@ -715,6 +715,23 @@ func (g *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) id() (string, e
 	return g.Id.Data, g.Id.Error
 }
 
+func (g *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) hasOpenAuthorizedNetworks() (bool, error) {
+	if g.AuthorizedNetworks.Error != nil {
+		return false, g.AuthorizedNetworks.Error
+	}
+	for _, n := range g.AuthorizedNetworks.Data {
+		entry, ok := n.(map[string]any)
+		if !ok {
+			continue
+		}
+		value, _ := entry["value"].(string)
+		if value == "0.0.0.0/0" || value == "::/0" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (g *mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationPscConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
