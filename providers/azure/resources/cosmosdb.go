@@ -375,3 +375,216 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) encryptionKey() (*mqlAzureS
 	}
 	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheKeyVaultKeyUri)
 }
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccount) privateEndpointConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	rid, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	accountName, err := rid.Component("databaseAccounts")
+	if err != nil {
+		return nil, err
+	}
+	client, err := cosmosdb.NewPrivateEndpointConnectionsClient(rid.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListByDatabaseAccountPager(rid.ResourceGroup, accountName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, pec := range page.Value {
+			args := map[string]*llx.RawData{
+				"__id": llx.StringDataPtr(pec.ID),
+				"id":   llx.StringDataPtr(pec.ID),
+				"name": llx.StringDataPtr(pec.Name),
+				"type": llx.StringDataPtr(pec.Type),
+			}
+			if pec.Properties != nil {
+				propsMap, err := convert.JsonToDict(pec.Properties)
+				if err != nil {
+					return nil, err
+				}
+				args["properties"] = llx.DictData(propsMap)
+				if pec.Properties.PrivateEndpoint != nil {
+					args["privateEndpointId"] = llx.StringDataPtr(pec.Properties.PrivateEndpoint.ID)
+				}
+				if pec.Properties.ProvisioningState != nil {
+					args["provisioningState"] = llx.StringDataPtr(pec.Properties.ProvisioningState)
+				}
+				if pec.Properties.PrivateLinkServiceConnectionState != nil {
+					stateArgs := map[string]*llx.RawData{}
+					if pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired != nil {
+						stateArgs["actionsRequired"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired)
+					}
+					if pec.Properties.PrivateLinkServiceConnectionState.Description != nil {
+						stateArgs["description"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.Description)
+					}
+					if pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
+						stateArgs["status"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.Status)
+					}
+					stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+					if err != nil {
+						return nil, err
+					}
+					args["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
+				}
+			}
+			mqlConn, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlConn)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlRoleDefinitions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	rid, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	accountName, err := rid.Component("databaseAccounts")
+	if err != nil {
+		return nil, err
+	}
+	client, err := cosmosdb.NewSQLResourcesClient(rid.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListSQLRoleDefinitionsPager(rid.ResourceGroup, accountName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, def := range page.Value {
+			if def == nil {
+				continue
+			}
+			args := map[string]*llx.RawData{
+				"__id":             llx.StringDataPtr(def.ID),
+				"id":               llx.StringDataPtr(def.ID),
+				"name":             llx.StringDataPtr(def.Name),
+				"type":             llx.StringDataPtr(def.Type),
+				"roleName":         llx.StringData(""),
+				"roleType":         llx.StringData(""),
+				"assignableScopes": llx.ArrayData([]any{}, types.String),
+				"permissions":      llx.ArrayData([]any{}, types.Dict),
+			}
+			if def.Properties != nil {
+				if def.Properties.RoleName != nil {
+					args["roleName"] = llx.StringDataPtr(def.Properties.RoleName)
+				}
+				if def.Properties.Type != nil {
+					args["roleType"] = llx.StringData(string(*def.Properties.Type))
+				}
+				scopes := []any{}
+				for _, s := range def.Properties.AssignableScopes {
+					if s != nil {
+						scopes = append(scopes, *s)
+					}
+				}
+				args["assignableScopes"] = llx.ArrayData(scopes, types.String)
+
+				perms := []any{}
+				for _, p := range def.Properties.Permissions {
+					if p == nil {
+						continue
+					}
+					m, err := convert.JsonToDict(p)
+					if err != nil {
+						return nil, err
+					}
+					perms = append(perms, m)
+				}
+				args["permissions"] = llx.ArrayData(perms, types.Dict)
+			}
+			mqlDef, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.sqlRoleDefinition", args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDef)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlRoleAssignments() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	rid, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	accountName, err := rid.Component("databaseAccounts")
+	if err != nil {
+		return nil, err
+	}
+	client, err := cosmosdb.NewSQLResourcesClient(rid.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListSQLRoleAssignmentsPager(rid.ResourceGroup, accountName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ra := range page.Value {
+			if ra == nil {
+				continue
+			}
+			args := map[string]*llx.RawData{
+				"__id":             llx.StringDataPtr(ra.ID),
+				"id":               llx.StringDataPtr(ra.ID),
+				"name":             llx.StringDataPtr(ra.Name),
+				"type":             llx.StringDataPtr(ra.Type),
+				"principalId":      llx.StringData(""),
+				"roleDefinitionId": llx.StringData(""),
+				"scope":            llx.StringData(""),
+			}
+			if ra.Properties != nil {
+				if ra.Properties.PrincipalID != nil {
+					args["principalId"] = llx.StringDataPtr(ra.Properties.PrincipalID)
+				}
+				if ra.Properties.RoleDefinitionID != nil {
+					args["roleDefinitionId"] = llx.StringDataPtr(ra.Properties.RoleDefinitionID)
+				}
+				if ra.Properties.Scope != nil {
+					args["scope"] = llx.StringDataPtr(ra.Properties.Scope)
+				}
+			}
+			mqlRA, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.sqlRoleAssignment", args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRA)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccount) diagnosticSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
+}

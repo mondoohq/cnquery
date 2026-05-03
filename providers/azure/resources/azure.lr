@@ -3353,6 +3353,8 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   geoRedundantBackup string
   // Microsoft Defender for Cloud advanced threat protection state ("Enabled", "Disabled", or "New")
   threatProtectionState() string
+  // Private endpoint connections for the PostgreSQL flexible server
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
 }
 
 // Azure Database for PostgreSQL server
@@ -3545,6 +3547,16 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   databases() []azure.subscription.mySqlService.database
   // MySQL flexible server firewall rules
   firewallRules() []azure.subscription.sqlService.firewallrule
+  // Backup retention period in days
+  backupRetentionDays int
+  // Whether geo-redundant backup is enabled ("Enabled" or "Disabled")
+  geoRedundantBackup string
+  // Key Vault key used for geo-backup encryption (null if system-managed or single-region)
+  geoBackupEncryptionKey() azure.subscription.keyVaultService.key
+  // High availability mode ("Disabled", "ZoneRedundant", or "SameZone")
+  highAvailabilityMode string
+  // High availability state ("NotEnabled", "CreatingStandby", "ReplicatingData", "FailingOver", "Healthy", or "RemovingStandby")
+  highAvailabilityState string
 }
 
 // Azure Cosmos DB
@@ -3601,6 +3613,14 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   backupStorageRedundancy string
   // Virtual network rules for the Cosmos DB account
   virtualNetworkRules []azure.subscription.cosmosDbService.account.virtualNetworkRule
+  // Private endpoint connections for the Cosmos DB account
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Cosmos DB SQL data-plane role definitions (built-in and custom)
+  sqlRoleDefinitions() []azure.subscription.cosmosDbService.account.sqlRoleDefinition
+  // Cosmos DB SQL data-plane role assignments
+  sqlRoleAssignments() []azure.subscription.cosmosDbService.account.sqlRoleAssignment
+  // Diagnostic settings configured on the Cosmos DB account
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
 }
 
 // Azure Cosmos DB account virtual network rule
@@ -3611,6 +3631,40 @@ private azure.subscription.cosmosDbService.account.virtualNetworkRule @defaults(
   subnetId string
   // Whether to allow requests from the subnet even if the service endpoint is not configured
   ignoreMissingVNetServiceEndpoint bool
+}
+
+// Azure Cosmos DB SQL data-plane role definition (data-plane RBAC, separate from Azure ARM roles)
+private azure.subscription.cosmosDbService.account.sqlRoleDefinition @defaults("name roleName roleType") {
+  // Cosmos role definition resource ID
+  id string
+  // Cosmos role definition resource name (a GUID)
+  name string
+  // Cosmos role definition resource type
+  type string
+  // User-friendly role name
+  roleName string
+  // "BuiltInRole" or "CustomRole"
+  roleType string
+  // Scopes at or below which assignments using this definition may be created
+  assignableScopes []string
+  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
+  permissions []dict
+}
+
+// Azure Cosmos DB SQL data-plane role assignment
+private azure.subscription.cosmosDbService.account.sqlRoleAssignment @defaults("name principalId scope") {
+  // Cosmos role assignment resource ID
+  id string
+  // Cosmos role assignment resource name (a GUID)
+  name string
+  // Cosmos role assignment resource type
+  type string
+  // AAD principal granted access by this assignment
+  principalId string
+  // Cosmos role definition ID this assignment binds
+  roleDefinitionId string
+  // Data-plane scope this assignment applies to (account, database, or container)
+  scope string
 }
 
 // Azure Key Vault

@@ -159,6 +159,8 @@ const (
 	ResourceAzureSubscriptionCosmosDbService                                                     string = "azure.subscription.cosmosDbService"
 	ResourceAzureSubscriptionCosmosDbServiceAccount                                              string = "azure.subscription.cosmosDbService.account"
 	ResourceAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule                            string = "azure.subscription.cosmosDbService.account.virtualNetworkRule"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition                             string = "azure.subscription.cosmosDbService.account.sqlRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment                             string = "azure.subscription.cosmosDbService.account.sqlRoleAssignment"
 	ResourceAzureSubscriptionKeyVaultService                                                     string = "azure.subscription.keyVaultService"
 	ResourceAzureSubscriptionKeyVaultServiceManagedHsm                                           string = "azure.subscription.keyVaultService.managedHsm"
 	ResourceAzureSubscriptionKeyVaultServiceVault                                                string = "azure.subscription.keyVaultService.vault"
@@ -864,6 +866,14 @@ func init() {
 		"azure.subscription.cosmosDbService.account.virtualNetworkRule": {
 			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule,
+		},
+		"azure.subscription.cosmosDbService.account.sqlRoleDefinition": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition,
+		},
+		"azure.subscription.cosmosDbService.account.sqlRoleAssignment": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment,
 		},
 		"azure.subscription.keyVaultService": {
 			Init:   initAzureSubscriptionKeyVaultService,
@@ -5690,6 +5700,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.postgreSqlService.flexibleServer.threatProtectionState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetThreatProtectionState()).ToDataRes(types.String)
 	},
+	"azure.subscription.postgreSqlService.flexibleServer.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
 	"azure.subscription.postgreSqlService.server.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceServer).GetId()).ToDataRes(types.String)
 	},
@@ -5924,6 +5937,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.mySqlService.flexibleServer.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.firewallrule")))
 	},
+	"azure.subscription.mySqlService.flexibleServer.backupRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetBackupRetentionDays()).ToDataRes(types.Int)
+	},
+	"azure.subscription.mySqlService.flexibleServer.geoRedundantBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetGeoRedundantBackup()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.geoBackupEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetGeoBackupEncryptionKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
+	},
+	"azure.subscription.mySqlService.flexibleServer.highAvailabilityMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetHighAvailabilityMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.highAvailabilityState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetHighAvailabilityState()).ToDataRes(types.String)
+	},
 	"azure.subscription.cosmosDbService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -5996,6 +6024,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")))
 	},
+	"azure.subscription.cosmosDbService.account.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetSqlRoleDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.sqlRoleDefinition")))
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetSqlRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.sqlRoleAssignment")))
+	},
+	"azure.subscription.cosmosDbService.account.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
+	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).GetId()).ToDataRes(types.String)
 	},
@@ -6004,6 +6044,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRule.ignoreMissingVNetServiceEndpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).GetIgnoreMissingVNetServiceEndpoint()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.roleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetRoleName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.roleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetRoleType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.assignableScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetAssignableScopes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetRoleDefinitionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetScope()).ToDataRes(types.String)
 	},
 	"azure.subscription.keyVaultService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultService).GetSubscriptionId()).ToDataRes(types.String)
@@ -15557,6 +15636,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).ThreatProtectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.postgreSqlService.flexibleServer.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.postgreSqlService.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPostgreSqlServiceServer).__id, ok = v.Value.(string)
 		return
@@ -15905,6 +15988,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.mySqlService.flexibleServer.backupRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).BackupRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.geoRedundantBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GeoRedundantBackup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.geoBackupEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GeoBackupEncryptionKey, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.highAvailabilityMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).HighAvailabilityMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.highAvailabilityState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).HighAvailabilityState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cosmosDbService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbService).__id, ok = v.Value.(string)
 		return
@@ -16009,6 +16112,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).VirtualNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cosmosDbService.account.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).SqlRoleDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).SqlRoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.diagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).__id, ok = v.Value.(string)
 		return
@@ -16023,6 +16142,66 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRule.ignoreMissingVNetServiceEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).IgnoreMissingVNetServiceEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.roleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).RoleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.roleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).RoleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.assignableScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).AssignableScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.roleDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35902,6 +36081,7 @@ type mqlAzureSubscriptionPostgreSqlServiceFlexibleServer struct {
 	BackupRetentionDays          plugin.TValue[int64]
 	GeoRedundantBackup           plugin.TValue[string]
 	ThreatProtectionState        plugin.TValue[string]
+	PrivateEndpointConnections   plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionPostgreSqlServiceFlexibleServer creates a new instance of this resource
@@ -36084,6 +36264,22 @@ func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetGeoRedundantBac
 func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetThreatProtectionState() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ThreatProtectionState, func() (string, error) {
 		return c.threatProtectionState()
+	})
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.postgreSqlService.flexibleServer", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
 	})
 }
 
@@ -36855,20 +37051,25 @@ type mqlAzureSubscriptionMySqlServiceFlexibleServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionMySqlServiceFlexibleServerInternal
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Location            plugin.TValue[string]
-	Tags                plugin.TValue[map[string]any]
-	Type                plugin.TValue[string]
-	Properties          plugin.TValue[any]
-	Version             plugin.TValue[string]
-	SslEnforcement      plugin.TValue[bool]
-	PublicNetworkAccess plugin.TValue[string]
-	DataEncryptionKey   plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
-	DataEncryptionType  plugin.TValue[string]
-	Configuration       plugin.TValue[[]any]
-	Databases           plugin.TValue[[]any]
-	FirewallRules       plugin.TValue[[]any]
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Location               plugin.TValue[string]
+	Tags                   plugin.TValue[map[string]any]
+	Type                   plugin.TValue[string]
+	Properties             plugin.TValue[any]
+	Version                plugin.TValue[string]
+	SslEnforcement         plugin.TValue[bool]
+	PublicNetworkAccess    plugin.TValue[string]
+	DataEncryptionKey      plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	DataEncryptionType     plugin.TValue[string]
+	Configuration          plugin.TValue[[]any]
+	Databases              plugin.TValue[[]any]
+	FirewallRules          plugin.TValue[[]any]
+	BackupRetentionDays    plugin.TValue[int64]
+	GeoRedundantBackup     plugin.TValue[string]
+	GeoBackupEncryptionKey plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	HighAvailabilityMode   plugin.TValue[string]
+	HighAvailabilityState  plugin.TValue[string]
 }
 
 // createAzureSubscriptionMySqlServiceFlexibleServer creates a new instance of this resource
@@ -37014,6 +37215,38 @@ func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetFirewallRules() *plu
 	})
 }
 
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetBackupRetentionDays() *plugin.TValue[int64] {
+	return &c.BackupRetentionDays
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetGeoRedundantBackup() *plugin.TValue[string] {
+	return &c.GeoRedundantBackup
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetGeoBackupEncryptionKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKey](&c.GeoBackupEncryptionKey, func() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.mySqlService.flexibleServer", c.__id, "geoBackupEncryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceKey), nil
+			}
+		}
+
+		return c.geoBackupEncryptionKey()
+	})
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetHighAvailabilityMode() *plugin.TValue[string] {
+	return &c.HighAvailabilityMode
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetHighAvailabilityState() *plugin.TValue[string] {
+	return &c.HighAvailabilityState
+}
+
 // mqlAzureSubscriptionCosmosDbService for the azure.subscription.cosmosDbService resource
 type mqlAzureSubscriptionCosmosDbService struct {
 	MqlRuntime *plugin.Runtime
@@ -37107,6 +37340,10 @@ type mqlAzureSubscriptionCosmosDbServiceAccount struct {
 	BackupRetentionIntervalInHours     plugin.TValue[int64]
 	BackupStorageRedundancy            plugin.TValue[string]
 	VirtualNetworkRules                plugin.TValue[[]any]
+	PrivateEndpointConnections         plugin.TValue[[]any]
+	SqlRoleDefinitions                 plugin.TValue[[]any]
+	SqlRoleAssignments                 plugin.TValue[[]any]
+	DiagnosticSettings                 plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCosmosDbServiceAccount creates a new instance of this resource
@@ -37241,6 +37478,70 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetVirtualNetworkRules() *p
 	return &c.VirtualNetworkRules
 }
 
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetSqlRoleDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SqlRoleDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "sqlRoleDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sqlRoleDefinitions()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetSqlRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SqlRoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "sqlRoleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sqlRoleAssignments()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetDiagnosticSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiagnosticSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "diagnosticSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.diagnosticSettings()
+	})
+}
+
 // mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule for the azure.subscription.cosmosDbService.account.virtualNetworkRule resource
 type mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule struct {
 	MqlRuntime *plugin.Runtime
@@ -37293,6 +37594,149 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule) GetSubnet
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule) GetIgnoreMissingVNetServiceEndpoint() *plugin.TValue[bool] {
 	return &c.IgnoreMissingVNetServiceEndpoint
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition for the azure.subscription.cosmosDbService.account.sqlRoleDefinition resource
+type mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinitionInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	RoleName         plugin.TValue[string]
+	RoleType         plugin.TValue[string]
+	AssignableScopes plugin.TValue[[]any]
+	Permissions      plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.sqlRoleDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.sqlRoleDefinition"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetRoleName() *plugin.TValue[string] {
+	return &c.RoleName
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetRoleType() *plugin.TValue[string] {
+	return &c.RoleType
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetAssignableScopes() *plugin.TValue[[]any] {
+	return &c.AssignableScopes
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment for the azure.subscription.cosmosDbService.account.sqlRoleAssignment resource
+type mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignmentInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	PrincipalId      plugin.TValue[string]
+	RoleDefinitionId plugin.TValue[string]
+	Scope            plugin.TValue[string]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.sqlRoleAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.sqlRoleAssignment"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetRoleDefinitionId() *plugin.TValue[string] {
+	return &c.RoleDefinitionId
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetScope() *plugin.TValue[string] {
+	return &c.Scope
 }
 
 // mqlAzureSubscriptionKeyVaultService for the azure.subscription.keyVaultService resource

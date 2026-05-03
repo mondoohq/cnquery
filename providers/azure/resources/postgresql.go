@@ -632,6 +632,79 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) geoBackupEncryptio
 	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheGeoBackupKeyURI)
 }
 
+// privateEndpointConnections lists private endpoint connections attached to the flexible server.
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) privateEndpointConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	rid, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	server, err := rid.Component("flexibleServers")
+	if err != nil {
+		return nil, err
+	}
+	client, err := flexible.NewPrivateEndpointConnectionsClient(rid.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListByServerPager(rid.ResourceGroup, server, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, pec := range page.Value {
+			args := map[string]*llx.RawData{
+				"__id": llx.StringDataPtr(pec.ID),
+				"id":   llx.StringDataPtr(pec.ID),
+				"name": llx.StringDataPtr(pec.Name),
+				"type": llx.StringDataPtr(pec.Type),
+			}
+			if pec.Properties != nil {
+				propsMap, err := convert.JsonToDict(pec.Properties)
+				if err != nil {
+					return nil, err
+				}
+				args["properties"] = llx.DictData(propsMap)
+				if pec.Properties.PrivateEndpoint != nil {
+					args["privateEndpointId"] = llx.StringDataPtr(pec.Properties.PrivateEndpoint.ID)
+				}
+				if pec.Properties.ProvisioningState != nil {
+					args["provisioningState"] = llx.StringData(string(*pec.Properties.ProvisioningState))
+				}
+				if pec.Properties.PrivateLinkServiceConnectionState != nil {
+					stateArgs := map[string]*llx.RawData{}
+					if pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired != nil {
+						stateArgs["actionsRequired"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired)
+					}
+					if pec.Properties.PrivateLinkServiceConnectionState.Description != nil {
+						stateArgs["description"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.Description)
+					}
+					if pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
+						stateArgs["status"] = llx.StringData(string(*pec.Properties.PrivateLinkServiceConnectionState.Status))
+					}
+					stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+					if err != nil {
+						return nil, err
+					}
+					args["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
+				}
+			}
+			mqlConn, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlConn)
+		}
+	}
+	return res, nil
+}
+
 // threatProtectionState fetches the Microsoft Defender for Cloud Advanced Threat Protection state.
 func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) threatProtectionState() (string, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)

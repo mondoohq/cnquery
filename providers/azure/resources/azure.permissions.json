@@ -46,6 +46,7 @@
     "Microsoft.DBforMySQL/servers/firewallRules/read",
     "Microsoft.DBforMySQL/servers/read",
     "Microsoft.DBforPostgreSQL/flexibleServers/advancedThreatProtectionSettings/read",
+    "Microsoft.DBforPostgreSQL/privateEndpointConnections/read",
     "Microsoft.DBforPostgreSQL/serverGroupsv2/read",
     "Microsoft.DBforPostgreSQL/servers/configurations/read",
     "Microsoft.DBforPostgreSQL/servers/databases/read",
@@ -54,6 +55,8 @@
     "Microsoft.DataFactory/factories/read",
     "Microsoft.Databricks/workspaces/read",
     "Microsoft.DocumentDB/databaseAccounts/read",
+    "Microsoft.DocumentDB/privateEndpointConnections/read",
+    "Microsoft.DocumentDB/sQLResources/read",
     "Microsoft.EventHub/namespaces/eventhubs/consumergroups/read",
     "Microsoft.EventHub/namespaces/eventhubs/read",
     "Microsoft.EventHub/namespaces/read",
@@ -411,6 +414,12 @@
       "source_file": "postgresql.go"
     },
     {
+      "permission": "Microsoft.DBforPostgreSQL/privateEndpointConnections/read",
+      "service": "Microsoft.DBforPostgreSQL",
+      "action": "NewListByServerPager",
+      "source_file": "postgresql.go"
+    },
+    {
       "permission": "Microsoft.DBforPostgreSQL/serverGroupsv2/read",
       "service": "Microsoft.DBforPostgreSQL",
       "action": "NewListPager",
@@ -456,6 +465,18 @@
       "permission": "Microsoft.DocumentDB/databaseAccounts/read",
       "service": "Microsoft.DocumentDB",
       "action": "NewListPager",
+      "source_file": "cosmosdb.go"
+    },
+    {
+      "permission": "Microsoft.DocumentDB/privateEndpointConnections/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListByDatabaseAccountPager",
+      "source_file": "cosmosdb.go"
+    },
+    {
+      "permission": "Microsoft.DocumentDB/sQLResources/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListSQLRoleAssignmentsPager",
       "source_file": "cosmosdb.go"
     },
     {
