@@ -81,7 +81,7 @@ func (l *conanLock) parseV1() languages.Packages {
 			Name:         parsed.Name,
 			Version:      parsed.Version,
 			Purl:         cpp.NewPackageUrl(parsed.Name, parsed.Version),
-			Cpes:         cpp.NewCpes(parsed.Name, parsed.Version),
+
 			EvidenceList: cpp.NewEvidenceList(l.evidence),
 		})
 	}
@@ -109,7 +109,7 @@ func (l *conanLock) parseV2() languages.Packages {
 			Name:         parsed.Name,
 			Version:      parsed.Version,
 			Purl:         cpp.NewPackageUrl(parsed.Name, parsed.Version),
-			Cpes:         cpp.NewCpes(parsed.Name, parsed.Version),
+
 			EvidenceList: cpp.NewEvidenceList(l.evidence),
 		})
 	}

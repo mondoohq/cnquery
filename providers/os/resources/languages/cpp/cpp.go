@@ -5,8 +5,6 @@ package cpp
 
 import (
 	"github.com/package-url/packageurl-go"
-	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers/os/resources/cpe"
 	"go.mondoo.com/mql/v13/sbom"
 )
 
@@ -20,18 +18,6 @@ func NewPackageUrl(name string, version string) string {
 		version,
 		nil,
 		"").String()
-}
-
-// NewCpes creates CPE entries for a Conan package.
-func NewCpes(name string, version string) []string {
-	cpes := []string{}
-	cpeEntries, err := cpe.NewPackage2Cpe(name, name, version, "", "")
-	if err != nil {
-		log.Warn().Str("name", name).Str("version", version).Err(err).Msg("failed to create cpe for Conan package")
-	} else if len(cpeEntries) > 0 {
-		cpes = append(cpes, cpeEntries...)
-	}
-	return cpes
 }
 
 // NewEvidenceList converts a list of file paths to evidence entries.
