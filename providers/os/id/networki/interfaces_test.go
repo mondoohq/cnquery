@@ -61,6 +61,177 @@ func TestInterfacesDarwin(t *testing.T) {
 	}
 }
 
+func TestInterfacesFreeBSD(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/freebsd.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+	assert.Equal(t, "freebsd", platform.Name)
+
+	interfaces, err := subject.Interfaces(conn, platform)
+	require.NoError(t, err)
+	assert.Len(t, interfaces, 2)
+
+	index := subject.FindInterface(interfaces, subject.Interface{Name: "em0"})
+	if assert.NotEqual(t, -1, index) {
+		em0 := interfaces[index]
+		assert.Equal(t, "em0", em0.Name)
+		assert.Equal(t, "08:00:27:6c:1a:0e", em0.MACAddress)
+		assert.Equal(t, "PCS Systemtechnik", em0.Vendor)
+		assert.Equal(t, 1500, em0.MTU)
+		if assert.NotNil(t, em0.Active) {
+			assert.True(t, *em0.Active)
+		}
+		assert.Nil(t, em0.Virtual)
+		assert.ElementsMatch(t,
+			[]string{"UP", "BROADCAST", "RUNNING", "SIMPLEX", "MULTICAST"},
+			em0.Flags,
+		)
+
+		i4 := em0.FindIP(net.ParseIP("192.168.1.50"))
+		if assert.NotEqual(t, -1, i4) {
+			ipv4 := em0.IPAddresses[i4]
+			assert.Equal(t, "192.168.1.50/24", ipv4.CIDR)
+			assert.Equal(t, "192.168.1.0/24", ipv4.Subnet)
+			assert.Equal(t, "192.168.1.255", ipv4.Broadcast)
+			assert.Equal(t, "192.168.1.1", ipv4.Gateway)
+		}
+		i6 := em0.FindIP(net.ParseIP("fe80::a00:27ff:fe6c:1a0e"))
+		if assert.NotEqual(t, -1, i6) {
+			ipv6 := em0.IPAddresses[i6]
+			assert.Equal(t, "fe80::a00:27ff:fe6c:1a0e/64", ipv6.CIDR)
+			assert.Equal(t, "fe80::/64", ipv6.Subnet)
+			assert.Equal(t, "fe80::1", ipv6.Gateway)
+		}
+	}
+}
+
+func TestInterfacesOpenBSD(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/openbsd.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+	assert.Equal(t, "openbsd", platform.Name)
+
+	interfaces, err := subject.Interfaces(conn, platform)
+	require.NoError(t, err)
+	assert.Len(t, interfaces, 2)
+
+	// OpenBSD uses "lladdr" instead of "ether" for MAC.
+	index := subject.FindInterface(interfaces, subject.Interface{Name: "em0"})
+	if assert.NotEqual(t, -1, index) {
+		em0 := interfaces[index]
+		assert.Equal(t, "em0", em0.Name)
+		assert.Equal(t, "08:00:27:6c:1a:0e", em0.MACAddress)
+		assert.Equal(t, 1500, em0.MTU)
+		if assert.NotNil(t, em0.Active) {
+			assert.True(t, *em0.Active)
+		}
+		assert.Nil(t, em0.Virtual)
+		assert.ElementsMatch(t,
+			[]string{"UP", "BROADCAST", "RUNNING", "SIMPLEX", "MULTICAST"},
+			em0.Flags,
+		)
+
+		i4 := em0.FindIP(net.ParseIP("192.168.1.51"))
+		if assert.NotEqual(t, -1, i4) {
+			ipv4 := em0.IPAddresses[i4]
+			assert.Equal(t, "192.168.1.51/24", ipv4.CIDR)
+			assert.Equal(t, "192.168.1.0/24", ipv4.Subnet)
+			assert.Equal(t, "192.168.1.255", ipv4.Broadcast)
+			assert.Equal(t, "192.168.1.1", ipv4.Gateway)
+		}
+		i6 := em0.FindIP(net.ParseIP("fe80::a00:27ff:fe6c:1a0e"))
+		if assert.NotEqual(t, -1, i6) {
+			ipv6 := em0.IPAddresses[i6]
+			assert.Equal(t, "fe80::a00:27ff:fe6c:1a0e/64", ipv6.CIDR)
+			assert.Equal(t, "fe80::1", ipv6.Gateway)
+		}
+	}
+}
+
+func TestInterfacesNetBSD(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/netbsd.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+	assert.Equal(t, "netbsd", platform.Name)
+
+	interfaces, err := subject.Interfaces(conn, platform)
+	require.NoError(t, err)
+	assert.Len(t, interfaces, 2)
+
+	// NetBSD has "0x" hex flag prefix, "address:" MAC keyword, and CIDR
+	// suffixes on inet/inet6 instead of separate netmask/prefixlen tokens.
+	index := subject.FindInterface(interfaces, subject.Interface{Name: "wm0"})
+	if assert.NotEqual(t, -1, index) {
+		wm0 := interfaces[index]
+		assert.Equal(t, "wm0", wm0.Name)
+		assert.Equal(t, "08:00:27:6c:1a:0e", wm0.MACAddress)
+		assert.Equal(t, 1500, wm0.MTU)
+		if assert.NotNil(t, wm0.Active) {
+			assert.True(t, *wm0.Active)
+		}
+		assert.Nil(t, wm0.Virtual)
+		assert.ElementsMatch(t,
+			[]string{"UP", "BROADCAST", "RUNNING", "SIMPLEX", "MULTICAST"},
+			wm0.Flags,
+		)
+
+		i4 := wm0.FindIP(net.ParseIP("192.168.1.52"))
+		if assert.NotEqual(t, -1, i4) {
+			ipv4 := wm0.IPAddresses[i4]
+			assert.Equal(t, "192.168.1.52/24", ipv4.CIDR)
+			assert.Equal(t, "192.168.1.0/24", ipv4.Subnet)
+			assert.Equal(t, "192.168.1.255", ipv4.Broadcast)
+			assert.Equal(t, "192.168.1.1", ipv4.Gateway)
+		}
+		i6 := wm0.FindIP(net.ParseIP("fe80::a00:27ff:fe6c:1a0e"))
+		if assert.NotEqual(t, -1, i6) {
+			ipv6 := wm0.IPAddresses[i6]
+			assert.Equal(t, "fe80::a00:27ff:fe6c:1a0e/64", ipv6.CIDR)
+			assert.Equal(t, "fe80::1", ipv6.Gateway)
+		}
+	}
+}
+
+func TestInterfacesDragonFlyBSD(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/dragonflybsd.toml"))
+	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
+	assert.Equal(t, "dragonflybsd", platform.Name)
+
+	interfaces, err := subject.Interfaces(conn, platform)
+	require.NoError(t, err)
+	assert.Len(t, interfaces, 2)
+
+	index := subject.FindInterface(interfaces, subject.Interface{Name: "em0"})
+	if assert.NotEqual(t, -1, index) {
+		em0 := interfaces[index]
+		assert.Equal(t, "em0", em0.Name)
+		assert.Equal(t, "08:00:27:6c:1a:0e", em0.MACAddress)
+		assert.Equal(t, 1500, em0.MTU)
+		if assert.NotNil(t, em0.Active) {
+			assert.True(t, *em0.Active)
+		}
+		assert.Nil(t, em0.Virtual)
+
+		i4 := em0.FindIP(net.ParseIP("192.168.1.53"))
+		if assert.NotEqual(t, -1, i4) {
+			ipv4 := em0.IPAddresses[i4]
+			assert.Equal(t, "192.168.1.53/24", ipv4.CIDR)
+			assert.Equal(t, "192.168.1.0/24", ipv4.Subnet)
+			assert.Equal(t, "192.168.1.1", ipv4.Gateway)
+		}
+		i6 := em0.FindIP(net.ParseIP("fe80::a00:27ff:fe6c:1a0e"))
+		if assert.NotEqual(t, -1, i6) {
+			ipv6 := em0.IPAddresses[i6]
+			assert.Equal(t, "fe80::1", ipv6.Gateway)
+		}
+	}
+}
+
 func TestInterfacesLinux(t *testing.T) {
 	conn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/linux_ip_addr_show_cmd.toml"))
 	require.NoError(t, err)

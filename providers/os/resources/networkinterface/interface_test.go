@@ -84,6 +84,38 @@ func TestMacOSRemoteInterface(t *testing.T) {
 	assert.Equal(t, "192.168.178.45", ip)
 }
 
+func TestBSDRemoteInterface(t *testing.T) {
+	mock, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "freebsd",
+			Family: []string{"bsd", "unix", "os"},
+		},
+	}, mock.WithPath("./testdata/freebsd.toml"))
+	require.NoError(t, err)
+
+	ifaces := networkinterface.New(mock)
+	list, err := ifaces.Interfaces()
+	require.NoError(t, err)
+	assert.Equal(t, 2, len(list))
+
+	em0, err := ifaces.InterfaceByName("em0")
+	require.NoError(t, err)
+	assert.Equal(t, "em0", em0.Name)
+	assert.Equal(t, 1500, em0.MTU)
+	assert.Equal(t, "up|broadcast|multicast", em0.Flags.String())
+	assert.Equal(t, "08:00:27:6c:1a:0e", em0.HardwareAddr.String())
+	// inet 192.168.1.50 (netmask form) and inet6 fe80::...%em0 (with scope)
+	assert.Equal(t, 2, len(em0.Addrs))
+
+	lo0, err := ifaces.InterfaceByName("lo0")
+	require.NoError(t, err)
+	assert.Equal(t, "lo0", lo0.Name)
+	assert.Equal(t, 16384, lo0.MTU)
+	assert.Equal(t, "up|loopback|multicast", lo0.Flags.String())
+	assert.Equal(t, "", lo0.HardwareAddr.String())
+	assert.Equal(t, 3, len(lo0.Addrs))
+}
+
 func TestLinuxRemoteInterface(t *testing.T) {
 	mock, err := mock.New(0, &inventory.Asset{
 		Platform: &inventory.Platform{

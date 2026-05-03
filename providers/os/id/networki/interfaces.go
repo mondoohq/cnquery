@@ -37,6 +37,9 @@ func Interfaces(conn shared.Connection, pf *inventory.Platform) ([]Interface, er
 	if pf.IsFamily(inventory.FAMILY_DARWIN) {
 		return n.detectDarwinInterfaces()
 	}
+	if pf.IsFamily(inventory.FAMILY_BSD) {
+		return n.detectBSDInterfaces()
+	}
 	if pf.IsFamily(inventory.FAMILY_WINDOWS) && conn.Capabilities().Has(shared.Capability_File) {
 		return n.detectWindowsInterfaces()
 	}

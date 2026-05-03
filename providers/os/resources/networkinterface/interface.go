@@ -65,6 +65,12 @@ func (r *InterfaceResource) Interfaces() ([]Interface, error) {
 			conn: r.conn,
 		}
 		return handler.Interfaces()
+	} else if asset.Platform.IsFamily(inventory.FAMILY_BSD) && !asset.Platform.IsFamily(inventory.FAMILY_DARWIN) {
+		log.Debug().Msg("detected bsd platform")
+		handler := &BSDInterfaceHandler{
+			conn: r.conn,
+		}
+		return handler.Interfaces()
 	} else if asset.Platform.Name == "windows" {
 		log.Debug().Msg("detected windows platform")
 		handler := &WindowsInterfaceHandler{
@@ -299,6 +305,112 @@ func (i *MacOSInterfaceHandler) ParseMacOS(r io.Reader) ([]Interface, error) {
 		}
 
 	}
+	return interfaces, nil
+}
+
+type BSDInterfaceHandler struct {
+	conn shared.Connection
+}
+
+func (i *BSDInterfaceHandler) Interfaces() ([]Interface, error) {
+	cmd, err := i.conn.RunCommand("ifconfig -a")
+	if err != nil {
+		return nil, errors.Wrap(err, "could not fetch bsd network adapter")
+	}
+	return i.ParseBSD(cmd.Stdout)
+}
+
+// BSDIfconfigHeader matches the first line of an ifconfig stanza on
+// FreeBSD, OpenBSD, NetBSD, and DragonFly. Note that NetBSD prefixes
+// the flags value with "0x", which differs from the other three.
+var BSDIfconfigHeader = regexp.MustCompile(`^([a-zA-Z0-9._]+):\s+flags=(?:0x)?[0-9a-fA-F]+<([^>]*)>`)
+
+func (i *BSDInterfaceHandler) ParseBSD(r io.Reader) ([]Interface, error) {
+	interfaces := []Interface{}
+	ifIndex := -1
+	scanner := bufio.NewScanner(r)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			continue
+		}
+
+		// New interface stanza
+		if m := BSDIfconfigHeader.FindStringSubmatch(line); len(m) > 0 {
+			var flags net.Flags
+			if m[2] != "" {
+				for _, f := range strings.Split(m[2], ",") {
+					switch strings.ToLower(f) {
+					case "up":
+						flags |= net.FlagUp
+					case "broadcast":
+						flags |= net.FlagBroadcast
+					case "multicast":
+						flags |= net.FlagMulticast
+					case "loopback":
+						flags |= net.FlagLoopback
+					case "pointopoint", "pointtopoint":
+						flags |= net.FlagPointToPoint
+					}
+				}
+			}
+
+			mtu := 0
+			tokens := strings.Fields(line)
+			for j, t := range tokens {
+				if t == "mtu" && j+1 < len(tokens) {
+					if v, err := strconv.Atoi(tokens[j+1]); err == nil {
+						mtu = v
+					}
+				}
+			}
+
+			ifIndex++
+			interfaces = append(interfaces, Interface{
+				Index: ifIndex + 1,
+				Name:  m[1],
+				MTU:   mtu,
+				Flags: flags,
+			})
+			continue
+		}
+
+		if ifIndex < 0 {
+			continue
+		}
+		cur := &interfaces[ifIndex]
+
+		trimmed := strings.TrimSpace(line)
+		fields := strings.Fields(trimmed)
+		if len(fields) < 2 {
+			continue
+		}
+
+		switch {
+		// MAC: "ether AA:..." (FreeBSD/DragonFly), "lladdr AA:..." (OpenBSD),
+		// "address: AA:..." (NetBSD)
+		case fields[0] == "ether", fields[0] == "lladdr", fields[0] == "address:":
+			if mac, err := net.ParseMAC(fields[1]); err == nil {
+				cur.HardwareAddr = mac
+			}
+
+		case fields[0] == "inet", fields[0] == "inet6":
+			addr := fields[1]
+			// strip CIDR suffix (NetBSD: "inet 1.2.3.4/24")
+			if k := strings.Index(addr, "/"); k != -1 {
+				addr = addr[:k]
+			}
+			// strip IPv6 link-local zone suffix (e.g. "fe80::1%em0")
+			if k := strings.Index(addr, "%"); k != -1 {
+				addr = addr[:k]
+			}
+			if ip := net.ParseIP(addr); ip != nil {
+				cur.Addrs = append(cur.Addrs, &ipAddr{IP: ip})
+			}
+		}
+	}
+
 	return interfaces, nil
 }
 
