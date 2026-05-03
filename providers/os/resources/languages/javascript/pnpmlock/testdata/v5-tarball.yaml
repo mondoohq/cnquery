@@ -7,5 +7,5 @@ packages:
 
   github.com/my-org/my-package/267087deadbeef:
     name: '@my-scope/my-package'
-    version: 1.0.0
+    version: '1.0.0'
     resolution: {tarball: https://codeload.github.com/my-org/my-package/tar.gz/267087deadbeef}
