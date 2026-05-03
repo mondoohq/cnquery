@@ -1,0 +1,20 @@
+{
+  "version": "0.4",
+  "graph_lock": {
+    "nodes": {
+      "0": {
+        "ref": "myproject/1.0@user/channel",
+        "path": "conanfile.py"
+      },
+      "1": {
+        "ref": "boost/1.84.0#abc123"
+      },
+      "2": {
+        "ref": "zlib/1.3.1#def456"
+      },
+      "3": {
+        "ref": "fmt/10.2.1@user/stable#ghi789"
+      }
+    }
+  }
+}
