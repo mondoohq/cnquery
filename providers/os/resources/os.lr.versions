@@ -712,6 +712,7 @@ ip6tables.input 9.0.0
 ip6tables.inputPolicy 13.2.9
 ip6tables.output 9.0.0
 ip6tables.outputPolicy 13.2.9
+ip6tables.tables 13.15.2
 ipAddress 11.3.42
 ipAddress.broadcast 11.3.42
 ipAddress.cidr 11.3.42
@@ -719,6 +720,11 @@ ipAddress.gateway 11.3.42
 ipAddress.ip 11.3.42
 ipAddress.subnet 11.3.42
 iptables 9.0.0
+iptables.chain 13.15.2
+iptables.chain.name 13.15.2
+iptables.chain.policy 13.15.2
+iptables.chain.rules 13.15.2
+iptables.chain.table 13.15.2
 iptables.entry 9.0.0
 iptables.entry.bytes 9.0.0
 iptables.entry.chain 9.0.0
@@ -738,6 +744,10 @@ iptables.input 9.0.0
 iptables.inputPolicy 13.2.9
 iptables.output 9.0.0
 iptables.outputPolicy 13.2.9
+iptables.table 13.15.2
+iptables.table.chains 13.15.2
+iptables.table.name 13.15.2
+iptables.tables 13.15.2
 java.package 13.10.1
 java.package.cpes 13.10.1
 java.package.files 13.10.1

@@ -1346,11 +1346,13 @@ containerd.container @defaults("id status") {
 
 // IPv4 tables
 iptables {
-  // IPv4 input chain entries
+  // All tables (filter, nat, mangle, raw)
+  tables() []iptables.table
+  // IPv4 input chain entries (filter table)
   input() []iptables.entry
-  // IPv4 output chain entries
+  // IPv4 output chain entries (filter table)
   output() []iptables.entry
-  // IPv4 forward chain entries
+  // IPv4 forward chain entries (filter table)
   forward() []iptables.entry
   // Default policy for the INPUT chain (e.g., ACCEPT, DROP)
   inputPolicy() string
@@ -1362,11 +1364,13 @@ iptables {
 
 // IPv6 tables
 ip6tables {
-  // IPv6 input chain entries
+  // All tables (filter, nat, mangle, raw)
+  tables() []iptables.table
+  // IPv6 input chain entries (filter table)
   input() []iptables.entry
-  // IPv6 output chain entries
+  // IPv6 output chain entries (filter table)
   output() []iptables.entry
-  // IPv6 forward chain entries
+  // IPv6 forward chain entries (filter table)
   forward() []iptables.entry
   // Default policy for the INPUT chain (e.g., ACCEPT, DROP)
   inputPolicy() string
@@ -1374,6 +1378,26 @@ ip6tables {
   forwardPolicy() string
   // Default policy for the OUTPUT chain (e.g., ACCEPT, DROP)
   outputPolicy() string
+}
+
+// iptables table (filter, nat, mangle, raw)
+private iptables.table @defaults("name") {
+  // Table name (filter, nat, mangle, raw)
+  name string
+  // Chains in this table
+  chains []iptables.chain
+}
+
+// iptables chain within a table
+private iptables.chain @defaults("table name policy") {
+  // Table this chain belongs to (filter, nat, mangle, raw)
+  table string
+  // Chain name (INPUT, OUTPUT, FORWARD, PREROUTING, POSTROUTING, or user-defined)
+  name string
+  // Default policy (ACCEPT, DROP, REJECT) - empty for user-defined chains
+  policy string
+  // Rules in this chain
+  rules []iptables.entry
 }
 
 // Individual iptables entry
@@ -1396,11 +1420,11 @@ iptables.entry {
   out string
   // Source address field that tells the receiver where the packet came from
   source string
-  //The destination IP address of the traffic, subnet of the traffic, or anywhere
+  // The destination IP address of the traffic, subnet of the traffic, or anywhere
   destination string
   // Optional settings within the header such as internet timestamps, SACK, or record route options
   options string
-  // Input or output, which is used to create the ID
+  // Chain and table identifier used for the resource ID
   chain string
 }
 

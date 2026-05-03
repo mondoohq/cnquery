@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/v13/types"
 )
 
 // Stat represents a structured statistic entry.
@@ -41,6 +42,22 @@ type ChainResult struct {
 
 func (ie *mqlIptablesEntry) id() (string, error) {
 	return strconv.FormatInt(ie.LineNumber.Data, 10) + ie.Chain.Data, nil
+}
+
+type mqlIptablesTableInternal struct {
+	ipVersion string
+}
+
+type mqlIptablesChainInternal struct {
+	ipVersion string
+}
+
+func (t *mqlIptablesTable) id() (string, error) {
+	return t.ipVersion + "/" + t.Name.Data, nil
+}
+
+func (c *mqlIptablesChain) id() (string, error) {
+	return c.ipVersion + "/" + c.Table.Data + "/" + c.Name.Data, nil
 }
 
 // statToRawData converts a Stat into the llx data map for creating an iptables.entry resource.
@@ -78,6 +95,9 @@ type mqlIptablesInternal struct {
 	inputCache   chainCache
 	outputCache  chainCache
 	forwardCache chainCache
+	tablesOnce   sync.Once
+	tablesCache  []any
+	tablesErr    error
 }
 
 // mqlIp6tablesInternal caches chain results to avoid running the same
@@ -86,6 +106,9 @@ type mqlIp6tablesInternal struct {
 	inputCache   chainCache
 	outputCache  chainCache
 	forwardCache chainCache
+	tablesOnce   sync.Once
+	tablesCache  []any
+	tablesErr    error
 }
 
 // fetchChain runs an iptables/ip6tables command for a chain, parses the output,
@@ -119,6 +142,145 @@ func fetchChain(runtime *plugin.Runtime, conn shared.Connection, binary, chainNa
 		entries = append(entries, entry.(*mqlIptablesEntry))
 	}
 	return entries, result.Policy, nil
+}
+
+// iptablesTableNames lists the standard tables to query.
+var iptablesTableNames = []string{"filter", "nat", "mangle", "raw"}
+
+// fetchAllTables runs `iptables -t <table> -L -v -n -x --line-numbers` for each
+// table and returns MQL table resources containing chains and entries.
+func fetchAllTables(runtime *plugin.Runtime, conn shared.Connection, binary string, ipv6 bool) ([]any, error) {
+	ver := "ipv4"
+	if ipv6 {
+		ver = "ipv6"
+	}
+
+	var tables []any
+	for _, tableName := range iptablesTableNames {
+		// tableName comes from the compile-time iptablesTableNames constant.
+		cmd, err := conn.RunCommand(fmt.Sprintf("%s -t %s -L -v -n -x --line-numbers", binary, tableName))
+		if err != nil {
+			return nil, err
+		}
+		data, err := io.ReadAll(cmd.Stdout)
+		if err != nil {
+			return nil, err
+		}
+		if cmd.ExitStatus != 0 {
+			stderr, _ := io.ReadAll(cmd.Stderr)
+			errMsg := strings.TrimSpace(string(stderr))
+			// Table may not exist on this kernel (e.g., raw or mangle not loaded)
+			if strings.Contains(errMsg, "does not exist") ||
+				strings.Contains(errMsg, "No such file or directory") ||
+				strings.Contains(errMsg, "can't initialize") {
+				continue
+			}
+			return nil, fmt.Errorf("%s -t %s failed: %s", binary, tableName, errMsg)
+		}
+
+		chains, err := parseAllChains(runtime, string(data), tableName, ver, ipv6)
+		if err != nil {
+			return nil, err
+		}
+		if len(chains) == 0 {
+			continue
+		}
+
+		tableRes, err := CreateResource(runtime, "iptables.table", map[string]*llx.RawData{
+			"name":   llx.StringData(tableName),
+			"chains": llx.ArrayData(chains, types.Resource("iptables.chain")),
+		})
+		if err != nil {
+			return nil, err
+		}
+		tableRes.(*mqlIptablesTable).ipVersion = ver
+		tables = append(tables, tableRes)
+	}
+	return tables, nil
+}
+
+// parseAllChains parses the full output of `iptables -t <table> -L` which
+// contains multiple chain blocks separated by blank lines.
+func parseAllChains(runtime *plugin.Runtime, output, tableName, ipVersion string, ipv6 bool) ([]any, error) {
+	blocks := splitChainBlocks(output)
+	var chains []any
+
+	for _, block := range blocks {
+		lines := getLines(block)
+		if len(lines) < 2 {
+			continue
+		}
+
+		chainName := parseChainName(lines[0])
+		if chainName == "" {
+			continue
+		}
+
+		result, err := ParseChain(lines, ipv6)
+		if err != nil {
+			return nil, err
+		}
+
+		chainID := ipVersion + "/" + tableName + "/" + chainName
+		entries := make([]any, 0, len(result.Entries))
+		for _, stat := range result.Entries {
+			entry, err := CreateResource(runtime, "iptables.entry", statToRawData(stat, chainID))
+			if err != nil {
+				return nil, err
+			}
+			entries = append(entries, entry)
+		}
+
+		chainRes, err := CreateResource(runtime, "iptables.chain", map[string]*llx.RawData{
+			"table":  llx.StringData(tableName),
+			"name":   llx.StringData(chainName),
+			"policy": llx.StringData(result.Policy),
+			"rules":  llx.ArrayData(entries, types.Resource("iptables.entry")),
+		})
+		if err != nil {
+			return nil, err
+		}
+		chainRes.(*mqlIptablesChain).ipVersion = ipVersion
+		chains = append(chains, chainRes)
+	}
+	return chains, nil
+}
+
+// splitChainBlocks splits the output of `iptables -L` (all chains) into
+// individual chain blocks. Each block starts with "Chain ..." and is
+// separated by empty lines.
+func splitChainBlocks(output string) []string {
+	var blocks []string
+	var current []string
+
+	for _, line := range strings.Split(output, "\n") {
+		if strings.HasPrefix(line, "Chain ") && len(current) > 0 {
+			blocks = append(blocks, strings.Join(current, "\n"))
+			current = nil
+		}
+		if line == "" && len(current) > 0 {
+			continue
+		}
+		if line != "" || len(current) > 0 {
+			current = append(current, line)
+		}
+	}
+	if len(current) > 0 {
+		blocks = append(blocks, strings.Join(current, "\n"))
+	}
+	return blocks
+}
+
+// reChainName matches "Chain CHAINNAME (...)" and extracts the chain name.
+var reChainName = regexp.MustCompile(`^Chain\s+(\S+)`)
+
+// parseChainName extracts the chain name from a chain header line.
+func parseChainName(line string) string {
+	m := reChainName.FindStringSubmatch(line)
+	if m == nil {
+		return ""
+	}
+	return m[1]
 }
 
 // --- iptables (IPv4) ---
@@ -171,6 +333,14 @@ func (i *mqlIptables) forwardPolicy() (string, error) {
 	return i.forwardCache.policy, i.forwardCache.err
 }
 
+func (i *mqlIptables) tables() ([]any, error) {
+	i.tablesOnce.Do(func() {
+		conn := i.MqlRuntime.Connection.(shared.Connection)
+		i.tablesCache, i.tablesErr = fetchAllTables(i.MqlRuntime, conn, "iptables", false)
+	})
+	return i.tablesCache, i.tablesErr
+}
+
 // --- ip6tables (IPv6) ---
 
 func (i *mqlIp6tables) fetchInput() {
@@ -219,6 +389,14 @@ func (i *mqlIp6tables) outputPolicy() (string, error) {
 func (i *mqlIp6tables) forwardPolicy() (string, error) {
 	i.forwardCache.once.Do(i.fetchForward)
 	return i.forwardCache.policy, i.forwardCache.err
+}
+
+func (i *mqlIp6tables) tables() ([]any, error) {
+	i.tablesOnce.Do(func() {
+		conn := i.MqlRuntime.Connection.(shared.Connection)
+		i.tablesCache, i.tablesErr = fetchAllTables(i.MqlRuntime, conn, "ip6tables", true)
+	})
+	return i.tablesCache, i.tablesErr
 }
 
 // Credit to github.com/coreos/go-iptables for some of the parsing logic

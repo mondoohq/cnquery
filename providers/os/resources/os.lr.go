@@ -120,6 +120,8 @@ const (
 	ResourceContainerdContainer          string = "containerd.container"
 	ResourceIptables                     string = "iptables"
 	ResourceIp6tables                    string = "ip6tables"
+	ResourceIptablesTable                string = "iptables.table"
+	ResourceIptablesChain                string = "iptables.chain"
 	ResourceIptablesEntry                string = "iptables.entry"
 	ResourceNftables                     string = "nftables"
 	ResourceNftablesTable                string = "nftables.table"
@@ -769,6 +771,14 @@ func init() {
 		"ip6tables": {
 			// to override args, implement: initIp6tables(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createIp6tables,
+		},
+		"iptables.table": {
+			// to override args, implement: initIptablesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIptablesTable,
+		},
+		"iptables.chain": {
+			// to override args, implement: initIptablesChain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIptablesChain,
 		},
 		"iptables.entry": {
 			// to override args, implement: initIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3112,6 +3122,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"containerd.container.snapshotter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlContainerdContainer).GetSnapshotter()).ToDataRes(types.String)
 	},
+	"iptables.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptables).GetTables()).ToDataRes(types.Array(types.Resource("iptables.table")))
+	},
 	"iptables.input": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptables).GetInput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
 	},
@@ -3130,6 +3143,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"iptables.outputPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptables).GetOutputPolicy()).ToDataRes(types.String)
 	},
+	"ip6tables.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIp6tables).GetTables()).ToDataRes(types.Array(types.Resource("iptables.table")))
+	},
 	"ip6tables.input": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIp6tables).GetInput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
 	},
@@ -3147,6 +3163,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ip6tables.outputPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIp6tables).GetOutputPolicy()).ToDataRes(types.String)
+	},
+	"iptables.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesTable).GetName()).ToDataRes(types.String)
+	},
+	"iptables.table.chains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesTable).GetChains()).ToDataRes(types.Array(types.Resource("iptables.chain")))
+	},
+	"iptables.chain.table": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesChain).GetTable()).ToDataRes(types.String)
+	},
+	"iptables.chain.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesChain).GetName()).ToDataRes(types.String)
+	},
+	"iptables.chain.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesChain).GetPolicy()).ToDataRes(types.String)
+	},
+	"iptables.chain.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesChain).GetRules()).ToDataRes(types.Array(types.Resource("iptables.entry")))
 	},
 	"iptables.entry.lineNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptablesEntry).GetLineNumber()).ToDataRes(types.Int)
@@ -9218,6 +9252,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIptables).__id, ok = v.Value.(string)
 		return
 	},
+	"iptables.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptables).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"iptables.input": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIptables).Input, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -9246,6 +9284,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlIp6tables).__id, ok = v.Value.(string)
 		return
 	},
+	"ip6tables.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIp6tables).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"ip6tables.input": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIp6tables).Input, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -9268,6 +9310,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ip6tables.outputPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIp6tables).OutputPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesTable).__id, ok = v.Value.(string)
+		return
+	},
+	"iptables.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.table.chains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesTable).Chains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iptables.chain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesChain).__id, ok = v.Value.(string)
+		return
+	},
+	"iptables.chain.table": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesChain).Table, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.chain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesChain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.chain.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesChain).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.chain.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesChain).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"iptables.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23344,6 +23418,7 @@ type mqlIptables struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlIptablesInternal
+	Tables        plugin.TValue[[]any]
 	Input         plugin.TValue[[]any]
 	Output        plugin.TValue[[]any]
 	Forward       plugin.TValue[[]any]
@@ -23382,6 +23457,22 @@ func (c *mqlIptables) MqlName() string {
 
 func (c *mqlIptables) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlIptables) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iptables", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
 }
 
 func (c *mqlIptables) GetInput() *plugin.TValue[[]any] {
@@ -23455,6 +23546,7 @@ type mqlIp6tables struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlIp6tablesInternal
+	Tables        plugin.TValue[[]any]
 	Input         plugin.TValue[[]any]
 	Output        plugin.TValue[[]any]
 	Forward       plugin.TValue[[]any]
@@ -23493,6 +23585,22 @@ func (c *mqlIp6tables) MqlName() string {
 
 func (c *mqlIp6tables) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlIp6tables) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ip6tables", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
 }
 
 func (c *mqlIp6tables) GetInput() *plugin.TValue[[]any] {
@@ -23559,6 +23667,124 @@ func (c *mqlIp6tables) GetOutputPolicy() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.OutputPolicy, func() (string, error) {
 		return c.outputPolicy()
 	})
+}
+
+// mqlIptablesTable for the iptables.table resource
+type mqlIptablesTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlIptablesTableInternal
+	Name   plugin.TValue[string]
+	Chains plugin.TValue[[]any]
+}
+
+// createIptablesTable creates a new instance of this resource
+func createIptablesTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIptablesTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iptables.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIptablesTable) MqlName() string {
+	return "iptables.table"
+}
+
+func (c *mqlIptablesTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIptablesTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlIptablesTable) GetChains() *plugin.TValue[[]any] {
+	return &c.Chains
+}
+
+// mqlIptablesChain for the iptables.chain resource
+type mqlIptablesChain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlIptablesChainInternal
+	Table  plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Policy plugin.TValue[string]
+	Rules  plugin.TValue[[]any]
+}
+
+// createIptablesChain creates a new instance of this resource
+func createIptablesChain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIptablesChain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iptables.chain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIptablesChain) MqlName() string {
+	return "iptables.chain"
+}
+
+func (c *mqlIptablesChain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIptablesChain) GetTable() *plugin.TValue[string] {
+	return &c.Table
+}
+
+func (c *mqlIptablesChain) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlIptablesChain) GetPolicy() *plugin.TValue[string] {
+	return &c.Policy
+}
+
+func (c *mqlIptablesChain) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
 }
 
 // mqlIptablesEntry for the iptables.entry resource

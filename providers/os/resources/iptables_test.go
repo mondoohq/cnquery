@@ -148,3 +148,98 @@ func TestParseChain(t *testing.T) {
 		assert.Equal(t, "::/0", result.Entries[0].Source)
 	})
 }
+
+func TestSplitChainBlocks(t *testing.T) {
+	t.Run("single chain", func(t *testing.T) {
+		output := "Chain INPUT (policy ACCEPT 0 packets, 0 bytes)\nnum      pkts      bytes target     prot opt in     out     source               destination\n"
+		blocks := splitChainBlocks(output)
+		require.Len(t, blocks, 1)
+		assert.Contains(t, blocks[0], "Chain INPUT")
+	})
+
+	t.Run("multiple chains with blank line separators", func(t *testing.T) {
+		output := `Chain PREROUTING (policy ACCEPT 5 packets, 260 bytes)
+num      pkts      bytes target     prot opt in     out     source               destination
+1           5      260 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:80 to:192.168.1.100:8080
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+num      pkts      bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT (policy ACCEPT 3 packets, 148 bytes)
+num      pkts      bytes target     prot opt in     out     source               destination
+
+Chain POSTROUTING (policy ACCEPT 3 packets, 148 bytes)
+num      pkts      bytes target     prot opt in     out     source               destination
+1          10      600 MASQUERADE  all  --  *      eth0    192.168.1.0/24       0.0.0.0/0
+`
+		blocks := splitChainBlocks(output)
+		require.Len(t, blocks, 4)
+		assert.Contains(t, blocks[0], "Chain PREROUTING")
+		assert.Contains(t, blocks[0], "DNAT")
+		assert.Contains(t, blocks[1], "Chain INPUT")
+		assert.Contains(t, blocks[2], "Chain OUTPUT")
+		assert.Contains(t, blocks[3], "Chain POSTROUTING")
+		assert.Contains(t, blocks[3], "MASQUERADE")
+	})
+
+	t.Run("empty output", func(t *testing.T) {
+		blocks := splitChainBlocks("")
+		assert.Empty(t, blocks)
+	})
+}
+
+func TestParseChainName(t *testing.T) {
+	assert.Equal(t, "INPUT", parseChainName("Chain INPUT (policy DROP 0 packets, 0 bytes)"))
+	assert.Equal(t, "FORWARD", parseChainName("Chain FORWARD (policy ACCEPT)"))
+	assert.Equal(t, "DOCKER", parseChainName("Chain DOCKER (1 references)"))
+	assert.Equal(t, "PREROUTING", parseChainName("Chain PREROUTING (policy ACCEPT 5 packets, 260 bytes)"))
+	assert.Equal(t, "POSTROUTING", parseChainName("Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)"))
+	assert.Equal(t, "", parseChainName(""))
+	assert.Equal(t, "", parseChainName("not a chain header"))
+}
+
+func TestSplitChainBlocks_NATTable(t *testing.T) {
+	output := `Chain PREROUTING (policy ACCEPT 0 packets, 0 bytes)
+num      pkts      bytes target     prot opt in     out     source               destination
+1           0        0 DNAT       tcp  --  eth0   *       0.0.0.0/0            0.0.0.0/0            tcp dpt:80 to:10.0.0.5:8080
+2           0        0 DNAT       tcp  --  eth0   *       0.0.0.0/0            0.0.0.0/0            tcp dpt:443 to:10.0.0.5:8443
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+num      pkts      bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+num      pkts      bytes target     prot opt in     out     source               destination
+
+Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)
+num      pkts      bytes target     prot opt in     out     source               destination
+1           0        0 MASQUERADE  all  --  *      eth0    10.0.0.0/24          0.0.0.0/0
+2           0        0 SNAT       all  --  *      eth1    192.168.1.0/24       0.0.0.0/0            to:203.0.113.5
+`
+
+	blocks := splitChainBlocks(output)
+	require.Len(t, blocks, 4)
+
+	// Verify PREROUTING has DNAT rules
+	preLines := getLines(blocks[0])
+	result, err := ParseChain(preLines, false)
+	require.NoError(t, err)
+	assert.Equal(t, "ACCEPT", result.Policy)
+	require.Len(t, result.Entries, 2)
+	assert.Equal(t, "DNAT", result.Entries[0].Target)
+	assert.Equal(t, "eth0", result.Entries[0].Input)
+	assert.Contains(t, result.Entries[0].Options, "tcp dpt:80 to:10.0.0.5:8080")
+	assert.Equal(t, "DNAT", result.Entries[1].Target)
+	assert.Contains(t, result.Entries[1].Options, "tcp dpt:443")
+
+	// Verify POSTROUTING has MASQUERADE and SNAT
+	postLines := getLines(blocks[3])
+	result, err = ParseChain(postLines, false)
+	require.NoError(t, err)
+	assert.Equal(t, "ACCEPT", result.Policy)
+	require.Len(t, result.Entries, 2)
+	assert.Equal(t, "MASQUERADE", result.Entries[0].Target)
+	assert.Equal(t, "10.0.0.0/24", result.Entries[0].Source)
+	assert.Equal(t, "SNAT", result.Entries[1].Target)
+	assert.Equal(t, "192.168.1.0/24", result.Entries[1].Source)
+	assert.Contains(t, result.Entries[1].Options, "to:203.0.113.5")
+}
