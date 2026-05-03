@@ -211,6 +211,7 @@ const (
 	ResourceGcpProjectBigtableServiceBackup                                            string = "gcp.project.bigtableService.backup"
 	ResourceGcpProjectAlloydbService                                                   string = "gcp.project.alloydbService"
 	ResourceGcpProjectAlloydbServiceCluster                                            string = "gcp.project.alloydbService.cluster"
+	ResourceGcpProjectAlloydbServiceClusterUser                                        string = "gcp.project.alloydbService.cluster.user"
 	ResourceGcpProjectAlloydbServiceInstance                                           string = "gcp.project.alloydbService.instance"
 	ResourceGcpProjectAlloydbServiceBackup                                             string = "gcp.project.alloydbService.backup"
 	ResourceGcpProjectComputeServiceSecurityPolicy                                     string = "gcp.project.computeService.securityPolicy"
@@ -1143,6 +1144,10 @@ func init() {
 		"gcp.project.alloydbService.cluster": {
 			Init:   initGcpProjectAlloydbServiceCluster,
 			Create: createGcpProjectAlloydbServiceCluster,
+		},
+		"gcp.project.alloydbService.cluster.user": {
+			// to override args, implement: initGcpProjectAlloydbServiceClusterUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectAlloydbServiceClusterUser,
 		},
 		"gcp.project.alloydbService.instance": {
 			// to override args, implement: initGcpProjectAlloydbServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3944,6 +3949,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.sqlService.instance.diskEncryptionStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetDiskEncryptionStatus()).ToDataRes(types.Dict)
+	},
+	"gcp.project.sqlService.instance.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstance).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.sqlService.instance.failoverReplica": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstance).GetFailoverReplica()).ToDataRes(types.Dict)
@@ -7521,6 +7529,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.spannerService.instance.database.encryptionInfo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetEncryptionInfo()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.spannerService.instance.database.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.spannerService.instance.database.defaultLeader": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetDefaultLeader()).ToDataRes(types.String)
 	},
@@ -7761,6 +7772,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.bigtableService.instance.backups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigtableServiceInstance).GetBackups()).ToDataRes(types.Array(types.Resource("gcp.project.bigtableService.backup")))
 	},
+	"gcp.project.bigtableService.instance.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceInstance).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
 	"gcp.project.bigtableService.cluster.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigtableServiceCluster).GetProjectId()).ToDataRes(types.String)
 	},
@@ -7784,6 +7798,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.bigtableService.cluster.encryptionConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigtableServiceCluster).GetEncryptionConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.bigtableService.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigtableServiceCluster).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
 	"gcp.project.bigtableService.cluster.nodeScalingFactor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigtableServiceCluster).GetNodeScalingFactor()).ToDataRes(types.String)
@@ -7952,6 +7969,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.alloydbService.cluster.backups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetBackups()).ToDataRes(types.Array(types.Resource("gcp.project.alloydbService.backup")))
+	},
+	"gcp.project.alloydbService.cluster.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.alloydbService.cluster.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceCluster).GetUsers()).ToDataRes(types.Array(types.Resource("gcp.project.alloydbService.cluster.user")))
+	},
+	"gcp.project.alloydbService.cluster.user.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceClusterUser).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.user.clusterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceClusterUser).GetClusterName()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.user.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceClusterUser).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.user.userType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceClusterUser).GetUserType()).ToDataRes(types.String)
+	},
+	"gcp.project.alloydbService.cluster.user.databaseRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectAlloydbServiceClusterUser).GetDatabaseRoles()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.alloydbService.instance.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAlloydbServiceInstance).GetProjectId()).ToDataRes(types.String)
@@ -15153,6 +15191,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstance).DiskEncryptionStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.sqlService.instance.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstance).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.sqlService.instance.failoverReplica": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstance).FailoverReplica, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -20457,6 +20499,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).EncryptionInfo, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.spannerService.instance.database.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
 	"gcp.project.spannerService.instance.database.defaultLeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).DefaultLeader, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -20805,6 +20851,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectBigtableServiceInstance).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.bigtableService.instance.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceInstance).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.bigtableService.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigtableServiceCluster).__id, ok = v.Value.(string)
 		return
@@ -20839,6 +20889,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.bigtableService.cluster.encryptionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigtableServiceCluster).EncryptionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigtableService.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigtableServiceCluster).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.bigtableService.cluster.nodeScalingFactor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21083,6 +21137,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.alloydbService.cluster.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectAlloydbServiceCluster).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceCluster).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceClusterUser).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.alloydbService.cluster.user.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceClusterUser).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.user.clusterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceClusterUser).ClusterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceClusterUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.user.userType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceClusterUser).UserType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.alloydbService.cluster.user.databaseRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectAlloydbServiceClusterUser).DatabaseRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.alloydbService.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34586,6 +34672,7 @@ type mqlGcpProjectSqlServiceInstance struct {
 	DatabaseVersion                            plugin.TValue[string]
 	DiskEncryptionConfiguration                plugin.TValue[any]
 	DiskEncryptionStatus                       plugin.TValue[any]
+	KmsKey                                     plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	FailoverReplica                            plugin.TValue[any]
 	GceZone                                    plugin.TValue[string]
 	Zone                                       plugin.TValue[*mqlGcpProjectComputeServiceZone]
@@ -34690,6 +34777,22 @@ func (c *mqlGcpProjectSqlServiceInstance) GetDiskEncryptionConfiguration() *plug
 
 func (c *mqlGcpProjectSqlServiceInstance) GetDiskEncryptionStatus() *plugin.TValue[any] {
 	return &c.DiskEncryptionStatus
+}
+
+func (c *mqlGcpProjectSqlServiceInstance) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.sqlService.instance", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectSqlServiceInstance) GetFailoverReplica() *plugin.TValue[any] {
@@ -47447,7 +47550,7 @@ func (c *mqlGcpProjectSpannerServiceInstance) GetInstancePartitions() *plugin.TV
 type mqlGcpProjectSpannerServiceInstanceDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectSpannerServiceInstanceDatabaseInternal it will be used here
+	mqlGcpProjectSpannerServiceInstanceDatabaseInternal
 	ProjectId              plugin.TValue[string]
 	InstanceName           plugin.TValue[string]
 	Name                   plugin.TValue[string]
@@ -47457,6 +47560,7 @@ type mqlGcpProjectSpannerServiceInstanceDatabase struct {
 	EarliestVersionTime    plugin.TValue[*time.Time]
 	EncryptionConfig       plugin.TValue[any]
 	EncryptionInfo         plugin.TValue[[]any]
+	KmsKey                 plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	DefaultLeader          plugin.TValue[string]
 	EnableDropProtection   plugin.TValue[bool]
 	Reconciling            plugin.TValue[bool]
@@ -47538,6 +47642,22 @@ func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetEncryptionConfig() *plu
 
 func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetEncryptionInfo() *plugin.TValue[[]any] {
 	return &c.EncryptionInfo
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.spannerService.instance.database", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetDefaultLeader() *plugin.TValue[string] {
@@ -48195,6 +48315,7 @@ type mqlGcpProjectBigtableServiceInstance struct {
 	AppProfiles  plugin.TValue[[]any]
 	Tables       plugin.TValue[[]any]
 	Backups      plugin.TValue[[]any]
+	IamPolicy    plugin.TValue[[]any]
 }
 
 // createGcpProjectBigtableServiceInstance creates a new instance of this resource
@@ -48326,11 +48447,27 @@ func (c *mqlGcpProjectBigtableServiceInstance) GetBackups() *plugin.TValue[[]any
 	})
 }
 
+func (c *mqlGcpProjectBigtableServiceInstance) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigtableService.instance", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
 // mqlGcpProjectBigtableServiceCluster for the gcp.project.bigtableService.cluster resource
 type mqlGcpProjectBigtableServiceCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectBigtableServiceClusterInternal it will be used here
+	mqlGcpProjectBigtableServiceClusterInternal
 	ProjectId          plugin.TValue[string]
 	InstanceName       plugin.TValue[string]
 	Name               plugin.TValue[string]
@@ -48339,6 +48476,7 @@ type mqlGcpProjectBigtableServiceCluster struct {
 	ServeNodes         plugin.TValue[int64]
 	DefaultStorageType plugin.TValue[string]
 	EncryptionConfig   plugin.TValue[any]
+	KmsKey             plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	NodeScalingFactor  plugin.TValue[string]
 	AutoscalingConfig  plugin.TValue[any]
 }
@@ -48410,6 +48548,22 @@ func (c *mqlGcpProjectBigtableServiceCluster) GetDefaultStorageType() *plugin.TV
 
 func (c *mqlGcpProjectBigtableServiceCluster) GetEncryptionConfig() *plugin.TValue[any] {
 	return &c.EncryptionConfig
+}
+
+func (c *mqlGcpProjectBigtableServiceCluster) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigtableService.cluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlGcpProjectBigtableServiceCluster) GetNodeScalingFactor() *plugin.TValue[string] {
@@ -48747,7 +48901,7 @@ func (c *mqlGcpProjectAlloydbService) GetClusters() *plugin.TValue[[]any] {
 type mqlGcpProjectAlloydbServiceCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectAlloydbServiceClusterInternal it will be used here
+	mqlGcpProjectAlloydbServiceClusterInternal
 	ProjectId               plugin.TValue[string]
 	Name                    plugin.TValue[string]
 	DisplayName             plugin.TValue[string]
@@ -48775,6 +48929,8 @@ type mqlGcpProjectAlloydbServiceCluster struct {
 	UpdatedAt               plugin.TValue[*time.Time]
 	Instances               plugin.TValue[[]any]
 	Backups                 plugin.TValue[[]any]
+	KmsKey                  plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	Users                   plugin.TValue[[]any]
 }
 
 // createGcpProjectAlloydbServiceCluster creates a new instance of this resource
@@ -48944,6 +49100,107 @@ func (c *mqlGcpProjectAlloydbServiceCluster) GetBackups() *plugin.TValue[[]any] 
 
 		return c.backups()
 	})
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.alloydbService.cluster", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectAlloydbServiceCluster) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.alloydbService.cluster", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+// mqlGcpProjectAlloydbServiceClusterUser for the gcp.project.alloydbService.cluster.user resource
+type mqlGcpProjectAlloydbServiceClusterUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectAlloydbServiceClusterUserInternal it will be used here
+	ProjectId     plugin.TValue[string]
+	ClusterName   plugin.TValue[string]
+	Name          plugin.TValue[string]
+	UserType      plugin.TValue[string]
+	DatabaseRoles plugin.TValue[[]any]
+}
+
+// createGcpProjectAlloydbServiceClusterUser creates a new instance of this resource
+func createGcpProjectAlloydbServiceClusterUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectAlloydbServiceClusterUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.alloydbService.cluster.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectAlloydbServiceClusterUser) MqlName() string {
+	return "gcp.project.alloydbService.cluster.user"
+}
+
+func (c *mqlGcpProjectAlloydbServiceClusterUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectAlloydbServiceClusterUser) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectAlloydbServiceClusterUser) GetClusterName() *plugin.TValue[string] {
+	return &c.ClusterName
+}
+
+func (c *mqlGcpProjectAlloydbServiceClusterUser) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectAlloydbServiceClusterUser) GetUserType() *plugin.TValue[string] {
+	return &c.UserType
+}
+
+func (c *mqlGcpProjectAlloydbServiceClusterUser) GetDatabaseRoles() *plugin.TValue[[]any] {
+	return &c.DatabaseRoles
 }
 
 // mqlGcpProjectAlloydbServiceInstance for the gcp.project.alloydbService.instance resource

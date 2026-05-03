@@ -185,10 +185,90 @@ func (g *mqlGcpProjectAlloydbService) clusters() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlAlloyCluster := mqlCluster.(*mqlGcpProjectAlloydbServiceCluster)
+		if cluster.EncryptionConfig != nil {
+			mqlAlloyCluster.cacheKmsKeyName = cluster.EncryptionConfig.KmsKeyName
+		}
 		res = append(res, mqlCluster)
 	}
 
 	return res, nil
+}
+
+type mqlGcpProjectAlloydbServiceClusterInternal struct {
+	cacheKmsKeyName string
+}
+
+func (g *mqlGcpProjectAlloydbServiceCluster) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectAlloydbServiceCluster) users() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	clusterName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(alloydb.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := alloydb.NewAlloyDBAdminClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	res := []any{}
+	it := client.ListUsers(ctx, &alloydbpb.ListUsersRequest{Parent: clusterName})
+	for {
+		user, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if isGRPCSkippable(err) {
+				log.Warn().Err(err).Msg("could not list AlloyDB users")
+				return nil, nil
+			}
+			return nil, err
+		}
+		mqlUser, err := CreateResource(g.MqlRuntime, "gcp.project.alloydbService.cluster.user", map[string]*llx.RawData{
+			"projectId":     llx.StringData(projectId),
+			"clusterName":   llx.StringData(clusterName),
+			"name":          llx.StringData(user.Name),
+			"userType":      llx.StringData(user.UserType.String()),
+			"databaseRoles": llx.ArrayData(convert.SliceAnyToInterface(user.DatabaseRoles), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlUser)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectAlloydbServiceClusterUser) id() (string, error) {
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return g.Name.Data, nil
 }
 
 type alloyDBClusterParts struct {

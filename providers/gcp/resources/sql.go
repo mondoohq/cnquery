@@ -504,7 +504,11 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			if err != nil {
 				return err
 			}
-			mqlInstance.(*mqlGcpProjectSqlServiceInstance).cacheSecondaryGceZone = instance.SecondaryGceZone
+			mqlSqlInstance := mqlInstance.(*mqlGcpProjectSqlServiceInstance)
+			mqlSqlInstance.cacheSecondaryGceZone = instance.SecondaryGceZone
+			if instance.DiskEncryptionConfiguration != nil {
+				mqlSqlInstance.cacheKmsKeyName = instance.DiskEncryptionConfiguration.KmsKeyName
+			}
 			res = append(res, mqlInstance)
 		}
 		return nil
@@ -580,6 +584,20 @@ func (g *mqlGcpProjectSqlServiceInstance) databases() ([]any, error) {
 
 type mqlGcpProjectSqlServiceInstanceInternal struct {
 	cacheSecondaryGceZone string
+	cacheKmsKeyName       string
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
 func (g *mqlGcpProjectSqlServiceInstance) id() (string, error) {

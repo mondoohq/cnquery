@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.12.1",
-  "generated_at": "2026-05-01T14:35:11-07:00",
+  "generated_at": "2026-05-03T12:31:49-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -16,6 +16,7 @@
     "alloydb.backups.list",
     "alloydb.clusters.list",
     "alloydb.instances.list",
+    "alloydb.users.list",
     "apikeys.keys.list",
     "artifactregistry.repositories.getIamPolicy",
     "artifactregistry.repositories.list",
@@ -263,6 +264,12 @@
       "permission": "alloydb.instances.list",
       "service": "alloydb",
       "action": "ListInstances",
+      "source_file": "alloydb.go"
+    },
+    {
+      "permission": "alloydb.users.list",
+      "service": "alloydb",
+      "action": "ListUsers",
       "source_file": "alloydb.go"
     },
     {
@@ -1157,7 +1164,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.List",
+      "action": "Folders.Search",
       "source_file": "folder.go",
       "scope": "org"
     },
@@ -1197,7 +1204,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.Search",
+      "action": "Projects.List",
       "source_file": "project.go",
       "scope": "org"
     },

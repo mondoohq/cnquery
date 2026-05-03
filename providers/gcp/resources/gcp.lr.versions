@@ -138,6 +138,7 @@ gcp.project.alloydbService.cluster.encryptionConfig 11.3.1
 gcp.project.alloydbService.cluster.encryptionInfo 11.3.1
 gcp.project.alloydbService.cluster.etag 11.3.1
 gcp.project.alloydbService.cluster.instances 11.3.1
+gcp.project.alloydbService.cluster.kmsKey 13.12.2
 gcp.project.alloydbService.cluster.labels 11.3.1
 gcp.project.alloydbService.cluster.location 11.3.1
 gcp.project.alloydbService.cluster.maintenanceSchedule 11.3.1
@@ -152,6 +153,13 @@ gcp.project.alloydbService.cluster.sslConfig 11.3.1
 gcp.project.alloydbService.cluster.state 11.3.1
 gcp.project.alloydbService.cluster.uid 11.3.1
 gcp.project.alloydbService.cluster.updatedAt 11.3.1
+gcp.project.alloydbService.cluster.user 13.12.2
+gcp.project.alloydbService.cluster.user.clusterName 13.12.2
+gcp.project.alloydbService.cluster.user.databaseRoles 13.12.2
+gcp.project.alloydbService.cluster.user.name 13.12.2
+gcp.project.alloydbService.cluster.user.projectId 13.12.2
+gcp.project.alloydbService.cluster.user.userType 13.12.2
+gcp.project.alloydbService.cluster.users 13.12.2
 gcp.project.alloydbService.clusters 11.3.1
 gcp.project.alloydbService.instance 11.3.1
 gcp.project.alloydbService.instance.activationPolicy 13.12.2
@@ -516,6 +524,7 @@ gcp.project.bigtableService.cluster.autoscalingConfig 11.3.1
 gcp.project.bigtableService.cluster.defaultStorageType 11.3.1
 gcp.project.bigtableService.cluster.encryptionConfig 11.3.1
 gcp.project.bigtableService.cluster.instanceName 11.3.1
+gcp.project.bigtableService.cluster.kmsKey 13.12.2
 gcp.project.bigtableService.cluster.location 11.3.1
 gcp.project.bigtableService.cluster.name 11.3.1
 gcp.project.bigtableService.cluster.nodeScalingFactor 11.3.1
@@ -528,6 +537,7 @@ gcp.project.bigtableService.instance.backups 11.3.1
 gcp.project.bigtableService.instance.clusters 11.3.1
 gcp.project.bigtableService.instance.createdAt 11.3.1
 gcp.project.bigtableService.instance.displayName 11.3.1
+gcp.project.bigtableService.instance.iamPolicy 13.12.2
 gcp.project.bigtableService.instance.instanceType 11.3.1
 gcp.project.bigtableService.instance.labels 11.3.1
 gcp.project.bigtableService.instance.name 11.3.1
@@ -3211,6 +3221,7 @@ gcp.project.spannerService.instance.database.encryptionConfig 11.3.1
 gcp.project.spannerService.instance.database.encryptionInfo 11.3.1
 gcp.project.spannerService.instance.database.iamPolicy 13.11.2
 gcp.project.spannerService.instance.database.instanceName 11.3.1
+gcp.project.spannerService.instance.database.kmsKey 13.12.2
 gcp.project.spannerService.instance.database.name 11.3.1
 gcp.project.spannerService.instance.database.projectId 11.3.1
 gcp.project.spannerService.instance.database.reconciling 11.3.1
@@ -3324,6 +3335,7 @@ gcp.project.sqlService.instance.ipMapping.id 9.0.0
 gcp.project.sqlService.instance.ipMapping.ipAddress 9.0.0
 gcp.project.sqlService.instance.ipMapping.timeToRetire 9.0.0
 gcp.project.sqlService.instance.ipMapping.type 9.0.0
+gcp.project.sqlService.instance.kmsKey 13.12.2
 gcp.project.sqlService.instance.maintenanceVersion 9.0.0
 gcp.project.sqlService.instance.masterInstanceName 9.0.0
 gcp.project.sqlService.instance.maxDiskSize 9.0.0

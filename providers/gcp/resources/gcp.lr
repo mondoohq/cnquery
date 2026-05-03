@@ -1678,6 +1678,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   diskEncryptionConfiguration dict
   // Disk encryption status
   diskEncryptionStatus dict
+  // Customer-managed KMS key used for disk encryption (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Name and status of the failover replica
   failoverReplica dict
   // DEPRECATED: Use zone instead
@@ -4602,6 +4604,8 @@ private gcp.project.spannerService.instance.database @defaults("name") {
   encryptionConfig dict
   // Encryption information
   encryptionInfo []dict
+  // Customer-managed KMS key used for encryption (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Default leader region
   defaultLeader string
   // Whether drop protection is enabled
@@ -4790,6 +4794,8 @@ private gcp.project.bigtableService.instance @defaults("name") {
   tables() []gcp.project.bigtableService.table
   // List of backups across all clusters in this instance
   backups() []gcp.project.bigtableService.backup
+  // IAM policy bindings for the Bigtable instance
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud (GCP) Bigtable cluster
@@ -4810,6 +4816,8 @@ private gcp.project.bigtableService.cluster @defaults("name") {
   defaultStorageType string
   // Encryption configuration (CMEK)
   encryptionConfig dict
+  // Customer-managed KMS key used for cluster encryption (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Node scaling factor
   nodeScalingFactor string
   // Autoscaling configuration
@@ -4942,6 +4950,24 @@ private gcp.project.alloydbService.cluster @defaults("name") {
   instances() []gcp.project.alloydbService.instance
   // List of backups for this cluster
   backups() []gcp.project.alloydbService.backup
+  // Customer-managed KMS key used for cluster encryption (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
+  // Database users defined on the cluster (built-in or AlloyDB IAM users)
+  users() []gcp.project.alloydbService.cluster.user
+}
+
+// Google Cloud (GCP) AlloyDB cluster user
+private gcp.project.alloydbService.cluster.user @defaults("name userType") {
+  // Project ID
+  projectId string
+  // Source cluster resource name
+  clusterName string
+  // Resource name of the user (projects/.../clusters/.../users/{name})
+  name string
+  // User type ("ALLOYDB_BUILT_IN" or "ALLOYDB_IAM_USER")
+  userType string
+  // PostgreSQL database role memberships granted to this user
+  databaseRoles []string
 }
 
 // Google Cloud (GCP) AlloyDB instance

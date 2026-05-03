@@ -251,6 +251,7 @@ func (g *mqlGcpProjectBigtableServiceInstance) clusters() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlCluster.(*mqlGcpProjectBigtableServiceCluster).cacheKmsKeyName = c.KMSKeyName
 		res = append(res, mqlCluster)
 	}
 
@@ -287,6 +288,72 @@ func (g *mqlGcpProjectBigtableServiceCluster) id() (string, error) {
 		return "", g.Name.Error
 	}
 	return fmt.Sprintf("gcp.project/%s/bigtableService/cluster/%s", g.ProjectId.Data, g.Name.Data), nil
+}
+
+type mqlGcpProjectBigtableServiceClusterInternal struct {
+	cacheKmsKeyName string
+}
+
+func (g *mqlGcpProjectBigtableServiceCluster) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectBigtableServiceInstance) iamPolicy() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	projectId := g.ProjectId.Data
+	instanceName := g.Name.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(bigtableAdminScopes...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	iac, err := bigtable.NewInstanceAdminClient(ctx, projectId, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer iac.Close()
+
+	policy, err := iac.InstanceIAM(instanceName).Policy(ctx)
+	if err != nil {
+		if isGRPCSkippable(err) {
+			log.Warn().Err(err).Msg("could not get Bigtable instance IAM policy")
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	resourcePath := fmt.Sprintf("projects/%s/instances/%s", projectId, instanceName)
+	res := []any{}
+	for _, role := range policy.Roles() {
+		members := policy.Members(role)
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(resourcePath + "/" + string(role)),
+			"role":    llx.StringData(string(role)),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
 }
 
 func (g *mqlGcpProjectBigtableServiceInstance) tables() ([]any, error) {
