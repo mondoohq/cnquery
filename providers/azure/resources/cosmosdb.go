@@ -402,6 +402,9 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) privateEndpointConnections(
 			return nil, err
 		}
 		for _, pec := range page.Value {
+			if pec == nil {
+				continue
+			}
 			args := map[string]*llx.RawData{
 				"__id": llx.StringDataPtr(pec.ID),
 				"id":   llx.StringDataPtr(pec.ID),
