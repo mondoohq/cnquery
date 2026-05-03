@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.12.1",
-  "generated_at": "2026-05-03T12:31:49-07:00",
+  "generated_at": "2026-05-03T12:50:21-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -1164,7 +1164,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.List",
+      "action": "Folders.Search",
       "source_file": "folder.go",
       "scope": "org"
     },
@@ -1204,7 +1204,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.Search",
+      "action": "Projects.List",
       "source_file": "project.go",
       "scope": "org"
     },
