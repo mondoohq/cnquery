@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.8.1",
-  "generated_at": "2026-04-29T09:56:02-07:00",
+  "generated_at": "2026-05-01T15:26:02-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/classicAdministrators/read",
@@ -109,6 +109,18 @@
     "Microsoft.ServiceBus/namespaces/read",
     "Microsoft.ServiceBus/namespaces/topics/read",
     "Microsoft.ServiceBus/namespaces/topics/subscriptions/read",
+    "Microsoft.Sql/dataMaskingPolicies/read",
+    "Microsoft.Sql/dataMaskingRules/read",
+    "Microsoft.Sql/databaseVulnerabilityAssessmentScans/read",
+    "Microsoft.Sql/databaseVulnerabilityAssessments/read",
+    "Microsoft.Sql/failoverGroups/read",
+    "Microsoft.Sql/geoBackupPolicies/read",
+    "Microsoft.Sql/ledgerDigestUploads/read",
+    "Microsoft.Sql/outboundFirewallRules/read",
+    "Microsoft.Sql/privateEndpointConnections/read",
+    "Microsoft.Sql/replicationLinks/read",
+    "Microsoft.Sql/serverDevOpsAuditSettings/read",
+    "Microsoft.Sql/serverKeys/read",
     "Microsoft.Sql/servers/administrators/read",
     "Microsoft.Sql/servers/advancedThreatProtectionSettings/read",
     "Microsoft.Sql/servers/auditingSettings/read",
@@ -347,7 +359,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/scopeMaps/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "containerregistry.go"
     },
     {
@@ -371,7 +383,7 @@
     {
       "permission": "Microsoft.DBforMySQL/servers/configurations/read",
       "service": "Microsoft.DBforMySQL",
-      "action": "NewListByServerPager",
+      "action": "Get",
       "source_file": "mysql.go"
     },
     {
@@ -509,7 +521,7 @@
     {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -527,7 +539,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -801,6 +813,78 @@
       "source_file": "servicebus.go"
     },
     {
+      "permission": "Microsoft.Sql/dataMaskingPolicies/read",
+      "service": "Microsoft.Sql",
+      "action": "Get",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/dataMaskingRules/read",
+      "service": "Microsoft.Sql",
+      "action": "NewListByDatabasePager",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/databaseVulnerabilityAssessmentScans/read",
+      "service": "Microsoft.Sql",
+      "action": "NewListByDatabasePager",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/databaseVulnerabilityAssessments/read",
+      "service": "Microsoft.Sql",
+      "action": "Get",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/failoverGroups/read",
+      "service": "Microsoft.Sql",
+      "action": "NewListByServerPager",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/geoBackupPolicies/read",
+      "service": "Microsoft.Sql",
+      "action": "Get",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/ledgerDigestUploads/read",
+      "service": "Microsoft.Sql",
+      "action": "Get",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/outboundFirewallRules/read",
+      "service": "Microsoft.Sql",
+      "action": "NewListByServerPager",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/privateEndpointConnections/read",
+      "service": "Microsoft.Sql",
+      "action": "NewListByServerPager",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/replicationLinks/read",
+      "service": "Microsoft.Sql",
+      "action": "NewListByServerPager",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/serverDevOpsAuditSettings/read",
+      "service": "Microsoft.Sql",
+      "action": "Get",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/serverKeys/read",
+      "service": "Microsoft.Sql",
+      "action": "NewListByServerPager",
+      "source_file": "sql.go"
+    },
+    {
       "permission": "Microsoft.Sql/servers/administrators/read",
       "service": "Microsoft.Sql",
       "action": "NewListByServerPager",
@@ -977,7 +1061,7 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListSlotsPager",
+      "action": "NewListFunctionsPager",
       "source_file": "web.go"
     }
   ]

@@ -2734,18 +2734,18 @@ private azure.subscription.sqlService.server @defaults("name location properties
   firewallRules() []azure.subscription.sqlService.firewallrule
   // SQL Database server Entra ID administrators
   azureAdAdministrators() []azure.subscription.sqlService.server.administrator
-  // SQL Database server connection policy
-  connectionPolicy() dict
-  // SQL Database server auditing policy
-  auditingPolicy() dict
+  // DEPRECATED: use connectionType instead
+  connectionPolicy() @maturity("deprecated") dict
+  // DEPRECATED: use blobAuditingPolicy() instead
+  auditingPolicy() @maturity("deprecated") dict
   // SQL Database server administrator login
   administratorLogin string
-  // SQL Database server security alert policy
-  securityAlertPolicy() dict
-  // SQL Database server encryption protector
-  encryptionProtector() dict
-  // SQL Database server threat detection policy
-  threatDetectionPolicy() dict
+  // DEPRECATED: use securityAlertPolicyConfig() instead
+  securityAlertPolicy() @maturity("deprecated") dict
+  // DEPRECATED: use encryptionProtectorConfig() instead
+  encryptionProtector() @maturity("deprecated") dict
+  // DEPRECATED: legacy preview API; use securityAlertPolicyConfig() and advancedThreatProtectionSetting() instead
+  threatDetectionPolicy() @maturity("deprecated") dict
   // SQL Database server vulnerability assessment settings
   vulnerabilityAssessmentSettings() azure.subscription.sqlService.server.vulnerabilityassessmentsettings
   virtualNetworkRules() []azure.subscription.sqlService.virtualNetworkRule
@@ -2755,6 +2755,28 @@ private azure.subscription.sqlService.server @defaults("name location properties
   encryptionProtectorKey() azure.subscription.keyVaultService.key
   // Whether Azure AD-only authentication is enabled (SQL authentication disabled)
   azureAdOnlyAuthentication() bool
+  // Server-wide connection type ("Default", "Proxy", or "Redirect")
+  connectionType() string
+  // Server-level SQL Auditing (blob auditing) policy
+  blobAuditingPolicy() azure.subscription.sqlService.server.blobAuditingPolicy
+  // Server-level Transparent Data Encryption (TDE) protector configuration
+  encryptionProtectorConfig() azure.subscription.sqlService.server.encryptionProtectorConfig
+  // Server-level security alert (threat detection) policy
+  securityAlertPolicyConfig() azure.subscription.sqlService.server.securityAlertPolicyConfig
+  // Server-level Microsoft Defender for SQL advanced threat protection setting
+  advancedThreatProtectionSetting() azure.subscription.sqlService.server.advancedThreatProtectionSetting
+  // Server-level Microsoft Entra ID (Azure AD) DevOps audit setting
+  devOpsAuditingSetting() azure.subscription.sqlService.server.devOpsAuditingSetting
+  // Customer-managed encryption keys (BYOK) registered on the server
+  keys() []azure.subscription.sqlService.server.key
+  // Outbound firewall rules (allowed FQDNs for data egress)
+  outboundFirewallRules() []azure.subscription.sqlService.server.outboundFirewallRule
+  // Private Link endpoint connections to the server
+  privateEndpointConnections() []azure.subscription.sqlService.server.privateEndpointConnection
+  // Auto-failover groups configured on the server
+  failoverGroups() []azure.subscription.sqlService.server.failoverGroup
+  // Geo-replication links from databases on this server to partners
+  replicationLinks() []azure.subscription.sqlService.server.replicationLink
 }
 
 // Azure SQL Database server vulnerability assessment settings
@@ -2845,16 +2867,16 @@ private azure.subscription.sqlService.database @defaults("name edition zoneRedun
   sampleName string
   // Whether the database is zone redundant
   zoneRedundant bool
-  // SQL database transparent data encryption
-  transparentDataEncryption() dict
+  // DEPRECATED: use transparentDataEncryptionEnabled instead
+  transparentDataEncryption() @maturity("deprecated") dict
   // SQL database advisor
   advisor() []dict
-  // SQL database threat detection policy
-  threatDetectionPolicy() dict
-  // SQL database connection policy
-  connectionPolicy() dict
-  // SQL database auditing policy
-  auditingPolicy() dict
+  // DEPRECATED: use advancedThreatProtection instead
+  threatDetectionPolicy() @maturity("deprecated") dict
+  // DEPRECATED: Azure SQL DB has no per-database connection policy; use server.connectionType instead
+  connectionPolicy() @maturity("deprecated") dict
+  // DEPRECATED: use blobAuditingPolicy() instead
+  auditingPolicy() @maturity("deprecated") dict
   // SQL database advanced threat protection settings
   advancedThreatProtection() azure.subscription.sqlService.database.advancedthreatprotection
   // SQL database backup short-term retention policy
@@ -2863,6 +2885,20 @@ private azure.subscription.sqlService.database @defaults("name edition zoneRedun
   longTermRetentionPolicy() azure.subscription.sqlService.database.longtermretentionpolicy
   // SQL database usage
   usage() []azure.subscription.sqlService.databaseusage
+  // Whether Transparent Data Encryption is enabled for this database
+  transparentDataEncryptionEnabled() bool
+  // Database-level SQL Auditing (blob auditing) policy
+  blobAuditingPolicy() azure.subscription.sqlService.database.blobAuditingPolicy
+  // Database-level security alert (threat detection) policy
+  securityAlertPolicy() azure.subscription.sqlService.database.securityAlertPolicy
+  // Database-level vulnerability assessment configuration and scans
+  vulnerabilityAssessment() azure.subscription.sqlService.database.vulnerabilityAssessment
+  // Database-level Dynamic Data Masking (DDM) policy
+  dataMaskingPolicy() azure.subscription.sqlService.database.dataMaskingPolicy
+  // Database-level immutable ledger digest upload configuration
+  ledgerDigestUpload() azure.subscription.sqlService.database.ledgerDigestUpload
+  // Database-level geo backup policy
+  geoBackupPolicy() azure.subscription.sqlService.database.geoBackupPolicy
 }
 
 // Azure SQL Database advanced threat protection settings
@@ -2915,6 +2951,368 @@ private azure.subscription.sqlService.databaseusage @defaults("id name") {
   limit float
   // Database usage unit
   unit string
+}
+
+// Azure SQL Database server blob auditing policy (server-level SQL Auditing)
+private azure.subscription.sqlService.server.blobAuditingPolicy @defaults("state retentionDays") {
+  // Resource ID
+  id string
+  // Auditing state ("Enabled" or "Disabled")
+  state string
+  // SQL audit action groups and individual actions audited by the policy
+  auditActionsAndGroups []string
+  // Whether audit events are sent to Azure Monitor (Log Analytics / Event Hub)
+  isAzureMonitorTargetEnabled bool
+  // Whether managed identity is used for authentication to the audit storage account
+  isManagedIdentityInUse bool
+  // Whether the secondary storage account access key is in use
+  isStorageSecondaryKeyInUse bool
+  // Audit log queue delay in milliseconds
+  queueDelayMs int
+  // Number of days to retain audit logs in storage (0 = unlimited)
+  retentionDays int
+  // Subscription ID of the audit storage account
+  storageAccountSubscriptionId string
+  // Audit log storage account blob endpoint
+  storageEndpoint string
+}
+
+// Azure SQL Database server Transparent Data Encryption (TDE) protector configuration
+private azure.subscription.sqlService.server.encryptionProtectorConfig @defaults("serverKeyType serverKeyName") {
+  // Resource ID
+  id string
+  // Name of the server key referenced by the protector
+  serverKeyName string
+  // Server key type ("AzureKeyVault" or "ServiceManaged")
+  serverKeyType string
+  // Key Vault key URI (null if service-managed)
+  uri string
+  // Key thumbprint
+  thumbprint string
+  // Subregion of the encryption protector
+  subregion string
+  // Whether automatic key rotation is enabled for the protector
+  autoRotationEnabled bool
+  // Key Vault key referenced by the protector (null if service-managed)
+  key() azure.subscription.keyVaultService.key
+}
+
+// Azure SQL Database server security alert (threat detection) policy
+private azure.subscription.sqlService.server.securityAlertPolicyConfig @defaults("state") {
+  // Resource ID
+  id string
+  // Alert policy state ("Enabled" or "Disabled")
+  state string
+  // List of alert types disabled for this policy (e.g. "Sql_Injection", "Access_Anomaly")
+  disabledAlerts []string
+  // Email addresses that receive alert notifications
+  emailAddresses []string
+  // Whether subscription administrators and database owners receive alert email
+  emailAccountAdmins bool
+  // Storage account blob endpoint that receives audited events for threat detection
+  storageEndpoint string
+  // Number of days to retain threat detection logs in storage (0 = unlimited)
+  retentionDays int
+  // UTC creation time of the policy
+  creationTime time
+}
+
+// Azure SQL Database server-scoped Microsoft Defender for SQL advanced threat protection setting
+private azure.subscription.sqlService.server.advancedThreatProtectionSetting @defaults("state") {
+  // Resource ID
+  id string
+  // ATP state ("Enabled", "Disabled", or "New")
+  state string
+  // UTC creation time of the setting
+  creationTime time
+}
+
+// Azure SQL Database server Microsoft Entra (Azure AD) DevOps audit setting
+private azure.subscription.sqlService.server.devOpsAuditingSetting @defaults("state") {
+  // Resource ID
+  id string
+  // DevOps audit state ("Enabled" or "Disabled")
+  state string
+  // Whether audit events are sent to Azure Monitor (Log Analytics / Event Hub)
+  isAzureMonitorTargetEnabled bool
+  // Subscription ID of the audit storage account
+  storageAccountSubscriptionId string
+  // Audit log storage account blob endpoint
+  storageEndpoint string
+}
+
+// Azure SQL Database server customer-managed (BYOK) encryption key
+private azure.subscription.sqlService.server.key @defaults("name serverKeyType autoRotationEnabled") {
+  // Resource ID
+  id string
+  // Key resource name
+  name string
+  // Resource type
+  type string
+  // Resource kind
+  kind string
+  // Server key type ("AzureKeyVault" or "ServiceManaged")
+  serverKeyType string
+  // Key Vault key URI (null for service-managed keys)
+  uri string
+  // Key thumbprint
+  thumbprint string
+  // Key creation date
+  creationDate time
+  // Whether automatic key rotation is enabled
+  autoRotationEnabled bool
+  // Subregion of the key
+  subregion string
+}
+
+// Azure SQL Database server outbound firewall rule (allowed FQDN for outbound traffic)
+private azure.subscription.sqlService.server.outboundFirewallRule @defaults("name provisioningState") {
+  // Resource ID
+  id string
+  // Allowed FQDN (the rule name is the FQDN)
+  name string
+  // Resource type
+  type string
+  // Provisioning state of the rule
+  provisioningState string
+}
+
+// Azure SQL Database server private endpoint connection
+private azure.subscription.sqlService.server.privateEndpointConnection @defaults("name provisioningState") {
+  // Resource ID
+  id string
+  // Connection name
+  name string
+  // Resource type
+  type string
+  // ID of the private endpoint resource linked to the server
+  privateEndpointId string
+  // Provisioning state of the connection
+  provisioningState string
+  // Connection state object: status (Approved/Pending/Rejected), description, actionsRequired
+  privateLinkServiceConnectionState dict
+}
+
+// Azure SQL Database auto-failover group
+private azure.subscription.sqlService.server.failoverGroup @defaults("name replicationRole replicationState") {
+  // Resource ID
+  id string
+  // Failover group name
+  name string
+  // Resource location
+  location string
+  // Resource tags
+  tags map[string]string
+  // Replication role of this server in the failover group ("Primary" or "Secondary")
+  replicationRole string
+  // Replication state of the failover group
+  replicationState string
+  // Partner server descriptors ({id, location, replicationRole})
+  partnerServers []dict
+  // Read/write endpoint configuration ({failoverPolicy, failoverWithDataLossGracePeriodMinutes})
+  readWriteEndpoint dict
+  // Read-only endpoint configuration ({failoverPolicy, targetServer})
+  readOnlyEndpoint dict
+  // Database resource IDs included in the failover group
+  databases []string
+}
+
+// Azure SQL Database geo-replication link
+private azure.subscription.sqlService.server.replicationLink @defaults("name partnerServer replicationState") {
+  // Resource ID
+  id string
+  // Replication link name
+  name string
+  // Partner server location
+  partnerLocation string
+  // Partner server name
+  partnerServer string
+  // Partner database name
+  partnerDatabase string
+  // Partner replication role
+  partnerRole string
+  // Replication mode (e.g. "Async")
+  replicationMode string
+  // Replication state ("PENDING", "SEEDING", "CATCH_UP", "SUSPENDED")
+  replicationState string
+  // Local replication role ("Primary" or "Secondary")
+  role string
+  // Whether termination of the replication link is allowed
+  isTerminationAllowed bool
+  // Replication link type (e.g. "GEO", "NAMED")
+  linkType string
+  // Replication start time
+  startTime time
+  // Seeding/catch-up percent complete (0-100)
+  percentComplete int
+}
+
+// Azure SQL Database vulnerability assessment scan record (shared between server and database scope)
+private azure.subscription.sqlService.vulnerabilityAssessmentScan @defaults("scanId state numberOfFailedSecurityChecks") {
+  // Resource ID
+  id string
+  // Scan record name
+  name string
+  // Scan ID
+  scanId string
+  // Trigger type ("OnDemand" or "Recurring")
+  triggerType string
+  // Scan state ("Passed", "Failed", "FailedToRun", or "InProgress")
+  state string
+  // Scan start time
+  startTime time
+  // Scan end time
+  endTime time
+  // Storage container path holding the scan results
+  storageContainerPath string
+  // Number of failed security checks in the scan
+  numberOfFailedSecurityChecks int
+  // List of scan errors ({code, message})
+  errors []dict
+}
+
+// Azure SQL Database database-level blob auditing policy
+private azure.subscription.sqlService.database.blobAuditingPolicy @defaults("state retentionDays") {
+  // Resource ID
+  id string
+  // Auditing state ("Enabled" or "Disabled")
+  state string
+  // SQL audit action groups and individual actions audited by the policy
+  auditActionsAndGroups []string
+  // Whether audit events are sent to Azure Monitor
+  isAzureMonitorTargetEnabled bool
+  // Whether managed identity is used for the audit storage account
+  isManagedIdentityInUse bool
+  // Whether the secondary storage account access key is in use
+  isStorageSecondaryKeyInUse bool
+  // Audit log queue delay in milliseconds
+  queueDelayMs int
+  // Number of days to retain audit logs in storage (0 = unlimited)
+  retentionDays int
+  // Subscription ID of the audit storage account
+  storageAccountSubscriptionId string
+  // Audit log storage account blob endpoint
+  storageEndpoint string
+}
+
+// Azure SQL Database database-level security alert policy
+private azure.subscription.sqlService.database.securityAlertPolicy @defaults("state") {
+  // Resource ID
+  id string
+  // Alert policy state ("Enabled", "Disabled", or "New")
+  state string
+  // List of alert types disabled for this policy
+  disabledAlerts []string
+  // Email addresses that receive alert notifications
+  emailAddresses []string
+  // Whether subscription administrators and database owners receive alert email
+  emailAccountAdmins bool
+  // Storage account blob endpoint that receives audited events for threat detection
+  storageEndpoint string
+  // Number of days to retain threat detection logs in storage (0 = unlimited)
+  retentionDays int
+  // UTC creation time of the policy
+  creationTime time
+}
+
+// Azure SQL Database database-level vulnerability assessment configuration
+private azure.subscription.sqlService.database.vulnerabilityAssessment @defaults("recurringScansEnabled") {
+  // Resource ID
+  id string
+  // Resource name
+  name string
+  // Resource type
+  type string
+  // Whether recurring scans are enabled
+  recurringScansEnabled bool
+  // Email addresses notified after a scheduled scan completes
+  recurringScanEmails []string
+  // Whether subscription administrators are notified after a scan
+  mailSubscriptionAdmins bool
+  // Storage container path that holds VA scan results
+  storageContainerPath string
+  // Vulnerability assessment scan records for the database
+  scans() []azure.subscription.sqlService.vulnerabilityAssessmentScan
+}
+
+// Azure SQL Database Dynamic Data Masking (DDM) policy
+private azure.subscription.sqlService.database.dataMaskingPolicy @defaults("dataMaskingState") {
+  // Resource ID
+  id string
+  // Resource name
+  name string
+  // Resource type
+  type string
+  // Resource location
+  location string
+  // Resource kind
+  kind string
+  // Data masking state ("Enabled" or "Disabled")
+  dataMaskingState string
+  // Comma-separated list of SQL users excluded from data masking
+  exemptPrincipals string
+  // Masking level
+  maskingLevel string
+  // Data masking rules defined on the database
+  rules() []azure.subscription.sqlService.database.dataMaskingRule
+}
+
+// Azure SQL Database Dynamic Data Masking rule
+private azure.subscription.sqlService.database.dataMaskingRule @defaults("schemaName tableName columnName maskingFunction") {
+  // Resource ID
+  id string
+  // Resource name
+  name string
+  // Resource type
+  type string
+  // Rule ID
+  ruleId string
+  // Alias name for the rule
+  aliasName string
+  // Rule state ("Enabled" or "Disabled")
+  ruleState string
+  // Schema of the masked column
+  schemaName string
+  // Table of the masked column
+  tableName string
+  // Column being masked
+  columnName string
+  // Masking function ("Default", "CCN", "Email", "Number", "SSN", "Text")
+  maskingFunction string
+  // Lower bound of the random interval used by the Number masking function
+  numberFrom string
+  // Upper bound of the random interval used by the Number masking function
+  numberTo string
+  // Number of leading characters preserved by the Text masking function
+  prefixSize string
+  // Number of trailing characters preserved by the Text masking function
+  suffixSize string
+  // Replacement string used by the Text masking function
+  replacementString string
+}
+
+// Azure SQL Database immutable ledger digest upload configuration
+private azure.subscription.sqlService.database.ledgerDigestUpload @defaults("state digestStorageEndpoint") {
+  // Resource ID
+  id string
+  // Resource name
+  name string
+  // Ledger digest upload state ("Enabled" or "Disabled")
+  state string
+  // Storage endpoint where ledger digests are uploaded
+  digestStorageEndpoint string
+}
+
+// Azure SQL Database geo backup policy
+private azure.subscription.sqlService.database.geoBackupPolicy @defaults("state") {
+  // Resource ID
+  id string
+  // Resource name
+  name string
+  // Geo backup state ("Enabled" or "Disabled")
+  state string
+  // Storage type used for geo backups
+  storageType string
 }
 
 // Azure Database for PostgreSQL
