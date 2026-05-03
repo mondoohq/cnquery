@@ -69,6 +69,7 @@ cafd
 cavium
 cbf
 ccf
+CCN
 cdn
 Centrify
 ceph
