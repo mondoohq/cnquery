@@ -121,6 +121,7 @@ datastream
 DATAUSER
 DBFS
 DBRS
+DCV
 ddl
 ddos
 dedup
@@ -155,6 +156,7 @@ eku
 elbv
 embeddings
 endpointslice
+eni
 ENIId
 erlang
 ERPCLOUD
@@ -546,6 +548,7 @@ uptycs
 URkuh
 usb
 userdata
+USERPOOL
 Utc
 valkey
 VAULTNAME

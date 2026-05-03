@@ -12485,7 +12485,7 @@ private aws.appstream.image @defaults("name state platform visibility region") {
   // Whether an image builder can be launched from this image
   imageBuilderSupported bool
   // Whether dynamic app providers are enabled within the image
-  dynamicAppProvidersEnabled string
+  dynamicAppProvidersEnabled bool
   // Version of the AppStream agent baked into the image
   appstreamAgentVersion string
   // Time when the image was created

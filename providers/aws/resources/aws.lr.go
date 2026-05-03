@@ -19067,7 +19067,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsAppstreamImage).GetImageBuilderSupported()).ToDataRes(types.Bool)
 	},
 	"aws.appstream.image.dynamicAppProvidersEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsAppstreamImage).GetDynamicAppProvidersEnabled()).ToDataRes(types.String)
+		return (r.(*mqlAwsAppstreamImage).GetDynamicAppProvidersEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.appstream.image.appstreamAgentVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamImage).GetAppstreamAgentVersion()).ToDataRes(types.String)
@@ -46620,7 +46620,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.appstream.image.dynamicAppProvidersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsAppstreamImage).DynamicAppProvidersEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsAppstreamImage).DynamicAppProvidersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.appstream.image.appstreamAgentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -113969,7 +113969,7 @@ type mqlAwsAppstreamImage struct {
 	Platform                    plugin.TValue[string]
 	ImageBuilderName            plugin.TValue[string]
 	ImageBuilderSupported       plugin.TValue[bool]
-	DynamicAppProvidersEnabled  plugin.TValue[string]
+	DynamicAppProvidersEnabled  plugin.TValue[bool]
 	AppstreamAgentVersion       plugin.TValue[string]
 	CreatedAt                   plugin.TValue[*time.Time]
 	PublicBaseImageReleasedDate plugin.TValue[*time.Time]
@@ -114054,7 +114054,7 @@ func (c *mqlAwsAppstreamImage) GetImageBuilderSupported() *plugin.TValue[bool] {
 	return &c.ImageBuilderSupported
 }
 
-func (c *mqlAwsAppstreamImage) GetDynamicAppProvidersEnabled() *plugin.TValue[string] {
+func (c *mqlAwsAppstreamImage) GetDynamicAppProvidersEnabled() *plugin.TValue[bool] {
 	return &c.DynamicAppProvidersEnabled
 }
 

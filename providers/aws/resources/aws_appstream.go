@@ -676,7 +676,7 @@ func newMqlAwsAppstreamImage(runtime *plugin.Runtime, region string, img appstre
 			"platform":                    llx.StringData(string(img.Platform)),
 			"imageBuilderName":            llx.StringDataPtr(img.ImageBuilderName),
 			"imageBuilderSupported":       llx.BoolDataPtr(img.ImageBuilderSupported),
-			"dynamicAppProvidersEnabled":  llx.StringData(string(img.DynamicAppProvidersEnabled)),
+			"dynamicAppProvidersEnabled":  llx.BoolData(img.DynamicAppProvidersEnabled == appstreamtypes.DynamicAppProvidersEnabledEnabled),
 			"appstreamAgentVersion":       llx.StringDataPtr(img.AppstreamAgentVersion),
 			"createdAt":                   llx.TimeDataPtr(img.CreatedTime),
 			"publicBaseImageReleasedDate": llx.TimeDataPtr(img.PublicBaseImageReleasedDate),
@@ -1011,7 +1011,8 @@ func (a *mqlAwsAppstreamFleet) sessions() ([]any, error) {
 }
 
 func (a *mqlAwsAppstreamSession) id() (string, error) {
-	return "arn:aws:appstream::" + a.Region.Data + ":session/" + a.Id.Data, nil
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	return "arn:aws:appstream:" + a.Region.Data + ":" + conn.AccountId() + ":session/" + a.Id.Data, nil
 }
 
 func (a *mqlAwsAppstreamSession) fleet() (*mqlAwsAppstreamFleet, error) {
