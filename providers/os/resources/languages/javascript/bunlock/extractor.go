@@ -30,9 +30,10 @@ func stripJSONC(data []byte) []byte {
 
 		if inString {
 			out = append(out, c)
-			if c == '\\' {
+			switch c {
+			case '\\':
 				escape = true
-			} else if c == '"' {
+			case '"':
 				inString = false
 			}
 			continue

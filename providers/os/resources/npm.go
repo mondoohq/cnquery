@@ -26,6 +26,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/packagejson"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/packagelockjson"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/pnpmlock"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/yarnlock"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -204,14 +205,16 @@ func hasLockfile(runtime *plugin.Runtime, fs afero.Fs, path string) bool {
 
 	searchPaths := []string{}
 	if isDir {
-		// check if there is a package-lock.json, pnpm-lock.yaml, bun.lock, or package.json file
+		// check if there is a lockfile
 		searchPaths = append(searchPaths,
 			filepath.Join(path, "/package-lock.json"),
 			filepath.Join(path, "/pnpm-lock.yaml"),
+			filepath.Join(path, "/yarn.lock"),
 			filepath.Join(path, "/bun.lock"),
 		)
 	} else if strings.HasSuffix(path, "package-lock.json") ||
 		strings.HasSuffix(path, "pnpm-lock.yaml") ||
+		strings.HasSuffix(path, "yarn.lock") ||
 		strings.HasSuffix(path, "bun.lock") {
 		searchPaths = append(searchPaths, path)
 	}
@@ -241,12 +244,15 @@ func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (lang
 		searchPaths = append(searchPaths,
 			filepath.Join(path, "/package-lock.json"),
 			filepath.Join(path, "/pnpm-lock.yaml"),
+			filepath.Join(path, "/yarn.lock"),
 			filepath.Join(path, "/bun.lock"),
 			filepath.Join(path, "/package.json"),
 		)
 	} else if strings.HasSuffix(path, "package-lock.json") {
 		searchPaths = append(searchPaths, path)
 	} else if strings.HasSuffix(path, "pnpm-lock.yaml") {
+		searchPaths = append(searchPaths, path)
+	} else if strings.HasSuffix(path, "yarn.lock") {
 		searchPaths = append(searchPaths, path)
 	} else if strings.HasSuffix(path, "bun.lock") {
 		searchPaths = append(searchPaths, path)
@@ -264,7 +270,7 @@ func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (lang
 	}
 
 	if len(filteredSearchPath) == 0 {
-		return nil, fmt.Errorf("path %s is not a package.json or package-lock.json file", path)
+		return nil, fmt.Errorf("path %s is not a supported JavaScript lockfile or package.json", path)
 	}
 
 	// technically we should only have one file, this logic will always pick the first one
@@ -285,6 +291,8 @@ func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (lang
 			extractor = &packagelockjson.Extractor{}
 		} else if strings.HasSuffix(searchPath, "pnpm-lock.yaml") {
 			extractor = &pnpmlock.Extractor{}
+		} else if strings.HasSuffix(searchPath, "yarn.lock") {
+			extractor = &yarnlock.Extractor{}
 		} else if strings.HasSuffix(searchPath, "bun.lock") {
 			extractor = &bunlock.Extractor{}
 		} else if strings.HasSuffix(searchPath, "package.json") {
