@@ -1,0 +1,24 @@
+[metadata]
+lock-version = "4.5.0"
+strategy = ["cross_platform"]
+content-hash = "sha256:abc123"
+
+[[package]]
+name = "django"
+version = "4.2.7"
+groups = ["default"]
+
+[[package]]
+name = "requests"
+version = "2.31.0"
+groups = ["default"]
+
+[[package]]
+name = "pytest"
+version = "7.4.3"
+groups = ["dev"]
+
+[[package]]
+name = "certifi"
+version = "2024.2.2"
+groups = ["default"]

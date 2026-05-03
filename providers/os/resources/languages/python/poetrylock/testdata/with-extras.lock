@@ -1,0 +1,22 @@
+# Poetry lockfile with optional and git-sourced packages.
+
+[[package]]
+name = "django"
+version = "4.2.7"
+description = "A high-level Python Web framework."
+
+[[package]]
+name = "django-debug-toolbar"
+version = "4.2.0"
+description = "A configurable set of panels that display various debug information."
+optional = true
+
+[[package]]
+name = "mypy-extensions"
+version = "1.0.0"
+description = "Type system extensions for programs checked with mypy."
+
+[metadata]
+lock-version = "2.0"
+python-versions = "^3.11"
+content-hash = "def456"

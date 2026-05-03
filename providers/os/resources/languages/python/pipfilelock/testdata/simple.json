@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "hash": {
+      "sha256": "abc123"
+    },
+    "pipfile-spec": 6,
+    "requires": {
+      "python_version": "3.11"
+    }
+  },
+  "default": {
+    "django": {
+      "version": "==4.2.7",
+      "hashes": [
+        "sha256:aaa"
+      ]
+    },
+    "requests": {
+      "version": "==2.31.0",
+      "hashes": [
+        "sha256:bbb"
+      ]
+    },
+    "certifi": {
+      "version": "==2024.2.2",
+      "hashes": [
+        "sha256:ccc"
+      ]
+    }
+  },
+  "develop": {
+    "pytest": {
+      "version": "==7.4.3",
+      "hashes": [
+        "sha256:ddd"
+      ]
+    },
+    "django": {
+      "version": "==4.2.7",
+      "hashes": [
+        "sha256:aaa"
+      ]
+    }
+  }
+}
