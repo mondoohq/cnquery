@@ -1164,7 +1164,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.Search",
+      "action": "Folders.List",
       "source_file": "folder.go",
       "scope": "org"
     },
@@ -1204,7 +1204,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.List",
+      "action": "Projects.Search",
       "source_file": "project.go",
       "scope": "org"
     },

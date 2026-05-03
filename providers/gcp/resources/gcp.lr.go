@@ -7532,6 +7532,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.spannerService.instance.database.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
 	},
+	"gcp.project.spannerService.instance.database.kmsKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetKmsKeys()).ToDataRes(types.Array(types.Resource("gcp.project.kmsService.keyring.cryptokey")))
+	},
 	"gcp.project.spannerService.instance.database.defaultLeader": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSpannerServiceInstanceDatabase).GetDefaultLeader()).ToDataRes(types.String)
 	},
@@ -20501,6 +20504,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.spannerService.instance.database.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.spannerService.instance.database.kmsKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSpannerServiceInstanceDatabase).KmsKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.spannerService.instance.database.defaultLeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47561,6 +47568,7 @@ type mqlGcpProjectSpannerServiceInstanceDatabase struct {
 	EncryptionConfig       plugin.TValue[any]
 	EncryptionInfo         plugin.TValue[[]any]
 	KmsKey                 plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
+	KmsKeys                plugin.TValue[[]any]
 	DefaultLeader          plugin.TValue[string]
 	EnableDropProtection   plugin.TValue[bool]
 	Reconciling            plugin.TValue[bool]
@@ -47657,6 +47665,22 @@ func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetKmsKey() *plugin.TValue
 		}
 
 		return c.kmsKey()
+	})
+}
+
+func (c *mqlGcpProjectSpannerServiceInstanceDatabase) GetKmsKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KmsKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.spannerService.instance.database", c.__id, "kmsKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.kmsKeys()
 	})
 }
 

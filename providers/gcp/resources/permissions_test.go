@@ -30,6 +30,7 @@ var validatedGCPPermissions = []string{
 	"alloydb.backups.list",
 	"alloydb.clusters.list",
 	"alloydb.instances.list",
+	"alloydb.users.list",
 	"apikeys.keys.list",
 	"artifactregistry.repositories.getIamPolicy",
 	"artifactregistry.repositories.list",
