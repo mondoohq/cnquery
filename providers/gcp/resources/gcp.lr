@@ -936,12 +936,12 @@ gcp.project.computeService.instance @defaults("name id") {
   shieldedInstanceConfig gcp.project.computeService.instance.shieldedInstanceConfig
   // Shielded VM integrity monitoring auto-learn policy (updateAutoLearnPolicy)
   shieldedInstanceIntegrityPolicy dict
-  // Deprecated: Use shieldedInstanceConfig.enableIntegrityMonitoring instead
-  enableIntegrityMonitoring bool
-  // Deprecated: Use shieldedInstanceConfig.enableSecureBoot instead
-  enableSecureBoot bool
-  // Deprecated: Use shieldedInstanceConfig.enableVtpm instead
-  enableVtpm bool
+  // DEPRECATED: Use shieldedInstanceConfig.enableIntegrityMonitoring instead
+  enableIntegrityMonitoring @maturity("deprecated") bool
+  // DEPRECATED: Use shieldedInstanceConfig.enableSecureBoot instead
+  enableSecureBoot @maturity("deprecated") bool
+  // DEPRECATED: Use shieldedInstanceConfig.enableVtpm instead
+  enableVtpm @maturity("deprecated") bool
   // Whether VM has been restricted from starting because Compute Engine has detected suspicious activity
   startRestricted bool
   // Instance status
@@ -1252,8 +1252,8 @@ gcp.project.computeService.network @defaults("name") {
   networkFirewallPolicyEnforcementOrder string
   // Creation timestamp
   created time
-  // Deprecated: Use networkPeerings instead
-  peerings []dict
+  // DEPRECATED: Use networkPeerings instead
+  peerings @maturity("deprecated") []dict
   // Network peerings for the resource
   networkPeerings() []gcp.project.computeService.network.peering
   // The network-wide routing mode to use
@@ -1356,8 +1356,8 @@ private gcp.project.computeService.router @defaults("name")  {
   bgpPeers []dict
   // Whether a router is dedicated for use with encrypted VLAN attachments
   encryptedInterconnectRouter bool
-  // Deprecated: Use natServices instead
-  nats []dict
+  // DEPRECATED: Use natServices instead
+  nats @maturity("deprecated") []dict
   // NAT services created in this router
   natServices []gcp.project.computeService.router.nat
   // Creation timestamp
@@ -1416,8 +1416,8 @@ private gcp.project.computeService.backendService @defaults("name") {
   maxStreamDuration time
   // Backend service name
   name string
-  // Deprecated: Use network instead
-  networkUrl string
+  // DEPRECATED: Use network instead
+  networkUrl @maturity("deprecated") string
   // Network to which this backend service belongs
   network() gcp.project.computeService.network
   // Named port on a backend instance group representing the port for communication to the backend VMs in that group
@@ -1426,8 +1426,8 @@ private gcp.project.computeService.backendService @defaults("name") {
   protocol string
   // Region URL
   regionUrl string
-  // Deprecated: Use securityPolicy instead
-  securityPolicyUrl string
+  // DEPRECATED: Use securityPolicy instead
+  securityPolicyUrl @maturity("deprecated") string
   // Cloud Armor security policy
   securityPolicy() gcp.project.computeService.securityPolicy
   // Client TLS policy and subject alternative names for the backend service
@@ -1680,8 +1680,8 @@ private gcp.project.sqlService.instance @defaults("name") {
   diskEncryptionStatus dict
   // Name and status of the failover replica
   failoverReplica dict
-  // Deprecated: Use zone instead
-  gceZone string
+  // DEPRECATED: Use zone instead
+  gceZone @maturity("deprecated") string
   // Compute Engine zone that the instance is currently serviced from
   zone() gcp.project.computeService.zone
   // Instance type
@@ -2414,8 +2414,8 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   confidentialNodesConfig dict
   // Configuration for Identity Service component
   identityServiceConfig dict
-  // Deprecated: Use networkPolicy instead
-  networkPolicyConfig dict
+  // DEPRECATED: Use networkPolicy instead
+  networkPolicyConfig @maturity("deprecated") dict
   // Network policy configuration
   networkPolicy() gcp.project.gkeService.cluster.networkPolicy
   // The release channel that the cluster is subscribed to
@@ -5198,22 +5198,22 @@ private gcp.project.computeService.vpnTunnel @defaults("name status") {
   localTrafficSelector []string
   // Remote traffic selector CIDRs
   remoteTrafficSelector []string
-  // Deprecated: Use peerExternalVpnGateway instead
-  peerExternalGateway string
+  // DEPRECATED: Use peerExternalVpnGateway instead
+  peerExternalGateway @maturity("deprecated") string
   // Interface ID of the external VPN gateway
   peerExternalGatewayInterface int
   // Peer external VPN gateway resource
   peerExternalVpnGateway() gcp.project.computeService.externalVpnGateway
-  // Deprecated: Use peerGcpVpnGateway instead
-  peerGcpGateway string
+  // DEPRECATED: Use peerGcpVpnGateway instead
+  peerGcpGateway @maturity("deprecated") string
   // Peer GCP HA VPN gateway resource
   peerGcpVpnGateway() gcp.project.computeService.vpnGateway
   // IP address of the peer VPN gateway
   peerIp string
   // Region URL where the VPN tunnel resides
   regionUrl string
-  // Deprecated: Use router instead
-  routerUrl string
+  // DEPRECATED: Use router instead
+  routerUrl @maturity("deprecated") string
   // Cloud Router resource for dynamic routing
   router() gcp.project.computeService.router
   // Hash of the shared secret
@@ -5222,8 +5222,8 @@ private gcp.project.computeService.vpnTunnel @defaults("name status") {
   status string
   // URL of the Target VPN gateway (Classic VPN only)
   targetVpnGateway string
-  // Deprecated: Use vpnGateway instead
-  vpnGatewayUrl string
+  // DEPRECATED: Use vpnGateway instead
+  vpnGatewayUrl @maturity("deprecated") string
   // HA VPN gateway resource
   vpnGateway() gcp.project.computeService.vpnGateway
   // Interface ID of the VPN gateway
@@ -6160,12 +6160,12 @@ private gcp.project.computeService.interconnectAttachment @defaults("name type s
   state string
   // Edge availability domain
   edgeAvailabilityDomain string
-  // Deprecated: Use interconnect instead
-  interconnectUrl string
+  // DEPRECATED: Use interconnect instead
+  interconnectUrl @maturity("deprecated") string
   // Interconnect resource
   interconnect() gcp.project.computeService.interconnect
-  // Deprecated: Use router instead
-  routerUrl string
+  // DEPRECATED: Use router instead
+  routerUrl @maturity("deprecated") string
   // Cloud Router resource
   router() gcp.project.computeService.router
   // Cloud Router IP address
@@ -7228,10 +7228,10 @@ private gcp.accesscontextmanager.servicePerimeter @defaults("name title") {
   description string
   // Perimeter type (PERIMETER_TYPE_REGULAR, PERIMETER_TYPE_BRIDGE)
   perimeterType string
-  // Deprecated: Use statusConfig instead
-  status dict
-  // Deprecated: Use specConfig instead
-  spec dict
+  // DEPRECATED: Use statusConfig instead
+  status @maturity("deprecated") dict
+  // DEPRECATED: Use specConfig instead
+  spec @maturity("deprecated") dict
   // Enforced perimeter configuration
   statusConfig() gcp.accesscontextmanager.servicePerimeter.config
   // Dry-run perimeter configuration (proposed changes)

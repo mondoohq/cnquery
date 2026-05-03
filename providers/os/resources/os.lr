@@ -20,8 +20,8 @@ extend asset {
   // Common Platform Enumeration (CPE) for the asset
   cpes() []core.cpe
   // Advisory & vulnerability report
-  // Deprecated; will be removed in version 13.0 (use vulnmgmt instead)
-  vulnerabilityReport() dict
+  // DEPRECATED: will be removed in version 13.0 (use vulnmgmt instead)
+  vulnerabilityReport() @maturity("deprecated") dict
   // Platform URL in the package URL format (as opposed to the CPE format)
   purl() string
 }
@@ -580,8 +580,8 @@ user @defaults("name uid gid") {
 privatekey {
   // PEM data
   pem string
-  // Deprecated; use file instead
-  path string
+  // DEPRECATED: use file instead
+  path @maturity("deprecated") string
   // File on disk for this private key
   file file
   // Whether the file is encrypted
@@ -701,8 +701,8 @@ pam.conf {
   files() []file
   // The raw PAM configuration (across all files)
   content(files) string
-  // Deprecated; list of services that are configured via PAM
-  services(files) map[string][]string
+  // DEPRECATED: list of services that are configured via PAM
+  services(files) @maturity("deprecated") map[string][]string
   // List of services with parsed entries that are configured via PAM
   entries(files) map[string][]pam.conf.serviceEntry
 }
@@ -993,8 +993,8 @@ journald.config {
   init(path? string)
   // File of this journald configuration
   file() file
-  // Deprecated; use sections() instead
-  params(file) map[string]string
+  // DEPRECATED: use sections() instead
+  params(file) @maturity("deprecated") map[string]string
   // All sections in this journald configuration
   sections(file) []journald.config.section
 }
@@ -2177,8 +2177,8 @@ registrykey @defaults("path") {
   path string
   // Whether the property exists
   exists() bool
-  // Deprecated; use `items` instead
-  properties() map[string]string
+  // DEPRECATED: use `items` instead
+  properties() @maturity("deprecated") map[string]string
   // Registry key items
   items() []registrykey.property
   // Registry key children
@@ -2194,8 +2194,8 @@ registrykey.property @defaults("path name") {
   name string
   // Whether the property exists
   exists() bool
-  // Deprecated; use `data` instead
-  value() string
+  // DEPRECATED: use `data` instead
+  value() @maturity("deprecated") string
   // Registry key type
   type() string
   // Registry key data
@@ -2288,8 +2288,8 @@ npm.packages {
 
   init(path? string)
 
-  // Deprecated: path to search for packages, use paths instead
-  path string
+  // DEPRECATED: path to search for packages, use paths instead
+  path @maturity("deprecated") string
 
   // Optional: list of paths searched for packages
   paths() []string

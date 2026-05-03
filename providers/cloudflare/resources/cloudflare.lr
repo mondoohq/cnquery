@@ -883,8 +883,8 @@ private cloudflare.tunnel.virtualNetwork @defaults("name") {
 	deletedAt time
 }
 
-// Cloudflare zone firewall rule (legacy, deprecated in favor of rulesets)
-private cloudflare.zone.firewallRule @defaults("id action") {
+// DEPRECATED: legacy zone firewall rule, use cloudflare.zone.ruleset instead
+private cloudflare.zone.firewallRule @defaults("id action") @maturity("deprecated") {
 	// Rule identifier
 	id string
 	// Rule description

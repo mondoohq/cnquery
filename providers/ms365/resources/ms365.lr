@@ -8,8 +8,8 @@ alias microsoft.organization = microsoft.tenant
 
 // Microsoft 365 services and resources
 microsoft {
-  // Deprecated: use `microsoft.tenant` instead
-  organizations() []microsoft.tenant
+  // DEPRECATED: use `microsoft.tenant` instead
+  organizations() @maturity("deprecated") []microsoft.tenant
   // List of users
   users() microsoft.users
   // List of groups
@@ -26,8 +26,8 @@ microsoft {
   enterpriseApplications() []microsoft.serviceprincipal
   // List of roles
   roles() microsoft.roles
-  // Deprecated: use groupSettings instead
-  settings() dict
+  // DEPRECATED: use groupSettings instead
+  settings() @maturity("deprecated") dict
   // Microsoft 365 settings
   groupSettings() []microsoft.setting
   // The connected tenant's default domain name
@@ -137,8 +137,8 @@ microsoft.tenant @defaults("name") {
   assignedPlans []dict
   // Provisioned plan
   provisionedPlans []dict
-  // Deprecated: use `createdAt` instead
-  createdDateTime time
+  // DEPRECATED: use `createdAt` instead
+  createdDateTime @maturity("deprecated") time
   // Tenant display name
   name string
   // Organization verified domains
@@ -639,36 +639,36 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   accountEnabled bool
   // User city
   city string
-  // Deprecated: use job.companyName instead
-  companyName string
-  // Deprecated: use contact.country instead
-  country string
+  // DEPRECATED: use job.companyName instead
+  companyName @maturity("deprecated") string
+  // DEPRECATED: use contact.country instead
+  country @maturity("deprecated") string
   // User create time
   createdDateTime time
-  // Deprecated: use job.department instead
-  department string
+  // DEPRECATED: use job.department instead
+  department @maturity("deprecated") string
   // User display name
   displayName string
-  // Deprecated: use job.employeeId instead
-  employeeId string
+  // DEPRECATED: use job.employeeId instead
+  employeeId @maturity("deprecated") string
   // User given name
   givenName string
-  // Deprecated: use job.title instead
-  jobTitle string
-  // Deprecated: use contact.email instead
-  mail string
-  // Deprecated: use contact.mobilePhone instead
-  mobilePhone string
-  // Deprecated: use contact.otherMails instead
-  otherMails []string
-  // Deprecated: use job.officeLocation instead
-  officeLocation string
-  // Deprecated: use contact.postalCode instead
-  postalCode string
-  // Deprecated: use contact.state instead
-  state string
-  // Deprecated: use contact.streetAddress instead
-  streetAddress string
+  // DEPRECATED: use job.title instead
+  jobTitle @maturity("deprecated") string
+  // DEPRECATED: use contact.email instead
+  mail @maturity("deprecated") string
+  // DEPRECATED: use contact.mobilePhone instead
+  mobilePhone @maturity("deprecated") string
+  // DEPRECATED: use contact.otherMails instead
+  otherMails @maturity("deprecated") []string
+  // DEPRECATED: use job.officeLocation instead
+  officeLocation @maturity("deprecated") string
+  // DEPRECATED: use contact.postalCode instead
+  postalCode @maturity("deprecated") string
+  // DEPRECATED: use contact.state instead
+  state @maturity("deprecated") string
+  // DEPRECATED: use contact.streetAddress instead
+  streetAddress @maturity("deprecated") string
   // User surname
   surname string
   // User service principal name
@@ -1026,8 +1026,8 @@ private microsoft.domaindnsrecord @defaults("id label") {
   supportedService string
   // Domain record TTL
   ttl int
-  // Deprecated; kept for backwards compatibility
-  properties dict
+  // DEPRECATED: kept for backwards compatibility
+  properties @maturity("deprecated") dict
 }
 
 // Microsoft Entra ID application registration
@@ -1209,8 +1209,8 @@ microsoft.serviceprincipal @defaults("name") {
   notificationEmailAddresses []string
   // App role assignment required
   appRoleAssignmentRequired bool
-  // Deprecated: use `enabled` instead
-  accountEnabled bool
+  // DEPRECATED: use `enabled` instead
+  accountEnabled @maturity("deprecated") bool
   // Whether it is a first-party Microsoft application
   isFirstParty() bool
   // Application roles
@@ -1570,10 +1570,10 @@ microsoft.roles {
   search string
 }
 
-// Deprecated: use `microsoft.roles` instead
-microsoft.rolemanagement {
-  // Deprecated: use `microsoft.roles` instead
-  roleDefinitions() microsoft.roles
+// DEPRECATED: use `microsoft.roles` instead
+microsoft.rolemanagement @maturity("deprecated") {
+  // DEPRECATED: use `microsoft.roles` instead
+  roleDefinitions() @maturity("deprecated") microsoft.roles
 }
 
 // Microsoft role definition
@@ -1741,8 +1741,8 @@ private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName
   displayName string
   // Device configuration version
   version int
-  // Deprecated; kept for backwards compatibility
-  properties dict
+  // DEPRECATED: kept for backwards compatibility
+  properties @maturity("deprecated") dict
 }
 
 // Microsoft device compliance policy
@@ -1761,8 +1761,8 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   version int
   // Device compliance policy assignments
   assignments []dict
-  // Deprecated; kept for backwards compatibility
-  properties dict
+  // DEPRECATED: kept for backwards compatibility
+  properties @maturity("deprecated") dict
 }
 
 // Microsoft 365 Exchange Online

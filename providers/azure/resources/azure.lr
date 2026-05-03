@@ -3647,48 +3647,48 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   subscriptionId string
   // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
-  // Deprecated; use "forServers" instead. List of Defender for Servers components and whether they are enabled
-  defenderForServers() dict
+  // DEPRECATED: use "forServers" instead. List of Defender for Servers components and whether they are enabled
+  defenderForServers() @maturity("deprecated") dict
   // List of Defender for Servers components and whether they are enabled
   forServers() azure.subscription.cloudDefenderService.defenderForServers
-  // Deprecated; use "forAppServices" instead. Microsoft Defender for App Service configuration
-  defenderForAppServices() dict
+  // DEPRECATED: use "forAppServices" instead. Microsoft Defender for App Service configuration
+  defenderForAppServices() @maturity("deprecated") dict
   // Microsoft Defender for App Service configuration
   forAppServices() azure.subscription.cloudDefenderService.defenderForAppServices
-  // Deprecated; use "forSqlServersOnMachines" instead. Microsoft Defender for SQL servers on machines configuration
-  defenderForSqlServersOnMachines() dict
+  // DEPRECATED: use "forSqlServersOnMachines" instead. Microsoft Defender for SQL servers on machines configuration
+  defenderForSqlServersOnMachines() @maturity("deprecated") dict
   // Microsoft Defender for SQL servers on machines configuration
   forSqlServersOnMachines() azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines
-  // Deprecated; use "forSqlDatabases" instead. Microsoft Defender for Azure SQL Databases configuration
-  defenderForSqlDatabases() dict
+  // DEPRECATED: use "forSqlDatabases" instead. Microsoft Defender for Azure SQL Databases configuration
+  defenderForSqlDatabases() @maturity("deprecated") dict
   // Microsoft Defender for Azure SQL Databases configuration
   forSqlDatabases() azure.subscription.cloudDefenderService.defenderForSqlDatabases
-  // Deprecated; use "forOpenSourceDatabases" instead. Microsoft Defender for open-source relational databases configuration
-  defenderForOpenSourceDatabases() dict
+  // DEPRECATED: use "forOpenSourceDatabases" instead. Microsoft Defender for open-source relational databases configuration
+  defenderForOpenSourceDatabases() @maturity("deprecated") dict
   // Microsoft Defender for open-source relational databases configuration
   forOpenSourceDatabases() azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases
-  // Deprecated; use "forCosmosDb" instead. Microsoft Defender for Azure Cosmos DB configuration
-  defenderForCosmosDb() dict
+  // DEPRECATED: use "forCosmosDb" instead. Microsoft Defender for Azure Cosmos DB configuration
+  defenderForCosmosDb() @maturity("deprecated") dict
   // Microsoft Defender for Azure Cosmos DB configuration
   forCosmosDb() azure.subscription.cloudDefenderService.defenderForCosmosDb
-  // Deprecated; use "forStorageAccounts" instead. Microsoft Defender for Storage Accounts configuration
-  defenderForStorageAccounts() dict
+  // DEPRECATED: use "forStorageAccounts" instead. Microsoft Defender for Storage Accounts configuration
+  defenderForStorageAccounts() @maturity("deprecated") dict
   // Microsoft Defender for Storage Accounts configuration
   forStorageAccounts() azure.subscription.cloudDefenderService.defenderForStorageAccounts
-  // Deprecated; use "forKeyVaults" instead. Microsoft Defender for Key Vault configuration
-  defenderForKeyVaults() dict
+  // DEPRECATED: use "forKeyVaults" instead. Microsoft Defender for Key Vault configuration
+  defenderForKeyVaults() @maturity("deprecated") dict
   // Microsoft Defender for Key Vault configuration
   forKeyVaults() azure.subscription.cloudDefenderService.defenderForKeyVaults
-  // Deprecated; use "forResourceManager" instead. Microsoft Defender for Resource Manager configuration
-  defenderForResourceManager() dict
+  // DEPRECATED: use "forResourceManager" instead. Microsoft Defender for Resource Manager configuration
+  defenderForResourceManager() @maturity("deprecated") dict
   // Microsoft Defender for Resource Manager configuration
   forResourceManager() azure.subscription.cloudDefenderService.defenderForResourceManager
   // Microsoft Defender for APIs configuration
   defenderForApis() azure.subscription.cloudDefenderService.defenderForApis
   // Microsoft Defender Cloud Security Posture Management (CSPM) configuration
   defenderCSPM() azure.subscription.cloudDefenderService.defenderCSPM
-  // Deprecated; use "forContainers" instead. Defender for Containers components configuration
-  defenderForContainers() dict
+  // DEPRECATED: use "forContainers" instead. Defender for Containers components configuration
+  defenderForContainers() @maturity("deprecated") dict
   // Defender for Containers components configuration
   forContainers() azure.subscription.cloudDefenderService.defenderForContainers
   // List of configured security contacts
@@ -4551,8 +4551,8 @@ private azure.subscription.policy.assignment @defaults("name enforcementMode") {
 private azure.subscription.iotService {
   // Subscription identifier
   subscriptionId string
-  // **Deprecated:** prefer `iotHubs()` for typed field access. Retained for backward compatibility.
-  hubs() []dict
+  // DEPRECATED: prefer `iotHubs()` for typed field access. Retained for backward compatibility.
+  hubs() @maturity("deprecated") []dict
   // Typed IoT hubs in the subscription
   iotHubs() []azure.subscription.iotService.iotHub
 }

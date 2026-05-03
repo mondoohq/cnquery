@@ -26,10 +26,10 @@ shodan.host @defaults("ip") {
   hostnames() []string
   // Open ports
   ports() []int
-  // Deprecated: use vulns() instead.
+  // DEPRECATED: use vulns() instead.
   // CVE IDs sourced from the host-level `vulns` map Shodan returns alongside
   // the host record (flat list, no CVSS metadata).
-  vulnerabilities() []string
+  vulnerabilities() @maturity("deprecated") []string
   // Detailed vulnerabilities aggregated from each service banner's `vulns`
   // map, with the highest CVSS score across banners reporting the same CVE.
   // May diverge from `vulnerabilities` because the two come from different
@@ -95,8 +95,8 @@ private shodan.host.service @defaults("port transport product version") {
   module string
   // Hostnames associated with the banner
   hostnames []string
-  // Deprecated: use vulns instead. CVE IDs associated with this banner
-  vulnerabilities []string
+  // DEPRECATED: use vulns instead. CVE IDs associated with this banner
+  vulnerabilities @maturity("deprecated") []string
   // Detailed vulnerabilities for this banner with CVSS and severity
   vulns []shodan.host.vulnerability
   // SSL/TLS data for the service (null if not present)

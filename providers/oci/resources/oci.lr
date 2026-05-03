@@ -400,8 +400,8 @@ private oci.network.vcn @defaults("name") {
   created time
   // VCN lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED, UPDATING)
   state string
-  // Deprecated: Use cidrBlocks instead
-  cidrBlock string
+  // DEPRECATED: Use cidrBlocks instead
+  cidrBlock @maturity("deprecated") string
   // IPv4 CIDR blocks for the VCN address space
   cidrBlocks []string
   // VCN domain name for DNS resolution
@@ -474,8 +474,8 @@ private oci.network.securityList @defaults("name") {
   egressSecurityRules []dict
   // Ingress security rules for inbound traffic
   ingressSecurityRules []dict
-  // Deprecated: Use vcn() instead
-  vcnId string
+  // DEPRECATED: Use vcn() instead
+  vcnId @maturity("deprecated") string
   // VCN that this security list belongs to
   vcn() oci.network.vcn
   // Free-form tags for resource management

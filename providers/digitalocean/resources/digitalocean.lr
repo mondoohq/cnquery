@@ -94,8 +94,8 @@ digitalocean.droplet @defaults("id name status") {
   privateIpv4 string
   // Tags
   tags []string
-  // Deprecated: use vpc() instead. VPC UUID
-  vpcUuid string
+  // DEPRECATED: use vpc() instead. VPC UUID
+  vpcUuid @maturity("deprecated") string
   // VPC the droplet is attached to
   vpc() digitalocean.vpc
   // Features (e.g., monitoring, backups)
@@ -126,8 +126,8 @@ digitalocean.firewall @defaults("id name status") {
   inboundRules []dict
   // Outbound rules
   outboundRules []dict
-  // Deprecated: use droplets() instead. Droplet IDs protected by this firewall
-  dropletIds []int
+  // DEPRECATED: use droplets() instead. Droplet IDs protected by this firewall
+  dropletIds @maturity("deprecated") []int
   // Droplets covered by this firewall (by direct ID or matching tag)
   droplets() []digitalocean.droplet
   // Tags used to target droplets
@@ -274,8 +274,8 @@ digitalocean.volume @defaults("id name sizeGigabytes") {
   createdAt time
   // Tags
   tags []string
-  // Deprecated: use droplets() instead. Droplet IDs attached to this volume
-  dropletIds []int
+  // DEPRECATED: use droplets() instead. Droplet IDs attached to this volume
+  dropletIds @maturity("deprecated") []int
   // Droplets this volume is attached to
   droplets() []digitalocean.droplet
 }
@@ -302,12 +302,12 @@ digitalocean.loadBalancer @defaults("id name status") {
   enableProxyProtocol bool
   // Enable backend keepalive
   enableBackendKeepalive bool
-  // Deprecated: use vpc() instead. VPC UUID
-  vpcUuid string
+  // DEPRECATED: use vpc() instead. VPC UUID
+  vpcUuid @maturity("deprecated") string
   // VPC the load balancer is attached to
   vpc() digitalocean.vpc
-  // Deprecated: use droplets() instead. Droplet IDs
-  dropletIds []int
+  // DEPRECATED: use droplets() instead. Droplet IDs
+  dropletIds @maturity("deprecated") []int
   // Droplets attached to this load balancer
   droplets() []digitalocean.droplet
   // Tags
@@ -374,8 +374,8 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   clusterSubnet string
   // Service subnet
   serviceSubnet string
-  // Deprecated: use vpc() instead. VPC UUID
-  vpcUuid string
+  // DEPRECATED: use vpc() instead. VPC UUID
+  vpcUuid @maturity("deprecated") string
   // VPC the cluster is attached to
   vpc() digitalocean.vpc
   // Auto-upgrade enabled
