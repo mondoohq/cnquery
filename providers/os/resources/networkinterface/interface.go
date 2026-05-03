@@ -387,15 +387,15 @@ func (i *BSDInterfaceHandler) ParseBSD(r io.Reader) ([]Interface, error) {
 			continue
 		}
 
-		switch {
+		switch fields[0] {
 		// MAC: "ether AA:..." (FreeBSD/DragonFly), "lladdr AA:..." (OpenBSD),
 		// "address: AA:..." (NetBSD)
-		case fields[0] == "ether", fields[0] == "lladdr", fields[0] == "address:":
+		case "ether", "lladdr", "address:":
 			if mac, err := net.ParseMAC(fields[1]); err == nil {
 				cur.HardwareAddr = mac
 			}
 
-		case fields[0] == "inet", fields[0] == "inet6":
+		case "inet", "inet6":
 			addr := fields[1]
 			// strip CIDR suffix (NetBSD: "inet 1.2.3.4/24")
 			if k := strings.Index(addr, "/"); k != -1 {
