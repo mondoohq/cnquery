@@ -159,10 +159,12 @@ func collectRubyPackages(afs *afero.Afero, fs afero.Fs, path string) (*languages
 	}
 
 	if isDir {
-		// Prefer Gemfile.lock (resolved versions)
-		lockPath := filepath.Join(path, "Gemfile.lock")
-		if exists, _ := afs.Exists(lockPath); exists {
-			return collectFromGemfileLock(afs, lockPath)
+		// Prefer Gemfile.lock or gems.locked (resolved versions)
+		for _, lockName := range []string{"Gemfile.lock", "gems.locked"} {
+			lockPath := filepath.Join(path, lockName)
+			if exists, _ := afs.Exists(lockPath); exists {
+				return collectFromGemfileLock(afs, lockPath)
+			}
 		}
 
 		// Fall back to .gemspec files
@@ -178,7 +180,7 @@ func collectRubyPackages(afs *afero.Afero, fs afero.Fs, path string) (*languages
 		return nil, nil, nil, nil
 	}
 
-	if strings.HasSuffix(path, "Gemfile.lock") {
+	if strings.HasSuffix(path, "Gemfile.lock") || strings.HasSuffix(path, "gems.locked") {
 		return collectFromGemfileLock(afs, path)
 	}
 	if strings.HasSuffix(path, ".gemspec") {
