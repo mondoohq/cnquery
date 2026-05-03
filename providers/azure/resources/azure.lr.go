@@ -135,7 +135,6 @@ const (
 	ResourceAzureSubscriptionSqlServiceServerDevOpsAuditingSetting                               string = "azure.subscription.sqlService.server.devOpsAuditingSetting"
 	ResourceAzureSubscriptionSqlServiceServerKey                                                 string = "azure.subscription.sqlService.server.key"
 	ResourceAzureSubscriptionSqlServiceServerOutboundFirewallRule                                string = "azure.subscription.sqlService.server.outboundFirewallRule"
-	ResourceAzureSubscriptionSqlServiceServerPrivateEndpointConnection                           string = "azure.subscription.sqlService.server.privateEndpointConnection"
 	ResourceAzureSubscriptionSqlServiceServerFailoverGroup                                       string = "azure.subscription.sqlService.server.failoverGroup"
 	ResourceAzureSubscriptionSqlServiceServerReplicationLink                                     string = "azure.subscription.sqlService.server.replicationLink"
 	ResourceAzureSubscriptionSqlServiceVulnerabilityAssessmentScan                               string = "azure.subscription.sqlService.vulnerabilityAssessmentScan"
@@ -723,7 +722,7 @@ func init() {
 			Create: createAzureSubscriptionSqlServiceServerAdministrator,
 		},
 		"azure.subscription.sqlService.database": {
-			// to override args, implement: initAzureSubscriptionSqlServiceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionSqlServiceDatabase,
 			Create: createAzureSubscriptionSqlServiceDatabase,
 		},
 		"azure.subscription.sqlService.database.advancedthreatprotection": {
@@ -769,10 +768,6 @@ func init() {
 		"azure.subscription.sqlService.server.outboundFirewallRule": {
 			// to override args, implement: initAzureSubscriptionSqlServiceServerOutboundFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionSqlServiceServerOutboundFirewallRule,
-		},
-		"azure.subscription.sqlService.server.privateEndpointConnection": {
-			// to override args, implement: initAzureSubscriptionSqlServiceServerPrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAzureSubscriptionSqlServiceServerPrivateEndpointConnection,
 		},
 		"azure.subscription.sqlService.server.failoverGroup": {
 			// to override args, implement: initAzureSubscriptionSqlServiceServerFailoverGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4979,7 +4974,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetOutboundFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.server.outboundFirewallRule")))
 	},
 	"azure.subscription.sqlService.server.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.server.privateEndpointConnection")))
+		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
 	},
 	"azure.subscription.sqlService.server.failoverGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetFailoverGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.server.failoverGroup")))
@@ -5350,24 +5345,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.server.outboundFirewallRule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerOutboundFirewallRule).GetProvisioningState()).ToDataRes(types.String)
 	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).GetId()).ToDataRes(types.String)
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).GetName()).ToDataRes(types.String)
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.type": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).GetType()).ToDataRes(types.String)
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.privateEndpointId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).GetPrivateEndpointId()).ToDataRes(types.String)
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.provisioningState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).GetProvisioningState()).ToDataRes(types.String)
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.privateLinkServiceConnectionState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).GetPrivateLinkServiceConnectionState()).ToDataRes(types.Dict)
-	},
 	"azure.subscription.sqlService.server.failoverGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetId()).ToDataRes(types.String)
 	},
@@ -5396,7 +5373,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadOnlyEndpoint()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.sqlService.server.failoverGroup.databases": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetDatabases()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetDatabases()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.database")))
 	},
 	"azure.subscription.sqlService.server.replicationLink.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerReplicationLink).GetId()).ToDataRes(types.String)
@@ -15070,34 +15047,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.sqlService.server.outboundFirewallRule.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceServerOutboundFirewallRule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).__id, ok = v.Value.(string)
-		return
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.privateEndpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).PrivateEndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.sqlService.server.privateEndpointConnection.privateLinkServiceConnectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection).PrivateLinkServiceConnectionState, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sqlService.server.failoverGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34913,85 +34862,11 @@ func (c *mqlAzureSubscriptionSqlServiceServerOutboundFirewallRule) GetProvisioni
 	return &c.ProvisioningState
 }
 
-// mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection for the azure.subscription.sqlService.server.privateEndpointConnection resource
-type mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnectionInternal it will be used here
-	Id                                plugin.TValue[string]
-	Name                              plugin.TValue[string]
-	Type                              plugin.TValue[string]
-	PrivateEndpointId                 plugin.TValue[string]
-	ProvisioningState                 plugin.TValue[string]
-	PrivateLinkServiceConnectionState plugin.TValue[any]
-}
-
-// createAzureSubscriptionSqlServiceServerPrivateEndpointConnection creates a new instance of this resource
-func createAzureSubscriptionSqlServiceServerPrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("azure.subscription.sqlService.server.privateEndpointConnection", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection) MqlName() string {
-	return "azure.subscription.sqlService.server.privateEndpointConnection"
-}
-
-func (c *mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
-func (c *mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection) GetType() *plugin.TValue[string] {
-	return &c.Type
-}
-
-func (c *mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection) GetPrivateEndpointId() *plugin.TValue[string] {
-	return &c.PrivateEndpointId
-}
-
-func (c *mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection) GetProvisioningState() *plugin.TValue[string] {
-	return &c.ProvisioningState
-}
-
-func (c *mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection) GetPrivateLinkServiceConnectionState() *plugin.TValue[any] {
-	return &c.PrivateLinkServiceConnectionState
-}
-
 // mqlAzureSubscriptionSqlServiceServerFailoverGroup for the azure.subscription.sqlService.server.failoverGroup resource
 type mqlAzureSubscriptionSqlServiceServerFailoverGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionSqlServiceServerFailoverGroupInternal it will be used here
+	mqlAzureSubscriptionSqlServiceServerFailoverGroupInternal
 	Id                plugin.TValue[string]
 	Name              plugin.TValue[string]
 	Location          plugin.TValue[string]
@@ -35078,7 +34953,19 @@ func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadOnlyEndpoint(
 }
 
 func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetDatabases() *plugin.TValue[[]any] {
-	return &c.Databases
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService.server.failoverGroup", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.databases()
+	})
 }
 
 // mqlAzureSubscriptionSqlServiceServerReplicationLink for the azure.subscription.sqlService.server.replicationLink resource

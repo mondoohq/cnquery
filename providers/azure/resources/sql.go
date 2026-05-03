@@ -28,6 +28,10 @@ type mqlAzureSubscriptionSqlServiceServerInternal struct {
 	encryptionProtectorErr  error
 }
 
+type mqlAzureSubscriptionSqlServiceServerFailoverGroupInternal struct {
+	cacheDatabaseIds []string
+}
+
 func (a *mqlAzureSubscriptionSqlServiceServer) fetchEncryptionProtector() (*sql.EncryptionProtectorsClientGetResponse, error) {
 	a.encryptionProtectorOnce.Do(func() {
 		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
@@ -1045,6 +1049,42 @@ func initAzureSubscriptionSqlServiceServer(runtime *plugin.Runtime, args map[str
 	return nil, nil, errors.New("azure sql database server does not exist")
 }
 
+func initAzureSubscriptionSqlServiceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	dbId := args["id"].Value.(string)
+	rid, err := ParseResourceID(dbId)
+	if err != nil {
+		return args, nil, nil
+	}
+	serverName, err := rid.Component("servers")
+	if err != nil {
+		return args, nil, nil
+	}
+	serverId := "/subscriptions/" + rid.SubscriptionID + "/resourceGroups/" + rid.ResourceGroup + "/providers/Microsoft.Sql/servers/" + serverName
+	serverRes, err := NewResource(runtime, "azure.subscription.sqlService.server",
+		map[string]*llx.RawData{"id": llx.StringData(serverId)})
+	if err != nil {
+		return args, nil, nil
+	}
+	server := serverRes.(*mqlAzureSubscriptionSqlServiceServer)
+	dbs := server.GetDatabases()
+	if dbs.Error != nil {
+		return args, nil, nil
+	}
+	for _, entry := range dbs.Data {
+		db := entry.(*mqlAzureSubscriptionSqlServiceDatabase)
+		if db.Id.Data == dbId {
+			return args, db, nil
+		}
+	}
+	return args, nil, nil
+}
+
 // ---------------------------------------------------------------------------
 // __id methods for new SQL security resources
 // ---------------------------------------------------------------------------
@@ -1074,10 +1114,6 @@ func (a *mqlAzureSubscriptionSqlServiceServerKey) id() (string, error) {
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServerOutboundFirewallRule) id() (string, error) {
-	return a.Id.Data, nil
-}
-
-func (a *mqlAzureSubscriptionSqlServiceServerPrivateEndpointConnection) id() (string, error) {
 	return a.Id.Data, nil
 }
 
@@ -1244,37 +1280,30 @@ func (a *mqlAzureSubscriptionSqlServiceServer) encryptionProtectorConfig() (*mql
 	}
 
 	var (
-		serverKeyName, serverKeyType, uri, thumbprint, subregion string
-		autoRotation                                             bool
+		serverKeyName, uri, thumbprint, subregion *string
+		serverKeyType                             string
+		autoRotation                              *bool
 	)
 	if resp.Properties != nil {
-		if resp.Properties.ServerKeyName != nil {
-			serverKeyName = *resp.Properties.ServerKeyName
-		}
+		serverKeyName = resp.Properties.ServerKeyName
 		if resp.Properties.ServerKeyType != nil {
 			serverKeyType = string(*resp.Properties.ServerKeyType)
 		}
-		if resp.Properties.URI != nil {
-			uri = *resp.Properties.URI
-		}
-		if resp.Properties.Thumbprint != nil {
-			thumbprint = *resp.Properties.Thumbprint
-		}
-		if resp.Properties.Subregion != nil {
-			subregion = *resp.Properties.Subregion
-		}
-		autoRotation = convert.ToValue(resp.Properties.AutoRotationEnabled)
+		uri = resp.Properties.URI
+		thumbprint = resp.Properties.Thumbprint
+		subregion = resp.Properties.Subregion
+		autoRotation = resp.Properties.AutoRotationEnabled
 	}
 
 	res, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.encryptionProtectorConfig",
 		map[string]*llx.RawData{
 			"id":                  llx.StringDataPtr(resp.ID),
-			"serverKeyName":       llx.StringData(serverKeyName),
+			"serverKeyName":       llx.StringDataPtr(serverKeyName),
 			"serverKeyType":       llx.StringData(serverKeyType),
-			"uri":                 llx.StringData(uri),
-			"thumbprint":          llx.StringData(thumbprint),
-			"subregion":           llx.StringData(subregion),
-			"autoRotationEnabled": llx.BoolData(autoRotation),
+			"uri":                 llx.StringDataPtr(uri),
+			"thumbprint":          llx.StringDataPtr(thumbprint),
+			"subregion":           llx.StringDataPtr(subregion),
+			"autoRotationEnabled": llx.BoolDataPtr(autoRotation),
 		})
 	if err != nil {
 		return nil, err
@@ -1619,33 +1648,44 @@ func (a *mqlAzureSubscriptionSqlServiceServer) privateEndpointConnections() ([]a
 			return nil, err
 		}
 		for _, pec := range page.Value {
-			var (
-				peId, provisioningState string
-				connState               any
-			)
+			args := map[string]*llx.RawData{
+				"__id": llx.StringDataPtr(pec.ID),
+				"id":   llx.StringDataPtr(pec.ID),
+				"name": llx.StringDataPtr(pec.Name),
+				"type": llx.StringDataPtr(pec.Type),
+			}
 			if pec.Properties != nil {
-				if pec.Properties.PrivateEndpoint != nil && pec.Properties.PrivateEndpoint.ID != nil {
-					peId = *pec.Properties.PrivateEndpoint.ID
+				propsMap, err := convert.JsonToDict(pec.Properties)
+				if err != nil {
+					return nil, err
+				}
+				args["properties"] = llx.DictData(propsMap)
+				if pec.Properties.PrivateEndpoint != nil {
+					args["privateEndpointId"] = llx.StringDataPtr(pec.Properties.PrivateEndpoint.ID)
 				}
 				if pec.Properties.ProvisioningState != nil {
-					provisioningState = string(*pec.Properties.ProvisioningState)
+					args["provisioningState"] = llx.StringData(string(*pec.Properties.ProvisioningState))
 				}
 				if pec.Properties.PrivateLinkServiceConnectionState != nil {
-					if d, derr := convert.JsonToDict(pec.Properties.PrivateLinkServiceConnectionState); derr == nil {
-						connState = d
+					stateArgs := map[string]*llx.RawData{}
+					if pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired != nil {
+						stateArgs["actionsRequired"] = llx.StringData(string(*pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired))
 					}
+					if pec.Properties.PrivateLinkServiceConnectionState.Description != nil {
+						stateArgs["description"] = llx.StringDataPtr(pec.Properties.PrivateLinkServiceConnectionState.Description)
+					}
+					if pec.Properties.PrivateLinkServiceConnectionState.Status != nil {
+						stateArgs["status"] = llx.StringData(string(*pec.Properties.PrivateLinkServiceConnectionState.Status))
+					}
+					stateRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+					if err != nil {
+						return nil, err
+					}
+					args["privateLinkServiceConnectionState"] = llx.ResourceData(stateRes, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState)
 				}
 			}
 
-			mqlConn, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.privateEndpointConnection",
-				map[string]*llx.RawData{
-					"id":                                llx.StringDataPtr(pec.ID),
-					"name":                              llx.StringDataPtr(pec.Name),
-					"type":                              llx.StringDataPtr(pec.Type),
-					"privateEndpointId":                 llx.StringData(peId),
-					"provisioningState":                 llx.StringData(provisioningState),
-					"privateLinkServiceConnectionState": llx.DictData(connState),
-				})
+			mqlConn, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, args)
 			if err != nil {
 				return nil, err
 			}
@@ -1690,7 +1730,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) failoverGroups() ([]any, error) {
 				partnerServers                    []any
 				readWriteEndpoint                 any
 				readOnlyEndpoint                  any
-				databaseIds                       []any
+				databaseIds                       []string
 			)
 			if fg.Properties != nil {
 				if fg.Properties.ReplicationRole != nil {
@@ -1712,7 +1752,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) failoverGroups() ([]any, error) {
 						readOnlyEndpoint = d
 					}
 				}
-				databaseIds = llx.TArr2Raw(convert.ToListFromPtrs(fg.Properties.Databases))
+				databaseIds = convert.ToListFromPtrs(fg.Properties.Databases)
 			}
 
 			mqlFG, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.failoverGroup",
@@ -1726,13 +1766,26 @@ func (a *mqlAzureSubscriptionSqlServiceServer) failoverGroups() ([]any, error) {
 					"partnerServers":    llx.ArrayData(partnerServers, types.Dict),
 					"readWriteEndpoint": llx.DictData(readWriteEndpoint),
 					"readOnlyEndpoint":  llx.DictData(readOnlyEndpoint),
-					"databases":         llx.ArrayData(databaseIds, types.String),
 				})
 			if err != nil {
 				return nil, err
 			}
+			mqlFG.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).cacheDatabaseIds = databaseIds
 			res = append(res, mqlFG)
 		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionSqlServiceServerFailoverGroup) databases() ([]any, error) {
+	res := make([]any, 0, len(a.cacheDatabaseIds))
+	for _, dbId := range a.cacheDatabaseIds {
+		mqlDb, err := NewResource(a.MqlRuntime, "azure.subscription.sqlService.database",
+			map[string]*llx.RawData{"id": llx.StringData(dbId)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlDb)
 	}
 	return res, nil
 }
@@ -2377,6 +2430,13 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) ledgerDigestUpload() (*mqlAzure
 	}
 	resp, err := client.Get(ctx, rid.ResourceGroup, server, database, sql.LedgerDigestUploadsNameCurrent, nil)
 	if err != nil {
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+			// Azure returns 404 from LedgerDigestUploads/Current on databases without ledger configured (the common case).
+			log.Debug().Str("database", database).Msg("ledger digest upload not configured for this database")
+			a.LedgerDigestUpload.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -2432,6 +2492,14 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) geoBackupPolicy() (*mqlAzureSub
 	}
 	resp, err := client.Get(ctx, rid.ResourceGroup, server, database, sql.GeoBackupPolicyNameDefault, nil)
 	if err != nil {
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+			// Azure returns 404 from GeoBackupPolicies/Default on databases where geo-backup does not apply
+			// (e.g. Hyperscale, Serverless, certain SKUs).
+			log.Debug().Str("database", database).Msg("geo backup policy unavailable for this database")
+			a.GeoBackupPolicy.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 

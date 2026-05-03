@@ -2410,13 +2410,6 @@ azure.subscription.sqlService.server.outboundFirewallRule.name 13.8.2
 azure.subscription.sqlService.server.outboundFirewallRule.provisioningState 13.8.2
 azure.subscription.sqlService.server.outboundFirewallRule.type 13.8.2
 azure.subscription.sqlService.server.outboundFirewallRules 13.8.2
-azure.subscription.sqlService.server.privateEndpointConnection 13.8.2
-azure.subscription.sqlService.server.privateEndpointConnection.id 13.8.2
-azure.subscription.sqlService.server.privateEndpointConnection.name 13.8.2
-azure.subscription.sqlService.server.privateEndpointConnection.privateEndpointId 13.8.2
-azure.subscription.sqlService.server.privateEndpointConnection.privateLinkServiceConnectionState 13.8.2
-azure.subscription.sqlService.server.privateEndpointConnection.provisioningState 13.8.2
-azure.subscription.sqlService.server.privateEndpointConnection.type 13.8.2
 azure.subscription.sqlService.server.privateEndpointConnections 13.8.2
 azure.subscription.sqlService.server.properties 9.0.1
 azure.subscription.sqlService.server.publicNetworkAccess 11.4.28

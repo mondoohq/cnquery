@@ -2772,7 +2772,7 @@ private azure.subscription.sqlService.server @defaults("name location properties
   // Outbound firewall rules (allowed FQDNs for data egress)
   outboundFirewallRules() []azure.subscription.sqlService.server.outboundFirewallRule
   // Private Link endpoint connections to the server
-  privateEndpointConnections() []azure.subscription.sqlService.server.privateEndpointConnection
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Auto-failover groups configured on the server
   failoverGroups() []azure.subscription.sqlService.server.failoverGroup
   // Geo-replication links from databases on this server to partners
@@ -2871,7 +2871,7 @@ private azure.subscription.sqlService.database @defaults("name edition zoneRedun
   transparentDataEncryption() @maturity("deprecated") dict
   // SQL database advisor
   advisor() []dict
-  // DEPRECATED: use advancedThreatProtection instead
+  // DEPRECATED: use securityAlertPolicy() instead
   threatDetectionPolicy() @maturity("deprecated") dict
   // DEPRECATED: Azure SQL DB has no per-database connection policy; use server.connectionType instead
   connectionPolicy() @maturity("deprecated") dict
@@ -3077,22 +3077,6 @@ private azure.subscription.sqlService.server.outboundFirewallRule @defaults("nam
   provisioningState string
 }
 
-// Azure SQL Database server private endpoint connection
-private azure.subscription.sqlService.server.privateEndpointConnection @defaults("name provisioningState") {
-  // Resource ID
-  id string
-  // Connection name
-  name string
-  // Resource type
-  type string
-  // ID of the private endpoint resource linked to the server
-  privateEndpointId string
-  // Provisioning state of the connection
-  provisioningState string
-  // Connection state object: status (Approved/Pending/Rejected), description, actionsRequired
-  privateLinkServiceConnectionState dict
-}
-
 // Azure SQL Database auto-failover group
 private azure.subscription.sqlService.server.failoverGroup @defaults("name replicationRole replicationState") {
   // Resource ID
@@ -3113,8 +3097,8 @@ private azure.subscription.sqlService.server.failoverGroup @defaults("name repli
   readWriteEndpoint dict
   // Read-only endpoint configuration ({failoverPolicy, targetServer})
   readOnlyEndpoint dict
-  // Database resource IDs included in the failover group
-  databases []string
+  // Databases included in the failover group
+  databases() []azure.subscription.sqlService.database
 }
 
 // Azure SQL Database geo-replication link
