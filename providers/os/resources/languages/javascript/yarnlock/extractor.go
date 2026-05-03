@@ -15,9 +15,15 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// yarnLockBom wraps a parsed yarnLock with file evidence.
+type yarnLockBom struct {
+	packages yarnLock
+	evidence []string
+}
+
 var (
 	_ languages.Extractor = (*Extractor)(nil)
-	_ languages.Bom       = (*yarnLock)(nil)
+	_ languages.Bom       = (*yarnLockBom)(nil)
 )
 
 type Extractor struct{}
@@ -45,40 +51,47 @@ func (p *Extractor) Parse(r io.Reader, filename string) (languages.Bom, error) {
 		return nil, err
 	}
 
-	var yarnLock yarnLock
+	var lock yarnLock
 
-	err := yaml.Unmarshal(b.Bytes(), &yarnLock)
+	err := yaml.Unmarshal(b.Bytes(), &lock)
 	if err != nil {
 		return nil, err
 	}
 
-	return &yarnLock, nil
+	var result yarnLockBom
+	result.packages = lock
+	if filename != "" {
+		result.evidence = append(result.evidence, filename)
+	}
+
+	return &result, nil
 }
 
-func (p *yarnLock) Root() *languages.Package {
+func (p *yarnLockBom) Root() *languages.Package {
 	// we don't have a root package in yarn.lock
 	return nil
 }
 
-func (p *yarnLock) Direct() languages.Packages {
+func (p *yarnLockBom) Direct() languages.Packages {
 	return nil
 }
 
-func (p *yarnLock) Transitive() languages.Packages {
+func (p *yarnLockBom) Transitive() languages.Packages {
 	var transitive languages.Packages
 
 	// add all dependencies
-	for k, v := range *p {
+	for k, v := range p.packages {
 		name, _, err := parseYarnPackageName(k)
 		if err != nil {
 			log.Error().Str("name", name).Msg("cannot parse yarn package name")
 			continue
 		}
 		transitive = append(transitive, &languages.Package{
-			Name:    name,
-			Version: v.Version,
-			Purl:    javascript.NewPackageUrl(name, v.Version),
-			Cpes:    javascript.NewCpes(name, v.Version),
+			Name:         name,
+			Version:      v.Version,
+			Purl:         javascript.NewPackageUrl(name, v.Version),
+			Cpes:         javascript.NewCpes(name, v.Version),
+			EvidenceList: javascript.NewEvidenceList(p.evidence),
 		})
 	}
 

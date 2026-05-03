@@ -22,8 +22,10 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/fsutil"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/bunlock"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/packagejson"
 	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/packagelockjson"
+	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript/pnpmlock"
 	"go.mondoo.com/mql/v13/types"
 )
 
@@ -202,9 +204,15 @@ func hasLockfile(runtime *plugin.Runtime, fs afero.Fs, path string) bool {
 
 	searchPaths := []string{}
 	if isDir {
-		// check if there is a package-lock.json or package.json file
-		searchPaths = append(searchPaths, filepath.Join(path, "/package-lock.json"))
-	} else if strings.HasSuffix(path, "package-lock.json") {
+		// check if there is a package-lock.json, pnpm-lock.yaml, bun.lock, or package.json file
+		searchPaths = append(searchPaths,
+			filepath.Join(path, "/package-lock.json"),
+			filepath.Join(path, "/pnpm-lock.yaml"),
+			filepath.Join(path, "/bun.lock"),
+		)
+	} else if strings.HasSuffix(path, "package-lock.json") ||
+		strings.HasSuffix(path, "pnpm-lock.yaml") ||
+		strings.HasSuffix(path, "bun.lock") {
 		searchPaths = append(searchPaths, path)
 	}
 
@@ -229,9 +237,18 @@ func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (lang
 
 	searchPaths := []string{}
 	if isDir {
-		// check if there is a package-lock.json or package.json file
-		searchPaths = append(searchPaths, filepath.Join(path, "/package-lock.json"), filepath.Join(path, "/package.json"))
+		// check if there is a lockfile or package.json file
+		searchPaths = append(searchPaths,
+			filepath.Join(path, "/package-lock.json"),
+			filepath.Join(path, "/pnpm-lock.yaml"),
+			filepath.Join(path, "/bun.lock"),
+			filepath.Join(path, "/package.json"),
+		)
 	} else if strings.HasSuffix(path, "package-lock.json") {
+		searchPaths = append(searchPaths, path)
+	} else if strings.HasSuffix(path, "pnpm-lock.yaml") {
+		searchPaths = append(searchPaths, path)
+	} else if strings.HasSuffix(path, "bun.lock") {
 		searchPaths = append(searchPaths, path)
 	} else if strings.HasSuffix(path, "package.json") {
 		searchPaths = append(searchPaths, path)
@@ -266,6 +283,10 @@ func collectNpmPackages(runtime *plugin.Runtime, fs afero.Fs, path string) (lang
 
 		if strings.HasSuffix(searchPath, "package-lock.json") {
 			extractor = &packagelockjson.Extractor{}
+		} else if strings.HasSuffix(searchPath, "pnpm-lock.yaml") {
+			extractor = &pnpmlock.Extractor{}
+		} else if strings.HasSuffix(searchPath, "bun.lock") {
+			extractor = &bunlock.Extractor{}
 		} else if strings.HasSuffix(searchPath, "package.json") {
 			extractor = &packagejson.Extractor{}
 		}

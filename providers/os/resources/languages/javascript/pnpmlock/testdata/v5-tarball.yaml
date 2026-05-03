@@ -1,0 +1,11 @@
+lockfileVersion: '5.4'
+
+packages:
+
+  /express/4.18.2:
+    resolution: {integrity: sha512-abc123}
+
+  github.com/my-org/my-package/267087deadbeef:
+    name: '@my-scope/my-package'
+    version: 1.0.0
+    resolution: {tarball: https://codeload.github.com/my-org/my-package/tar.gz/267087deadbeef}
