@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.20.0",
-  "generated_at": "2026-05-01T13:11:17-07:00",
+  "generated_at": "2026-05-01T15:26:02-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -23,9 +23,16 @@
     "appmesh:ListVirtualNodes",
     "appmesh:ListVirtualRouters",
     "appmesh:ListVirtualServices",
+    "appstream:DescribeApplications",
+    "appstream:DescribeEntitlements",
     "appstream:DescribeFleets",
     "appstream:DescribeImageBuilders",
+    "appstream:DescribeImages",
+    "appstream:DescribeSessions",
     "appstream:DescribeStacks",
+    "appstream:DescribeUsers",
+    "appstream:ListAssociatedFleets",
+    "appstream:ListAssociatedStacks",
     "appstream:ListTagsForResource",
     "athena:BatchGetNamedQuery",
     "athena:GetDataCatalog",
@@ -792,6 +799,18 @@
       "source_file": "aws_appmesh.go"
     },
     {
+      "permission": "appstream:DescribeApplications",
+      "service": "appstream",
+      "action": "DescribeApplications",
+      "source_file": "aws_appstream.go"
+    },
+    {
+      "permission": "appstream:DescribeEntitlements",
+      "service": "appstream",
+      "action": "DescribeEntitlements",
+      "source_file": "aws_appstream.go"
+    },
+    {
       "permission": "appstream:DescribeFleets",
       "service": "appstream",
       "action": "DescribeFleets",
@@ -804,9 +823,39 @@
       "source_file": "aws_appstream.go"
     },
     {
+      "permission": "appstream:DescribeImages",
+      "service": "appstream",
+      "action": "DescribeImages",
+      "source_file": "aws_appstream.go"
+    },
+    {
+      "permission": "appstream:DescribeSessions",
+      "service": "appstream",
+      "action": "DescribeSessions",
+      "source_file": "aws_appstream.go"
+    },
+    {
       "permission": "appstream:DescribeStacks",
       "service": "appstream",
       "action": "DescribeStacks",
+      "source_file": "aws_appstream.go"
+    },
+    {
+      "permission": "appstream:DescribeUsers",
+      "service": "appstream",
+      "action": "DescribeUsers",
+      "source_file": "aws_appstream.go"
+    },
+    {
+      "permission": "appstream:ListAssociatedFleets",
+      "service": "appstream",
+      "action": "ListAssociatedFleets",
+      "source_file": "aws_appstream.go"
+    },
+    {
+      "permission": "appstream:ListAssociatedStacks",
+      "service": "appstream",
+      "action": "ListAssociatedStacks",
       "source_file": "aws_appstream.go"
     },
     {

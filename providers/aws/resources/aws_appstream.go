@@ -510,3 +510,528 @@ func (a *mqlAwsAppstreamImageBuilder) tags() (map[string]any, error) {
 	}
 	return toInterfaceMap(resp.Tags), nil
 }
+
+// Applications
+
+func (a *mqlAwsAppstream) applications() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	pool := jobpool.CreatePool(a.getApplications(conn), 5)
+	pool.Run()
+	if pool.HasErrors() {
+		return nil, pool.GetErrors()
+	}
+	for i := range pool.Jobs {
+		if pool.Jobs[i].Result != nil {
+			res = append(res, pool.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAppstream) getApplications(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("appstream>getApplications>region %s", region)
+			svc := conn.Appstream(region)
+			res := []any{}
+			var nextToken *string
+			for {
+				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+				resp, err := svc.DescribeApplications(ctx, &appstream.DescribeApplicationsInput{NextToken: nextToken})
+				cancel()
+				if err != nil {
+					if isAppstreamRegionError(err) {
+						log.Debug().Str("region", region).Msg("error accessing region for AWS AppStream applications API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, app := range resp.Applications {
+					mqlApp, err := newMqlAwsAppstreamApplication(a.MqlRuntime, region, app)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlApp)
+				}
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsAppstreamApplication(runtime *plugin.Runtime, region string, app appstreamtypes.Application) (*mqlAwsAppstreamApplication, error) {
+	platforms := []any{}
+	for _, p := range app.Platforms {
+		platforms = append(platforms, string(p))
+	}
+	resource, err := CreateResource(runtime, "aws.appstream.application",
+		map[string]*llx.RawData{
+			"__id":             llx.StringDataPtr(app.Arn),
+			"arn":              llx.StringDataPtr(app.Arn),
+			"name":             llx.StringDataPtr(app.Name),
+			"displayName":      llx.StringDataPtr(app.DisplayName),
+			"description":      llx.StringDataPtr(app.Description),
+			"enabled":          llx.BoolDataPtr(app.Enabled),
+			"launchPath":       llx.StringDataPtr(app.LaunchPath),
+			"launchParameters": llx.StringDataPtr(app.LaunchParameters),
+			"workingDirectory": llx.StringDataPtr(app.WorkingDirectory),
+			"platforms":        llx.ArrayData(platforms, types.String),
+			"instanceFamilies": llx.ArrayData(toInterfaceArr(app.InstanceFamilies), types.String),
+			"metadata":         llx.MapData(toInterfaceMap(app.Metadata), types.String),
+			"appBlockArn":      llx.StringDataPtr(app.AppBlockArn),
+			"createdAt":        llx.TimeDataPtr(app.CreatedTime),
+			"region":           llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsAppstreamApplication), nil
+}
+
+func (a *mqlAwsAppstreamApplication) id() (string, error) { return a.Arn.Data, nil }
+
+// Images
+
+func (a *mqlAwsAppstream) images() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	pool := jobpool.CreatePool(a.getImages(conn), 5)
+	pool.Run()
+	if pool.HasErrors() {
+		return nil, pool.GetErrors()
+	}
+	for i := range pool.Jobs {
+		if pool.Jobs[i].Result != nil {
+			res = append(res, pool.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAppstream) getImages(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("appstream>getImages>region %s", region)
+			svc := conn.Appstream(region)
+			res := []any{}
+			var nextToken *string
+			for {
+				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+				resp, err := svc.DescribeImages(ctx, &appstream.DescribeImagesInput{NextToken: nextToken})
+				cancel()
+				if err != nil {
+					if isAppstreamRegionError(err) {
+						log.Debug().Str("region", region).Msg("error accessing region for AWS AppStream images API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, img := range resp.Images {
+					mqlImg, err := newMqlAwsAppstreamImage(a.MqlRuntime, region, img)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlImg)
+				}
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsAppstreamImage(runtime *plugin.Runtime, region string, img appstreamtypes.Image) (*mqlAwsAppstreamImage, error) {
+	resource, err := CreateResource(runtime, "aws.appstream.image",
+		map[string]*llx.RawData{
+			"__id":                        llx.StringDataPtr(img.Arn),
+			"arn":                         llx.StringDataPtr(img.Arn),
+			"name":                        llx.StringDataPtr(img.Name),
+			"displayName":                 llx.StringDataPtr(img.DisplayName),
+			"description":                 llx.StringDataPtr(img.Description),
+			"baseImageArn":                llx.StringDataPtr(img.BaseImageArn),
+			"state":                       llx.StringData(string(img.State)),
+			"visibility":                  llx.StringData(string(img.Visibility)),
+			"platform":                    llx.StringData(string(img.Platform)),
+			"imageBuilderName":            llx.StringDataPtr(img.ImageBuilderName),
+			"imageBuilderSupported":       llx.BoolDataPtr(img.ImageBuilderSupported),
+			"dynamicAppProvidersEnabled":  llx.StringData(string(img.DynamicAppProvidersEnabled)),
+			"appstreamAgentVersion":       llx.StringDataPtr(img.AppstreamAgentVersion),
+			"createdAt":                   llx.TimeDataPtr(img.CreatedTime),
+			"publicBaseImageReleasedDate": llx.TimeDataPtr(img.PublicBaseImageReleasedDate),
+			"region":                      llx.StringData(region),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsAppstreamImage), nil
+}
+
+func (a *mqlAwsAppstreamImage) id() (string, error) { return a.Arn.Data, nil }
+
+func (a *mqlAwsAppstreamImage) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Appstream(a.Region.Data)
+	ctx := context.Background()
+	resp, err := svc.ListTagsForResource(ctx, &appstream.ListTagsForResourceInput{
+		ResourceArn: aws.String(a.Arn.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return toInterfaceMap(resp.Tags), nil
+}
+
+// Users (USERPOOL only)
+
+func (a *mqlAwsAppstream) users() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	pool := jobpool.CreatePool(a.getUsers(conn), 5)
+	pool.Run()
+	if pool.HasErrors() {
+		return nil, pool.GetErrors()
+	}
+	for i := range pool.Jobs {
+		if pool.Jobs[i].Result != nil {
+			res = append(res, pool.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAppstream) getUsers(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("appstream>getUsers>region %s", region)
+			svc := conn.Appstream(region)
+			res := []any{}
+			var nextToken *string
+			for {
+				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+				resp, err := svc.DescribeUsers(ctx, &appstream.DescribeUsersInput{
+					AuthenticationType: appstreamtypes.AuthenticationTypeUserpool,
+					NextToken:          nextToken,
+				})
+				cancel()
+				if err != nil {
+					if isAppstreamRegionError(err) {
+						log.Debug().Str("region", region).Msg("error accessing region for AWS AppStream users API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, u := range resp.Users {
+					resource, err := CreateResource(a.MqlRuntime, "aws.appstream.user",
+						map[string]*llx.RawData{
+							"__id":               llx.StringDataPtr(u.Arn),
+							"arn":                llx.StringDataPtr(u.Arn),
+							"userName":           llx.StringDataPtr(u.UserName),
+							"authenticationType": llx.StringData(string(u.AuthenticationType)),
+							"firstName":          llx.StringDataPtr(u.FirstName),
+							"lastName":           llx.StringDataPtr(u.LastName),
+							"status":             llx.StringDataPtr(u.Status),
+							"enabled":            llx.BoolDataPtr(u.Enabled),
+							"createdAt":          llx.TimeDataPtr(u.CreatedTime),
+							"region":             llx.StringData(region),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, resource)
+				}
+				if resp.NextToken == nil {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsAppstreamUser) id() (string, error) { return a.Arn.Data, nil }
+
+// Stack ↔ Fleet associations + Entitlements + Sessions
+
+func (a *mqlAwsAppstreamStack) associatedFleets() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Appstream(a.Region.Data)
+	res := []any{}
+	var nextToken *string
+	stackName := a.Name.Data
+	for {
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		resp, err := svc.ListAssociatedFleets(ctx, &appstream.ListAssociatedFleetsInput{
+			StackName: aws.String(stackName),
+			NextToken: nextToken,
+		})
+		cancel()
+		if err != nil {
+			if isAppstreamRegionError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, fleetName := range resp.Names {
+			fleetArn := buildAppstreamFleetArn(a.Region.Data, conn.AccountId(), fleetName)
+			fleet, err := NewResource(a.MqlRuntime, "aws.appstream.fleet",
+				map[string]*llx.RawData{"arn": llx.StringData(fleetArn)})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, fleet)
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAppstreamFleet) associatedStacks() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Appstream(a.Region.Data)
+	res := []any{}
+	var nextToken *string
+	fleetName := a.Name.Data
+	for {
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		resp, err := svc.ListAssociatedStacks(ctx, &appstream.ListAssociatedStacksInput{
+			FleetName: aws.String(fleetName),
+			NextToken: nextToken,
+		})
+		cancel()
+		if err != nil {
+			if isAppstreamRegionError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, stackName := range resp.Names {
+			stackArn := buildAppstreamStackArn(a.Region.Data, conn.AccountId(), stackName)
+			stack, err := NewResource(a.MqlRuntime, "aws.appstream.stack",
+				map[string]*llx.RawData{"arn": llx.StringData(stackArn)})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, stack)
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return res, nil
+}
+
+func buildAppstreamFleetArn(region, account, name string) string {
+	return "arn:aws:appstream:" + region + ":" + account + ":fleet/" + name
+}
+
+func buildAppstreamStackArn(region, account, name string) string {
+	return "arn:aws:appstream:" + region + ":" + account + ":stack/" + name
+}
+
+func (a *mqlAwsAppstreamStack) entitlements() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Appstream(a.Region.Data)
+	res := []any{}
+	var nextToken *string
+	stackName := a.Name.Data
+	for {
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		resp, err := svc.DescribeEntitlements(ctx, &appstream.DescribeEntitlementsInput{
+			StackName: aws.String(stackName),
+			NextToken: nextToken,
+		})
+		cancel()
+		if err != nil {
+			if isAppstreamRegionError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, e := range resp.Entitlements {
+			attrs := map[string]any{}
+			for _, ea := range e.Attributes {
+				attrs[aws.ToString(ea.Name)] = aws.ToString(ea.Value)
+			}
+			ename := aws.ToString(e.Name)
+			synthArn := "arn:aws:appstream:" + a.Region.Data + ":" + conn.AccountId() + ":entitlement/" + stackName + "/" + ename
+			resource, err := CreateResource(a.MqlRuntime, "aws.appstream.entitlement",
+				map[string]*llx.RawData{
+					"__id":           llx.StringData(synthArn),
+					"arn":            llx.StringData(synthArn),
+					"name":           llx.StringData(ename),
+					"stackName":      llx.StringData(stackName),
+					"appVisibility":  llx.StringData(string(e.AppVisibility)),
+					"attributes":     llx.MapData(attrs, types.String),
+					"description":    llx.StringDataPtr(e.Description),
+					"createdAt":      llx.TimeDataPtr(e.CreatedTime),
+					"lastModifiedAt": llx.TimeDataPtr(e.LastModifiedTime),
+					"region":         llx.StringData(a.Region.Data),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, resource)
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAppstreamEntitlement) id() (string, error) { return a.Arn.Data, nil }
+
+func (a *mqlAwsAppstreamEntitlement) stack() (*mqlAwsAppstreamStack, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	stackArn := buildAppstreamStackArn(a.Region.Data, conn.AccountId(), a.StackName.Data)
+	res, err := NewResource(a.MqlRuntime, "aws.appstream.stack",
+		map[string]*llx.RawData{"arn": llx.StringData(stackArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAppstreamStack), nil
+}
+
+// Sessions — fetched per-fleet across all stacks the fleet is associated with.
+
+func (a *mqlAwsAppstreamFleet) sessions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Appstream(a.Region.Data)
+	res := []any{}
+
+	// Walk each associated stack, then list active sessions for the (fleet, stack) pair.
+	var stackToken *string
+	fleetName := a.Name.Data
+	for {
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		stacks, err := svc.ListAssociatedStacks(ctx, &appstream.ListAssociatedStacksInput{
+			FleetName: aws.String(fleetName),
+			NextToken: stackToken,
+		})
+		cancel()
+		if err != nil {
+			if isAppstreamRegionError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, stackName := range stacks.Names {
+			var sessionToken *string
+			for {
+				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+				sresp, err := svc.DescribeSessions(ctx, &appstream.DescribeSessionsInput{
+					FleetName: aws.String(fleetName),
+					StackName: aws.String(stackName),
+					NextToken: sessionToken,
+				})
+				cancel()
+				if err != nil {
+					if isAppstreamRegionError(err) {
+						break
+					}
+					return nil, err
+				}
+				for _, s := range sresp.Sessions {
+					sid := aws.ToString(s.Id)
+					synthArn := "arn:aws:appstream:" + a.Region.Data + ":" + conn.AccountId() + ":session/" + sid
+					var eniId, eniIp string
+					if s.NetworkAccessConfiguration != nil {
+						eniId = aws.ToString(s.NetworkAccessConfiguration.EniId)
+						eniIp = aws.ToString(s.NetworkAccessConfiguration.EniPrivateIpAddress)
+					}
+					resource, err := CreateResource(a.MqlRuntime, "aws.appstream.session",
+						map[string]*llx.RawData{
+							"__id":                llx.StringData(synthArn),
+							"id":                  llx.StringData(sid),
+							"userId":              llx.StringDataPtr(s.UserId),
+							"state":               llx.StringData(string(s.State)),
+							"connectionState":     llx.StringData(string(s.ConnectionState)),
+							"authenticationType":  llx.StringData(string(s.AuthenticationType)),
+							"fleetName":           llx.StringDataPtr(s.FleetName),
+							"stackName":           llx.StringDataPtr(s.StackName),
+							"instanceId":          llx.StringDataPtr(s.InstanceId),
+							"startTime":           llx.TimeDataPtr(s.StartTime),
+							"maxExpirationTime":   llx.TimeDataPtr(s.MaxExpirationTime),
+							"eniId":               llx.StringData(eniId),
+							"eniPrivateIpAddress": llx.StringData(eniIp),
+							"region":              llx.StringData(a.Region.Data),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, resource)
+				}
+				if sresp.NextToken == nil {
+					break
+				}
+				sessionToken = sresp.NextToken
+			}
+		}
+		if stacks.NextToken == nil {
+			break
+		}
+		stackToken = stacks.NextToken
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAppstreamSession) id() (string, error) {
+	return "arn:aws:appstream::" + a.Region.Data + ":session/" + a.Id.Data, nil
+}
+
+func (a *mqlAwsAppstreamSession) fleet() (*mqlAwsAppstreamFleet, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	fleetArn := buildAppstreamFleetArn(a.Region.Data, conn.AccountId(), a.FleetName.Data)
+	res, err := NewResource(a.MqlRuntime, "aws.appstream.fleet",
+		map[string]*llx.RawData{"arn": llx.StringData(fleetArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAppstreamFleet), nil
+}
+
+func (a *mqlAwsAppstreamSession) stack() (*mqlAwsAppstreamStack, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	stackArn := buildAppstreamStackArn(a.Region.Data, conn.AccountId(), a.StackName.Data)
+	res, err := NewResource(a.MqlRuntime, "aws.appstream.stack",
+		map[string]*llx.RawData{"arn": llx.StringData(stackArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsAppstreamStack), nil
+}

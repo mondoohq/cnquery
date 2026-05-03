@@ -12258,6 +12258,12 @@ aws.appstream @defaults("fleets") {
   stacks() []aws.appstream.stack
   // List of AppStream image builders across all enabled regions
   imageBuilders() []aws.appstream.imageBuilder
+  // List of AppStream applications (only used in app-block-based fleets) across all enabled regions
+  applications() []aws.appstream.application
+  // List of AppStream images across all enabled regions
+  images() []aws.appstream.image
+  // List of AppStream user-pool users across all enabled regions (AuthenticationType=USERPOOL only; SAML/API users are not enumerable)
+  users() []aws.appstream.user
 }
 
 // Amazon AppStream 2.0 fleet
@@ -12305,6 +12311,10 @@ private aws.appstream.fleet @defaults("name state fleetType region") {
   createdAt time
   // Compute capacity status including desired, running, in-use, available counts and drain mode info
   computeCapacityStatus() aws.appstream.fleet.computeCapacityStatus
+  // Stacks associated with the fleet
+  associatedStacks() []aws.appstream.stack
+  // Active streaming sessions on the fleet (across all stacks the fleet is associated with). Sessions are live; ended sessions do not appear.
+  sessions() []aws.appstream.session
   // Tags associated with the fleet
   tags() map[string]string
   // Region where the fleet exists
@@ -12359,6 +12369,10 @@ private aws.appstream.stack @defaults("name region") {
   embedHostDomains []string
   // Content redirection configuration for URL redirection between streaming session and local client
   contentRedirection() aws.appstream.stack.contentRedirection
+  // Fleets associated with the stack
+  associatedFleets() []aws.appstream.fleet
+  // Entitlements that gate which apps a SAML user can access in the stack
+  entitlements() []aws.appstream.entitlement
   // Tags associated with the stack
   tags() map[string]string
   // Region where the stack exists
@@ -12413,6 +12427,154 @@ private aws.appstream.imageBuilder @defaults("name state platform region") {
   // Tags associated with the image builder
   tags() map[string]string
   // Region where the image builder exists
+  region string
+}
+
+// Amazon AppStream 2.0 application (used in elastic and app-block-based fleets)
+private aws.appstream.application @defaults("name displayName enabled platforms region") {
+  // ARN of the application
+  arn string
+  // Name of the application
+  name string
+  // Display name for the application
+  displayName string
+  // Description of the application
+  description string
+  // Whether the application is enabled (disabled apps cannot be launched)
+  enabled bool
+  // Path to the application executable inside the streaming instance
+  launchPath string
+  // Arguments passed to the application at launch
+  launchParameters string
+  // Working directory for the application
+  workingDirectory string
+  // Operating system platforms the application can run on (WINDOWS_SERVER_2016/2019/2022/2025, AMAZON_LINUX2, RHEL8, ROCKY_LINUX8, UBUNTU_PRO_2404)
+  platforms []string
+  // Instance families the application supports (e.g., GENERAL_PURPOSE, COMPUTE_OPTIMIZED, MEMORY_OPTIMIZED, GRAPHICS_DESIGN, GRAPHICS_PRO)
+  instanceFamilies []string
+  // Additional metadata that describes the application
+  metadata map[string]string
+  // ARN of the app block that backs the application (app-block-based fleets only)
+  appBlockArn string
+  // Time when the application was created within its app block
+  createdAt time
+  // Region where the application exists
+  region string
+}
+
+// Amazon AppStream 2.0 image
+private aws.appstream.image @defaults("name state platform visibility region") {
+  // ARN of the image
+  arn string
+  // Name of the image
+  name string
+  // Display name of the image
+  displayName string
+  // Description of the image
+  description string
+  // ARN of the image from which this image was created (null for AWS-supplied base images)
+  baseImageArn string
+  // State of the image: PENDING, AVAILABLE, FAILED, COPYING, DELETING, CREATING, IMPORTING, or AVAILABLE_FOR_DCV
+  state string
+  // Visibility of the image: PUBLIC, PRIVATE, or SHARED
+  visibility string
+  // Operating system platform: WINDOWS_SERVER_2016, WINDOWS_SERVER_2019, WINDOWS_SERVER_2022, WINDOWS_SERVER_2025, AMAZON_LINUX2, RHEL8, ROCKY_LINUX8, or UBUNTU_PRO_2404
+  platform string
+  // Name of the image builder that created the image (null for shared/copied/managed-update images)
+  imageBuilderName string
+  // Whether an image builder can be launched from this image
+  imageBuilderSupported bool
+  // Whether dynamic app providers are enabled within the image
+  dynamicAppProvidersEnabled string
+  // Version of the AppStream agent baked into the image
+  appstreamAgentVersion string
+  // Time when the image was created
+  createdAt time
+  // Date the underlying public base image was released by AWS
+  publicBaseImageReleasedDate time
+  // Tags associated with the image
+  tags() map[string]string
+  // Region where the image exists
+  region string
+}
+
+// Amazon AppStream 2.0 user-pool user (USERPOOL authentication only; SAML 2.0 / API auth users are not enumerable through the AppStream API)
+private aws.appstream.user @defaults("userName status enabled region") {
+  // ARN of the user
+  arn string
+  // Email address of the user (also serves as the user's identifier within the user pool)
+  userName string
+  // Authentication type: API, SAML, or USERPOOL
+  authenticationType string
+  // First (given) name of the user
+  firstName string
+  // Last (surname) name of the user
+  lastName string
+  // Status of the user in the user pool: UNCONFIRMED, CONFIRMED, ARCHIVED, COMPROMISED, or UNKNOWN
+  status string
+  // Whether the user is enabled (disabled users cannot sign in)
+  enabled bool
+  // Time when the user was created in the user pool
+  createdAt time
+  // Region where the user exists
+  region string
+}
+
+// Amazon AppStream 2.0 streaming session (currently active; the API does not return ended sessions)
+private aws.appstream.session @defaults("id userId state fleetName stackName") {
+  // Streaming session identifier
+  id string
+  // Identifier of the user the session was created for (email address for USERPOOL, NameID for SAML, opaque for API)
+  userId string
+  // Current state of the session: ACTIVE, PENDING, or EXPIRED
+  state string
+  // Whether the user is currently connected: CONNECTED or NOT_CONNECTED
+  connectionState string
+  // Authentication method used to start the session: API, SAML, or USERPOOL
+  authenticationType string
+  // Name of the fleet the session is running on
+  fleetName string
+  // Fleet the session is running on
+  fleet() aws.appstream.fleet
+  // Name of the stack the session is streaming
+  stackName string
+  // Stack the session is streaming
+  stack() aws.appstream.stack
+  // Identifier of the streaming instance hosting the session
+  instanceId string
+  // Time when the streaming instance was dedicated for the user
+  startTime time
+  // Time when the session is set to expire (per the fleet's max-user-duration)
+  maxExpirationTime time
+  // ENI ID for the session network access (VPC-enabled fleets only)
+  eniId string
+  // Private IP address attached to the session ENI (VPC-enabled fleets only)
+  eniPrivateIpAddress string
+  // Region where the session exists
+  region string
+}
+
+// Amazon AppStream 2.0 entitlement — gates which applications a SAML 2.0 user can access in a stack
+private aws.appstream.entitlement @defaults("name stackName appVisibility region") {
+  // Synthetic ARN for the entitlement (entitlements have no native ARN)
+  arn string
+  // Name of the entitlement
+  name string
+  // Name of the stack the entitlement is associated with
+  stackName string
+  // Stack the entitlement is associated with
+  stack() aws.appstream.stack
+  // Whether all applications in the stack or only associated applications are entitled (ALL or ASSOCIATED)
+  appVisibility string
+  // SAML PrincipalTag attribute → expected-value pairs that must match for entitlement to apply (e.g. department=Engineering). Multiple pairs are AND-ed.
+  attributes map[string]string
+  // Description of the entitlement
+  description string
+  // Time when the entitlement was created
+  createdAt time
+  // Time when the entitlement was last modified
+  lastModifiedAt time
+  // Region where the entitlement exists
   region string
 }
 
