@@ -12592,7 +12592,7 @@ private aws.appstream.application @defaults("name displayName enabled platforms 
   launchParameters string
   // Working directory for the application
   workingDirectory string
-  // Operating system platforms the application can run on (WINDOWS_SERVER_2016/2019/2022/2025, AMAZON_LINUX2, RHEL8, ROCKY_LINUX8, UBUNTU_PRO_2404)
+  // Operating system platforms the application can run on (WINDOWS, WINDOWS_SERVER_2016/2019/2022/2025, AMAZON_LINUX2, RHEL8, ROCKY_LINUX8, UBUNTU_PRO_2404)
   platforms []string
   // Instance families the application supports (e.g., GENERAL_PURPOSE, COMPUTE_OPTIMIZED, MEMORY_OPTIMIZED, GRAPHICS_DESIGN, GRAPHICS_PRO)
   instanceFamilies []string
@@ -12618,11 +12618,11 @@ private aws.appstream.image @defaults("name state platform visibility region") {
   description string
   // ARN of the image from which this image was created (null for AWS-supplied base images)
   baseImageArn string
-  // State of the image: PENDING, AVAILABLE, FAILED, COPYING, DELETING, CREATING, IMPORTING, or AVAILABLE_FOR_DCV
+  // State of the image: PENDING, AVAILABLE, FAILED, COPYING, DELETING, CREATING, IMPORTING, or VALIDATING
   state string
   // Visibility of the image: PUBLIC, PRIVATE, or SHARED
   visibility string
-  // Operating system platform: WINDOWS_SERVER_2016, WINDOWS_SERVER_2019, WINDOWS_SERVER_2022, WINDOWS_SERVER_2025, AMAZON_LINUX2, RHEL8, ROCKY_LINUX8, or UBUNTU_PRO_2404
+  // Operating system platform: WINDOWS, WINDOWS_SERVER_2016, WINDOWS_SERVER_2019, WINDOWS_SERVER_2022, WINDOWS_SERVER_2025, AMAZON_LINUX2, RHEL8, ROCKY_LINUX8, or UBUNTU_PRO_2404
   platform string
   // Name of the image builder that created the image (null for shared/copied/managed-update images)
   imageBuilderName string
@@ -12648,7 +12648,7 @@ private aws.appstream.user @defaults("userName status enabled region") {
   arn string
   // Email address of the user (also serves as the user's identifier within the user pool)
   userName string
-  // Authentication type: API, SAML, or USERPOOL
+  // Authentication type: API, SAML, USERPOOL, or AWS_AD
   authenticationType string
   // First (given) name of the user
   firstName string
@@ -12674,7 +12674,7 @@ private aws.appstream.session @defaults("id userId state fleetName stackName") {
   state string
   // Whether the user is currently connected: CONNECTED or NOT_CONNECTED
   connectionState string
-  // Authentication method used to start the session: API, SAML, or USERPOOL
+  // Authentication method used to start the session: API, SAML, USERPOOL, or AWS_AD
   authenticationType string
   // Name of the fleet the session is running on
   fleetName string

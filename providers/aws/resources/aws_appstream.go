@@ -6,9 +6,12 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	appstreamtypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/rs/zerolog/log"
@@ -145,10 +148,47 @@ func newMqlAwsAppstreamFleet(runtime *plugin.Runtime, region string, fleet appst
 
 type mqlAwsAppstreamFleetInternal struct {
 	cacheComputeCapacityStatus *appstreamtypes.ComputeCapacityStatus
+
+	stackNamesLock    sync.Mutex
+	stackNamesFetched bool
+	stackNames        []string
 }
 
 func (a *mqlAwsAppstreamFleet) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func initAwsAppstreamFleet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	region, name, err := parseAppstreamRef(args, "fleet/")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Appstream(region)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	resp, err := svc.DescribeFleets(ctx, &appstream.DescribeFleetsInput{
+		Names: []string{name},
+	})
+	if err != nil {
+		if isAppstreamRegionError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if len(resp.Fleets) == 0 {
+		return args, nil, nil
+	}
+
+	mqlFleet, err := newMqlAwsAppstreamFleet(runtime, region, resp.Fleets[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlFleet, nil
 }
 
 func (a *mqlAwsAppstreamFleet) iamRole() (*mqlAwsIamRole, error) {
@@ -323,6 +363,63 @@ type mqlAwsAppstreamStackInternal struct {
 
 func (a *mqlAwsAppstreamStack) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func initAwsAppstreamStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	region, name, err := parseAppstreamRef(args, "stack/")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Appstream(region)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	resp, err := svc.DescribeStacks(ctx, &appstream.DescribeStacksInput{
+		Names: []string{name},
+	})
+	if err != nil {
+		if isAppstreamRegionError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if len(resp.Stacks) == 0 {
+		return args, nil, nil
+	}
+
+	mqlStack, err := newMqlAwsAppstreamStack(runtime, region, resp.Stacks[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlStack, nil
+}
+
+// parseAppstreamRef extracts region + resource name from init args. Supports
+// {arn}, {name + region}, or both. resourcePrefix is "fleet/" or "stack/".
+func parseAppstreamRef(args map[string]*llx.RawData, resourcePrefix string) (string, string, error) {
+	var region, name string
+	if a := args["arn"]; a != nil {
+		parsed, err := arn.Parse(a.Value.(string))
+		if err != nil {
+			return "", "", err
+		}
+		region = parsed.Region
+		name = strings.TrimPrefix(parsed.Resource, resourcePrefix)
+	}
+	if r := args["region"]; r != nil {
+		region = r.Value.(string)
+	}
+	if n := args["name"]; n != nil {
+		name = n.Value.(string)
+	}
+	if region == "" || name == "" {
+		return "", "", errors.New("arn or (name + region) required to fetch aws appstream resource")
+	}
+	return region, name, nil
 }
 
 func (a *mqlAwsAppstreamStack) contentRedirection() (*mqlAwsAppstreamStackContentRedirection, error) {
@@ -693,7 +790,8 @@ func (a *mqlAwsAppstreamImage) id() (string, error) { return a.Arn.Data, nil }
 func (a *mqlAwsAppstreamImage) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Appstream(a.Region.Data)
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
 	resp, err := svc.ListTagsForResource(ctx, &appstream.ListTagsForResourceInput{
 		ResourceArn: aws.String(a.Arn.Data),
 	})
@@ -818,10 +916,19 @@ func (a *mqlAwsAppstreamStack) associatedFleets() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsAppstreamFleet) associatedStacks() ([]any, error) {
+// listAssociatedStackNames returns (and caches) the names of stacks associated
+// with this fleet. Both associatedStacks() and sessions() walk the same set of
+// stacks, so we fetch ListAssociatedStacks once per fleet.
+func (a *mqlAwsAppstreamFleet) listAssociatedStackNames() ([]string, error) {
+	a.stackNamesLock.Lock()
+	defer a.stackNamesLock.Unlock()
+	if a.stackNamesFetched {
+		return a.stackNames, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Appstream(a.Region.Data)
-	res := []any{}
+	names := []string{}
 	var nextToken *string
 	fleetName := a.Name.Data
 	for {
@@ -833,23 +940,38 @@ func (a *mqlAwsAppstreamFleet) associatedStacks() ([]any, error) {
 		cancel()
 		if err != nil {
 			if isAppstreamRegionError(err) {
-				return res, nil
+				a.stackNamesFetched = true
+				a.stackNames = names
+				return names, nil
 			}
 			return nil, err
 		}
-		for _, stackName := range resp.Names {
-			stackArn := buildAppstreamStackArn(a.Region.Data, conn.AccountId(), stackName)
-			stack, err := NewResource(a.MqlRuntime, "aws.appstream.stack",
-				map[string]*llx.RawData{"arn": llx.StringData(stackArn)})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, stack)
-		}
+		names = append(names, resp.Names...)
 		if resp.NextToken == nil {
 			break
 		}
 		nextToken = resp.NextToken
+	}
+	a.stackNamesFetched = true
+	a.stackNames = names
+	return names, nil
+}
+
+func (a *mqlAwsAppstreamFleet) associatedStacks() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	names, err := a.listAssociatedStackNames()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(names))
+	for _, stackName := range names {
+		stackArn := buildAppstreamStackArn(a.Region.Data, conn.AccountId(), stackName)
+		stack, err := NewResource(a.MqlRuntime, "aws.appstream.stack",
+			map[string]*llx.RawData{"arn": llx.StringData(stackArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, stack)
 	}
 	return res, nil
 }
@@ -935,77 +1057,63 @@ func (a *mqlAwsAppstreamFleet) sessions() ([]any, error) {
 	res := []any{}
 
 	// Walk each associated stack, then list active sessions for the (fleet, stack) pair.
-	var stackToken *string
+	// Stack names are cached on the fleet so associatedStacks() and sessions() share the same listing.
+	stackNames, err := a.listAssociatedStackNames()
+	if err != nil {
+		return nil, err
+	}
 	fleetName := a.Name.Data
-	for {
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-		stacks, err := svc.ListAssociatedStacks(ctx, &appstream.ListAssociatedStacksInput{
-			FleetName: aws.String(fleetName),
-			NextToken: stackToken,
-		})
-		cancel()
-		if err != nil {
-			if isAppstreamRegionError(err) {
-				return res, nil
-			}
-			return nil, err
-		}
-		for _, stackName := range stacks.Names {
-			var sessionToken *string
-			for {
-				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-				sresp, err := svc.DescribeSessions(ctx, &appstream.DescribeSessionsInput{
-					FleetName: aws.String(fleetName),
-					StackName: aws.String(stackName),
-					NextToken: sessionToken,
-				})
-				cancel()
-				if err != nil {
-					if isAppstreamRegionError(err) {
-						break
-					}
-					return nil, err
-				}
-				for _, s := range sresp.Sessions {
-					sid := aws.ToString(s.Id)
-					synthArn := "arn:aws:appstream:" + a.Region.Data + ":" + conn.AccountId() + ":session/" + sid
-					var eniId, eniIp string
-					if s.NetworkAccessConfiguration != nil {
-						eniId = aws.ToString(s.NetworkAccessConfiguration.EniId)
-						eniIp = aws.ToString(s.NetworkAccessConfiguration.EniPrivateIpAddress)
-					}
-					resource, err := CreateResource(a.MqlRuntime, "aws.appstream.session",
-						map[string]*llx.RawData{
-							"__id":                llx.StringData(synthArn),
-							"id":                  llx.StringData(sid),
-							"userId":              llx.StringDataPtr(s.UserId),
-							"state":               llx.StringData(string(s.State)),
-							"connectionState":     llx.StringData(string(s.ConnectionState)),
-							"authenticationType":  llx.StringData(string(s.AuthenticationType)),
-							"fleetName":           llx.StringDataPtr(s.FleetName),
-							"stackName":           llx.StringDataPtr(s.StackName),
-							"instanceId":          llx.StringDataPtr(s.InstanceId),
-							"startTime":           llx.TimeDataPtr(s.StartTime),
-							"maxExpirationTime":   llx.TimeDataPtr(s.MaxExpirationTime),
-							"eniId":               llx.StringData(eniId),
-							"eniPrivateIpAddress": llx.StringData(eniIp),
-							"region":              llx.StringData(a.Region.Data),
-						})
-					if err != nil {
-						return nil, err
-					}
-					res = append(res, resource)
-				}
-				if sresp.NextToken == nil {
+	for _, stackName := range stackNames {
+		var sessionToken *string
+		for {
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			sresp, err := svc.DescribeSessions(ctx, &appstream.DescribeSessionsInput{
+				FleetName: aws.String(fleetName),
+				StackName: aws.String(stackName),
+				NextToken: sessionToken,
+			})
+			cancel()
+			if err != nil {
+				if isAppstreamRegionError(err) {
 					break
 				}
-				sessionToken = sresp.NextToken
+				return nil, err
 			}
+			for _, s := range sresp.Sessions {
+				sid := aws.ToString(s.Id)
+				synthArn := "arn:aws:appstream:" + a.Region.Data + ":" + conn.AccountId() + ":session/" + sid
+				var eniId, eniIp string
+				if s.NetworkAccessConfiguration != nil {
+					eniId = aws.ToString(s.NetworkAccessConfiguration.EniId)
+					eniIp = aws.ToString(s.NetworkAccessConfiguration.EniPrivateIpAddress)
+				}
+				resource, err := CreateResource(a.MqlRuntime, "aws.appstream.session",
+					map[string]*llx.RawData{
+						"__id":                llx.StringData(synthArn),
+						"id":                  llx.StringData(sid),
+						"userId":              llx.StringDataPtr(s.UserId),
+						"state":               llx.StringData(string(s.State)),
+						"connectionState":     llx.StringData(string(s.ConnectionState)),
+						"authenticationType":  llx.StringData(string(s.AuthenticationType)),
+						"fleetName":           llx.StringDataPtr(s.FleetName),
+						"stackName":           llx.StringDataPtr(s.StackName),
+						"instanceId":          llx.StringDataPtr(s.InstanceId),
+						"startTime":           llx.TimeDataPtr(s.StartTime),
+						"maxExpirationTime":   llx.TimeDataPtr(s.MaxExpirationTime),
+						"eniId":               llx.StringData(eniId),
+						"eniPrivateIpAddress": llx.StringData(eniIp),
+						"region":              llx.StringData(a.Region.Data),
+					})
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, resource)
+			}
+			if sresp.NextToken == nil {
+				break
+			}
+			sessionToken = sresp.NextToken
 		}
-		if stacks.NextToken == nil {
-			break
-		}
-		stackToken = stacks.NextToken
 	}
 	return res, nil
 }

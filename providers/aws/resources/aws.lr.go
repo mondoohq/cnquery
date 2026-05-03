@@ -2919,7 +2919,7 @@ func init() {
 			Create: createAwsAppstream,
 		},
 		"aws.appstream.fleet": {
-			// to override args, implement: initAwsAppstreamFleet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsAppstreamFleet,
 			Create: createAwsAppstreamFleet,
 		},
 		"aws.appstream.fleet.computeCapacityStatus": {
@@ -2927,7 +2927,7 @@ func init() {
 			Create: createAwsAppstreamFleetComputeCapacityStatus,
 		},
 		"aws.appstream.stack": {
-			// to override args, implement: initAwsAppstreamStack(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsAppstreamStack,
 			Create: createAwsAppstreamStack,
 		},
 		"aws.appstream.stack.contentRedirection": {
