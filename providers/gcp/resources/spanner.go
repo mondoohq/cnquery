@@ -343,19 +343,6 @@ type mqlGcpProjectSpannerServiceInstanceDatabaseInternal struct {
 	cacheKmsKeyNames []string
 }
 
-func (g *mqlGcpProjectSpannerServiceInstanceDatabase) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
-	if len(g.cacheKmsKeyNames) == 0 {
-		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
-		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyNames[0])})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
-}
-
 func (g *mqlGcpProjectSpannerServiceInstanceDatabase) kmsKeys() ([]any, error) {
 	if len(g.cacheKmsKeyNames) == 0 {
 		return []any{}, nil

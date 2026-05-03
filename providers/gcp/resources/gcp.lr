@@ -4604,8 +4604,6 @@ private gcp.project.spannerService.instance.database @defaults("name") {
   encryptionConfig dict
   // Encryption information
   encryptionInfo []dict
-  // Customer-managed KMS key used for encryption (null when Google-managed); for multi-region databases with multiple keys, returns the first
-  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Customer-managed KMS keys used for encryption; populated for multi-region databases that span multiple regions (empty when Google-managed)
   kmsKeys() []gcp.project.kmsService.keyring.cryptokey
   // Default leader region

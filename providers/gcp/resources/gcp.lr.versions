@@ -3221,7 +3221,6 @@ gcp.project.spannerService.instance.database.encryptionConfig 11.3.1
 gcp.project.spannerService.instance.database.encryptionInfo 11.3.1
 gcp.project.spannerService.instance.database.iamPolicy 13.11.2
 gcp.project.spannerService.instance.database.instanceName 11.3.1
-gcp.project.spannerService.instance.database.kmsKey 13.12.2
 gcp.project.spannerService.instance.database.kmsKeys 13.12.2
 gcp.project.spannerService.instance.database.name 11.3.1
 gcp.project.spannerService.instance.database.projectId 11.3.1
