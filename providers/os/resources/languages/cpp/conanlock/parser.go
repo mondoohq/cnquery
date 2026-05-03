@@ -3,7 +3,10 @@
 
 package conanlock
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 // conanLock represents a parsed conan.lock file.
 type conanLock struct {
@@ -29,9 +32,13 @@ type conanGraphNode struct {
 	Path string `json:"path"`
 }
 
-// isV2 returns true if this is a v2 format lockfile (version >= "0.5").
+// isV2 returns true if this is a v2 format lockfile (version >= 0.5).
 func (l *conanLock) isV2() bool {
-	return l.Version >= "0.5"
+	v, err := strconv.ParseFloat(l.Version, 64)
+	if err != nil {
+		return false
+	}
+	return v >= 0.5
 }
 
 // conanReference holds the parsed components of a Conan reference string.

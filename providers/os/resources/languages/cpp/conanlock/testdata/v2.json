@@ -7,5 +7,7 @@
   "build_requires": [
     "cmake/3.28.1#ghi789"
   ],
-  "python_requires": []
+  "python_requires": [
+    "conan-tools/1.0.0#jkl012"
+  ]
 }

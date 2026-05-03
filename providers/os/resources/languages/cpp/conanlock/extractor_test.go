@@ -50,7 +50,7 @@ func TestParseV2(t *testing.T) {
 	require.NoError(t, err)
 
 	pkgs := bom.Transitive()
-	assert.Len(t, pkgs, 3) // 2 requires + 1 build_requires
+	assert.Len(t, pkgs, 4) // 2 requires + 1 build_requires + 1 python_requires
 
 	boost := pkgs.Find("boost")
 	require.NotNil(t, boost)
@@ -60,6 +60,10 @@ func TestParseV2(t *testing.T) {
 	cmake := pkgs.Find("cmake")
 	require.NotNil(t, cmake)
 	assert.Equal(t, "3.28.1", cmake.Version)
+
+	conanTools := pkgs.Find("conan-tools")
+	require.NotNil(t, conanTools)
+	assert.Equal(t, "1.0.0", conanTools.Version)
 }
 
 func TestParseConanReference(t *testing.T) {
