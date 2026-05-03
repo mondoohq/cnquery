@@ -432,6 +432,11 @@ const (
 	ResourceAwsApigateway                                                       string = "aws.apigateway"
 	ResourceAwsApigatewayRestapi                                                string = "aws.apigateway.restapi"
 	ResourceAwsApigatewayStage                                                  string = "aws.apigateway.stage"
+	ResourceAwsApigatewayAuthorizer                                             string = "aws.apigateway.authorizer"
+	ResourceAwsApigatewayRequestValidator                                       string = "aws.apigateway.requestValidator"
+	ResourceAwsApigatewayApiKey                                                 string = "aws.apigateway.apiKey"
+	ResourceAwsApigatewayUsagePlan                                              string = "aws.apigateway.usagePlan"
+	ResourceAwsApigatewayVpcLink                                                string = "aws.apigateway.vpcLink"
 	ResourceAwsLambda                                                           string = "aws.lambda"
 	ResourceAwsLambdaFunction                                                   string = "aws.lambda.function"
 	ResourceAwsLambdaFunctionVersion                                            string = "aws.lambda.function.version"
@@ -2399,6 +2404,26 @@ func init() {
 		"aws.apigateway.stage": {
 			// to override args, implement: initAwsApigatewayStage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsApigatewayStage,
+		},
+		"aws.apigateway.authorizer": {
+			// to override args, implement: initAwsApigatewayAuthorizer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApigatewayAuthorizer,
+		},
+		"aws.apigateway.requestValidator": {
+			// to override args, implement: initAwsApigatewayRequestValidator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApigatewayRequestValidator,
+		},
+		"aws.apigateway.apiKey": {
+			// to override args, implement: initAwsApigatewayApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApigatewayApiKey,
+		},
+		"aws.apigateway.usagePlan": {
+			// to override args, implement: initAwsApigatewayUsagePlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApigatewayUsagePlan,
+		},
+		"aws.apigateway.vpcLink": {
+			// to override args, implement: initAwsApigatewayVpcLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApigatewayVpcLink,
 		},
 		"aws.lambda": {
 			// to override args, implement: initAwsLambda(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -14541,6 +14566,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigateway.restApis": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigateway).GetRestApis()).ToDataRes(types.Array(types.Resource("aws.apigateway.restapi")))
 	},
+	"aws.apigateway.apiKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigateway).GetApiKeys()).ToDataRes(types.Array(types.Resource("aws.apigateway.apiKey")))
+	},
+	"aws.apigateway.usagePlans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigateway).GetUsagePlans()).ToDataRes(types.Array(types.Resource("aws.apigateway.usagePlan")))
+	},
+	"aws.apigateway.vpcLinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigateway).GetVpcLinks()).ToDataRes(types.Array(types.Resource("aws.apigateway.vpcLink")))
+	},
 	"aws.apigateway.restapi.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayRestapi).GetArn()).ToDataRes(types.String)
 	},
@@ -14558,6 +14592,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.apigateway.restapi.stages": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayRestapi).GetStages()).ToDataRes(types.Array(types.Resource("aws.apigateway.stage")))
+	},
+	"aws.apigateway.restapi.authorizers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRestapi).GetAuthorizers()).ToDataRes(types.Array(types.Resource("aws.apigateway.authorizer")))
+	},
+	"aws.apigateway.restapi.requestValidators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRestapi).GetRequestValidators()).ToDataRes(types.Array(types.Resource("aws.apigateway.requestValidator")))
 	},
 	"aws.apigateway.restapi.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayRestapi).GetRegion()).ToDataRes(types.String)
@@ -14642,6 +14682,177 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.apigateway.stage.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayStage).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.apigateway.authorizer.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apigateway.authorizer.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetId()).ToDataRes(types.String)
+	},
+	"aws.apigateway.authorizer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetName()).ToDataRes(types.String)
+	},
+	"aws.apigateway.authorizer.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetType()).ToDataRes(types.String)
+	},
+	"aws.apigateway.authorizer.authType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetAuthType()).ToDataRes(types.String)
+	},
+	"aws.apigateway.authorizer.restApiId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetRestApiId()).ToDataRes(types.String)
+	},
+	"aws.apigateway.authorizer.authorizerCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetAuthorizerCredentials()).ToDataRes(types.String)
+	},
+	"aws.apigateway.authorizer.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.apigateway.authorizer.authorizerUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetAuthorizerUri()).ToDataRes(types.String)
+	},
+	"aws.apigateway.authorizer.lambdaFunction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetLambdaFunction()).ToDataRes(types.Resource("aws.lambda.function"))
+	},
+	"aws.apigateway.authorizer.authorizerResultTtlInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetAuthorizerResultTtlInSeconds()).ToDataRes(types.Int)
+	},
+	"aws.apigateway.authorizer.identitySource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetIdentitySource()).ToDataRes(types.String)
+	},
+	"aws.apigateway.authorizer.identityValidationExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetIdentityValidationExpression()).ToDataRes(types.String)
+	},
+	"aws.apigateway.authorizer.providerArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetProviderArns()).ToDataRes(types.Array(types.String))
+	},
+	"aws.apigateway.authorizer.userPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetUserPools()).ToDataRes(types.Array(types.Resource("aws.cognito.userPool")))
+	},
+	"aws.apigateway.authorizer.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayAuthorizer).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.apigateway.requestValidator.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRequestValidator).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apigateway.requestValidator.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRequestValidator).GetId()).ToDataRes(types.String)
+	},
+	"aws.apigateway.requestValidator.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRequestValidator).GetName()).ToDataRes(types.String)
+	},
+	"aws.apigateway.requestValidator.restApiId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRequestValidator).GetRestApiId()).ToDataRes(types.String)
+	},
+	"aws.apigateway.requestValidator.validateRequestBody": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRequestValidator).GetValidateRequestBody()).ToDataRes(types.Bool)
+	},
+	"aws.apigateway.requestValidator.validateRequestParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRequestValidator).GetValidateRequestParameters()).ToDataRes(types.Bool)
+	},
+	"aws.apigateway.requestValidator.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayRequestValidator).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.apigateway.apiKey.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apigateway.apiKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetId()).ToDataRes(types.String)
+	},
+	"aws.apigateway.apiKey.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetName()).ToDataRes(types.String)
+	},
+	"aws.apigateway.apiKey.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.apigateway.apiKey.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.apigateway.apiKey.customerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetCustomerId()).ToDataRes(types.String)
+	},
+	"aws.apigateway.apiKey.stageKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetStageKeys()).ToDataRes(types.Array(types.String))
+	},
+	"aws.apigateway.apiKey.createdDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetCreatedDate()).ToDataRes(types.Time)
+	},
+	"aws.apigateway.apiKey.lastUpdatedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetLastUpdatedDate()).ToDataRes(types.Time)
+	},
+	"aws.apigateway.apiKey.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.apigateway.apiKey.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayApiKey).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.apigateway.usagePlan.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apigateway.usagePlan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetId()).ToDataRes(types.String)
+	},
+	"aws.apigateway.usagePlan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetName()).ToDataRes(types.String)
+	},
+	"aws.apigateway.usagePlan.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.apigateway.usagePlan.productCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetProductCode()).ToDataRes(types.String)
+	},
+	"aws.apigateway.usagePlan.apiStages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetApiStages()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.apigateway.usagePlan.quotaLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetQuotaLimit()).ToDataRes(types.Int)
+	},
+	"aws.apigateway.usagePlan.quotaOffset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetQuotaOffset()).ToDataRes(types.Int)
+	},
+	"aws.apigateway.usagePlan.quotaPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetQuotaPeriod()).ToDataRes(types.String)
+	},
+	"aws.apigateway.usagePlan.throttleBurstLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetThrottleBurstLimit()).ToDataRes(types.Int)
+	},
+	"aws.apigateway.usagePlan.throttleRateLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetThrottleRateLimit()).ToDataRes(types.Float)
+	},
+	"aws.apigateway.usagePlan.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.apigateway.usagePlan.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayUsagePlan).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.apigateway.vpcLink.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayVpcLink).GetArn()).ToDataRes(types.String)
+	},
+	"aws.apigateway.vpcLink.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayVpcLink).GetId()).ToDataRes(types.String)
+	},
+	"aws.apigateway.vpcLink.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayVpcLink).GetName()).ToDataRes(types.String)
+	},
+	"aws.apigateway.vpcLink.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayVpcLink).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.apigateway.vpcLink.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayVpcLink).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.apigateway.vpcLink.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayVpcLink).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.apigateway.vpcLink.targetArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayVpcLink).GetTargetArns()).ToDataRes(types.Array(types.String))
+	},
+	"aws.apigateway.vpcLink.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayVpcLink).GetTargets()).ToDataRes(types.Array(types.Resource("aws.elb.loadbalancer")))
+	},
+	"aws.apigateway.vpcLink.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayVpcLink).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.apigateway.vpcLink.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayVpcLink).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.lambda.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambda).GetFunctions()).ToDataRes(types.Array(types.Resource("aws.lambda.function")))
@@ -39857,6 +40068,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsApigateway).RestApis, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.apigateway.apiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigateway).ApiKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigateway).UsagePlans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigateway).VpcLinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.apigateway.restapi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayRestapi).__id, ok = v.Value.(string)
 		return
@@ -39883,6 +40106,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.apigateway.restapi.stages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayRestapi).Stages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.restapi.authorizers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRestapi).Authorizers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.restapi.requestValidators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRestapi).RequestValidators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.restapi.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39999,6 +40230,254 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.apigateway.stage.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayStage).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apigateway.authorizer.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.authType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).AuthType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.restApiId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).RestApiId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.authorizerCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).AuthorizerCredentials, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.authorizerUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).AuthorizerUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.lambdaFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).LambdaFunction, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.authorizerResultTtlInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).AuthorizerResultTtlInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.identitySource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).IdentitySource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.identityValidationExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).IdentityValidationExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.providerArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).ProviderArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.userPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).UserPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.authorizer.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayAuthorizer).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.requestValidator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRequestValidator).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apigateway.requestValidator.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRequestValidator).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.requestValidator.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRequestValidator).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.requestValidator.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRequestValidator).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.requestValidator.restApiId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRequestValidator).RestApiId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.requestValidator.validateRequestBody": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRequestValidator).ValidateRequestBody, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.requestValidator.validateRequestParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRequestValidator).ValidateRequestParameters, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.requestValidator.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayRequestValidator).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apigateway.apiKey.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.customerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).CustomerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.stageKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).StageKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.createdDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).CreatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.lastUpdatedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).LastUpdatedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.apiKey.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayApiKey).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apigateway.usagePlan.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.productCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).ProductCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.apiStages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).ApiStages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.quotaLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).QuotaLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.quotaOffset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).QuotaOffset, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.quotaPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).QuotaPeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.throttleBurstLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).ThrottleBurstLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.throttleRateLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).ThrottleRateLimit, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.usagePlan.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayUsagePlan).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apigateway.vpcLink.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLink.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLink.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLink.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLink.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLink.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLink.targetArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).TargetArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLink.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLink.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.vpcLink.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayVpcLink).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -97400,7 +97879,10 @@ type mqlAwsApigateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsApigatewayInternal it will be used here
-	RestApis plugin.TValue[[]any]
+	RestApis   plugin.TValue[[]any]
+	ApiKeys    plugin.TValue[[]any]
+	UsagePlans plugin.TValue[[]any]
+	VpcLinks   plugin.TValue[[]any]
 }
 
 // createAwsApigateway creates a new instance of this resource
@@ -97456,6 +97938,54 @@ func (c *mqlAwsApigateway) GetRestApis() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsApigateway) GetApiKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway", c.__id, "apiKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiKeys()
+	})
+}
+
+func (c *mqlAwsApigateway) GetUsagePlans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UsagePlans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway", c.__id, "usagePlans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.usagePlans()
+	})
+}
+
+func (c *mqlAwsApigateway) GetVpcLinks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcLinks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway", c.__id, "vpcLinks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcLinks()
+	})
+}
+
 // mqlAwsApigatewayRestapi for the aws.apigateway.restapi resource
 type mqlAwsApigatewayRestapi struct {
 	MqlRuntime *plugin.Runtime
@@ -97467,6 +97997,8 @@ type mqlAwsApigatewayRestapi struct {
 	CreatedDate               plugin.TValue[*time.Time]
 	Description               plugin.TValue[string]
 	Stages                    plugin.TValue[[]any]
+	Authorizers               plugin.TValue[[]any]
+	RequestValidators         plugin.TValue[[]any]
 	Region                    plugin.TValue[string]
 	Tags                      plugin.TValue[map[string]any]
 	ApiKeySource              plugin.TValue[string]
@@ -97550,6 +98082,38 @@ func (c *mqlAwsApigatewayRestapi) GetStages() *plugin.TValue[[]any] {
 		}
 
 		return c.stages()
+	})
+}
+
+func (c *mqlAwsApigatewayRestapi) GetAuthorizers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Authorizers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.restapi", c.__id, "authorizers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizers()
+	})
+}
+
+func (c *mqlAwsApigatewayRestapi) GetRequestValidators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RequestValidators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.restapi", c.__id, "requestValidators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.requestValidators()
 	})
 }
 
@@ -97736,6 +98300,559 @@ func (c *mqlAwsApigatewayStage) GetVariables() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsApigatewayStage) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+// mqlAwsApigatewayAuthorizer for the aws.apigateway.authorizer resource
+type mqlAwsApigatewayAuthorizer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApigatewayAuthorizerInternal it will be used here
+	Arn                          plugin.TValue[string]
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Type                         plugin.TValue[string]
+	AuthType                     plugin.TValue[string]
+	RestApiId                    plugin.TValue[string]
+	AuthorizerCredentials        plugin.TValue[string]
+	IamRole                      plugin.TValue[*mqlAwsIamRole]
+	AuthorizerUri                plugin.TValue[string]
+	LambdaFunction               plugin.TValue[*mqlAwsLambdaFunction]
+	AuthorizerResultTtlInSeconds plugin.TValue[int64]
+	IdentitySource               plugin.TValue[string]
+	IdentityValidationExpression plugin.TValue[string]
+	ProviderArns                 plugin.TValue[[]any]
+	UserPools                    plugin.TValue[[]any]
+	Region                       plugin.TValue[string]
+}
+
+// createAwsApigatewayAuthorizer creates a new instance of this resource
+func createAwsApigatewayAuthorizer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApigatewayAuthorizer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apigateway.authorizer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApigatewayAuthorizer) MqlName() string {
+	return "aws.apigateway.authorizer"
+}
+
+func (c *mqlAwsApigatewayAuthorizer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetAuthType() *plugin.TValue[string] {
+	return &c.AuthType
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetRestApiId() *plugin.TValue[string] {
+	return &c.RestApiId
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetAuthorizerCredentials() *plugin.TValue[string] {
+	return &c.AuthorizerCredentials
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.authorizer", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetAuthorizerUri() *plugin.TValue[string] {
+	return &c.AuthorizerUri
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetLambdaFunction() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.LambdaFunction, func() (*mqlAwsLambdaFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.authorizer", c.__id, "lambdaFunction")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunction), nil
+			}
+		}
+
+		return c.lambdaFunction()
+	})
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetAuthorizerResultTtlInSeconds() *plugin.TValue[int64] {
+	return &c.AuthorizerResultTtlInSeconds
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetIdentitySource() *plugin.TValue[string] {
+	return &c.IdentitySource
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetIdentityValidationExpression() *plugin.TValue[string] {
+	return &c.IdentityValidationExpression
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetProviderArns() *plugin.TValue[[]any] {
+	return &c.ProviderArns
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetUserPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.authorizer", c.__id, "userPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userPools()
+	})
+}
+
+func (c *mqlAwsApigatewayAuthorizer) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsApigatewayRequestValidator for the aws.apigateway.requestValidator resource
+type mqlAwsApigatewayRequestValidator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApigatewayRequestValidatorInternal it will be used here
+	Arn                       plugin.TValue[string]
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	RestApiId                 plugin.TValue[string]
+	ValidateRequestBody       plugin.TValue[bool]
+	ValidateRequestParameters plugin.TValue[bool]
+	Region                    plugin.TValue[string]
+}
+
+// createAwsApigatewayRequestValidator creates a new instance of this resource
+func createAwsApigatewayRequestValidator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApigatewayRequestValidator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apigateway.requestValidator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApigatewayRequestValidator) MqlName() string {
+	return "aws.apigateway.requestValidator"
+}
+
+func (c *mqlAwsApigatewayRequestValidator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApigatewayRequestValidator) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApigatewayRequestValidator) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsApigatewayRequestValidator) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsApigatewayRequestValidator) GetRestApiId() *plugin.TValue[string] {
+	return &c.RestApiId
+}
+
+func (c *mqlAwsApigatewayRequestValidator) GetValidateRequestBody() *plugin.TValue[bool] {
+	return &c.ValidateRequestBody
+}
+
+func (c *mqlAwsApigatewayRequestValidator) GetValidateRequestParameters() *plugin.TValue[bool] {
+	return &c.ValidateRequestParameters
+}
+
+func (c *mqlAwsApigatewayRequestValidator) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsApigatewayApiKey for the aws.apigateway.apiKey resource
+type mqlAwsApigatewayApiKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApigatewayApiKeyInternal it will be used here
+	Arn             plugin.TValue[string]
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Enabled         plugin.TValue[bool]
+	CustomerId      plugin.TValue[string]
+	StageKeys       plugin.TValue[[]any]
+	CreatedDate     plugin.TValue[*time.Time]
+	LastUpdatedDate plugin.TValue[*time.Time]
+	Tags            plugin.TValue[map[string]any]
+	Region          plugin.TValue[string]
+}
+
+// createAwsApigatewayApiKey creates a new instance of this resource
+func createAwsApigatewayApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApigatewayApiKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apigateway.apiKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApigatewayApiKey) MqlName() string {
+	return "aws.apigateway.apiKey"
+}
+
+func (c *mqlAwsApigatewayApiKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApigatewayApiKey) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApigatewayApiKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsApigatewayApiKey) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsApigatewayApiKey) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsApigatewayApiKey) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAwsApigatewayApiKey) GetCustomerId() *plugin.TValue[string] {
+	return &c.CustomerId
+}
+
+func (c *mqlAwsApigatewayApiKey) GetStageKeys() *plugin.TValue[[]any] {
+	return &c.StageKeys
+}
+
+func (c *mqlAwsApigatewayApiKey) GetCreatedDate() *plugin.TValue[*time.Time] {
+	return &c.CreatedDate
+}
+
+func (c *mqlAwsApigatewayApiKey) GetLastUpdatedDate() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedDate
+}
+
+func (c *mqlAwsApigatewayApiKey) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsApigatewayApiKey) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsApigatewayUsagePlan for the aws.apigateway.usagePlan resource
+type mqlAwsApigatewayUsagePlan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApigatewayUsagePlanInternal it will be used here
+	Arn                plugin.TValue[string]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	ProductCode        plugin.TValue[string]
+	ApiStages          plugin.TValue[[]any]
+	QuotaLimit         plugin.TValue[int64]
+	QuotaOffset        plugin.TValue[int64]
+	QuotaPeriod        plugin.TValue[string]
+	ThrottleBurstLimit plugin.TValue[int64]
+	ThrottleRateLimit  plugin.TValue[float64]
+	Tags               plugin.TValue[map[string]any]
+	Region             plugin.TValue[string]
+}
+
+// createAwsApigatewayUsagePlan creates a new instance of this resource
+func createAwsApigatewayUsagePlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApigatewayUsagePlan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apigateway.usagePlan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApigatewayUsagePlan) MqlName() string {
+	return "aws.apigateway.usagePlan"
+}
+
+func (c *mqlAwsApigatewayUsagePlan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetProductCode() *plugin.TValue[string] {
+	return &c.ProductCode
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetApiStages() *plugin.TValue[[]any] {
+	return &c.ApiStages
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetQuotaLimit() *plugin.TValue[int64] {
+	return &c.QuotaLimit
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetQuotaOffset() *plugin.TValue[int64] {
+	return &c.QuotaOffset
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetQuotaPeriod() *plugin.TValue[string] {
+	return &c.QuotaPeriod
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetThrottleBurstLimit() *plugin.TValue[int64] {
+	return &c.ThrottleBurstLimit
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetThrottleRateLimit() *plugin.TValue[float64] {
+	return &c.ThrottleRateLimit
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsApigatewayUsagePlan) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsApigatewayVpcLink for the aws.apigateway.vpcLink resource
+type mqlAwsApigatewayVpcLink struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApigatewayVpcLinkInternal it will be used here
+	Arn           plugin.TValue[string]
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Status        plugin.TValue[string]
+	StatusMessage plugin.TValue[string]
+	TargetArns    plugin.TValue[[]any]
+	Targets       plugin.TValue[[]any]
+	Tags          plugin.TValue[map[string]any]
+	Region        plugin.TValue[string]
+}
+
+// createAwsApigatewayVpcLink creates a new instance of this resource
+func createAwsApigatewayVpcLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApigatewayVpcLink{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apigateway.vpcLink", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApigatewayVpcLink) MqlName() string {
+	return "aws.apigateway.vpcLink"
+}
+
+func (c *mqlAwsApigatewayVpcLink) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApigatewayVpcLink) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsApigatewayVpcLink) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsApigatewayVpcLink) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsApigatewayVpcLink) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsApigatewayVpcLink) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsApigatewayVpcLink) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsApigatewayVpcLink) GetTargetArns() *plugin.TValue[[]any] {
+	return &c.TargetArns
+}
+
+func (c *mqlAwsApigatewayVpcLink) GetTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Targets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.vpcLink", c.__id, "targets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.targets()
+	})
+}
+
+func (c *mqlAwsApigatewayVpcLink) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsApigatewayVpcLink) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 // mqlAwsLambda for the aws.lambda resource

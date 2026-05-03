@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.20.0",
-  "generated_at": "2026-05-01T13:11:17-07:00",
+  "generated_at": "2026-05-01T15:26:02-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -12,8 +12,13 @@
     "acm:GetCertificate",
     "acm:ListCertificates",
     "acm:ListTagsForCertificate",
+    "apigateway:GetApiKeys",
+    "apigateway:GetAuthorizers",
+    "apigateway:GetRequestValidators",
     "apigateway:GetRestApis",
     "apigateway:GetStages",
+    "apigateway:GetUsagePlans",
+    "apigateway:GetVpcLinks",
     "application-autoscaling:DescribeScalableTargets",
     "application-autoscaling:DescribeScalingPolicies",
     "application-autoscaling:DescribeScheduledActions",
@@ -726,6 +731,24 @@
       "source_file": "aws_acm.go"
     },
     {
+      "permission": "apigateway:GetApiKeys",
+      "service": "apigateway",
+      "action": "GetApiKeys",
+      "source_file": "aws_apigateway.go"
+    },
+    {
+      "permission": "apigateway:GetAuthorizers",
+      "service": "apigateway",
+      "action": "GetAuthorizers",
+      "source_file": "aws_apigateway.go"
+    },
+    {
+      "permission": "apigateway:GetRequestValidators",
+      "service": "apigateway",
+      "action": "GetRequestValidators",
+      "source_file": "aws_apigateway.go"
+    },
+    {
       "permission": "apigateway:GetRestApis",
       "service": "apigateway",
       "action": "GetRestApis",
@@ -735,6 +758,18 @@
       "permission": "apigateway:GetStages",
       "service": "apigateway",
       "action": "GetStages",
+      "source_file": "aws_apigateway.go"
+    },
+    {
+      "permission": "apigateway:GetUsagePlans",
+      "service": "apigateway",
+      "action": "GetUsagePlans",
+      "source_file": "aws_apigateway.go"
+    },
+    {
+      "permission": "apigateway:GetVpcLinks",
+      "service": "apigateway",
+      "action": "GetVpcLinks",
       "source_file": "aws_apigateway.go"
     },
     {

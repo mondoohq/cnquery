@@ -8939,6 +8939,12 @@ aws.dms @defaults("replicationInstances") {
 aws.apigateway @defaults("restApis") {
   // List of `aws.apigateway.restapi` objects representing all rest APIs across all enabled regions in the account
   restApis() []aws.apigateway.restapi
+  // List of `aws.apigateway.apiKey` objects representing all API keys across all enabled regions in the account
+  apiKeys() []aws.apigateway.apiKey
+  // List of `aws.apigateway.usagePlan` objects representing all usage plans across all enabled regions in the account
+  usagePlans() []aws.apigateway.usagePlan
+  // List of `aws.apigateway.vpcLink` objects representing all VPC links across all enabled regions in the account
+  vpcLinks() []aws.apigateway.vpcLink
 }
 
 // Amazon API Gateway REST API
@@ -8955,6 +8961,10 @@ private aws.apigateway.restapi @defaults("name id") {
   description string
   // Stages for the REST API
   stages() []aws.apigateway.stage
+  // Authorizers for the REST API
+  authorizers() []aws.apigateway.authorizer
+  // Request validators for the REST API
+  requestValidators() []aws.apigateway.requestValidator
   // Region where the REST API exists
   region string
   // Tags for the REST API
@@ -9016,6 +9026,140 @@ private aws.apigateway.stage @defaults("arn") {
   variables map[string]string
   // Tags for the stage
   tags map[string]string
+}
+
+// Amazon API Gateway authorizer
+private aws.apigateway.authorizer @defaults("name type restApiId") {
+  // ARN for the authorizer (synthetic — API Gateway authorizers do not have a native ARN)
+  arn string
+  // Identifier of the authorizer
+  id string
+  // Name of the authorizer
+  name string
+  // Type of authorizer (TOKEN, REQUEST, COGNITO_USER_POOLS)
+  type string
+  // Optional customer-defined auth type used in OpenAPI imports/exports
+  authType string
+  // Identifier of the REST API the authorizer belongs to
+  restApiId string
+  // ARN of the IAM role API Gateway assumes to invoke the authorizer; null for resource-based Lambda permissions
+  authorizerCredentials string
+  // IAM role API Gateway assumes to invoke the authorizer
+  iamRole() aws.iam.role
+  // URI of the authorizer (Lambda invocation URI for TOKEN/REQUEST authorizers)
+  authorizerUri string
+  // Lambda function backing the authorizer (parsed from authorizerUri; null for COGNITO_USER_POOLS)
+  lambdaFunction() aws.lambda.function
+  // TTL in seconds of cached authorizer results; 0 disables caching
+  authorizerResultTtlInSeconds int
+  // Identity source mapping expression(s) used to look up the authorizer cache key
+  identitySource string
+  // Validation expression for the incoming identity token (TOKEN authorizers); regex matched against aud claim for COGNITO_USER_POOLS
+  identityValidationExpression string
+  // Cognito user pool ARNs for COGNITO_USER_POOLS authorizers
+  providerArns []string
+  // Cognito user pools backing the authorizer (COGNITO_USER_POOLS only)
+  userPools() []aws.cognito.userPool
+  // Region where the authorizer exists
+  region string
+}
+
+// Amazon API Gateway request validator
+private aws.apigateway.requestValidator @defaults("name restApiId") {
+  // ARN for the request validator (synthetic — API Gateway request validators do not have a native ARN)
+  arn string
+  // Identifier of the request validator
+  id string
+  // Name of the request validator
+  name string
+  // Identifier of the REST API the validator belongs to
+  restApiId string
+  // Whether the request body is validated against the configured Model schema
+  validateRequestBody bool
+  // Whether request parameters are validated
+  validateRequestParameters bool
+  // Region where the request validator exists
+  region string
+}
+
+// Amazon API Gateway API key
+private aws.apigateway.apiKey @defaults("name id enabled") {
+  // ARN for the API key
+  arn string
+  // Identifier of the API key
+  id string
+  // Name of the API key
+  name string
+  // Description of the API key
+  description string
+  // Whether the API key can be used by callers
+  enabled bool
+  // Marketplace customer identifier when integrating with the AWS SaaS Marketplace
+  customerId string
+  // Stages associated with the API key (formatted as `{restApiId}/{stageName}`)
+  stageKeys []string
+  // Time when the API key was created
+  createdDate time
+  // Time when the API key was last updated
+  lastUpdatedDate time
+  // Tags for the API key
+  tags map[string]string
+  // Region where the API key exists
+  region string
+}
+
+// Amazon API Gateway usage plan
+private aws.apigateway.usagePlan @defaults("name id") {
+  // ARN for the usage plan
+  arn string
+  // Identifier of the usage plan
+  id string
+  // Name of the usage plan
+  name string
+  // Description of the usage plan
+  description string
+  // AWS Marketplace product code associated with the plan
+  productCode string
+  // Associated API stages (each entry has apiId, stage, and per-method throttle settings)
+  apiStages []dict
+  // Quota limit — the target maximum number of permitted requests per period; -1 if unset
+  quotaLimit int
+  // Quota offset — requests subtracted from the limit in the initial period; -1 if unset
+  quotaOffset int
+  // Quota period (DAY, WEEK, MONTH); empty if unset
+  quotaPeriod string
+  // Throttle burst limit — request burst rate; -1 if unset
+  throttleBurstLimit int
+  // Throttle rate limit — steady-state request rate per second; -1 if unset
+  throttleRateLimit float
+  // Tags for the usage plan
+  tags map[string]string
+  // Region where the usage plan exists
+  region string
+}
+
+// Amazon API Gateway VPC link
+private aws.apigateway.vpcLink @defaults("name id status") {
+  // ARN for the VPC link
+  arn string
+  // Identifier of the VPC link
+  id string
+  // Name of the VPC link
+  name string
+  // Description of the VPC link
+  description string
+  // Status of the VPC link (AVAILABLE, PENDING, DELETING, FAILED)
+  status string
+  // Description of the VPC link status
+  statusMessage string
+  // ARNs of the network load balancers targeted by the VPC link
+  targetArns []string
+  // Network load balancers targeted by the VPC link
+  targets() []aws.elb.loadbalancer
+  // Tags for the VPC link
+  tags map[string]string
+  // Region where the VPC link exists
+  region string
 }
 
 // AWS Lambda
