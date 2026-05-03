@@ -47,21 +47,15 @@ func (l *pipfileLock) Direct() languages.Packages {
 }
 
 // Transitive returns all packages from both "default" and "develop" sections.
+// Note: this is a superset of Direct() — it includes all resolved dependencies
+// regardless of group, matching the convention used by other extractors where
+// Transitive() returns all non-root packages.
 func (l *pipfileLock) Transitive() languages.Packages {
-	seen := make(map[string]bool)
-	var packages languages.Packages
+	packages := l.packagesFrom(l.Default)
 
-	// Add default packages first.
-	for name, pkg := range l.Default {
-		version := cleanVersion(pkg.Version)
-		seen[name] = true
-		packages = append(packages, &languages.Package{
-			Name:         name,
-			Version:      version,
-			Purl:         python.NewPackageUrl(name, version),
-			Cpes:         python.NewCpes(name, version),
-			EvidenceList: python.NewEvidenceList(l.evidence),
-		})
+	seen := make(map[string]bool, len(packages))
+	for _, p := range packages {
+		seen[p.Name] = true
 	}
 
 	// Add develop packages, skipping duplicates.
