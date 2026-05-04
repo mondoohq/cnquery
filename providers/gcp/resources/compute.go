@@ -364,6 +364,10 @@ func initGcpProjectComputeServiceInstance(runtime *plugin.Runtime, args map[stri
 	return nil, nil, errors.New("instance not found")
 }
 
+func (g *mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
 func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
