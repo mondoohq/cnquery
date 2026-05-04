@@ -90,22 +90,30 @@ func (b *crashLogBuffer) appendLineLocked(line []byte) {
 
 // Snapshot returns a copy of the current buffer contents in chronological order.
 // Safe to call concurrently with Write.
+//
+// Any unterminated bytes still sitting in pending (a partial line that hasn't
+// seen a '\n' yet) are appended as a final line. This matters for crashes
+// where the subprocess is killed mid-write — the panic line that didn't get
+// to flush its newline is exactly what we want to surface.
 func (b *crashLogBuffer) Snapshot() []string {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	var lines [][]byte
 	if b.full {
-		lines = make([][]byte, 0, len(b.ring))
+		lines = make([][]byte, 0, len(b.ring)+1)
 		lines = append(lines, b.ring[b.head:]...)
 		lines = append(lines, b.ring[:b.head]...)
 	} else {
 		lines = b.ring[:b.head]
 	}
 
-	out := make([]string, len(lines))
-	for i, l := range lines {
-		out[i] = string(l)
+	out := make([]string, 0, len(lines)+1)
+	for _, l := range lines {
+		out = append(out, string(l))
+	}
+	if b.pending.Len() > 0 {
+		out = append(out, b.pending.String())
 	}
 	return out
 }

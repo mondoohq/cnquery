@@ -604,8 +604,23 @@ func buildCrashDiagnostics(p *RunningProvider) string {
 	// panic-shaped: the lines just before death can still hint at the
 	// resource being processed when it happened.
 	if tail := p.crashTail(); len(tail) > 0 {
+		// Cap to keep error messages bounded — a panic with hundreds of
+		// blocked goroutines could otherwise produce a multi-MB string and
+		// bloat Sentry events. Take from the start: Go runtime fatals print
+		// the panicking goroutine first, so the most actionable frames are
+		// at the beginning. The other goroutines' stacks rarely add value
+		// beyond the panicking one's.
+		const maxTail = 80
+		truncated := false
+		if len(tail) > maxTail {
+			tail = tail[:maxTail]
+			truncated = true
+		}
 		sb.WriteString("\nplugin stderr (panic/fatal trace):\n")
 		sb.WriteString(strings.Join(tail, "\n"))
+		if truncated {
+			sb.WriteString("\n... (trace truncated)")
+		}
 	} else if snap := p.stderrSnapshot(); len(snap) > 0 {
 		const maxFallback = 30
 		if len(snap) > maxFallback {

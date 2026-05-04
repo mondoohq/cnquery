@@ -6,6 +6,7 @@ package providers
 import (
 	"errors"
 	"io"
+	"strconv"
 	"testing"
 	"time"
 
@@ -565,6 +566,33 @@ func TestRuntime_HandlePluginError_CrashIncludesHeartbeatTrigger(t *testing.T) {
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "trigger=heartbeat-timeout")
+}
+
+func TestRuntime_HandlePluginError_CrashTailIsTruncated(t *testing.T) {
+	// A panic that produces hundreds of stack frames (e.g. with a large
+	// runtime goroutine dump) must not balloon the error string. Verify
+	// the cap kicks in and a truncation marker is appended.
+	r := &Runtime{}
+	buf := newCrashLogBuffer(io.Discard, 500)
+	_, _ = buf.Write([]byte("panic: too much\n"))
+	for i := range 300 {
+		_, _ = buf.Write([]byte(strconv.Itoa(i) + " frame\n"))
+	}
+
+	instance := &RunningProvider{Name: "os", crashLog: buf}
+	provider := &ConnectedProvider{Instance: instance}
+
+	crashErr := status.Error(codes.Unavailable, "EOF")
+	_, err := r.handlePluginError(crashErr, provider, "x", "y")
+
+	require.Error(t, err)
+	msg := err.Error()
+	assert.Contains(t, msg, "panic: too much")
+	assert.Contains(t, msg, "(trace truncated)")
+	// Frame 0..79 should be present (cap is 80, including the panic line
+	// that's 79 frames). Frame 200 should not.
+	assert.Contains(t, msg, "0 frame")
+	assert.NotContains(t, msg, "200 frame")
 }
 
 func TestRuntime_HandlePluginError_CrashWithoutContextStaysCompact(t *testing.T) {

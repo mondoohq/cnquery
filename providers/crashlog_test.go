@@ -40,8 +40,9 @@ func TestCrashLogBuffer_SplitsOnNewlines(t *testing.T) {
 func TestCrashLogBuffer_HandlesPartialLinesAcrossWrites(t *testing.T) {
 	b := newCrashLogBuffer(io.Discard, 10)
 	_, _ = b.Write([]byte("partial "))
-	// not yet a complete line
-	assert.Empty(t, b.Snapshot())
+	// Snapshot surfaces the unterminated pending bytes too — see the
+	// SIGKILL-mid-write rationale on Snapshot itself.
+	assert.Equal(t, []string{"partial "}, b.Snapshot())
 	_, _ = b.Write([]byte("line\nnext\n"))
 	assert.Equal(t, []string{"partial line", "next"}, b.Snapshot())
 }
@@ -108,6 +109,35 @@ func TestCrashLogBuffer_CrashTailPicksMostRecentPanic(t *testing.T) {
 	_, _ = b.Write([]byte("panic: first\nrecovered\npanic: second fatal\ngoroutine 1:\n"))
 	tail := b.CrashTail()
 	assert.Equal(t, []string{"panic: second fatal", "goroutine 1:"}, tail)
+}
+
+func TestCrashLogBuffer_SnapshotIncludesUnterminatedPending(t *testing.T) {
+	// Simulates the SIGKILL/OOM-mid-write case: the subprocess writes a
+	// panic line but is killed before emitting the trailing '\n'. Snapshot
+	// must still surface that partial line — it's the most actionable byte.
+	b := newCrashLogBuffer(io.Discard, 10)
+	_, _ = b.Write([]byte("setup ok\npanic: about to die"))
+
+	snap := b.Snapshot()
+	assert.Equal(t, []string{"setup ok", "panic: about to die"}, snap)
+}
+
+func TestCrashLogBuffer_CrashTailFindsPanicInPending(t *testing.T) {
+	b := newCrashLogBuffer(io.Discard, 10)
+	_, _ = b.Write([]byte("normal log\npanic: nil deref"))
+
+	tail := b.CrashTail()
+	assert.Equal(t, []string{"panic: nil deref"}, tail)
+}
+
+func TestCrashLogBuffer_PendingDoesNotReappearAfterFlush(t *testing.T) {
+	// Once a complete line is flushed to the ring, subsequent Snapshots
+	// must not double-count it via the pending path.
+	b := newCrashLogBuffer(io.Discard, 10)
+	_, _ = b.Write([]byte("partial"))
+	_, _ = b.Write([]byte(" rest\n"))
+	assert.Equal(t, []string{"partial rest"}, b.Snapshot())
+	assert.Equal(t, []string{"partial rest"}, b.Snapshot())
 }
 
 func TestCrashLogBuffer_ConcurrentWrites(t *testing.T) {
