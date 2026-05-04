@@ -454,8 +454,14 @@ gcp.project @defaults("name number") {
   number() string
   // IAM policy
   iamPolicy() []gcp.resourcemanager.binding
+  // Whether the project's IAM policy grants any role to allUsers or allAuthenticatedUsers
+  hasPublicIamBinding() bool
+  // IAM bindings using primitive roles (roles/owner, roles/editor, roles/viewer); CIS recommends using predefined or custom roles instead
+  primitiveRoleBindings() []gcp.resourcemanager.binding
   // Audit logging configuration
   auditConfig() []gcp.resourcemanager.auditConfig
+  // Whether DATA_READ and DATA_WRITE audit logging is enabled for allServices with no exempted members (CIS 2.1)
+  dataAccessLoggingEnabled() bool
   // Organization policies
   orgPolicies() []gcp.orgPolicy
   // Available organization policy constraints

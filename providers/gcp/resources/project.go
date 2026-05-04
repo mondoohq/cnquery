@@ -174,6 +174,89 @@ func (g *mqlGcpProject) iamPolicy() ([]any, error) {
 	return res, nil
 }
 
+func (g *mqlGcpProject) hasPublicIamBinding() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
+func (g *mqlGcpProject) primitiveRoleBindings() ([]any, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return nil, bindings.Error
+	}
+	res := make([]any, 0)
+	for _, raw := range bindings.Data {
+		b, ok := raw.(*mqlGcpResourcemanagerBinding)
+		if !ok || b == nil {
+			continue
+		}
+		role := b.GetRole()
+		if role.Error != nil {
+			return nil, role.Error
+		}
+		switch role.Data {
+		case "roles/owner", "roles/editor", "roles/viewer":
+			res = append(res, b)
+		}
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProject) dataAccessLoggingEnabled() (bool, error) {
+	configs := g.GetAuditConfig()
+	if configs.Error != nil {
+		return false, configs.Error
+	}
+	for _, raw := range configs.Data {
+		cfg, ok := raw.(*mqlGcpResourcemanagerAuditConfig)
+		if !ok || cfg == nil {
+			continue
+		}
+		service := cfg.GetService()
+		if service.Error != nil {
+			return false, service.Error
+		}
+		if service.Data != "allServices" {
+			continue
+		}
+		logConfigs := cfg.GetAuditLogConfigs()
+		if logConfigs.Error != nil {
+			return false, logConfigs.Error
+		}
+		var hasDataRead, hasDataWrite bool
+		for _, lcRaw := range logConfigs.Data {
+			lc, ok := lcRaw.(*mqlGcpResourcemanagerAuditConfigLogConfig)
+			if !ok || lc == nil {
+				continue
+			}
+			logType := lc.GetLogType()
+			if logType.Error != nil {
+				return false, logType.Error
+			}
+			exempted := lc.GetExemptedMembers()
+			if exempted.Error != nil {
+				return false, exempted.Error
+			}
+			if len(exempted.Data) > 0 {
+				continue
+			}
+			switch logType.Data {
+			case "DATA_READ":
+				hasDataRead = true
+			case "DATA_WRITE":
+				hasDataWrite = true
+			}
+		}
+		if hasDataRead && hasDataWrite {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (g *mqlGcpProject) auditConfig() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error

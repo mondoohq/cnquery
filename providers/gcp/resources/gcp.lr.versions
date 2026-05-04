@@ -1887,6 +1887,7 @@ gcp.project.containerAnalysisService.occurrence.vulnerability 13.6.1
 gcp.project.containerAnalysisService.occurrences 13.6.1
 gcp.project.containerAnalysisService.projectId 13.6.1
 gcp.project.createTime 9.0.0
+gcp.project.dataAccessLoggingEnabled 13.12.2
 gcp.project.dataflow 11.6.6
 gcp.project.dataflowService 11.6.6
 gcp.project.dataflowService.job 11.6.6
@@ -2508,6 +2509,7 @@ gcp.project.gkeService.cluster.tpuIpv4CidrBlock 13.1.2
 gcp.project.gkeService.cluster.workloadIdentityConfig 9.0.0
 gcp.project.gkeService.clusters 9.0.0
 gcp.project.gkeService.projectId 9.0.0
+gcp.project.hasPublicIamBinding 13.12.2
 gcp.project.iam 9.0.0
 gcp.project.iamPolicy 9.0.0
 gcp.project.iamService 9.0.0
@@ -2920,6 +2922,7 @@ gcp.project.number 9.0.0
 gcp.project.orgPolicies 11.5.1
 gcp.project.orgPolicyConstraints 13.6.1
 gcp.project.parentId 9.0.0
+gcp.project.primitiveRoleBindings 13.12.2
 gcp.project.pubsub 9.0.0
 gcp.project.pubsubService 9.0.0
 gcp.project.pubsubService.projectId 9.0.0

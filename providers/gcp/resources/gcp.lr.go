@@ -2342,8 +2342,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
+	"gcp.project.hasPublicIamBinding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetHasPublicIamBinding()).ToDataRes(types.Bool)
+	},
+	"gcp.project.primitiveRoleBindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetPrimitiveRoleBindings()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
 	"gcp.project.auditConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetAuditConfig()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.auditConfig")))
+	},
+	"gcp.project.dataAccessLoggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetDataAccessLoggingEnabled()).ToDataRes(types.Bool)
 	},
 	"gcp.project.orgPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetOrgPolicies()).ToDataRes(types.Array(types.Resource("gcp.orgPolicy")))
@@ -12971,8 +12980,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProject).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.hasPublicIamBinding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).HasPublicIamBinding, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.primitiveRoleBindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).PrimitiveRoleBindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.auditConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).AuditConfig, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dataAccessLoggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).DataAccessLoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.orgPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29261,70 +29282,73 @@ type mqlGcpProject struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectInternal
-	Id                     plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	ParentId               plugin.TValue[string]
-	State                  plugin.TValue[string]
-	CreateTime             plugin.TValue[*time.Time]
-	Labels                 plugin.TValue[map[string]any]
-	DeleteTime             plugin.TValue[*time.Time]
-	Number                 plugin.TValue[string]
-	IamPolicy              plugin.TValue[[]any]
-	AuditConfig            plugin.TValue[[]any]
-	OrgPolicies            plugin.TValue[[]any]
-	OrgPolicyConstraints   plugin.TValue[[]any]
-	Services               plugin.TValue[[]any]
-	Recommendations        plugin.TValue[[]any]
-	Gke                    plugin.TValue[*mqlGcpProjectGkeService]
-	Compute                plugin.TValue[*mqlGcpProjectComputeService]
-	Pubsub                 plugin.TValue[*mqlGcpProjectPubsubService]
-	Kms                    plugin.TValue[*mqlGcpProjectKmsService]
-	EssentialContacts      plugin.TValue[[]any]
-	ApiKeys                plugin.TValue[[]any]
-	Logging                plugin.TValue[*mqlGcpProjectLoggingservice]
-	Sql                    plugin.TValue[*mqlGcpProjectSqlService]
-	Iam                    plugin.TValue[*mqlGcpProjectIamService]
-	CommonInstanceMetadata plugin.TValue[map[string]any]
-	Dns                    plugin.TValue[*mqlGcpProjectDnsService]
-	Bigquery               plugin.TValue[*mqlGcpProjectBigqueryService]
-	CloudFunctions         plugin.TValue[[]any]
-	CloudFunctionsV2       plugin.TValue[[]any]
-	Dataproc               plugin.TValue[*mqlGcpProjectDataprocService]
-	CloudRun               plugin.TValue[*mqlGcpProjectCloudRunService]
-	AccessApprovalSettings plugin.TValue[*mqlGcpAccessApprovalSettings]
-	Storage                plugin.TValue[*mqlGcpProjectStorageService]
-	Monitoring             plugin.TValue[*mqlGcpProjectMonitoringService]
-	BinaryAuthorization    plugin.TValue[*mqlGcpProjectBinaryAuthorizationControl]
-	Redis                  plugin.TValue[*mqlGcpProjectRedisService]
-	Secretmanager          plugin.TValue[*mqlGcpProjectSecretmanagerService]
-	Firestore              plugin.TValue[*mqlGcpProjectFirestoreService]
-	Spanner                plugin.TValue[*mqlGcpProjectSpannerService]
-	Bigtable               plugin.TValue[*mqlGcpProjectBigtableService]
-	Alloydb                plugin.TValue[*mqlGcpProjectAlloydbService]
-	CertificateAuthority   plugin.TValue[*mqlGcpProjectCertificateAuthorityService]
-	Filestore              plugin.TValue[*mqlGcpProjectFilestoreService]
-	CloudTasks             plugin.TValue[*mqlGcpProjectCloudTasksService]
-	CloudScheduler         plugin.TValue[*mqlGcpProjectCloudSchedulerService]
-	AppEngine              plugin.TValue[*mqlGcpProjectAppEngineService]
-	CloudDeploy            plugin.TValue[*mqlGcpProjectCloudDeployService]
-	Dataflow               plugin.TValue[*mqlGcpProjectDataflowService]
-	ArtifactRegistry       plugin.TValue[*mqlGcpProjectArtifactRegistryService]
-	Backupdr               plugin.TValue[*mqlGcpProjectBackupdrService]
-	Vertexai               plugin.TValue[*mqlGcpProjectVertexaiService]
-	ModelArmor             plugin.TValue[*mqlGcpProjectModelArmorService]
-	SccFindings            plugin.TValue[[]any]
-	Eventarc               plugin.TValue[*mqlGcpProjectEventarcService]
-	Dlp                    plugin.TValue[*mqlGcpProjectDlpService]
-	Batch                  plugin.TValue[*mqlGcpProjectBatchService]
-	Ids                    plugin.TValue[*mqlGcpProjectIdsService]
-	GkeBackup              plugin.TValue[*mqlGcpProjectGkeBackupService]
-	ContainerAnalysis      plugin.TValue[*mqlGcpProjectContainerAnalysisService]
-	CloudBuild             plugin.TValue[*mqlGcpProjectCloudBuildService]
-	Iap                    plugin.TValue[*mqlGcpProjectIapService]
-	SourceRepositories     plugin.TValue[*mqlGcpProjectSourceRepositoriesService]
-	Memcache               plugin.TValue[*mqlGcpProjectMemcacheService]
-	Datastream             plugin.TValue[*mqlGcpProjectDatastreamService]
-	Memorystore            plugin.TValue[*mqlGcpProjectMemorystoreService]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	ParentId                 plugin.TValue[string]
+	State                    plugin.TValue[string]
+	CreateTime               plugin.TValue[*time.Time]
+	Labels                   plugin.TValue[map[string]any]
+	DeleteTime               plugin.TValue[*time.Time]
+	Number                   plugin.TValue[string]
+	IamPolicy                plugin.TValue[[]any]
+	HasPublicIamBinding      plugin.TValue[bool]
+	PrimitiveRoleBindings    plugin.TValue[[]any]
+	AuditConfig              plugin.TValue[[]any]
+	DataAccessLoggingEnabled plugin.TValue[bool]
+	OrgPolicies              plugin.TValue[[]any]
+	OrgPolicyConstraints     plugin.TValue[[]any]
+	Services                 plugin.TValue[[]any]
+	Recommendations          plugin.TValue[[]any]
+	Gke                      plugin.TValue[*mqlGcpProjectGkeService]
+	Compute                  plugin.TValue[*mqlGcpProjectComputeService]
+	Pubsub                   plugin.TValue[*mqlGcpProjectPubsubService]
+	Kms                      plugin.TValue[*mqlGcpProjectKmsService]
+	EssentialContacts        plugin.TValue[[]any]
+	ApiKeys                  plugin.TValue[[]any]
+	Logging                  plugin.TValue[*mqlGcpProjectLoggingservice]
+	Sql                      plugin.TValue[*mqlGcpProjectSqlService]
+	Iam                      plugin.TValue[*mqlGcpProjectIamService]
+	CommonInstanceMetadata   plugin.TValue[map[string]any]
+	Dns                      plugin.TValue[*mqlGcpProjectDnsService]
+	Bigquery                 plugin.TValue[*mqlGcpProjectBigqueryService]
+	CloudFunctions           plugin.TValue[[]any]
+	CloudFunctionsV2         plugin.TValue[[]any]
+	Dataproc                 plugin.TValue[*mqlGcpProjectDataprocService]
+	CloudRun                 plugin.TValue[*mqlGcpProjectCloudRunService]
+	AccessApprovalSettings   plugin.TValue[*mqlGcpAccessApprovalSettings]
+	Storage                  plugin.TValue[*mqlGcpProjectStorageService]
+	Monitoring               plugin.TValue[*mqlGcpProjectMonitoringService]
+	BinaryAuthorization      plugin.TValue[*mqlGcpProjectBinaryAuthorizationControl]
+	Redis                    plugin.TValue[*mqlGcpProjectRedisService]
+	Secretmanager            plugin.TValue[*mqlGcpProjectSecretmanagerService]
+	Firestore                plugin.TValue[*mqlGcpProjectFirestoreService]
+	Spanner                  plugin.TValue[*mqlGcpProjectSpannerService]
+	Bigtable                 plugin.TValue[*mqlGcpProjectBigtableService]
+	Alloydb                  plugin.TValue[*mqlGcpProjectAlloydbService]
+	CertificateAuthority     plugin.TValue[*mqlGcpProjectCertificateAuthorityService]
+	Filestore                plugin.TValue[*mqlGcpProjectFilestoreService]
+	CloudTasks               plugin.TValue[*mqlGcpProjectCloudTasksService]
+	CloudScheduler           plugin.TValue[*mqlGcpProjectCloudSchedulerService]
+	AppEngine                plugin.TValue[*mqlGcpProjectAppEngineService]
+	CloudDeploy              plugin.TValue[*mqlGcpProjectCloudDeployService]
+	Dataflow                 plugin.TValue[*mqlGcpProjectDataflowService]
+	ArtifactRegistry         plugin.TValue[*mqlGcpProjectArtifactRegistryService]
+	Backupdr                 plugin.TValue[*mqlGcpProjectBackupdrService]
+	Vertexai                 plugin.TValue[*mqlGcpProjectVertexaiService]
+	ModelArmor               plugin.TValue[*mqlGcpProjectModelArmorService]
+	SccFindings              plugin.TValue[[]any]
+	Eventarc                 plugin.TValue[*mqlGcpProjectEventarcService]
+	Dlp                      plugin.TValue[*mqlGcpProjectDlpService]
+	Batch                    plugin.TValue[*mqlGcpProjectBatchService]
+	Ids                      plugin.TValue[*mqlGcpProjectIdsService]
+	GkeBackup                plugin.TValue[*mqlGcpProjectGkeBackupService]
+	ContainerAnalysis        plugin.TValue[*mqlGcpProjectContainerAnalysisService]
+	CloudBuild               plugin.TValue[*mqlGcpProjectCloudBuildService]
+	Iap                      plugin.TValue[*mqlGcpProjectIapService]
+	SourceRepositories       plugin.TValue[*mqlGcpProjectSourceRepositoriesService]
+	Memcache                 plugin.TValue[*mqlGcpProjectMemcacheService]
+	Datastream               plugin.TValue[*mqlGcpProjectDatastreamService]
+	Memorystore              plugin.TValue[*mqlGcpProjectMemorystoreService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -29426,6 +29450,28 @@ func (c *mqlGcpProject) GetIamPolicy() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGcpProject) GetHasPublicIamBinding() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasPublicIamBinding, func() (bool, error) {
+		return c.hasPublicIamBinding()
+	})
+}
+
+func (c *mqlGcpProject) GetPrimitiveRoleBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrimitiveRoleBindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "primitiveRoleBindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.primitiveRoleBindings()
+	})
+}
+
 func (c *mqlGcpProject) GetAuditConfig() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.AuditConfig, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -29439,6 +29485,12 @@ func (c *mqlGcpProject) GetAuditConfig() *plugin.TValue[[]any] {
 		}
 
 		return c.auditConfig()
+	})
+}
+
+func (c *mqlGcpProject) GetDataAccessLoggingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DataAccessLoggingEnabled, func() (bool, error) {
+		return c.dataAccessLoggingEnabled()
 	})
 }
 
