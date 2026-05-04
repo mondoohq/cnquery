@@ -103,9 +103,10 @@ func AnalyzeBundle(bundle *llx.CodeBundle, schema resources.ResourcesSchema) (*Q
 	}
 
 	a := &usageAnalyzer{
-		bundle: bundle,
-		schema: schema,
-		usage:  usage,
+		bundle:           bundle,
+		schema:           schema,
+		usage:            usage,
+		seenUnknownNames: map[string]struct{}{},
 	}
 	a.walk()
 
@@ -116,9 +117,10 @@ func AnalyzeBundle(bundle *llx.CodeBundle, schema resources.ResourcesSchema) (*Q
 }
 
 type usageAnalyzer struct {
-	bundle *llx.CodeBundle
-	schema resources.ResourcesSchema
-	usage  *QueryUsage
+	bundle           *llx.CodeBundle
+	schema           resources.ResourcesSchema
+	usage            *QueryUsage
+	seenUnknownNames map[string]struct{}
 }
 
 func (a *usageAnalyzer) walk() {
@@ -182,6 +184,9 @@ func (a *usageAnalyzer) classify(chunk *llx.Chunk) {
 func (a *usageAnalyzer) recordResource(name string) {
 	ru := a.getOrCreateResource(name)
 	ru.Count++
+	// Provider count tracks resource references only — keep it in lockstep
+	// with the doc on ProviderUsage.Count ("sum of ResourceUsage.Count").
+	a.usage.Providers[ru.Provider].Count++
 }
 
 func (a *usageAnalyzer) recordField(resourceName, fieldName string) {
@@ -221,7 +226,6 @@ func (a *usageAnalyzer) getOrCreateResource(name string) *ResourceUsage {
 		}
 		pu.Resources[name] = ru
 	}
-	pu.Count++
 	return ru
 }
 
@@ -242,13 +246,11 @@ func (a *usageAnalyzer) resolveResource(name string) (providerID, maturity strin
 }
 
 func (a *usageAnalyzer) warnUnknownResource(name string) {
-	msg := "unknown resource: " + name
-	for _, w := range a.usage.Warnings {
-		if w == msg {
-			return
-		}
+	if _, ok := a.seenUnknownNames[name]; ok {
+		return
 	}
-	a.usage.Warnings = append(a.usage.Warnings, msg)
+	a.seenUnknownNames[name] = struct{}{}
+	a.usage.Warnings = append(a.usage.Warnings, "unknown resource: "+name)
 }
 
 func (a *usageAnalyzer) getOrCreateProvider(id string) *ProviderUsage {

@@ -166,6 +166,23 @@ func TestAnalyzeBundle_NilSchema(t *testing.T) {
 		"fields are skipped when schema is nil (cannot tell field vs builtin)")
 }
 
+func TestAnalyzeQuery_ProviderCountEqualsResourceSum(t *testing.T) {
+	// Multiple resources + multiple field accesses on each, mixed across two
+	// providers — exercises both the resource-count and field-count paths.
+	usage, _, err := mqlc.AnalyzeQuery(
+		"asset.platform; asset.name; users { name uid home }", nil, conf)
+	require.NoError(t, err)
+
+	for id, pu := range usage.Providers {
+		var sum int
+		for _, ru := range pu.Resources {
+			sum += ru.Count
+		}
+		assert.Equal(t, sum, pu.Count,
+			"provider %q: Count must equal sum of ResourceUsage.Count", id)
+	}
+}
+
 func TestAnalyzeBundle_NilBundle(t *testing.T) {
 	_, err := mqlc.AnalyzeBundle(nil, conf.Schema)
 	assert.Error(t, err)
