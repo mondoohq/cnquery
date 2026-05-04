@@ -454,6 +454,7 @@ roku
 rootdir
 rpo
 RRULE
+RSASHA
 RSASSA
 RSession
 rtl
