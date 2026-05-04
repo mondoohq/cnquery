@@ -8276,8 +8276,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.sslPolicy.minTlsVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetMinTlsVersion()).ToDataRes(types.String)
 	},
-	"gcp.project.computeService.sslPolicy.weakTlsVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetWeakTlsVersion()).ToDataRes(types.Bool)
+	"gcp.project.computeService.sslPolicy.weakTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetWeakTls()).ToDataRes(types.Bool)
 	},
 	"gcp.project.computeService.sslPolicy.customFeatures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetCustomFeatures()).ToDataRes(types.Array(types.String))
@@ -21631,8 +21631,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceSslPolicy).MinTlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gcp.project.computeService.sslPolicy.weakTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSslPolicy).WeakTlsVersion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"gcp.project.computeService.sslPolicy.weakTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSslPolicy).WeakTls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.sslPolicy.customFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50029,7 +50029,7 @@ type mqlGcpProjectComputeServiceSslPolicy struct {
 	Description     plugin.TValue[string]
 	Profile         plugin.TValue[string]
 	MinTlsVersion   plugin.TValue[string]
-	WeakTlsVersion  plugin.TValue[bool]
+	WeakTls         plugin.TValue[bool]
 	CustomFeatures  plugin.TValue[[]any]
 	EnabledFeatures plugin.TValue[[]any]
 	RegionUrl       plugin.TValue[string]
@@ -50095,9 +50095,9 @@ func (c *mqlGcpProjectComputeServiceSslPolicy) GetMinTlsVersion() *plugin.TValue
 	return &c.MinTlsVersion
 }
 
-func (c *mqlGcpProjectComputeServiceSslPolicy) GetWeakTlsVersion() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.WeakTlsVersion, func() (bool, error) {
-		return c.weakTlsVersion()
+func (c *mqlGcpProjectComputeServiceSslPolicy) GetWeakTls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WeakTls, func() (bool, error) {
+		return c.weakTls()
 	})
 }
 

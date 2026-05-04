@@ -355,10 +355,11 @@ func (g *mqlGcpProjectDnsServiceRecordset) id() (string, error) {
 }
 
 func (g *mqlGcpProjectDnsServiceManagedzone) dnsSecAlgorithmWeak() (bool, error) {
-	if g.DnssecEnabled.Error != nil {
-		return false, g.DnssecEnabled.Error
+	enabled := g.GetDnssecEnabled()
+	if enabled.Error != nil {
+		return false, enabled.Error
 	}
-	if !g.DnssecEnabled.Data {
+	if !enabled.Data {
 		return false, nil
 	}
 	cfg := g.GetDnssecConfig()
@@ -382,8 +383,8 @@ func (g *mqlGcpProjectDnsServiceManagedzone) dnsSecAlgorithmWeak() (bool, error)
 			continue
 		}
 		alg, _ := spec["algorithm"].(string)
-		switch alg {
-		case "rsasha1", "rsasha1-nsec3-sha1", "RSASHA1", "RSASHA1-NSEC3-SHA1":
+		switch strings.ToUpper(alg) {
+		case "RSASHA1", "RSASHA1-NSEC3-SHA1":
 			return true, nil
 		}
 	}

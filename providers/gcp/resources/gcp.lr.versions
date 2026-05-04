@@ -1692,7 +1692,7 @@ gcp.project.computeService.sslPolicy.profile 11.5.1
 gcp.project.computeService.sslPolicy.regionUrl 11.5.1
 gcp.project.computeService.sslPolicy.selfLink 11.5.1
 gcp.project.computeService.sslPolicy.warnings 11.5.1
-gcp.project.computeService.sslPolicy.weakTlsVersion 13.12.2
+gcp.project.computeService.sslPolicy.weakTls 13.12.2
 gcp.project.computeService.storagePool 11.6.6
 gcp.project.computeService.storagePool.capacityProvisioningType 11.6.6
 gcp.project.computeService.storagePool.created 11.6.6

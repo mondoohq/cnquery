@@ -5178,8 +5178,8 @@ private gcp.project.computeService.sslPolicy @defaults("name profile minTlsVersi
   profile string
   // Minimum TLS version (TLS_1_0, TLS_1_1, TLS_1_2)
   minTlsVersion string
-  // Whether the policy permits weak TLS: minTlsVersion is TLS_1_0/TLS_1_1, or profile is COMPATIBLE
-  weakTlsVersion() bool
+  // Whether the policy permits weak TLS — true when minTlsVersion is TLS_1_0/TLS_1_1 (version weakness) or profile is COMPATIBLE (cipher-suite weakness, even when minTlsVersion is TLS_1_2)
+  weakTls() bool
   // Custom features enabled when profile is CUSTOM
   customFeatures []string
   // Features enabled in the SSL policy

@@ -2800,7 +2800,7 @@ func (g *mqlGcpProjectComputeServiceSecurityPolicy) rules() ([]any, error) {
 
 // SSL Policies
 
-func (g *mqlGcpProjectComputeServiceSslPolicy) weakTlsVersion() (bool, error) {
+func (g *mqlGcpProjectComputeServiceSslPolicy) weakTls() (bool, error) {
 	if g.MinTlsVersion.Error != nil {
 		return false, g.MinTlsVersion.Error
 	}
