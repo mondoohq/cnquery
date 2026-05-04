@@ -3367,7 +3367,31 @@ func (g *mqlGcpProjectComputeServiceInstance) osLoginEnabled() (bool, error) {
 	if md.Error != nil {
 		return false, md.Error
 	}
-	return metadataBoolFlag(md.Data, "enable-oslogin"), nil
+	if _, set := md.Data["enable-oslogin"]; set {
+		return metadataBoolFlag(md.Data, "enable-oslogin"), nil
+	}
+	if g.ProjectId.Error != nil {
+		return false, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+	if projectId == "" {
+		return false, nil
+	}
+	projRes, err := NewResource(g.MqlRuntime, "gcp.project", map[string]*llx.RawData{
+		"id": llx.StringData(projectId),
+	})
+	if err != nil {
+		return false, err
+	}
+	proj := projRes.(*mqlGcpProject)
+	projMd := proj.GetCommonInstanceMetadata()
+	if projMd.Error != nil {
+		return false, projMd.Error
+	}
+	if projMd.Data == nil {
+		return false, nil
+	}
+	return metadataBoolFlag(projMd.Data, "enable-oslogin"), nil
 }
 
 func (g *mqlGcpProjectComputeServiceInstance) serialPortEnabled() (bool, error) {

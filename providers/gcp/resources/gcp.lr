@@ -924,15 +924,15 @@ gcp.project.computeService.instance @defaults("name id") {
   networkInterfaces []dict
   // Whether the instance has at least one external IP attached via a network interface accessConfig
   hasPublicIp() bool
-  // Whether the instance runs as the default Compute Engine service account (<projectNumber>-compute@developer.gserviceaccount.com); CIS 4.1 advises a dedicated SA
+  // Whether the instance runs as the default Compute Engine service account (<projectNumber>-compute@developer.gserviceaccount.com)
   usesDefaultServiceAccount() bool
-  // Whether any attached service account has the broad cloud-platform OAuth scope; CIS 4.2 advises minimal scopes
+  // Whether any attached service account has the broad cloud-platform OAuth scope
   hasFullCloudPlatformScope() bool
-  // Whether instance metadata 'block-project-ssh-keys' is true; CIS 4.3
+  // Whether instance metadata 'block-project-ssh-keys' is true
   blockProjectSshKeysEnabled() bool
-  // Whether instance metadata 'enable-oslogin' is true; CIS 4.4. Does NOT yet fall back to project-level metadata.
+  // Whether OS Login is enabled on this instance — checks instance metadata 'enable-oslogin', then falls back to project commonInstanceMetadata when unset
   osLoginEnabled() bool
-  // Whether instance metadata 'serial-port-enable' is set to true (interactive serial console); CIS 4.5
+  // Whether instance metadata 'serial-port-enable' is set to true (interactive serial console)
   serialPortEnabled() bool
   // Private IPv6 google access type for the VM
   privateIpv6GoogleAccess string
