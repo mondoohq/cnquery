@@ -3501,6 +3501,7 @@ gcp.project.storageService.bucket.lifecycleRuleCondition.noncurrentTimeBefore 11
 gcp.project.storageService.bucket.lifecycleRuleCondition.numNewerVersions 11.0.79
 gcp.project.storageService.bucket.location 9.0.0
 gcp.project.storageService.bucket.locationType 9.0.0
+gcp.project.storageService.bucket.loggingEnabled 13.12.2
 gcp.project.storageService.bucket.metageneration 13.1.2
 gcp.project.storageService.bucket.name 9.0.0
 gcp.project.storageService.bucket.objectRetentionMode 13.7.2
@@ -3509,6 +3510,7 @@ gcp.project.storageService.bucket.projectNumber 9.0.0
 gcp.project.storageService.bucket.public 13.12.2
 gcp.project.storageService.bucket.publicAccessPrevention 13.1.2
 gcp.project.storageService.bucket.retentionPolicy 9.0.0
+gcp.project.storageService.bucket.retentionPolicyLocked 13.12.2
 gcp.project.storageService.bucket.rpo 11.6.6
 gcp.project.storageService.bucket.satisfiesPZS 11.6.6
 gcp.project.storageService.bucket.softDeletePolicy 13.7.2

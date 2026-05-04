@@ -3833,6 +3833,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.retentionPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetRetentionPolicy()).ToDataRes(types.Dict)
 	},
+	"gcp.project.storageService.bucket.retentionPolicyLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetRetentionPolicyLocked()).ToDataRes(types.Bool)
+	},
+	"gcp.project.storageService.bucket.loggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetLoggingEnabled()).ToDataRes(types.Bool)
+	},
 	"gcp.project.storageService.bucket.encryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetEncryption()).ToDataRes(types.Dict)
 	},
@@ -15061,6 +15067,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.storageService.bucket.retentionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).RetentionPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.retentionPolicyLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).RetentionPolicyLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.loggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).LoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.storageService.bucket.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34334,6 +34348,8 @@ type mqlGcpProjectStorageServiceBucket struct {
 	IamPolicy                plugin.TValue[[]any]
 	IamConfiguration         plugin.TValue[any]
 	RetentionPolicy          plugin.TValue[any]
+	RetentionPolicyLocked    plugin.TValue[bool]
+	LoggingEnabled           plugin.TValue[bool]
 	Encryption               plugin.TValue[any]
 	DefaultKmsKey            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 	Lifecycle                plugin.TValue[[]any]
@@ -34451,6 +34467,14 @@ func (c *mqlGcpProjectStorageServiceBucket) GetIamConfiguration() *plugin.TValue
 
 func (c *mqlGcpProjectStorageServiceBucket) GetRetentionPolicy() *plugin.TValue[any] {
 	return &c.RetentionPolicy
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetRetentionPolicyLocked() *plugin.TValue[bool] {
+	return &c.RetentionPolicyLocked
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetLoggingEnabled() *plugin.TValue[bool] {
+	return &c.LoggingEnabled
 }
 
 func (c *mqlGcpProjectStorageServiceBucket) GetEncryption() *plugin.TValue[any] {

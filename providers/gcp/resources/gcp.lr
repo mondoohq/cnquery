@@ -1552,6 +1552,10 @@ private gcp.project.storageService.bucket @defaults("id") {
   iamConfiguration dict
   // Retention policy
   retentionPolicy dict
+  // Whether the bucket's retention policy is locked (retentionPolicy.isLocked == true)
+  retentionPolicyLocked bool
+  // Whether bucket access logs are configured (logging.logBucket is set)
+  loggingEnabled bool
   // Encryption
   encryption dict
   // Default Cloud KMS encryption key for new objects in this bucket
