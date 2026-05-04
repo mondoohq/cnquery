@@ -2400,7 +2400,7 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   addonsConfig gcp.project.gkeService.cluster.addonsConfig
   // Configuration for the use of Kubernetes Service Accounts in GCP IAM policies
   workloadIdentityConfig dict
-  // Whether Workload Identity is enabled (workloadPool is set); CIS 5.2.2
+  // Whether Workload Identity is enabled (workloadPool is set)
   workloadIdentityEnabled bool
   // Configuration for cluster IP allocation
   ipAllocationPolicy gcp.project.gkeService.cluster.ipAllocationPolicy
@@ -2408,11 +2408,11 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   networkConfig gcp.project.gkeService.cluster.networkConfig
   // Binary authorization configuration
   binaryAuthorization dict
-  // Whether Binary Authorization is enabled for the cluster; CIS 5.10.5
+  // Whether Binary Authorization is enabled for the cluster (Enabled flag is true OR evaluationMode is anything other than DISABLED/UNSPECIFIED)
   binaryAuthorizationEnabled bool
   // Legacy ABAC authorization configuration
   legacyAbac dict
-  // Whether legacy ABAC is enabled (CIS 5.8.4 says it should not be)
+  // Whether the legacy ABAC authorizer is enabled on the cluster
   legacyAbacEnabled bool
   // Authentication information for accessing the master endpoint
   masterAuth dict
@@ -2436,7 +2436,7 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   databaseEncryptionKey() gcp.project.kmsService.keyring.cryptokey
   // Configuration for Shielded Nodes feature
   shieldedNodesConfig dict
-  // Whether Shielded Nodes is enabled cluster-wide; CIS 5.5.5
+  // Whether Shielded Nodes is enabled cluster-wide
   shieldedNodesEnabled bool
   // Configuration for the fine-grained cost management feature
   costManagementConfig dict
@@ -2648,9 +2648,9 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   status string
   // Node management configuration
   management dict
-  // Whether nodes are automatically upgraded to the cluster master version; CIS 5.5.4
+  // Whether nodes are automatically upgraded to the cluster master version
   autoUpgrade bool
-  // Whether nodes are automatically repaired when unhealthy; CIS 5.5.3
+  // Whether nodes are automatically repaired when unhealthy
   autoRepair bool
   // Autoscaler configuration for this NodePool
   autoscaling gcp.project.gkeService.cluster.nodepool.autoscaling
