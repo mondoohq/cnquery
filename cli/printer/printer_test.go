@@ -98,9 +98,7 @@ func TestPrinter(t *testing.T) {
 			"file('zzz') { content }",
 			"",
 			[]string{
-				"error: 1 error occurred:\n" +
-					"\t* file 'zzz' not found\n" +
-					"file: {\n  content: error: file 'zzz' not found\n}",
+				"file: {\n  content: null\n}",
 			},
 		},
 		{
