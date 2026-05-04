@@ -354,6 +354,42 @@ func (g *mqlGcpProjectDnsServiceRecordset) id() (string, error) {
 	return "gcp.project.dnsService.recordset/" + projectId + "/" + id, nil
 }
 
+func (g *mqlGcpProjectDnsServiceManagedzone) dnsSecAlgorithmWeak() (bool, error) {
+	if g.DnssecEnabled.Error != nil {
+		return false, g.DnssecEnabled.Error
+	}
+	if !g.DnssecEnabled.Data {
+		return false, nil
+	}
+	cfg := g.GetDnssecConfig()
+	if cfg.Error != nil {
+		return false, cfg.Error
+	}
+	if cfg.Data == nil {
+		return false, nil
+	}
+	cfgMap, ok := cfg.Data.(map[string]any)
+	if !ok {
+		return false, nil
+	}
+	specs, ok := cfgMap["defaultKeySpecs"].([]any)
+	if !ok {
+		return false, nil
+	}
+	for _, raw := range specs {
+		spec, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		alg, _ := spec["algorithm"].(string)
+		switch alg {
+		case "rsasha1", "rsasha1-nsec3-sha1", "RSASHA1", "RSASHA1-NSEC3-SHA1":
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (g *mqlGcpProjectDnsServiceManagedzone) iamPolicy() ([]any, error) {
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error

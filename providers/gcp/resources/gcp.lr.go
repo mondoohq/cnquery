@@ -4751,6 +4751,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dnsService.managedzone.dnssecEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetDnssecEnabled()).ToDataRes(types.Bool)
 	},
+	"gcp.project.dnsService.managedzone.dnsSecAlgorithmWeak": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetDnsSecAlgorithmWeak()).ToDataRes(types.Bool)
+	},
 	"gcp.project.dnsService.managedzone.privateVisibilityConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDnsServiceManagedzone).GetPrivateVisibilityConfig()).ToDataRes(types.Dict)
 	},
@@ -6049,6 +6052,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.serviceAccount.keys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetKeys()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.serviceAccount.key")))
+	},
+	"gcp.project.iamService.serviceAccount.hasUserManagedKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetHasUserManagedKeys()).ToDataRes(types.Bool)
+	},
+	"gcp.project.iamService.serviceAccount.activeUserManagedKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetActiveUserManagedKeys()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.serviceAccount.key")))
 	},
 	"gcp.project.iamService.serviceAccount.lastAuthenticatedTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccount).GetLastAuthenticatedTime()).ToDataRes(types.Time)
@@ -8266,6 +8275,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.sslPolicy.minTlsVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetMinTlsVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.sslPolicy.weakTlsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetWeakTlsVersion()).ToDataRes(types.Bool)
 	},
 	"gcp.project.computeService.sslPolicy.customFeatures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetCustomFeatures()).ToDataRes(types.Array(types.String))
@@ -16395,6 +16407,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDnsServiceManagedzone).DnssecEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dnsService.managedzone.dnsSecAlgorithmWeak": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDnsServiceManagedzone).DnsSecAlgorithmWeak, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dnsService.managedzone.privateVisibilityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDnsServiceManagedzone).PrivateVisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -18361,6 +18377,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.serviceAccount.keys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccount).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.hasUserManagedKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccount).HasUserManagedKeys, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.activeUserManagedKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccount).ActiveUserManagedKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.serviceAccount.lastAuthenticatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21605,6 +21629,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.sslPolicy.minTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSslPolicy).MinTlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.sslPolicy.weakTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSslPolicy).WeakTlsVersion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.sslPolicy.customFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37263,6 +37291,7 @@ type mqlGcpProjectDnsServiceManagedzone struct {
 	Labels                  plugin.TValue[map[string]any]
 	CloudLoggingEnabled     plugin.TValue[bool]
 	DnssecEnabled           plugin.TValue[bool]
+	DnsSecAlgorithmWeak     plugin.TValue[bool]
 	PrivateVisibilityConfig plugin.TValue[any]
 	RecordSets              plugin.TValue[[]any]
 	IamPolicy               plugin.TValue[[]any]
@@ -37355,6 +37384,12 @@ func (c *mqlGcpProjectDnsServiceManagedzone) GetCloudLoggingEnabled() *plugin.TV
 
 func (c *mqlGcpProjectDnsServiceManagedzone) GetDnssecEnabled() *plugin.TValue[bool] {
 	return &c.DnssecEnabled
+}
+
+func (c *mqlGcpProjectDnsServiceManagedzone) GetDnsSecAlgorithmWeak() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DnsSecAlgorithmWeak, func() (bool, error) {
+		return c.dnsSecAlgorithmWeak()
+	})
 }
 
 func (c *mqlGcpProjectDnsServiceManagedzone) GetPrivateVisibilityConfig() *plugin.TValue[any] {
@@ -42448,6 +42483,8 @@ type mqlGcpProjectIamServiceServiceAccount struct {
 	Oauth2ClientId        plugin.TValue[string]
 	Disabled              plugin.TValue[bool]
 	Keys                  plugin.TValue[[]any]
+	HasUserManagedKeys    plugin.TValue[bool]
+	ActiveUserManagedKeys plugin.TValue[[]any]
 	LastAuthenticatedTime plugin.TValue[*time.Time]
 }
 
@@ -42533,6 +42570,28 @@ func (c *mqlGcpProjectIamServiceServiceAccount) GetKeys() *plugin.TValue[[]any] 
 		}
 
 		return c.keys()
+	})
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccount) GetHasUserManagedKeys() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUserManagedKeys, func() (bool, error) {
+		return c.hasUserManagedKeys()
+	})
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccount) GetActiveUserManagedKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ActiveUserManagedKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iamService.serviceAccount", c.__id, "activeUserManagedKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.activeUserManagedKeys()
 	})
 }
 
@@ -49970,6 +50029,7 @@ type mqlGcpProjectComputeServiceSslPolicy struct {
 	Description     plugin.TValue[string]
 	Profile         plugin.TValue[string]
 	MinTlsVersion   plugin.TValue[string]
+	WeakTlsVersion  plugin.TValue[bool]
 	CustomFeatures  plugin.TValue[[]any]
 	EnabledFeatures plugin.TValue[[]any]
 	RegionUrl       plugin.TValue[string]
@@ -50033,6 +50093,12 @@ func (c *mqlGcpProjectComputeServiceSslPolicy) GetProfile() *plugin.TValue[strin
 
 func (c *mqlGcpProjectComputeServiceSslPolicy) GetMinTlsVersion() *plugin.TValue[string] {
 	return &c.MinTlsVersion
+}
+
+func (c *mqlGcpProjectComputeServiceSslPolicy) GetWeakTlsVersion() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WeakTlsVersion, func() (bool, error) {
+		return c.weakTlsVersion()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceSslPolicy) GetCustomFeatures() *plugin.TValue[[]any] {

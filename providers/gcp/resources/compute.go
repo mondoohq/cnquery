@@ -2800,6 +2800,20 @@ func (g *mqlGcpProjectComputeServiceSecurityPolicy) rules() ([]any, error) {
 
 // SSL Policies
 
+func (g *mqlGcpProjectComputeServiceSslPolicy) weakTlsVersion() (bool, error) {
+	if g.MinTlsVersion.Error != nil {
+		return false, g.MinTlsVersion.Error
+	}
+	switch g.MinTlsVersion.Data {
+	case "TLS_1_0", "TLS_1_1":
+		return true, nil
+	}
+	if g.Profile.Error != nil {
+		return false, g.Profile.Error
+	}
+	return g.Profile.Data == "COMPATIBLE", nil
+}
+
 func (g *mqlGcpProjectComputeServiceSslPolicy) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }

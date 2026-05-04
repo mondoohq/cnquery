@@ -2300,6 +2300,8 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   cloudLoggingEnabled bool
   // Whether DNSSEC is enabled
   dnssecEnabled bool
+  // Whether DNSSEC is enabled but uses a weak signing algorithm (RSASHA1 / RSASHA1-NSEC3-SHA1)
+  dnsSecAlgorithmWeak() bool
   // Authorized VPC networks and GKE clusters for a private zone (empty for public zones)
   privateVisibilityConfig dict
   // Cloud DNS record set in the zone
@@ -3409,6 +3411,10 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   disabled bool
   // Service account keys
   keys() []gcp.project.iamService.serviceAccount.key
+  // Whether this service account has at least one user-managed (non-disabled) key
+  hasUserManagedKeys() bool
+  // User-managed keys that are not disabled (the SA-key audit hot spot)
+  activeUserManagedKeys() []gcp.project.iamService.serviceAccount.key
   // Timestamp when the service account was last used to authenticate (from Policy Intelligence)
   lastAuthenticatedTime() time
 }
@@ -5172,6 +5178,8 @@ private gcp.project.computeService.sslPolicy @defaults("name profile minTlsVersi
   profile string
   // Minimum TLS version (TLS_1_0, TLS_1_1, TLS_1_2)
   minTlsVersion string
+  // Whether the policy permits weak TLS: minTlsVersion is TLS_1_0/TLS_1_1, or profile is COMPATIBLE
+  weakTlsVersion() bool
   // Custom features enabled when profile is CUSTOM
   customFeatures []string
   // Features enabled in the SSL policy

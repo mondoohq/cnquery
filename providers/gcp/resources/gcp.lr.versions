@@ -1692,6 +1692,7 @@ gcp.project.computeService.sslPolicy.profile 11.5.1
 gcp.project.computeService.sslPolicy.regionUrl 11.5.1
 gcp.project.computeService.sslPolicy.selfLink 11.5.1
 gcp.project.computeService.sslPolicy.warnings 11.5.1
+gcp.project.computeService.sslPolicy.weakTlsVersion 13.12.2
 gcp.project.computeService.storagePool 11.6.6
 gcp.project.computeService.storagePool.capacityProvisioningType 11.6.6
 gcp.project.computeService.storagePool.created 11.6.6
@@ -2127,6 +2128,7 @@ gcp.project.dnsService.managedzone.cloudLoggingEnabled 11.6.6
 gcp.project.dnsService.managedzone.created 9.0.0
 gcp.project.dnsService.managedzone.description 9.0.0
 gcp.project.dnsService.managedzone.dnsName 9.0.0
+gcp.project.dnsService.managedzone.dnsSecAlgorithmWeak 13.12.2
 gcp.project.dnsService.managedzone.dnssecConfig 9.0.0
 gcp.project.dnsService.managedzone.dnssecEnabled 13.1.2
 gcp.project.dnsService.managedzone.iamPolicy 13.9.1
@@ -2522,10 +2524,12 @@ gcp.project.iamService.role.stage 11.6.6
 gcp.project.iamService.role.title 11.6.6
 gcp.project.iamService.roles 11.6.6
 gcp.project.iamService.serviceAccount 9.0.0
+gcp.project.iamService.serviceAccount.activeUserManagedKeys 13.12.2
 gcp.project.iamService.serviceAccount.description 9.0.0
 gcp.project.iamService.serviceAccount.disabled 9.0.0
 gcp.project.iamService.serviceAccount.displayName 9.0.0
 gcp.project.iamService.serviceAccount.email 9.0.0
+gcp.project.iamService.serviceAccount.hasUserManagedKeys 13.12.2
 gcp.project.iamService.serviceAccount.key 9.0.0
 gcp.project.iamService.serviceAccount.key.disabled 9.0.0
 gcp.project.iamService.serviceAccount.key.keyAlgorithm 9.0.0

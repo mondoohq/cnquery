@@ -307,6 +307,44 @@ type lastAuthActivity struct {
 	LastAuthenticatedTime string `json:"lastAuthenticatedTime"`
 }
 
+func (g *mqlGcpProjectIamServiceServiceAccount) hasUserManagedKeys() (bool, error) {
+	keys, err := g.activeUserManagedKeys()
+	if err != nil {
+		return false, err
+	}
+	return len(keys) > 0, nil
+}
+
+func (g *mqlGcpProjectIamServiceServiceAccount) activeUserManagedKeys() ([]any, error) {
+	keys := g.GetKeys()
+	if keys.Error != nil {
+		return nil, keys.Error
+	}
+	res := make([]any, 0)
+	for _, raw := range keys.Data {
+		key, ok := raw.(*mqlGcpProjectIamServiceServiceAccountKey)
+		if !ok || key == nil {
+			continue
+		}
+		userManaged := key.GetUserManaged()
+		if userManaged.Error != nil {
+			return nil, userManaged.Error
+		}
+		if !userManaged.Data {
+			continue
+		}
+		disabled := key.GetDisabled()
+		if disabled.Error != nil {
+			return nil, disabled.Error
+		}
+		if disabled.Data {
+			continue
+		}
+		res = append(res, key)
+	}
+	return res, nil
+}
+
 func (g *mqlGcpProjectIamServiceServiceAccount) lastAuthenticatedTime() (*time.Time, error) {
 	// If the SA wasn't found at init time, UniqueId is null; skip the call.
 	if g.UniqueId.IsNull() {
