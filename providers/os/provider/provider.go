@@ -391,6 +391,11 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 		switch conf.Type {
 		case shared.Type_Local.String(), "k8s": // FIXME: k8s is a temp workaround for cross-provider resources
+			if conf.Type == "k8s" {
+				// The parent connection lives in the k8s provider process, not here.
+				// Without this, AddRuntime would fail with "parent connection N not found".
+				conf.ParentConnectionId = 0
+			}
 			conn = local.NewConnection(connId, conf, asset)
 
 			fingerprint, p, err := id.IdentifyPlatform(conn, req, asset.Platform, asset.IdDetector)
