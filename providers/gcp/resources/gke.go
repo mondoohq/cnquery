@@ -1235,3 +1235,54 @@ func (g *mqlGcpProjectGkeServiceClusterNotificationConfig) topic() (*mqlGcpProje
 	}
 	return res.(*mqlGcpProjectPubsubServiceTopic), nil
 }
+
+func (g *mqlGcpProjectGkeServiceCluster) loggingEnabled() (bool, error) {
+	if g.LoggingService.Error != nil {
+		return false, g.LoggingService.Error
+	}
+	v := strings.ToLower(g.LoggingService.Data)
+	return v != "" && v != "none", nil
+}
+
+func (g *mqlGcpProjectGkeServiceCluster) monitoringEnabled() (bool, error) {
+	if g.MonitoringService.Error != nil {
+		return false, g.MonitoringService.Error
+	}
+	v := strings.ToLower(g.MonitoringService.Data)
+	return v != "" && v != "none", nil
+}
+
+func (g *mqlGcpProjectGkeServiceCluster) releaseChannelManaged() (bool, error) {
+	if g.ReleaseChannel.Error != nil {
+		return false, g.ReleaseChannel.Error
+	}
+	switch strings.ToLower(g.ReleaseChannel.Data) {
+	case "stable", "regular":
+		return true, nil
+	}
+	return false, nil
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) usesDefaultServiceAccount() (bool, error) {
+	if g.ServiceAccountEmail.Error != nil {
+		return false, g.ServiceAccountEmail.Error
+	}
+	email := g.ServiceAccountEmail.Data
+	if email == "" || email == "default" {
+		return true, nil
+	}
+	return defaultComputeServiceAccountRe.MatchString(email), nil
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) hasFullCloudPlatformScope() (bool, error) {
+	scopes := g.GetOauthScopes()
+	if scopes.Error != nil {
+		return false, scopes.Error
+	}
+	for _, s := range scopes.Data {
+		if str, ok := s.(string); ok && str == cloudPlatformOAuthScope {
+			return true, nil
+		}
+	}
+	return false, nil
+}

@@ -644,6 +644,8 @@ private gcp.project.computeService {
   firewalls() []gcp.project.computeService.firewall
   // Google Compute Engine VPC network in a project
   networks() []gcp.project.computeService.network
+  // Whether the project still has the auto-created `default` VPC network — true when a network named "default" exists
+  hasDefaultNetwork() bool
   // Logical partition of a VPC network
   subnetworks() []gcp.project.computeService.subnetwork
   // Cloud Routers in a project
@@ -1236,6 +1238,10 @@ private gcp.project.computeService.firewall @defaults("name") {
   sourceRanges []string
   // Whether this rule allows ingress traffic from the public internet (INGRESS, enabled, has allow rules, sourceRanges contains 0.0.0.0/0 or ::/0)
   openToInternet() bool
+  // Whether this rule permits SSH (tcp/22) from the public internet — narrower form of openToInternet for the SSH-specific port check
+  allowsSshFromInternet() bool
+  // Whether this rule permits RDP (tcp/3389) from the public internet — narrower form of openToInternet for the RDP-specific port check
+  allowsRdpFromInternet() bool
   // Source service accounts
   sourceServiceAccounts []string
   // Source tags
@@ -1262,6 +1268,8 @@ private gcp.project.computeService.firewall @defaults("name") {
 
 // Google Cloud (GCP) Compute VPC network resource
 gcp.project.computeService.network @defaults("name") {
+  // Whether the network is a legacy (single-region, non-subnetted) network — derived from mode == "legacy"
+  legacy() bool
   // Unique identifier
   id string
   // Project ID
@@ -1460,6 +1468,10 @@ private gcp.project.computeService.backendService @defaults("name") {
   securityPolicyUrl @maturity("deprecated") string
   // Cloud Armor security policy
   securityPolicy() gcp.project.computeService.securityPolicy
+  // Whether the backend service has a Cloud Armor security policy attached
+  cloudArmorEnabled() bool
+  // Whether Identity-Aware Proxy is enabled for the backend service (iap.enabled is true)
+  iapEnabled() bool
   // Client TLS policy and subject alternative names for the backend service
   securitySettings dict
   // Service binding URLs
@@ -1598,8 +1610,12 @@ private gcp.project.storageService.bucket @defaults("id") {
   metageneration int
   // Uniform bucket-level access configuration (enabled, lockedTime)
   uniformBucketLevelAccess dict
+  // Whether uniform bucket-level access is enabled — flat hoist of uniformBucketLevelAccess.enabled
+  uniformBucketLevelAccessEnabled() bool
   // Soft delete policy (retentionDurationSeconds, effectiveTime)
   softDeletePolicy dict
+  // Whether soft-delete is enabled — true when softDeletePolicy.retentionDurationSeconds > 0
+  softDeletePolicyEnabled() bool
   // Object retention mode (Enabled or empty)
   objectRetentionMode string
   // Automatic storage class management (enabled, toggleTime, terminalStorageClass)
@@ -1738,6 +1754,16 @@ private gcp.project.sqlService.instance @defaults("name") {
   replicaNames []string
   // Settings
   settings gcp.project.sqlService.instance.settings
+  // Whether the instance is reachable on a public IP — flat hoist of settings.ipConfiguration.ipv4Enabled
+  publicIpEnabled() bool
+  // Whether automated backups are enabled — flat hoist of settings.backupConfiguration.enabled
+  backupConfigurationEnabled() bool
+  // Whether point-in-time recovery is enabled — flat hoist of settings.backupConfiguration.pointInTimeRecoveryEnabled
+  pointInTimeRecoveryEnabled() bool
+  // Whether the instance has any built-in (non-IAM) database users
+  hasBuiltInUsers() bool
+  // Whether a built-in 'root' user exists (the most common SQL hardening finding)
+  localRootEnabled() bool
   // Service account email address
   serviceAccountEmailAddress string
   // Instance state
@@ -2398,8 +2424,12 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   description string
   // The logging service the cluster should use to write logs
   loggingService string
+  // Whether cluster logging is enabled (loggingService is set and not "none")
+  loggingEnabled() bool
   // The monitoring service the cluster should use to write metrics
   monitoringService string
+  // Whether cluster monitoring is enabled (monitoringService is set and not "none")
+  monitoringEnabled() bool
   // The name of the Google Compute Engine network to which the cluster is connected
   network string
   // The IP address range of the container pods in this cluster
@@ -2484,6 +2514,8 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   networkPolicy() gcp.project.gkeService.cluster.networkPolicy
   // The release channel that the cluster is subscribed to
   releaseChannel string
+  // Whether the cluster is on a managed release channel suitable for production (releaseChannel is "stable" or "regular"; excludes RAPID and unspecified)
+  releaseChannelManaged() bool
   // Whether Cloud TPU integration is enabled
   enableTpu bool
   // The number of nodes currently in the cluster
@@ -2771,6 +2803,10 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   serviceAccountEmail string
   // Google Cloud Platform Service Account to be used by the node VMs
   serviceAccount() gcp.project.iamService.serviceAccount
+  // Whether the node pool runs as the default Compute Engine service account (<projectNumber>-compute@developer.gserviceaccount.com or "default")
+  usesDefaultServiceAccount() bool
+  // Whether the node pool's service account is granted the broad cloud-platform OAuth scope
+  hasFullCloudPlatformScope() bool
   // The metadata key/value pairs assigned to instances in the cluster
   metadata map[string]string
   // The image type to use for this node
@@ -3131,6 +3167,8 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   nextRotation time
   // Rotation period
   rotationPeriod time
+  // Whether automatic rotation is configured for this key (rotationPeriod is set)
+  rotationEnabled() bool
   // Template describing the settings for new crypto key versions
   versionTemplate dict
   // User-defined labels
@@ -3373,6 +3411,14 @@ private gcp.project.loggingservice.metric @defaults("description filter") {
   description string
   // Advanced log filter
   filter string
+  // Whether the filter matches IAM policy mutations (SetIamPolicy)
+  filtersIamChanges() bool
+  // Whether the filter matches audit-config mutations (auditConfigDelta on SetIamPolicy)
+  filtersAuditConfigChanges() bool
+  // Whether the filter matches compute route mutations (compute.routes.{insert,patch,delete})
+  filtersRouteChanges() bool
+  // Whether the filter matches compute firewall mutations (compute.firewalls.{insert,patch,delete})
+  filtersFirewallChanges() bool
   // Alert policies for this metric
   alertPolicies() []gcp.project.monitoringService.alertPolicy
 }
@@ -4494,6 +4540,8 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   etag string
   // Rotation policy configuration
   rotation dict
+  // Whether rotation is configured (rotation.rotationPeriod or nextRotationTime is set)
+  rotationEnabled() bool
   // Version aliases mapping alias names to version numbers
   versionAliases map[string]int
   // Custom metadata annotations
@@ -4510,6 +4558,8 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   versions() []gcp.project.secretmanagerService.secret.version
   // IAM policy for this secret
   iamPolicy() []gcp.resourcemanager.binding
+  // Whether the secret's IAM policy grants any role to allUsers or allAuthenticatedUsers
+  public() bool
 }
 
 // Google Cloud (GCP) Secret Manager secret version

@@ -1001,3 +1001,118 @@ func (g *mqlGcpProjectSqlServiceBackupRun) id() (string, error) {
 	}
 	return fmt.Sprintf("gcp.project/%s/sqlService.instance/%s/backupRun/%s", g.ProjectId.Data, g.InstanceName.Data, g.Id.Data), nil
 }
+
+func (g *mqlGcpProjectSqlServiceInstance) publicIpEnabled() (bool, error) {
+	settings := g.GetSettings()
+	if settings.Error != nil {
+		return false, settings.Error
+	}
+	if settings.Data == nil {
+		return false, nil
+	}
+	ip := settings.Data.GetIpConfiguration()
+	if ip.Error != nil {
+		return false, ip.Error
+	}
+	if ip.Data == nil {
+		return false, nil
+	}
+	enabled := ip.Data.GetIpv4Enabled()
+	if enabled.Error != nil {
+		return false, enabled.Error
+	}
+	return enabled.Data, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) backupConfigurationEnabled() (bool, error) {
+	settings := g.GetSettings()
+	if settings.Error != nil {
+		return false, settings.Error
+	}
+	if settings.Data == nil {
+		return false, nil
+	}
+	backup := settings.Data.GetBackupConfiguration()
+	if backup.Error != nil {
+		return false, backup.Error
+	}
+	if backup.Data == nil {
+		return false, nil
+	}
+	enabled := backup.Data.GetEnabled()
+	if enabled.Error != nil {
+		return false, enabled.Error
+	}
+	return enabled.Data, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) pointInTimeRecoveryEnabled() (bool, error) {
+	settings := g.GetSettings()
+	if settings.Error != nil {
+		return false, settings.Error
+	}
+	if settings.Data == nil {
+		return false, nil
+	}
+	backup := settings.Data.GetBackupConfiguration()
+	if backup.Error != nil {
+		return false, backup.Error
+	}
+	if backup.Data == nil {
+		return false, nil
+	}
+	pitr := backup.Data.GetPointInTimeRecoveryEnabled()
+	if pitr.Error != nil {
+		return false, pitr.Error
+	}
+	return pitr.Data, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) hasBuiltInUsers() (bool, error) {
+	users := g.GetUsers()
+	if users.Error != nil {
+		return false, users.Error
+	}
+	for _, raw := range users.Data {
+		u, ok := raw.(*mqlGcpProjectSqlServiceInstanceUser)
+		if !ok || u == nil {
+			continue
+		}
+		t := u.GetType()
+		if t.Error != nil {
+			return false, t.Error
+		}
+		if t.Data == "BUILT_IN" || t.Data == "" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (g *mqlGcpProjectSqlServiceInstance) localRootEnabled() (bool, error) {
+	users := g.GetUsers()
+	if users.Error != nil {
+		return false, users.Error
+	}
+	for _, raw := range users.Data {
+		u, ok := raw.(*mqlGcpProjectSqlServiceInstanceUser)
+		if !ok || u == nil {
+			continue
+		}
+		name := u.GetName()
+		if name.Error != nil {
+			return false, name.Error
+		}
+		if name.Data != "root" {
+			continue
+		}
+		t := u.GetType()
+		if t.Error != nil {
+			return false, t.Error
+		}
+		if t.Data == "BUILT_IN" || t.Data == "" {
+			return true, nil
+		}
+	}
+	return false, nil
+}

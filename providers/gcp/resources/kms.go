@@ -513,6 +513,14 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) versions() ([]any, error) {
 	return versions, nil
 }
 
+func (g *mqlGcpProjectKmsServiceKeyringCryptokey) rotationEnabled() (bool, error) {
+	v := g.GetRotationPeriod()
+	if v.Error != nil {
+		return false, v.Error
+	}
+	return v.Data != nil, nil
+}
+
 func (g *mqlGcpProjectKmsServiceKeyringCryptokey) public() (bool, error) {
 	bindings := g.GetIamPolicy()
 	if bindings.Error != nil {

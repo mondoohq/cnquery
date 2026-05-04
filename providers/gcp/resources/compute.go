@@ -3471,3 +3471,155 @@ func (g *mqlGcpProjectComputeServiceInstance) serialPortEnabled() (bool, error) 
 	}
 	return metadataBoolFlag(md.Data, "serial-port-enable"), nil
 }
+
+func (g *mqlGcpProjectComputeService) hasDefaultNetwork() (bool, error) {
+	networks := g.GetNetworks()
+	if networks.Error != nil {
+		return false, networks.Error
+	}
+	for _, raw := range networks.Data {
+		n, ok := raw.(*mqlGcpProjectComputeServiceNetwork)
+		if !ok || n == nil {
+			continue
+		}
+		name := n.GetName()
+		if name.Error != nil {
+			return false, name.Error
+		}
+		if name.Data == "default" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (g *mqlGcpProjectComputeServiceNetwork) legacy() (bool, error) {
+	if g.Mode.Error != nil {
+		return false, g.Mode.Error
+	}
+	return g.Mode.Data == "legacy", nil
+}
+
+func firewallSourceRangesContainPublic(ranges []any) bool {
+	for _, r := range ranges {
+		s, ok := r.(string)
+		if !ok {
+			continue
+		}
+		if s == "0.0.0.0/0" || s == "::/0" {
+			return true
+		}
+	}
+	return false
+}
+
+func allowedRulePermitsPort(rule map[string]any, port int) bool {
+	proto, _ := rule["ipProtocol"].(string)
+	if proto == "" {
+		proto, _ = rule["IPProtocol"].(string)
+	}
+	switch strings.ToLower(proto) {
+	case "tcp", "6", "all":
+	default:
+		return false
+	}
+	portsRaw, ok := rule["ports"].([]any)
+	if !ok || len(portsRaw) == 0 {
+		return true
+	}
+	for _, p := range portsRaw {
+		ps, ok := p.(string)
+		if !ok {
+			continue
+		}
+		if portMatches(ps, port) {
+			return true
+		}
+	}
+	return false
+}
+
+func portMatches(spec string, port int) bool {
+	if !strings.Contains(spec, "-") {
+		n, err := strconv.Atoi(spec)
+		if err != nil {
+			return false
+		}
+		return n == port
+	}
+	parts := strings.SplitN(spec, "-", 2)
+	low, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return false
+	}
+	high, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return false
+	}
+	return port >= low && port <= high
+}
+
+func (g *mqlGcpProjectComputeServiceFirewall) firewallOpenToInternetTcp(port int) (bool, error) {
+	if g.Disabled.Error != nil {
+		return false, g.Disabled.Error
+	}
+	if g.Disabled.Data {
+		return false, nil
+	}
+	if g.Direction.Error != nil {
+		return false, g.Direction.Error
+	}
+	if !strings.EqualFold(g.Direction.Data, "INGRESS") {
+		return false, nil
+	}
+	if g.SourceRanges.Error != nil {
+		return false, g.SourceRanges.Error
+	}
+	if !firewallSourceRangesContainPublic(g.SourceRanges.Data) {
+		return false, nil
+	}
+	if g.Allowed.Error != nil {
+		return false, g.Allowed.Error
+	}
+	for _, raw := range g.Allowed.Data {
+		rule, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		if allowedRulePermitsPort(rule, port) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (g *mqlGcpProjectComputeServiceFirewall) allowsSshFromInternet() (bool, error) {
+	return g.firewallOpenToInternetTcp(22)
+}
+
+func (g *mqlGcpProjectComputeServiceFirewall) allowsRdpFromInternet() (bool, error) {
+	return g.firewallOpenToInternetTcp(3389)
+}
+
+func (g *mqlGcpProjectComputeServiceBackendService) cloudArmorEnabled() (bool, error) {
+	policy, err := g.securityPolicy()
+	if err != nil {
+		return false, err
+	}
+	return policy != nil, nil
+}
+
+func (g *mqlGcpProjectComputeServiceBackendService) iapEnabled() (bool, error) {
+	if g.Iap.Error != nil {
+		return false, g.Iap.Error
+	}
+	if g.Iap.Data == nil {
+		return false, nil
+	}
+	iapMap, ok := g.Iap.Data.(map[string]any)
+	if !ok {
+		return false, nil
+	}
+	enabled, _ := iapMap["enabled"].(bool)
+	return enabled, nil
+}

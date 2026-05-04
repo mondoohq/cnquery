@@ -299,6 +299,35 @@ func (g *mqlGcpProjectSecretmanagerServiceSecretVersion) id() (string, error) {
 	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
+func (g *mqlGcpProjectSecretmanagerServiceSecret) rotationEnabled() (bool, error) {
+	v := g.GetRotation()
+	if v.Error != nil {
+		return false, v.Error
+	}
+	if v.Data == nil {
+		return false, nil
+	}
+	m, ok := v.Data.(map[string]any)
+	if !ok {
+		return false, nil
+	}
+	if period, _ := m["rotationPeriod"].(string); period != "" {
+		return true, nil
+	}
+	if next, _ := m["nextRotationTime"].(string); next != "" {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (g *mqlGcpProjectSecretmanagerServiceSecret) public() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
 func (g *mqlGcpProjectSecretmanagerServiceSecret) kmsKeys() ([]any, error) {
 	if g.CustomerManagedEncryption.Error != nil {
 		return nil, g.CustomerManagedEncryption.Error

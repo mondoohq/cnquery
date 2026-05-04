@@ -552,3 +552,44 @@ func isPublicEntity(s string) bool {
 func anyPublicEntity(entities []string) bool {
 	return slices.ContainsFunc(entities, isPublicEntity)
 }
+
+func (g *mqlGcpProjectStorageServiceBucket) uniformBucketLevelAccessEnabled() (bool, error) {
+	v := g.GetUniformBucketLevelAccess()
+	if v.Error != nil {
+		return false, v.Error
+	}
+	if v.Data == nil {
+		return false, nil
+	}
+	m, ok := v.Data.(map[string]any)
+	if !ok {
+		return false, nil
+	}
+	enabled, _ := m["enabled"].(bool)
+	return enabled, nil
+}
+
+func (g *mqlGcpProjectStorageServiceBucket) softDeletePolicyEnabled() (bool, error) {
+	v := g.GetSoftDeletePolicy()
+	if v.Error != nil {
+		return false, v.Error
+	}
+	if v.Data == nil {
+		return false, nil
+	}
+	m, ok := v.Data.(map[string]any)
+	if !ok {
+		return false, nil
+	}
+	switch d := m["retentionDurationSeconds"].(type) {
+	case string:
+		return d != "" && d != "0" && d != "0s", nil
+	case float64:
+		return d > 0, nil
+	case int64:
+		return d > 0, nil
+	case int:
+		return d > 0, nil
+	}
+	return false, nil
+}

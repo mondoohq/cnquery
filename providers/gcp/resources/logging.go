@@ -363,6 +363,35 @@ func (g *mqlGcpProjectLoggingserviceSink) storageBucket() (*mqlGcpProjectStorage
 	return nil, nil
 }
 
+func (g *mqlGcpProjectLoggingserviceMetric) filtersIamChanges() (bool, error) {
+	if g.Filter.Error != nil {
+		return false, g.Filter.Error
+	}
+	return strings.Contains(g.Filter.Data, "SetIamPolicy"), nil
+}
+
+func (g *mqlGcpProjectLoggingserviceMetric) filtersAuditConfigChanges() (bool, error) {
+	if g.Filter.Error != nil {
+		return false, g.Filter.Error
+	}
+	f := g.Filter.Data
+	return strings.Contains(f, "SetIamPolicy") && strings.Contains(f, "auditConfigDelta"), nil
+}
+
+func (g *mqlGcpProjectLoggingserviceMetric) filtersRouteChanges() (bool, error) {
+	if g.Filter.Error != nil {
+		return false, g.Filter.Error
+	}
+	return strings.Contains(g.Filter.Data, "compute.routes."), nil
+}
+
+func (g *mqlGcpProjectLoggingserviceMetric) filtersFirewallChanges() (bool, error) {
+	if g.Filter.Error != nil {
+		return false, g.Filter.Error
+	}
+	return strings.Contains(g.Filter.Data, "compute.firewalls."), nil
+}
+
 func (g *mqlGcpProjectLoggingserviceMetric) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error

@@ -1075,6 +1075,7 @@ gcp.project.computeService.backendService.cdnPolicy.serveWhileStale 9.0.0
 gcp.project.computeService.backendService.cdnPolicy.signedUrlCacheMaxAgeSec 9.0.0
 gcp.project.computeService.backendService.cdnPolicy.signedUrlKeyNames 9.0.0
 gcp.project.computeService.backendService.circuitBreakers 9.0.0
+gcp.project.computeService.backendService.cloudArmorEnabled 13.12.2
 gcp.project.computeService.backendService.compressionMode 9.0.0
 gcp.project.computeService.backendService.connectionDraining 9.0.0
 gcp.project.computeService.backendService.connectionTrackingPolicy 9.0.0
@@ -1089,6 +1090,7 @@ gcp.project.computeService.backendService.failoverPolicy 9.0.0
 gcp.project.computeService.backendService.fingerprint 13.1.2
 gcp.project.computeService.backendService.healthChecks 9.0.0
 gcp.project.computeService.backendService.iap 9.0.0
+gcp.project.computeService.backendService.iapEnabled 13.12.2
 gcp.project.computeService.backendService.id 9.0.0
 gcp.project.computeService.backendService.ipAddressSelectionPolicy 11.6.6
 gcp.project.computeService.backendService.loadBalancingScheme 9.0.0
@@ -1158,6 +1160,8 @@ gcp.project.computeService.externalVpnGateway.selfLink 13.6.1
 gcp.project.computeService.externalVpnGateways 13.6.1
 gcp.project.computeService.firewall 9.0.0
 gcp.project.computeService.firewall.allowed 9.0.0
+gcp.project.computeService.firewall.allowsRdpFromInternet 13.12.2
+gcp.project.computeService.firewall.allowsSshFromInternet 13.12.2
 gcp.project.computeService.firewall.created 9.0.0
 gcp.project.computeService.firewall.denied 9.0.0
 gcp.project.computeService.firewall.description 9.0.0
@@ -1238,6 +1242,7 @@ gcp.project.computeService.forwardingRule.subnetwork 9.0.0
 gcp.project.computeService.forwardingRule.subnetworkUrl 9.0.0
 gcp.project.computeService.forwardingRule.targetUrl 9.0.0
 gcp.project.computeService.forwardingRules 9.0.0
+gcp.project.computeService.hasDefaultNetwork 13.12.2
 gcp.project.computeService.healthCheck 11.6.6
 gcp.project.computeService.healthCheck.checkIntervalSec 11.6.6
 gcp.project.computeService.healthCheck.created 11.6.6
@@ -1457,6 +1462,7 @@ gcp.project.computeService.network.firewallPolicy 11.6.6
 gcp.project.computeService.network.gatewayIPv4 9.0.0
 gcp.project.computeService.network.id 9.0.0
 gcp.project.computeService.network.internalIpv6Range 11.6.6
+gcp.project.computeService.network.legacy 13.12.2
 gcp.project.computeService.network.mode 9.0.0
 gcp.project.computeService.network.mtu 9.0.0
 gcp.project.computeService.network.name 9.0.0
@@ -2363,6 +2369,7 @@ gcp.project.gkeService.cluster.legacyAbac 9.0.0
 gcp.project.gkeService.cluster.legacyAbacEnabled 13.12.2
 gcp.project.gkeService.cluster.location 9.0.0
 gcp.project.gkeService.cluster.locations 9.0.0
+gcp.project.gkeService.cluster.loggingEnabled 13.12.2
 gcp.project.gkeService.cluster.loggingService 9.0.0
 gcp.project.gkeService.cluster.maintenancePolicy 11.6.6
 gcp.project.gkeService.cluster.maintenancePolicy.dailyMaintenanceWindowDuration 11.6.6
@@ -2378,6 +2385,7 @@ gcp.project.gkeService.cluster.masterAuthorizedNetworksConfig 9.0.0
 gcp.project.gkeService.cluster.masterAuthorizedNetworksEnabled 13.12.2
 gcp.project.gkeService.cluster.masterGlobalAccessEnabled 13.12.2
 gcp.project.gkeService.cluster.meshCertificates 13.7.2
+gcp.project.gkeService.cluster.monitoringEnabled 13.12.2
 gcp.project.gkeService.cluster.monitoringService 9.0.0
 gcp.project.gkeService.cluster.name 9.0.0
 gcp.project.gkeService.cluster.network 9.0.0
@@ -2441,6 +2449,7 @@ gcp.project.gkeService.cluster.nodepool.config.gpuDirectConfig 13.6.1
 gcp.project.gkeService.cluster.nodepool.config.gvnicConfig 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gvnicConfig.enabled 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.gvnicConfig.id 9.0.0
+gcp.project.gkeService.cluster.nodepool.config.hasFullCloudPlatformScope 13.12.2
 gcp.project.gkeService.cluster.nodepool.config.id 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.imageType 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.kubeletConfig 9.0.0
@@ -2476,6 +2485,7 @@ gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig.id 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.spot 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.tags 9.0.0
 gcp.project.gkeService.cluster.nodepool.config.taints 9.0.0
+gcp.project.gkeService.cluster.nodepool.config.usesDefaultServiceAccount 13.12.2
 gcp.project.gkeService.cluster.nodepool.config.workloadMetadataMode 9.0.0
 gcp.project.gkeService.cluster.nodepool.etag 13.1.2
 gcp.project.gkeService.cluster.nodepool.id 9.0.0
@@ -2513,6 +2523,7 @@ gcp.project.gkeService.cluster.privateEndpointEnabled 13.12.2
 gcp.project.gkeService.cluster.privateNodesEnabled 13.12.2
 gcp.project.gkeService.cluster.projectId 9.0.0
 gcp.project.gkeService.cluster.releaseChannel 9.0.0
+gcp.project.gkeService.cluster.releaseChannelManaged 13.12.2
 gcp.project.gkeService.cluster.resourceLabels 9.0.0
 gcp.project.gkeService.cluster.securityPostureConfig 11.6.6
 gcp.project.gkeService.cluster.securityPostureConfig.id 11.6.6
@@ -2617,6 +2628,7 @@ gcp.project.kmsService.keyring.cryptokey.primary 9.0.0
 gcp.project.kmsService.keyring.cryptokey.public 13.12.2
 gcp.project.kmsService.keyring.cryptokey.purpose 9.0.0
 gcp.project.kmsService.keyring.cryptokey.resourcePath 9.0.0
+gcp.project.kmsService.keyring.cryptokey.rotationEnabled 13.12.2
 gcp.project.kmsService.keyring.cryptokey.rotationPeriod 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version 9.0.0
 gcp.project.kmsService.keyring.cryptokey.version.algorithm 9.0.0
@@ -2705,6 +2717,10 @@ gcp.project.loggingservice.metric 9.0.0
 gcp.project.loggingservice.metric.alertPolicies 9.0.0
 gcp.project.loggingservice.metric.description 9.0.0
 gcp.project.loggingservice.metric.filter 9.0.0
+gcp.project.loggingservice.metric.filtersAuditConfigChanges 13.12.2
+gcp.project.loggingservice.metric.filtersFirewallChanges 13.12.2
+gcp.project.loggingservice.metric.filtersIamChanges 13.12.2
+gcp.project.loggingservice.metric.filtersRouteChanges 13.12.2
 gcp.project.loggingservice.metric.id 9.0.0
 gcp.project.loggingservice.metric.projectId 9.0.0
 gcp.project.loggingservice.metrics 9.0.0
@@ -3179,9 +3195,11 @@ gcp.project.secretmanagerService.secret.kmsKeys 13.12.2
 gcp.project.secretmanagerService.secret.labels 11.1.0
 gcp.project.secretmanagerService.secret.name 11.1.0
 gcp.project.secretmanagerService.secret.projectId 11.1.0
+gcp.project.secretmanagerService.secret.public 13.12.2
 gcp.project.secretmanagerService.secret.replication 11.1.0
 gcp.project.secretmanagerService.secret.resourcePath 11.1.0
 gcp.project.secretmanagerService.secret.rotation 11.1.0
+gcp.project.secretmanagerService.secret.rotationEnabled 13.12.2
 gcp.project.secretmanagerService.secret.tags 13.12.2
 gcp.project.secretmanagerService.secret.topics 11.1.0
 gcp.project.secretmanagerService.secret.version 11.1.0
@@ -3350,6 +3368,7 @@ gcp.project.sqlService.backupRun.windowStartTime 13.11.2
 gcp.project.sqlService.instance 9.0.0
 gcp.project.sqlService.instance.availableMaintenanceVersions 9.0.0
 gcp.project.sqlService.instance.backendType 9.0.0
+gcp.project.sqlService.instance.backupConfigurationEnabled 13.12.2
 gcp.project.sqlService.instance.backupRuns 13.11.2
 gcp.project.sqlService.instance.connectionName 9.0.0
 gcp.project.sqlService.instance.created 9.0.0
@@ -3370,6 +3389,7 @@ gcp.project.sqlService.instance.dnsName 11.6.6
 gcp.project.sqlService.instance.etag 13.1.2
 gcp.project.sqlService.instance.failoverReplica 9.0.0
 gcp.project.sqlService.instance.gceZone 9.0.0
+gcp.project.sqlService.instance.hasBuiltInUsers 13.12.2
 gcp.project.sqlService.instance.instanceType 9.0.0
 gcp.project.sqlService.instance.ipAddresses 9.0.0
 gcp.project.sqlService.instance.ipMapping 9.0.0
@@ -3378,13 +3398,16 @@ gcp.project.sqlService.instance.ipMapping.ipAddress 9.0.0
 gcp.project.sqlService.instance.ipMapping.timeToRetire 9.0.0
 gcp.project.sqlService.instance.ipMapping.type 9.0.0
 gcp.project.sqlService.instance.kmsKey 13.12.2
+gcp.project.sqlService.instance.localRootEnabled 13.12.2
 gcp.project.sqlService.instance.maintenanceVersion 9.0.0
 gcp.project.sqlService.instance.masterInstanceName 9.0.0
 gcp.project.sqlService.instance.maxDiskSize 9.0.0
 gcp.project.sqlService.instance.name 9.0.0
+gcp.project.sqlService.instance.pointInTimeRecoveryEnabled 13.12.2
 gcp.project.sqlService.instance.primaryDnsName 11.6.6
 gcp.project.sqlService.instance.projectId 9.0.0
 gcp.project.sqlService.instance.pscServiceAttachmentLink 11.6.6
+gcp.project.sqlService.instance.publicIpEnabled 13.12.2
 gcp.project.sqlService.instance.region 9.0.0
 gcp.project.sqlService.instance.replicaConfiguration 13.7.2
 gcp.project.sqlService.instance.replicaNames 9.0.0
@@ -3541,8 +3564,10 @@ gcp.project.storageService.bucket.retentionPolicyLocked 13.12.2
 gcp.project.storageService.bucket.rpo 11.6.6
 gcp.project.storageService.bucket.satisfiesPZS 11.6.6
 gcp.project.storageService.bucket.softDeletePolicy 13.7.2
+gcp.project.storageService.bucket.softDeletePolicyEnabled 13.12.2
 gcp.project.storageService.bucket.storageClass 9.0.0
 gcp.project.storageService.bucket.uniformBucketLevelAccess 13.7.2
+gcp.project.storageService.bucket.uniformBucketLevelAccessEnabled 13.12.2
 gcp.project.storageService.bucket.updated 9.0.0
 gcp.project.storageService.bucket.versioningEnabled 11.6.6
 gcp.project.storageService.buckets 9.0.0
