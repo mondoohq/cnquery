@@ -76,12 +76,12 @@ func (s *mqlAuditdConfig) parse(file *mqlFile) error {
 		return errors.New("no base auditd config file to read")
 	}
 
-	content := file.GetContent()
-	if content.Error != nil {
-		return content.Error
+	content, err := fileRequiredContent(file)
+	if err != nil {
+		return err
 	}
 
-	ini := parsers.ParseIni(content.Data, "=")
+	ini := parsers.ParseIni(content, "=")
 
 	res := make(map[string]any, len(ini.Fields))
 	s.Params.Data = res

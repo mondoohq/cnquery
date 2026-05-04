@@ -534,7 +534,7 @@ func TestMapRefLookup(t *testing.T) {
 	})
 }
 
-func TestArrayMapError(t *testing.T) {
+func TestArrayMapMissingFileContent(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
@@ -542,7 +542,7 @@ func TestArrayMapError(t *testing.T) {
 				["a"].map(file(_).content)
 			`,
 			ResultIndex: 0,
-			Error:       "1 error occurred:\n\t* file 'a' not found\n",
+			Expectation: []any{nil},
 		},
 	})
 }

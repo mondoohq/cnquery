@@ -92,7 +92,7 @@ func TestResource_K8sKubeletAKS(t *testing.T) {
 	t.Run("kubelet configFile path", func(t *testing.T) {
 		res := x.TestQuery(t, "kubelet.configFile")
 		assert.NotEmpty(t, res)
-		assert.Error(t, res[0].Data.Error)
+		assert.NoError(t, res[0].Data.Error)
 	})
 
 	t.Run("kubelet configFile exists", func(t *testing.T) {

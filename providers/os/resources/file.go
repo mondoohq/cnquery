@@ -44,6 +44,30 @@ func fileContentOrEmpty(file *mqlFile) (string, error) {
 	return content.Data, nil
 }
 
+func fileRequiredContent(file *mqlFile) (string, error) {
+	if file == nil {
+		return "", resources.NotFoundError{Resource: "file"}
+	}
+
+	exists := file.GetExists()
+	if exists.Error != nil {
+		return "", exists.Error
+	}
+	if !exists.Data {
+		return "", resources.NotFoundError{Resource: "file", ID: file.Path.Data}
+	}
+
+	content := file.GetContent()
+	if content.Error != nil {
+		return "", content.Error
+	}
+	if content.IsNull() {
+		return "", resources.NotFoundError{Resource: "file", ID: file.Path.Data}
+	}
+
+	return content.Data, nil
+}
+
 type mqlFileInternal struct {
 	statInfo *shared.FileInfoDetails
 }
@@ -54,7 +78,10 @@ func (s *mqlFile) id() (string, error) {
 
 func (s *mqlFile) content(path string, exists bool) (string, error) {
 	if !exists {
-		return "", resources.NotFoundError{Resource: "file", ID: path}
+		s.Content = plugin.TValue[string]{
+			State: plugin.StateIsSet | plugin.StateIsNull,
+		}
+		return "", nil
 	}
 
 	conn := s.MqlRuntime.Connection.(shared.Connection)
@@ -178,7 +205,13 @@ func (s *mqlFile) loadOwnership(path string) error {
 		return err
 	}
 	if !exists {
-		return os.ErrNotExist
+		s.User = plugin.TValue[*mqlUser]{
+			State: plugin.StateIsSet | plugin.StateIsNull,
+		}
+		s.Group = plugin.TValue[*mqlGroup]{
+			State: plugin.StateIsSet | plugin.StateIsNull,
+		}
+		return nil
 	}
 	if s.User.IsSet() && s.Group.IsSet() {
 		return nil
@@ -201,7 +234,10 @@ func (s *mqlFile) size(path string) (int64, error) {
 		return 0, err
 	}
 	if !exists {
-		return 0, os.ErrNotExist
+		s.Size = plugin.TValue[int64]{
+			State: plugin.StateIsSet | plugin.StateIsNull,
+		}
+		return 0, nil
 	}
 	return 0, nil
 }
@@ -212,7 +248,10 @@ func (s *mqlFile) permissions(path string) (*mqlFilePermissions, error) {
 		return nil, err
 	}
 	if !exists {
-		return nil, os.ErrNotExist
+		s.Permissions = plugin.TValue[*mqlFilePermissions]{
+			State: plugin.StateIsSet | plugin.StateIsNull,
+		}
+		return nil, nil
 	}
 	return nil, nil
 }

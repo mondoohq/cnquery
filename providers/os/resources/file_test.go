@@ -6,7 +6,6 @@ package resources_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -51,8 +50,36 @@ func TestResource_File(t *testing.T) {
 }
 
 func TestResource_File_NotExist(t *testing.T) {
-	res := x.TestQuery(t, "file('Nope').content")
-	assert.EqualError(t, res[0].Data.Error, "file 'Nope' not found")
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "file('Nope').exists",
+			ResultIndex: 0, Expectation: false,
+		},
+		{
+			Code:        "file('Nope').content",
+			ResultIndex: 0, Expectation: nil,
+		},
+		{
+			Code:        "file('Nope').content == 'x'",
+			ResultIndex: 0, Expectation: nil,
+		},
+		{
+			Code:        "file('Nope').size > 0",
+			ResultIndex: 0, Expectation: nil,
+		},
+		{
+			Code:        "file('Nope').permissions.mode == 420",
+			ResultIndex: 0, Expectation: nil,
+		},
+		{
+			Code:        "file('Nope').user.name == 'root'",
+			ResultIndex: 0, Expectation: nil,
+		},
+		{
+			Code:        "file('Nope').group.name == 'root'",
+			ResultIndex: 0, Expectation: nil,
+		},
+	})
 }
 
 func TestResource_File_Permissions(t *testing.T) {

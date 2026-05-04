@@ -74,12 +74,12 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 		return errors.New("no base journald config file to read")
 	}
 
-	content := file.GetContent()
-	if content.Error != nil {
-		return content.Error
+	content, err := fileRequiredContent(file)
+	if err != nil {
+		return err
 	}
 
-	unit, err := parsers.ParseUnit(content.Data)
+	unit, err := parsers.ParseUnit(content)
 	if err != nil {
 		return fmt.Errorf("failed to parse journald config: %w", err)
 	}

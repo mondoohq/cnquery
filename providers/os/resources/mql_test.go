@@ -634,13 +634,13 @@ func TestDict_Methods_OtherJson(t *testing.T) {
 	})
 }
 
-func TestArrayBlockError(t *testing.T) {
+func TestArrayBlockMissingFileContent(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock())
 	res := x.TestQuery(t, "users.list { file(_.name + 'doesnotexist').content }")
 	assert.NotEmpty(t, res)
 	queryResult := res[len(res)-1]
 	require.NotNil(t, queryResult)
-	require.Error(t, queryResult.Data.Error)
+	require.NoError(t, queryResult.Data.Error)
 }
 
 func TestBrokenQueryExecutionGH674(t *testing.T) {

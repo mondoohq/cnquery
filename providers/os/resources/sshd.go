@@ -185,12 +185,12 @@ func (s *mqlSshdConfig) parse(file *mqlFile) error {
 			filesIdx[path] = file
 		}
 
-		fileContent := file.GetContent()
-		if fileContent.Error != nil {
-			return "", fileContent.Error
+		fileContent, err := fileRequiredContent(file)
+		if err != nil {
+			return "", err
 		}
 
-		return fileContent.Data + "\n", nil
+		return fileContent + "\n", nil
 	}
 
 	// Function to expand glob patterns
