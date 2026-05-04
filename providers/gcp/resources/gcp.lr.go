@@ -4622,6 +4622,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.bigqueryService.model.kmsName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceModel).GetKmsName()).ToDataRes(types.String)
 	},
+	"gcp.project.bigqueryService.model.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceModel).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
 	"gcp.project.bigqueryService.routine.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceRoutine).GetId()).ToDataRes(types.String)
 	},
@@ -16225,6 +16228,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.bigqueryService.model.kmsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceModel).KmsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.model.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceModel).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
 		return
 	},
 	"gcp.project.bigqueryService.routine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36911,7 +36918,7 @@ func (c *mqlGcpProjectBigqueryServiceTable) GetSchema() *plugin.TValue[[]any] {
 type mqlGcpProjectBigqueryServiceModel struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectBigqueryServiceModelInternal it will be used here
+	mqlGcpProjectBigqueryServiceModelInternal
 	Id             plugin.TValue[string]
 	DatasetId      plugin.TValue[string]
 	ProjectId      plugin.TValue[string]
@@ -36924,6 +36931,7 @@ type mqlGcpProjectBigqueryServiceModel struct {
 	Type           plugin.TValue[string]
 	ExpirationTime plugin.TValue[*time.Time]
 	KmsName        plugin.TValue[string]
+	KmsKey         plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey]
 }
 
 // createGcpProjectBigqueryServiceModel creates a new instance of this resource
@@ -37009,6 +37017,22 @@ func (c *mqlGcpProjectBigqueryServiceModel) GetExpirationTime() *plugin.TValue[*
 
 func (c *mqlGcpProjectBigqueryServiceModel) GetKmsName() *plugin.TValue[string] {
 	return &c.KmsName
+}
+
+func (c *mqlGcpProjectBigqueryServiceModel) GetKmsKey() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokey] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokey](&c.KmsKey, func() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigqueryService.model", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 // mqlGcpProjectBigqueryServiceRoutine for the gcp.project.bigqueryService.routine resource

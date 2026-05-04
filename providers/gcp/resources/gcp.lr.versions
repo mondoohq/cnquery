@@ -443,6 +443,7 @@ gcp.project.bigqueryService.model.datasetId 9.0.0
 gcp.project.bigqueryService.model.description 9.0.0
 gcp.project.bigqueryService.model.expirationTime 9.0.0
 gcp.project.bigqueryService.model.id 9.0.0
+gcp.project.bigqueryService.model.kmsKey 13.12.2
 gcp.project.bigqueryService.model.kmsName 9.0.0
 gcp.project.bigqueryService.model.labels 9.0.0
 gcp.project.bigqueryService.model.location 9.0.0

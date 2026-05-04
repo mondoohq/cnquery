@@ -2064,8 +2064,8 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   modified time
   // Tags associated with this dataset
   tags map[string]string
-  // Cloud KMS encryption key that will be used to protect BigQuery table
-  kmsName string
+  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  kmsName @maturity("deprecated") string
   // Customer-managed KMS key used to protect tables in this dataset (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Access permissions
@@ -2146,8 +2146,8 @@ private gcp.project.bigqueryService.table @defaults("id") {
   type string
   // Time when this table expires
   expirationTime time
-  // Cloud KMS encryption key that is used to protect BigQuery table
-  kmsName string
+  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  kmsName @maturity("deprecated") string
   // Customer-managed KMS key used to protect this table (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Snapshot creation time
@@ -2192,8 +2192,10 @@ private gcp.project.bigqueryService.model @defaults("id") {
   type string
   // Expiration time of the model
   expirationTime time
-  // Cloud KMS encryption key that is used to protect BigQuery model
-  kmsName string
+  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  kmsName @maturity("deprecated") string
+  // Customer-managed KMS key used to protect this model (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
 }
 
 // Google Cloud (GCP) BigQuery routine
@@ -2923,8 +2925,8 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   topicName string
   // Labels associated with this topic
   labels map[string]string
-  // Cloud KMS key used to protect access to messages published to the topic
-  kmsKeyName string
+  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  kmsKeyName @maturity("deprecated") string
   // Customer-managed KMS key used to protect topic messages (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Message storage policy
@@ -3271,8 +3273,8 @@ private gcp.project.loggingservice.bucket @defaults("name") {
   projectId string
   // Location where the bucket is stored
   location string
-  // CMEK settings of the log bucket
-  cmekSettings dict
+  // DEPRECATED: use kmsKey() for the typed cryptokey reference
+  cmekSettings @maturity("deprecated") dict
   // Customer-managed KMS key used to encrypt log entries in this bucket (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation timestamp
@@ -4460,8 +4462,8 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   annotations map[string]string
   // Version destroy TTL duration
   versionDestroyTtl time
-  // Customer-managed encryption key names from all replication locations
-  customerManagedEncryption []string
+  // DEPRECATED: use kmsKeys() for the typed cryptokey references
+  customerManagedEncryption @maturity("deprecated") []string
   // Customer-managed KMS keys protecting this secret across all replication locations (empty when Google-managed)
   kmsKeys() []gcp.project.kmsService.keyring.cryptokey
   // Resource manager tags used to organize and group resources, and to control policy evaluation

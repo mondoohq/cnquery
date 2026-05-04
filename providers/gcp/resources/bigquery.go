@@ -205,6 +205,23 @@ type mqlGcpProjectBigqueryServiceTableInternal struct {
 	cacheKmsKeyName string
 }
 
+type mqlGcpProjectBigqueryServiceModelInternal struct {
+	cacheKmsKeyName string
+}
+
+func (g *mqlGcpProjectBigqueryServiceModel) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
 func (g *mqlGcpProjectBigqueryServiceDataset) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
 	if g.cacheKmsKeyName == "" {
 		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
@@ -517,6 +534,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) models() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlInstance.(*mqlGcpProjectBigqueryServiceModel).cacheKmsKeyName = kmsName
 		res = append(res, mqlInstance)
 
 	}
