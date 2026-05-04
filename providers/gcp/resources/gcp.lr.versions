@@ -1279,6 +1279,7 @@ gcp.project.computeService.image.status 9.0.0
 gcp.project.computeService.image.storageLocations 13.1.2
 gcp.project.computeService.images 9.0.0
 gcp.project.computeService.instance 9.0.0
+gcp.project.computeService.instance.blockProjectSshKeysEnabled 13.12.2
 gcp.project.computeService.instance.canIpForward 9.0.0
 gcp.project.computeService.instance.confidentialInstanceConfig 9.0.0
 gcp.project.computeService.instance.cpuPlatform 9.0.0
@@ -1292,6 +1293,7 @@ gcp.project.computeService.instance.enableSecureBoot 9.0.0
 gcp.project.computeService.instance.enableVtpm 9.0.0
 gcp.project.computeService.instance.fingerprint 9.0.0
 gcp.project.computeService.instance.guestAccelerators 9.0.0
+gcp.project.computeService.instance.hasFullCloudPlatformScope 13.12.2
 gcp.project.computeService.instance.hasPublicIp 13.12.2
 gcp.project.computeService.instance.hostname 9.0.0
 gcp.project.computeService.instance.id 9.0.0
@@ -1305,6 +1307,7 @@ gcp.project.computeService.instance.metadata 9.0.0
 gcp.project.computeService.instance.minCpuPlatform 9.0.0
 gcp.project.computeService.instance.name 9.0.0
 gcp.project.computeService.instance.networkInterfaces 9.0.0
+gcp.project.computeService.instance.osLoginEnabled 13.12.2
 gcp.project.computeService.instance.physicalHostResourceStatus 9.0.0
 gcp.project.computeService.instance.privateIpv6GoogleAccess 9.0.0
 gcp.project.computeService.instance.projectId 9.0.0
@@ -1313,6 +1316,7 @@ gcp.project.computeService.instance.resourcePolicies 9.0.0
 gcp.project.computeService.instance.satisfiesPzi 11.6.6
 gcp.project.computeService.instance.satisfiesPzs 11.6.6
 gcp.project.computeService.instance.scheduling 9.0.0
+gcp.project.computeService.instance.serialPortEnabled 13.12.2
 gcp.project.computeService.instance.serviceAccounts 9.0.0
 gcp.project.computeService.instance.shieldedInstanceConfig 11.6.3
 gcp.project.computeService.instance.shieldedInstanceConfig.enableIntegrityMonitoring 11.6.3
@@ -1326,6 +1330,7 @@ gcp.project.computeService.instance.status 9.0.0
 gcp.project.computeService.instance.statusMessage 9.0.0
 gcp.project.computeService.instance.tags 9.0.0
 gcp.project.computeService.instance.totalEgressBandwidthTier 9.0.0
+gcp.project.computeService.instance.usesDefaultServiceAccount 13.12.2
 gcp.project.computeService.instance.workloadIdentityConfig 13.5.0
 gcp.project.computeService.instance.zone 9.0.0
 gcp.project.computeService.instanceGroup 11.6.6

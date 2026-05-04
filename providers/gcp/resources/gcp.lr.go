@@ -2987,6 +2987,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instance.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetHasPublicIp()).ToDataRes(types.Bool)
 	},
+	"gcp.project.computeService.instance.usesDefaultServiceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetUsesDefaultServiceAccount()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.hasFullCloudPlatformScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetHasFullCloudPlatformScope()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.blockProjectSshKeysEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetBlockProjectSshKeysEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.osLoginEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetOsLoginEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.instance.serialPortEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetSerialPortEnabled()).ToDataRes(types.Bool)
+	},
 	"gcp.project.computeService.instance.privateIpv6GoogleAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetPrivateIpv6GoogleAccess()).ToDataRes(types.String)
 	},
@@ -13869,6 +13884,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.instance.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.usesDefaultServiceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).UsesDefaultServiceAccount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.hasFullCloudPlatformScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).HasFullCloudPlatformScope, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.blockProjectSshKeysEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).BlockProjectSshKeysEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osLoginEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).OsLoginEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.serialPortEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).SerialPortEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instance.privateIpv6GoogleAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31941,6 +31976,11 @@ type mqlGcpProjectComputeServiceInstance struct {
 	MinCpuPlatform                  plugin.TValue[string]
 	NetworkInterfaces               plugin.TValue[[]any]
 	HasPublicIp                     plugin.TValue[bool]
+	UsesDefaultServiceAccount       plugin.TValue[bool]
+	HasFullCloudPlatformScope       plugin.TValue[bool]
+	BlockProjectSshKeysEnabled      plugin.TValue[bool]
+	OsLoginEnabled                  plugin.TValue[bool]
+	SerialPortEnabled               plugin.TValue[bool]
 	PrivateIpv6GoogleAccess         plugin.TValue[string]
 	ReservationAffinity             plugin.TValue[any]
 	ResourcePolicies                plugin.TValue[[]any]
@@ -32090,6 +32130,36 @@ func (c *mqlGcpProjectComputeServiceInstance) GetNetworkInterfaces() *plugin.TVa
 func (c *mqlGcpProjectComputeServiceInstance) GetHasPublicIp() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasPublicIp, func() (bool, error) {
 		return c.hasPublicIp()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetUsesDefaultServiceAccount() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsesDefaultServiceAccount, func() (bool, error) {
+		return c.usesDefaultServiceAccount()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetHasFullCloudPlatformScope() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasFullCloudPlatformScope, func() (bool, error) {
+		return c.hasFullCloudPlatformScope()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetBlockProjectSshKeysEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BlockProjectSshKeysEnabled, func() (bool, error) {
+		return c.blockProjectSshKeysEnabled()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetOsLoginEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OsLoginEnabled, func() (bool, error) {
+		return c.osLoginEnabled()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetSerialPortEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SerialPortEnabled, func() (bool, error) {
+		return c.serialPortEnabled()
 	})
 }
 
