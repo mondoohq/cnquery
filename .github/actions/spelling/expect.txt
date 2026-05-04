@@ -122,7 +122,6 @@ datastream
 DATAUSER
 DBFS
 DBRS
-DCV
 ddl
 ddos
 dedup
@@ -440,6 +439,7 @@ rai
 raidz
 ratebasedstatement
 rbcd
+Rdp
 recaptcha
 regexmatchstatement
 regexpatternsetreferencestatement
@@ -507,6 +507,7 @@ stepfunctions
 streamable
 stringx
 Stus
+subnetted
 subscriptionfilter
 superusers
 swi
