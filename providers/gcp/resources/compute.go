@@ -3272,3 +3272,19 @@ func (g *mqlGcpProjectComputeServiceSnapshot) iamPolicy() ([]any, error) {
 	}
 	return computeIamBindingsToResources(g.MqlRuntime, name, policy.Bindings)
 }
+
+func (g *mqlGcpProjectComputeServiceSnapshot) public() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
+func (g *mqlGcpProjectComputeServiceImage) public() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}

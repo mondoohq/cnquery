@@ -278,13 +278,15 @@ func (g *mqlGcpProjectIamServiceServiceAccount) keys() ([]any, error) {
 	}
 	mqlKeys := make([]any, 0, len(resp.Keys))
 	for _, k := range resp.Keys {
+		keyType := k.KeyType.String()
 		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount.key", map[string]*llx.RawData{
 			"name":            llx.StringData(k.Name),
 			"keyAlgorithm":    llx.StringData(k.KeyAlgorithm.String()),
 			"validAfterTime":  llx.TimeDataPtr(timestampAsTimePtr(k.ValidAfterTime)),
 			"validBeforeTime": llx.TimeDataPtr(timestampAsTimePtr(k.ValidBeforeTime)),
 			"keyOrigin":       llx.StringData(k.KeyOrigin.String()),
-			"keyType":         llx.StringData(k.KeyType.String()),
+			"keyType":         llx.StringData(keyType),
+			"userManaged":     llx.BoolData(keyType == "USER_MANAGED"),
 			"disabled":        llx.BoolData(k.Disabled),
 		})
 		if err != nil {

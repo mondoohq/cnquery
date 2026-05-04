@@ -214,6 +214,27 @@ func (g *mqlGcpProjectBigqueryServiceDataset) getClient() (*bigquery.Client, err
 	return g.client, g.clientErr
 }
 
+func (g *mqlGcpProjectBigqueryServiceDataset) public() (bool, error) {
+	access := g.GetAccess()
+	if access.Error != nil {
+		return false, access.Error
+	}
+	for _, raw := range access.Data {
+		entry, ok := raw.(*mqlGcpProjectBigqueryServiceDatasetAccessEntry)
+		if !ok || entry == nil {
+			continue
+		}
+		entity := entry.GetEntity()
+		if entity.Error != nil {
+			return false, entity.Error
+		}
+		if isPublicMember(entity.Data) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (g *mqlGcpProjectBigqueryServiceDataset) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error

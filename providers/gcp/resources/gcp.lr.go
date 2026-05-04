@@ -3287,6 +3287,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.snapshot.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
+	"gcp.project.computeService.snapshot.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetPublic()).ToDataRes(types.Bool)
+	},
 	"gcp.project.computeService.image.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceImage).GetId()).ToDataRes(types.String)
 	},
@@ -3346,6 +3349,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.image.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceImage).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.computeService.image.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceImage).GetPublic()).ToDataRes(types.Bool)
 	},
 	"gcp.project.computeService.firewall.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewall).GetId()).ToDataRes(types.String)
@@ -4436,6 +4442,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.bigqueryService.dataset.access": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetAccess()).ToDataRes(types.Array(types.Resource("gcp.project.bigqueryService.dataset.accessEntry")))
 	},
+	"gcp.project.bigqueryService.dataset.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetPublic()).ToDataRes(types.Bool)
+	},
 	"gcp.project.bigqueryService.dataset.defaultTableExpirationMs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceDataset).GetDefaultTableExpirationMs()).ToDataRes(types.Int)
 	},
@@ -5453,6 +5462,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.pubsubService.topic.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceTopic).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
+	"gcp.project.pubsubService.topic.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceTopic).GetPublic()).ToDataRes(types.Bool)
+	},
 	"gcp.project.pubsubService.topic.config.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceTopicConfig).GetProjectId()).ToDataRes(types.String)
 	},
@@ -5512,6 +5524,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.pubsubService.subscription.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscription).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.pubsubService.subscription.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectPubsubServiceSubscription).GetPublic()).ToDataRes(types.Bool)
 	},
 	"gcp.project.pubsubService.subscription.config.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectPubsubServiceSubscriptionConfig).GetProjectId()).ToDataRes(types.String)
@@ -5678,6 +5693,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.kmsService.keyring.cryptokey.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
 	},
+	"gcp.project.kmsService.keyring.cryptokey.public": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetPublic()).ToDataRes(types.Bool)
+	},
 	"gcp.project.kmsService.keyring.cryptokey.version.resourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GetResourcePath()).ToDataRes(types.String)
 	},
@@ -5830,6 +5848,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.apiKey.restrictions.serverKeyRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetServerKeyRestrictions()).ToDataRes(types.Dict)
+	},
+	"gcp.project.apiKey.restrictions.unrestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictions).GetUnrestricted()).ToDataRes(types.Bool)
 	},
 	"gcp.project.loggingservice.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingservice).GetProjectId()).ToDataRes(types.String)
@@ -6049,6 +6070,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.serviceAccount.key.keyType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetKeyType()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.serviceAccount.key.userManaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetUserManaged()).ToDataRes(types.Bool)
 	},
 	"gcp.project.iamService.serviceAccount.key.disabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetDisabled()).ToDataRes(types.Bool)
@@ -6742,6 +6766,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudRunService.service.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunServiceService).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.project.cloudRunService.service.publicInvocable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudRunServiceService).GetPublicInvocable()).ToDataRes(types.Bool)
 	},
 	"gcp.project.cloudRunService.service.revisionTemplate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudRunServiceServiceRevisionTemplate).GetId()).ToDataRes(types.String)
@@ -14264,6 +14291,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceSnapshot).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.snapshot.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSnapshot).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceImage).__id, ok = v.Value.(string)
 		return
@@ -14346,6 +14377,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.image.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceImage).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.image.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceImage).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15916,6 +15951,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectBigqueryServiceDataset).Access, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.bigqueryService.dataset.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceDataset).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.bigqueryService.dataset.defaultTableExpirationMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceDataset).DefaultTableExpirationMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -17424,6 +17463,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectPubsubServiceTopic).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.pubsubService.topic.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceTopic).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.pubsubService.topic.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceTopicConfig).__id, ok = v.Value.(string)
 		return
@@ -17518,6 +17561,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.pubsubService.subscription.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectPubsubServiceSubscription).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.pubsubService.subscription.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectPubsubServiceSubscription).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.pubsubService.subscription.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17768,6 +17815,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.kmsService.keyring.cryptokey.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.kmsService.keyring.cryptokey.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).__id, ok = v.Value.(string)
 		return
@@ -18002,6 +18053,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.apiKey.restrictions.serverKeyRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKeyRestrictions).ServerKeyRestrictions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.apiKey.restrictions.unrestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictions).Unrestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.loggingservice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18338,6 +18393,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.serviceAccount.key.keyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).KeyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.key.userManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccountKey).UserManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.serviceAccount.key.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19350,6 +19409,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudRunService.service.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudRunServiceService).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudRunService.service.publicInvocable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudRunServiceService).PublicInvocable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudRunService.service.revisionTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32655,6 +32718,7 @@ type mqlGcpProjectComputeServiceSnapshot struct {
 	SourceSnapshotSchedulePolicy   plugin.TValue[string]
 	SourceSnapshotSchedulePolicyId plugin.TValue[string]
 	IamPolicy                      plugin.TValue[[]any]
+	Public                         plugin.TValue[bool]
 }
 
 // createGcpProjectComputeServiceSnapshot creates a new instance of this resource
@@ -32806,6 +32870,12 @@ func (c *mqlGcpProjectComputeServiceSnapshot) GetIamPolicy() *plugin.TValue[[]an
 	})
 }
 
+func (c *mqlGcpProjectComputeServiceSnapshot) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
+	})
+}
+
 // mqlGcpProjectComputeServiceImage for the gcp.project.computeService.image resource
 type mqlGcpProjectComputeServiceImage struct {
 	MqlRuntime *plugin.Runtime
@@ -32831,6 +32901,7 @@ type mqlGcpProjectComputeServiceImage struct {
 	SourceImage               plugin.TValue[*mqlGcpProjectComputeServiceImage]
 	SourceSnapshot            plugin.TValue[*mqlGcpProjectComputeServiceSnapshot]
 	IamPolicy                 plugin.TValue[[]any]
+	Public                    plugin.TValue[bool]
 }
 
 // createGcpProjectComputeServiceImage creates a new instance of this resource
@@ -32995,6 +33066,12 @@ func (c *mqlGcpProjectComputeServiceImage) GetIamPolicy() *plugin.TValue[[]any] 
 		}
 
 		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceImage) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
 	})
 }
 
@@ -36265,6 +36342,7 @@ type mqlGcpProjectBigqueryServiceDataset struct {
 	Tags                         plugin.TValue[map[string]any]
 	KmsName                      plugin.TValue[string]
 	Access                       plugin.TValue[[]any]
+	Public                       plugin.TValue[bool]
 	DefaultTableExpirationMs     plugin.TValue[int64]
 	Tables                       plugin.TValue[[]any]
 	Models                       plugin.TValue[[]any]
@@ -36355,6 +36433,12 @@ func (c *mqlGcpProjectBigqueryServiceDataset) GetKmsName() *plugin.TValue[string
 
 func (c *mqlGcpProjectBigqueryServiceDataset) GetAccess() *plugin.TValue[[]any] {
 	return &c.Access
+}
+
+func (c *mqlGcpProjectBigqueryServiceDataset) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
+	})
 }
 
 func (c *mqlGcpProjectBigqueryServiceDataset) GetDefaultTableExpirationMs() *plugin.TValue[int64] {
@@ -39890,6 +39974,7 @@ type mqlGcpProjectPubsubServiceTopic struct {
 	Name      plugin.TValue[string]
 	Config    plugin.TValue[*mqlGcpProjectPubsubServiceTopicConfig]
 	IamPolicy plugin.TValue[[]any]
+	Public    plugin.TValue[bool]
 }
 
 // createGcpProjectPubsubServiceTopic creates a new instance of this resource
@@ -39966,6 +40051,12 @@ func (c *mqlGcpProjectPubsubServiceTopic) GetIamPolicy() *plugin.TValue[[]any] {
 		}
 
 		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectPubsubServiceTopic) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
 	})
 }
 
@@ -40202,6 +40293,7 @@ type mqlGcpProjectPubsubServiceSubscription struct {
 	Name      plugin.TValue[string]
 	Config    plugin.TValue[*mqlGcpProjectPubsubServiceSubscriptionConfig]
 	IamPolicy plugin.TValue[[]any]
+	Public    plugin.TValue[bool]
 }
 
 // createGcpProjectPubsubServiceSubscription creates a new instance of this resource
@@ -40278,6 +40370,12 @@ func (c *mqlGcpProjectPubsubServiceSubscription) GetIamPolicy() *plugin.TValue[[
 		}
 
 		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectPubsubServiceSubscription) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
 	})
 }
 
@@ -40803,6 +40901,7 @@ type mqlGcpProjectKmsServiceKeyringCryptokey struct {
 	KeyAccessJustificationsPolicy plugin.TValue[any]
 	Versions                      plugin.TValue[[]any]
 	IamPolicy                     plugin.TValue[[]any]
+	Public                        plugin.TValue[bool]
 }
 
 // createGcpProjectKmsServiceKeyringCryptokey creates a new instance of this resource
@@ -40923,6 +41022,12 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() *plugin.TValue[
 		}
 
 		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
+		return c.public()
 	})
 }
 
@@ -41470,6 +41575,7 @@ type mqlGcpProjectApiKeyRestrictions struct {
 	BrowserKeyRestrictions plugin.TValue[any]
 	IosKeyRestrictions     plugin.TValue[any]
 	ServerKeyRestrictions  plugin.TValue[any]
+	Unrestricted           plugin.TValue[bool]
 }
 
 // createGcpProjectApiKeyRestrictions creates a new instance of this resource
@@ -41531,6 +41637,12 @@ func (c *mqlGcpProjectApiKeyRestrictions) GetIosKeyRestrictions() *plugin.TValue
 
 func (c *mqlGcpProjectApiKeyRestrictions) GetServerKeyRestrictions() *plugin.TValue[any] {
 	return &c.ServerKeyRestrictions
+}
+
+func (c *mqlGcpProjectApiKeyRestrictions) GetUnrestricted() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Unrestricted, func() (bool, error) {
+		return c.unrestricted()
+	})
 }
 
 // mqlGcpProjectLoggingservice for the gcp.project.loggingservice resource
@@ -42441,6 +42553,7 @@ type mqlGcpProjectIamServiceServiceAccountKey struct {
 	ValidBeforeTime plugin.TValue[*time.Time]
 	KeyOrigin       plugin.TValue[string]
 	KeyType         plugin.TValue[string]
+	UserManaged     plugin.TValue[bool]
 	Disabled        plugin.TValue[bool]
 }
 
@@ -42503,6 +42616,10 @@ func (c *mqlGcpProjectIamServiceServiceAccountKey) GetKeyOrigin() *plugin.TValue
 
 func (c *mqlGcpProjectIamServiceServiceAccountKey) GetKeyType() *plugin.TValue[string] {
 	return &c.KeyType
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccountKey) GetUserManaged() *plugin.TValue[bool] {
+	return &c.UserManaged
 }
 
 func (c *mqlGcpProjectIamServiceServiceAccountKey) GetDisabled() *plugin.TValue[bool] {
@@ -44592,6 +44709,7 @@ type mqlGcpProjectCloudRunServiceService struct {
 	Uid                   plugin.TValue[string]
 	Etag                  plugin.TValue[string]
 	IamPolicy             plugin.TValue[[]any]
+	PublicInvocable       plugin.TValue[bool]
 }
 
 // createGcpProjectCloudRunServiceService creates a new instance of this resource
@@ -44772,6 +44890,12 @@ func (c *mqlGcpProjectCloudRunServiceService) GetIamPolicy() *plugin.TValue[[]an
 		}
 
 		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpProjectCloudRunServiceService) GetPublicInvocable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PublicInvocable, func() (bool, error) {
+		return c.publicInvocable()
 	})
 }
 

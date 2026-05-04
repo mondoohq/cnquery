@@ -1144,6 +1144,8 @@ private gcp.project.computeService.snapshot @defaults("name") {
   sourceSnapshotSchedulePolicyId string
   // IAM policy bindings for this snapshot (includes allUsers / allAuthenticatedUsers grants when the snapshot is publicly shared)
   iamPolicy() []gcp.resourcemanager.binding
+  // Whether the snapshot's IAM policy grants any role to allUsers or allAuthenticatedUsers
+  public() bool
 }
 
 // Google Cloud (GCP) Compute
@@ -1188,6 +1190,8 @@ private gcp.project.computeService.image @defaults("id name") {
   sourceSnapshot() gcp.project.computeService.snapshot
   // IAM policy bindings for this image (includes allUsers / allAuthenticatedUsers grants when the image is publicly shared)
   iamPolicy() []gcp.resourcemanager.binding
+  // Whether the image's IAM policy grants any role to allUsers or allAuthenticatedUsers
+  public() bool
 }
 
 // Google Cloud (GCP) Compute firewall
@@ -2058,6 +2062,8 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   kmsName string
   // Access permissions
   access []gcp.project.bigqueryService.dataset.accessEntry
+  // Whether any access entry grants the dataset to allUsers or allAuthenticatedUsers
+  public() bool
   // Default expiration time (in milliseconds) for tables in the dataset
   defaultTableExpirationMs int
   // Returns tables in the dataset
@@ -2895,6 +2901,8 @@ private gcp.project.pubsubService.topic @defaults("name") {
   config() gcp.project.pubsubService.topic.config
   // IAM policy for this topic
   iamPolicy() []gcp.resourcemanager.binding
+  // Whether the topic's IAM policy grants any role to allUsers or allAuthenticatedUsers
+  public() bool
 }
 
 // Google Cloud (GCP) Pub/Sub topic configuration
@@ -2951,6 +2959,8 @@ private gcp.project.pubsubService.subscription @defaults("name") {
   config() gcp.project.pubsubService.subscription.config
   // IAM policy for this subscription
   iamPolicy() []gcp.resourcemanager.binding
+  // Whether the subscription's IAM policy grants any role to allUsers or allAuthenticatedUsers
+  public() bool
 }
 
 // Google Cloud (GCP) Pub/Sub subscription configuration
@@ -3089,6 +3099,8 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   versions() []gcp.project.kmsService.keyring.cryptokey.version
   // Crypto key IAM policy
   iamPolicy() []gcp.resourcemanager.binding
+  // Whether the key's IAM policy grants any role to allUsers or allAuthenticatedUsers
+  public() bool
 }
 
 // Google Cloud (GCP) KMS crypto key version
@@ -3223,6 +3235,8 @@ private gcp.project.apiKey.restrictions {
   iosKeyRestrictions dict
   // The IP addresses that are allowed to use the key
   serverKeyRestrictions dict
+  // Whether the API key has no restrictions configured (no app/IP/referrer/API target restriction). CIS flags unrestricted keys.
+  unrestricted() bool
 }
 
 // Google Cloud (GCP) Logging resources
@@ -3413,6 +3427,8 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   keyOrigin string
   // Key type
   keyType string
+  // Whether the key is user-managed (true when keyType == USER_MANAGED). User-managed keys are typically the audit hot spot.
+  userManaged bool
   // Whether the key is disabled
   disabled bool
 }
@@ -3962,6 +3978,8 @@ private gcp.project.cloudRunService.service @defaults("name") {
   etag string
   // IAM policy bindings for this Cloud Run service
   iamPolicy() []gcp.resourcemanager.binding
+  // Whether the service is reachable from the public internet: ingress allows all traffic AND IAM grants invoke to allUsers or allAuthenticatedUsers
+  publicInvocable() bool
 }
 
 // Google Cloud (GCP) Run service revision template

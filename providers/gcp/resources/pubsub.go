@@ -995,3 +995,19 @@ func (g *mqlGcpProjectPubsubServiceTopicConfigSchemaSettings) schemaResource() (
 	}
 	return res.(*mqlGcpProjectPubsubServiceSchema), nil
 }
+
+func (g *mqlGcpProjectPubsubServiceTopic) public() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
+func (g *mqlGcpProjectPubsubServiceSubscription) public() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}

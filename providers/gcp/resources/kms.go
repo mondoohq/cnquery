@@ -513,6 +513,14 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) versions() ([]any, error) {
 	return versions, nil
 }
 
+func (g *mqlGcpProjectKmsServiceKeyringCryptokey) public() (bool, error) {
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
 func (g *mqlGcpProjectKmsServiceKeyringCryptokey) iamPolicy() ([]any, error) {
 	if g.ResourcePath.Error != nil {
 		return nil, g.ResourcePath.Error

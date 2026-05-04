@@ -205,6 +205,7 @@ gcp.project.apiKey.restrictions.browserKeyRestrictions 9.0.0
 gcp.project.apiKey.restrictions.iosKeyRestrictions 9.0.0
 gcp.project.apiKey.restrictions.parentResourcePath 9.0.0
 gcp.project.apiKey.restrictions.serverKeyRestrictions 9.0.0
+gcp.project.apiKey.restrictions.unrestricted 13.12.2
 gcp.project.apiKey.updated 9.0.0
 gcp.project.apiKeys 9.0.0
 gcp.project.appEngine 11.6.6
@@ -429,6 +430,7 @@ gcp.project.bigqueryService.dataset.models 9.0.0
 gcp.project.bigqueryService.dataset.modified 9.0.0
 gcp.project.bigqueryService.dataset.name 9.0.0
 gcp.project.bigqueryService.dataset.projectId 9.0.0
+gcp.project.bigqueryService.dataset.public 13.12.2
 gcp.project.bigqueryService.dataset.routines 9.0.0
 gcp.project.bigqueryService.dataset.storageBillingModel 13.1.2
 gcp.project.bigqueryService.dataset.tables 9.0.0
@@ -930,6 +932,7 @@ gcp.project.cloudRunService.service.launchStage 9.0.0
 gcp.project.cloudRunService.service.name 9.0.0
 gcp.project.cloudRunService.service.observedGeneration 9.0.0
 gcp.project.cloudRunService.service.projectId 9.0.0
+gcp.project.cloudRunService.service.publicInvocable 13.12.2
 gcp.project.cloudRunService.service.reconciling 9.0.0
 gcp.project.cloudRunService.service.region 9.0.0
 gcp.project.cloudRunService.service.revisionTemplate 9.0.0
@@ -1266,6 +1269,7 @@ gcp.project.computeService.image.labels 9.0.0
 gcp.project.computeService.image.licenses 9.0.0
 gcp.project.computeService.image.name 9.0.0
 gcp.project.computeService.image.projectId 9.0.0
+gcp.project.computeService.image.public 13.12.2
 gcp.project.computeService.image.satisfiesPzi 11.6.6
 gcp.project.computeService.image.satisfiesPzs 11.6.6
 gcp.project.computeService.image.sourceDisk 13.1.2
@@ -1651,6 +1655,7 @@ gcp.project.computeService.snapshot.labels 9.0.0
 gcp.project.computeService.snapshot.licenses 9.0.0
 gcp.project.computeService.snapshot.name 9.0.0
 gcp.project.computeService.snapshot.projectId 13.10.1
+gcp.project.computeService.snapshot.public 13.12.2
 gcp.project.computeService.snapshot.satisfiesPzi 11.6.6
 gcp.project.computeService.snapshot.satisfiesPzs 11.6.6
 gcp.project.computeService.snapshot.snapshotType 9.0.0
@@ -2527,6 +2532,7 @@ gcp.project.iamService.serviceAccount.key.keyAlgorithm 9.0.0
 gcp.project.iamService.serviceAccount.key.keyOrigin 9.0.0
 gcp.project.iamService.serviceAccount.key.keyType 9.0.0
 gcp.project.iamService.serviceAccount.key.name 9.0.0
+gcp.project.iamService.serviceAccount.key.userManaged 13.12.2
 gcp.project.iamService.serviceAccount.key.validAfterTime 9.0.0
 gcp.project.iamService.serviceAccount.key.validBeforeTime 9.0.0
 gcp.project.iamService.serviceAccount.keys 9.0.0
@@ -2585,6 +2591,7 @@ gcp.project.kmsService.keyring.cryptokey.labels 9.0.0
 gcp.project.kmsService.keyring.cryptokey.name 9.0.0
 gcp.project.kmsService.keyring.cryptokey.nextRotation 9.0.0
 gcp.project.kmsService.keyring.cryptokey.primary 9.0.0
+gcp.project.kmsService.keyring.cryptokey.public 13.12.2
 gcp.project.kmsService.keyring.cryptokey.purpose 9.0.0
 gcp.project.kmsService.keyring.cryptokey.resourcePath 9.0.0
 gcp.project.kmsService.keyring.cryptokey.rotationPeriod 9.0.0
@@ -2956,6 +2963,7 @@ gcp.project.pubsubService.subscription.config.topicMessageRetentionDuration 11.6
 gcp.project.pubsubService.subscription.iamPolicy 11.0.146
 gcp.project.pubsubService.subscription.name 9.0.0
 gcp.project.pubsubService.subscription.projectId 9.0.0
+gcp.project.pubsubService.subscription.public 13.12.2
 gcp.project.pubsubService.subscriptions 9.0.0
 gcp.project.pubsubService.topic 9.0.0
 gcp.project.pubsubService.topic.config 9.0.0
@@ -2979,6 +2987,7 @@ gcp.project.pubsubService.topic.config.topicName 9.0.0
 gcp.project.pubsubService.topic.iamPolicy 11.0.146
 gcp.project.pubsubService.topic.name 9.0.0
 gcp.project.pubsubService.topic.projectId 9.0.0
+gcp.project.pubsubService.topic.public 13.12.2
 gcp.project.pubsubService.topics 9.0.0
 gcp.project.recommendations 9.0.0
 gcp.project.redis 11.0.79

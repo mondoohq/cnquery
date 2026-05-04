@@ -953,6 +953,20 @@ func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templ
 	return mqlContainers, nil
 }
 
+func (g *mqlGcpProjectCloudRunServiceService) publicInvocable() (bool, error) {
+	if g.Ingress.Error != nil {
+		return false, g.Ingress.Error
+	}
+	if g.Ingress.Data != "INGRESS_TRAFFIC_ALL" {
+		return false, nil
+	}
+	bindings := g.GetIamPolicy()
+	if bindings.Error != nil {
+		return false, bindings.Error
+	}
+	return iamPolicyHasPublicMember(bindings.Data)
+}
+
 func mqlVolumes(volumes []*runpb.Volume) []any {
 	mqlVolumes := make([]any, 0, len(volumes))
 	for _, v := range volumes {

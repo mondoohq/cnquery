@@ -227,6 +227,29 @@ func (g *mqlGcpProjectApiKeyRestrictions) id() (string, error) {
 	return fmt.Sprintf("%s/restrictions", g.ParentResourcePath.Data), nil
 }
 
+func (g *mqlGcpProjectApiKeyRestrictions) unrestricted() (bool, error) {
+	if g.AndroidKeyRestrictions.Error != nil {
+		return false, g.AndroidKeyRestrictions.Error
+	}
+	if g.BrowserKeyRestrictions.Error != nil {
+		return false, g.BrowserKeyRestrictions.Error
+	}
+	if g.IosKeyRestrictions.Error != nil {
+		return false, g.IosKeyRestrictions.Error
+	}
+	if g.ServerKeyRestrictions.Error != nil {
+		return false, g.ServerKeyRestrictions.Error
+	}
+	if g.ApiTargets.Error != nil {
+		return false, g.ApiTargets.Error
+	}
+	return g.AndroidKeyRestrictions.Data == nil &&
+		g.BrowserKeyRestrictions.Data == nil &&
+		g.IosKeyRestrictions.Data == nil &&
+		g.ServerKeyRestrictions.Data == nil &&
+		len(g.ApiTargets.Data) == 0, nil
+}
+
 // Always bootstrap through the parent key. apiKeys() populates restrictions
 // via CreateResource (which bypasses Init), so any NewResource call here is
 // a top-level `gcp.project.apiKey.restrictions` query — partial args would
