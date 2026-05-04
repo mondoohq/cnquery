@@ -2310,6 +2310,7 @@ gcp.project.gkeService.cluster.addonsConfig.networkPolicyConfig 9.0.0
 gcp.project.gkeService.cluster.addonsConfig.statefulHaConfig 9.0.0
 gcp.project.gkeService.cluster.autopilotEnabled 9.0.0
 gcp.project.gkeService.cluster.binaryAuthorization 9.0.0
+gcp.project.gkeService.cluster.binaryAuthorizationEnabled 13.12.2
 gcp.project.gkeService.cluster.clusterIpv4Cidr 9.0.0
 gcp.project.gkeService.cluster.confidentialNodesConfig 9.0.0
 gcp.project.gkeService.cluster.costManagementConfig 9.0.0
@@ -2345,6 +2346,7 @@ gcp.project.gkeService.cluster.ipAllocationPolicy.tpuIpv4CidrBlock 9.0.0
 gcp.project.gkeService.cluster.ipAllocationPolicy.useIpAliases 9.0.0
 gcp.project.gkeService.cluster.ipAllocationPolicy.useRoutes 9.0.0
 gcp.project.gkeService.cluster.legacyAbac 9.0.0
+gcp.project.gkeService.cluster.legacyAbacEnabled 13.12.2
 gcp.project.gkeService.cluster.location 9.0.0
 gcp.project.gkeService.cluster.locations 9.0.0
 gcp.project.gkeService.cluster.loggingService 9.0.0
@@ -2389,6 +2391,8 @@ gcp.project.gkeService.cluster.networkPolicyConfig 9.0.0
 gcp.project.gkeService.cluster.nodeIpv4CidrSize 13.1.2
 gcp.project.gkeService.cluster.nodePools 9.0.0
 gcp.project.gkeService.cluster.nodepool 9.0.0
+gcp.project.gkeService.cluster.nodepool.autoRepair 13.12.2
+gcp.project.gkeService.cluster.nodepool.autoUpgrade 13.12.2
 gcp.project.gkeService.cluster.nodepool.autoscaling 11.0.82
 gcp.project.gkeService.cluster.nodepool.autoscaling.autoprovisioned 11.0.82
 gcp.project.gkeService.cluster.nodepool.autoscaling.enabled 11.0.82
@@ -2502,10 +2506,12 @@ gcp.project.gkeService.cluster.securityPostureConfig.mode 11.6.6
 gcp.project.gkeService.cluster.securityPostureConfig.vulnerabilityMode 11.6.6
 gcp.project.gkeService.cluster.servicesIpv4Cidr 13.1.2
 gcp.project.gkeService.cluster.shieldedNodesConfig 9.0.0
+gcp.project.gkeService.cluster.shieldedNodesEnabled 13.12.2
 gcp.project.gkeService.cluster.status 9.0.0
 gcp.project.gkeService.cluster.subnetwork 9.0.0
 gcp.project.gkeService.cluster.tpuIpv4CidrBlock 13.1.2
 gcp.project.gkeService.cluster.workloadIdentityConfig 9.0.0
+gcp.project.gkeService.cluster.workloadIdentityEnabled 13.12.2
 gcp.project.gkeService.clusters 9.0.0
 gcp.project.gkeService.projectId 9.0.0
 gcp.project.iam 9.0.0

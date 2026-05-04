@@ -2400,14 +2400,20 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   addonsConfig gcp.project.gkeService.cluster.addonsConfig
   // Configuration for the use of Kubernetes Service Accounts in GCP IAM policies
   workloadIdentityConfig dict
+  // Whether Workload Identity is enabled (workloadPool is set); CIS 5.2.2
+  workloadIdentityEnabled bool
   // Configuration for cluster IP allocation
   ipAllocationPolicy gcp.project.gkeService.cluster.ipAllocationPolicy
   // Configuration for cluster networking
   networkConfig gcp.project.gkeService.cluster.networkConfig
   // Binary authorization configuration
   binaryAuthorization dict
+  // Whether Binary Authorization is enabled for the cluster; CIS 5.10.5
+  binaryAuthorizationEnabled bool
   // Legacy ABAC authorization configuration
   legacyAbac dict
+  // Whether legacy ABAC is enabled (CIS 5.8.4 says it should not be)
+  legacyAbacEnabled bool
   // Authentication information for accessing the master endpoint
   masterAuth dict
   // Master authorized networks configuration
@@ -2430,6 +2436,8 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   databaseEncryptionKey() gcp.project.kmsService.keyring.cryptokey
   // Configuration for Shielded Nodes feature
   shieldedNodesConfig dict
+  // Whether Shielded Nodes is enabled cluster-wide; CIS 5.5.5
+  shieldedNodesEnabled bool
   // Configuration for the fine-grained cost management feature
   costManagementConfig dict
   // Configuration of Confidential Nodes
@@ -2640,6 +2648,10 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   status string
   // Node management configuration
   management dict
+  // Whether nodes are automatically upgraded to the cluster master version; CIS 5.5.4
+  autoUpgrade bool
+  // Whether nodes are automatically repaired when unhealthy; CIS 5.5.3
+  autoRepair bool
   // Autoscaler configuration for this NodePool
   autoscaling gcp.project.gkeService.cluster.nodepool.autoscaling
   // Additional information about the current status of this node pool

@@ -437,10 +437,12 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 		}
 
 		var workloadIdCfg map[string]any
+		var workloadIdentityEnabled bool
 		if c.WorkloadIdentityConfig != nil {
 			workloadIdCfg = map[string]any{
 				"workloadPool": c.WorkloadIdentityConfig.WorkloadPool,
 			}
+			workloadIdentityEnabled = c.WorkloadIdentityConfig.WorkloadPool != ""
 		}
 
 		var ipAllocPolicy plugin.Resource
@@ -509,18 +511,26 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 		}
 
 		var binAuth map[string]any
+		var binaryAuthorizationEnabled bool
 		if c.BinaryAuthorization != nil {
 			binAuth = map[string]any{
 				"enabled":        c.BinaryAuthorization.Enabled,
 				"evaluationMode": c.BinaryAuthorization.EvaluationMode.String(),
 			}
+			// CIS interpretation: Binary Auth is "enabled" when evaluationMode is anything
+			// other than DISABLED. The legacy boolean Enabled field is also honored.
+			mode := c.BinaryAuthorization.EvaluationMode
+			binaryAuthorizationEnabled = c.BinaryAuthorization.Enabled ||
+				(mode != containerpb.BinaryAuthorization_EVALUATION_MODE_UNSPECIFIED && mode != containerpb.BinaryAuthorization_DISABLED)
 		}
 
 		var legacyAbac map[string]any
+		var legacyAbacEnabled bool
 		if c.LegacyAbac != nil {
 			legacyAbac = map[string]any{
 				"enabled": c.LegacyAbac.Enabled,
 			}
+			legacyAbacEnabled = c.LegacyAbac.Enabled
 		}
 
 		var masterAuth map[string]any
@@ -595,10 +605,12 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 		}
 
 		var shieldedNodesConfig map[string]any
+		var shieldedNodesEnabled bool
 		if c.ShieldedNodes != nil {
 			shieldedNodesConfig = map[string]any{
 				"enabled": c.ShieldedNodes.Enabled,
 			}
+			shieldedNodesEnabled = c.ShieldedNodes.Enabled
 		}
 
 		var costManagementConfig map[string]any
@@ -725,10 +737,13 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"expirationTime":                  llx.TimeDataPtr(parseTime(c.ExpireTime)),
 			"addonsConfig":                    llx.ResourceData(addonsConfig, "gcp.project.gkeService.cluster.addonsConfig"),
 			"workloadIdentityConfig":          llx.DictData(workloadIdCfg),
+			"workloadIdentityEnabled":         llx.BoolData(workloadIdentityEnabled),
 			"ipAllocationPolicy":              llx.ResourceData(ipAllocPolicy, "gcp.project.gkeService.cluster.ipAllocationPolicy"),
 			"networkConfig":                   llx.ResourceData(networkConfig, "gcp.project.gkeService.cluster.networkConfig"),
 			"binaryAuthorization":             llx.DictData(binAuth),
+			"binaryAuthorizationEnabled":      llx.BoolData(binaryAuthorizationEnabled),
 			"legacyAbac":                      llx.DictData(legacyAbac),
+			"legacyAbacEnabled":               llx.BoolData(legacyAbacEnabled),
 			"masterAuth":                      llx.DictData(masterAuth),
 			"masterAuthorizedNetworksConfig":  llx.DictData(masterAuthorizedNetworksCfg),
 			"masterAuthorizedNetworksEnabled": llx.BoolData(masterAuthorizedNetworksEnabled),
@@ -739,6 +754,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"databaseEncryption":              llx.DictData(databaseEncryption),
 			"databaseEncryptionState":         llx.StringData(databaseEncryptionState),
 			"shieldedNodesConfig":             llx.DictData(shieldedNodesConfig),
+			"shieldedNodesEnabled":            llx.BoolData(shieldedNodesEnabled),
 			"costManagementConfig":            llx.DictData(costManagementConfig),
 			"confidentialNodesConfig":         llx.DictData(confidentialNodesConfig),
 			"identityServiceConfig":           llx.DictData(identityServiceConfig),
@@ -816,6 +832,7 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 	}
 
 	var management map[string]any
+	var autoUpgrade, autoRepair bool
 	if np.Management != nil {
 		var upgradeOpts map[string]any
 		if np.Management.UpgradeOptions != nil {
@@ -824,6 +841,8 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 				"description":          np.Management.UpgradeOptions.Description,
 			}
 		}
+		autoUpgrade = np.Management.AutoUpgrade
+		autoRepair = np.Management.AutoRepair
 		management = map[string]any{
 			"autoRepair":     np.Management.AutoRepair,
 			"autoUpgrade":    np.Management.AutoUpgrade,
@@ -865,6 +884,8 @@ func createMqlNodePool(runtime *plugin.Runtime, np *containerpb.NodePool, cluste
 		"instanceGroupUrls": llx.ArrayData(convert.SliceAnyToInterface(np.InstanceGroupUrls), types.String),
 		"status":            llx.StringData(np.Status.String()),
 		"management":        llx.DictData(management),
+		"autoUpgrade":       llx.BoolData(autoUpgrade),
+		"autoRepair":        llx.BoolData(autoRepair),
 		"autoscaling":       llx.ResourceData(mqlPoolAutoscaling, "gcp.project.gkeService.cluster.nodepool.autoscaling"),
 		"statusMessage":     llx.StringData(np.StatusMessage),
 		"podIpv4CidrSize":   llx.IntData(int64(np.PodIpv4CidrSize)),
