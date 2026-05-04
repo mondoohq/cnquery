@@ -2514,7 +2514,7 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   networkPolicy() gcp.project.gkeService.cluster.networkPolicy
   // The release channel that the cluster is subscribed to
   releaseChannel string
-  // Whether the cluster is on a managed release channel suitable for production (releaseChannel is "stable" or "regular"; excludes RAPID and unspecified)
+  // Whether the cluster is subscribed to a Google-managed release channel (rapid, regular, or stable). False for unspecified, which means upgrades are manual.
   releaseChannelManaged() bool
   // Whether Cloud TPU integration is enabled
   enableTpu bool

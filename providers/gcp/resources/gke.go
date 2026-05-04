@@ -1257,7 +1257,7 @@ func (g *mqlGcpProjectGkeServiceCluster) releaseChannelManaged() (bool, error) {
 		return false, g.ReleaseChannel.Error
 	}
 	switch strings.ToLower(g.ReleaseChannel.Data) {
-	case "stable", "regular":
+	case "rapid", "regular", "stable":
 		return true, nil
 	}
 	return false, nil
