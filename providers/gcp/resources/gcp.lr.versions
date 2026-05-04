@@ -422,6 +422,7 @@ gcp.project.bigqueryService.dataset.defaultTableExpirationMs 11.6.6
 gcp.project.bigqueryService.dataset.description 9.0.0
 gcp.project.bigqueryService.dataset.id 9.0.0
 gcp.project.bigqueryService.dataset.isCaseInsensitive 13.1.2
+gcp.project.bigqueryService.dataset.kmsKey 13.12.2
 gcp.project.bigqueryService.dataset.kmsName 9.0.0
 gcp.project.bigqueryService.dataset.labels 9.0.0
 gcp.project.bigqueryService.dataset.location 9.0.0
@@ -483,6 +484,7 @@ gcp.project.bigqueryService.table.description 9.0.0
 gcp.project.bigqueryService.table.expirationTime 9.0.0
 gcp.project.bigqueryService.table.externalDataConfig 9.0.0
 gcp.project.bigqueryService.table.id 9.0.0
+gcp.project.bigqueryService.table.kmsKey 13.12.2
 gcp.project.bigqueryService.table.kmsName 9.0.0
 gcp.project.bigqueryService.table.labels 9.0.0
 gcp.project.bigqueryService.table.location 9.0.0
@@ -1117,6 +1119,7 @@ gcp.project.computeService.disk.diskEncryptionKey 9.0.0
 gcp.project.computeService.disk.enableConfidentialCompute 11.6.6
 gcp.project.computeService.disk.guestOsFeatures 9.0.0
 gcp.project.computeService.disk.id 9.0.0
+gcp.project.computeService.disk.kmsKey 13.12.2
 gcp.project.computeService.disk.labels 9.0.0
 gcp.project.computeService.disk.lastAttachTimestamp 9.0.0
 gcp.project.computeService.disk.lastDetachTimestamp 9.0.0
@@ -1265,6 +1268,7 @@ gcp.project.computeService.image.enableConfidentialCompute 11.6.6
 gcp.project.computeService.image.family 9.0.0
 gcp.project.computeService.image.iamPolicy 13.10.1
 gcp.project.computeService.image.id 9.0.0
+gcp.project.computeService.image.kmsKey 13.12.2
 gcp.project.computeService.image.labels 9.0.0
 gcp.project.computeService.image.licenses 9.0.0
 gcp.project.computeService.image.name 9.0.0
@@ -1651,6 +1655,7 @@ gcp.project.computeService.snapshot.downloadBytes 9.0.0
 gcp.project.computeService.snapshot.enableConfidentialCompute 11.6.6
 gcp.project.computeService.snapshot.iamPolicy 13.10.1
 gcp.project.computeService.snapshot.id 9.0.0
+gcp.project.computeService.snapshot.kmsKey 13.12.2
 gcp.project.computeService.snapshot.labels 9.0.0
 gcp.project.computeService.snapshot.licenses 9.0.0
 gcp.project.computeService.snapshot.name 9.0.0
@@ -2651,6 +2656,7 @@ gcp.project.loggingservice.bucket.indexConfig.fieldPath 9.0.0
 gcp.project.loggingservice.bucket.indexConfig.id 9.0.0
 gcp.project.loggingservice.bucket.indexConfig.type 9.0.0
 gcp.project.loggingservice.bucket.indexConfigs 9.0.0
+gcp.project.loggingservice.bucket.kmsKey 13.12.2
 gcp.project.loggingservice.bucket.lifecycleState 9.0.0
 gcp.project.loggingservice.bucket.location 11.2.1
 gcp.project.loggingservice.bucket.locked 9.0.0
@@ -2967,6 +2973,7 @@ gcp.project.pubsubService.subscription.public 13.12.2
 gcp.project.pubsubService.subscriptions 9.0.0
 gcp.project.pubsubService.topic 9.0.0
 gcp.project.pubsubService.topic.config 9.0.0
+gcp.project.pubsubService.topic.config.kmsKey 13.12.2
 gcp.project.pubsubService.topic.config.kmsKeyName 9.0.0
 gcp.project.pubsubService.topic.config.labels 9.0.0
 gcp.project.pubsubService.topic.config.messageStoragePolicy 9.0.0
@@ -3149,6 +3156,7 @@ gcp.project.secretmanagerService.secret.customerManagedEncryption 11.1.0
 gcp.project.secretmanagerService.secret.etag 11.1.0
 gcp.project.secretmanagerService.secret.expireTime 11.1.0
 gcp.project.secretmanagerService.secret.iamPolicy 11.1.0
+gcp.project.secretmanagerService.secret.kmsKeys 13.12.2
 gcp.project.secretmanagerService.secret.labels 11.1.0
 gcp.project.secretmanagerService.secret.name 11.1.0
 gcp.project.secretmanagerService.secret.projectId 11.1.0

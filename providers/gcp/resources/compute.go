@@ -773,6 +773,20 @@ type mqlGcpProjectComputeServiceDiskInternal struct {
 	cacheSourceImageUrl    string
 	cacheSourceSnapshotUrl string
 	cacheStoragePoolUrl    string
+	cacheKmsKeyName        string
+}
+
+func (g *mqlGcpProjectComputeServiceDisk) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
 func (g *mqlGcpProjectComputeServiceDisk) sourceDisk() (*mqlGcpProjectComputeServiceDisk, error) {
@@ -960,6 +974,9 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 					mqlD.cacheSourceImageUrl = disk.SourceImage
 					mqlD.cacheSourceSnapshotUrl = disk.SourceSnapshot
 					mqlD.cacheStoragePoolUrl = disk.StoragePool
+					if disk.DiskEncryptionKey != nil {
+						mqlD.cacheKmsKeyName = disk.DiskEncryptionKey.KmsKeyName
+					}
 					mux.Lock()
 					res = append(res, mqlDisk)
 					mux.Unlock()
@@ -1172,6 +1189,10 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 	req := computeSvc.Snapshots.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.SnapshotList) error {
 		for _, snapshot := range page.Items {
+			var snapshotKmsKeyName string
+			if snapshot.SnapshotEncryptionKey != nil {
+				snapshotKmsKeyName = snapshot.SnapshotEncryptionKey.KmsKeyName
+			}
 			mqlSnapshpt, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.snapshot", map[string]*llx.RawData{
 				"id":                             llx.StringData(strconv.FormatUint(snapshot.Id, 10)),
 				"projectId":                      llx.StringData(projectId),
@@ -1202,6 +1223,7 @@ func (g *mqlGcpProjectComputeService) snapshots() ([]any, error) {
 				return err
 			}
 
+			mqlSnapshpt.(*mqlGcpProjectComputeServiceSnapshot).cacheKmsKeyName = snapshotKmsKeyName
 			res = append(res, mqlSnapshpt)
 		}
 		return nil
@@ -1269,6 +1291,37 @@ type mqlGcpProjectComputeServiceImageInternal struct {
 	cacheSourceDiskUrl     string
 	cacheSourceImageUrl    string
 	cacheSourceSnapshotUrl string
+	cacheKmsKeyName        string
+}
+
+func (g *mqlGcpProjectComputeServiceImage) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+type mqlGcpProjectComputeServiceSnapshotInternal struct {
+	cacheKmsKeyName string
+}
+
+func (g *mqlGcpProjectComputeServiceSnapshot) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
 func (g *mqlGcpProjectComputeServiceImage) sourceDisk() (*mqlGcpProjectComputeServiceDisk, error) {
@@ -1382,6 +1435,9 @@ func (g *mqlGcpProjectComputeService) images() ([]any, error) {
 			mqlI.cacheSourceDiskUrl = image.SourceDisk
 			mqlI.cacheSourceImageUrl = image.SourceImage
 			mqlI.cacheSourceSnapshotUrl = image.SourceSnapshot
+			if image.ImageEncryptionKey != nil {
+				mqlI.cacheKmsKeyName = image.ImageEncryptionKey.KmsKeyName
+			}
 			res = append(res, mqlImage)
 		}
 		return nil

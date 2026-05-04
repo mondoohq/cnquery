@@ -1028,6 +1028,8 @@ private gcp.project.computeService.disk @defaults("name") {
   created time
   // Disk encryption key
   diskEncryptionKey dict
+  // Customer-managed KMS key used for disk encryption (null when Google-managed or customer-supplied)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Whether the disk uses confidential compute mode encryption
   enableConfidentialCompute bool
   // URL of the disk type resource (e.g., pd-standard, pd-ssd, pd-balanced)
@@ -1142,6 +1144,8 @@ private gcp.project.computeService.snapshot @defaults("name") {
   sourceSnapshotSchedulePolicy string
   // ID of the snapshot schedule policy
   sourceSnapshotSchedulePolicyId string
+  // Customer-managed KMS key used for snapshot encryption (null when Google-managed or customer-supplied)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // IAM policy bindings for this snapshot (includes allUsers / allAuthenticatedUsers grants when the snapshot is publicly shared)
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the snapshot's IAM policy grants any role to allUsers or allAuthenticatedUsers
@@ -1188,6 +1192,8 @@ private gcp.project.computeService.image @defaults("id name") {
   sourceImage() gcp.project.computeService.image
   // Source snapshot used to create this image
   sourceSnapshot() gcp.project.computeService.snapshot
+  // Customer-managed KMS key used for image encryption (null when Google-managed or customer-supplied)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // IAM policy bindings for this image (includes allUsers / allAuthenticatedUsers grants when the image is publicly shared)
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the image's IAM policy grants any role to allUsers or allAuthenticatedUsers
@@ -2060,6 +2066,8 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
   tags map[string]string
   // Cloud KMS encryption key that will be used to protect BigQuery table
   kmsName string
+  // Customer-managed KMS key used to protect tables in this dataset (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Access permissions
   access []gcp.project.bigqueryService.dataset.accessEntry
   // Whether any access entry grants the dataset to allUsers or allAuthenticatedUsers
@@ -2140,6 +2148,8 @@ private gcp.project.bigqueryService.table @defaults("id") {
   expirationTime time
   // Cloud KMS encryption key that is used to protect BigQuery table
   kmsName string
+  // Customer-managed KMS key used to protect this table (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Snapshot creation time
   snapshotTime time
   // Query to use for a logical view
@@ -2915,6 +2925,8 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   labels map[string]string
   // Cloud KMS key used to protect access to messages published to the topic
   kmsKeyName string
+  // Customer-managed KMS key used to protect topic messages (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Message storage policy
   messageStoragePolicy gcp.project.pubsubService.topic.config.messagestoragepolicy
   // State of the topic (STATE_UNSPECIFIED, ACTIVE, INGESTION_RESOURCE_ERROR)
@@ -3261,6 +3273,8 @@ private gcp.project.loggingservice.bucket @defaults("name") {
   location string
   // CMEK settings of the log bucket
   cmekSettings dict
+  // Customer-managed KMS key used to encrypt log entries in this bucket (null when Google-managed)
+  kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation timestamp
   created time
   // Description of the bucket
@@ -4448,6 +4462,8 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   versionDestroyTtl time
   // Customer-managed encryption key names from all replication locations
   customerManagedEncryption []string
+  // Customer-managed KMS keys protecting this secret across all replication locations (empty when Google-managed)
+  kmsKeys() []gcp.project.kmsService.keyring.cryptokey
   // Resource manager tags used to organize and group resources, and to control policy evaluation
   tags map[string]string
   // List of secret versions

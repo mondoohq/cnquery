@@ -299,6 +299,30 @@ func (g *mqlGcpProjectSecretmanagerServiceSecretVersion) id() (string, error) {
 	return g.ResourcePath.Data, g.ResourcePath.Error
 }
 
+func (g *mqlGcpProjectSecretmanagerServiceSecret) kmsKeys() ([]any, error) {
+	if g.CustomerManagedEncryption.Error != nil {
+		return nil, g.CustomerManagedEncryption.Error
+	}
+	keys := g.CustomerManagedEncryption.Data
+	if len(keys) == 0 {
+		return []any{}, nil
+	}
+	res := make([]any, 0, len(keys))
+	for _, raw := range keys {
+		name, ok := raw.(string)
+		if !ok || name == "" {
+			continue
+		}
+		k, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+			map[string]*llx.RawData{"resourcePath": llx.StringData(name)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, k)
+	}
+	return res, nil
+}
+
 func (g *mqlGcpProjectSecretmanagerServiceSecret) iamPolicy() ([]any, error) {
 	if g.ResourcePath.Error != nil {
 		return nil, g.ResourcePath.Error

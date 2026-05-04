@@ -121,6 +121,10 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 				indexConfigs = append(indexConfigs, mqlIndexConfig)
 			}
 
+			var bucketKmsKeyName string
+			if bucket.CmekSettings != nil {
+				bucketKmsKeyName = bucket.CmekSettings.KmsKeyName
+			}
 			mqlBucket, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket", map[string]*llx.RawData{
 				"projectId":           llx.StringData(projectId),
 				"location":            llx.StringData(parseLocationFromPath(bucket.Name)),
@@ -139,6 +143,7 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			mqlBucket.(*mqlGcpProjectLoggingserviceBucket).cacheKmsKeyName = bucketKmsKeyName
 			mqlBuckets = append(mqlBuckets, mqlBucket)
 		}
 		return nil
@@ -381,6 +386,23 @@ func (g *mqlGcpProjectLoggingserviceSink) id() (string, error) {
 	}
 	id := g.Id.Data
 	return fmt.Sprintf("%s/gcp.project.loggingservice.sink/%s", projectId, id), nil
+}
+
+type mqlGcpProjectLoggingserviceBucketInternal struct {
+	cacheKmsKeyName string
+}
+
+func (g *mqlGcpProjectLoggingserviceBucket) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
 func (g *mqlGcpProjectLoggingserviceBucket) id() (string, error) {

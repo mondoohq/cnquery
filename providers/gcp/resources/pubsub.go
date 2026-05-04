@@ -1011,3 +1011,19 @@ func (g *mqlGcpProjectPubsubServiceSubscription) public() (bool, error) {
 	}
 	return iamPolicyHasPublicMember(bindings.Data)
 }
+
+func (g *mqlGcpProjectPubsubServiceTopicConfig) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.KmsKeyName.Error != nil {
+		return nil, g.KmsKeyName.Error
+	}
+	if g.KmsKeyName.Data == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.KmsKeyName.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}

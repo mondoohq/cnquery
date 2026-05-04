@@ -187,6 +187,7 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlInstance.(*mqlGcpProjectBigqueryServiceDataset).cacheKmsKeyName = kmsName
 		res = append(res, mqlInstance)
 	}
 
@@ -194,9 +195,40 @@ func (g *mqlGcpProjectBigqueryService) datasets() ([]any, error) {
 }
 
 type mqlGcpProjectBigqueryServiceDatasetInternal struct {
-	clientOnce sync.Once
-	client     *bigquery.Client
-	clientErr  error
+	clientOnce      sync.Once
+	client          *bigquery.Client
+	clientErr       error
+	cacheKmsKeyName string
+}
+
+type mqlGcpProjectBigqueryServiceTableInternal struct {
+	cacheKmsKeyName string
+}
+
+func (g *mqlGcpProjectBigqueryServiceDataset) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
+}
+
+func (g *mqlGcpProjectBigqueryServiceTable) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
+	if g.cacheKmsKeyName == "" {
+		g.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.kmsService.keyring.cryptokey",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheKmsKeyName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
 func (g *mqlGcpProjectBigqueryServiceDataset) getClient() (*bigquery.Client, error) {
@@ -405,6 +437,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlInstance.(*mqlGcpProjectBigqueryServiceTable).cacheKmsKeyName = kmsName
 		res = append(res, mqlInstance)
 
 	}
