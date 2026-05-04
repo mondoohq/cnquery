@@ -5,7 +5,9 @@ package providers
 
 import (
 	"errors"
+	"io"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -469,10 +471,127 @@ func TestRuntime_CriticalErrors_MultiplePanics(t *testing.T) {
 		Instance: &RunningProvider{Name: "aws"},
 	}
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		panicErr := status.Error(codes.Internal, "panic in provider aws: error")
 		r.handlePluginError(panicErr, provider, "", "") // nolint:errcheck
 	}
 
 	assert.Len(t, r.CriticalErrors(), 3)
+}
+
+func TestRuntime_HandlePluginError_CrashIncludesVersionAndUptime(t *testing.T) {
+	r := &Runtime{}
+	instance := &RunningProvider{
+		Name:      "os",
+		Version:   "13.5.0",
+		startedAt: time.Now().Add(-3 * time.Second),
+	}
+	provider := &ConnectedProvider{Instance: instance}
+
+	crashErr := status.Error(codes.Unavailable, "error reading from server: EOF")
+	_, err := r.handlePluginError(crashErr, provider, "npm.packages", "list")
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "version=13.5.0")
+	assert.Contains(t, err.Error(), "uptime=")
+	// uptime=3s (approximately) — just confirm it's a duration string
+	assert.Contains(t, err.Error(), "subprocess=running")
+}
+
+func TestRuntime_HandlePluginError_CrashIncludesPanicTail(t *testing.T) {
+	r := &Runtime{}
+	buf := newCrashLogBuffer(io.Discard, 100)
+	_, _ = buf.Write([]byte("2026-05-04 starting up\n"))
+	_, _ = buf.Write([]byte("panic: runtime error: invalid memory address\n"))
+	_, _ = buf.Write([]byte("[signal SIGSEGV]\n"))
+	_, _ = buf.Write([]byte("goroutine 1:\n"))
+	_, _ = buf.Write([]byte("\tpkg.Func()\n"))
+
+	instance := &RunningProvider{
+		Name:     "os",
+		Version:  "13.5.0",
+		crashLog: buf,
+	}
+	provider := &ConnectedProvider{Instance: instance}
+
+	crashErr := status.Error(codes.Unavailable, "error reading from server: EOF")
+	_, err := r.handlePluginError(crashErr, provider, "npm.packages", "list")
+
+	require.Error(t, err)
+	msg := err.Error()
+	assert.Contains(t, msg, "plugin stderr (panic/fatal trace):")
+	assert.Contains(t, msg, "panic: runtime error: invalid memory address")
+	assert.Contains(t, msg, "goroutine 1:")
+	// The pre-panic startup line must not be in the panic-trace section.
+	tailIdx := mustIndex(t, msg, "plugin stderr (panic/fatal trace):")
+	assert.NotContains(t, msg[tailIdx:], "starting up")
+}
+
+func TestRuntime_HandlePluginError_CrashFallsBackToRecentStderr(t *testing.T) {
+	// No panic marker — we should still surface recent stderr lines so the
+	// caller has something to look at (e.g. for OOM-killed subprocesses that
+	// die without writing a panic trace).
+	r := &Runtime{}
+	buf := newCrashLogBuffer(io.Discard, 100)
+	_, _ = buf.Write([]byte("2026-05-04 querying /var/lib\n"))
+	_, _ = buf.Write([]byte("2026-05-04 found 1024 entries\n"))
+
+	instance := &RunningProvider{
+		Name:     "os",
+		crashLog: buf,
+	}
+	provider := &ConnectedProvider{Instance: instance}
+
+	crashErr := status.Error(codes.Unavailable, "error reading from server: EOF")
+	_, err := r.handlePluginError(crashErr, provider, "files.find", "list")
+
+	require.Error(t, err)
+	msg := err.Error()
+	assert.Contains(t, msg, "plugin stderr (last 2 lines):")
+	assert.Contains(t, msg, "querying /var/lib")
+	assert.Contains(t, msg, "found 1024 entries")
+}
+
+func TestRuntime_HandlePluginError_CrashIncludesHeartbeatTrigger(t *testing.T) {
+	r := &Runtime{}
+	instance := &RunningProvider{
+		Name:            "os",
+		heartbeatFailed: true,
+	}
+	provider := &ConnectedProvider{Instance: instance}
+
+	crashErr := status.Error(codes.Unavailable, "error reading from server: EOF")
+	_, err := r.handlePluginError(crashErr, provider, "windows", "optionalFeatures")
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "trigger=heartbeat-timeout")
+}
+
+func TestRuntime_HandlePluginError_CrashWithoutContextStaysCompact(t *testing.T) {
+	// A bare RunningProvider (no version, no startedAt, no buffer) should not
+	// produce extra noise — the message is just the original crash text.
+	r := &Runtime{}
+	provider := &ConnectedProvider{
+		Instance: &RunningProvider{Name: "aws"},
+	}
+
+	crashErr := status.Error(codes.Unavailable, "connection lost")
+	_, err := r.handlePluginError(crashErr, provider, "", "")
+
+	require.Error(t, err)
+	msg := err.Error()
+	assert.NotContains(t, msg, "version=")
+	assert.NotContains(t, msg, "uptime=")
+	assert.NotContains(t, msg, "plugin stderr")
+}
+
+func mustIndex(t *testing.T, s, sub string) int {
+	t.Helper()
+	for i := 0; i+len(sub) <= len(s); i++ {
+		if s[i:i+len(sub)] == sub {
+			return i
+		}
+	}
+	t.Fatalf("substring %q not found in %q", sub, s)
+	return -1
 }

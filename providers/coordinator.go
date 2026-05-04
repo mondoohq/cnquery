@@ -314,6 +314,15 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		}
 	}
 
+	// crashLog tees the plugin subprocess's stderr to logger.LogOutputWriter
+	// (so terminal output is unchanged) while keeping the most recent lines
+	// in a ring buffer. handlePluginError reads from it on crash to surface
+	// the actual panic/fatal trace in the error sent to Sentry — without it,
+	// the only thing that reaches error tracking is the gRPC "Unavailable: EOF"
+	// rendering of the dropped connection. The buffer is shared across plugin
+	// restarts triggered by RestartableProvider.Reconnect().
+	crashLog := newCrashLogBuffer(logger.LogOutputWriter, defaultCrashLogLines)
+
 	connectFunc := func() (pp.ProviderPlugin, *plugin.Client, error) {
 		pluginCmd := exec.Command(provider.binPath(), []string{"run_as_plugin", "--log-level", zerolog.GlobalLevel().String()}...)
 
@@ -329,7 +338,7 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 				plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
 			},
 			Logger: pluginLogger,
-			Stderr: logger.LogOutputWriter,
+			Stderr: crashLog,
 		})
 
 		// Connect via RPC
@@ -361,6 +370,8 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 	if err != nil {
 		return nil, err
 	}
+	res.Version = provider.Version
+	res.crashLog = crashLog
 	c.runningByID[res.ID] = res
 
 	return res, nil

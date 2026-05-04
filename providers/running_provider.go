@@ -275,16 +275,30 @@ func (r *RestartableProvider) StoreData(req *pp.StoreReq) (*pp.StoreRes, error) 
 var _ pp.ProviderPlugin = &RestartableProvider{}
 
 type RunningProvider struct {
-	Name   string
-	ID     string
-	Plugin pp.ProviderPlugin
-	Schema resources.ResourcesSchema
+	Name    string
+	ID      string
+	Version string
+	Plugin  pp.ProviderPlugin
+	Schema  resources.ResourcesSchema
 
 	// isClosed is true for any provider that is not running anymore,
 	// either via shutdown or via crash
 	isClosed bool
 	// isShutdown is only used once during provider shutdown
 	isShutdown bool
+	// heartbeatFailed is set when a heartbeat probe fails and triggers
+	// Shutdown(). It distinguishes "we proactively closed the connection
+	// because the plugin stopped responding" from "the plugin process
+	// crashed on its own" — both surface as gRPC Unavailable downstream.
+	heartbeatFailed bool
+	// startedAt records when SupervisedRunningProvider returned; used to
+	// report uptime in crash messages so we can tell quick startup crashes
+	// apart from after-N-minutes failures.
+	startedAt time.Time
+	// crashLog captures the plugin subprocess's stderr in a ring buffer so
+	// we can include the most recent stderr (typically a runtime fatal or
+	// panic stack trace) in the error attached to Runtime.CriticalErrors.
+	crashLog *crashLogBuffer
 	// provider errors which are evaluated and printed during shutdown of the provider
 	err          error
 	lock         sync.Mutex
@@ -298,10 +312,11 @@ func SupervisedRunningProvider(name string, id string, plugin pp.ProviderPlugin,
 	hbCtx, hbCancelFunc := context.WithCancel(context.Background())
 
 	rp := &RunningProvider{
-		Name:     name,
-		ID:       id,
-		Schema:   schema,
-		isClosed: false,
+		Name:      name,
+		ID:        id,
+		Schema:    schema,
+		isClosed:  false,
+		startedAt: time.Now(),
 		Plugin: &RestartableProvider{
 			plugin:          plugin,
 			client:          client,
@@ -324,6 +339,9 @@ func SupervisedRunningProvider(name string, id string, plugin pp.ProviderPlugin,
 func (p *RunningProvider) heartbeat(ctx context.Context, cancelFunc context.CancelFunc) error {
 	if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
 		log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin heartbeat")
+		p.shutdownLock.Lock()
+		p.heartbeatFailed = true
+		p.shutdownLock.Unlock()
 		if err := p.Shutdown(); err != nil {
 			log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin shutdown")
 		}
@@ -336,6 +354,9 @@ func (p *RunningProvider) heartbeat(ctx context.Context, cancelFunc context.Canc
 		for !p.isCloseOrShutdown() {
 			if err := p.doOneHeartbeat(p.interval + p.gracePeriod); err != nil {
 				log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin heartbeat")
+				p.shutdownLock.Lock()
+				p.heartbeatFailed = true
+				p.shutdownLock.Unlock()
 				if err := p.Shutdown(); err != nil {
 					log.Error().Err(err).Str("plugin", p.Name).Msg("error in plugin shutdown")
 				}
@@ -456,4 +477,54 @@ func (p *RunningProvider) KillClient() {
 			c.Kill()
 		}
 	}
+}
+
+// hasExited reports whether the underlying plugin subprocess has exited.
+// Returns false if we have no client handle (e.g. for builtin providers).
+func (p *RunningProvider) hasExited() bool {
+	if rp, ok := p.Plugin.(*RestartableProvider); ok {
+		c := rp.Client()
+		if c != nil {
+			return c.Exited()
+		}
+	}
+	return false
+}
+
+// uptime reports how long the provider has been running. Zero if startedAt
+// was never set (e.g. for builtin providers constructed directly).
+func (p *RunningProvider) uptime() time.Duration {
+	if p.startedAt.IsZero() {
+		return 0
+	}
+	return time.Since(p.startedAt)
+}
+
+// crashTail returns the most recent stderr lines that look like a Go runtime
+// fatal or panic stack trace, or nil if no panic-like marker was captured.
+func (p *RunningProvider) crashTail() []string {
+	if p.crashLog == nil {
+		return nil
+	}
+	return p.crashLog.CrashTail()
+}
+
+// stderrSnapshot returns the full ring-buffer contents of recent plugin stderr.
+// Used as a fallback when crashTail returns nothing — for OS-level kills
+// (SIGKILL by OOM, etc.) the process may not write anything panic-shaped before
+// dying, but earlier debug logs can still hint at what was happening.
+func (p *RunningProvider) stderrSnapshot() []string {
+	if p.crashLog == nil {
+		return nil
+	}
+	return p.crashLog.Snapshot()
+}
+
+// hadHeartbeatFailure reports whether this provider was Shutdown by the
+// heartbeat watcher rather than dying on its own. Used to distinguish "plugin
+// stopped responding to heartbeats" from "plugin process crashed."
+func (p *RunningProvider) hadHeartbeatFailure() bool {
+	p.shutdownLock.Lock()
+	defer p.shutdownLock.Unlock()
+	return p.heartbeatFailed
 }

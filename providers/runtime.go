@@ -5,6 +5,7 @@ package providers
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -528,7 +529,8 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider, reso
 		// Transport-level errors (e.g. "dial tcp" connection failures) don't
 		// carry a gRPC status code. Record them as critical so they reach
 		// error reporting (Sentry) via runtime.CriticalErrors().
-		transportErr := errors.New("the '" + provider.Instance.Name + "' provider connection failed" + ctx + ": " + err.Error())
+		base := "the '" + provider.Instance.Name + "' provider connection failed" + ctx + ": " + err.Error()
+		transportErr := errors.New(base + buildCrashDiagnostics(provider.Instance))
 		r.addCriticalError(transportErr)
 		return false, transportErr
 	}
@@ -549,11 +551,73 @@ func (r *Runtime) handlePluginError(err error, provider *ConnectedProvider, reso
 		// Happens when the plugin crashes or the gRPC connection drops.
 		// TODO: try to restart the plugin and reset its connections
 		provider.Instance.isClosed = true
-		provider.Instance.err = errors.New("the '" + provider.Instance.Name + "' provider crashed" + ctx + ": " + err.Error())
+		base := "the '" + provider.Instance.Name + "' provider crashed" + ctx + ": " + err.Error()
+		provider.Instance.err = errors.New(base + buildCrashDiagnostics(provider.Instance))
 		r.addCriticalError(provider.Instance.err)
 		return false, provider.Instance.err
 	}
 	return false, err
+}
+
+// buildCrashDiagnostics returns a multi-line suffix to append to a crash error
+// with whatever extra context we have about the dead/dying provider:
+// version, uptime, whether the subprocess actually exited, whether the
+// shutdown was triggered by a heartbeat probe, and the most recent stderr
+// (panic/fatal trace if one was captured).
+//
+// Returns "" when there's nothing useful to report, so the message stays
+// compact for cases where the optional context is unavailable (mostly tests
+// and builtin providers).
+func buildCrashDiagnostics(p *RunningProvider) string {
+	if p == nil {
+		return ""
+	}
+
+	var meta []string
+	if v := strings.TrimSpace(p.Version); v != "" {
+		meta = append(meta, "version="+v)
+	}
+	if up := p.uptime(); up > 0 {
+		meta = append(meta, "uptime="+up.Round(time.Millisecond).String())
+	}
+	if p.hasExited() {
+		meta = append(meta, "subprocess=exited")
+	} else if p.startedAt.IsZero() {
+		// builtin/in-process — no subprocess to report on
+	} else {
+		meta = append(meta, "subprocess=running")
+	}
+	if p.hadHeartbeatFailure() {
+		meta = append(meta, "trigger=heartbeat-timeout")
+	}
+
+	var sb strings.Builder
+	if len(meta) > 0 {
+		sb.WriteString("\n[")
+		sb.WriteString(strings.Join(meta, " "))
+		sb.WriteString("]")
+	}
+
+	// Prefer a panic/fatal tail when one was captured — it points at the line
+	// of provider code that died. Fall back to a tail of recent stderr for
+	// OS-level kills (OOM, SIGKILL) that exit before writing anything
+	// panic-shaped: the lines just before death can still hint at the
+	// resource being processed when it happened.
+	if tail := p.crashTail(); len(tail) > 0 {
+		sb.WriteString("\nplugin stderr (panic/fatal trace):\n")
+		sb.WriteString(strings.Join(tail, "\n"))
+	} else if snap := p.stderrSnapshot(); len(snap) > 0 {
+		const maxFallback = 30
+		if len(snap) > maxFallback {
+			snap = snap[len(snap)-maxFallback:]
+		}
+		sb.WriteString("\nplugin stderr (last ")
+		sb.WriteString(strconv.Itoa(len(snap)))
+		sb.WriteString(" lines):\n")
+		sb.WriteString(strings.Join(snap, "\n"))
+	}
+
+	return sb.String()
 }
 
 type providerCallbacks struct {
