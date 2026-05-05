@@ -21,7 +21,7 @@ const DISABLE_DELAYED_DISCOVERY_OPTION = "disable-delayed-discovery"
 type Service struct {
 	runtimes         map[uint32]*Runtime
 	lastConnectionID uint32
-	runtimesLock     sync.Mutex
+	runtimesLock     sync.RWMutex
 
 	lastHeartbeat int64
 	heartbeatLock sync.Mutex
@@ -123,13 +123,13 @@ func (s *Service) deprecatedAddRuntime(createRuntime func(connId uint32) (*Runti
 // ^^
 
 func (s *Service) GetRuntime(id uint32) (*Runtime, error) {
-	s.runtimesLock.Lock()
-	defer s.runtimesLock.Unlock()
+	s.runtimesLock.RLock()
+	defer s.runtimesLock.RUnlock()
 	return s.doGetRuntime(id)
 }
 
-// doGetRuntime is a helper function to get a runtime by its ID. It MUST be called
-// with a lock on s.runtimesLock.
+// doGetRuntime is a helper function to get a runtime by its ID. The caller MUST
+// hold s.runtimesLock (read or write).
 func (s *Service) doGetRuntime(id uint32) (*Runtime, error) {
 	if runtime, ok := s.runtimes[id]; ok {
 		return runtime, nil
@@ -181,31 +181,58 @@ func (s *Service) GetData(req *DataReq) (*DataRes, error) {
 		}, nil
 	}
 
-	resource, ok := runtime.Resources.Get(req.Resource + "\x00" + req.ResourceId)
+	resourceKey := req.Resource + "\x00" + req.ResourceId
+	resource, ok := runtime.Resources.Get(resourceKey)
 	if !ok {
-		// Note: Since resources are internally always created, there are only very
-		// few cases where we arrive here:
-		// 1. The caller is wrong. Possibly a mixup with IDs
-		// 2. The resource was loaded from a recording, but the field is not
-		// in the recording. Thus the resource was never created inside the
-		// plugin. We will attempt to create the resource and see if the field
-		// can be computed.
-		if !runtime.HasRecording {
+		// The resource doesn't exist in this runtime. This can happen when:
+		// 1. The resource was loaded from a recording but the field is not in the
+		//    recording. We attempt to create the resource from the recording.
+		// 2. The resource was created via a different connection's runtime (e.g.,
+		//    cross-provider shared resources in K8s). We search sibling runtimes.
+		// 3. The caller is wrong (possibly a mixup with IDs).
+		if runtime.HasRecording {
+			args, err := runtime.ResourceFromRecording(req.Resource, req.ResourceId)
+			if err != nil {
+				return nil, errors.New("attempted to load resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
+			}
+
+			resource, err = runtime.CreateResource(runtime, req.Resource, args)
+			if err != nil {
+				return nil, errors.New("attempted to create resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
+			}
+		} else if resource, ok = s.findResourceInRuntimes(req.Connection, resourceKey); ok {
+			// Safe: shared resources that hit this path are fully resolved at creation
+			// time and don't lazy-load fields through MqlRuntime.
+			runtime.Resources.Set(resourceKey, resource)
+		} else {
 			return nil, errors.New("resource '" + req.Resource + "' (id: " + req.ResourceId + ") doesn't exist")
-		}
-
-		args, err := runtime.ResourceFromRecording(req.Resource, req.ResourceId)
-		if err != nil {
-			return nil, errors.New("attempted to load resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
-		}
-
-		resource, err = runtime.CreateResource(runtime, req.Resource, args)
-		if err != nil {
-			return nil, errors.New("attempted to create resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
 		}
 	}
 
 	return runtime.GetData(resource, req.Field, args), nil
+}
+
+// findResourceInRuntimes searches all runtimes for a resource by key. This
+// handles the case where a resource was created via one connection but is being
+// looked up from a different connection in the same provider (e.g., cross-provider
+// shared resources created via CreateSharedResource in K8s scans).
+//
+// The search is intentionally global (not scoped to parent/child lineage) because
+// the affected resources (container.image, certificates, cpe, tls, etc.) are
+// stateless and deterministic — same __id guarantees identical data regardless of
+// which connection created them.
+func (s *Service) findResourceInRuntimes(connID uint32, resourceKey string) (Resource, bool) {
+	s.runtimesLock.RLock()
+	defer s.runtimesLock.RUnlock()
+	for id, rt := range s.runtimes {
+		if id == connID {
+			continue
+		}
+		if res, ok := rt.Resources.Get(resourceKey); ok {
+			return res, true
+		}
+	}
+	return nil, false
 }
 
 func (s *Service) StoreData(req *StoreReq) (*StoreRes, error) {
