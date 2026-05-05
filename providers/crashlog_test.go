@@ -85,6 +85,21 @@ func TestCrashLogBuffer_CrashTailFindsPanic(t *testing.T) {
 	}
 }
 
+func TestCrashLogBuffer_CrashTailFindsRuntimeDiagnostic(t *testing.T) {
+	// "runtime: " (with trailing space) is the prefix Go's runtime uses for
+	// its own diagnostic prints — distinct from "panic: runtime error: ..."
+	// (which is one line starting with "panic:"). Examples from the wild:
+	// "runtime: out of memory: cannot allocate ..."
+	// "runtime: program exceeds 10000-thread limit"
+	// We capture these because they sometimes appear WITHOUT a following
+	// "fatal error:" line (e.g. when the subprocess is killed mid-write),
+	// and they're the only signal we get.
+	b := newCrashLogBuffer(io.Discard, 50)
+	_, _ = b.Write([]byte("regular log\nruntime: out of memory: cannot allocate 16384-byte block\n"))
+	tail := b.CrashTail()
+	assert.Equal(t, []string{"runtime: out of memory: cannot allocate 16384-byte block"}, tail)
+}
+
 func TestCrashLogBuffer_CrashTailFindsFatalError(t *testing.T) {
 	b := newCrashLogBuffer(io.Discard, 50)
 	_, _ = b.Write([]byte("regular log\nfatal error: concurrent map writes\n\ngoroutine 17:\n"))
