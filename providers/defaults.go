@@ -486,6 +486,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"openstack": {
+		Provider: &plugin.Provider{
+			Name:            "openstack",
+			ID:              "go.mondoo.com/mql/providers/openstack",
+			ConnectionTypes: []string{"openstack"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "openstack",
+					Use:   "openstack",
+					Short: "an OpenStack project",
+				},
+			},
+		},
+	},
+
 	"os": {
 		Provider: &plugin.Provider{
 			Name:            "os",

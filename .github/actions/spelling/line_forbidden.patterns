@@ -179,10 +179,6 @@
 \bSLES Micro OS\b
 \bSLES Micro\b
 
-# s.b. DragonFly BSD
-\bDragon[Ff]lyBSD\b
-\bDragonfly BSD\b
-
 # s.b. PLCnext
 \bPLCNext\b
 
@@ -301,12 +297,6 @@
 
 # s.b. DocuSign
 \bDocu Sign\b
-
-# s.b. DocuSign
-\bDocu Sign\b
-
-# s.b. DocuSign
-\bDocu Sign\b
 \bDocusign\b
 
 # s.b. MongoDB
@@ -320,6 +310,8 @@
 # s.b. OpenStack
 \bOpen Stack\b
 \bOpenstack\b
+\bopenStack\b
+\bOpenSTACK\b
 
 # s.b. Red Hat
 \bRedHat\b
@@ -657,9 +649,6 @@
 
 # s.b. AWS Config
 \bAWS config\b
-
-# s.b. Copilot
-\bCoPilot\b
 
 # s.b. DeepRacer
 \bDeepracer\b

@@ -226,6 +226,7 @@ PROVIDERS := \
 	oci \
 	okta \
 	opcua \
+	openstack \
 	os \
 	proxmox \
 	shodan \

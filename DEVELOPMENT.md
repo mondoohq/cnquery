@@ -224,6 +224,7 @@ use (
    ./mql/providers/oci
    ./mql/providers/okta
    ./mql/providers/opcua
+   ./mql/providers/openstack
    ./mql/providers/proxmox
    ./mql/providers/shodan
    ./mql/providers/slack
@@ -236,6 +237,48 @@ use (
    ./cnspec
 )
 ```
+
+## Creating a new provider
+
+Use the scaffolding tool to generate the provider skeleton:
+
+```bash
+go run apps/provider-scaffold/provider-scaffold.go \
+  --path providers/your-provider \
+  --provider-id your-provider \
+  --provider-name "Your Provider"
+cd providers/your-provider && go mod tidy
+```
+
+The Go package path is derived automatically as `go.mondoo.com/mql/v13/providers/{provider-id}`. New providers use the ID scheme `go.mondoo.com/mql/providers/{provider-id}` (no version in the ID).
+
+After scaffolding, register the provider in these files:
+
+- **`providers/defaults.go`** — add a default entry (alphabetically) so the CLI discovers the provider before it's installed
+- **`README.md`** — add a row to the provider table (alphabetically)
+- **`DEVELOPMENT.md`** — add the provider path to the `go.work` provider list (alphabetically)
+- **`Makefile`** — add the provider name to the `PROVIDERS` list (alphabetically)
+
+### Asset URL tree
+
+Set `AssetUrlTrees` in `providers/<your-provider>/config/config.go` so assets discovered by the provider land under a stable technology bucket. This is what Mondoo Platform uses to group and filter assets across providers.
+
+The convention is `technology=<bucket>` followed by one or more discriminants that match what the provider's connection scopes to (account, project, tenant, cluster, host, …). Match peer providers when the technology already exists (e.g. AWS uses `technology=aws/account=…/service=…`, GCP uses `technology=gcp/project=…/service=…`). Pick a new bucket only when none of the existing ones fit.
+
+```go
+AssetUrlTrees: []*inventory.AssetUrlBranch{
+    {
+        PathSegments: []string{"technology=<bucket>"},
+        Key:          "<discriminant>",
+        Title:        "<Discriminant Title>",
+        Values: map[string]*inventory.AssetUrlBranch{
+            "*": nil, // accept any discriminant value; nest further branches if the provider emits sub-assets
+        },
+    },
+},
+```
+
+The build emits the tree into `providers/<your-provider>/dist/<your-provider>.json`; check it with `make providers/build/<your-provider>` and grep for `AssetUrlTrees` in the dist json. Mention the resulting URL shape in the provider's `README.md` so reviewers know what asset paths to expect.
 
 ## Providers development best practices
 

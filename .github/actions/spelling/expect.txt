@@ -10,6 +10,8 @@ advancedthreatprotection
 aeson
 afero
 AJD
+aki
+Akismet
 alamofire
 alloydb
 alpm
@@ -21,6 +23,7 @@ apm
 apparmor
 appsettings
 appslot
+ari
 armcontainerregistry
 armcontainerregistrytasks
 armoperationalinsights
@@ -137,7 +140,9 @@ deliverychannel
 depsdev
 dfw
 dhcpcd
+dhcpv
 directoryservice
+discriminants
 diskread
 diskwrite
 dlp
@@ -149,8 +154,10 @@ dpd
 dport
 draid
 DRdf
+dscp
 dsse
 Duf
+DVR
 eas
 ecc
 Ecmp
@@ -166,6 +173,7 @@ eni
 ENIId
 erlang
 ERPCLOUD
+ethertype
 eula
 evc
 eventarc
@@ -198,6 +206,7 @@ fsn
 ftps
 fumadocs
 functionapp
+FWaa
 gcfs
 gcs
 gelf
@@ -209,6 +218,7 @@ GHSA
 gistfile
 githubactions
 godo
+gophercloud
 gopls
 GOSUMDB
 gotchas
@@ -279,6 +289,9 @@ jupyter
 jwks
 KEDA
 kerberoastable
+keymanager
+keymap
+keyspace
 kilocode
 kiro
 kmip
@@ -390,6 +403,7 @@ NUnit
 nvmxnet
 objectstorage
 ocr
+octavia
 Odr
 oem
 oid
@@ -404,6 +418,7 @@ opencode
 openhands
 opensearch
 openssl
+openstack
 openvpn
 openzfs
 operationalinsights
@@ -412,6 +427,8 @@ orstatement
 OSGi
 ospf
 ovmf
+ovn
+OVS
 owpjy
 Paa
 pacman
@@ -440,6 +457,7 @@ privs
 privsep
 processingjob
 proxmox
+PROXYV
 psc
 psr
 PTn
@@ -488,6 +506,7 @@ rtl
 rtsp
 rulegroup
 rulegroupreferencestatement
+rxtx
 saas
 sas
 sasl
@@ -515,6 +534,7 @@ Signout
 singlequeryargument
 sizeconstraintstatement
 skaffold
+slaac
 slo
 smbv
 snaptime
@@ -544,6 +564,7 @@ Stus
 subfolders
 subkeys
 subnetted
+subports
 subscriptionfilter
 superusers
 swi
@@ -598,11 +619,13 @@ vcpus
 vdcs
 vdev
 VDhir
+vdi
 vendored
 verifiedaccess
 vertexai
 Veth
 VGeneration
+vhd
 virtio
 virtualmachine
 vlans
@@ -618,6 +641,7 @@ vmstate
 VMX
 vmxnet
 vnet
+VNI
 vnic
 vpus
 vrf

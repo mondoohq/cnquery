@@ -574,22 +574,7 @@ Each provider follows a standard directory layout:
 - **`gen/main.go`** - Generates CLI configuration JSON
 
 ### Creating a New Provider
-Use the scaffolding tool to generate the provider skeleton:
-```bash
-go run apps/provider-scaffold/provider-scaffold.go \
-  --path providers/your-provider \
-  --provider-id your-provider \
-  --provider-name "Your Provider"
-cd providers/your-provider && go mod tidy
-```
-The Go package path is derived automatically as `go.mondoo.com/mql/v13/providers/{provider-id}`.
-New providers use the ID scheme `go.mondoo.com/mql/providers/{provider-id}` (no version in the ID).
-
-After scaffolding, you must also register the provider in these files:
-- **`providers/defaults.go`** — Add a default entry (alphabetically) so the CLI discovers the provider before it's installed
-- **`README.md`** — Add a row to the provider table (alphabetically)
-- **`DEVELOPMENT.md`** — Add the provider path to the `go.work` provider list (alphabetically)
-- **`Makefile`** — Add the provider name to the `PROVIDERS` list (alphabetically)
+See [DEVELOPMENT.md → Creating a new provider](DEVELOPMENT.md#creating-a-new-provider) for the scaffolding command and the four files to register the new provider in.
 
 ### CLI and Output
 Key directories for user-facing functionality:

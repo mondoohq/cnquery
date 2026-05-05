@@ -1,0 +1,1197 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/openstack"
+option go_package = "go.mondoo.com/mql/v13/providers/openstack/resources"
+
+// OpenStack project connection
+openstack {
+  // Keystone auth URL the connection is bound to
+  authUrl string
+  // Scoped project ID
+  projectId string
+  // Region the connection is targeting
+  region string
+
+  // Keystone projects visible to the authenticated user (admin scope returns all)
+  projects() []openstack.project
+  // Keystone users (typically admin-only)
+  users() []openstack.user
+  // Keystone roles (typically admin-only)
+  roles() []openstack.role
+  // Keystone domains (typically admin-only)
+  domains() []openstack.domain
+
+  // Nova compute servers (instances) in the scoped project
+  servers() []openstack.compute.server
+  // Nova flavors (VM sizes)
+  flavors() []openstack.compute.flavor
+  // Nova SSH keypairs
+  keypairs() []openstack.compute.keypair
+  // Nova server groups (affinity / anti-affinity)
+  serverGroups() []openstack.compute.serverGroup
+
+  // Neutron networks
+  networks() []openstack.network
+  // Neutron subnets
+  subnets() []openstack.subnet
+  // Neutron routers
+  routers() []openstack.router
+  // Neutron ports
+  ports() []openstack.port
+  // Neutron floating IPs
+  floatingIps() []openstack.floatingIp
+  // Neutron security groups (with embedded rules)
+  securityGroups() []openstack.securityGroup
+
+  // Cinder block-storage volumes in the scoped project
+  volumes() []openstack.blockstorage.volume
+  // Cinder volume snapshots in the scoped project
+  snapshots() []openstack.blockstorage.snapshot
+  // Glance images visible to the scoped project
+  images() []openstack.image
+  // Barbican secrets in the scoped project
+  secrets() []openstack.keymanager.secret
+  // Barbican secret containers (e.g. TLS bundles referenced by Octavia listeners) in the scoped project
+  secretContainers() []openstack.keymanager.container
+  // Barbican secret-generation orders in the scoped project
+  secretOrders() []openstack.keymanager.order
+  // Octavia load balancers in the scoped project
+  loadBalancers() []openstack.octavia.loadBalancer
+  // Octavia listeners in the scoped project
+  listeners() []openstack.octavia.listener
+  // Octavia pools in the scoped project
+  pools() []openstack.octavia.pool
+  // Octavia health monitors in the scoped project
+  healthMonitors() []openstack.octavia.healthMonitor
+  // Octavia L7 policies in the scoped project
+  l7Policies() []openstack.octavia.l7Policy
+  // Neutron subnet pools (admin-allocated CIDR ranges) visible to the scoped project
+  subnetPools() []openstack.subnetPool
+  // Neutron QoS policies in the scoped project
+  qosPolicies() []openstack.qosPolicy
+  // Neutron trunks (parent/subport multi-VLAN containers) in the scoped project
+  trunks() []openstack.trunk
+  // Neutron FWaaS v2 firewall groups in the scoped project
+  firewallGroups() []openstack.firewall.group
+  // Neutron FWaaS v2 firewall policies in the scoped project
+  firewallPolicies() []openstack.firewall.policy
+  // Neutron FWaaS v2 firewall rules in the scoped project
+  firewallRules() []openstack.firewall.rule
+}
+
+// OpenStack Keystone project (formerly "tenant")
+private openstack.project @defaults("id name enabled") {
+  init(id? string)
+  // Project ID (UUID)
+  id string
+  // Project name
+  name string
+  // Description
+  description string
+  // Whether the project is enabled
+  enabled bool
+  // Whether this project acts as a domain
+  isDomain bool
+  // Tags
+  tags []string
+  // Domain this project belongs to
+  domain() openstack.domain
+  // Parent project; null for top-level projects
+  parent() openstack.project
+}
+
+// OpenStack Keystone user
+private openstack.user @defaults("id name enabled") {
+  init(id? string)
+  // User ID (UUID)
+  id string
+  // Username
+  name string
+  // Whether the user account is enabled
+  enabled bool
+  // Description
+  description string
+  // When the user's password expires (null when no expiry is set, e.g. federated users)
+  passwordExpiresAt time
+  // Whether the user is exempt from account lockout after repeated failed authentication attempts (Keystone option `ignore_lockout_failure_attempts`)
+  ignoreLockoutFailureAttempts bool
+  // Domain this user belongs to
+  domain() openstack.domain
+  // Default project the user is scoped to when authenticating without an explicit scope; null when unset
+  defaultProject() openstack.project
+  // Roles assigned to this user across all scopes (effective; deduplicated, includes group-derived roles)
+  roles() []openstack.role
+}
+
+// OpenStack Keystone role
+private openstack.role @defaults("id name") {
+  init(id? string)
+  // Role ID (UUID)
+  id string
+  // Role name (e.g., admin, member, reader)
+  name string
+  // Description
+  description string
+  // Domain this role belongs to; null for global roles
+  domain() openstack.domain
+}
+
+// OpenStack Keystone domain
+private openstack.domain @defaults("id name enabled") {
+  init(id? string)
+  // Domain ID (UUID, or "default" for the bootstrap domain)
+  id string
+  // Domain name
+  name string
+  // Description
+  description string
+  // Whether the domain is enabled
+  enabled bool
+}
+
+// OpenStack Nova compute server (instance)
+private openstack.compute.server @defaults("id name status") {
+  init(id? string)
+  // Server ID (UUID)
+  id string
+  // Server name
+  name string
+  // Status (ACTIVE, SHUTOFF, ERROR, BUILD, ...)
+  status string
+  // Power state (Nova `OS-EXT-STS:power_state`)
+  powerState int
+  // VM state (Nova `OS-EXT-STS:vm_state`)
+  vmState string
+  // Task state (Nova `OS-EXT-STS:task_state`)
+  taskState string
+  // Whether the server is locked
+  locked bool
+  // Hypervisor host ID (opaque hash)
+  hostId string
+  // Public IPv4 address (Nova `accessIPv4`)
+  accessIPv4 string
+  // Public IPv6 address (Nova `accessIPv6`)
+  accessIPv6 string
+  // Owning project ID
+  projectId string
+  // Owning user ID
+  userId string
+  // SSH keypair name used at boot
+  keyName string
+  // Availability zone
+  availabilityZone string
+  // Disk config (AUTO or MANUAL)
+  diskConfig string
+  // Per-network address allocations (network name -> [{addr, version, type, macAddr}])
+  addresses dict
+  // Free-form server metadata
+  metadata map[string]string
+  // Tags
+  tags []string
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
+  // Launch timestamp (Nova `OS-SRV-USG:launched_at`)
+  launchedAt time
+  // Termination timestamp (Nova `OS-SRV-USG:terminated_at`; null while running)
+  terminatedAt time
+  // Image the server was booted from; null when booted from a volume
+  image() openstack.image
+  // Flavor (VM size) the server was booted with
+  flavor() openstack.compute.flavor
+  // SSH keypair injected at boot; null when no key was used
+  keypair() openstack.compute.keypair
+  // Security groups attached at boot
+  securityGroups() []openstack.securityGroup
+  // Cinder volumes attached to this server
+  volumes() []openstack.blockstorage.volume
+}
+
+// OpenStack Nova flavor (VM size)
+private openstack.compute.flavor @defaults("id name vcpus ram disk") {
+  init(id? string)
+  // Flavor ID (UUID for v2.55+, integer string for older clouds)
+  id string
+  // Flavor name
+  name string
+  // vCPU count
+  vcpus int
+  // RAM in MB
+  ram int
+  // Root disk size in GB
+  disk int
+  // Swap size in MB (0 when no swap)
+  swap int
+  // Ephemeral disk size in GB
+  ephemeral int
+  // RX/TX bandwidth factor
+  rxtxFactor float
+  // Whether the flavor is publicly visible
+  isPublic bool
+  // Flavor description (added in microversion 2.55)
+  description string
+  // Extra specs (e.g., hw:cpu_policy, aggregate_instance_extra_specs:*)
+  extraSpecs() map[string]string
+}
+
+// OpenStack Nova SSH keypair
+private openstack.compute.keypair @defaults("name type fingerprint") {
+  // Keypair name (unique per user)
+  name string
+  // Type (ssh, x509)
+  type string
+  // Public key fingerprint
+  fingerprint string
+  // Public key material
+  publicKey string
+  // Owning user ID
+  userId string
+}
+
+// OpenStack Nova server group (affinity / anti-affinity)
+private openstack.compute.serverGroup @defaults("id name policies") {
+  init(id? string)
+  // Server group ID
+  id string
+  // Server group name
+  name string
+  // Scheduling policies (e.g., affinity, anti-affinity, soft-affinity, soft-anti-affinity)
+  policies []string
+  // Member server IDs
+  members []string
+  // User-defined metadata
+  metadata map[string]string
+  // Owning project ID
+  projectId string
+  // Owning user ID
+  userId string
+  // Servers in this group
+  memberServers() []openstack.compute.server
+}
+
+// OpenStack Neutron network
+private openstack.network @defaults("id name status") {
+  init(id? string)
+  // Network ID (UUID)
+  id string
+  // Network name
+  name string
+  // Status (ACTIVE, DOWN, BUILD, ERROR)
+  status string
+  // Whether the network is administratively up
+  adminStateUp bool
+  // Whether the network is shared with other projects
+  shared bool
+  // Whether this is an external (public) network
+  external bool
+  // MTU
+  mtu int
+  // Owning project ID
+  projectId string
+  // Description
+  description string
+  // Tags
+  tags []string
+  // Provider network type (vxlan, vlan, flat, gre, ...)
+  providerNetworkType string
+  // Provider physical network mapping
+  providerPhysicalNetwork string
+  // Provider segmentation ID (VLAN tag, VXLAN VNI, ...)
+  providerSegmentationId int
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Subnets attached to this network
+  subnets() []openstack.subnet
+}
+
+// OpenStack Neutron subnet
+private openstack.subnet @defaults("id name cidr") {
+  init(id? string)
+  // Subnet ID (UUID)
+  id string
+  // Subnet name
+  name string
+  // CIDR
+  cidr string
+  // IP version (4 or 6)
+  ipVersion int
+  // Default gateway IP
+  gatewayIp string
+  // Whether DHCP is enabled
+  enableDhcp bool
+  // Whether fixed IPs assigned from this subnet are published to DNS
+  dnsPublishFixedIp bool
+  // IPv6 address assignment mode (slaac, dhcpv6-stateful, dhcpv6-stateless; empty for IPv4 or unset)
+  ipv6AddressMode string
+  // IPv6 router-advertisement mode (slaac, dhcpv6-stateful, dhcpv6-stateless; empty for IPv4 or unset)
+  ipv6RaMode string
+  // DNS nameservers advertised by DHCP
+  dnsNameservers []string
+  // Allocation pools ([{start, end}])
+  allocationPools []dict
+  // Host routes ([{destination, nexthop}])
+  hostRoutes []dict
+  // Owning project ID
+  projectId string
+  // Network this subnet belongs to
+  network() openstack.network
+  // Subnet pool this subnet's CIDR was allocated from; null when the CIDR was assigned manually
+  subnetPool() openstack.subnetPool
+  // Description
+  description string
+  // Tags
+  tags []string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+}
+
+// OpenStack Neutron router
+private openstack.router @defaults("id name status") {
+  init(id? string)
+  // Router ID (UUID)
+  id string
+  // Router name
+  name string
+  // Status
+  status string
+  // Whether the router is administratively up
+  adminStateUp bool
+  // Whether the router is distributed (DVR)
+  distributed bool
+  // Owning project ID
+  projectId string
+  // Description
+  description string
+  // Tags
+  tags []string
+  // External gateway info ({network_id, enable_snat, external_fixed_ips})
+  externalGatewayInfo dict
+  // Static routes ([{destination, nexthop}])
+  routes []dict
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // External network the router uses for its gateway; null when no external gateway is set
+  externalNetwork() openstack.network
+}
+
+// OpenStack Neutron port
+private openstack.port @defaults("id name status macAddress") {
+  init(id? string)
+  // Port ID (UUID)
+  id string
+  // Port name
+  name string
+  // Status (ACTIVE, DOWN, BUILD)
+  status string
+  // Whether the port is administratively up
+  adminStateUp bool
+  // MAC address
+  macAddress string
+  // Device ID the port is attached to (server UUID, router UUID, etc.)
+  deviceId string
+  // Device owner (compute:nova, network:router_interface, ...)
+  deviceOwner string
+  // Fixed IPs ([{subnet_id, ip_address}])
+  fixedIps []dict
+  // Whether port security is enabled
+  portSecurityEnabled bool
+  // Whether port uplink status propagation is enabled
+  propagateUplinkStatus bool
+  // Owning project ID
+  projectId string
+  // Description
+  description string
+  // Tags
+  tags []string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Network this port belongs to
+  network() openstack.network
+  // Security groups attached to the port
+  securityGroups() []openstack.securityGroup
+}
+
+// OpenStack Neutron floating IP
+private openstack.floatingIp @defaults("id floatingIpAddress status") {
+  init(id? string)
+  // Floating IP ID (UUID)
+  id string
+  // Status (ACTIVE, DOWN)
+  status string
+  // The floating (public) IP address
+  floatingIpAddress string
+  // The fixed (private) IP address it maps to (empty when unattached)
+  fixedIpAddress string
+  // Owning project ID
+  projectId string
+  // Description
+  description string
+  // Tags
+  tags []string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // External network this floating IP is allocated from
+  floatingNetwork() openstack.network
+  // Port this floating IP is bound to; null when unattached
+  port() openstack.port
+  // Router handling NAT for this floating IP; null when unattached
+  router() openstack.router
+}
+
+// OpenStack Neutron security group
+private openstack.securityGroup @defaults("id name") {
+  init(id? string)
+  // Security group ID (UUID)
+  id string
+  // Security group name
+  name string
+  // Description
+  description string
+  // Whether the security group is stateful (tracks connection state); stateless groups require explicit return-traffic rules
+  stateful bool
+  // Owning project ID
+  projectId string
+  // Tags
+  tags []string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Embedded rules
+  rules []openstack.securityGroup.rule
+}
+
+// OpenStack Neutron security group rule
+private openstack.securityGroup.rule @defaults("id direction protocol portRangeMin portRangeMax") {
+  // Rule ID (UUID)
+  id string
+  // Direction (ingress, egress)
+  direction string
+  // Ethertype (IPv4, IPv6)
+  ethertype string
+  // Protocol (tcp, udp, icmp, ...; empty matches any)
+  protocol string
+  // Lower bound of the matched port range (0 when not set)
+  portRangeMin int
+  // Upper bound of the matched port range (0 when not set)
+  portRangeMax int
+  // Remote IP prefix (CIDR; empty when matched by remote group instead)
+  remoteIpPrefix string
+  // Owning project ID
+  projectId string
+  // Description
+  description string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Security group this rule belongs to
+  securityGroup() openstack.securityGroup
+  // Remote security group the rule matches; null when matched by IP prefix instead
+  remoteGroup() openstack.securityGroup
+}
+
+// OpenStack Cinder block-storage volume
+private openstack.blockstorage.volume @defaults("id name status size") {
+  init(id? string)
+  // Volume ID (UUID)
+  id string
+  // Volume name
+  name string
+  // Description
+  description string
+  // Status (available, in-use, error, creating, attaching, detaching, ...)
+  status string
+  // Size in GB
+  size int
+  // Whether the volume is bootable
+  bootable bool
+  // Whether the volume is encrypted at rest
+  encrypted bool
+  // Whether the volume can be attached to multiple servers concurrently
+  multiAttach bool
+  // Volume type (storage class name)
+  volumeType string
+  // Availability zone
+  availabilityZone string
+  // Replication status
+  replicationStatus string
+  // User-defined metadata
+  metadata map[string]string
+  // Image metadata for volumes booted from a Glance image (empty for non-image volumes)
+  imageMetadata map[string]string
+  // Attachment records ([{server_id, attached_at, device, attachment_id, host_name}])
+  attachments []dict
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Project that owns this volume
+  project() openstack.project
+  // User that created this volume; null when the volume API does not return a user
+  user() openstack.user
+  // Source volume this volume was cloned from; null when not cloned
+  sourceVolume() openstack.blockstorage.volume
+  // Snapshot this volume was created from; null when not created from a snapshot
+  sourceSnapshot() openstack.blockstorage.snapshot
+  // Servers this volume is attached to; empty when detached
+  servers() []openstack.compute.server
+}
+
+// OpenStack Cinder volume snapshot
+private openstack.blockstorage.snapshot @defaults("id name status size") {
+  init(id? string)
+  // Snapshot ID (UUID)
+  id string
+  // Snapshot name
+  name string
+  // Description
+  description string
+  // Status (available, creating, error, deleting, ...)
+  status string
+  // Size in GB (matches the source volume's size at snapshot time)
+  size int
+  // Progress of the snapshot creation (e.g. "100%")
+  progress string
+  // Group snapshot ID; empty when not part of a consistency group snapshot
+  groupSnapshotId string
+  // Whether the snapshot consumes project quota
+  consumesQuota bool
+  // User-defined metadata
+  metadata map[string]string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Volume this snapshot was taken from
+  volume() openstack.blockstorage.volume
+  // Project that owns this snapshot
+  project() openstack.project
+  // User that created this snapshot; null when the snapshot API does not return a user
+  user() openstack.user
+}
+
+// OpenStack Glance image
+private openstack.image @defaults("id name status visibility") {
+  init(id? string)
+  // Image ID (UUID)
+  id string
+  // Image name
+  name string
+  // Status (queued, saving, active, killed, deleted, pending_delete, deactivated, uploading, importing)
+  status string
+  // Visibility (public, private, community, shared)
+  visibility string
+  // Whether the image is delete-protected
+  protected bool
+  // Whether the image is hidden from the default image list (`os_hidden`)
+  hidden bool
+  // Container format (ami, ari, aki, bare, ovf)
+  containerFormat string
+  // Disk format (ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, iso)
+  diskFormat string
+  // Minimum root disk in GB required to boot the image
+  minDiskGigabytes int
+  // Minimum RAM in MB required to boot the image
+  minRamMegabytes int
+  // Image data checksum (MD5; deprecated by Glance but still populated on most clouds)
+  checksum string
+  // Image data size in bytes
+  sizeBytes int
+  // Virtual disk size in bytes
+  virtualSize int
+  // Tags
+  tags []string
+  // User-defined metadata
+  metadata map[string]string
+  // Free-form image properties; carries Glance signing fields (`img_signature`, `img_signature_hash_method`, `img_signature_key_type`, `img_signature_certificate_uuid`), kernel/ramdisk references, and OS distro hints
+  properties dict
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Project that owns the image
+  owner() openstack.project
+}
+
+// OpenStack Barbican secret. The `payload` (raw secret material) is intentionally not exposed.
+private openstack.keymanager.secret @defaults("id name secretType status") {
+  init(id? string)
+  // Secret ID (UUID extracted from secretRef)
+  id string
+  // Secret name
+  name string
+  // Secret type (symmetric, public, private, passphrase, certificate, opaque)
+  secretType string
+  // Algorithm (e.g. AES, RSA)
+  algorithm string
+  // Bit length of the secret material
+  bitLength int
+  // Mode (e.g. CBC, GCM); empty when not applicable
+  mode string
+  // Status (ACTIVE, PENDING, ERROR)
+  status string
+  // Available payload content types (e.g. {"default": "application/octet-stream"})
+  contentTypes map[string]string
+  // Full Barbican secret URL; matches the `default_tls_container_ref` / `sni_container_refs` strings used by Octavia listeners (when those point at a secret rather than a container)
+  secretRef string
+  // Expiration timestamp; null when the secret has no expiry
+  expiresAt time
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // User that created this secret; null when the API does not return a creator
+  creator() openstack.user
+}
+
+// OpenStack Barbican secret container. Bundles secrets together; certificate-typed containers are what Octavia listeners reference for TLS termination.
+private openstack.keymanager.container @defaults("id name type status") {
+  init(id? string)
+  // Container ID (UUID extracted from containerRef)
+  id string
+  // Container name
+  name string
+  // Type (generic, rsa, certificate)
+  type string
+  // Status (ACTIVE, PENDING, ERROR)
+  status string
+  // Full Barbican container URL; matches the `default_tls_container_ref` / `sni_container_refs` strings used by Octavia listeners
+  containerRef string
+  // Raw secret references on this container ([{name, secret_ref}])
+  secretRefs []dict
+  // Consumers registered on this container ([{name, url}])
+  consumers []dict
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // User that created this container; null when the API does not return a creator
+  creator() openstack.user
+  // All secrets referenced by this container
+  secrets() []openstack.keymanager.secret
+  // Certificate body; only set on certificate-typed containers
+  certificate() openstack.keymanager.secret
+  // Private key paired with the certificate; only set on certificate-typed containers
+  privateKey() openstack.keymanager.secret
+  // Intermediate CA bundle; only set on certificate-typed containers that include intermediates
+  intermediates() openstack.keymanager.secret
+}
+
+// OpenStack Barbican secret-generation order
+private openstack.keymanager.order @defaults("id type status subStatus") {
+  init(id? string)
+  // Order ID (UUID extracted from orderRef)
+  id string
+  // Order type (key, asymmetric, certificate)
+  type string
+  // Status (PENDING, ACTIVE, ERROR)
+  status string
+  // Sub-status; finer-grained progress when status is PENDING
+  subStatus string
+  // Sub-status human-readable message
+  subStatusMessage string
+  // Error reason; populated when status is ERROR
+  errorReason string
+  // Error status code; populated when status is ERROR
+  errorStatusCode string
+  // Full Barbican order URL
+  orderRef string
+  // Order metadata (algorithm, bit_length, expiration, mode, name, payload_content_type)
+  meta dict
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // User that created this order; null when the API does not return a creator
+  creator() openstack.user
+  // Secret produced by this order; null until the order completes (or for container-producing orders)
+  secret() openstack.keymanager.secret
+  // Container produced by this order; null for secret-producing orders
+  container() openstack.keymanager.container
+}
+
+// OpenStack Octavia load balancer
+private openstack.octavia.loadBalancer @defaults("id name provisioningStatus operatingStatus vipAddress") {
+  init(id? string)
+  // Load balancer ID (UUID)
+  id string
+  // Load balancer name
+  name string
+  // Description
+  description string
+  // Whether the load balancer is administratively up
+  adminStateUp bool
+  // Provisioning status (ACTIVE, PENDING_CREATE, PENDING_UPDATE, PENDING_DELETE, ERROR)
+  provisioningStatus string
+  // Operating status (ONLINE, OFFLINE, DEGRADED, ERROR, NO_MONITOR, DRAINING)
+  operatingStatus string
+  // Virtual IP address
+  vipAddress string
+  // Octavia provider (amphora, ovn, ...)
+  provider string
+  // Octavia flavor ID; empty when no flavor is set
+  flavorId string
+  // Octavia availability zone; empty when not specified
+  availabilityZone string
+  // Additional VIPs ([{subnet_id, ip_address}]); microversion 2.26+
+  additionalVips []dict
+  // Tags
+  tags []string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Project that owns this load balancer
+  project() openstack.project
+  // Neutron port hosting the VIP; null when no port is associated yet
+  vipPort() openstack.port
+  // Neutron network the VIP is allocated on
+  vipNetwork() openstack.network
+  // Neutron subnet the VIP is allocated from
+  vipSubnet() openstack.subnet
+  // Listeners attached to this load balancer
+  listeners() []openstack.octavia.listener
+  // Pools attached to this load balancer
+  pools() []openstack.octavia.pool
+}
+
+// OpenStack Octavia listener
+private openstack.octavia.listener @defaults("id name protocol protocolPort provisioningStatus") {
+  init(id? string)
+  // Listener ID (UUID)
+  id string
+  // Listener name
+  name string
+  // Description
+  description string
+  // Whether the listener is administratively up
+  adminStateUp bool
+  // Protocol (TCP, SCTP, UDP, HTTP, HTTPS, TERMINATED_HTTPS, PROMETHEUS)
+  protocol string
+  // Listening port (1-65535)
+  protocolPort int
+  // Maximum simultaneous connections allowed; -1 means unlimited
+  connectionLimit int
+  // Provisioning status (ACTIVE, PENDING_*, ERROR)
+  provisioningStatus string
+  // OpenSSL-format colon-separated cipher list applied to TLS-terminated listeners
+  tlsCiphers string
+  // Allowed TLS protocol versions (e.g. TLSv1.2, TLSv1.3); microversion 2.17+
+  tlsVersions []string
+  // Allowed ALPN protocols (http/1.0, http/1.1, h2); microversion 2.20+
+  alpnProtocols []string
+  // TLS client authentication mode (NONE, OPTIONAL, MANDATORY); microversion 2.8+
+  clientAuthentication string
+  // CIDRs allowed to connect to the listener; empty list allows all
+  allowedCidrs []string
+  // Headers Octavia inserts before forwarding to the backend (e.g. X-Forwarded-For)
+  insertHeaders map[string]string
+  // Frontend client inactivity timeout in milliseconds
+  timeoutClientData int
+  // Backend member inactivity timeout in milliseconds
+  timeoutMemberData int
+  // Backend member connection timeout in milliseconds
+  timeoutMemberConnect int
+  // Wait time, in milliseconds, for additional TCP packets for content inspection
+  timeoutTcpInspect int
+  // Whether HSTS includeSubDomains is enabled (microversion 2.27+)
+  hstsIncludeSubdomains bool
+  // Tags
+  tags []string
+  // Project that owns this listener
+  project() openstack.project
+  // Load balancer this listener is attached to
+  loadBalancer() openstack.octavia.loadBalancer
+  // Default backend pool for traffic on this listener; null when no default pool is set
+  defaultPool() openstack.octavia.pool
+  // Barbican container holding the listener's default TLS material; null when not set or when the ref points at a bare Barbican secret
+  defaultTlsContainer() openstack.keymanager.container
+  // Barbican containers used for SNI; empty when SNI is not configured
+  sniContainers() []openstack.keymanager.container
+  // Barbican container holding the client CA bundle for mTLS; null when not configured
+  clientCATlsContainer() openstack.keymanager.container
+  // Barbican container holding the client CRL list; null when not configured
+  clientCRLContainer() openstack.keymanager.container
+  // L7 policies attached to this listener
+  l7Policies() []openstack.octavia.l7Policy
+}
+
+// OpenStack Octavia backend pool
+private openstack.octavia.pool @defaults("id name lbAlgorithm protocol provisioningStatus") {
+  init(id? string)
+  // Pool ID (UUID)
+  id string
+  // Pool name
+  name string
+  // Description
+  description string
+  // Whether the pool is administratively up
+  adminStateUp bool
+  // Load-balancing algorithm (ROUND_ROBIN, LEAST_CONNECTIONS, SOURCE_IP, SOURCE_IP_PORT)
+  lbAlgorithm string
+  // Pool protocol (TCP, UDP, HTTP, HTTPS, PROXY, PROXYV2, SCTP)
+  protocol string
+  // Provisioning status (ACTIVE, PENDING_*, ERROR)
+  provisioningStatus string
+  // Operating status (ONLINE, OFFLINE, DEGRADED, ERROR, NO_MONITOR, DRAINING)
+  operatingStatus string
+  // Octavia provider serving this pool
+  provider string
+  // Session persistence config ({type, cookie_name, persistence_timeout, persistence_granularity}); empty when persistence is disabled
+  persistence dict
+  // Whether backend connections use TLS; microversion 2.8+
+  tlsEnabled bool
+  // OpenSSL-format colon-separated cipher list for backend TLS; microversion 2.15+
+  tlsCiphers string
+  // Allowed TLS protocol versions for backend TLS; microversion 2.17+
+  tlsVersions []string
+  // ALPN protocols for backend TLS (microversion 2.24+)
+  alpnProtocols []string
+  // Tags
+  tags []string
+  // Project that owns this pool
+  project() openstack.project
+  // Load balancer this pool is attached to; null when standalone
+  loadBalancer() openstack.octavia.loadBalancer
+  // Listeners that use this pool as their default; usually 0 or 1
+  listeners() []openstack.octavia.listener
+  // Health monitor watching this pool; null when no monitor is attached
+  healthMonitor() openstack.octavia.healthMonitor
+  // Subnet the pool's members live on
+  subnet() openstack.subnet
+  // Barbican container holding the CA bundle used to verify backend TLS; null when not set
+  caTlsContainer() openstack.keymanager.container
+  // Barbican container holding the CRL list for backend TLS; null when not set
+  crlContainer() openstack.keymanager.container
+  // Barbican container holding the client cert/key bundle for backend mTLS; null when not set
+  clientTlsContainer() openstack.keymanager.container
+  // Members in this pool
+  members []openstack.octavia.member
+}
+
+// OpenStack Octavia pool member
+private openstack.octavia.member @defaults("id name address protocolPort weight") {
+  // Member ID (UUID)
+  id string
+  // Member name
+  name string
+  // Whether the member is administratively up
+  adminStateUp bool
+  // Backend IP address
+  address string
+  // Backend protocol port (1-65535)
+  protocolPort int
+  // Member weight (relative weight in the load-balancing algorithm); 0 means standby
+  weight int
+  // Whether this is a backup member (only receives traffic when all non-backup members are down)
+  backup bool
+  // Alternate IP address used for health monitoring; empty falls back to address
+  monitorAddress string
+  // Alternate port used for health monitoring; 0 falls back to protocolPort
+  monitorPort int
+  // Provisioning status (ACTIVE, PENDING_*, ERROR)
+  provisioningStatus string
+  // Operating status (ONLINE, OFFLINE, DEGRADED, ERROR, NO_MONITOR)
+  operatingStatus string
+  // Tags (microversion 2.5+)
+  tags []string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Project that owns this member
+  project() openstack.project
+  // Pool this member belongs to
+  pool() openstack.octavia.pool
+  // Subnet the member's address lives on; null when no subnet is associated
+  subnet() openstack.subnet
+}
+
+// OpenStack Octavia health monitor
+private openstack.octavia.healthMonitor @defaults("id name type delay timeout") {
+  init(id? string)
+  // Health monitor ID (UUID)
+  id string
+  // Health monitor name
+  name string
+  // Whether the health monitor is administratively up
+  adminStateUp bool
+  // Probe type (PING, TCP, HTTP, HTTPS, TLS-HELLO, UDP-CONNECT, SCTP)
+  type string
+  // Seconds between probes
+  delay int
+  // Probe connection timeout in seconds (must be < delay)
+  timeout int
+  // Allowed connection failures before a member is marked unhealthy (1-10)
+  maxRetries int
+  // Allowed connection failures before a member is marked DOWN (1-10)
+  maxRetriesDown int
+  // HTTP method used by HTTP/HTTPS probes (GET, HEAD, POST, ...)
+  httpMethod string
+  // HTTP version used by HTTP/HTTPS probes (1.0, 1.1)
+  httpVersion string
+  // HTTP path probed (must start with /)
+  urlPath string
+  // Expected HTTP response codes (e.g. "200", "200,201,202", "200-299")
+  expectedCodes string
+  // HTTP Host header used by HTTP/HTTPS probes
+  domainName string
+  // Status of the health monitor itself
+  status string
+  // Provisioning status (ACTIVE, PENDING_*, ERROR)
+  provisioningStatus string
+  // Operating status (ONLINE, OFFLINE, ERROR)
+  operatingStatus string
+  // Tags
+  tags []string
+  // Project that owns this health monitor
+  project() openstack.project
+  // Pools watched by this health monitor; usually 1
+  pools() []openstack.octavia.pool
+}
+
+// OpenStack Octavia L7 policy
+private openstack.octavia.l7Policy @defaults("id name action position provisioningStatus") {
+  init(id? string)
+  // L7 policy ID (UUID)
+  id string
+  // L7 policy name
+  name string
+  // Description
+  description string
+  // Whether the policy is administratively up
+  adminStateUp bool
+  // Action to take when all rules match (REDIRECT_PREFIX, REDIRECT_TO_POOL, REDIRECT_TO_URL, REJECT)
+  action string
+  // Evaluation position relative to other policies on the same listener
+  position int
+  // URL prefix when action is REDIRECT_PREFIX
+  redirectPrefix string
+  // URL when action is REDIRECT_TO_URL
+  redirectUrl string
+  // HTTP response code used with REDIRECT_TO_URL or REDIRECT_PREFIX
+  redirectHttpCode int
+  // Provisioning status (ACTIVE, PENDING_*, ERROR)
+  provisioningStatus string
+  // Operating status (ONLINE, OFFLINE, ERROR)
+  operatingStatus string
+  // Tags
+  tags []string
+  // Project that owns this policy
+  project() openstack.project
+  // Listener this policy is attached to
+  listener() openstack.octavia.listener
+  // Pool requests are redirected to when action is REDIRECT_TO_POOL; null otherwise
+  redirectPool() openstack.octavia.pool
+  // Match rules; the policy fires when ALL rules match
+  rules []openstack.octavia.l7Rule
+}
+
+// OpenStack Octavia L7 match rule
+private openstack.octavia.l7Rule @defaults("id ruleType compareType value") {
+  // L7 rule ID (UUID)
+  id string
+  // Rule type (COOKIE, FILE_TYPE, HEADER, HOST_NAME, PATH, SSL_CONN_HAS_CERT, SSL_VERIFY_RESULT, SSL_DN_FIELD)
+  ruleType string
+  // Comparison type (CONTAINS, ENDS_WITH, EQUAL_TO, REGEX, STARTS_WITH)
+  compareType string
+  // Comparison value (e.g. "/api/v1", ".example.com")
+  value string
+  // Comparison key (e.g. cookie name when ruleType is COOKIE); empty when not applicable
+  key string
+  // Whether the comparison is inverted (e.g. "not equal to")
+  invert bool
+  // Whether the rule is administratively up
+  adminStateUp bool
+  // Provisioning status (ACTIVE, PENDING_*, ERROR)
+  provisioningStatus string
+  // Operating status (ONLINE, OFFLINE, ERROR)
+  operatingStatus string
+  // Tags
+  tags []string
+  // Project that owns this rule
+  project() openstack.project
+  // L7 policy this rule belongs to
+  l7Policy() openstack.octavia.l7Policy
+}
+
+// OpenStack Neutron subnet pool. Admins pre-allocate CIDR ranges; tenant subnets are carved from these.
+private openstack.subnetPool @defaults("id name ipVersion shared isDefault") {
+  init(id? string)
+  // Subnet pool ID (UUID)
+  id string
+  // Subnet pool name
+  name string
+  // Description
+  description string
+  // CIDR prefixes the pool can allocate from
+  prefixes []string
+  // Default prefix length used when carving a subnet without an explicit length
+  defaultPrefixLen int
+  // Smallest prefix the pool can allocate (default 8 for IPv4, 64 for IPv6)
+  minPrefixLen int
+  // Largest prefix the pool can allocate (default 32 for IPv4, 128 for IPv6)
+  maxPrefixLen int
+  // Per-project quota in addresses
+  defaultQuota int
+  // Address scope ID this pool is bound to; empty when not in any address scope
+  addressScopeId string
+  // IP version (4 or 6)
+  ipVersion int
+  // Whether the pool is shared across projects
+  shared bool
+  // Whether the pool is the default for its IP version
+  isDefault bool
+  // Tags
+  tags []string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Project that owns this subnet pool
+  project() openstack.project
+}
+
+// OpenStack Neutron QoS policy. Attaches bandwidth-limit, DSCP, and minimum-bandwidth rules to ports/networks/floating IPs.
+private openstack.qosPolicy @defaults("id name shared isDefault") {
+  init(id? string)
+  // QoS policy ID (UUID)
+  id string
+  // QoS policy name
+  name string
+  // Description
+  description string
+  // Whether the policy is shared across projects
+  shared bool
+  // Whether the policy is the project's default
+  isDefault bool
+  // Rules attached to this policy. Rules are heterogeneous; each entry has a `type` key (`bandwidth_limit`, `dscp_marking`, `minimum_bandwidth`, `packet_rate_limit`) plus the type-specific fields (e.g. `max_kbps`, `dscp_mark`, `min_kbps`).
+  rules []dict
+  // Tags
+  tags []string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Project that owns this QoS policy
+  project() openstack.project
+}
+
+// OpenStack Neutron trunk. Parent port plus a set of subports identified by VLAN tags.
+private openstack.trunk @defaults("id name status") {
+  init(id? string)
+  // Trunk ID (UUID)
+  id string
+  // Trunk name
+  name string
+  // Description
+  description string
+  // Whether the trunk is administratively up
+  adminStateUp bool
+  // Status (ACTIVE, DOWN, BUILD, DEGRADED, ERROR)
+  status string
+  // Subport entries ([{port_id, segmentation_type, segmentation_id}])
+  subports []dict
+  // Tags
+  tags []string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Project that owns this trunk
+  project() openstack.project
+  // Parent port that carries the trunk
+  parentPort() openstack.port
+  // Subports as resolved Neutron ports
+  subportPorts() []openstack.port
+}
+
+// OpenStack FWaaS v2 firewall group. Binds ingress/egress policies to a set of ports.
+private openstack.firewall.group @defaults("id name status adminStateUp") {
+  init(id? string)
+  // Firewall group ID (UUID)
+  id string
+  // Firewall group name
+  name string
+  // Description
+  description string
+  // Whether the firewall group is administratively up
+  adminStateUp bool
+  // Status (ACTIVE, INACTIVE, PENDING_*, ERROR)
+  status string
+  // Whether the group is shared across projects
+  shared bool
+  // Project that owns this firewall group
+  project() openstack.project
+  // Ports protected by this firewall group
+  ports() []openstack.port
+  // Policy applied to ingress traffic; null when no ingress policy is bound
+  ingressPolicy() openstack.firewall.policy
+  // Policy applied to egress traffic; null when no egress policy is bound
+  egressPolicy() openstack.firewall.policy
+}
+
+// OpenStack FWaaS v2 firewall policy. Ordered list of rules used by a firewall group.
+private openstack.firewall.policy @defaults("id name audited shared") {
+  init(id? string)
+  // Firewall policy ID (UUID)
+  id string
+  // Firewall policy name
+  name string
+  // Description
+  description string
+  // Whether the policy has been audited (an admin has reviewed it)
+  audited bool
+  // Whether the policy is shared across projects
+  shared bool
+  // Project that owns this firewall policy
+  project() openstack.project
+  // Rules in this policy in evaluation order
+  rules() []openstack.firewall.rule
+}
+
+// OpenStack FWaaS v2 firewall rule. Single match-action entry referenced by one or more policies.
+private openstack.firewall.rule @defaults("id name action protocol enabled") {
+  init(id? string)
+  // Firewall rule ID (UUID)
+  id string
+  // Firewall rule name
+  name string
+  // Description
+  description string
+  // Match protocol (tcp, udp, icmp, any; empty matches any)
+  protocol string
+  // Action (allow, deny, reject)
+  action string
+  // IP version the rule applies to (4 or 6); 0 when unspecified
+  ipVersion int
+  // Source IP/CIDR; empty matches any
+  sourceIpAddress string
+  // Destination IP/CIDR; empty matches any
+  destinationIpAddress string
+  // Source port or range (e.g. "443" or "1024:65535"); empty matches any
+  sourcePort string
+  // Destination port or range; empty matches any
+  destinationPort string
+  // Whether the rule is shared across projects
+  shared bool
+  // Whether the rule is currently evaluated (disabled rules are skipped)
+  enabled bool
+  // Project that owns this firewall rule
+  project() openstack.project
+  // Policies that reference this rule
+  policies() []openstack.firewall.policy
+}
