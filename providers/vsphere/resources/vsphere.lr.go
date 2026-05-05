@@ -396,6 +396,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.host.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetTags()).ToDataRes(types.Array(types.String))
 	},
+	"vsphere.host.lockdownMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetLockdownMode()).ToDataRes(types.String)
+	},
+	"vsphere.host.firewallEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetFirewallEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.secureBootEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetSecureBootEnabled()).ToDataRes(types.Bool)
+	},
 	"vsphere.vm.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetMoid()).ToDataRes(types.String)
 	},
@@ -880,6 +889,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.lockdownMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).LockdownMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).FirewallEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.secureBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).SecureBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"vsphere.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2028,6 +2049,9 @@ type mqlVsphereHost struct {
 	Ntp               plugin.TValue[*mqlEsxiNtpconfig]
 	Snmp              plugin.TValue[map[string]any]
 	Tags              plugin.TValue[[]any]
+	LockdownMode      plugin.TValue[string]
+	FirewallEnabled   plugin.TValue[bool]
+	SecureBootEnabled plugin.TValue[bool]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -2247,6 +2271,18 @@ func (c *mqlVsphereHost) GetSnmp() *plugin.TValue[map[string]any] {
 
 func (c *mqlVsphereHost) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
+}
+
+func (c *mqlVsphereHost) GetLockdownMode() *plugin.TValue[string] {
+	return &c.LockdownMode
+}
+
+func (c *mqlVsphereHost) GetFirewallEnabled() *plugin.TValue[bool] {
+	return &c.FirewallEnabled
+}
+
+func (c *mqlVsphereHost) GetSecureBootEnabled() *plugin.TValue[bool] {
+	return &c.SecureBootEnabled
 }
 
 // mqlVsphereVm for the vsphere.vm resource

@@ -70,13 +70,16 @@ vsphere.host.acceptanceLevel 9.0.0
 vsphere.host.adapters 9.0.0
 vsphere.host.advancedSettings 9.0.0
 vsphere.host.distributedSwitch 9.0.0
+vsphere.host.firewallEnabled 13.0.10
 vsphere.host.inventoryPath 9.0.0
 vsphere.host.kernelModules 9.0.0
+vsphere.host.lockdownMode 13.0.10
 vsphere.host.moid 9.0.0
 vsphere.host.name 9.0.0
 vsphere.host.ntp 9.0.0
 vsphere.host.packages 9.0.0
 vsphere.host.properties 9.0.0
+vsphere.host.secureBootEnabled 13.0.10
 vsphere.host.services 9.0.0
 vsphere.host.snmp 9.0.0
 vsphere.host.standardSwitch 9.0.0

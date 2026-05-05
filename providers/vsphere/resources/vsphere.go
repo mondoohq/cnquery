@@ -133,7 +133,7 @@ func esxiHostProperties(conn *connection.VsphereConnection) (*object.HostSystem,
 		// check if the connection was initialized with a specific host
 		identifier, err := conn.Identifier()
 		if err != nil || !connection.IsVsphereResourceID(identifier) {
-			return nil, nil, errors.New("esxi resource is only supported for esxi connections or vsphere vm connections")
+			return nil, nil, errors.New("singular host resource is ambiguous on a vCenter connection; use vsphere.datacenter.hosts or vsphere.cluster.hosts to enumerate, or connect directly to an ESXi host")
 		}
 
 		// extract type and inventory
@@ -143,7 +143,7 @@ func esxiHostProperties(conn *connection.VsphereConnection) (*object.HostSystem,
 		}
 
 		if moid.Type != "HostSystem" {
-			return nil, nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
+			return nil, nil, errors.New("singular host resource is not supported for vsphere type " + moid.Type)
 		}
 
 		h, err = cl.HostByMoid(moid)

@@ -25,6 +25,27 @@ func (v *mqlVsphereHost) id() (string, error) {
 	return v.Moid.Data, nil
 }
 
+// hostHardeningArgs extracts a few audit-relevant scalar fields from mo.HostSystem.
+// firewallEnabled reflects whether the default policy blocks unsolicited incoming
+// traffic; the host firewall service itself is always running on ESXi.
+// secureBootEnabled is reported by HostCapability.UefiSecureBoot, which requires
+// vSphere 8.0.3+; on older hosts it's reported as false.
+func hostHardeningArgs(hostInfo *mo.HostSystem) (lockdownMode string, firewallEnabled bool, secureBootEnabled bool) {
+	if hostInfo == nil {
+		return "", false, false
+	}
+	if hostInfo.Config != nil {
+		lockdownMode = string(hostInfo.Config.LockdownMode)
+		if fw := hostInfo.Config.Firewall; fw != nil && fw.DefaultPolicy.IncomingBlocked != nil {
+			firewallEnabled = *fw.DefaultPolicy.IncomingBlocked
+		}
+	}
+	if hostInfo.Capability != nil && hostInfo.Capability.UefiSecureBoot != nil {
+		secureBootEnabled = *hostInfo.Capability.UefiSecureBoot
+	}
+	return
+}
+
 func initVsphereHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
@@ -46,10 +67,15 @@ func initVsphereHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		name = hostInfo.Name
 	}
 
+	lockdownMode, firewallEnabled, secureBootEnabled := hostHardeningArgs(hostInfo)
+
 	args["moid"] = llx.StringData(h.Reference().Encode())
 	args["name"] = llx.StringData(name)
 	args["properties"] = llx.DictData(props)
 	args["inventoryPath"] = llx.StringData(h.InventoryPath)
+	args["lockdownMode"] = llx.StringData(lockdownMode)
+	args["firewallEnabled"] = llx.BoolData(firewallEnabled)
+	args["secureBootEnabled"] = llx.BoolData(secureBootEnabled)
 
 	return args, nil, nil
 }
