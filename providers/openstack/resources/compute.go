@@ -12,12 +12,14 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/openstack/connection"
 )
 
 // ---- openstack.compute.server ----
 
 type mqlOpenstackComputeServerInternal struct {
 	cacheFlavorID         string
+	cacheFlavorName       string
 	cacheImageID          string
 	cacheKeyName          string
 	cacheSecurityGroupSGs []string
@@ -63,7 +65,7 @@ func (o *mqlOpenstack) servers() ([]any, error) {
 
 func newMqlOpenstackComputeServer(runtime *plugin.Runtime, s *servers.Server) (*mqlOpenstackComputeServer, error) {
 	imageID := serverImage(s.Image)
-	flavorID := serverFlavorID(s.Flavor)
+	flavorID, flavorName := serverFlavorRef(s.Flavor)
 	sgNames := serverSecurityGroupNames(s.SecurityGroups)
 	volumeIDs := serverVolumeIDs(s.AttachedVolumes)
 
@@ -97,6 +99,7 @@ func newMqlOpenstackComputeServer(runtime *plugin.Runtime, s *servers.Server) (*
 	}
 	mqlServer := res.(*mqlOpenstackComputeServer)
 	mqlServer.cacheFlavorID = flavorID
+	mqlServer.cacheFlavorName = flavorName
 	mqlServer.cacheImageID = imageID
 	mqlServer.cacheKeyName = s.KeyName
 	mqlServer.cacheSecurityGroupSGs = sgNames
@@ -167,12 +170,20 @@ func serverGroupMetadata(in map[string]any) map[string]string {
 }
 
 func (r *mqlOpenstackComputeServer) flavor() (*mqlOpenstackComputeFlavor, error) {
-	if r.cacheFlavorID == "" {
+	id := r.cacheFlavorID
+	if id == "" && r.cacheFlavorName != "" {
+		resolved, err := lookupFlavorIDByName(conn(r.MqlRuntime), r.cacheFlavorName)
+		if err != nil {
+			return nil, err
+		}
+		id = resolved
+	}
+	if id == "" {
 		r.Flavor.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(r.MqlRuntime, "openstack.compute.flavor", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheFlavorID),
+		"id": llx.StringData(id),
 	})
 	if err != nil {
 		return nil, err
@@ -211,7 +222,7 @@ func (r *mqlOpenstackComputeServer) securityGroups() ([]any, error) {
 
 	out := make([]any, 0, len(r.cacheSecurityGroupSGs))
 	for _, name := range r.cacheSecurityGroupSGs {
-		id, err := lookupSecurityGroupIDByName(client, name)
+		id, err := lookupSecurityGroupIDByName(c, client, name)
 		if err != nil {
 			return nil, err
 		}
@@ -242,17 +253,54 @@ func serverImage(raw any) string {
 	return ""
 }
 
-func serverFlavorID(raw map[string]any) string {
+// serverFlavorRef returns the flavor's id and original_name from the embedded
+// flavor object on a server response. Nova removed `id` from the embedded
+// flavor at microversion 2.47, so callers need to resolve the name to an id
+// when only the name is present.
+func serverFlavorRef(raw map[string]any) (id, name string) {
 	if raw == nil {
-		return ""
+		return "", ""
 	}
-	if id, ok := raw["id"].(string); ok {
-		return id
+	if v, ok := raw["id"].(string); ok {
+		id = v
 	}
-	if og, ok := raw["original_name"].(string); ok {
-		return og
+	if v, ok := raw["original_name"].(string); ok {
+		name = v
 	}
-	return ""
+	return id, name
+}
+
+// lookupFlavorIDByName resolves a flavor name to an id via a per-connection
+// cache populated lazily from a single flavors.ListDetail call.
+func lookupFlavorIDByName(c *connection.OpenstackConnection, name string) (string, error) {
+	c.FlavorNameCacheLock.Lock()
+	defer c.FlavorNameCacheLock.Unlock()
+
+	if !c.FlavorNameCacheDone {
+		client, err := c.ComputeClient()
+		if err != nil {
+			return "", err
+		}
+		pages, err := flavors.ListDetail(client, flavors.ListOpts{}).AllPages(ctx())
+		if err != nil {
+			if translateOpenstackError(err) == nil {
+				c.FlavorNameCacheDone = true
+				c.FlavorNameCache = map[string]string{}
+				return "", nil
+			}
+			return "", err
+		}
+		items, err := flavors.ExtractFlavors(pages)
+		if err != nil {
+			return "", err
+		}
+		c.FlavorNameCache = make(map[string]string, len(items))
+		for _, f := range items {
+			c.FlavorNameCache[f.Name] = f.ID
+		}
+		c.FlavorNameCacheDone = true
+	}
+	return c.FlavorNameCache[name], nil
 }
 
 func serverSecurityGroupNames(in []map[string]any) []string {

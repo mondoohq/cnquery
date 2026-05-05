@@ -5,8 +5,10 @@ package connection
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 
@@ -35,6 +37,14 @@ type OpenstackConnection struct {
 	image        *gophercloud.ServiceClient
 	keyManager   *gophercloud.ServiceClient
 	loadBalancer *gophercloud.ServiceClient
+
+	SGNameCacheLock sync.Mutex
+	SGNameCache     map[string]string
+	SGNameCacheDone bool
+
+	FlavorNameCacheLock sync.Mutex
+	FlavorNameCache     map[string]string
+	FlavorNameCacheDone bool
 }
 
 func NewOpenstackConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*OpenstackConnection, error) {
@@ -47,8 +57,18 @@ func NewOpenstackConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		return nil, errors.New("OpenStack auth URL is required (use --auth-url, --cloud, or set OS_AUTH_URL)")
 	}
 
-	provider, err := openstack.AuthenticatedClient(context.Background(), auth.authOpts)
+	provider, err := openstack.NewClient(auth.authOpts.IdentityEndpoint)
 	if err != nil {
+		return nil, fmt.Errorf("failed to initialize OpenStack client: %w", err)
+	}
+	if conf.Options[OPTION_INSECURE] == "true" {
+		provider.HTTPClient = http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // user-controlled flag for lab/test clouds
+			},
+		}
+	}
+	if err := openstack.Authenticate(context.Background(), provider, auth.authOpts); err != nil {
 		return nil, fmt.Errorf("failed to authenticate with OpenStack: %w", err)
 	}
 

@@ -1,6 +1,6 @@
 # OpenStack Provider
 
-Query OpenStack projects with cnquery and cnspec. Built on `gophercloud/v2`.
+Query OpenStack projects with mql and cnspec. Built on `gophercloud/v2`.
 
 ## Coverage
 
@@ -18,7 +18,7 @@ Seven OpenStack services across 34 resources:
 
 ```bash
 # clouds.yaml entry
-cnquery shell openstack --cloud my-cloud
+mql shell openstack --cloud my-cloud
 
 # environment variables
 export OS_AUTH_URL=https://keystone.example.com/v3
@@ -27,10 +27,10 @@ export OS_PASSWORD=secret
 export OS_PROJECT_NAME=demo
 export OS_USER_DOMAIN_NAME=Default
 export OS_PROJECT_DOMAIN_NAME=Default
-cnquery shell openstack
+mql shell openstack
 
 # explicit flags
-cnquery shell openstack \
+mql shell openstack \
   --auth-url https://keystone.example.com/v3 \
   --username admin --password secret \
   --project-name demo \
@@ -38,7 +38,7 @@ cnquery shell openstack \
   --region RegionOne
 
 # Keystone v3 application credentials
-cnquery shell openstack \
+mql shell openstack \
   --auth-url https://keystone.example.com/v3 \
   --application-credential-id <id> \
   --application-credential-secret <secret>

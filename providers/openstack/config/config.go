@@ -50,6 +50,7 @@ and --application-credential-secret.
 				{Long: connection.OPTION_APPLICATION_CREDENTIAL_ID, Type: plugin.FlagType_String, Desc: "application credential ID (env: OS_APPLICATION_CREDENTIAL_ID)"},
 				{Long: connection.OPTION_APPLICATION_CREDENTIAL_NAME, Type: plugin.FlagType_String, Desc: "application credential name (env: OS_APPLICATION_CREDENTIAL_NAME)"},
 				{Long: connection.OPTION_APPLICATION_CREDENTIAL_SECRET, Type: plugin.FlagType_String, Desc: "application credential secret (env: OS_APPLICATION_CREDENTIAL_SECRET)"},
+				{Long: connection.OPTION_INSECURE, Type: plugin.FlagType_Bool, Desc: "skip TLS certificate verification"},
 			},
 		},
 	},

@@ -4,8 +4,6 @@
 package resources
 
 import (
-	"sync"
-
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/external"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/layer3/floatingips"
@@ -19,15 +17,8 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/subnets"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/openstack/connection"
 	"go.mondoo.com/mql/v13/types"
-)
-
-// Process-wide cache mapping security-group name → id, populated lazily by
-// lookupSecurityGroupIDByName so we only list groups once per process.
-var (
-	sgNameCacheLock sync.Mutex
-	sgNameCache     map[string]string
-	sgNameCacheDone bool
 )
 
 // ---- openstack.network ----
@@ -708,18 +699,19 @@ func (r *mqlOpenstackSecurityGroupRule) remoteGroup() (*mqlOpenstackSecurityGrou
 }
 
 // lookupSecurityGroupIDByName resolves a security-group name to an ID using a
-// process-wide cache. Nova reports server security groups by name, but Neutron
-// is the source of truth for IDs, so we list groups once and consult the cache.
-func lookupSecurityGroupIDByName(client *gophercloud.ServiceClient, name string) (string, error) {
-	sgNameCacheLock.Lock()
-	defer sgNameCacheLock.Unlock()
+// per-connection cache. Nova reports server security groups by name, but
+// Neutron is the source of truth for IDs, so each connection lists groups once
+// and consults its cache thereafter.
+func lookupSecurityGroupIDByName(c *connection.OpenstackConnection, client *gophercloud.ServiceClient, name string) (string, error) {
+	c.SGNameCacheLock.Lock()
+	defer c.SGNameCacheLock.Unlock()
 
-	if !sgNameCacheDone {
+	if !c.SGNameCacheDone {
 		pages, err := groups.List(client, groups.ListOpts{}).AllPages(ctx())
 		if err != nil {
 			if translateOpenstackError(err) == nil {
-				sgNameCacheDone = true
-				sgNameCache = map[string]string{}
+				c.SGNameCacheDone = true
+				c.SGNameCache = map[string]string{}
 				return "", nil
 			}
 			return "", err
@@ -728,12 +720,12 @@ func lookupSecurityGroupIDByName(client *gophercloud.ServiceClient, name string)
 		if err != nil {
 			return "", err
 		}
-		sgNameCache = make(map[string]string, len(items))
+		c.SGNameCache = make(map[string]string, len(items))
 		for _, sg := range items {
-			sgNameCache[sg.Name] = sg.ID
+			c.SGNameCache[sg.Name] = sg.ID
 		}
-		sgNameCacheDone = true
+		c.SGNameCacheDone = true
 	}
 
-	return sgNameCache[name], nil
+	return c.SGNameCache[name], nil
 }

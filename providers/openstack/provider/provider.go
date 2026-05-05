@@ -64,6 +64,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", string(v.Value)))
 	}
 
+	if v, ok := flags[connection.OPTION_INSECURE]; ok && len(v.Value) > 0 && v.Value[0] != 0 {
+		conf.Options[connection.OPTION_INSECURE] = "true"
+	}
+
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conf},
 	}

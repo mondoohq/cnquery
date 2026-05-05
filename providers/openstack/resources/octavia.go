@@ -57,7 +57,62 @@ func (r *mqlOpenstackOctaviaLoadBalancer) id() (string, error) {
 }
 
 func initOpenstackOctaviaLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return args, nil, nil
+	if len(args) >= 2 {
+		return args, nil, nil
+	}
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	c := conn(runtime)
+	client, err := c.LoadBalancerClient()
+	if err != nil {
+		return nil, nil, err
+	}
+	lb, err := loadbalancers.Get(ctx(), client, id).Extract()
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	mqlLb, err := newMqlOpenstackOctaviaLoadBalancer(runtime, lb)
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, mqlLb, nil
+}
+
+func newMqlOpenstackOctaviaLoadBalancer(runtime *plugin.Runtime, lb *loadbalancers.LoadBalancer) (*mqlOpenstackOctaviaLoadBalancer, error) {
+	res, err := CreateResource(runtime, "openstack.octavia.loadBalancer", map[string]*llx.RawData{
+		"__id":               llx.StringData("openstack.octavia.loadBalancer/" + lb.ID),
+		"id":                 llx.StringData(lb.ID),
+		"name":               llx.StringData(lb.Name),
+		"description":        llx.StringData(lb.Description),
+		"adminStateUp":       llx.BoolData(lb.AdminStateUp),
+		"provisioningStatus": llx.StringData(lb.ProvisioningStatus),
+		"operatingStatus":    llx.StringData(lb.OperatingStatus),
+		"vipAddress":         llx.StringData(lb.VipAddress),
+		"provider":           llx.StringData(lb.Provider),
+		"flavorId":           llx.StringData(lb.FlavorID),
+		"availabilityZone":   llx.StringData(lb.AvailabilityZone),
+		"additionalVips":     dictSliceData(additionalVipsToDict(lb.AdditionalVips)),
+		"tags":               stringSliceData(lb.Tags),
+		"createdAt":          llx.TimeDataPtr(timePtr(lb.CreatedAt)),
+		"updatedAt":          llx.TimeDataPtr(timePtr(lb.UpdatedAt)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlLb := res.(*mqlOpenstackOctaviaLoadBalancer)
+	mqlLb.cacheProjectID = lb.ProjectID
+	mqlLb.cacheVipPortID = lb.VipPortID
+	mqlLb.cacheVipNetworkID = lb.VipNetworkID
+	mqlLb.cacheVipSubnetID = lb.VipSubnetID
+	mqlLb.cacheListenerIDs = listenerIDsFromLB(lb.Listeners)
+	mqlLb.cachePoolIDs = poolIDsFromLB(lb.Pools)
+	return mqlLb, nil
 }
 
 func (o *mqlOpenstack) loadBalancers() ([]any, error) {
@@ -80,34 +135,10 @@ func (o *mqlOpenstack) loadBalancers() ([]any, error) {
 
 	out := make([]any, 0, len(items))
 	for i := range items {
-		lb := &items[i]
-		res, err := CreateResource(o.MqlRuntime, "openstack.octavia.loadBalancer", map[string]*llx.RawData{
-			"__id":               llx.StringData("openstack.octavia.loadBalancer/" + lb.ID),
-			"id":                 llx.StringData(lb.ID),
-			"name":               llx.StringData(lb.Name),
-			"description":        llx.StringData(lb.Description),
-			"adminStateUp":       llx.BoolData(lb.AdminStateUp),
-			"provisioningStatus": llx.StringData(lb.ProvisioningStatus),
-			"operatingStatus":    llx.StringData(lb.OperatingStatus),
-			"vipAddress":         llx.StringData(lb.VipAddress),
-			"provider":           llx.StringData(lb.Provider),
-			"flavorId":           llx.StringData(lb.FlavorID),
-			"availabilityZone":   llx.StringData(lb.AvailabilityZone),
-			"additionalVips":     dictSliceData(additionalVipsToDict(lb.AdditionalVips)),
-			"tags":               stringSliceData(lb.Tags),
-			"createdAt":          llx.TimeDataPtr(timePtr(lb.CreatedAt)),
-			"updatedAt":          llx.TimeDataPtr(timePtr(lb.UpdatedAt)),
-		})
+		mqlLb, err := newMqlOpenstackOctaviaLoadBalancer(o.MqlRuntime, &items[i])
 		if err != nil {
 			return nil, err
 		}
-		mqlLb := res.(*mqlOpenstackOctaviaLoadBalancer)
-		mqlLb.cacheProjectID = lb.ProjectID
-		mqlLb.cacheVipPortID = lb.VipPortID
-		mqlLb.cacheVipNetworkID = lb.VipNetworkID
-		mqlLb.cacheVipSubnetID = lb.VipSubnetID
-		mqlLb.cacheListenerIDs = listenerIDsFromLB(lb.Listeners)
-		mqlLb.cachePoolIDs = poolIDsFromLB(lb.Pools)
 		out = append(out, mqlLb)
 	}
 	return out, nil
