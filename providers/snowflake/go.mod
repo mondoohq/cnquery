@@ -2,6 +2,11 @@ module go.mondoo.com/mql/v13/providers/snowflake
 
 replace go.mondoo.com/mql/v13 => ../..
 
+// thrift v0.23.0 fails to build on 32-bit targets (linux/386, linux/arm/v7):
+// framed_transport.go:206 uses math.MaxUint32, which overflows int on 32-bit.
+// Drop this once the next upstream release ships the fix.
+replace github.com/apache/thrift => github.com/apache/thrift v0.22.0
+
 go 1.26.2
 
 require (
