@@ -108,13 +108,7 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	asset := req.Asset
 	conf := asset.Connections[0]
 	runtime, err := s.AddRuntime(conf, func(connId uint32) (*plugin.Runtime, error) {
-		var conn *connection.OpenstackConnection
-		var err error
-
-		switch conf.Type {
-		default:
-			conn, err = connection.NewOpenstackConnection(connId, asset, conf)
-		}
+		conn, err := connection.NewOpenstackConnection(connId, asset, conf)
 		if err != nil {
 			return nil, err
 		}
