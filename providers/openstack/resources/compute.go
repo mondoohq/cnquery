@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
@@ -152,18 +154,28 @@ func serverVolumeIDs(in []servers.AttachedVolume) []string {
 	return out
 }
 
-// serverGroupMetadata converts the SDK's map[string]any (Nova returns
-// metadata typed loosely) into map[string]string. Non-string values are
-// dropped — Nova validates metadata as string-to-string, so this only fires
-// on out-of-spec clouds.
+// serverGroupMetadata converts the SDK's map[string]any (Nova types metadata
+// loosely) into map[string]string for the schema. Strings pass through; other
+// JSON-decoded values (bool, number, array, object) are rendered to their
+// JSON form so the user-visible map stays faithful to what Nova returned.
 func serverGroupMetadata(in map[string]any) map[string]string {
 	if len(in) == 0 {
 		return nil
 	}
 	out := make(map[string]string, len(in))
 	for k, raw := range in {
-		if s, ok := raw.(string); ok {
-			out[k] = s
+		switch v := raw.(type) {
+		case nil:
+			continue
+		case string:
+			out[k] = v
+		default:
+			b, err := json.Marshal(v)
+			if err != nil {
+				out[k] = fmt.Sprint(v)
+				continue
+			}
+			out[k] = string(b)
 		}
 	}
 	return out
