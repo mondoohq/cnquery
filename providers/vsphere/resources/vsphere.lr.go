@@ -814,6 +814,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vm.vbsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetVbsEnabled()).ToDataRes(types.Bool)
 	},
+	"vsphere.vm.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.encryptionKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetEncryptionKeyId()).ToDataRes(types.String)
+	},
+	"vsphere.vm.kmsCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetKmsCluster()).ToDataRes(types.Resource("vsphere.kmsCluster"))
+	},
+	"vsphere.vm.vtpmPresent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetVtpmPresent()).ToDataRes(types.Bool)
+	},
 	"vsphere.vm.numCpu": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetNumCpu()).ToDataRes(types.Int)
 	},
@@ -1851,6 +1863,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vm.vbsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVm).VbsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.encryptionKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).EncryptionKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.kmsCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).KmsCluster, ok = plugin.RawToTValue[*mqlVsphereKmsCluster](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.vtpmPresent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).VtpmPresent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"vsphere.vm.numCpu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4424,6 +4452,10 @@ type mqlVsphereVm struct {
 	BootFirmware        plugin.TValue[string]
 	SecureBootEnabled   plugin.TValue[bool]
 	VbsEnabled          plugin.TValue[bool]
+	Encrypted           plugin.TValue[bool]
+	EncryptionKeyId     plugin.TValue[string]
+	KmsCluster          plugin.TValue[*mqlVsphereKmsCluster]
+	VtpmPresent         plugin.TValue[bool]
 	NumCpu              plugin.TValue[int64]
 	MemoryMB            plugin.TValue[int64]
 	CpuHotAddEnabled    plugin.TValue[bool]
@@ -4511,6 +4543,34 @@ func (c *mqlVsphereVm) GetSecureBootEnabled() *plugin.TValue[bool] {
 
 func (c *mqlVsphereVm) GetVbsEnabled() *plugin.TValue[bool] {
 	return &c.VbsEnabled
+}
+
+func (c *mqlVsphereVm) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlVsphereVm) GetEncryptionKeyId() *plugin.TValue[string] {
+	return &c.EncryptionKeyId
+}
+
+func (c *mqlVsphereVm) GetKmsCluster() *plugin.TValue[*mqlVsphereKmsCluster] {
+	return plugin.GetOrCompute[*mqlVsphereKmsCluster](&c.KmsCluster, func() (*mqlVsphereKmsCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "kmsCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereKmsCluster), nil
+			}
+		}
+
+		return c.kmsCluster()
+	})
+}
+
+func (c *mqlVsphereVm) GetVtpmPresent() *plugin.TValue[bool] {
+	return &c.VtpmPresent
 }
 
 func (c *mqlVsphereVm) GetNumCpu() *plugin.TValue[int64] {

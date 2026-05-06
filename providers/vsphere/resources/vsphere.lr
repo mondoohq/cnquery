@@ -475,6 +475,14 @@ private vsphere.vm @defaults("moid name") {
   secureBootEnabled bool
   // Whether Virtualization-Based Security (VBS) is enabled
   vbsEnabled bool
+  // Whether vSphere VM encryption is enabled on this VM (encrypts VMX, swap, and disks)
+  encrypted bool
+  // Encryption key ID (CryptoKeyId.KeyId) used to encrypt the VM; empty if not encrypted
+  encryptionKeyId string
+  // KMS cluster providing the encryption key, resolved lazily against vsphere.kmsClusters; null when the VM is not encrypted
+  kmsCluster() vsphere.kmsCluster
+  // Whether a virtual TPM 2.0 device is attached to the VM
+  vtpmPresent bool
   // Number of virtual CPUs configured
   numCpu int
   // Configured memory size in megabytes

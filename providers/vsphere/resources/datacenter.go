@@ -339,6 +339,8 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 			vmwareToolsVersion                    string
 			guestIpAddress                        string
 			guestHostname                         string
+			encrypted, vtpmPresent                bool
+			encryptionKeyId                       string
 		)
 		if s.vmInfo != nil {
 			powerState = string(s.vmInfo.Runtime.PowerState)
@@ -371,6 +373,16 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 				}
 				numCpu = int64(cfg.Hardware.NumCPU)
 				memoryMB = int64(cfg.Hardware.MemoryMB)
+				if cfg.KeyId != nil {
+					encrypted = true
+					encryptionKeyId = cfg.KeyId.KeyId
+				}
+				for _, dev := range cfg.Hardware.Device {
+					if _, ok := dev.(*vimtypes.VirtualTPM); ok {
+						vtpmPresent = true
+						break
+					}
+				}
 			}
 		}
 		mqlVm, err := CreateResource(v.MqlRuntime, "vsphere.vm", map[string]*llx.RawData{
@@ -382,6 +394,9 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 			"bootFirmware":        llx.StringData(bootFirmware),
 			"secureBootEnabled":   llx.BoolData(secureBootEnabled),
 			"vbsEnabled":          llx.BoolData(vbsEnabled),
+			"encrypted":           llx.BoolData(encrypted),
+			"encryptionKeyId":     llx.StringData(encryptionKeyId),
+			"vtpmPresent":         llx.BoolData(vtpmPresent),
 			"numCpu":              llx.IntData(numCpu),
 			"memoryMB":            llx.IntData(memoryMB),
 			"cpuHotAddEnabled":    llx.BoolData(cpuHotAddEnabled),

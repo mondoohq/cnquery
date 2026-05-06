@@ -217,9 +217,12 @@ vsphere.vm.annotation 13.0.12
 vsphere.vm.bootFirmware 13.0.12
 vsphere.vm.cpuHotAddEnabled 13.0.12
 vsphere.vm.createDate 13.0.12
+vsphere.vm.encrypted 13.0.12
+vsphere.vm.encryptionKeyId 13.0.12
 vsphere.vm.guestHostname 13.0.12
 vsphere.vm.guestIpAddress 13.0.12
 vsphere.vm.inventoryPath 9.0.0
+vsphere.vm.kmsCluster 13.0.12
 vsphere.vm.memoryHotAddEnabled 13.0.12
 vsphere.vm.memoryMB 13.0.12
 vsphere.vm.moid 9.0.0
@@ -233,6 +236,7 @@ vsphere.vm.tags 11.0.101
 vsphere.vm.vbsEnabled 13.0.12
 vsphere.vm.vmwareToolsRunning 13.0.12
 vsphere.vm.vmwareToolsVersion 13.0.12
+vsphere.vm.vtpmPresent 13.0.12
 vsphere.vmknic 9.0.0
 vsphere.vmknic.ipv4 9.0.0
 vsphere.vmknic.ipv6 9.0.0
