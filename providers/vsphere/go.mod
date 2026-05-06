@@ -8,8 +8,7 @@ require (
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
-	// pin v0.46.3
-	github.com/vmware/govmomi v0.46.3
+	github.com/vmware/govmomi v0.47.1
 	go.mondoo.com/mondoo-go v0.0.0-20260430122853-c770cea4fd7f
 	go.mondoo.com/mql/v13 v13.8.0
 )
@@ -63,7 +62,6 @@ require (
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/dougm/pretty v0.0.0-20171025230240-2ee9d7453c02 // indirect
 	github.com/dvsekhvalnov/jose2go v1.8.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect

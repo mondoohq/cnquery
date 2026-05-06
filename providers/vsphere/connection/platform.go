@@ -11,8 +11,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/cli/esx"
 	"github.com/vmware/govmomi/find"
-	"github.com/vmware/govmomi/govc/host/esxcli"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.com/mql/v13/mrn"
@@ -110,12 +110,13 @@ func (c *VsphereConnection) EsxiVersion(moid string) (*EsxiSystemVersion, error)
 // Version : 6.7.0
 // see https://kb.vmware.com/s/article/2143832 for version and build number mapping
 func esxiVersion(host *object.HostSystem) (*EsxiSystemVersion, error) {
-	e, err := esxcli.NewExecutor(host.Client(), host)
+	ctx := context.Background()
+	e, err := esx.NewExecutor(ctx, host.Client(), host)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := e.Run([]string{"system", "version", "get"})
+	res, err := e.Run(ctx, []string{"system", "version", "get"})
 	if err != nil {
 		return nil, err
 	}
