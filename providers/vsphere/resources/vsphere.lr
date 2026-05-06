@@ -163,11 +163,11 @@ private vsphere.identitysource @defaults("name type") {
 // VM encryption and virtual TPM. KMIP servers are configured at the vCenter
 // level (not per host); each cluster groups one or more KMS servers under a
 // single cluster ID.
-private vsphere.kmsCluster @defaults("name useAsDefault managementType") {
-  // Cluster identifier (vCenter-assigned)
+private vsphere.kmsCluster @defaults("clusterId useAsDefault managementType") {
+  // Cluster identifier — also the vCenter-visible name (KmipClusterInfo has no
+  // separate display name; the ID you set when registering the cluster is what
+  // appears in the UI).
   clusterId string
-  // Display name of the cluster
-  name string
   // Whether this cluster is the vCenter default for new encryption keys
   useAsDefault bool
   // Management type (vCenter, trustAuthority, nativeKeyProvider, externalKeyProvider)

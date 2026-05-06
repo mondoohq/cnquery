@@ -375,7 +375,6 @@ func (v *mqlVsphere) kmsClusters() ([]any, error) {
 		}
 		mqlCluster, err := CreateResource(v.MqlRuntime, "vsphere.kmsCluster", map[string]*llx.RawData{
 			"clusterId":      llx.StringData(c.ClusterId.Id),
-			"name":           llx.StringData(c.ClusterId.Id),
 			"useAsDefault":   llx.BoolData(c.UseAsDefault),
 			"managementType": llx.StringData(c.ManagementType),
 			"serverCount":    llx.IntData(int64(len(c.Servers))),

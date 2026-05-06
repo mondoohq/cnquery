@@ -171,7 +171,6 @@ vsphere.identitysource.userBaseDn 13.0.12
 vsphere.kmsCluster 13.0.12
 vsphere.kmsCluster.clusterId 13.0.12
 vsphere.kmsCluster.managementType 13.0.12
-vsphere.kmsCluster.name 13.0.12
 vsphere.kmsCluster.serverCount 13.0.12
 vsphere.kmsCluster.servers 13.0.12
 vsphere.kmsCluster.useAsDefault 13.0.12

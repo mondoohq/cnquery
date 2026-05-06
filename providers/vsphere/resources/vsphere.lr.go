@@ -433,9 +433,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.kmsCluster.clusterId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereKmsCluster).GetClusterId()).ToDataRes(types.String)
 	},
-	"vsphere.kmsCluster.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereKmsCluster).GetName()).ToDataRes(types.String)
-	},
 	"vsphere.kmsCluster.useAsDefault": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereKmsCluster).GetUseAsDefault()).ToDataRes(types.Bool)
 	},
@@ -1298,10 +1295,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.kmsCluster.clusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereKmsCluster).ClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"vsphere.kmsCluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereKmsCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vsphere.kmsCluster.useAsDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3054,7 +3047,6 @@ type mqlVsphereKmsCluster struct {
 	__id       string
 	// optional: if you define mqlVsphereKmsClusterInternal it will be used here
 	ClusterId      plugin.TValue[string]
-	Name           plugin.TValue[string]
 	UseAsDefault   plugin.TValue[bool]
 	ManagementType plugin.TValue[string]
 	ServerCount    plugin.TValue[int64]
@@ -3100,10 +3092,6 @@ func (c *mqlVsphereKmsCluster) MqlID() string {
 
 func (c *mqlVsphereKmsCluster) GetClusterId() *plugin.TValue[string] {
 	return &c.ClusterId
-}
-
-func (c *mqlVsphereKmsCluster) GetName() *plugin.TValue[string] {
-	return &c.Name
 }
 
 func (c *mqlVsphereKmsCluster) GetUseAsDefault() *plugin.TValue[bool] {
