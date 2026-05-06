@@ -58,6 +58,28 @@ func BatchGetTags(ctx context.Context, refs []mo.Reference, client *vim25.Client
 		return out
 	}
 
+	return resolveAttachedTags(ctx, attached, func(ctx context.Context, id string) (string, error) {
+		cat, err := tagManager.GetCategory(ctx, id)
+		if err != nil {
+			return "", err
+		}
+		return cat.Name, nil
+	})
+}
+
+// categoryNameFetcher resolves a category ID to a name. Returning a non-nil
+// error tells resolveAttachedTags to skip the cache entry and try again the
+// next time the category is encountered in the batch.
+type categoryNameFetcher func(ctx context.Context, categoryID string) (string, error)
+
+// resolveAttachedTags formats the (object → tags) pairs from
+// GetAttachedTagsOnObjects into the moid → []string form callers want, looking
+// up category names via getCategory. Categories are fetched at most once per
+// successful lookup per call. A getCategory failure is NOT cached, so a
+// transient error doesn't permanently strip the category prefix from every
+// later tag using that category in the same batch.
+func resolveAttachedTags(ctx context.Context, attached []tags.AttachedTags, getCategory categoryNameFetcher) map[string][]string {
+	out := map[string][]string{}
 	categoryNames := map[string]string{}
 	for _, entry := range attached {
 		moid := entry.ObjectID.Reference().Value
@@ -65,13 +87,10 @@ func BatchGetTags(ctx context.Context, refs []mo.Reference, client *vim25.Client
 		for _, tag := range entry.Tags {
 			catName, ok := categoryNames[tag.CategoryID]
 			if !ok {
-				if cat, err := tagManager.GetCategory(ctx, tag.CategoryID); err == nil {
-					catName = cat.Name
+				if name, err := getCategory(ctx, tag.CategoryID); err == nil {
+					catName = name
 					categoryNames[tag.CategoryID] = catName
 				}
-				// Don't cache failures: a transient GetCategory error shouldn't
-				// permanently suppress the category prefix for every other tag
-				// using that category in this batch.
 			}
 			if catName == "" {
 				strs = append(strs, tag.Name)
