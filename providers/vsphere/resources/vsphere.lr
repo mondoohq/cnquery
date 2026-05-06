@@ -88,6 +88,24 @@ vsphere {
   licenses() []vsphere.license
   // List of available datacenter
   datacenters() []vsphere.datacenter
+  // Authorization roles defined in vCenter (RBAC role catalog)
+  roles() []vsphere.role
+}
+
+// vSphere authorization role (RBAC role definition from AuthorizationManager)
+private vsphere.role @defaults("name system") {
+  // Unique role identifier
+  roleId int
+  // Role name (e.g., "Admin", "ReadOnly", or a custom name)
+  name string
+  // Human-readable label
+  label string
+  // Role summary / description
+  summary string
+  // Whether the role is built-in (system-defined and immutable) vs. customer-defined
+  system bool
+  // Privilege identifiers granted by this role
+  privileges []string
 }
 
 // vSphere license information
@@ -118,6 +136,34 @@ private vsphere.datacenter @defaults("moid name") {
   distributedSwitches() []vsphere.vswitch.dvs
   // List of distributed virtual port groups
   distributedPortGroups() []vsphere.vswitch.portgroup
+  // Datastores in the datacenter
+  datastores() []vsphere.datastore
+}
+
+// vSphere datastore (storage backing for VMs)
+private vsphere.datastore @defaults("name type") {
+  // vSphere managed object ID
+  moid string
+  // Datastore name
+  name string
+  // Volume type (VMFS, NFS, NFS41, vsan, VVOL, etc.)
+  type string
+  // Total capacity in bytes
+  capacity int
+  // Free space in bytes
+  freeSpace int
+  // Bytes potentially used by all VMs (over-commit headroom for thin provisioning)
+  uncommitted int
+  // Whether the datastore is currently accessible
+  accessible bool
+  // Whether more than one host has access (vCenter-only)
+  multipleHostAccess bool
+  // Maintenance mode state (normal, inMaintenance, enteringMaintenance)
+  maintenanceMode string
+  // Datastore URL/locator (only valid when accessible)
+  url string
+  // vSphere inventory path
+  inventoryPath string
 }
 
 // vSphere cluster resource
@@ -178,6 +224,26 @@ private vsphere.host @defaults("moid name") {
   firewallOutgoingBlocked bool
   // Whether the host firmware reports UEFI Secure Boot was used during system boot (requires vSphere 8.0.3 or later)
   secureBootEnabled bool
+  // Host SSL/TLS certificate
+  certificate() esxi.certificate
+}
+
+// ESXi host SSL/TLS certificate (from HostCertificateManager)
+private esxi.certificate @defaults("subject status notAfter") {
+  // Identifier (host inventory path + cert kind)
+  id string
+  // Certificate kind (e.g. machine, vmca); empty/unset means the host machine cert
+  kind string
+  // Subject distinguished name
+  subject string
+  // Issuer distinguished name
+  issuer string
+  // Validity start
+  notBefore time
+  // Validity end (expiration)
+  notAfter time
+  // Status reported by vCenter (good, expiring, expired, expiringShortly, unknown, etc.)
+  status string
 }
 
 // vSphere VM resource

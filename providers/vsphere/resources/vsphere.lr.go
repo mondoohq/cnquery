@@ -23,10 +23,13 @@ const (
 	ResourceVulnPackage             string = "vuln.package"
 	ResourceAuditCvss               string = "audit.cvss"
 	ResourceVsphere                 string = "vsphere"
+	ResourceVsphereRole             string = "vsphere.role"
 	ResourceVsphereLicense          string = "vsphere.license"
 	ResourceVsphereDatacenter       string = "vsphere.datacenter"
+	ResourceVsphereDatastore        string = "vsphere.datastore"
 	ResourceVsphereCluster          string = "vsphere.cluster"
 	ResourceVsphereHost             string = "vsphere.host"
+	ResourceEsxiCertificate         string = "esxi.certificate"
 	ResourceVsphereVm               string = "vsphere.vm"
 	ResourceVsphereVswitchStandard  string = "vsphere.vswitch.standard"
 	ResourceVsphereVswitchDvs       string = "vsphere.vswitch.dvs"
@@ -74,6 +77,10 @@ func init() {
 			// to override args, implement: initVsphere(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphere,
 		},
+		"vsphere.role": {
+			// to override args, implement: initVsphereRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereRole,
+		},
 		"vsphere.license": {
 			// to override args, implement: initVsphereLicense(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereLicense,
@@ -82,6 +89,10 @@ func init() {
 			// to override args, implement: initVsphereDatacenter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereDatacenter,
 		},
+		"vsphere.datastore": {
+			// to override args, implement: initVsphereDatastore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereDatastore,
+		},
 		"vsphere.cluster": {
 			// to override args, implement: initVsphereCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereCluster,
@@ -89,6 +100,10 @@ func init() {
 		"vsphere.host": {
 			Init:   initVsphereHost,
 			Create: createVsphereHost,
+		},
+		"esxi.certificate": {
+			// to override args, implement: initEsxiCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createEsxiCertificate,
 		},
 		"vsphere.vm": {
 			// to override args, implement: initVsphereVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -297,6 +312,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.datacenters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphere).GetDatacenters()).ToDataRes(types.Array(types.Resource("vsphere.datacenter")))
 	},
+	"vsphere.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetRoles()).ToDataRes(types.Array(types.Resource("vsphere.role")))
+	},
+	"vsphere.role.roleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereRole).GetRoleId()).ToDataRes(types.Int)
+	},
+	"vsphere.role.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereRole).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.role.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereRole).GetLabel()).ToDataRes(types.String)
+	},
+	"vsphere.role.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereRole).GetSummary()).ToDataRes(types.String)
+	},
+	"vsphere.role.system": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereRole).GetSystem()).ToDataRes(types.Bool)
+	},
+	"vsphere.role.privileges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereRole).GetPrivileges()).ToDataRes(types.Array(types.String))
+	},
 	"vsphere.license.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereLicense).GetName()).ToDataRes(types.String)
 	},
@@ -329,6 +365,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.datacenter.distributedPortGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatacenter).GetDistributedPortGroups()).ToDataRes(types.Array(types.Resource("vsphere.vswitch.portgroup")))
+	},
+	"vsphere.datacenter.datastores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatacenter).GetDatastores()).ToDataRes(types.Array(types.Resource("vsphere.datastore")))
+	},
+	"vsphere.datastore.moid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetMoid()).ToDataRes(types.String)
+	},
+	"vsphere.datastore.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.datastore.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetType()).ToDataRes(types.String)
+	},
+	"vsphere.datastore.capacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetCapacity()).ToDataRes(types.Int)
+	},
+	"vsphere.datastore.freeSpace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetFreeSpace()).ToDataRes(types.Int)
+	},
+	"vsphere.datastore.uncommitted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetUncommitted()).ToDataRes(types.Int)
+	},
+	"vsphere.datastore.accessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetAccessible()).ToDataRes(types.Bool)
+	},
+	"vsphere.datastore.multipleHostAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetMultipleHostAccess()).ToDataRes(types.Bool)
+	},
+	"vsphere.datastore.maintenanceMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetMaintenanceMode()).ToDataRes(types.String)
+	},
+	"vsphere.datastore.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetUrl()).ToDataRes(types.String)
+	},
+	"vsphere.datastore.inventoryPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetInventoryPath()).ToDataRes(types.String)
 	},
 	"vsphere.cluster.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetMoid()).ToDataRes(types.String)
@@ -407,6 +479,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.host.secureBootEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetSecureBootEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetCertificate()).ToDataRes(types.Resource("esxi.certificate"))
+	},
+	"esxi.certificate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiCertificate).GetId()).ToDataRes(types.String)
+	},
+	"esxi.certificate.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiCertificate).GetKind()).ToDataRes(types.String)
+	},
+	"esxi.certificate.subject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiCertificate).GetSubject()).ToDataRes(types.String)
+	},
+	"esxi.certificate.issuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiCertificate).GetIssuer()).ToDataRes(types.String)
+	},
+	"esxi.certificate.notBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiCertificate).GetNotBefore()).ToDataRes(types.Time)
+	},
+	"esxi.certificate.notAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiCertificate).GetNotAfter()).ToDataRes(types.Time)
+	},
+	"esxi.certificate.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiCertificate).GetStatus()).ToDataRes(types.String)
 	},
 	"vsphere.vm.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetMoid()).ToDataRes(types.String)
@@ -746,6 +842,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphere).Datacenters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereRole).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.role.roleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereRole).RoleId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.role.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereRole).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.role.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereRole).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.role.system": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereRole).System, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.role.privileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereRole).Privileges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.license.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereLicense).__id, ok = v.Value.(string)
 		return
@@ -796,6 +924,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.datacenter.distributedPortGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereDatacenter).DistributedPortGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.datacenter.datastores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatacenter).Datastores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.datastore.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).Capacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.freeSpace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).FreeSpace, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.uncommitted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).Uncommitted, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.accessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).Accessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.multipleHostAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).MultipleHostAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.maintenanceMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).MaintenanceMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.inventoryPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).InventoryPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vsphere.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -908,6 +1088,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.secureBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).SecureBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).Certificate, ok = plugin.RawToTValue[*mqlEsxiCertificate](v.Value, v.Error)
+		return
+	},
+	"esxi.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"esxi.certificate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiCertificate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.certificate.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiCertificate).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.certificate.subject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiCertificate).Subject, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.certificate.issuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiCertificate).Issuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.certificate.notBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiCertificate).NotBefore, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"esxi.certificate.notAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiCertificate).NotAfter, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"esxi.certificate.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiCertificate).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vsphere.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1673,6 +1889,7 @@ type mqlVsphere struct {
 	About       plugin.TValue[any]
 	Licenses    plugin.TValue[[]any]
 	Datacenters plugin.TValue[[]any]
+	Roles       plugin.TValue[[]any]
 }
 
 // createVsphere creates a new instance of this resource
@@ -1750,6 +1967,96 @@ func (c *mqlVsphere) GetDatacenters() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlVsphere) GetRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Roles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "roles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roles()
+	})
+}
+
+// mqlVsphereRole for the vsphere.role resource
+type mqlVsphereRole struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereRoleInternal it will be used here
+	RoleId     plugin.TValue[int64]
+	Name       plugin.TValue[string]
+	Label      plugin.TValue[string]
+	Summary    plugin.TValue[string]
+	System     plugin.TValue[bool]
+	Privileges plugin.TValue[[]any]
+}
+
+// createVsphereRole creates a new instance of this resource
+func createVsphereRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.role", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereRole) MqlName() string {
+	return "vsphere.role"
+}
+
+func (c *mqlVsphereRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereRole) GetRoleId() *plugin.TValue[int64] {
+	return &c.RoleId
+}
+
+func (c *mqlVsphereRole) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereRole) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlVsphereRole) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
+func (c *mqlVsphereRole) GetSystem() *plugin.TValue[bool] {
+	return &c.System
+}
+
+func (c *mqlVsphereRole) GetPrivileges() *plugin.TValue[[]any] {
+	return &c.Privileges
+}
+
 // mqlVsphereLicense for the vsphere.license resource
 type mqlVsphereLicense struct {
 	MqlRuntime *plugin.Runtime
@@ -1822,6 +2129,7 @@ type mqlVsphereDatacenter struct {
 	Clusters              plugin.TValue[[]any]
 	DistributedSwitches   plugin.TValue[[]any]
 	DistributedPortGroups plugin.TValue[[]any]
+	Datastores            plugin.TValue[[]any]
 }
 
 // createVsphereDatacenter creates a new instance of this resource
@@ -1953,6 +2261,121 @@ func (c *mqlVsphereDatacenter) GetDistributedPortGroups() *plugin.TValue[[]any] 
 	})
 }
 
+func (c *mqlVsphereDatacenter) GetDatastores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Datastores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datacenter", c.__id, "datastores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.datastores()
+	})
+}
+
+// mqlVsphereDatastore for the vsphere.datastore resource
+type mqlVsphereDatastore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereDatastoreInternal it will be used here
+	Moid               plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Type               plugin.TValue[string]
+	Capacity           plugin.TValue[int64]
+	FreeSpace          plugin.TValue[int64]
+	Uncommitted        plugin.TValue[int64]
+	Accessible         plugin.TValue[bool]
+	MultipleHostAccess plugin.TValue[bool]
+	MaintenanceMode    plugin.TValue[string]
+	Url                plugin.TValue[string]
+	InventoryPath      plugin.TValue[string]
+}
+
+// createVsphereDatastore creates a new instance of this resource
+func createVsphereDatastore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereDatastore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.datastore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereDatastore) MqlName() string {
+	return "vsphere.datastore"
+}
+
+func (c *mqlVsphereDatastore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereDatastore) GetMoid() *plugin.TValue[string] {
+	return &c.Moid
+}
+
+func (c *mqlVsphereDatastore) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereDatastore) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlVsphereDatastore) GetCapacity() *plugin.TValue[int64] {
+	return &c.Capacity
+}
+
+func (c *mqlVsphereDatastore) GetFreeSpace() *plugin.TValue[int64] {
+	return &c.FreeSpace
+}
+
+func (c *mqlVsphereDatastore) GetUncommitted() *plugin.TValue[int64] {
+	return &c.Uncommitted
+}
+
+func (c *mqlVsphereDatastore) GetAccessible() *plugin.TValue[bool] {
+	return &c.Accessible
+}
+
+func (c *mqlVsphereDatastore) GetMultipleHostAccess() *plugin.TValue[bool] {
+	return &c.MultipleHostAccess
+}
+
+func (c *mqlVsphereDatastore) GetMaintenanceMode() *plugin.TValue[string] {
+	return &c.MaintenanceMode
+}
+
+func (c *mqlVsphereDatastore) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlVsphereDatastore) GetInventoryPath() *plugin.TValue[string] {
+	return &c.InventoryPath
+}
+
 // mqlVsphereCluster for the vsphere.cluster resource
 type mqlVsphereCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -2060,6 +2483,7 @@ type mqlVsphereHost struct {
 	FirewallIncomingBlocked plugin.TValue[bool]
 	FirewallOutgoingBlocked plugin.TValue[bool]
 	SecureBootEnabled       plugin.TValue[bool]
+	Certificate             plugin.TValue[*mqlEsxiCertificate]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -2295,6 +2719,101 @@ func (c *mqlVsphereHost) GetFirewallOutgoingBlocked() *plugin.TValue[bool] {
 
 func (c *mqlVsphereHost) GetSecureBootEnabled() *plugin.TValue[bool] {
 	return &c.SecureBootEnabled
+}
+
+func (c *mqlVsphereHost) GetCertificate() *plugin.TValue[*mqlEsxiCertificate] {
+	return plugin.GetOrCompute[*mqlEsxiCertificate](&c.Certificate, func() (*mqlEsxiCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlEsxiCertificate), nil
+			}
+		}
+
+		return c.certificate()
+	})
+}
+
+// mqlEsxiCertificate for the esxi.certificate resource
+type mqlEsxiCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlEsxiCertificateInternal it will be used here
+	Id        plugin.TValue[string]
+	Kind      plugin.TValue[string]
+	Subject   plugin.TValue[string]
+	Issuer    plugin.TValue[string]
+	NotBefore plugin.TValue[*time.Time]
+	NotAfter  plugin.TValue[*time.Time]
+	Status    plugin.TValue[string]
+}
+
+// createEsxiCertificate creates a new instance of this resource
+func createEsxiCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlEsxiCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("esxi.certificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlEsxiCertificate) MqlName() string {
+	return "esxi.certificate"
+}
+
+func (c *mqlEsxiCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlEsxiCertificate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlEsxiCertificate) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlEsxiCertificate) GetSubject() *plugin.TValue[string] {
+	return &c.Subject
+}
+
+func (c *mqlEsxiCertificate) GetIssuer() *plugin.TValue[string] {
+	return &c.Issuer
+}
+
+func (c *mqlEsxiCertificate) GetNotBefore() *plugin.TValue[*time.Time] {
+	return &c.NotBefore
+}
+
+func (c *mqlEsxiCertificate) GetNotAfter() *plugin.TValue[*time.Time] {
+	return &c.NotAfter
+}
+
+func (c *mqlEsxiCertificate) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlVsphereVm for the vsphere.vm resource

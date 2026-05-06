@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -493,4 +494,58 @@ func (v *mqlVsphereHost) snmp() (map[string]any, error) {
 		return nil, err
 	}
 	return esxiClient.Snmp()
+}
+
+func (v *mqlVsphereHost) certificate() (*mqlEsxiCertificate, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	vClient := getClientInstance(conn)
+
+	if v.InventoryPath.Error != nil {
+		return nil, v.InventoryPath.Error
+	}
+	path := v.InventoryPath.Data
+
+	host, err := vClient.HostByInventoryPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	certMgr, err := host.ConfigManager().CertificateManager(ctx)
+	if err != nil {
+		return nil, err
+	}
+	info, err := certMgr.CertificateInfo(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	id := "cert/" + path
+	if info.Kind != "" {
+		id += "/" + info.Kind
+	}
+	args := map[string]*llx.RawData{
+		"__id":    llx.StringData(id),
+		"id":      llx.StringData(id),
+		"kind":    llx.StringData(info.Kind),
+		"subject": llx.StringData(info.Subject),
+		"issuer":  llx.StringData(info.Issuer),
+		"status":  llx.StringData(info.Status),
+	}
+	if info.NotBefore != nil {
+		args["notBefore"] = llx.TimeData(*info.NotBefore)
+	} else {
+		args["notBefore"] = llx.TimeData(time.Time{})
+	}
+	if info.NotAfter != nil {
+		args["notAfter"] = llx.TimeData(*info.NotAfter)
+	} else {
+		args["notAfter"] = llx.TimeData(time.Time{})
+	}
+
+	mqlCert, err := CreateResource(v.MqlRuntime, "esxi.certificate", args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlCert.(*mqlEsxiCertificate), nil
 }

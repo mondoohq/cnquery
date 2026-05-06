@@ -7,13 +7,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/vsphere/connection"
 	"go.mondoo.com/mql/v13/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func getClientInstance(conn *connection.VsphereConnection) *resourceclient.Client {
@@ -97,6 +100,38 @@ func (v *mqlVsphere) licenses() ([]any, error) {
 	}
 
 	return licenses, nil
+}
+
+func (v *mqlVsphere) roles() ([]any, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	authMgr := object.NewAuthorizationManager(conn.Client().Client)
+
+	rolesList, err := authMgr.RoleList(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("failed to list authorization roles: %w", err)
+	}
+
+	mqlRoles := make([]any, len(rolesList))
+	for i, r := range rolesList {
+		var label, summary string
+		if d := r.Info.GetDescription(); d != nil {
+			label = d.Label
+			summary = d.Summary
+		}
+		mqlRole, err := CreateResource(v.MqlRuntime, "vsphere.role", map[string]*llx.RawData{
+			"roleId":     llx.IntData(int64(r.RoleId)),
+			"name":       llx.StringData(r.Name),
+			"label":      llx.StringData(label),
+			"summary":    llx.StringData(summary),
+			"system":     llx.BoolData(r.System),
+			"privileges": llx.ArrayData(convert.SliceAnyToInterface(r.Privilege), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlRoles[i] = mqlRole
+	}
+	return mqlRoles, nil
 }
 
 func (v *mqlEsxi) id() (string, error) {
@@ -274,5 +309,17 @@ func (v *mqlEsxiTimezone) id() (string, error) {
 }
 
 func (v *mqlEsxiNtpconfig) id() (string, error) {
+	return v.Id.Data, nil
+}
+
+func (v *mqlVsphereRole) id() (string, error) {
+	return strconv.FormatInt(v.RoleId.Data, 10), nil
+}
+
+func (v *mqlVsphereDatastore) id() (string, error) {
+	return v.Moid.Data, nil
+}
+
+func (v *mqlEsxiCertificate) id() (string, error) {
 	return v.Id.Data, nil
 }

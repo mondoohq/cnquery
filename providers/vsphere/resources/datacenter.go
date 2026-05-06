@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
+	vimtypes "github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -370,4 +372,82 @@ func (v *mqlVsphereDatacenter) distributedPortGroups() ([]any, error) {
 	}
 
 	return mqlPGs, nil
+}
+
+func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	vClient := getClientInstance(conn)
+
+	if v.InventoryPath.Error != nil {
+		return nil, v.InventoryPath.Error
+	}
+	path := v.InventoryPath.Data
+
+	dc, err := vClient.Datacenter(path)
+	if err != nil {
+		return nil, err
+	}
+
+	finder := find.NewFinder(vClient.Client.Client, true)
+	finder.SetDatacenter(dc)
+	ctx := context.Background()
+	dsList, err := finder.DatastoreList(ctx, "*")
+	if err != nil {
+		if resourceclient.IsNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("error listing datastores for datacenter %s: %w", dc.InventoryPath, err)
+	}
+
+	mqlDss := make([]any, len(dsList))
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(discoveryConcurrency)
+	type stagedDs struct {
+		moid    string
+		summary vimtypes.DatastoreSummary
+		path    string
+	}
+	staged := make([]stagedDs, len(dsList))
+	for i, ds := range dsList {
+		g.Go(func() error {
+			var props mo.Datastore
+			if err := ds.Properties(gctx, ds.Reference(), []string{"summary"}, &props); err != nil {
+				return err
+			}
+			staged[i] = stagedDs{
+				moid:    ds.Reference().Encode(),
+				summary: props.Summary,
+				path:    ds.InventoryPath,
+			}
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	for i, s := range staged {
+		multi := false
+		if s.summary.MultipleHostAccess != nil {
+			multi = *s.summary.MultipleHostAccess
+		}
+		mqlDs, err := CreateResource(v.MqlRuntime, "vsphere.datastore", map[string]*llx.RawData{
+			"moid":               llx.StringData(s.moid),
+			"name":               llx.StringData(s.summary.Name),
+			"type":               llx.StringData(s.summary.Type),
+			"capacity":           llx.IntData(s.summary.Capacity),
+			"freeSpace":          llx.IntData(s.summary.FreeSpace),
+			"uncommitted":        llx.IntData(s.summary.Uncommitted),
+			"accessible":         llx.BoolData(s.summary.Accessible),
+			"multipleHostAccess": llx.BoolData(multi),
+			"maintenanceMode":    llx.StringData(s.summary.MaintenanceMode),
+			"url":                llx.StringData(s.summary.Url),
+			"inventoryPath":      llx.StringData(s.path),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlDss[i] = mqlDs
+	}
+	return mqlDss, nil
 }
