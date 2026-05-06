@@ -148,19 +148,19 @@ private vsphere.datastore @defaults("name type") {
   name string
   // Volume type (VMFS, NFS, NFS41, vsan, VVOL, etc.)
   type string
-  // Total capacity in bytes
+  // Total capacity in bytes (only meaningful when accessible == true)
   capacity int
-  // Free space in bytes
+  // Free space in bytes (only meaningful when accessible == true)
   freeSpace int
-  // Bytes potentially used by all VMs (over-commit headroom for thin provisioning)
+  // Bytes potentially used by all VMs (over-commit headroom for thin provisioning); only meaningful when accessible == true
   uncommitted int
-  // Whether the datastore is currently accessible
+  // Whether the datastore is currently accessible. When false, capacity / freeSpace / uncommitted / url are not guaranteed to be valid.
   accessible bool
   // Whether more than one host has access (vCenter-only)
   multipleHostAccess bool
   // Maintenance mode state (normal, inMaintenance, enteringMaintenance)
   maintenanceMode string
-  // Datastore URL/locator (only valid when accessible)
+  // Datastore URL/locator (only valid when accessible == true)
   url string
   // vSphere inventory path
   inventoryPath string

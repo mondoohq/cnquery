@@ -515,6 +515,14 @@ func (v *mqlVsphereHost) certificate() (*mqlEsxiCertificate, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Older ESXi versions (and some host states) don't expose a
+	// HostCertificateManager; CertificateManager returns (nil, nil).
+	// Mark the field resolved-and-null so the runtime doesn't panic
+	// or re-fetch.
+	if certMgr == nil {
+		v.Certificate.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
 	info, err := certMgr.CertificateInfo(ctx)
 	if err != nil {
 		return nil, err
