@@ -15,7 +15,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/ssoadmin"
+	"github.com/vmware/govmomi/sts"
 	"github.com/vmware/govmomi/vapi/rest"
+	"github.com/vmware/govmomi/vim25/soap"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
@@ -28,6 +31,9 @@ type VsphereConnection struct {
 
 	restMu     sync.Mutex
 	restClient *rest.Client
+
+	ssoMu     sync.Mutex
+	ssoClient *ssoadmin.Client
 }
 
 func vSphereConnectionURL(hostname string, port int32, user string, password string) (*url.URL, error) {
@@ -114,6 +120,49 @@ func (c *VsphereConnection) RestClient(ctx context.Context) (*rest.Client, error
 	return rc, nil
 }
 
+// SsoAdminClient returns a logged-in SSO admin client for this connection,
+// creating it on the first call. SSO admin uses its own session manager
+// (not the SOAP cookie), so we issue an STS bearer token signed with the
+// vSphere host certificate and use that to authenticate. The same client
+// is reused for the lifetime of the connection.
+func (c *VsphereConnection) SsoAdminClient(ctx context.Context) (*ssoadmin.Client, error) {
+	c.ssoMu.Lock()
+	defer c.ssoMu.Unlock()
+	if c.ssoClient != nil {
+		return c.ssoClient, nil
+	}
+	creds, err := vault.GetPassword(c.Conf.Credentials)
+	if err != nil {
+		return nil, err
+	}
+
+	vc := c.client.Client
+	admin, err := ssoadmin.NewClient(ctx, vc)
+	if err != nil {
+		return nil, err
+	}
+
+	tokens, err := sts.NewClient(ctx, vc)
+	if err != nil {
+		return nil, err
+	}
+	signer, err := tokens.Issue(ctx, sts.TokenRequest{
+		Certificate: vc.Certificate(),
+		Userinfo:    url.UserPassword(creds.User, string(creds.Secret)),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	header := soap.Header{Security: signer}
+	if err := admin.Login(admin.WithHeader(ctx, header)); err != nil {
+		return nil, err
+	}
+
+	c.ssoClient = admin
+	return admin, nil
+}
+
 func (c *VsphereConnection) Close() {
 	c.restMu.Lock()
 	rc := c.restClient
@@ -124,6 +173,17 @@ func (c *VsphereConnection) Close() {
 			log.Error().Err(err).Msg("failed to logout from vSphere REST session")
 		}
 	}
+
+	c.ssoMu.Lock()
+	sc := c.ssoClient
+	c.ssoClient = nil
+	c.ssoMu.Unlock()
+	if sc != nil {
+		if err := sc.Logout(context.Background()); err != nil {
+			log.Error().Err(err).Msg("failed to logout from vSphere SSO admin session")
+		}
+	}
+
 	if c.client != nil {
 		if err := c.client.Logout(context.Background()); err != nil {
 			log.Error().Err(err).Msg("failed to logout from vSphere connection")

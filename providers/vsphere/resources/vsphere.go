@@ -10,6 +10,8 @@ import (
 	"strconv"
 
 	"github.com/vmware/govmomi/object"
+	ssoadmintypes "github.com/vmware/govmomi/ssoadmin/types"
+	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25/mo"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -132,6 +134,198 @@ func (v *mqlVsphere) roles() ([]any, error) {
 		mqlRoles[i] = mqlRole
 	}
 	return mqlRoles, nil
+}
+
+func (v *mqlVsphere) permissions() ([]any, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	authMgr := object.NewAuthorizationManager(conn.Client().Client)
+
+	perms, err := authMgr.RetrieveAllPermissions(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve permissions: %w", err)
+	}
+
+	mqlPerms := make([]any, len(perms))
+	for i, p := range perms {
+		var entityMoid, entityType string
+		if p.Entity != nil {
+			entityMoid = p.Entity.Encode()
+			entityType = p.Entity.Type
+		}
+		id := entityMoid + ":" + p.Principal
+		mqlPerm, err := CreateResource(v.MqlRuntime, "vsphere.permission", map[string]*llx.RawData{
+			"__id":       llx.StringData(id),
+			"id":         llx.StringData(id),
+			"entityMoid": llx.StringData(entityMoid),
+			"entityType": llx.StringData(entityType),
+			"principal":  llx.StringData(p.Principal),
+			"group":      llx.BoolData(p.Group),
+			"propagate":  llx.BoolData(p.Propagate),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlPerm.(*mqlVspherePermission).roleId = p.RoleId
+		mqlPerms[i] = mqlPerm
+	}
+	return mqlPerms, nil
+}
+
+// mqlVspherePermissionInternal carries the raw roleId so role() can resolve
+// the typed vsphere.role reference against the cached role list.
+type mqlVspherePermissionInternal struct {
+	roleId int32
+}
+
+func (v *mqlVsphere) folders() ([]any, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	c := conn.Client().Client
+	ctx := context.Background()
+
+	mgr := view.NewManager(c)
+	cv, err := mgr.CreateContainerView(ctx, c.ServiceContent.RootFolder, []string{"Folder"}, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create folder container view: %w", err)
+	}
+	defer func() { _ = cv.Destroy(ctx) }()
+
+	var folders []mo.Folder
+	if err := cv.Retrieve(ctx, []string{"Folder"}, []string{"name", "childType", "childEntity"}, &folders); err != nil {
+		return nil, fmt.Errorf("failed to retrieve folders: %w", err)
+	}
+
+	mqlFolders := make([]any, 0, len(folders))
+	for _, f := range folders {
+		ref := f.Reference()
+		// InventoryPath isn't on mo.Folder; build via Finder.
+		mqlFolder, err := CreateResource(v.MqlRuntime, "vsphere.folder", map[string]*llx.RawData{
+			"moid":          llx.StringData(ref.Encode()),
+			"name":          llx.StringData(f.Name),
+			"inventoryPath": llx.StringData(""),
+			"childTypes":    llx.ArrayData(convert.SliceAnyToInterface(f.ChildType), types.String),
+			"childCount":    llx.IntData(int64(len(f.ChildEntity))),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlFolders = append(mqlFolders, mqlFolder)
+	}
+	return mqlFolders, nil
+}
+
+func (v *mqlVsphere) identitySources() ([]any, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	ctx := context.Background()
+
+	admin, err := conn.SsoAdminClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to SSO admin: %w", err)
+	}
+
+	sources, err := admin.IdentitySources(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list identity sources: %w", err)
+	}
+
+	mqlSources := []any{}
+
+	domainAliases := func(domains []ssoadmintypes.Domain) []string {
+		aliases := make([]string, 0, len(domains)*2)
+		for _, d := range domains {
+			if d.Name != "" {
+				aliases = append(aliases, d.Name)
+			}
+			if d.Alias != "" {
+				aliases = append(aliases, d.Alias)
+			}
+		}
+		return aliases
+	}
+
+	addSource := func(src ssoadmintypes.IdentitySource, kind string) error {
+		mqlSrc, err := CreateResource(v.MqlRuntime, "vsphere.identitysource", map[string]*llx.RawData{
+			"__id":                   llx.StringData(kind + ":" + src.Name),
+			"name":                   llx.StringData(src.Name),
+			"type":                   llx.StringData(kind),
+			"authenticationType":     llx.StringData(""),
+			"primaryUrl":             llx.StringData(""),
+			"failoverUrl":            llx.StringData(""),
+			"userBaseDn":             llx.StringData(""),
+			"groupBaseDn":            llx.StringData(""),
+			"authenticationUsername": llx.StringData(""),
+			"alternativeNames":       llx.ArrayData(convert.SliceAnyToInterface(domainAliases(src.Domains)), types.String),
+		})
+		if err != nil {
+			return err
+		}
+		mqlSources = append(mqlSources, mqlSrc)
+		return nil
+	}
+
+	addLdapSource := func(src ssoadmintypes.LdapIdentitySource, kind string) error {
+		mqlSrc, err := CreateResource(v.MqlRuntime, "vsphere.identitysource", map[string]*llx.RawData{
+			"__id":                   llx.StringData(kind + ":" + src.Name),
+			"name":                   llx.StringData(src.Name),
+			"type":                   llx.StringData(kind),
+			"authenticationType":     llx.StringData(src.AuthenticationDetails.AuthenticationType),
+			"primaryUrl":             llx.StringData(src.Details.PrimaryURL),
+			"failoverUrl":            llx.StringData(src.Details.FailoverURL),
+			"userBaseDn":             llx.StringData(src.Details.UserBaseDn),
+			"groupBaseDn":            llx.StringData(src.Details.GroupBaseDn),
+			"authenticationUsername": llx.StringData(src.AuthenticationDetails.Username),
+			"alternativeNames":       llx.ArrayData(convert.SliceAnyToInterface(domainAliases(src.Domains)), types.String),
+		})
+		if err != nil {
+			return err
+		}
+		mqlSources = append(mqlSources, mqlSrc)
+		return nil
+	}
+
+	if err := addSource(sources.System, "system"); err != nil {
+		return nil, err
+	}
+	if sources.LocalOS != nil {
+		if err := addSource(*sources.LocalOS, "localos"); err != nil {
+			return nil, err
+		}
+	}
+	if sources.NativeAD != nil {
+		if err := addSource(*sources.NativeAD, "nativead"); err != nil {
+			return nil, err
+		}
+	}
+	for _, src := range sources.LDAPS {
+		if err := addLdapSource(src, "ldap"); err != nil {
+			return nil, err
+		}
+	}
+	return mqlSources, nil
+}
+
+// role resolves the typed vsphere.role for this permission. First call after
+// startup triggers a single AuthorizationManager.RoleList via vsphere.roles
+// and caches the result; subsequent calls hit the cache.
+func (p *mqlVspherePermission) role() (*mqlVsphereRole, error) {
+	res, err := CreateResource(p.MqlRuntime, "vsphere", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	roles := res.(*mqlVsphere).GetRoles()
+	if roles.Error != nil {
+		return nil, roles.Error
+	}
+	for _, r := range roles.Data {
+		role := r.(*mqlVsphereRole)
+		if role.RoleId.Data == int64(p.roleId) {
+			return role, nil
+		}
+	}
+	// Role lookup miss — most likely the role was deleted between the
+	// permission scan and the role-list fetch. Mark the field resolved
+	// and null so the runtime doesn't panic or re-fetch.
+	p.Role.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }
 
 func (v *mqlEsxi) id() (string, error) {

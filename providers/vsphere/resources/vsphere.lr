@@ -90,6 +90,71 @@ vsphere {
   datacenters() []vsphere.datacenter
   // Authorization roles defined in vCenter (RBAC role catalog)
   roles() []vsphere.role
+  // All RBAC permission grants in vCenter (every (entity, principal, role) tuple)
+  permissions() []vsphere.permission
+  // Inventory folders across all datacenters
+  folders() []vsphere.folder
+  // SSO identity sources configured on vCenter (LDAP/AD/local-OS providers)
+  identitySources() []vsphere.identitysource
+}
+
+// vSphere RBAC permission grant. Each grant ties a principal (user or group)
+// to a role on a specific managed entity, optionally propagated down the
+// inventory hierarchy.
+private vsphere.permission @defaults("principal entityType entityMoid") {
+  // Identifier (entity moid + principal)
+  id string
+  // Managed object ID of the entity the permission is granted on
+  entityMoid string
+  // Type of the entity (e.g., Datacenter, ClusterComputeResource, HostSystem, VirtualMachine, Folder)
+  entityType string
+  // Principal (user or group) the permission is granted to, often "DOMAIN\\name" or "DOMAIN\\GroupName"
+  principal string
+  // Whether the principal is a group (true) or a user (false)
+  group bool
+  // RBAC role granted by this permission (typed reference; resolved lazily against vsphere.roles)
+  role() vsphere.role
+  // Whether the permission propagates to children of the entity in the inventory hierarchy
+  propagate bool
+}
+
+// vSphere inventory folder. Folders are the organizational containers in
+// vCenter's inventory tree and the unit of permission inheritance.
+private vsphere.folder @defaults("name inventoryPath") {
+  // vSphere managed object ID
+  moid string
+  // Folder name
+  name string
+  // vSphere inventory path
+  inventoryPath string
+  // Allowed child managed-object types (e.g., VirtualMachine, Folder, HostSystem)
+  childTypes []string
+  // Number of immediate child entities under this folder
+  childCount int
+}
+
+// vSphere SSO identity source — an authentication provider registered with vCenter.
+// Includes the built-in vsphere.local domain, the local OS identity source,
+// any native AD-as-vCenter-domain configuration, and external LDAP/AD providers.
+private vsphere.identitysource @defaults("name type") {
+  // Domain name of the identity source (e.g., vsphere.local, corp.example.com)
+  name string
+  // Source kind (system, localos, nativead, ldap)
+  type string
+  // Authentication mechanism used by external providers (anonymous, password, srp, reserved); empty for system/localos
+  authenticationType string
+  // Primary directory server URL (LDAP only)
+  primaryUrl string
+  // Failover directory server URL (LDAP only; empty if not configured)
+  failoverUrl string
+  // Distinguished name to bind under for users (LDAP only)
+  userBaseDn string
+  // Distinguished name to bind under for groups (LDAP only)
+  groupBaseDn string
+  // Service-account username used to bind (LDAP only)
+  authenticationUsername string
+  // Alternative names recognized for the domain (e.g., NetBIOS aliases)
+  alternativeNames []string
 }
 
 // vSphere authorization role (RBAC role definition from AuthorizationManager)
@@ -138,6 +203,39 @@ private vsphere.datacenter @defaults("moid name") {
   distributedPortGroups() []vsphere.vswitch.portgroup
   // Datastores in the datacenter
   datastores() []vsphere.datastore
+  // Resource pools in the datacenter (CPU/memory partitions on clusters or standalone hosts)
+  resourcePools() []vsphere.resourcepool
+}
+
+// vSphere resource pool. CPU/memory partitions on a cluster or standalone host
+// with reservation/limit/share controls.
+private vsphere.resourcepool @defaults("name") {
+  // vSphere managed object ID
+  moid string
+  // Resource pool name
+  name string
+  // vSphere inventory path
+  inventoryPath string
+  // CPU reservation in MHz (0 = no reservation)
+  cpuReservationMhz int
+  // CPU limit in MHz (-1 = unlimited)
+  cpuLimitMhz int
+  // Whether CPU reservation can grow into the parent's unreserved capacity
+  cpuExpandableReservation bool
+  // CPU share level (low, normal, high, custom)
+  cpuShareLevel string
+  // CPU shares (only meaningful when cpuShareLevel == custom)
+  cpuShares int
+  // Memory reservation in MB (0 = no reservation)
+  memoryReservationMB int
+  // Memory limit in MB (-1 = unlimited)
+  memoryLimitMB int
+  // Whether memory reservation can grow into the parent's unreserved capacity
+  memoryExpandableReservation bool
+  // Memory share level (low, normal, high, custom)
+  memoryShareLevel string
+  // Memory shares (only meaningful when memoryShareLevel == custom)
+  memoryShares int
 }
 
 // vSphere datastore (storage backing for VMs)

@@ -516,3 +516,94 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 	}
 	return mqlDss, nil
 }
+
+func (v *mqlVsphereDatacenter) resourcePools() ([]any, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	vClient := getClientInstance(conn)
+
+	if v.InventoryPath.Error != nil {
+		return nil, v.InventoryPath.Error
+	}
+	dc, err := vClient.Datacenter(v.InventoryPath.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	finder := find.NewFinder(vClient.Client.Client, true)
+	finder.SetDatacenter(dc)
+	ctx := context.Background()
+	pools, err := finder.ResourcePoolList(ctx, "*")
+	if err != nil {
+		if resourceclient.IsNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("error listing resource pools for datacenter %s: %w", dc.InventoryPath, err)
+	}
+
+	mqlPools := make([]any, len(pools))
+	for i, p := range pools {
+		pctx, cancel := context.WithTimeout(context.Background(), resourceclient.DefaultAPITimeout)
+		var props mo.ResourcePool
+		err := p.Properties(pctx, p.Reference(), []string{"config"}, &props)
+		cancel()
+		if err != nil {
+			return nil, err
+		}
+		cfg := props.Config
+
+		// Translate the SharesInfo. SDK has Shares.Level (string-typed enum)
+		// and Shares.Shares (int32, only meaningful when Level == "custom").
+		cpuShareLevel, cpuShares := "", int64(0)
+		if cfg.CpuAllocation.Shares != nil {
+			cpuShareLevel = string(cfg.CpuAllocation.Shares.Level)
+			cpuShares = int64(cfg.CpuAllocation.Shares.Shares)
+		}
+		memShareLevel, memShares := "", int64(0)
+		if cfg.MemoryAllocation.Shares != nil {
+			memShareLevel = string(cfg.MemoryAllocation.Shares.Level)
+			memShares = int64(cfg.MemoryAllocation.Shares.Shares)
+		}
+		cpuExpandable := false
+		if cfg.CpuAllocation.ExpandableReservation != nil {
+			cpuExpandable = *cfg.CpuAllocation.ExpandableReservation
+		}
+		memExpandable := false
+		if cfg.MemoryAllocation.ExpandableReservation != nil {
+			memExpandable = *cfg.MemoryAllocation.ExpandableReservation
+		}
+		var cpuReservation, cpuLimit, memReservation, memLimit int64
+		if cfg.CpuAllocation.Reservation != nil {
+			cpuReservation = *cfg.CpuAllocation.Reservation
+		}
+		if cfg.CpuAllocation.Limit != nil {
+			cpuLimit = *cfg.CpuAllocation.Limit
+		}
+		if cfg.MemoryAllocation.Reservation != nil {
+			memReservation = *cfg.MemoryAllocation.Reservation
+		}
+		if cfg.MemoryAllocation.Limit != nil {
+			memLimit = *cfg.MemoryAllocation.Limit
+		}
+
+		mqlPool, err := CreateResource(v.MqlRuntime, "vsphere.resourcepool", map[string]*llx.RawData{
+			"moid":                        llx.StringData(p.Reference().Encode()),
+			"name":                        llx.StringData(p.Name()),
+			"inventoryPath":               llx.StringData(p.InventoryPath),
+			"cpuReservationMhz":           llx.IntData(cpuReservation),
+			"cpuLimitMhz":                 llx.IntData(cpuLimit),
+			"cpuExpandableReservation":    llx.BoolData(cpuExpandable),
+			"cpuShareLevel":               llx.StringData(cpuShareLevel),
+			"cpuShares":                   llx.IntData(cpuShares),
+			"memoryReservationMB":         llx.IntData(memReservation),
+			"memoryLimitMB":               llx.IntData(memLimit),
+			"memoryExpandableReservation": llx.BoolData(memExpandable),
+			"memoryShareLevel":            llx.StringData(memShareLevel),
+			"memoryShares":                llx.IntData(memShares),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlPools[i] = mqlPool
+	}
+	return mqlPools, nil
+}
