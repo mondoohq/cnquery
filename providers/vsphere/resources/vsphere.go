@@ -365,7 +365,7 @@ func (v *mqlVsphere) kmsClusters() ([]any, error) {
 
 	mqlClusters := make([]any, len(clusters))
 	for i, c := range clusters {
-		var servers []any
+		servers := make([]any, 0, len(c.Servers))
 		for _, s := range c.Servers {
 			servers = append(servers, map[string]any{
 				"name":    s.Name,

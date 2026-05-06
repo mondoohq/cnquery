@@ -517,8 +517,8 @@ func (v *mqlVsphereHost) firewallRulesets() ([]any, error) {
 		rsId := hostPath + "/firewall/" + rs.Key
 
 		allIp := false
-		var allowedIPs []any
-		var allowedNetworks []any
+		allowedIPs := []any{}
+		allowedNetworks := []any{}
 		if rs.AllowedHosts != nil {
 			allIp = rs.AllowedHosts.AllIp
 			for _, ip := range rs.AllowedHosts.IpAddress {
