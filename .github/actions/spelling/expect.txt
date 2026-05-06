@@ -270,6 +270,7 @@ keymap
 keyspace
 kilocode
 kiro
+KMIP
 kolide
 kotlin
 KQL
@@ -578,6 +579,7 @@ vmbr
 vmca
 vmdk
 vmfs
+vmhba
 VMID
 vmstate
 vnet

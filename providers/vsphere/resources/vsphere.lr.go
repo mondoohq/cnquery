@@ -26,6 +26,7 @@ const (
 	ResourceVspherePermission       string = "vsphere.permission"
 	ResourceVsphereFolder           string = "vsphere.folder"
 	ResourceVsphereIdentitysource   string = "vsphere.identitysource"
+	ResourceVsphereKmsCluster       string = "vsphere.kmsCluster"
 	ResourceVsphereRole             string = "vsphere.role"
 	ResourceVsphereLicense          string = "vsphere.license"
 	ResourceVsphereDatacenter       string = "vsphere.datacenter"
@@ -33,6 +34,9 @@ const (
 	ResourceVsphereDatastore        string = "vsphere.datastore"
 	ResourceVsphereCluster          string = "vsphere.cluster"
 	ResourceVsphereHost             string = "vsphere.host"
+	ResourceEsxiFirewallRuleset     string = "esxi.firewallRuleset"
+	ResourceEsxiFirewallRule        string = "esxi.firewallRule"
+	ResourceEsxiIscsiAdapter        string = "esxi.iscsiAdapter"
 	ResourceEsxiCertificate         string = "esxi.certificate"
 	ResourceVsphereVm               string = "vsphere.vm"
 	ResourceVsphereVswitchStandard  string = "vsphere.vswitch.standard"
@@ -93,6 +97,10 @@ func init() {
 			// to override args, implement: initVsphereIdentitysource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereIdentitysource,
 		},
+		"vsphere.kmsCluster": {
+			// to override args, implement: initVsphereKmsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereKmsCluster,
+		},
 		"vsphere.role": {
 			// to override args, implement: initVsphereRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereRole,
@@ -120,6 +128,18 @@ func init() {
 		"vsphere.host": {
 			Init:   initVsphereHost,
 			Create: createVsphereHost,
+		},
+		"esxi.firewallRuleset": {
+			// to override args, implement: initEsxiFirewallRuleset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createEsxiFirewallRuleset,
+		},
+		"esxi.firewallRule": {
+			// to override args, implement: initEsxiFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createEsxiFirewallRule,
+		},
+		"esxi.iscsiAdapter": {
+			// to override args, implement: initEsxiIscsiAdapter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createEsxiIscsiAdapter,
 		},
 		"esxi.certificate": {
 			// to override args, implement: initEsxiCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -344,6 +364,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.identitySources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphere).GetIdentitySources()).ToDataRes(types.Array(types.Resource("vsphere.identitysource")))
 	},
+	"vsphere.kmsClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphere).GetKmsClusters()).ToDataRes(types.Array(types.Resource("vsphere.kmsCluster")))
+	},
 	"vsphere.permission.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVspherePermission).GetId()).ToDataRes(types.String)
 	},
@@ -406,6 +429,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.identitysource.alternativeNames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereIdentitysource).GetAlternativeNames()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.kmsCluster.clusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereKmsCluster).GetClusterId()).ToDataRes(types.String)
+	},
+	"vsphere.kmsCluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereKmsCluster).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.kmsCluster.useAsDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereKmsCluster).GetUseAsDefault()).ToDataRes(types.Bool)
+	},
+	"vsphere.kmsCluster.managementType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereKmsCluster).GetManagementType()).ToDataRes(types.String)
+	},
+	"vsphere.kmsCluster.serverCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereKmsCluster).GetServerCount()).ToDataRes(types.Int)
+	},
+	"vsphere.kmsCluster.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereKmsCluster).GetServers()).ToDataRes(types.Array(types.Dict))
 	},
 	"vsphere.role.roleId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereRole).GetRoleId()).ToDataRes(types.Int)
@@ -646,6 +687,87 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.host.numCpuCores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetNumCpuCores()).ToDataRes(types.Int)
+	},
+	"vsphere.host.firewallRulesets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetFirewallRulesets()).ToDataRes(types.Array(types.Resource("esxi.firewallRuleset")))
+	},
+	"vsphere.host.iscsiAdapters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetIscsiAdapters()).ToDataRes(types.Array(types.Resource("esxi.iscsiAdapter")))
+	},
+	"esxi.firewallRuleset.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRuleset).GetId()).ToDataRes(types.String)
+	},
+	"esxi.firewallRuleset.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRuleset).GetKey()).ToDataRes(types.String)
+	},
+	"esxi.firewallRuleset.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRuleset).GetLabel()).ToDataRes(types.String)
+	},
+	"esxi.firewallRuleset.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRuleset).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"esxi.firewallRuleset.required": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRuleset).GetRequired()).ToDataRes(types.Bool)
+	},
+	"esxi.firewallRuleset.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRuleset).GetService()).ToDataRes(types.String)
+	},
+	"esxi.firewallRuleset.allIpsAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRuleset).GetAllIpsAllowed()).ToDataRes(types.Bool)
+	},
+	"esxi.firewallRuleset.allowedIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRuleset).GetAllowedIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"esxi.firewallRuleset.allowedIpNetworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRuleset).GetAllowedIpNetworks()).ToDataRes(types.Array(types.Dict))
+	},
+	"esxi.firewallRuleset.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRuleset).GetRules()).ToDataRes(types.Array(types.Resource("esxi.firewallRule")))
+	},
+	"esxi.firewallRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRule).GetId()).ToDataRes(types.String)
+	},
+	"esxi.firewallRule.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRule).GetPort()).ToDataRes(types.Int)
+	},
+	"esxi.firewallRule.endPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRule).GetEndPort()).ToDataRes(types.Int)
+	},
+	"esxi.firewallRule.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRule).GetDirection()).ToDataRes(types.String)
+	},
+	"esxi.firewallRule.portType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRule).GetPortType()).ToDataRes(types.String)
+	},
+	"esxi.firewallRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiFirewallRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"esxi.iscsiAdapter.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiIscsiAdapter).GetId()).ToDataRes(types.String)
+	},
+	"esxi.iscsiAdapter.device": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiIscsiAdapter).GetDevice()).ToDataRes(types.String)
+	},
+	"esxi.iscsiAdapter.iScsiName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiIscsiAdapter).GetIScsiName()).ToDataRes(types.String)
+	},
+	"esxi.iscsiAdapter.iScsiAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiIscsiAdapter).GetIScsiAlias()).ToDataRes(types.String)
+	},
+	"esxi.iscsiAdapter.chapAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiIscsiAdapter).GetChapAuthEnabled()).ToDataRes(types.Bool)
+	},
+	"esxi.iscsiAdapter.chapAuthenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiIscsiAdapter).GetChapAuthenticationType()).ToDataRes(types.String)
+	},
+	"esxi.iscsiAdapter.chapName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiIscsiAdapter).GetChapName()).ToDataRes(types.String)
+	},
+	"esxi.iscsiAdapter.mutualChapAuthenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiIscsiAdapter).GetMutualChapAuthenticationType()).ToDataRes(types.String)
+	},
+	"esxi.iscsiAdapter.mutualChapName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlEsxiIscsiAdapter).GetMutualChapName()).ToDataRes(types.String)
 	},
 	"esxi.certificate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlEsxiCertificate).GetId()).ToDataRes(types.String)
@@ -1070,6 +1192,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphere).IdentitySources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vsphere.kmsClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphere).KmsClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.permission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVspherePermission).__id, ok = v.Value.(string)
 		return
@@ -1164,6 +1290,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.identitysource.alternativeNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereIdentitysource).AlternativeNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.kmsCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereKmsCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.kmsCluster.clusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereKmsCluster).ClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.kmsCluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereKmsCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.kmsCluster.useAsDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereKmsCluster).UseAsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.kmsCluster.managementType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereKmsCluster).ManagementType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.kmsCluster.serverCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereKmsCluster).ServerCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.kmsCluster.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereKmsCluster).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1512,6 +1666,126 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.numCpuCores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).NumCpuCores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRulesets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).FirewallRulesets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.iscsiAdapters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).IscsiAdapters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRuleset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).__id, ok = v.Value.(string)
+		return
+	},
+	"esxi.firewallRuleset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRuleset.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRuleset.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRuleset.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRuleset.required": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRuleset.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRuleset.allIpsAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).AllIpsAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRuleset.allowedIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).AllowedIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRuleset.allowedIpNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).AllowedIpNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRuleset.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRuleset).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRule).__id, ok = v.Value.(string)
+		return
+	},
+	"esxi.firewallRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRule.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRule).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRule.endPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRule).EndPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRule.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRule).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRule.portType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRule).PortType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.firewallRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiFirewallRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.iscsiAdapter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiIscsiAdapter).__id, ok = v.Value.(string)
+		return
+	},
+	"esxi.iscsiAdapter.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiIscsiAdapter).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.iscsiAdapter.device": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiIscsiAdapter).Device, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.iscsiAdapter.iScsiName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiIscsiAdapter).IScsiName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.iscsiAdapter.iScsiAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiIscsiAdapter).IScsiAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.iscsiAdapter.chapAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiIscsiAdapter).ChapAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"esxi.iscsiAdapter.chapAuthenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiIscsiAdapter).ChapAuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.iscsiAdapter.chapName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiIscsiAdapter).ChapName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.iscsiAdapter.mutualChapAuthenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiIscsiAdapter).MutualChapAuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"esxi.iscsiAdapter.mutualChapName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlEsxiIscsiAdapter).MutualChapName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"esxi.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2377,6 +2651,7 @@ type mqlVsphere struct {
 	Permissions     plugin.TValue[[]any]
 	Folders         plugin.TValue[[]any]
 	IdentitySources plugin.TValue[[]any]
+	KmsClusters     plugin.TValue[[]any]
 }
 
 // createVsphere creates a new instance of this resource
@@ -2515,6 +2790,22 @@ func (c *mqlVsphere) GetIdentitySources() *plugin.TValue[[]any] {
 		}
 
 		return c.identitySources()
+	})
+}
+
+func (c *mqlVsphere) GetKmsClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KmsClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere", c.__id, "kmsClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.kmsClusters()
 	})
 }
 
@@ -2755,6 +3046,80 @@ func (c *mqlVsphereIdentitysource) GetAuthenticationUsername() *plugin.TValue[st
 
 func (c *mqlVsphereIdentitysource) GetAlternativeNames() *plugin.TValue[[]any] {
 	return &c.AlternativeNames
+}
+
+// mqlVsphereKmsCluster for the vsphere.kmsCluster resource
+type mqlVsphereKmsCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereKmsClusterInternal it will be used here
+	ClusterId      plugin.TValue[string]
+	Name           plugin.TValue[string]
+	UseAsDefault   plugin.TValue[bool]
+	ManagementType plugin.TValue[string]
+	ServerCount    plugin.TValue[int64]
+	Servers        plugin.TValue[[]any]
+}
+
+// createVsphereKmsCluster creates a new instance of this resource
+func createVsphereKmsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereKmsCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.kmsCluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereKmsCluster) MqlName() string {
+	return "vsphere.kmsCluster"
+}
+
+func (c *mqlVsphereKmsCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereKmsCluster) GetClusterId() *plugin.TValue[string] {
+	return &c.ClusterId
+}
+
+func (c *mqlVsphereKmsCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereKmsCluster) GetUseAsDefault() *plugin.TValue[bool] {
+	return &c.UseAsDefault
+}
+
+func (c *mqlVsphereKmsCluster) GetManagementType() *plugin.TValue[string] {
+	return &c.ManagementType
+}
+
+func (c *mqlVsphereKmsCluster) GetServerCount() *plugin.TValue[int64] {
+	return &c.ServerCount
+}
+
+func (c *mqlVsphereKmsCluster) GetServers() *plugin.TValue[[]any] {
+	return &c.Servers
 }
 
 // mqlVsphereRole for the vsphere.role resource
@@ -3418,6 +3783,8 @@ type mqlVsphereHost struct {
 	Model                   plugin.TValue[string]
 	CpuMhz                  plugin.TValue[int64]
 	NumCpuCores             plugin.TValue[int64]
+	FirewallRulesets        plugin.TValue[[]any]
+	IscsiAdapters           plugin.TValue[[]any]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -3685,6 +4052,295 @@ func (c *mqlVsphereHost) GetCpuMhz() *plugin.TValue[int64] {
 
 func (c *mqlVsphereHost) GetNumCpuCores() *plugin.TValue[int64] {
 	return &c.NumCpuCores
+}
+
+func (c *mqlVsphereHost) GetFirewallRulesets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallRulesets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "firewallRulesets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallRulesets()
+	})
+}
+
+func (c *mqlVsphereHost) GetIscsiAdapters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IscsiAdapters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "iscsiAdapters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iscsiAdapters()
+	})
+}
+
+// mqlEsxiFirewallRuleset for the esxi.firewallRuleset resource
+type mqlEsxiFirewallRuleset struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlEsxiFirewallRulesetInternal it will be used here
+	Id                 plugin.TValue[string]
+	Key                plugin.TValue[string]
+	Label              plugin.TValue[string]
+	Enabled            plugin.TValue[bool]
+	Required           plugin.TValue[bool]
+	Service            plugin.TValue[string]
+	AllIpsAllowed      plugin.TValue[bool]
+	AllowedIpAddresses plugin.TValue[[]any]
+	AllowedIpNetworks  plugin.TValue[[]any]
+	Rules              plugin.TValue[[]any]
+}
+
+// createEsxiFirewallRuleset creates a new instance of this resource
+func createEsxiFirewallRuleset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlEsxiFirewallRuleset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("esxi.firewallRuleset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlEsxiFirewallRuleset) MqlName() string {
+	return "esxi.firewallRuleset"
+}
+
+func (c *mqlEsxiFirewallRuleset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlEsxiFirewallRuleset) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlEsxiFirewallRuleset) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlEsxiFirewallRuleset) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlEsxiFirewallRuleset) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlEsxiFirewallRuleset) GetRequired() *plugin.TValue[bool] {
+	return &c.Required
+}
+
+func (c *mqlEsxiFirewallRuleset) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlEsxiFirewallRuleset) GetAllIpsAllowed() *plugin.TValue[bool] {
+	return &c.AllIpsAllowed
+}
+
+func (c *mqlEsxiFirewallRuleset) GetAllowedIpAddresses() *plugin.TValue[[]any] {
+	return &c.AllowedIpAddresses
+}
+
+func (c *mqlEsxiFirewallRuleset) GetAllowedIpNetworks() *plugin.TValue[[]any] {
+	return &c.AllowedIpNetworks
+}
+
+func (c *mqlEsxiFirewallRuleset) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+// mqlEsxiFirewallRule for the esxi.firewallRule resource
+type mqlEsxiFirewallRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlEsxiFirewallRuleInternal it will be used here
+	Id        plugin.TValue[string]
+	Port      plugin.TValue[int64]
+	EndPort   plugin.TValue[int64]
+	Direction plugin.TValue[string]
+	PortType  plugin.TValue[string]
+	Protocol  plugin.TValue[string]
+}
+
+// createEsxiFirewallRule creates a new instance of this resource
+func createEsxiFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlEsxiFirewallRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("esxi.firewallRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlEsxiFirewallRule) MqlName() string {
+	return "esxi.firewallRule"
+}
+
+func (c *mqlEsxiFirewallRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlEsxiFirewallRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlEsxiFirewallRule) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlEsxiFirewallRule) GetEndPort() *plugin.TValue[int64] {
+	return &c.EndPort
+}
+
+func (c *mqlEsxiFirewallRule) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlEsxiFirewallRule) GetPortType() *plugin.TValue[string] {
+	return &c.PortType
+}
+
+func (c *mqlEsxiFirewallRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+// mqlEsxiIscsiAdapter for the esxi.iscsiAdapter resource
+type mqlEsxiIscsiAdapter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlEsxiIscsiAdapterInternal it will be used here
+	Id                           plugin.TValue[string]
+	Device                       plugin.TValue[string]
+	IScsiName                    plugin.TValue[string]
+	IScsiAlias                   plugin.TValue[string]
+	ChapAuthEnabled              plugin.TValue[bool]
+	ChapAuthenticationType       plugin.TValue[string]
+	ChapName                     plugin.TValue[string]
+	MutualChapAuthenticationType plugin.TValue[string]
+	MutualChapName               plugin.TValue[string]
+}
+
+// createEsxiIscsiAdapter creates a new instance of this resource
+func createEsxiIscsiAdapter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlEsxiIscsiAdapter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("esxi.iscsiAdapter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlEsxiIscsiAdapter) MqlName() string {
+	return "esxi.iscsiAdapter"
+}
+
+func (c *mqlEsxiIscsiAdapter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlEsxiIscsiAdapter) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlEsxiIscsiAdapter) GetDevice() *plugin.TValue[string] {
+	return &c.Device
+}
+
+func (c *mqlEsxiIscsiAdapter) GetIScsiName() *plugin.TValue[string] {
+	return &c.IScsiName
+}
+
+func (c *mqlEsxiIscsiAdapter) GetIScsiAlias() *plugin.TValue[string] {
+	return &c.IScsiAlias
+}
+
+func (c *mqlEsxiIscsiAdapter) GetChapAuthEnabled() *plugin.TValue[bool] {
+	return &c.ChapAuthEnabled
+}
+
+func (c *mqlEsxiIscsiAdapter) GetChapAuthenticationType() *plugin.TValue[string] {
+	return &c.ChapAuthenticationType
+}
+
+func (c *mqlEsxiIscsiAdapter) GetChapName() *plugin.TValue[string] {
+	return &c.ChapName
+}
+
+func (c *mqlEsxiIscsiAdapter) GetMutualChapAuthenticationType() *plugin.TValue[string] {
+	return &c.MutualChapAuthenticationType
+}
+
+func (c *mqlEsxiIscsiAdapter) GetMutualChapName() *plugin.TValue[string] {
+	return &c.MutualChapName
 }
 
 // mqlEsxiCertificate for the esxi.certificate resource
