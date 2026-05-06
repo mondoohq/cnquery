@@ -39,6 +39,8 @@ const (
 	ResourceEsxiIscsiAdapter        string = "esxi.iscsiAdapter"
 	ResourceEsxiCertificate         string = "esxi.certificate"
 	ResourceVsphereVm               string = "vsphere.vm"
+	ResourceVsphereVmSnapshot       string = "vsphere.vm.snapshot"
+	ResourceVsphereVmDisk           string = "vsphere.vm.disk"
 	ResourceVsphereVswitchStandard  string = "vsphere.vswitch.standard"
 	ResourceVsphereVswitchDvs       string = "vsphere.vswitch.dvs"
 	ResourceVsphereVswitchPortgroup string = "vsphere.vswitch.portgroup"
@@ -148,6 +150,14 @@ func init() {
 		"vsphere.vm": {
 			// to override args, implement: initVsphereVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereVm,
+		},
+		"vsphere.vm.snapshot": {
+			// to override args, implement: initVsphereVmSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVmSnapshot,
+		},
+		"vsphere.vm.disk": {
+			// to override args, implement: initVsphereVmDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVmDisk,
 		},
 		"vsphere.vswitch.standard": {
 			// to override args, implement: initVsphereVswitchStandard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -879,6 +889,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vm.datastores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetDatastores()).ToDataRes(types.Array(types.Resource("vsphere.datastore")))
+	},
+	"vsphere.vm.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetSnapshots()).ToDataRes(types.Array(types.Resource("vsphere.vm.snapshot")))
+	},
+	"vsphere.vm.disks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetDisks()).ToDataRes(types.Array(types.Resource("vsphere.vm.disk")))
+	},
+	"vsphere.vm.snapshot.moid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmSnapshot).GetMoid()).ToDataRes(types.String)
+	},
+	"vsphere.vm.snapshot.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmSnapshot).GetId()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.snapshot.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmSnapshot).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.vm.snapshot.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmSnapshot).GetDescription()).ToDataRes(types.String)
+	},
+	"vsphere.vm.snapshot.createDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmSnapshot).GetCreateDate()).ToDataRes(types.Time)
+	},
+	"vsphere.vm.snapshot.powerState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmSnapshot).GetPowerState()).ToDataRes(types.String)
+	},
+	"vsphere.vm.snapshot.quiesced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmSnapshot).GetQuiesced()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.snapshot.current": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmSnapshot).GetCurrent()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.snapshot.parentMoid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmSnapshot).GetParentMoid()).ToDataRes(types.String)
+	},
+	"vsphere.vm.disk.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetKey()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.disk.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetLabel()).ToDataRes(types.String)
+	},
+	"vsphere.vm.disk.backingType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetBackingType()).ToDataRes(types.String)
+	},
+	"vsphere.vm.disk.fileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetFileName()).ToDataRes(types.String)
+	},
+	"vsphere.vm.disk.capacityBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetCapacityBytes()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.disk.diskMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetDiskMode()).ToDataRes(types.String)
+	},
+	"vsphere.vm.disk.thinProvisioned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetThinProvisioned()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.disk.eagerlyScrub": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetEagerlyScrub()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.disk.writeThrough": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetWriteThrough()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.disk.sharing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetSharing()).ToDataRes(types.String)
+	},
+	"vsphere.vm.disk.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetUuid()).ToDataRes(types.String)
+	},
+	"vsphere.vm.disk.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.disk.encryptionKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetEncryptionKeyId()).ToDataRes(types.String)
+	},
+	"vsphere.vm.disk.datastore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetDatastore()).ToDataRes(types.Resource("vsphere.datastore"))
 	},
 	"vsphere.vswitch.standard.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchStandard).GetName()).ToDataRes(types.String)
@@ -1969,6 +2054,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vm.datastores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVm).Datastores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).Disks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmSnapshot).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vm.snapshot.moid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmSnapshot).Moid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.snapshot.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmSnapshot).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.snapshot.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmSnapshot).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.snapshot.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmSnapshot).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.snapshot.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmSnapshot).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.snapshot.powerState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmSnapshot).PowerState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.snapshot.quiesced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmSnapshot).Quiesced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.snapshot.current": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmSnapshot).Current, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.snapshot.parentMoid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmSnapshot).ParentMoid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vm.disk.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).Key, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.backingType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).BackingType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.fileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).FileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.capacityBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).CapacityBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.diskMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).DiskMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.thinProvisioned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).ThinProvisioned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.eagerlyScrub": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).EagerlyScrub, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.writeThrough": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).WriteThrough, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.sharing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).Sharing, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.encryptionKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).EncryptionKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.disk.datastore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).Datastore, ok = plugin.RawToTValue[*mqlVsphereDatastore](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4580,6 +4773,8 @@ type mqlVsphereVm struct {
 	GuestHostname       plugin.TValue[string]
 	Host                plugin.TValue[*mqlVsphereHost]
 	Datastores          plugin.TValue[[]any]
+	Snapshots           plugin.TValue[[]any]
+	Disks               plugin.TValue[[]any]
 }
 
 // createVsphereVm creates a new instance of this resource
@@ -4762,6 +4957,243 @@ func (c *mqlVsphereVm) GetDatastores() *plugin.TValue[[]any] {
 		}
 
 		return c.datastores()
+	})
+}
+
+func (c *mqlVsphereVm) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshots()
+	})
+}
+
+func (c *mqlVsphereVm) GetDisks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Disks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "disks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.disks()
+	})
+}
+
+// mqlVsphereVmSnapshot for the vsphere.vm.snapshot resource
+type mqlVsphereVmSnapshot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereVmSnapshotInternal it will be used here
+	Moid        plugin.TValue[string]
+	Id          plugin.TValue[int64]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	CreateDate  plugin.TValue[*time.Time]
+	PowerState  plugin.TValue[string]
+	Quiesced    plugin.TValue[bool]
+	Current     plugin.TValue[bool]
+	ParentMoid  plugin.TValue[string]
+}
+
+// createVsphereVmSnapshot creates a new instance of this resource
+func createVsphereVmSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVmSnapshot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vm.snapshot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVmSnapshot) MqlName() string {
+	return "vsphere.vm.snapshot"
+}
+
+func (c *mqlVsphereVmSnapshot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVmSnapshot) GetMoid() *plugin.TValue[string] {
+	return &c.Moid
+}
+
+func (c *mqlVsphereVmSnapshot) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlVsphereVmSnapshot) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereVmSnapshot) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVsphereVmSnapshot) GetCreateDate() *plugin.TValue[*time.Time] {
+	return &c.CreateDate
+}
+
+func (c *mqlVsphereVmSnapshot) GetPowerState() *plugin.TValue[string] {
+	return &c.PowerState
+}
+
+func (c *mqlVsphereVmSnapshot) GetQuiesced() *plugin.TValue[bool] {
+	return &c.Quiesced
+}
+
+func (c *mqlVsphereVmSnapshot) GetCurrent() *plugin.TValue[bool] {
+	return &c.Current
+}
+
+func (c *mqlVsphereVmSnapshot) GetParentMoid() *plugin.TValue[string] {
+	return &c.ParentMoid
+}
+
+// mqlVsphereVmDisk for the vsphere.vm.disk resource
+type mqlVsphereVmDisk struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVsphereVmDiskInternal
+	Key             plugin.TValue[int64]
+	Label           plugin.TValue[string]
+	BackingType     plugin.TValue[string]
+	FileName        plugin.TValue[string]
+	CapacityBytes   plugin.TValue[int64]
+	DiskMode        plugin.TValue[string]
+	ThinProvisioned plugin.TValue[bool]
+	EagerlyScrub    plugin.TValue[bool]
+	WriteThrough    plugin.TValue[bool]
+	Sharing         plugin.TValue[string]
+	Uuid            plugin.TValue[string]
+	Encrypted       plugin.TValue[bool]
+	EncryptionKeyId plugin.TValue[string]
+	Datastore       plugin.TValue[*mqlVsphereDatastore]
+}
+
+// createVsphereVmDisk creates a new instance of this resource
+func createVsphereVmDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVmDisk{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vm.disk", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVmDisk) MqlName() string {
+	return "vsphere.vm.disk"
+}
+
+func (c *mqlVsphereVmDisk) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVmDisk) GetKey() *plugin.TValue[int64] {
+	return &c.Key
+}
+
+func (c *mqlVsphereVmDisk) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlVsphereVmDisk) GetBackingType() *plugin.TValue[string] {
+	return &c.BackingType
+}
+
+func (c *mqlVsphereVmDisk) GetFileName() *plugin.TValue[string] {
+	return &c.FileName
+}
+
+func (c *mqlVsphereVmDisk) GetCapacityBytes() *plugin.TValue[int64] {
+	return &c.CapacityBytes
+}
+
+func (c *mqlVsphereVmDisk) GetDiskMode() *plugin.TValue[string] {
+	return &c.DiskMode
+}
+
+func (c *mqlVsphereVmDisk) GetThinProvisioned() *plugin.TValue[bool] {
+	return &c.ThinProvisioned
+}
+
+func (c *mqlVsphereVmDisk) GetEagerlyScrub() *plugin.TValue[bool] {
+	return &c.EagerlyScrub
+}
+
+func (c *mqlVsphereVmDisk) GetWriteThrough() *plugin.TValue[bool] {
+	return &c.WriteThrough
+}
+
+func (c *mqlVsphereVmDisk) GetSharing() *plugin.TValue[string] {
+	return &c.Sharing
+}
+
+func (c *mqlVsphereVmDisk) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlVsphereVmDisk) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlVsphereVmDisk) GetEncryptionKeyId() *plugin.TValue[string] {
+	return &c.EncryptionKeyId
+}
+
+func (c *mqlVsphereVmDisk) GetDatastore() *plugin.TValue[*mqlVsphereDatastore] {
+	return plugin.GetOrCompute[*mqlVsphereDatastore](&c.Datastore, func() (*mqlVsphereDatastore, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm.disk", c.__id, "datastore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereDatastore), nil
+			}
+		}
+
+		return c.datastore()
 	})
 }
 

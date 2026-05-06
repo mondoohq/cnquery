@@ -519,6 +519,67 @@ private vsphere.vm @defaults("moid name") {
   host() vsphere.host
   // Datastores backing the VM's files, resolved against vsphere.datacenters[].datastores
   datastores() []vsphere.datastore
+  // Snapshots in this VM's snapshot tree, flattened (root-first depth-first); empty when no snapshots exist
+  snapshots() []vsphere.vm.snapshot
+  // Virtual disks attached to the VM, in device order
+  disks() []vsphere.vm.disk
+}
+
+// One snapshot in a VM's snapshot tree. The tree is flattened — use
+// `parentMoid` to reconstruct hierarchy and `current` to find the active one.
+private vsphere.vm.snapshot @defaults("name id createDate") {
+  // ManagedObjectReference of the snapshot, encoded
+  moid string
+  // VM-internal sequential identifier (unique within the parent VM)
+  id int
+  // Snapshot name
+  name string
+  // Snapshot description
+  description string
+  // When the snapshot was taken
+  createDate time
+  // VM power state when the snapshot was taken (poweredOn, poweredOff, suspended)
+  powerState string
+  // Whether the snapshot was taken with the quiesce option (file-system consistent)
+  quiesced bool
+  // Whether this is the VM's current (active) snapshot
+  current bool
+  // Encoded ManagedObjectReference of the parent snapshot; empty for root snapshots
+  parentMoid string
+}
+
+// One virtual disk attached to a VM. Modeled from VirtualDisk devices in
+// vmConfig.hardware.device; non-disk devices (NICs, controllers, CD-ROMs) are
+// not exposed here.
+private vsphere.vm.disk @defaults("label capacityBytes diskMode") {
+  // Device key (unique within the parent VM, stable across reconfigure)
+  key int
+  // Device label (e.g., "Hard disk 1")
+  label string
+  // Backing variant: flatVer2 (regular VMFS .vmdk), rdmV1 (raw device mapping), sparseVer2, seSparse (linked clone delta), or empty when an unknown backing is in use
+  backingType string
+  // VMDK file path in datastore-bracket form (e.g. "[datastore1] vm/vm.vmdk")
+  fileName string
+  // Disk capacity in bytes
+  capacityBytes int
+  // Persistence mode (persistent, independent_persistent, independent_nonpersistent, nonpersistent, undoable, append). Independent disks are excluded from snapshots.
+  diskMode string
+  // Whether the disk is thin-provisioned (only meaningful for flatVer2 backing)
+  thinProvisioned bool
+  // Whether the disk is eager-zeroed thick (required for FT and clustered apps; only meaningful for flatVer2 backing)
+  eagerlyScrub bool
+  // Whether writes bypass the host buffer cache (only meaningful for flatVer2 backing)
+  writeThrough bool
+  // Sharing mode (sharingNone, sharingMultiWriter)
+  sharing string
+  // Disk UUID assigned by ESXi (stable across vMotion / storage vMotion)
+  uuid string
+  // Whether the disk is encrypted via vSphere VM Encryption
+  encrypted bool
+  // CryptoKeyId.KeyId encrypting the disk; empty when not encrypted
+  encryptionKeyId string
+  // Datastore backing this disk, resolved against vsphere.datacenters[].datastores; null when the backing has no datastore (e.g., RDM with passthrough) or the datastore isn't visible in inventory
+  datastore() vsphere.datastore
 }
 
 // vSphere standard virtual switch
