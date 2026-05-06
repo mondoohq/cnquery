@@ -173,7 +173,9 @@ private vsphere.host @defaults("moid name") {
   // Lockdown mode (lockdownDisabled, lockdownNormal, lockdownStrict)
   lockdownMode string
   // Whether the host firewall blocks unsolicited incoming traffic by default (the host firewall service itself is always running on ESXi)
-  firewallEnabled bool
+  firewallIncomingBlocked bool
+  // Whether the host firewall blocks unsolicited outgoing traffic by default
+  firewallOutgoingBlocked bool
   // Whether the host firmware reports UEFI Secure Boot was used during system boot (requires vSphere 8.0.3 or later)
   secureBootEnabled bool
 }

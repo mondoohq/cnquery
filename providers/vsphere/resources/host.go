@@ -26,18 +26,23 @@ func (v *mqlVsphereHost) id() (string, error) {
 }
 
 // hostHardeningArgs extracts a few audit-relevant scalar fields from mo.HostSystem.
-// firewallEnabled reflects whether the default policy blocks unsolicited incoming
-// traffic; the host firewall service itself is always running on ESXi.
+// firewallIncomingBlocked / firewallOutgoingBlocked reflect the host firewall's
+// default policy; the firewall service itself is always running on ESXi.
 // secureBootEnabled is reported by HostCapability.UefiSecureBoot, which requires
 // vSphere 8.0.3+; on older hosts it's reported as false.
-func hostHardeningArgs(hostInfo *mo.HostSystem) (lockdownMode string, firewallEnabled bool, secureBootEnabled bool) {
+func hostHardeningArgs(hostInfo *mo.HostSystem) (lockdownMode string, firewallIncomingBlocked, firewallOutgoingBlocked, secureBootEnabled bool) {
 	if hostInfo == nil {
-		return "", false, false
+		return
 	}
 	if hostInfo.Config != nil {
 		lockdownMode = string(hostInfo.Config.LockdownMode)
-		if fw := hostInfo.Config.Firewall; fw != nil && fw.DefaultPolicy.IncomingBlocked != nil {
-			firewallEnabled = *fw.DefaultPolicy.IncomingBlocked
+		if fw := hostInfo.Config.Firewall; fw != nil {
+			if fw.DefaultPolicy.IncomingBlocked != nil {
+				firewallIncomingBlocked = *fw.DefaultPolicy.IncomingBlocked
+			}
+			if fw.DefaultPolicy.OutgoingBlocked != nil {
+				firewallOutgoingBlocked = *fw.DefaultPolicy.OutgoingBlocked
+			}
 		}
 	}
 	if hostInfo.Capability != nil && hostInfo.Capability.UefiSecureBoot != nil {
@@ -67,14 +72,15 @@ func initVsphereHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		name = hostInfo.Name
 	}
 
-	lockdownMode, firewallEnabled, secureBootEnabled := hostHardeningArgs(hostInfo)
+	lockdownMode, firewallIncomingBlocked, firewallOutgoingBlocked, secureBootEnabled := hostHardeningArgs(hostInfo)
 
 	args["moid"] = llx.StringData(h.Reference().Encode())
 	args["name"] = llx.StringData(name)
 	args["properties"] = llx.DictData(props)
 	args["inventoryPath"] = llx.StringData(h.InventoryPath)
 	args["lockdownMode"] = llx.StringData(lockdownMode)
-	args["firewallEnabled"] = llx.BoolData(firewallEnabled)
+	args["firewallIncomingBlocked"] = llx.BoolData(firewallIncomingBlocked)
+	args["firewallOutgoingBlocked"] = llx.BoolData(firewallOutgoingBlocked)
 	args["secureBootEnabled"] = llx.BoolData(secureBootEnabled)
 
 	return args, nil, nil

@@ -50,17 +50,18 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 			}
 		}
 
-		lockdownMode, firewallEnabled, secureBootEnabled := hostHardeningArgs(hostInfo)
+		lockdownMode, firewallIncomingBlocked, firewallOutgoingBlocked, secureBootEnabled := hostHardeningArgs(hostInfo)
 
 		mqlHost, err := CreateResource(runtime, "vsphere.host", map[string]*llx.RawData{
-			"moid":              llx.StringData(h.Reference().Encode()),
-			"name":              llx.StringData(name),
-			"properties":        llx.DictData(props),
-			"inventoryPath":     llx.StringData(h.InventoryPath),
-			"tags":              llx.ArrayData(convert.SliceAnyToInterface(tags), types.String),
-			"lockdownMode":      llx.StringData(lockdownMode),
-			"firewallEnabled":   llx.BoolData(firewallEnabled),
-			"secureBootEnabled": llx.BoolData(secureBootEnabled),
+			"moid":                    llx.StringData(h.Reference().Encode()),
+			"name":                    llx.StringData(name),
+			"properties":              llx.DictData(props),
+			"inventoryPath":           llx.StringData(h.InventoryPath),
+			"tags":                    llx.ArrayData(convert.SliceAnyToInterface(tags), types.String),
+			"lockdownMode":            llx.StringData(lockdownMode),
+			"firewallIncomingBlocked": llx.BoolData(firewallIncomingBlocked),
+			"firewallOutgoingBlocked": llx.BoolData(firewallOutgoingBlocked),
+			"secureBootEnabled":       llx.BoolData(secureBootEnabled),
 		})
 		if err != nil {
 			return nil, err

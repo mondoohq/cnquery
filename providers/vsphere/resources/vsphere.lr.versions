@@ -70,7 +70,8 @@ vsphere.host.acceptanceLevel 9.0.0
 vsphere.host.adapters 9.0.0
 vsphere.host.advancedSettings 9.0.0
 vsphere.host.distributedSwitch 9.0.0
-vsphere.host.firewallEnabled 13.0.10
+vsphere.host.firewallIncomingBlocked 13.0.11
+vsphere.host.firewallOutgoingBlocked 13.0.11
 vsphere.host.inventoryPath 9.0.0
 vsphere.host.kernelModules 9.0.0
 vsphere.host.lockdownMode 13.0.10

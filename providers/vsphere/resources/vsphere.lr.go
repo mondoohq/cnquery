@@ -399,8 +399,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.host.lockdownMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetLockdownMode()).ToDataRes(types.String)
 	},
-	"vsphere.host.firewallEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereHost).GetFirewallEnabled()).ToDataRes(types.Bool)
+	"vsphere.host.firewallIncomingBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetFirewallIncomingBlocked()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.firewallOutgoingBlocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetFirewallOutgoingBlocked()).ToDataRes(types.Bool)
 	},
 	"vsphere.host.secureBootEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetSecureBootEnabled()).ToDataRes(types.Bool)
@@ -895,8 +898,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereHost).LockdownMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"vsphere.host.firewallEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).FirewallEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"vsphere.host.firewallIncomingBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).FirewallIncomingBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallOutgoingBlocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).FirewallOutgoingBlocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.secureBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2032,26 +2039,27 @@ type mqlVsphereHost struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlVsphereHostInternal
-	Moid              plugin.TValue[string]
-	Name              plugin.TValue[string]
-	InventoryPath     plugin.TValue[string]
-	Properties        plugin.TValue[any]
-	StandardSwitch    plugin.TValue[[]any]
-	DistributedSwitch plugin.TValue[[]any]
-	Adapters          plugin.TValue[[]any]
-	Vmknics           plugin.TValue[[]any]
-	Packages          plugin.TValue[[]any]
-	AcceptanceLevel   plugin.TValue[string]
-	KernelModules     plugin.TValue[[]any]
-	AdvancedSettings  plugin.TValue[map[string]any]
-	Services          plugin.TValue[[]any]
-	Timezone          plugin.TValue[*mqlEsxiTimezone]
-	Ntp               plugin.TValue[*mqlEsxiNtpconfig]
-	Snmp              plugin.TValue[map[string]any]
-	Tags              plugin.TValue[[]any]
-	LockdownMode      plugin.TValue[string]
-	FirewallEnabled   plugin.TValue[bool]
-	SecureBootEnabled plugin.TValue[bool]
+	Moid                    plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	InventoryPath           plugin.TValue[string]
+	Properties              plugin.TValue[any]
+	StandardSwitch          plugin.TValue[[]any]
+	DistributedSwitch       plugin.TValue[[]any]
+	Adapters                plugin.TValue[[]any]
+	Vmknics                 plugin.TValue[[]any]
+	Packages                plugin.TValue[[]any]
+	AcceptanceLevel         plugin.TValue[string]
+	KernelModules           plugin.TValue[[]any]
+	AdvancedSettings        plugin.TValue[map[string]any]
+	Services                plugin.TValue[[]any]
+	Timezone                plugin.TValue[*mqlEsxiTimezone]
+	Ntp                     plugin.TValue[*mqlEsxiNtpconfig]
+	Snmp                    plugin.TValue[map[string]any]
+	Tags                    plugin.TValue[[]any]
+	LockdownMode            plugin.TValue[string]
+	FirewallIncomingBlocked plugin.TValue[bool]
+	FirewallOutgoingBlocked plugin.TValue[bool]
+	SecureBootEnabled       plugin.TValue[bool]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -2277,8 +2285,12 @@ func (c *mqlVsphereHost) GetLockdownMode() *plugin.TValue[string] {
 	return &c.LockdownMode
 }
 
-func (c *mqlVsphereHost) GetFirewallEnabled() *plugin.TValue[bool] {
-	return &c.FirewallEnabled
+func (c *mqlVsphereHost) GetFirewallIncomingBlocked() *plugin.TValue[bool] {
+	return &c.FirewallIncomingBlocked
+}
+
+func (c *mqlVsphereHost) GetFirewallOutgoingBlocked() *plugin.TValue[bool] {
+	return &c.FirewallOutgoingBlocked
 }
 
 func (c *mqlVsphereHost) GetSecureBootEnabled() *plugin.TValue[bool] {
