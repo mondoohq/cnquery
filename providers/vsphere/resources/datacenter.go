@@ -51,12 +51,11 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 	// CreateResource is held back to stage 2 because it touches the runtime
 	// resource cache, which we keep single-threaded.
 	staged := make([]stagedHost, len(vhosts))
-	g, _ := errgroup.WithContext(ctx)
+	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(discoveryConcurrency)
 	for i, h := range vhosts {
-		i, h := i, h
 		g.Go(func() error {
-			hostInfo, err := resourceclient.HostInfo(h)
+			hostInfo, err := resourceclient.HostInfo(gctx, h)
 			if err != nil {
 				return err
 			}
@@ -233,12 +232,11 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 		tags   []string
 	}
 	staged := make([]stagedVm, len(vms))
-	g, _ := errgroup.WithContext(ctx)
+	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(discoveryConcurrency)
 	for i, vm := range vms {
-		i, vm := i, vm
 		g.Go(func() error {
-			vmInfo, err := resourceclient.VmInfo(vm)
+			vmInfo, err := resourceclient.VmInfo(gctx, vm)
 			if err != nil {
 				return err
 			}

@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -153,7 +154,7 @@ func esxiHostProperties(conn *connection.VsphereConnection) (*object.HostSystem,
 	}
 
 	// todo sync with GetHosts
-	hostInfo, err := resourceclient.HostInfo(h)
+	hostInfo, err := resourceclient.HostInfo(context.Background(), h)
 	if err != nil {
 		return nil, nil, err
 	}

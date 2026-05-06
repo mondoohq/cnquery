@@ -17,8 +17,8 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 )
 
-func HostInfo(host *object.HostSystem) (*mo.HostSystem, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), DefaultAPITimeout)
+func HostInfo(ctx context.Context, host *object.HostSystem) (*mo.HostSystem, error) {
+	ctx, cancel := context.WithTimeout(ctx, DefaultAPITimeout)
 	defer cancel()
 	var props mo.HostSystem
 	if err := host.Properties(ctx, host.Reference(), nil, &props); err != nil {

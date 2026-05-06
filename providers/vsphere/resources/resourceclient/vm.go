@@ -14,8 +14,8 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 )
 
-func VmInfo(vm *object.VirtualMachine) (*mo.VirtualMachine, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), DefaultAPITimeout)
+func VmInfo(ctx context.Context, vm *object.VirtualMachine) (*mo.VirtualMachine, error) {
+	ctx, cancel := context.WithTimeout(ctx, DefaultAPITimeout)
 	defer cancel()
 	var props mo.VirtualMachine
 	if err := vm.Properties(ctx, vm.Reference(), nil, &props); err != nil {
@@ -29,7 +29,7 @@ func VmProperties(vm *mo.VirtualMachine) (map[string]any, error) {
 }
 
 func AdvancedSettings(vm *object.VirtualMachine) (map[string]any, error) {
-	vmInfo, err := VmInfo(vm)
+	vmInfo, err := VmInfo(context.Background(), vm)
 	if err != nil {
 		return nil, err
 	}
