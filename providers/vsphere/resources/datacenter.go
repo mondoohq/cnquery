@@ -15,7 +15,27 @@ import (
 	"go.mondoo.com/mql/v13/providers/vsphere/connection"
 	"go.mondoo.com/mql/v13/providers/vsphere/resources/resourceclient"
 	"go.mondoo.com/mql/v13/types"
+	"golang.org/x/sync/errgroup"
 )
+
+// discoveryConcurrency caps the number of concurrent per-asset SOAP calls we
+// fan out during host/VM enumeration. Higher = lower wall-clock for a single
+// discovery, but vCenter rate-limits concurrent sessions and the gain
+// flattens past ~16 workers.
+const discoveryConcurrency = 16
+
+// stagedHost holds the per-host data fetched in the concurrent stage of
+// newVsphereHostResources, before the sequential CreateResource pass.
+type stagedHost struct {
+	hostInfo                *mo.HostSystem
+	props                   map[string]any
+	name                    string
+	tags                    []string
+	lockdownMode            string
+	firewallIncomingBlocked bool
+	firewallOutgoingBlocked bool
+	secureBootEnabled       bool
+}
 
 func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Runtime, vhosts []*object.HostSystem) ([]any, error) {
 	conn := runtime.Connection.(*connection.VsphereConnection)
@@ -27,52 +47,63 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 	}
 	vapiTagsByMoid := BatchGetTags(ctx, hostRefs, vClient.Client.Client, conn.Conf)
 
-	mqlHosts := make([]any, len(vhosts))
+	// Stage 1 — concurrent fetch of per-host data (SOAP + JSON marshaling).
+	// CreateResource is held back to stage 2 because it touches the runtime
+	// resource cache, which we keep single-threaded.
+	staged := make([]stagedHost, len(vhosts))
+	g, _ := errgroup.WithContext(ctx)
+	g.SetLimit(discoveryConcurrency)
 	for i, h := range vhosts {
+		i, h := i, h
+		g.Go(func() error {
+			hostInfo, err := resourceclient.HostInfo(h)
+			if err != nil {
+				return err
+			}
+			props, err := resourceclient.HostProperties(hostInfo)
+			if err != nil {
+				return err
+			}
 
-		hostInfo, err := resourceclient.HostInfo(h)
-		if err != nil {
-			return nil, err
-		}
+			s := stagedHost{hostInfo: hostInfo, props: props}
+			if hostInfo != nil {
+				s.name = hostInfo.Name
+			}
+			if vapi := vapiTagsByMoid[h.Reference().Value]; len(vapi) > 0 {
+				s.tags = vapi
+			} else if hostInfo != nil {
+				s.tags = extractTagKeys(hostInfo.Tag)
+			}
+			s.lockdownMode, s.firewallIncomingBlocked, s.firewallOutgoingBlocked, s.secureBootEnabled = hostHardeningArgs(hostInfo)
+			staged[i] = s
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
 
-		props, err := resourceclient.HostProperties(hostInfo)
-		if err != nil {
-			return nil, err
-		}
-
-		var name string
-		if hostInfo != nil {
-			name = hostInfo.Name
-		}
-
-		var tags []string
-		if vapi := vapiTagsByMoid[h.Reference().Value]; len(vapi) > 0 {
-			tags = vapi
-		} else if hostInfo != nil {
-			tags = extractTagKeys(hostInfo.Tag)
-		}
-
-		lockdownMode, firewallIncomingBlocked, firewallOutgoingBlocked, secureBootEnabled := hostHardeningArgs(hostInfo)
-
+	// Stage 2 — sequential CreateResource pass.
+	mqlHosts := make([]any, len(vhosts))
+	for i, s := range staged {
+		h := vhosts[i]
 		mqlHost, err := CreateResource(runtime, "vsphere.host", map[string]*llx.RawData{
 			"moid":                    llx.StringData(h.Reference().Encode()),
-			"name":                    llx.StringData(name),
-			"properties":              llx.DictData(props),
+			"name":                    llx.StringData(s.name),
+			"properties":              llx.DictData(s.props),
 			"inventoryPath":           llx.StringData(h.InventoryPath),
-			"tags":                    llx.ArrayData(convert.SliceAnyToInterface(tags), types.String),
-			"lockdownMode":            llx.StringData(lockdownMode),
-			"firewallIncomingBlocked": llx.BoolData(firewallIncomingBlocked),
-			"firewallOutgoingBlocked": llx.BoolData(firewallOutgoingBlocked),
-			"secureBootEnabled":       llx.BoolData(secureBootEnabled),
+			"tags":                    llx.ArrayData(convert.SliceAnyToInterface(s.tags), types.String),
+			"lockdownMode":            llx.StringData(s.lockdownMode),
+			"firewallIncomingBlocked": llx.BoolData(s.firewallIncomingBlocked),
+			"firewallOutgoingBlocked": llx.BoolData(s.firewallOutgoingBlocked),
+			"secureBootEnabled":       llx.BoolData(s.secureBootEnabled),
 		})
 		if err != nil {
 			return nil, err
 		}
-		mqlHost.(*mqlVsphereHost).host = hostInfo
-
+		mqlHost.(*mqlVsphereHost).host = s.hostInfo
 		mqlHosts[i] = mqlHost
 	}
-
 	return mqlHosts, nil
 }
 
@@ -188,34 +219,69 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 		return nil, err
 	}
 
+	ctx := context.Background()
 	vmRefs := make([]mo.Reference, len(vms))
 	for i, vm := range vms {
 		vmRefs[i] = vm.Reference()
 	}
-	vapiTagsByMoid := BatchGetTags(context.Background(), vmRefs, vClient.Client.Client, conn.Conf)
+	vapiTagsByMoid := BatchGetTags(ctx, vmRefs, vClient.Client.Client, conn.Conf)
 
-	mqlVms := make([]any, len(vms))
+	// Stage 1 — concurrent VmInfo + VmProperties for each VM.
+	type stagedVm struct {
+		vmInfo *mo.VirtualMachine
+		props  map[string]any
+		tags   []string
+	}
+	staged := make([]stagedVm, len(vms))
+	g, _ := errgroup.WithContext(ctx)
+	g.SetLimit(discoveryConcurrency)
 	for i, vm := range vms {
-		vmInfo, err := resourceclient.VmInfo(vm)
-		if err != nil {
-			return nil, err
-		}
+		i, vm := i, vm
+		g.Go(func() error {
+			vmInfo, err := resourceclient.VmInfo(vm)
+			if err != nil {
+				return err
+			}
+			props, err := resourceclient.VmProperties(vmInfo)
+			if err != nil {
+				return err
+			}
 
-		var tags []string
-		if vapi := vapiTagsByMoid[vm.Reference().Value]; len(vapi) > 0 {
-			tags = vapi
-		} else if vmInfo != nil {
-			tags = extractTagKeys(vmInfo.Tag)
-		}
-
-		mqlVm, err := newMqlVm(v.MqlRuntime, vm, vmInfo, tags)
-		if err != nil {
-			return nil, err
-		}
-
-		mqlVms[i] = mqlVm
+			s := stagedVm{vmInfo: vmInfo, props: props}
+			if vapi := vapiTagsByMoid[vm.Reference().Value]; len(vapi) > 0 {
+				s.tags = vapi
+			} else if vmInfo != nil {
+				s.tags = extractTagKeys(vmInfo.Tag)
+			}
+			staged[i] = s
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
+	// Stage 2 — sequential CreateResource pass.
+	mqlVms := make([]any, len(vms))
+	for i, s := range staged {
+		vm := vms[i]
+		var name string
+		if s.vmInfo != nil && s.vmInfo.Config != nil {
+			name = s.vmInfo.Config.Name
+		}
+		mqlVm, err := CreateResource(v.MqlRuntime, "vsphere.vm", map[string]*llx.RawData{
+			"moid":          llx.StringData(vm.Reference().Encode()),
+			"name":          llx.StringData(name),
+			"properties":    llx.DictData(s.props),
+			"inventoryPath": llx.StringData(vm.InventoryPath),
+			"tags":          llx.ArrayData(convert.SliceAnyToInterface(s.tags), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlVm.(*mqlVsphereVm).vm = s.vmInfo
+		mqlVms[i] = mqlVm
+	}
 	return mqlVms, nil
 }
 
