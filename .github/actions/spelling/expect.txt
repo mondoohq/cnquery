@@ -231,6 +231,7 @@ iap
 IBgt
 iccid
 identitycenter
+identitysource
 idps
 ilb
 imds
@@ -287,6 +288,7 @@ limitrange
 linuxbrew
 linuxefi
 liveanalytics
+localos
 loggingservice
 logon
 logpull
@@ -336,6 +338,7 @@ myproject
 myvendor
 naflags
 natgateway
+nativead
 NCUs
 netbios
 netin
@@ -499,6 +502,7 @@ spo
 sqli
 sqlimatchstatement
 sqlserver
+srp
 sslv
 Sspr
 stdio
