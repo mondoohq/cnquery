@@ -8,7 +8,7 @@ require (
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
-	github.com/vmware/govmomi v0.47.1
+	github.com/vmware/govmomi v0.53.1
 	go.mondoo.com/mondoo-go v0.0.0-20260430122853-c770cea4fd7f
 	go.mondoo.com/mql/v13 v13.8.0
 	golang.org/x/sync v0.20.0
