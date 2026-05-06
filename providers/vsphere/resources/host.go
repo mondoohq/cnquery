@@ -6,9 +6,11 @@ package resources
 import (
 	"context"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/vmware/govmomi/vim25/mo"
+	vimtypes "github.com/vmware/govmomi/vim25/types"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -494,6 +496,120 @@ func (v *mqlVsphereHost) snmp() (map[string]any, error) {
 		return nil, err
 	}
 	return esxiClient.Snmp()
+}
+
+// firewallRulesets exposes the per-service ESXi firewall ruleset definitions
+// from mo.HostSystem.Config.Firewall (already fetched via HostInfo). Each
+// ruleset bundles a per-service rule list, an enabled flag, and the
+// allowed-IP scope; the global default-deny posture lives on
+// vsphere.host.firewallIncomingBlocked / firewallOutgoingBlocked.
+func (v *mqlVsphereHost) firewallRulesets() ([]any, error) {
+	if v.host == nil || v.host.Config == nil || v.host.Config.Firewall == nil {
+		return []any{}, nil
+	}
+	hostPath := ""
+	if v.InventoryPath.Error == nil {
+		hostPath = v.InventoryPath.Data
+	}
+
+	mqlRulesets := make([]any, 0, len(v.host.Config.Firewall.Ruleset))
+	for _, rs := range v.host.Config.Firewall.Ruleset {
+		rsId := hostPath + "/firewall/" + rs.Key
+
+		allIp := false
+		var allowedIPs []any
+		var allowedNetworks []any
+		if rs.AllowedHosts != nil {
+			allIp = rs.AllowedHosts.AllIp
+			for _, ip := range rs.AllowedHosts.IpAddress {
+				allowedIPs = append(allowedIPs, ip)
+			}
+			for _, n := range rs.AllowedHosts.IpNetwork {
+				allowedNetworks = append(allowedNetworks, map[string]any{
+					"network":      n.Network,
+					"prefixLength": int64(n.PrefixLength),
+				})
+			}
+		}
+
+		mqlRules := make([]any, len(rs.Rule))
+		for i, r := range rs.Rule {
+			ruleId := rsId + "/" + strconv.Itoa(i)
+			mqlRule, err := CreateResource(v.MqlRuntime, "esxi.firewallRule", map[string]*llx.RawData{
+				"__id":      llx.StringData(ruleId),
+				"id":        llx.StringData(ruleId),
+				"port":      llx.IntData(int64(r.Port)),
+				"endPort":   llx.IntData(int64(r.EndPort)),
+				"direction": llx.StringData(string(r.Direction)),
+				"portType":  llx.StringData(string(r.PortType)),
+				"protocol":  llx.StringData(r.Protocol),
+			})
+			if err != nil {
+				return nil, err
+			}
+			mqlRules[i] = mqlRule
+		}
+
+		mqlRs, err := CreateResource(v.MqlRuntime, "esxi.firewallRuleset", map[string]*llx.RawData{
+			"__id":               llx.StringData(rsId),
+			"id":                 llx.StringData(rsId),
+			"key":                llx.StringData(rs.Key),
+			"label":              llx.StringData(rs.Label),
+			"enabled":            llx.BoolData(rs.Enabled),
+			"required":           llx.BoolData(rs.Required),
+			"service":            llx.StringData(rs.Service),
+			"allIpsAllowed":      llx.BoolData(allIp),
+			"allowedIpAddresses": llx.ArrayData(allowedIPs, types.String),
+			"allowedIpNetworks":  llx.ArrayData(allowedNetworks, types.Dict),
+			"rules":              llx.ArrayData(mqlRules, types.Resource("esxi.firewallRule")),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlRulesets = append(mqlRulesets, mqlRs)
+	}
+	return mqlRulesets, nil
+}
+
+// iscsiAdapters lists iSCSI host bus adapters from
+// mo.HostSystem.Config.StorageDevice.HostBusAdapter, exposing the IQN and
+// CHAP authentication posture. The CHAP secret itself is intentionally NOT
+// exposed — only the policy and the username.
+func (v *mqlVsphereHost) iscsiAdapters() ([]any, error) {
+	if v.host == nil || v.host.Config == nil || v.host.Config.StorageDevice == nil {
+		return []any{}, nil
+	}
+	hostPath := ""
+	if v.InventoryPath.Error == nil {
+		hostPath = v.InventoryPath.Data
+	}
+
+	mqlAdapters := []any{}
+	for _, ba := range v.host.Config.StorageDevice.HostBusAdapter {
+		hba, ok := ba.(*vimtypes.HostInternetScsiHba)
+		if !ok || hba == nil {
+			continue
+		}
+		auth := hba.AuthenticationProperties
+		id := hostPath + "/iscsi/" + hba.Device
+		mqlAdapter, err := CreateResource(v.MqlRuntime, "esxi.iscsiAdapter", map[string]*llx.RawData{
+			"__id":                         llx.StringData(id),
+			"id":                           llx.StringData(id),
+			"device":                       llx.StringData(hba.Device),
+			"iScsiName":                    llx.StringData(hba.IScsiName),
+			"iScsiAlias":                   llx.StringData(hba.IScsiAlias),
+			"chapAuthEnabled":              llx.BoolData(auth.ChapAuthEnabled),
+			"chapAuthenticationType":       llx.StringData(auth.ChapAuthenticationType),
+			"chapName":                     llx.StringData(auth.ChapName),
+			"mutualChapAuthenticationType": llx.StringData(auth.MutualChapAuthenticationType),
+			"mutualChapName":               llx.StringData(auth.MutualChapName),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlAdapters = append(mqlAdapters, mqlAdapter)
+	}
+	return mqlAdapters, nil
 }
 
 func (v *mqlVsphereHost) certificate() (*mqlEsxiCertificate, error) {

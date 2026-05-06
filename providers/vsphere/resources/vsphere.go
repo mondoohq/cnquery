@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/vmware/govmomi/crypto"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"go.mondoo.com/mql/v13/llx"
@@ -132,6 +133,49 @@ func (v *mqlVsphere) roles() ([]any, error) {
 		mqlRoles[i] = mqlRole
 	}
 	return mqlRoles, nil
+}
+
+func (v *mqlVsphere) kmsClusters() ([]any, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	mgr, err := crypto.GetManagerKmip(conn.Client().Client)
+	if err != nil {
+		// CryptoManager isn't available on direct ESXi connections; return
+		// an empty list rather than an error so policies don't break.
+		if errors.Is(err, object.ErrNotSupported) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("failed to get KMIP manager: %w", err)
+	}
+
+	clusters, err := mgr.ListKmipServers(context.Background(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list KMIP servers: %w", err)
+	}
+
+	mqlClusters := make([]any, len(clusters))
+	for i, c := range clusters {
+		var servers []any
+		for _, s := range c.Servers {
+			servers = append(servers, map[string]any{
+				"name":    s.Name,
+				"address": s.Address,
+				"port":    int64(s.Port),
+			})
+		}
+		mqlCluster, err := CreateResource(v.MqlRuntime, "vsphere.kmsCluster", map[string]*llx.RawData{
+			"clusterId":      llx.StringData(c.ClusterId.Id),
+			"name":           llx.StringData(c.ClusterId.Id),
+			"useAsDefault":   llx.BoolData(c.UseAsDefault),
+			"managementType": llx.StringData(c.ManagementType),
+			"serverCount":    llx.IntData(int64(len(c.Servers))),
+			"servers":        llx.ArrayData(servers, types.Dict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlClusters[i] = mqlCluster
+	}
+	return mqlClusters, nil
 }
 
 func (v *mqlEsxi) id() (string, error) {
@@ -322,4 +366,20 @@ func (v *mqlVsphereDatastore) id() (string, error) {
 
 func (v *mqlEsxiCertificate) id() (string, error) {
 	return v.Id.Data, nil
+}
+
+func (v *mqlEsxiFirewallRuleset) id() (string, error) {
+	return v.Id.Data, nil
+}
+
+func (v *mqlEsxiFirewallRule) id() (string, error) {
+	return v.Id.Data, nil
+}
+
+func (v *mqlEsxiIscsiAdapter) id() (string, error) {
+	return v.Id.Data, nil
+}
+
+func (v *mqlVsphereKmsCluster) id() (string, error) {
+	return v.ClusterId.Data, nil
 }

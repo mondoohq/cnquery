@@ -90,6 +90,27 @@ vsphere {
   datacenters() []vsphere.datacenter
   // Authorization roles defined in vCenter (RBAC role catalog)
   roles() []vsphere.role
+  // KMIP key-management clusters registered with vCenter (drive VM encryption / vTPM)
+  kmsClusters() []vsphere.kmsCluster
+}
+
+// vSphere KMIP cluster — a registered key-management server cluster used for
+// VM encryption and virtual TPM. KMIP servers are configured at the vCenter
+// level (not per host); each cluster groups one or more KMS servers under a
+// single cluster ID.
+private vsphere.kmsCluster @defaults("name useAsDefault managementType") {
+  // Cluster identifier (vCenter-assigned)
+  clusterId string
+  // Display name of the cluster
+  name string
+  // Whether this cluster is the vCenter default for new encryption keys
+  useAsDefault bool
+  // Management type (vCenter, trustAuthority, nativeKeyProvider, externalKeyProvider)
+  managementType string
+  // Number of KMS servers configured under this cluster
+  serverCount int
+  // KMS server entries. Each is a dict with `name`, `address`, and `port` (no secret material exposed).
+  servers []dict
 }
 
 // vSphere authorization role (RBAC role definition from AuthorizationManager)
@@ -238,6 +259,76 @@ private vsphere.host @defaults("moid name") {
   cpuMhz int
   // Number of physical CPU cores across all sockets
   numCpuCores int
+  // ESXi firewall rulesets — per-service rule definitions (CIM, SSH, NTP, vMotion, etc.)
+  firewallRulesets() []esxi.firewallRuleset
+  // iSCSI host bus adapters configured on the host (zero entries if iSCSI is not in use)
+  iscsiAdapters() []esxi.iscsiAdapter
+}
+
+// ESXi firewall ruleset — one entry per network service (e.g., CIMHttpServer,
+// DVSSync, sshServer). Models the per-service rule definitions and their
+// allowed-IP scope; the global default-deny posture lives on
+// vsphere.host.firewallIncomingBlocked / firewallOutgoingBlocked.
+private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") {
+  // Identifier (host inventory path + ruleset key)
+  id string
+  // Service identifier (e.g., CIMHttpServer, DVSSync, sshServer)
+  key string
+  // Human-readable service label
+  label string
+  // Whether the ruleset is currently enabled
+  enabled bool
+  // Whether the ruleset is required by ESXi and cannot be disabled
+  required bool
+  // Backing service name (matches an esxi.service.key); empty if no daemon service
+  service string
+  // Whether traffic is allowed from any IP. When false, callers should consult allowedIpAddresses / allowedIpNetworks.
+  allIpsAllowed bool
+  // Specific IP addresses allowed to reach the service (only populated when allIpsAllowed == false)
+  allowedIpAddresses []string
+  // Specific IP networks allowed (only populated when allIpsAllowed == false). Each entry is a dict with `network` and `prefixLength`.
+  allowedIpNetworks []dict
+  // Port and protocol rules opened by this ruleset
+  rules []esxi.firewallRule
+}
+
+// Single port/protocol rule within an esxi.firewallRuleset.
+private esxi.firewallRule @defaults("port direction protocol") {
+  // Identifier (parent ruleset id + rule index)
+  id string
+  // Port number (or start port for a range)
+  port int
+  // End port (only meaningful when the rule covers a range; 0 for single-port rules)
+  endPort int
+  // Direction (inbound, outbound)
+  direction string
+  // Port type (src, dst)
+  portType string
+  // Protocol (tcp, udp)
+  protocol string
+}
+
+// ESXi iSCSI host bus adapter. Exposes the IQN and CHAP authentication
+// posture (policy + username only — secrets are intentionally not exposed).
+private esxi.iscsiAdapter @defaults("device iScsiName") {
+  // Identifier (host inventory path + device name)
+  id string
+  // HBA device name (e.g., vmhba65)
+  device string
+  // iSCSI Qualified Name (IQN)
+  iScsiName string
+  // Optional alias
+  iScsiAlias string
+  // Whether CHAP authentication is enabled at all
+  chapAuthEnabled bool
+  // CHAP authentication policy (chapDiscouraged, chapPreferred, chapRequired, chapProhibited)
+  chapAuthenticationType string
+  // CHAP username (the secret is intentionally NOT exposed)
+  chapName string
+  // Mutual CHAP authentication policy (chapProhibited, chapRequired, ...)
+  mutualChapAuthenticationType string
+  // Mutual CHAP username
+  mutualChapName string
 }
 
 // ESXi host SSL/TLS certificate (from HostCertificateManager)
