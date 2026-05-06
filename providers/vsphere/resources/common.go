@@ -11,7 +11,7 @@ import (
 	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/vapi/tags"
 	"github.com/vmware/govmomi/vim25"
-	"github.com/vmware/govmomi/vim25/types"
+	"github.com/vmware/govmomi/vim25/mo"
 	vmwaretypes "github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -26,45 +26,57 @@ func extractTagKeys(tags []vmwaretypes.Tag) []string {
 	return tagKeys
 }
 
-// GetTags retrieves tags for a host system using the vSphere vAPI
-// If the vAPI is not available, it will return an empty array instead of an error.
-// This maintains backward compatibility with vSphere environments that don't use tags.
-func GetTags(ctx context.Context, ref types.ManagedObjectReference, client *vim25.Client, conf *inventory.Config) []string {
-	// Create vAPI REST client
-	restClient := rest.NewClient(client)
+// BatchGetTags fetches the attached vAPI tags for every reference in `refs`
+// using a single REST login and a single batched API call, caching category
+// lookups across the batch. The returned map is keyed by ref.Reference().Value
+// (the MOID) and holds tag strings formatted as "category:tag".
+//
+// On any error (login failure, missing credentials, vAPI unavailable) it
+// returns an empty map — callers should fall back to mo.ManagedEntity.Tag,
+// which preserves the previous "vAPI is best-effort" behavior.
+func BatchGetTags(ctx context.Context, refs []mo.Reference, client *vim25.Client, conf *inventory.Config) map[string][]string {
+	out := map[string][]string{}
+	if len(refs) == 0 {
+		return out
+	}
 
-	// Get credentials from connection config
 	creds, err := vault.GetPassword(conf.Credentials)
 	if err != nil {
-		return []string{}
+		return out
 	}
 
-	userInfo := url.UserPassword(creds.User, string(creds.Secret))
-	err = restClient.Login(ctx, userInfo)
-	if err != nil {
-		return []string{}
+	restClient := rest.NewClient(client)
+	if err := restClient.Login(ctx, url.UserPassword(creds.User, string(creds.Secret))); err != nil {
+		return out
 	}
+	defer restClient.Logout(ctx)
 
 	tagManager := tags.NewManager(restClient)
 
-	// Get attached tags for the host
-	attachedTags, err := tagManager.GetAttachedTags(ctx, ref)
+	attached, err := tagManager.GetAttachedTagsOnObjects(ctx, refs)
 	if err != nil {
-		return []string{}
+		return out
 	}
 
-	// Convert tags to string format: "category:tag"
-	tagStrings := make([]string, len(attachedTags))
-	for i, tag := range attachedTags {
-		// Get category information
-		category, err := tagManager.GetCategory(ctx, tag.CategoryID)
-		if err != nil {
-			// If we can't get category, just use tag name
-			tagStrings[i] = tag.Name
-			continue
+	categoryNames := map[string]string{}
+	for _, entry := range attached {
+		moid := entry.ObjectID.Reference().Value
+		strs := make([]string, 0, len(entry.Tags))
+		for _, tag := range entry.Tags {
+			catName, ok := categoryNames[tag.CategoryID]
+			if !ok {
+				if cat, err := tagManager.GetCategory(ctx, tag.CategoryID); err == nil {
+					catName = cat.Name
+				}
+				categoryNames[tag.CategoryID] = catName
+			}
+			if catName == "" {
+				strs = append(strs, tag.Name)
+			} else {
+				strs = append(strs, fmt.Sprintf("%s:%s", catName, tag.Name))
+			}
 		}
-		tagStrings[i] = fmt.Sprintf("%s:%s", category.Name, tag.Name)
+		out[moid] = strs
 	}
-
-	return tagStrings
+	return out
 }

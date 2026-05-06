@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/vim25/mo"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -17,6 +18,15 @@ import (
 )
 
 func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Runtime, vhosts []*object.HostSystem) ([]any, error) {
+	conn := runtime.Connection.(*connection.VsphereConnection)
+	ctx := context.Background()
+
+	hostRefs := make([]mo.Reference, len(vhosts))
+	for i, h := range vhosts {
+		hostRefs[i] = h.Reference()
+	}
+	vapiTagsByMoid := BatchGetTags(ctx, hostRefs, vClient.Client.Client, conn.Conf)
+
 	mqlHosts := make([]any, len(vhosts))
 	for i, h := range vhosts {
 
@@ -34,19 +44,10 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 		var tags []string
 		if hostInfo != nil {
 			name = hostInfo.Name
-			simpleTags := extractTagKeys(hostInfo.Tag)
-
-			// Get vAPI tags using the connection
-			conn := runtime.Connection.(*connection.VsphereConnection)
-			ctx := context.Background()
-
-			// Get vAPI tags using the connection config
-			vapiTags := GetTags(ctx, h.Reference(), vClient.Client.Client, conn.Conf)
-			// Use vAPI tags if available, otherwise use simple tags
-			if len(vapiTags) > 0 {
-				tags = vapiTags
+			if vapi := vapiTagsByMoid[h.Reference().Value]; len(vapi) > 0 {
+				tags = vapi
 			} else {
-				tags = simpleTags
+				tags = extractTagKeys(hostInfo.Tag)
 			}
 		}
 
@@ -186,6 +187,12 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 		return nil, err
 	}
 
+	vmRefs := make([]mo.Reference, len(vms))
+	for i, vm := range vms {
+		vmRefs[i] = vm.Reference()
+	}
+	vapiTagsByMoid := BatchGetTags(context.Background(), vmRefs, vClient.Client.Client, conn.Conf)
+
 	mqlVms := make([]any, len(vms))
 	for i, vm := range vms {
 		vmInfo, err := resourceclient.VmInfo(vm)
@@ -193,7 +200,14 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 			return nil, err
 		}
 
-		mqlVm, err := newMqlVm(v.MqlRuntime, vm, vmInfo)
+		var tags []string
+		if vapi := vapiTagsByMoid[vm.Reference().Value]; len(vapi) > 0 {
+			tags = vapi
+		} else if vmInfo != nil {
+			tags = extractTagKeys(vmInfo.Tag)
+		}
+
+		mqlVm, err := newMqlVm(v.MqlRuntime, vm, vmInfo, tags)
 		if err != nil {
 			return nil, err
 		}
