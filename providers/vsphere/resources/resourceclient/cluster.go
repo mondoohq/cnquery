@@ -29,8 +29,10 @@ func (c *Client) Cluster(path string) (*object.ClusterComputeResource, error) {
 	return finder.ClusterComputeResource(context.Background(), path)
 }
 
-func clusterProperties(cluster *object.ClusterComputeResource) (*mo.ClusterComputeResource, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), DefaultAPITimeout)
+// ClusterInfo loads the typed mo.ClusterComputeResource for a cluster,
+// applying DefaultAPITimeout. Mirrors HostInfo and VmInfo.
+func ClusterInfo(ctx context.Context, cluster *object.ClusterComputeResource) (*mo.ClusterComputeResource, error) {
+	ctx, cancel := context.WithTimeout(ctx, DefaultAPITimeout)
 	defer cancel()
 	var props mo.ClusterComputeResource
 	if err := cluster.Properties(ctx, cluster.Reference(), nil, &props); err != nil {
@@ -40,7 +42,7 @@ func clusterProperties(cluster *object.ClusterComputeResource) (*mo.ClusterCompu
 }
 
 func (c *Client) ClusterProperties(cluster *object.ClusterComputeResource) (map[string]any, error) {
-	props, err := clusterProperties(cluster)
+	props, err := ClusterInfo(context.Background(), cluster)
 	if err != nil {
 		return nil, err
 	}

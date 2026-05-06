@@ -171,15 +171,12 @@ func (v *mqlVsphereDatacenter) clusters() ([]any, error) {
 
 	mqlClusters := make([]any, len(vCluster))
 	for i, c := range vCluster {
-		ctx, cancel := context.WithTimeout(context.Background(), resourceclient.DefaultAPITimeout)
-		var moc mo.ClusterComputeResource
-		err := c.Properties(ctx, c.Reference(), nil, &moc)
-		cancel()
+		moc, err := resourceclient.ClusterInfo(context.Background(), c)
 		if err != nil {
 			return nil, err
 		}
 
-		props, err := resourceclient.PropertiesToDict(&moc)
+		props, err := resourceclient.PropertiesToDict(moc)
 		if err != nil {
 			return nil, err
 		}
