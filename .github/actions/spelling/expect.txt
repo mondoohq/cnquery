@@ -569,7 +569,9 @@ virtualmachine
 vlans
 vllm
 vmbr
+vmca
 vmdk
+VMFS
 VMID
 vmstate
 vnet
@@ -580,6 +582,7 @@ vtpm
 vulnerabilityassessmentsettings
 vulnmgmt
 vulns
+VVOL
 vztmpl
 webauthn
 webcam
