@@ -153,7 +153,13 @@ func (v *mqlVsphere) permissions() ([]any, error) {
 			entityMoid = p.Entity.Encode()
 			entityType = p.Entity.Type
 		}
-		id := entityMoid + ":" + p.Principal
+		// Principal kind disambiguates a user named "alice" from a group named "alice"
+		// granted on the same entity — vSphere stores those as two distinct permissions.
+		principalKind := "user"
+		if p.Group {
+			principalKind = "group"
+		}
+		id := entityMoid + ":" + principalKind + ":" + p.Principal
 		mqlPerm, err := CreateResource(v.MqlRuntime, "vsphere.permission", map[string]*llx.RawData{
 			"__id":       llx.StringData(id),
 			"id":         llx.StringData(id),

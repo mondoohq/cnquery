@@ -102,7 +102,7 @@ vsphere {
 // to a role on a specific managed entity, optionally propagated down the
 // inventory hierarchy.
 private vsphere.permission @defaults("principal entityType entityMoid") {
-  // Identifier (entity moid + principal)
+  // Identifier (entity moid + principal kind + principal)
   id string
   // Managed object ID of the entity the permission is granted on
   entityMoid string
