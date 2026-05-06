@@ -405,6 +405,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.datastore.vmfsVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatastore).GetVmfsVersion()).ToDataRes(types.String)
 	},
+	"vsphere.datastore.ssd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetSsd()).ToDataRes(types.Bool)
+	},
 	"vsphere.cluster.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetMoid()).ToDataRes(types.String)
 	},
@@ -422,6 +425,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.cluster.vsanEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetVsanEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.haEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCluster).GetHaEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.drsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCluster).GetDrsEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.cluster.evcMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCluster).GetEvcMode()).ToDataRes(types.String)
 	},
 	"vsphere.host.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetMoid()).ToDataRes(types.String)
@@ -561,6 +573,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vm.memoryHotAddEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetMemoryHotAddEnabled()).ToDataRes(types.Bool)
 	},
+	"vsphere.vm.powerState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetPowerState()).ToDataRes(types.String)
+	},
+	"vsphere.vm.annotation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetAnnotation()).ToDataRes(types.String)
+	},
+	"vsphere.vm.createDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetCreateDate()).ToDataRes(types.Time)
+	},
+	"vsphere.vm.numSnapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetNumSnapshots()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.vmwareToolsRunning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetVmwareToolsRunning()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.vmwareToolsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetVmwareToolsVersion()).ToDataRes(types.String)
+	},
+	"vsphere.vm.guestIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetGuestIpAddress()).ToDataRes(types.String)
+	},
+	"vsphere.vm.guestHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetGuestHostname()).ToDataRes(types.String)
+	},
 	"vsphere.vswitch.standard.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchStandard).GetName()).ToDataRes(types.String)
 	},
@@ -599,6 +635,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vswitch.portgroup.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchPortgroup).GetProperties()).ToDataRes(types.Dict)
+	},
+	"vsphere.vswitch.portgroup.vlanId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetVlanId()).ToDataRes(types.Int)
 	},
 	"vsphere.vmnic.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVmnic).GetName()).ToDataRes(types.String)
@@ -1021,6 +1060,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereDatastore).VmfsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"vsphere.datastore.ssd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).Ssd, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"vsphere.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).__id, ok = v.Value.(string)
 		return
@@ -1047,6 +1090,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.cluster.vsanEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).VsanEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.haEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCluster).HaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.drsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCluster).DrsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.evcMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCluster).EvcMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1245,6 +1300,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereVm).MemoryHotAddEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"vsphere.vm.powerState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).PowerState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.annotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).Annotation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.createDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).CreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.numSnapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).NumSnapshots, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.vmwareToolsRunning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).VmwareToolsRunning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.vmwareToolsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).VmwareToolsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.guestIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).GuestIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.guestHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).GuestHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"vsphere.vswitch.standard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchStandard).__id, ok = v.Value.(string)
 		return
@@ -1307,6 +1394,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vswitch.portgroup.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchPortgroup).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.vlanId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).VlanId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"vsphere.vmnic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2385,6 +2476,7 @@ type mqlVsphereDatastore struct {
 	Url                plugin.TValue[string]
 	InventoryPath      plugin.TValue[string]
 	VmfsVersion        plugin.TValue[string]
+	Ssd                plugin.TValue[bool]
 }
 
 // createVsphereDatastore creates a new instance of this resource
@@ -2472,6 +2564,10 @@ func (c *mqlVsphereDatastore) GetVmfsVersion() *plugin.TValue[string] {
 	return &c.VmfsVersion
 }
 
+func (c *mqlVsphereDatastore) GetSsd() *plugin.TValue[bool] {
+	return &c.Ssd
+}
+
 // mqlVsphereCluster for the vsphere.cluster resource
 type mqlVsphereCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -2483,6 +2579,9 @@ type mqlVsphereCluster struct {
 	Properties    plugin.TValue[any]
 	Hosts         plugin.TValue[[]any]
 	VsanEnabled   plugin.TValue[bool]
+	HaEnabled     plugin.TValue[bool]
+	DrsEnabled    plugin.TValue[bool]
+	EvcMode       plugin.TValue[string]
 }
 
 // createVsphereCluster creates a new instance of this resource
@@ -2556,6 +2655,18 @@ func (c *mqlVsphereCluster) GetHosts() *plugin.TValue[[]any] {
 
 func (c *mqlVsphereCluster) GetVsanEnabled() *plugin.TValue[bool] {
 	return &c.VsanEnabled
+}
+
+func (c *mqlVsphereCluster) GetHaEnabled() *plugin.TValue[bool] {
+	return &c.HaEnabled
+}
+
+func (c *mqlVsphereCluster) GetDrsEnabled() *plugin.TValue[bool] {
+	return &c.DrsEnabled
+}
+
+func (c *mqlVsphereCluster) GetEvcMode() *plugin.TValue[string] {
+	return &c.EvcMode
 }
 
 // mqlVsphereHost for the vsphere.host resource
@@ -2955,6 +3066,14 @@ type mqlVsphereVm struct {
 	MemoryMB            plugin.TValue[int64]
 	CpuHotAddEnabled    plugin.TValue[bool]
 	MemoryHotAddEnabled plugin.TValue[bool]
+	PowerState          plugin.TValue[string]
+	Annotation          plugin.TValue[string]
+	CreateDate          plugin.TValue[*time.Time]
+	NumSnapshots        plugin.TValue[int64]
+	VmwareToolsRunning  plugin.TValue[bool]
+	VmwareToolsVersion  plugin.TValue[string]
+	GuestIpAddress      plugin.TValue[string]
+	GuestHostname       plugin.TValue[string]
 }
 
 // createVsphereVm creates a new instance of this resource
@@ -3046,6 +3165,38 @@ func (c *mqlVsphereVm) GetCpuHotAddEnabled() *plugin.TValue[bool] {
 
 func (c *mqlVsphereVm) GetMemoryHotAddEnabled() *plugin.TValue[bool] {
 	return &c.MemoryHotAddEnabled
+}
+
+func (c *mqlVsphereVm) GetPowerState() *plugin.TValue[string] {
+	return &c.PowerState
+}
+
+func (c *mqlVsphereVm) GetAnnotation() *plugin.TValue[string] {
+	return &c.Annotation
+}
+
+func (c *mqlVsphereVm) GetCreateDate() *plugin.TValue[*time.Time] {
+	return &c.CreateDate
+}
+
+func (c *mqlVsphereVm) GetNumSnapshots() *plugin.TValue[int64] {
+	return &c.NumSnapshots
+}
+
+func (c *mqlVsphereVm) GetVmwareToolsRunning() *plugin.TValue[bool] {
+	return &c.VmwareToolsRunning
+}
+
+func (c *mqlVsphereVm) GetVmwareToolsVersion() *plugin.TValue[string] {
+	return &c.VmwareToolsVersion
+}
+
+func (c *mqlVsphereVm) GetGuestIpAddress() *plugin.TValue[string] {
+	return &c.GuestIpAddress
+}
+
+func (c *mqlVsphereVm) GetGuestHostname() *plugin.TValue[string] {
+	return &c.GuestHostname
 }
 
 // mqlVsphereVswitchStandard for the vsphere.vswitch.standard resource
@@ -3224,6 +3375,7 @@ type mqlVsphereVswitchPortgroup struct {
 	Moid       plugin.TValue[string]
 	Name       plugin.TValue[string]
 	Properties plugin.TValue[any]
+	VlanId     plugin.TValue[int64]
 }
 
 // createVsphereVswitchPortgroup creates a new instance of this resource
@@ -3273,6 +3425,10 @@ func (c *mqlVsphereVswitchPortgroup) GetName() *plugin.TValue[string] {
 
 func (c *mqlVsphereVswitchPortgroup) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetVlanId() *plugin.TValue[int64] {
+	return &c.VlanId
 }
 
 // mqlVsphereVmnic for the vsphere.vmnic resource

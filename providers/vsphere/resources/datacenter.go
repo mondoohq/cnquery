@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
@@ -19,6 +20,23 @@ import (
 	"go.mondoo.com/mql/v13/types"
 	"golang.org/x/sync/errgroup"
 )
+
+// countSnapshots returns the total snapshot count in a VM's snapshot tree
+// (including nested children). 0 if info is nil.
+func countSnapshots(info *vimtypes.VirtualMachineSnapshotInfo) int {
+	if info == nil {
+		return 0
+	}
+	var walk func(nodes []vimtypes.VirtualMachineSnapshotTree) int
+	walk = func(nodes []vimtypes.VirtualMachineSnapshotTree) int {
+		n := len(nodes)
+		for i := range nodes {
+			n += walk(nodes[i].ChildSnapshotList)
+		}
+		return n
+	}
+	return walk(info.RootSnapshotList)
+}
 
 // discoveryConcurrency caps the number of concurrent per-asset SOAP calls we
 // fan out during host/VM enumeration. Higher = lower wall-clock for a single
@@ -181,11 +199,21 @@ func (v *mqlVsphereDatacenter) clusters() ([]any, error) {
 			return nil, err
 		}
 
-		vsanEnabled := false
+		vsanEnabled, haEnabled, drsEnabled := false, false, false
 		if cfg, ok := moc.ConfigurationEx.(*vimtypes.ClusterConfigInfoEx); ok && cfg != nil {
 			if cfg.VsanConfigInfo != nil && cfg.VsanConfigInfo.Enabled != nil {
 				vsanEnabled = *cfg.VsanConfigInfo.Enabled
 			}
+			if cfg.DasConfig.Enabled != nil {
+				haEnabled = *cfg.DasConfig.Enabled
+			}
+			if cfg.DrsConfig.Enabled != nil {
+				drsEnabled = *cfg.DrsConfig.Enabled
+			}
+		}
+		evcMode := ""
+		if sum, ok := moc.Summary.(*vimtypes.ClusterComputeResourceSummary); ok && sum != nil {
+			evcMode = sum.CurrentEVCModeKey
 		}
 
 		mqlCluster, err := CreateResource(v.MqlRuntime, "vsphere.cluster", map[string]*llx.RawData{
@@ -194,6 +222,9 @@ func (v *mqlVsphereDatacenter) clusters() ([]any, error) {
 			"properties":    llx.DictData(props),
 			"inventoryPath": llx.StringData(c.InventoryPath),
 			"vsanEnabled":   llx.BoolData(vsanEnabled),
+			"haEnabled":     llx.BoolData(haEnabled),
+			"drsEnabled":    llx.BoolData(drsEnabled),
+			"evcMode":       llx.StringData(evcMode),
 		})
 		if err != nil {
 			return nil, err
@@ -300,25 +331,47 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 			secureBootEnabled, vbsEnabled         bool
 			cpuHotAddEnabled, memoryHotAddEnabled bool
 			numCpu, memoryMB                      int64
+			powerState                            string
+			annotation                            string
+			createDate                            time.Time
+			numSnapshots                          int64
+			vmwareToolsRunning                    bool
+			vmwareToolsVersion                    string
+			guestIpAddress                        string
+			guestHostname                         string
 		)
-		if s.vmInfo != nil && s.vmInfo.Config != nil {
-			cfg := s.vmInfo.Config
-			name = cfg.Name
-			bootFirmware = cfg.Firmware
-			if cfg.BootOptions != nil && cfg.BootOptions.EfiSecureBootEnabled != nil {
-				secureBootEnabled = *cfg.BootOptions.EfiSecureBootEnabled
+		if s.vmInfo != nil {
+			powerState = string(s.vmInfo.Runtime.PowerState)
+			numSnapshots = int64(countSnapshots(s.vmInfo.Snapshot))
+			if s.vmInfo.Guest != nil {
+				vmwareToolsRunning = s.vmInfo.Guest.ToolsRunningStatus == string(vimtypes.VirtualMachineToolsRunningStatusGuestToolsRunning)
+				vmwareToolsVersion = s.vmInfo.Guest.ToolsVersion
+				guestIpAddress = s.vmInfo.Guest.IpAddress
+				guestHostname = s.vmInfo.Guest.HostName
 			}
-			if cfg.Flags.VbsEnabled != nil {
-				vbsEnabled = *cfg.Flags.VbsEnabled
+			if s.vmInfo.Config != nil {
+				cfg := s.vmInfo.Config
+				name = cfg.Name
+				annotation = cfg.Annotation
+				if cfg.CreateDate != nil {
+					createDate = *cfg.CreateDate
+				}
+				bootFirmware = cfg.Firmware
+				if cfg.BootOptions != nil && cfg.BootOptions.EfiSecureBootEnabled != nil {
+					secureBootEnabled = *cfg.BootOptions.EfiSecureBootEnabled
+				}
+				if cfg.Flags.VbsEnabled != nil {
+					vbsEnabled = *cfg.Flags.VbsEnabled
+				}
+				if cfg.CpuHotAddEnabled != nil {
+					cpuHotAddEnabled = *cfg.CpuHotAddEnabled
+				}
+				if cfg.MemoryHotAddEnabled != nil {
+					memoryHotAddEnabled = *cfg.MemoryHotAddEnabled
+				}
+				numCpu = int64(cfg.Hardware.NumCPU)
+				memoryMB = int64(cfg.Hardware.MemoryMB)
 			}
-			if cfg.CpuHotAddEnabled != nil {
-				cpuHotAddEnabled = *cfg.CpuHotAddEnabled
-			}
-			if cfg.MemoryHotAddEnabled != nil {
-				memoryHotAddEnabled = *cfg.MemoryHotAddEnabled
-			}
-			numCpu = int64(cfg.Hardware.NumCPU)
-			memoryMB = int64(cfg.Hardware.MemoryMB)
 		}
 		mqlVm, err := CreateResource(v.MqlRuntime, "vsphere.vm", map[string]*llx.RawData{
 			"moid":                llx.StringData(vm.Reference().Encode()),
@@ -333,6 +386,14 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 			"memoryMB":            llx.IntData(memoryMB),
 			"cpuHotAddEnabled":    llx.BoolData(cpuHotAddEnabled),
 			"memoryHotAddEnabled": llx.BoolData(memoryHotAddEnabled),
+			"powerState":          llx.StringData(powerState),
+			"annotation":          llx.StringData(annotation),
+			"createDate":          llx.TimeData(createDate),
+			"numSnapshots":        llx.IntData(numSnapshots),
+			"vmwareToolsRunning":  llx.BoolData(vmwareToolsRunning),
+			"vmwareToolsVersion":  llx.StringData(vmwareToolsVersion),
+			"guestIpAddress":      llx.StringData(guestIpAddress),
+			"guestHostname":       llx.StringData(guestHostname),
 		})
 		if err != nil {
 			return nil, err
@@ -416,11 +477,22 @@ func (v *mqlVsphereDatacenter) distributedPortGroups() ([]any, error) {
 			return nil, err
 		}
 
+		// Extract a single VLAN ID for the simple-tag case. Trunked /
+		// private-VLAN configurations leave vlanId at 0 — callers can
+		// inspect `properties` for the full VLAN spec.
+		var vlanId int64
+		if portCfg, ok := config.Config.DefaultPortConfig.(*vimtypes.VMwareDVSPortSetting); ok && portCfg != nil {
+			if vlan, ok := portCfg.Vlan.(*vimtypes.VmwareDistributedVirtualSwitchVlanIdSpec); ok && vlan != nil {
+				vlanId = int64(vlan.VlanId)
+			}
+		}
+
 		name := distPG.Name()
 		mqlDistPG, err := NewResource(v.MqlRuntime, "vsphere.vswitch.portgroup", map[string]*llx.RawData{
 			"moid":       llx.StringData(distPG.Reference().Encode()),
 			"name":       llx.StringData(name),
 			"properties": llx.DictData(configMap),
+			"vlanId":     llx.IntData(vlanId),
 		})
 		if err != nil {
 			return nil, err
@@ -465,6 +537,7 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 		summary     vimtypes.DatastoreSummary
 		path        string
 		vmfsVersion string
+		ssd         bool
 	}
 	staged := make([]stagedDs, len(dsList))
 	for i, ds := range dsList {
@@ -474,14 +547,19 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 				return err
 			}
 			vmfsVersion := ""
+			ssd := false
 			if vmfsInfo, ok := props.Info.(*vimtypes.VmfsDatastoreInfo); ok && vmfsInfo != nil && vmfsInfo.Vmfs != nil {
 				vmfsVersion = vmfsInfo.Vmfs.Version
+				if vmfsInfo.Vmfs.Ssd != nil {
+					ssd = *vmfsInfo.Vmfs.Ssd
+				}
 			}
 			staged[i] = stagedDs{
 				moid:        ds.Reference().Encode(),
 				summary:     props.Summary,
 				path:        ds.InventoryPath,
 				vmfsVersion: vmfsVersion,
+				ssd:         ssd,
 			}
 			return nil
 		})
@@ -508,6 +586,7 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 			"url":                llx.StringData(s.summary.Url),
 			"inventoryPath":      llx.StringData(s.path),
 			"vmfsVersion":        llx.StringData(s.vmfsVersion),
+			"ssd":                llx.BoolData(s.ssd),
 		})
 		if err != nil {
 			return nil, err
