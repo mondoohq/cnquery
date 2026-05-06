@@ -49,7 +49,7 @@ func BatchGetTags(ctx context.Context, refs []mo.Reference, client *vim25.Client
 	if err := restClient.Login(ctx, url.UserPassword(creds.User, string(creds.Secret))); err != nil {
 		return out
 	}
-	defer restClient.Logout(ctx)
+	defer func() { _ = restClient.Logout(ctx) }()
 
 	tagManager := tags.NewManager(restClient)
 
@@ -67,8 +67,11 @@ func BatchGetTags(ctx context.Context, refs []mo.Reference, client *vim25.Client
 			if !ok {
 				if cat, err := tagManager.GetCategory(ctx, tag.CategoryID); err == nil {
 					catName = cat.Name
+					categoryNames[tag.CategoryID] = catName
 				}
-				categoryNames[tag.CategoryID] = catName
+				// Don't cache failures: a transient GetCategory error shouldn't
+				// permanently suppress the category prefix for every other tag
+				// using that category in this batch.
 			}
 			if catName == "" {
 				strs = append(strs, tag.Name)

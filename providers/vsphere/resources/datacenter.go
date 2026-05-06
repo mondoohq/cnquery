@@ -41,14 +41,15 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 		}
 
 		var name string
-		var tags []string
 		if hostInfo != nil {
 			name = hostInfo.Name
-			if vapi := vapiTagsByMoid[h.Reference().Value]; len(vapi) > 0 {
-				tags = vapi
-			} else {
-				tags = extractTagKeys(hostInfo.Tag)
-			}
+		}
+
+		var tags []string
+		if vapi := vapiTagsByMoid[h.Reference().Value]; len(vapi) > 0 {
+			tags = vapi
+		} else if hostInfo != nil {
+			tags = extractTagKeys(hostInfo.Tag)
 		}
 
 		lockdownMode, firewallIncomingBlocked, firewallOutgoingBlocked, secureBootEnabled := hostHardeningArgs(hostInfo)
