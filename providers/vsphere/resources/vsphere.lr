@@ -166,6 +166,8 @@ private vsphere.datastore @defaults("name type") {
   inventoryPath string
   // VMFS version (only set for VMFS datastores; empty for NFS, vSAN, VVOL, etc.)
   vmfsVersion string
+  // Whether the underlying VMFS volume is on SSD (only set for VMFS; false for non-VMFS or unknown)
+  ssd bool
 }
 
 // vSphere cluster resource
@@ -182,6 +184,12 @@ private vsphere.cluster @defaults("moid name") {
   hosts() []vsphere.host
   // Whether vSAN is enabled on the cluster
   vsanEnabled bool
+  // Whether vSphere HA (Distributed Availability Service) is enabled
+  haEnabled bool
+  // Whether DRS (Distributed Resource Scheduler) is enabled
+  drsEnabled bool
+  // Currently-applied EVC (Enhanced vMotion Compatibility) baseline key, e.g. "intel-broadwell"; empty if EVC is disabled
+  evcMode string
 }
 
 // vSphere ESXi host resource
@@ -286,6 +294,22 @@ private vsphere.vm @defaults("moid name") {
   cpuHotAddEnabled bool
   // Whether memory hot-add is enabled
   memoryHotAddEnabled bool
+  // Power state (poweredOn, poweredOff, suspended)
+  powerState string
+  // Free-form description / notes set on the VM
+  annotation string
+  // When the VM was created
+  createDate time
+  // Number of snapshots in the VM's snapshot tree (0 if none)
+  numSnapshots int
+  // Whether VMware Tools reports as running in the guest (only meaningful when powerState == poweredOn)
+  vmwareToolsRunning bool
+  // VMware Tools version installed in the guest, as the numeric build string (empty if Tools not running or not reported)
+  vmwareToolsVersion string
+  // Primary IP address reported by VMware Tools (only meaningful when Tools is running)
+  guestIpAddress string
+  // Hostname reported by VMware Tools (only meaningful when Tools is running)
+  guestHostname string
 }
 
 // vSphere standard virtual switch
@@ -317,13 +341,15 @@ private vsphere.vswitch.dvs @defaults("name") {
 }
 
 // vSphere distributed virtual port group
-private vsphere.vswitch.portgroup @defaults("name") {
+private vsphere.vswitch.portgroup @defaults("name vlanId") {
   // vSphere managed object ID
   moid string
   // Port group name
   name string
   // Port group properties
   properties dict
+  // VLAN ID assigned to the port group (0 means untagged / VLAN trunking ranges; check properties for trunked specs)
+  vlanId int
 }
 
 // vSphere ESXi physical network interface resource
