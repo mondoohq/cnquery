@@ -115,8 +115,12 @@ func (c *VsphereConnection) RestClient(ctx context.Context) (*rest.Client, error
 }
 
 func (c *VsphereConnection) Close() {
-	if c.restClient != nil {
-		if err := c.restClient.Logout(context.Background()); err != nil {
+	c.restMu.Lock()
+	rc := c.restClient
+	c.restClient = nil
+	c.restMu.Unlock()
+	if rc != nil {
+		if err := rc.Logout(context.Background()); err != nil {
 			log.Error().Err(err).Msg("failed to logout from vSphere REST session")
 		}
 	}
