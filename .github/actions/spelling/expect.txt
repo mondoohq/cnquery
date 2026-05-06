@@ -61,6 +61,7 @@ bigtable
 BINPACK
 blackhole
 breakglass
+broadwell
 bumpable
 bwawxf
 BXdl
@@ -161,6 +162,7 @@ ENIId
 erlang
 ERPCLOUD
 eula
+evc
 eventarc
 evs
 Exadata
