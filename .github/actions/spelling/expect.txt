@@ -582,6 +582,7 @@ vmfs
 vmhba
 VMID
 vmstate
+VMX
 vnet
 vnic
 vpus
