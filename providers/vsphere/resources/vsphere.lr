@@ -164,6 +164,8 @@ private vsphere.datastore @defaults("name type") {
   url string
   // vSphere inventory path
   inventoryPath string
+  // VMFS version (only set for VMFS datastores; empty for NFS, vSAN, VVOL, etc.)
+  vmfsVersion string
 }
 
 // vSphere cluster resource
@@ -178,6 +180,8 @@ private vsphere.cluster @defaults("moid name") {
   properties dict
   // ESXi hosts running in the cluster
   hosts() []vsphere.host
+  // Whether vSAN is enabled on the cluster
+  vsanEnabled bool
 }
 
 // vSphere ESXi host resource
@@ -226,6 +230,14 @@ private vsphere.host @defaults("moid name") {
   secureBootEnabled bool
   // Host SSL/TLS certificate
   certificate() esxi.certificate
+  // Hardware vendor (as reported by SMBIOS)
+  vendor string
+  // Hardware model (as reported by SMBIOS)
+  model string
+  // Per-core CPU clock in MHz
+  cpuMhz int
+  // Number of physical CPU cores across all sockets
+  numCpuCores int
 }
 
 // ESXi host SSL/TLS certificate (from HostCertificateManager)
@@ -260,6 +272,20 @@ private vsphere.vm @defaults("moid name") {
   advancedSettings() map[string]string
   // VM tags
   tags []string
+  // Boot firmware (bios or efi)
+  bootFirmware string
+  // Whether UEFI Secure Boot is enabled (only meaningful when bootFirmware is efi)
+  secureBootEnabled bool
+  // Whether Virtualization-Based Security (VBS) is enabled
+  vbsEnabled bool
+  // Number of virtual CPUs configured
+  numCpu int
+  // Configured memory size in megabytes
+  memoryMB int
+  // Whether CPU hot-add is enabled
+  cpuHotAddEnabled bool
+  // Whether memory hot-add is enabled
+  memoryHotAddEnabled bool
 }
 
 // vSphere standard virtual switch

@@ -37,6 +37,10 @@ type stagedHost struct {
 	firewallIncomingBlocked bool
 	firewallOutgoingBlocked bool
 	secureBootEnabled       bool
+	vendor                  string
+	model                   string
+	cpuMhz                  int64
+	numCpuCores             int64
 }
 
 func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Runtime, vhosts []*object.HostSystem) ([]any, error) {
@@ -76,6 +80,15 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 				s.tags = extractTagKeys(hostInfo.Tag)
 			}
 			s.lockdownMode, s.firewallIncomingBlocked, s.firewallOutgoingBlocked, s.secureBootEnabled = hostHardeningArgs(hostInfo)
+			if hostInfo != nil {
+				hw := hostInfo.Summary.Hardware
+				if hw != nil {
+					s.vendor = hw.Vendor
+					s.model = hw.Model
+					s.cpuMhz = int64(hw.CpuMhz)
+					s.numCpuCores = int64(hw.NumCpuCores)
+				}
+			}
 			staged[i] = s
 			return nil
 		})
@@ -98,6 +111,10 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 			"firewallIncomingBlocked": llx.BoolData(s.firewallIncomingBlocked),
 			"firewallOutgoingBlocked": llx.BoolData(s.firewallOutgoingBlocked),
 			"secureBootEnabled":       llx.BoolData(s.secureBootEnabled),
+			"vendor":                  llx.StringData(s.vendor),
+			"model":                   llx.StringData(s.model),
+			"cpuMhz":                  llx.IntData(s.cpuMhz),
+			"numCpuCores":             llx.IntData(s.numCpuCores),
 		})
 		if err != nil {
 			return nil, err
@@ -152,12 +169,24 @@ func (v *mqlVsphereDatacenter) clusters() ([]any, error) {
 		return nil, err
 	}
 
+	ctx := context.Background()
 	mqlClusters := make([]any, len(vCluster))
 	for i, c := range vCluster {
+		var moc mo.ClusterComputeResource
+		if err := c.Properties(ctx, c.Reference(), nil, &moc); err != nil {
+			return nil, err
+		}
 
-		props, err := client.ClusterProperties(c)
+		props, err := resourceclient.PropertiesToDict(&moc)
 		if err != nil {
 			return nil, err
+		}
+
+		vsanEnabled := false
+		if cfg, ok := moc.ConfigurationEx.(*vimtypes.ClusterConfigInfoEx); ok && cfg != nil {
+			if cfg.VsanConfigInfo != nil && cfg.VsanConfigInfo.Enabled != nil {
+				vsanEnabled = *cfg.VsanConfigInfo.Enabled
+			}
 		}
 
 		mqlCluster, err := CreateResource(v.MqlRuntime, "vsphere.cluster", map[string]*llx.RawData{
@@ -165,6 +194,7 @@ func (v *mqlVsphereDatacenter) clusters() ([]any, error) {
 			"name":          llx.StringData(c.Name()),
 			"properties":    llx.DictData(props),
 			"inventoryPath": llx.StringData(c.InventoryPath),
+			"vsanEnabled":   llx.BoolData(vsanEnabled),
 		})
 		if err != nil {
 			return nil, err
@@ -265,16 +295,45 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 	mqlVms := make([]any, len(vms))
 	for i, s := range staged {
 		vm := vms[i]
-		var name string
+		var (
+			name                                  string
+			bootFirmware                          string
+			secureBootEnabled, vbsEnabled         bool
+			cpuHotAddEnabled, memoryHotAddEnabled bool
+			numCpu, memoryMB                      int64
+		)
 		if s.vmInfo != nil && s.vmInfo.Config != nil {
-			name = s.vmInfo.Config.Name
+			cfg := s.vmInfo.Config
+			name = cfg.Name
+			bootFirmware = cfg.Firmware
+			if cfg.BootOptions != nil && cfg.BootOptions.EfiSecureBootEnabled != nil {
+				secureBootEnabled = *cfg.BootOptions.EfiSecureBootEnabled
+			}
+			if cfg.Flags.VbsEnabled != nil {
+				vbsEnabled = *cfg.Flags.VbsEnabled
+			}
+			if cfg.CpuHotAddEnabled != nil {
+				cpuHotAddEnabled = *cfg.CpuHotAddEnabled
+			}
+			if cfg.MemoryHotAddEnabled != nil {
+				memoryHotAddEnabled = *cfg.MemoryHotAddEnabled
+			}
+			numCpu = int64(cfg.Hardware.NumCPU)
+			memoryMB = int64(cfg.Hardware.MemoryMB)
 		}
 		mqlVm, err := CreateResource(v.MqlRuntime, "vsphere.vm", map[string]*llx.RawData{
-			"moid":          llx.StringData(vm.Reference().Encode()),
-			"name":          llx.StringData(name),
-			"properties":    llx.DictData(s.props),
-			"inventoryPath": llx.StringData(vm.InventoryPath),
-			"tags":          llx.ArrayData(convert.SliceAnyToInterface(s.tags), types.String),
+			"moid":                llx.StringData(vm.Reference().Encode()),
+			"name":                llx.StringData(name),
+			"properties":          llx.DictData(s.props),
+			"inventoryPath":       llx.StringData(vm.InventoryPath),
+			"tags":                llx.ArrayData(convert.SliceAnyToInterface(s.tags), types.String),
+			"bootFirmware":        llx.StringData(bootFirmware),
+			"secureBootEnabled":   llx.BoolData(secureBootEnabled),
+			"vbsEnabled":          llx.BoolData(vbsEnabled),
+			"numCpu":              llx.IntData(numCpu),
+			"memoryMB":            llx.IntData(memoryMB),
+			"cpuHotAddEnabled":    llx.BoolData(cpuHotAddEnabled),
+			"memoryHotAddEnabled": llx.BoolData(memoryHotAddEnabled),
 		})
 		if err != nil {
 			return nil, err
@@ -403,21 +462,27 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(discoveryConcurrency)
 	type stagedDs struct {
-		moid    string
-		summary vimtypes.DatastoreSummary
-		path    string
+		moid        string
+		summary     vimtypes.DatastoreSummary
+		path        string
+		vmfsVersion string
 	}
 	staged := make([]stagedDs, len(dsList))
 	for i, ds := range dsList {
 		g.Go(func() error {
 			var props mo.Datastore
-			if err := ds.Properties(gctx, ds.Reference(), []string{"summary"}, &props); err != nil {
+			if err := ds.Properties(gctx, ds.Reference(), []string{"summary", "info"}, &props); err != nil {
 				return err
 			}
+			vmfsVersion := ""
+			if vmfsInfo, ok := props.Info.(*vimtypes.VmfsDatastoreInfo); ok && vmfsInfo != nil && vmfsInfo.Vmfs != nil {
+				vmfsVersion = vmfsInfo.Vmfs.Version
+			}
 			staged[i] = stagedDs{
-				moid:    ds.Reference().Encode(),
-				summary: props.Summary,
-				path:    ds.InventoryPath,
+				moid:        ds.Reference().Encode(),
+				summary:     props.Summary,
+				path:        ds.InventoryPath,
+				vmfsVersion: vmfsVersion,
 			}
 			return nil
 		})
@@ -443,6 +508,7 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 			"maintenanceMode":    llx.StringData(s.summary.MaintenanceMode),
 			"url":                llx.StringData(s.summary.Url),
 			"inventoryPath":      llx.StringData(s.path),
+			"vmfsVersion":        llx.StringData(s.vmfsVersion),
 		})
 		if err != nil {
 			return nil, err

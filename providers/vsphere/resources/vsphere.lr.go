@@ -402,6 +402,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.datastore.inventoryPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatastore).GetInventoryPath()).ToDataRes(types.String)
 	},
+	"vsphere.datastore.vmfsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetVmfsVersion()).ToDataRes(types.String)
+	},
 	"vsphere.cluster.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetMoid()).ToDataRes(types.String)
 	},
@@ -416,6 +419,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.cluster.hosts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetHosts()).ToDataRes(types.Array(types.Resource("vsphere.host")))
+	},
+	"vsphere.cluster.vsanEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereCluster).GetVsanEnabled()).ToDataRes(types.Bool)
 	},
 	"vsphere.host.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetMoid()).ToDataRes(types.String)
@@ -483,6 +489,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.host.certificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetCertificate()).ToDataRes(types.Resource("esxi.certificate"))
 	},
+	"vsphere.host.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetVendor()).ToDataRes(types.String)
+	},
+	"vsphere.host.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetModel()).ToDataRes(types.String)
+	},
+	"vsphere.host.cpuMhz": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetCpuMhz()).ToDataRes(types.Int)
+	},
+	"vsphere.host.numCpuCores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetNumCpuCores()).ToDataRes(types.Int)
+	},
 	"esxi.certificate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlEsxiCertificate).GetId()).ToDataRes(types.String)
 	},
@@ -521,6 +539,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vm.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.vm.bootFirmware": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetBootFirmware()).ToDataRes(types.String)
+	},
+	"vsphere.vm.secureBootEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetSecureBootEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.vbsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetVbsEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.numCpu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetNumCpu()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.memoryMB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetMemoryMB()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.cpuHotAddEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetCpuHotAddEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.memoryHotAddEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetMemoryHotAddEnabled()).ToDataRes(types.Bool)
 	},
 	"vsphere.vswitch.standard.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchStandard).GetName()).ToDataRes(types.String)
@@ -978,6 +1017,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereDatastore).InventoryPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"vsphere.datastore.vmfsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).VmfsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"vsphere.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).__id, ok = v.Value.(string)
 		return
@@ -1000,6 +1043,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.cluster.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.cluster.vsanEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereCluster).VsanEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1094,6 +1141,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereHost).Certificate, ok = plugin.RawToTValue[*mqlEsxiCertificate](v.Value, v.Error)
 		return
 	},
+	"vsphere.host.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.cpuMhz": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).CpuMhz, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.numCpuCores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).NumCpuCores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"esxi.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlEsxiCertificate).__id, ok = v.Value.(string)
 		return
@@ -1152,6 +1215,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vm.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVm).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.bootFirmware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).BootFirmware, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.secureBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).SecureBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.vbsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).VbsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.numCpu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).NumCpu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.memoryMB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).MemoryMB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cpuHotAddEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).CpuHotAddEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.memoryHotAddEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).MemoryHotAddEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2293,6 +2384,7 @@ type mqlVsphereDatastore struct {
 	MaintenanceMode    plugin.TValue[string]
 	Url                plugin.TValue[string]
 	InventoryPath      plugin.TValue[string]
+	VmfsVersion        plugin.TValue[string]
 }
 
 // createVsphereDatastore creates a new instance of this resource
@@ -2376,6 +2468,10 @@ func (c *mqlVsphereDatastore) GetInventoryPath() *plugin.TValue[string] {
 	return &c.InventoryPath
 }
 
+func (c *mqlVsphereDatastore) GetVmfsVersion() *plugin.TValue[string] {
+	return &c.VmfsVersion
+}
+
 // mqlVsphereCluster for the vsphere.cluster resource
 type mqlVsphereCluster struct {
 	MqlRuntime *plugin.Runtime
@@ -2386,6 +2482,7 @@ type mqlVsphereCluster struct {
 	InventoryPath plugin.TValue[string]
 	Properties    plugin.TValue[any]
 	Hosts         plugin.TValue[[]any]
+	VsanEnabled   plugin.TValue[bool]
 }
 
 // createVsphereCluster creates a new instance of this resource
@@ -2457,6 +2554,10 @@ func (c *mqlVsphereCluster) GetHosts() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlVsphereCluster) GetVsanEnabled() *plugin.TValue[bool] {
+	return &c.VsanEnabled
+}
+
 // mqlVsphereHost for the vsphere.host resource
 type mqlVsphereHost struct {
 	MqlRuntime *plugin.Runtime
@@ -2484,6 +2585,10 @@ type mqlVsphereHost struct {
 	FirewallOutgoingBlocked plugin.TValue[bool]
 	SecureBootEnabled       plugin.TValue[bool]
 	Certificate             plugin.TValue[*mqlEsxiCertificate]
+	Vendor                  plugin.TValue[string]
+	Model                   plugin.TValue[string]
+	CpuMhz                  plugin.TValue[int64]
+	NumCpuCores             plugin.TValue[int64]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -2737,6 +2842,22 @@ func (c *mqlVsphereHost) GetCertificate() *plugin.TValue[*mqlEsxiCertificate] {
 	})
 }
 
+func (c *mqlVsphereHost) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlVsphereHost) GetModel() *plugin.TValue[string] {
+	return &c.Model
+}
+
+func (c *mqlVsphereHost) GetCpuMhz() *plugin.TValue[int64] {
+	return &c.CpuMhz
+}
+
+func (c *mqlVsphereHost) GetNumCpuCores() *plugin.TValue[int64] {
+	return &c.NumCpuCores
+}
+
 // mqlEsxiCertificate for the esxi.certificate resource
 type mqlEsxiCertificate struct {
 	MqlRuntime *plugin.Runtime
@@ -2821,12 +2942,19 @@ type mqlVsphereVm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlVsphereVmInternal
-	Moid             plugin.TValue[string]
-	Name             plugin.TValue[string]
-	InventoryPath    plugin.TValue[string]
-	Properties       plugin.TValue[any]
-	AdvancedSettings plugin.TValue[map[string]any]
-	Tags             plugin.TValue[[]any]
+	Moid                plugin.TValue[string]
+	Name                plugin.TValue[string]
+	InventoryPath       plugin.TValue[string]
+	Properties          plugin.TValue[any]
+	AdvancedSettings    plugin.TValue[map[string]any]
+	Tags                plugin.TValue[[]any]
+	BootFirmware        plugin.TValue[string]
+	SecureBootEnabled   plugin.TValue[bool]
+	VbsEnabled          plugin.TValue[bool]
+	NumCpu              plugin.TValue[int64]
+	MemoryMB            plugin.TValue[int64]
+	CpuHotAddEnabled    plugin.TValue[bool]
+	MemoryHotAddEnabled plugin.TValue[bool]
 }
 
 // createVsphereVm creates a new instance of this resource
@@ -2890,6 +3018,34 @@ func (c *mqlVsphereVm) GetAdvancedSettings() *plugin.TValue[map[string]any] {
 
 func (c *mqlVsphereVm) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
+}
+
+func (c *mqlVsphereVm) GetBootFirmware() *plugin.TValue[string] {
+	return &c.BootFirmware
+}
+
+func (c *mqlVsphereVm) GetSecureBootEnabled() *plugin.TValue[bool] {
+	return &c.SecureBootEnabled
+}
+
+func (c *mqlVsphereVm) GetVbsEnabled() *plugin.TValue[bool] {
+	return &c.VbsEnabled
+}
+
+func (c *mqlVsphereVm) GetNumCpu() *plugin.TValue[int64] {
+	return &c.NumCpu
+}
+
+func (c *mqlVsphereVm) GetMemoryMB() *plugin.TValue[int64] {
+	return &c.MemoryMB
+}
+
+func (c *mqlVsphereVm) GetCpuHotAddEnabled() *plugin.TValue[bool] {
+	return &c.CpuHotAddEnabled
+}
+
+func (c *mqlVsphereVm) GetMemoryHotAddEnabled() *plugin.TValue[bool] {
+	return &c.MemoryHotAddEnabled
 }
 
 // mqlVsphereVswitchStandard for the vsphere.vswitch.standard resource
