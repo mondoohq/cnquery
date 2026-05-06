@@ -110,8 +110,10 @@ func (v *mqlVsphereHost) standardSwitch() ([]any, error) {
 
 	mqlVswitches := make([]any, len(vswitches))
 	for i, s := range vswitches {
+		name := s["Name"].(string)
 		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vswitch.standard", map[string]*llx.RawData{
-			"name":       llx.StringData(s["Name"].(string)),
+			"__id":       llx.StringData(esxiClient.InventoryPath + "/" + name),
+			"name":       llx.StringData(name),
 			"properties": llx.DictData(s),
 		})
 		if err != nil {
@@ -142,8 +144,10 @@ func (v *mqlVsphereHost) distributedSwitch() ([]any, error) {
 
 	mqlVswitches := make([]any, len(vswitches))
 	for i, s := range vswitches {
+		name := s["Name"].(string)
 		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vswitch.dvs", map[string]*llx.RawData{
-			"name":       llx.StringData(s["Name"].(string)),
+			"__id":       llx.StringData(esxiClient.InventoryPath + "/" + name),
+			"name":       llx.StringData(name),
 			"properties": llx.DictData(s),
 		})
 		if err != nil {
@@ -189,6 +193,7 @@ func (v *mqlVsphereHost) adapters() ([]any, error) {
 		pParams := pauseParams[nicName]
 
 		mqlAdapter, err := CreateResource(v.MqlRuntime, "vsphere.vmnic", map[string]*llx.RawData{
+			"__id":        llx.StringData(esxiClient.InventoryPath + "/" + nicName),
 			"name":        llx.StringData(nicName),
 			"properties":  llx.DictData(a),
 			"pauseParams": llx.DictData(pParams),
@@ -244,8 +249,10 @@ func (v *mqlVsphereHost) vmknics() ([]any, error) {
 	mqlVmknics := make([]any, len(vmknics))
 	for i := range vmknics {
 		entry := vmknics[i]
+		nicName := entry.Properties["Name"].(string)
 		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vmknic", map[string]*llx.RawData{
-			"name":       llx.StringData(entry.Properties["Name"].(string)),
+			"__id":       llx.StringData(esxiClient.InventoryPath + "/" + nicName),
+			"name":       llx.StringData(nicName),
 			"properties": llx.DictData(entry.Properties),
 			"ipv4":       llx.ArrayData(entry.Ipv4, types.Dict),
 			"ipv6":       llx.ArrayData(entry.Ipv6, types.Dict),
@@ -330,6 +337,7 @@ func (v *mqlVsphereHost) kernelModules() ([]any, error) {
 	mqlModules := make([]any, len(modules))
 	for i, m := range modules {
 		mqlModule, err := CreateResource(v.MqlRuntime, "esxi.kernelmodule", map[string]*llx.RawData{
+			"__id":                 llx.StringData(esxiClient.InventoryPath + "/" + m.Module),
 			"name":                 llx.StringData(m.Module),
 			"modulefile":           llx.StringData(m.ModuleFile),
 			"version":              llx.StringData(m.Version),
@@ -388,6 +396,7 @@ func (v *mqlVsphereHost) services() ([]any, error) {
 	mqlServices := make([]any, len(services))
 	for i, s := range services {
 		mqlService, err := CreateResource(v.MqlRuntime, "esxi.service", map[string]*llx.RawData{
+			"__id":     llx.StringData(path + "/" + s.Key),
 			"key":      llx.StringData(s.Key),
 			"label":    llx.StringData(s.Label),
 			"required": llx.BoolData(s.Required),
@@ -427,6 +436,7 @@ func (v *mqlVsphereHost) timezone() (*mqlEsxiTimezone, error) {
 	}
 
 	mqlTimezone, err := CreateResource(v.MqlRuntime, "esxi.timezone", map[string]*llx.RawData{
+		"__id":        llx.StringData(path + "/" + datetimeinfo.TimeZone.Key),
 		"key":         llx.StringData(datetimeinfo.TimeZone.Key),
 		"name":        llx.StringData(datetimeinfo.TimeZone.Name),
 		"offset":      llx.IntData(int64(datetimeinfo.TimeZone.GmtOffset)),
@@ -435,7 +445,6 @@ func (v *mqlVsphereHost) timezone() (*mqlEsxiTimezone, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return mqlTimezone.(*mqlEsxiTimezone), nil
 }
 
