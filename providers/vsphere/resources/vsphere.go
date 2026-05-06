@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	ssoadmintypes "github.com/vmware/govmomi/ssoadmin/types"
 	"github.com/vmware/govmomi/view"
@@ -197,11 +198,21 @@ func (v *mqlVsphere) folders() ([]any, error) {
 	mqlFolders := make([]any, 0, len(folders))
 	for _, f := range folders {
 		ref := f.Reference()
-		// InventoryPath isn't on mo.Folder; build via Finder.
+		// mo.Folder doesn't carry inventoryPath; resolve it by walking the
+		// ManagedEntity ancestor chain. find.InventoryPath does that via
+		// PropertyCollector. One round trip per folder; acceptable on
+		// typical vCenter sizes (tens of folders).
+		path, err := find.InventoryPath(ctx, c, ref)
+		if err != nil {
+			// Resolving the path can fail if the folder is concurrently
+			// removed; treat as "unknown" rather than aborting the whole
+			// folder list.
+			path = ""
+		}
 		mqlFolder, err := CreateResource(v.MqlRuntime, "vsphere.folder", map[string]*llx.RawData{
 			"moid":          llx.StringData(ref.Encode()),
 			"name":          llx.StringData(f.Name),
-			"inventoryPath": llx.StringData(""),
+			"inventoryPath": llx.StringData(path),
 			"childTypes":    llx.ArrayData(convert.SliceAnyToInterface(f.ChildType), types.String),
 			"childCount":    llx.IntData(int64(len(f.ChildEntity))),
 		})
@@ -516,4 +527,12 @@ func (v *mqlVsphereDatastore) id() (string, error) {
 
 func (v *mqlEsxiCertificate) id() (string, error) {
 	return v.Id.Data, nil
+}
+
+func (v *mqlVsphereFolder) id() (string, error) {
+	return v.Moid.Data, nil
+}
+
+func (v *mqlVsphereResourcepool) id() (string, error) {
+	return v.Moid.Data, nil
 }
