@@ -402,6 +402,7 @@ pacman
 pagerduty
 panos
 parallelquery
+passthrough
 PAYG
 pdp
 persistentvolume
@@ -445,6 +446,7 @@ rai
 raidz
 ratebasedstatement
 rbcd
+rdm
 Rdp
 recaptcha
 regexmatchstatement
