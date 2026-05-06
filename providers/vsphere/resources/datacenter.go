@@ -21,6 +21,19 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// mqlVsphereClusterInternal caches the underlying ClusterComputeResource so
+// cross-reference accessors (e.g. cluster.hosts()) can avoid redundant fetches.
+type mqlVsphereClusterInternal struct {
+	cluster *mo.ClusterComputeResource
+}
+
+// mqlVsphereDatastoreInternal caches the Datastore mo so cross-reference
+// accessors (datastore.vms(), datastore.hosts()) can resolve typed refs from
+// already-fetched property data.
+type mqlVsphereDatastoreInternal struct {
+	ds *mo.Datastore
+}
+
 // countSnapshots returns the total snapshot count in a VM's snapshot tree
 // (including nested children). 0 if info is nil.
 func countSnapshots(info *vimtypes.VirtualMachineSnapshotInfo) int {
@@ -229,6 +242,7 @@ func (v *mqlVsphereDatacenter) clusters() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlCluster.(*mqlVsphereCluster).cluster = moc
 
 		mqlClusters[i] = mqlCluster
 	}
@@ -549,7 +563,7 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 	g.SetLimit(discoveryConcurrency)
 	type stagedDs struct {
 		moid        string
-		summary     vimtypes.DatastoreSummary
+		props       *mo.Datastore
 		path        string
 		vmfsVersion string
 		ssd         bool
@@ -557,8 +571,10 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 	staged := make([]stagedDs, len(dsList))
 	for i, ds := range dsList {
 		g.Go(func() error {
+			// "vm" and "host" power the datastore.vms()/hosts() cross-references;
+			// they're cheap to include in the same property fetch.
 			var props mo.Datastore
-			if err := ds.Properties(gctx, ds.Reference(), []string{"summary", "info"}, &props); err != nil {
+			if err := ds.Properties(gctx, ds.Reference(), []string{"summary", "info", "vm", "host"}, &props); err != nil {
 				return err
 			}
 			vmfsVersion := ""
@@ -571,7 +587,7 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 			}
 			staged[i] = stagedDs{
 				moid:        ds.Reference().Encode(),
-				summary:     props.Summary,
+				props:       &props,
 				path:        ds.InventoryPath,
 				vmfsVersion: vmfsVersion,
 				ssd:         ssd,
@@ -585,20 +601,21 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 
 	for i, s := range staged {
 		multi := false
-		if s.summary.MultipleHostAccess != nil {
-			multi = *s.summary.MultipleHostAccess
+		summary := s.props.Summary
+		if summary.MultipleHostAccess != nil {
+			multi = *summary.MultipleHostAccess
 		}
 		mqlDs, err := CreateResource(v.MqlRuntime, "vsphere.datastore", map[string]*llx.RawData{
 			"moid":               llx.StringData(s.moid),
-			"name":               llx.StringData(s.summary.Name),
-			"type":               llx.StringData(s.summary.Type),
-			"capacity":           llx.IntData(s.summary.Capacity),
-			"freeSpace":          llx.IntData(s.summary.FreeSpace),
-			"uncommitted":        llx.IntData(s.summary.Uncommitted),
-			"accessible":         llx.BoolData(s.summary.Accessible),
+			"name":               llx.StringData(summary.Name),
+			"type":               llx.StringData(summary.Type),
+			"capacity":           llx.IntData(summary.Capacity),
+			"freeSpace":          llx.IntData(summary.FreeSpace),
+			"uncommitted":        llx.IntData(summary.Uncommitted),
+			"accessible":         llx.BoolData(summary.Accessible),
 			"multipleHostAccess": llx.BoolData(multi),
-			"maintenanceMode":    llx.StringData(s.summary.MaintenanceMode),
-			"url":                llx.StringData(s.summary.Url),
+			"maintenanceMode":    llx.StringData(summary.MaintenanceMode),
+			"url":                llx.StringData(summary.Url),
 			"inventoryPath":      llx.StringData(s.path),
 			"vmfsVersion":        llx.StringData(s.vmfsVersion),
 			"ssd":                llx.BoolData(s.ssd),
@@ -606,6 +623,7 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlDs.(*mqlVsphereDatastore).ds = s.props
 		mqlDss[i] = mqlDs
 	}
 	return mqlDss, nil

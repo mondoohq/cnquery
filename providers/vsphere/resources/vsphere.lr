@@ -287,6 +287,10 @@ private vsphere.datastore @defaults("name type") {
   vmfsVersion string
   // Whether the underlying VMFS volume is on SSD (only set for VMFS; false for non-VMFS or unknown)
   ssd bool
+  // Hosts that have this datastore mounted, resolved against vsphere.datacenters[].hosts
+  hosts() []vsphere.host
+  // Virtual machines whose files are stored on this datastore, resolved against vsphere.datacenters[].vms
+  vms() []vsphere.vm
 }
 
 // vSphere cluster resource
@@ -369,6 +373,10 @@ private vsphere.host @defaults("moid name") {
   firewallRulesets() []esxi.firewallRuleset
   // iSCSI host bus adapters configured on the host (zero entries if iSCSI is not in use)
   iscsiAdapters() []esxi.iscsiAdapter
+  // Cluster the host belongs to, resolved against vsphere.datacenters[].clusters; null for standalone hosts
+  cluster() vsphere.cluster
+  // Datastores mounted on the host, resolved against vsphere.datacenters[].datastores
+  datastores() []vsphere.datastore
 }
 
 // ESXi firewall ruleset — one entry per network service (e.g., CIMHttpServer,
@@ -507,6 +515,10 @@ private vsphere.vm @defaults("moid name") {
   guestIpAddress string
   // Hostname reported by VMware Tools (only meaningful when Tools is running)
   guestHostname string
+  // ESXi host the VM is currently registered on, resolved against vsphere.datacenters[].hosts; null when the VM is unregistered or the host is missing from inventory
+  host() vsphere.host
+  // Datastores backing the VM's files, resolved against vsphere.datacenters[].datastores
+  datastores() []vsphere.datastore
 }
 
 // vSphere standard virtual switch

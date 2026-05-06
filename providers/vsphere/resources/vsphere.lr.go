@@ -580,6 +580,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.datastore.ssd": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereDatastore).GetSsd()).ToDataRes(types.Bool)
 	},
+	"vsphere.datastore.hosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetHosts()).ToDataRes(types.Array(types.Resource("vsphere.host")))
+	},
+	"vsphere.datastore.vms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereDatastore).GetVms()).ToDataRes(types.Array(types.Resource("vsphere.vm")))
+	},
 	"vsphere.cluster.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereCluster).GetMoid()).ToDataRes(types.String)
 	},
@@ -690,6 +696,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.host.iscsiAdapters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetIscsiAdapters()).ToDataRes(types.Array(types.Resource("esxi.iscsiAdapter")))
+	},
+	"vsphere.host.cluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetCluster()).ToDataRes(types.Resource("vsphere.cluster"))
+	},
+	"vsphere.host.datastores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetDatastores()).ToDataRes(types.Array(types.Resource("vsphere.datastore")))
 	},
 	"esxi.firewallRuleset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlEsxiFirewallRuleset).GetId()).ToDataRes(types.String)
@@ -861,6 +873,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vm.guestHostname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetGuestHostname()).ToDataRes(types.String)
+	},
+	"vsphere.vm.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetHost()).ToDataRes(types.Resource("vsphere.host"))
+	},
+	"vsphere.vm.datastores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetDatastores()).ToDataRes(types.Array(types.Resource("vsphere.datastore")))
 	},
 	"vsphere.vswitch.standard.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchStandard).GetName()).ToDataRes(types.String)
@@ -1525,6 +1543,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereDatastore).Ssd, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"vsphere.datastore.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.datastore.vms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereDatastore).Vms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vsphere.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereCluster).__id, ok = v.Value.(string)
 		return
@@ -1679,6 +1705,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.iscsiAdapters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).IscsiAdapters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.cluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).Cluster, ok = plugin.RawToTValue[*mqlVsphereCluster](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.datastores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).Datastores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"esxi.firewallRuleset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1927,6 +1961,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vm.guestHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVm).GuestHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).Host, ok = plugin.RawToTValue[*mqlVsphereHost](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.datastores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).Datastores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3562,7 +3604,7 @@ func (c *mqlVsphereResourcepool) GetMemoryShares() *plugin.TValue[int64] {
 type mqlVsphereDatastore struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVsphereDatastoreInternal it will be used here
+	mqlVsphereDatastoreInternal
 	Moid               plugin.TValue[string]
 	Name               plugin.TValue[string]
 	Type               plugin.TValue[string]
@@ -3576,6 +3618,8 @@ type mqlVsphereDatastore struct {
 	InventoryPath      plugin.TValue[string]
 	VmfsVersion        plugin.TValue[string]
 	Ssd                plugin.TValue[bool]
+	Hosts              plugin.TValue[[]any]
+	Vms                plugin.TValue[[]any]
 }
 
 // createVsphereDatastore creates a new instance of this resource
@@ -3667,11 +3711,43 @@ func (c *mqlVsphereDatastore) GetSsd() *plugin.TValue[bool] {
 	return &c.Ssd
 }
 
+func (c *mqlVsphereDatastore) GetHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datastore", c.__id, "hosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hosts()
+	})
+}
+
+func (c *mqlVsphereDatastore) GetVms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vms, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.datastore", c.__id, "vms")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vms()
+	})
+}
+
 // mqlVsphereCluster for the vsphere.cluster resource
 type mqlVsphereCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVsphereClusterInternal it will be used here
+	mqlVsphereClusterInternal
 	Moid          plugin.TValue[string]
 	Name          plugin.TValue[string]
 	InventoryPath plugin.TValue[string]
@@ -3801,6 +3877,8 @@ type mqlVsphereHost struct {
 	NumCpuCores             plugin.TValue[int64]
 	FirewallRulesets        plugin.TValue[[]any]
 	IscsiAdapters           plugin.TValue[[]any]
+	Cluster                 plugin.TValue[*mqlVsphereCluster]
+	Datastores              plugin.TValue[[]any]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -4099,6 +4177,38 @@ func (c *mqlVsphereHost) GetIscsiAdapters() *plugin.TValue[[]any] {
 		}
 
 		return c.iscsiAdapters()
+	})
+}
+
+func (c *mqlVsphereHost) GetCluster() *plugin.TValue[*mqlVsphereCluster] {
+	return plugin.GetOrCompute[*mqlVsphereCluster](&c.Cluster, func() (*mqlVsphereCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "cluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereCluster), nil
+			}
+		}
+
+		return c.cluster()
+	})
+}
+
+func (c *mqlVsphereHost) GetDatastores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Datastores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "datastores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.datastores()
 	})
 }
 
@@ -4468,6 +4578,8 @@ type mqlVsphereVm struct {
 	VmwareToolsVersion  plugin.TValue[string]
 	GuestIpAddress      plugin.TValue[string]
 	GuestHostname       plugin.TValue[string]
+	Host                plugin.TValue[*mqlVsphereHost]
+	Datastores          plugin.TValue[[]any]
 }
 
 // createVsphereVm creates a new instance of this resource
@@ -4619,6 +4731,38 @@ func (c *mqlVsphereVm) GetGuestIpAddress() *plugin.TValue[string] {
 
 func (c *mqlVsphereVm) GetGuestHostname() *plugin.TValue[string] {
 	return &c.GuestHostname
+}
+
+func (c *mqlVsphereVm) GetHost() *plugin.TValue[*mqlVsphereHost] {
+	return plugin.GetOrCompute[*mqlVsphereHost](&c.Host, func() (*mqlVsphereHost, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "host")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereHost), nil
+			}
+		}
+
+		return c.host()
+	})
+}
+
+func (c *mqlVsphereVm) GetDatastores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Datastores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "datastores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.datastores()
+	})
 }
 
 // mqlVsphereVswitchStandard for the vsphere.vswitch.standard resource
