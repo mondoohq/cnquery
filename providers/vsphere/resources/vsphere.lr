@@ -298,7 +298,7 @@ private vsphere.vm @defaults("moid name") {
   powerState string
   // Free-form description / notes set on the VM
   annotation string
-  // When the VM was created
+  // When the VM was created. vCenter may not report this for VMs created before vSphere 6.7 or for templates; in those cases the field is the zero time (0001-01-01).
   createDate time
   // Number of snapshots in the VM's snapshot tree (0 if none)
   numSnapshots int
