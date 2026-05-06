@@ -41,6 +41,7 @@ const (
 	ResourceVsphereVm               string = "vsphere.vm"
 	ResourceVsphereVmSnapshot       string = "vsphere.vm.snapshot"
 	ResourceVsphereVmDisk           string = "vsphere.vm.disk"
+	ResourceVsphereEncryptionKey    string = "vsphere.encryptionKey"
 	ResourceVsphereVswitchStandard  string = "vsphere.vswitch.standard"
 	ResourceVsphereVswitchDvs       string = "vsphere.vswitch.dvs"
 	ResourceVsphereVswitchPortgroup string = "vsphere.vswitch.portgroup"
@@ -158,6 +159,10 @@ func init() {
 		"vsphere.vm.disk": {
 			// to override args, implement: initVsphereVmDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereVmDisk,
+		},
+		"vsphere.encryptionKey": {
+			// to override args, implement: initVsphereEncryptionKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereEncryptionKey,
 		},
 		"vsphere.vswitch.standard": {
 			// to override args, implement: initVsphereVswitchStandard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -956,14 +961,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vm.disk.uuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVmDisk).GetUuid()).ToDataRes(types.String)
 	},
-	"vsphere.vm.disk.encrypted": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVmDisk).GetEncrypted()).ToDataRes(types.Bool)
-	},
-	"vsphere.vm.disk.encryptionKeyId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVmDisk).GetEncryptionKeyId()).ToDataRes(types.String)
+	"vsphere.vm.disk.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmDisk).GetEncryptionKey()).ToDataRes(types.Resource("vsphere.encryptionKey"))
 	},
 	"vsphere.vm.disk.datastore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVmDisk).GetDatastore()).ToDataRes(types.Resource("vsphere.datastore"))
+	},
+	"vsphere.encryptionKey.keyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEncryptionKey).GetKeyId()).ToDataRes(types.String)
+	},
+	"vsphere.encryptionKey.kmsCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEncryptionKey).GetKmsCluster()).ToDataRes(types.Resource("vsphere.kmsCluster"))
 	},
 	"vsphere.vswitch.standard.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchStandard).GetName()).ToDataRes(types.String)
@@ -2152,16 +2160,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereVmDisk).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"vsphere.vm.disk.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVmDisk).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"vsphere.vm.disk.encryptionKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVmDisk).EncryptionKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"vsphere.vm.disk.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmDisk).EncryptionKey, ok = plugin.RawToTValue[*mqlVsphereEncryptionKey](v.Value, v.Error)
 		return
 	},
 	"vsphere.vm.disk.datastore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVmDisk).Datastore, ok = plugin.RawToTValue[*mqlVsphereDatastore](v.Value, v.Error)
+		return
+	},
+	"vsphere.encryptionKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEncryptionKey).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.encryptionKey.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEncryptionKey).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.encryptionKey.kmsCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEncryptionKey).KmsCluster, ok = plugin.RawToTValue[*mqlVsphereKmsCluster](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5092,8 +5108,7 @@ type mqlVsphereVmDisk struct {
 	WriteThrough    plugin.TValue[bool]
 	Sharing         plugin.TValue[string]
 	Uuid            plugin.TValue[string]
-	Encrypted       plugin.TValue[bool]
-	EncryptionKeyId plugin.TValue[string]
+	EncryptionKey   plugin.TValue[*mqlVsphereEncryptionKey]
 	Datastore       plugin.TValue[*mqlVsphereDatastore]
 }
 
@@ -5173,12 +5188,20 @@ func (c *mqlVsphereVmDisk) GetUuid() *plugin.TValue[string] {
 	return &c.Uuid
 }
 
-func (c *mqlVsphereVmDisk) GetEncrypted() *plugin.TValue[bool] {
-	return &c.Encrypted
-}
+func (c *mqlVsphereVmDisk) GetEncryptionKey() *plugin.TValue[*mqlVsphereEncryptionKey] {
+	return plugin.GetOrCompute[*mqlVsphereEncryptionKey](&c.EncryptionKey, func() (*mqlVsphereEncryptionKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm.disk", c.__id, "encryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereEncryptionKey), nil
+			}
+		}
 
-func (c *mqlVsphereVmDisk) GetEncryptionKeyId() *plugin.TValue[string] {
-	return &c.EncryptionKeyId
+		return c.encryptionKey()
+	})
 }
 
 func (c *mqlVsphereVmDisk) GetDatastore() *plugin.TValue[*mqlVsphereDatastore] {
@@ -5194,6 +5217,67 @@ func (c *mqlVsphereVmDisk) GetDatastore() *plugin.TValue[*mqlVsphereDatastore] {
 		}
 
 		return c.datastore()
+	})
+}
+
+// mqlVsphereEncryptionKey for the vsphere.encryptionKey resource
+type mqlVsphereEncryptionKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVsphereEncryptionKeyInternal
+	KeyId      plugin.TValue[string]
+	KmsCluster plugin.TValue[*mqlVsphereKmsCluster]
+}
+
+// createVsphereEncryptionKey creates a new instance of this resource
+func createVsphereEncryptionKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereEncryptionKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.encryptionKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereEncryptionKey) MqlName() string {
+	return "vsphere.encryptionKey"
+}
+
+func (c *mqlVsphereEncryptionKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereEncryptionKey) GetKeyId() *plugin.TValue[string] {
+	return &c.KeyId
+}
+
+func (c *mqlVsphereEncryptionKey) GetKmsCluster() *plugin.TValue[*mqlVsphereKmsCluster] {
+	return plugin.GetOrCompute[*mqlVsphereKmsCluster](&c.KmsCluster, func() (*mqlVsphereKmsCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.encryptionKey", c.__id, "kmsCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereKmsCluster), nil
+			}
+		}
+
+		return c.kmsCluster()
 	})
 }
 

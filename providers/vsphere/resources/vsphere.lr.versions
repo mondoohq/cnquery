@@ -123,6 +123,9 @@ vsphere.datastore.uncommitted 13.0.12
 vsphere.datastore.url 13.0.12
 vsphere.datastore.vmfsVersion 13.0.12
 vsphere.datastore.vms 13.0.12
+vsphere.encryptionKey 13.1.1
+vsphere.encryptionKey.keyId 13.1.1
+vsphere.encryptionKey.kmsCluster 13.1.1
 vsphere.folder 13.0.12
 vsphere.folder.childCount 13.0.12
 vsphere.folder.childTypes 13.0.12
@@ -228,8 +231,7 @@ vsphere.vm.disk.capacityBytes 13.1.1
 vsphere.vm.disk.datastore 13.1.1
 vsphere.vm.disk.diskMode 13.1.1
 vsphere.vm.disk.eagerlyScrub 13.1.1
-vsphere.vm.disk.encrypted 13.1.1
-vsphere.vm.disk.encryptionKeyId 13.1.1
+vsphere.vm.disk.encryptionKey 13.1.1
 vsphere.vm.disk.fileName 13.1.1
 vsphere.vm.disk.key 13.1.1
 vsphere.vm.disk.label 13.1.1

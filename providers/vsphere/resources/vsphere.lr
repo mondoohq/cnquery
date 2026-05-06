@@ -574,12 +574,20 @@ private vsphere.vm.disk @defaults("label capacityBytes diskMode") {
   sharing string
   // Disk UUID assigned by ESXi (stable across vMotion / storage vMotion)
   uuid string
-  // Whether the disk is encrypted via vSphere VM Encryption
-  encrypted bool
-  // CryptoKeyId.KeyId encrypting the disk; empty when not encrypted
-  encryptionKeyId string
+  // Encryption key wrapping this disk, resolved lazily; null when the disk is not encrypted
+  encryptionKey() vsphere.encryptionKey
   // Datastore backing this disk, resolved against vsphere.datacenters[].datastores; null when the backing has no datastore (e.g., RDM with passthrough) or the datastore isn't visible in inventory
   datastore() vsphere.datastore
+}
+
+// vSphere VM Encryption key reference — the CryptoKeyId on an encrypted
+// resource. vCenter only tracks the key's identifier and which provider holds
+// it; the key material itself lives in the KMS.
+private vsphere.encryptionKey @defaults("keyId") {
+  // CryptoKeyId.KeyId — UUID assigned by the KMS provider
+  keyId string
+  // KMS cluster that issued the key, resolved against vsphere.kmsClusters; null when the provider isn't registered
+  kmsCluster() vsphere.kmsCluster
 }
 
 // vSphere standard virtual switch

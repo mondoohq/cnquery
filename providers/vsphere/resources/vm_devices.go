@@ -13,6 +13,12 @@ import (
 
 type mqlVsphereVmDiskInternal struct {
 	cacheDatastoreMoid string
+	cacheKeyId         string
+	cacheKeyProviderId string
+}
+
+type mqlVsphereEncryptionKeyInternal struct {
+	cacheProviderId string
 }
 
 func (v *mqlVsphereVm) snapshots() ([]any, error) {
@@ -71,10 +77,11 @@ func (v *mqlVsphereVm) disks() ([]any, error) {
 		}
 
 		var (
-			label                                                  string
-			backingType, fileName, diskMode, sharing, uuid         string
-			thinProvisioned, eagerlyScrub, writeThrough, encrypted bool
-			encryptionKeyId, datastoreMoid                         string
+			label                                       string
+			backingType, fileName, diskMode, sharing    string
+			uuid                                        string
+			thinProvisioned, eagerlyScrub, writeThrough bool
+			keyId, keyProviderId, datastoreMoid         string
 		)
 		if info := disk.DeviceInfo; info != nil {
 			label = info.GetDescription().Label
@@ -97,8 +104,10 @@ func (v *mqlVsphereVm) disks() ([]any, error) {
 				writeThrough = *b.WriteThrough
 			}
 			if b.KeyId != nil {
-				encrypted = true
-				encryptionKeyId = b.KeyId.KeyId
+				keyId = b.KeyId.KeyId
+				if b.KeyId.ProviderId != nil {
+					keyProviderId = b.KeyId.ProviderId.Id
+				}
 			}
 			if b.Datastore != nil {
 				datastoreMoid = b.Datastore.Encode()
@@ -121,8 +130,10 @@ func (v *mqlVsphereVm) disks() ([]any, error) {
 				writeThrough = *b.WriteThrough
 			}
 			if b.KeyId != nil {
-				encrypted = true
-				encryptionKeyId = b.KeyId.KeyId
+				keyId = b.KeyId.KeyId
+				if b.KeyId.ProviderId != nil {
+					keyProviderId = b.KeyId.ProviderId.Id
+				}
 			}
 			if b.Datastore != nil {
 				datastoreMoid = b.Datastore.Encode()
@@ -133,8 +144,10 @@ func (v *mqlVsphereVm) disks() ([]any, error) {
 			diskMode = b.DiskMode
 			uuid = b.Uuid
 			if b.KeyId != nil {
-				encrypted = true
-				encryptionKeyId = b.KeyId.KeyId
+				keyId = b.KeyId.KeyId
+				if b.KeyId.ProviderId != nil {
+					keyProviderId = b.KeyId.ProviderId.Id
+				}
 			}
 			if b.Datastore != nil {
 				datastoreMoid = b.Datastore.Encode()
@@ -159,14 +172,14 @@ func (v *mqlVsphereVm) disks() ([]any, error) {
 			"writeThrough":    llx.BoolData(writeThrough),
 			"sharing":         llx.StringData(sharing),
 			"uuid":            llx.StringData(uuid),
-			"encrypted":       llx.BoolData(encrypted),
-			"encryptionKeyId": llx.StringData(encryptionKeyId),
 		})
 		if err != nil {
 			return nil, err
 		}
 		mqlDisk := res.(*mqlVsphereVmDisk)
 		mqlDisk.cacheDatastoreMoid = datastoreMoid
+		mqlDisk.cacheKeyId = keyId
+		mqlDisk.cacheKeyProviderId = keyProviderId
 		out = append(out, mqlDisk)
 	}
 	return out, nil
@@ -185,5 +198,45 @@ func (d *mqlVsphereVmDisk) datastore() (*mqlVsphereDatastore, error) {
 		return ds, nil
 	}
 	d.Datastore.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+func (d *mqlVsphereVmDisk) encryptionKey() (*mqlVsphereEncryptionKey, error) {
+	if d.cacheKeyId == "" {
+		d.EncryptionKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(d.MqlRuntime, "vsphere.encryptionKey", map[string]*llx.RawData{
+		"__id":  llx.StringData(d.cacheKeyProviderId + "/" + d.cacheKeyId),
+		"keyId": llx.StringData(d.cacheKeyId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	key := res.(*mqlVsphereEncryptionKey)
+	key.cacheProviderId = d.cacheKeyProviderId
+	return key, nil
+}
+
+func (k *mqlVsphereEncryptionKey) kmsCluster() (*mqlVsphereKmsCluster, error) {
+	if k.cacheProviderId == "" {
+		k.KmsCluster.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(k.MqlRuntime, "vsphere", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	clusters := res.(*mqlVsphere).GetKmsClusters()
+	if clusters.Error != nil {
+		return nil, clusters.Error
+	}
+	for _, c := range clusters.Data {
+		cluster := c.(*mqlVsphereKmsCluster)
+		if cluster.ClusterId.Data == k.cacheProviderId {
+			return cluster, nil
+		}
+	}
+	k.KmsCluster.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
