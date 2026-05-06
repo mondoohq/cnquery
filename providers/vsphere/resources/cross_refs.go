@@ -4,16 +4,18 @@
 package resources
 
 import (
+	"sync"
+
 	"github.com/vmware/govmomi/vim25/types"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
-// vsphereInventory walks vsphere.datacenters and indexes hosts/vms/datastores/
-// clusters by encoded moid for cross-reference resolution. The `vsphere`
-// resource and each datacenter's child list are cached by the runtime, so
-// repeated lookups across many resources only fan out the underlying SOAP
-// calls once.
+// vsphereInventory indexes hosts, VMs, datastores, and clusters by encoded
+// moid for cross-reference resolution. Built once per scan and cached on the
+// singleton vsphere resource (see mqlVsphereInternal), since a query like
+// `vsphere.vms { host datastores }` over N VMs would otherwise rebuild the
+// index 2N times.
 type vsphereInventory struct {
 	hosts      map[string]*mqlVsphereHost
 	vms        map[string]*mqlVsphereVm
@@ -21,12 +23,30 @@ type vsphereInventory struct {
 	clusters   map[string]*mqlVsphereCluster
 }
 
+// mqlVsphereInternal extends mqlVspherePermissionInternal (already declared in
+// vsphere.go); the codegen embeds both fields into the generated resource
+// struct. The sync.Once ensures the inventory index is built exactly once per
+// scan even when called concurrently from multiple cross-reference accessors.
+type mqlVsphereInternal struct {
+	inventoryOnce sync.Once
+	inventory     *vsphereInventory
+	inventoryErr  error
+}
+
 func loadVsphereInventory(runtime *plugin.Runtime) (*vsphereInventory, error) {
 	res, err := CreateResource(runtime, "vsphere", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
-	dcs := res.(*mqlVsphere).GetDatacenters()
+	v := res.(*mqlVsphere)
+	v.inventoryOnce.Do(func() {
+		v.inventory, v.inventoryErr = buildVsphereInventory(v)
+	})
+	return v.inventory, v.inventoryErr
+}
+
+func buildVsphereInventory(v *mqlVsphere) (*vsphereInventory, error) {
+	dcs := v.GetDatacenters()
 	if dcs.Error != nil {
 		return nil, dcs.Error
 	}
@@ -38,29 +58,25 @@ func loadVsphereInventory(runtime *plugin.Runtime) (*vsphereInventory, error) {
 	}
 	for _, d := range dcs.Data {
 		dc := d.(*mqlVsphereDatacenter)
-		hosts := dc.GetHosts()
-		if hosts.Error == nil {
+		if hosts := dc.GetHosts(); hosts.Error == nil {
 			for _, h := range hosts.Data {
 				host := h.(*mqlVsphereHost)
 				inv.hosts[host.Moid.Data] = host
 			}
 		}
-		vms := dc.GetVms()
-		if vms.Error == nil {
+		if vms := dc.GetVms(); vms.Error == nil {
 			for _, vm := range vms.Data {
-				v := vm.(*mqlVsphereVm)
-				inv.vms[v.Moid.Data] = v
+				m := vm.(*mqlVsphereVm)
+				inv.vms[m.Moid.Data] = m
 			}
 		}
-		datastores := dc.GetDatastores()
-		if datastores.Error == nil {
+		if datastores := dc.GetDatastores(); datastores.Error == nil {
 			for _, ds := range datastores.Data {
-				d := ds.(*mqlVsphereDatastore)
-				inv.datastores[d.Moid.Data] = d
+				s := ds.(*mqlVsphereDatastore)
+				inv.datastores[s.Moid.Data] = s
 			}
 		}
-		clusters := dc.GetClusters()
-		if clusters.Error == nil {
+		if clusters := dc.GetClusters(); clusters.Error == nil {
 			for _, c := range clusters.Data {
 				cl := c.(*mqlVsphereCluster)
 				inv.clusters[cl.Moid.Data] = cl

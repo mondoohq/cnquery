@@ -2706,7 +2706,7 @@ func (c *mqlAuditCvss) GetVector() *plugin.TValue[string] {
 type mqlVsphere struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVsphereInternal it will be used here
+	mqlVsphereInternal
 	About           plugin.TValue[any]
 	Licenses        plugin.TValue[[]any]
 	Datacenters     plugin.TValue[[]any]
