@@ -45,7 +45,7 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 	for i, h := range vhosts {
 		hostRefs[i] = h.Reference()
 	}
-	vapiTagsByMoid := BatchGetTags(ctx, hostRefs, vClient.Client.Client, conn.Conf)
+	vapiTagsByMoid := BatchGetTags(ctx, hostRefs, conn)
 
 	// Stage 1 — concurrent fetch of per-host data (SOAP + JSON marshaling).
 	// CreateResource is held back to stage 2 because it touches the runtime
@@ -223,7 +223,7 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 	for i, vm := range vms {
 		vmRefs[i] = vm.Reference()
 	}
-	vapiTagsByMoid := BatchGetTags(ctx, vmRefs, vClient.Client.Client, conn.Conf)
+	vapiTagsByMoid := BatchGetTags(ctx, vmRefs, conn)
 
 	// Stage 1 — concurrent VmInfo + VmProperties for each VM.
 	type stagedVm struct {

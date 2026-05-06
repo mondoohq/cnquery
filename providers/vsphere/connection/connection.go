@@ -8,12 +8,14 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
+	"sync"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/vapi/rest"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 )
 
@@ -23,6 +25,9 @@ type VsphereConnection struct {
 	asset              *inventory.Asset
 	client             *govmomi.Client
 	selectedPlatformID string
+
+	restMu     sync.Mutex
+	restClient *rest.Client
 }
 
 func vSphereConnectionURL(hostname string, port int32, user string, password string) (*url.URL, error) {
@@ -86,7 +91,35 @@ func (c *VsphereConnection) Client() *govmomi.Client {
 	return c.client
 }
 
+// RestClient returns a logged-in vAPI REST client for this connection,
+// creating it on the first call. The same client is reused for every
+// vAPI request from this connection (tag lookups, etc.), so a single
+// `mql run` doesn't pay the ~800ms vAPI login cost more than once per
+// connection.
+func (c *VsphereConnection) RestClient(ctx context.Context) (*rest.Client, error) {
+	c.restMu.Lock()
+	defer c.restMu.Unlock()
+	if c.restClient != nil {
+		return c.restClient, nil
+	}
+	creds, err := vault.GetPassword(c.Conf.Credentials)
+	if err != nil {
+		return nil, err
+	}
+	rc := rest.NewClient(c.client.Client)
+	if err := rc.Login(ctx, url.UserPassword(creds.User, string(creds.Secret))); err != nil {
+		return nil, err
+	}
+	c.restClient = rc
+	return rc, nil
+}
+
 func (c *VsphereConnection) Close() {
+	if c.restClient != nil {
+		if err := c.restClient.Logout(context.Background()); err != nil {
+			log.Error().Err(err).Msg("failed to logout from vSphere REST session")
+		}
+	}
 	if c.client != nil {
 		if err := c.client.Logout(context.Background()); err != nil {
 			log.Error().Err(err).Msg("failed to logout from vSphere connection")
