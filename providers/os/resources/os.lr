@@ -28,7 +28,11 @@ extend asset {
 
 // Operating system end-of-life status
 //
-// Check whether the platform has reached vendor end-of-support
+// Examine the End-of-Life metadata Mondoo publishes for the asset's
+// detected operating system or platform: the EoL date itself, a
+// product-page URL, and a documentation URL. Used by audits to flag
+// hosts whose vendor has stopped issuing security patches and to plan
+// migrations before unsupported software accumulates risk.
 asset.eol @defaults("date") {
   // Documentation URL
   docsUrl string
@@ -50,7 +54,14 @@ private mondoo.eol {
 
 // Asset vulnerability assessment
 //
-// Examine CVEs, advisories, and affected packages from the intelligence feed
+// Top-level entry point for vulnerability data Mondoo derives for an
+// asset by joining its installed-package inventory and platform identity
+// against the curated CVE / advisory feed. Exposes every CVE affecting
+// the asset, every vendor advisory that mentions one of those CVEs, the
+// affected packages with their currently-installed and patched-available
+// versions, the timestamp of the last assessment run, and the rolled-up
+// CVSS statistics — the surface used to score asset risk and to drive
+// patch-status policies.
 vulnmgmt {
   // List of all CVEs affecting the asset
   cves() []vuln.cve
@@ -110,9 +121,14 @@ private vuln.package @defaults("name version") {
   arch string
 }
 
-// All platform and package advisories
+// Platform and package advisories
 //
-// Examine vendor advisories with CVSS scores and severity counts
+// Examine the consolidated list of vendor advisories that affect the
+// asset, plus a worst-case CVSS roll-up across all of them and a
+// statistical breakdown by severity (total, critical, high, medium, low,
+// none, unknown). Use it to drive policies that require zero outstanding
+// critical-severity advisories or that compare an asset's advisory load
+// against a baseline.
 platform.advisories {
   []audit.advisory
   // Worst CVSS score for all advisories
@@ -121,9 +137,13 @@ platform.advisories {
   stats() dict
 }
 
-// All platform and package CVEs
+// Platform and package CVEs
 //
-// Examine known CVEs affecting the asset with CVSS scores and severity counts
+// Examine the full list of CVEs that affect the asset's installed
+// packages or platform, plus a worst-case CVSS roll-up across them and
+// a per-severity statistical breakdown (total, critical, high, medium,
+// low, none, unknown). Used to enforce ceilings on outstanding critical
+// or high-severity CVEs and to surface the most urgent fixes.
 platform.cves {
   []audit.cve
   // Worst CVSS score for all CVEs
@@ -180,7 +200,15 @@ private audit.cve {
 
 // Hardware identity from SMBIOS / DMI
 //
-// Examine BIOS, system, baseboard, chassis, CPU, and Secure Boot details
+// Top-level namespace for low-level hardware identity exposed by the
+// firmware. The sub-resources below — `machine.bios`, `machine.system`,
+// `machine.baseboard`, `machine.chassis`, `machine.cpu`, and
+// `machine.secureboot` — surface the SMBIOS / DMI tables (vendor /
+// version / release date for the BIOS, manufacturer / product / SKU /
+// UUID / serial for the system, baseboard and chassis identifiers, CPU
+// socket and core counts) plus the EFI Secure Boot posture read from
+// EFI variables on Linux. Used for inventory, warranty / supply-chain
+// reviews, and platform-firmware compliance.
 machine {}
 
 // SMBIOS BIOS information
@@ -261,7 +289,15 @@ machine.secureboot @defaults("enabled") {
 
 // Operating system information
 //
-// Examine hostname, uptime, environment, and pending updates
+// Top-level entry point for operating-system-level facts about the
+// asset. Examine the pretty hostname (or Windows device name), the
+// FQDN-style hostname, the system's machine ID, the hypervisor it's
+// running under (when virtualized), the running environment variables
+// and the resolved PATH list, the current uptime, the list of available
+// OS updates with their categories and severities, whether a reboot is
+// pending after recent installs, and the current system date / timezone.
+// Used as the cross-platform anchor that audits start from when they
+// need OS identity and patch state.
 os {
   // Pretty hostname on macOS/Linux or device name on Windows
   name() string
@@ -309,7 +345,13 @@ os.update @defaults("name")  {
 
 // Generic operating system information common to all platforms
 //
-// Examine identity, environment, users, groups, and update state
+// Cross-platform OS view that embeds `machine` (firmware / SMBIOS
+// hardware identity) and exposes the fields shared by every supported
+// platform: the pretty hostname (or Windows device name), the
+// FQDN-style hostname, environment variables and the resolved PATH
+// list, uptime, the available-OS-update list, the reboot-pending flag,
+// and the typed `users()` and `groups()` collections. `os.unix` and
+// `os.linux` extend this with platform-specific surfaces.
 os.base {
   embed machine
 
@@ -335,14 +377,24 @@ os.base {
 
 // Operating system information for Unix-like platforms
 //
-// Examine the cross-platform os.base attributes plus Unix-specific surfaces
+// Extends `os.base` for Unix-family operating systems (macOS, Linux,
+// FreeBSD, and similar). Aliases such as `os.base.user` / `os.base.group`
+// / `os.base.file` / `os.base.command` / `os.base.packages` route to
+// concrete Unix resources, and `os.unix.sshd` aliases to the system-wide
+// `sshd` resource so audits can express "examine sshd on the asset"
+// without knowing the exact platform.
 os.unix {
   embed os.base as base
 }
 
 // Operating system information for Linux platforms
 //
-// Examine firewall, fstab, AppArmor, and other Linux-only surfaces
+// Extends `os.unix` (and through it, `os.base`) with Linux-only
+// surfaces: the four supported packet-filter stacks (`iptables`,
+// `ip6tables`, `nftables`, `ufw`, `firewalld`), the `/etc/fstab` mount
+// table, and the AppArmor mandatory-access-control namespace. Use it
+// to write Linux-specific audits without reaching out to global
+// resource handles.
 os.linux {
   embed os.unix as unix
 
@@ -364,7 +416,14 @@ os.linux {
 
 // Operating system root certificate trust store
 //
-// Examine the certificates the OS trusts for TLS validation
+// Examine the X.509 root certificates that the asset's operating system
+// trusts for TLS validation, derived from the platform-appropriate
+// trust-store files (e.g. `/etc/ssl/certs/ca-certificates.crt` on
+// Debian, `/etc/pki/tls/certs/ca-bundle.crt` on RHEL, the macOS
+// SecTrust store, the Windows Root certificate store). The resource
+// lazily reads each trust-store file and exposes the parsed
+// `network.certificate` list so audits can pin specific issuers,
+// detect untrusted local additions, or count the trust-store size.
 os.rootCertificates {
   []certificate(content)
   // List of files that define these certificates
@@ -372,9 +431,15 @@ os.rootCertificates {
   content(files) []string
 }
 
-// Results of running a command on the system
+// Result of running a shell command on the system
 //
-// Examine stdout, stderr, and exit code from arbitrary system commands
+// Provides ad-hoc command execution as an MQL resource. Initialize it
+// with a shell command string; the resource lazily executes the command
+// through the connection (local exec, SSH, container exec, etc.) and
+// surfaces the captured `stdout`, `stderr`, and `exitcode`. Used as a
+// fall-back when there isn't a more specific typed resource for a
+// piece of system state, and for assertions on tool versions or
+// command-line probes.
 command {
   init(command string)
   // Raw contents of the command
@@ -387,9 +452,14 @@ command {
   exitcode(command) int
 }
 
-// Results of running a PowerShell script on the system
+// Result of running a PowerShell script on the system
 //
-// Examine stdout, stderr, and exit code from arbitrary PowerShell scripts
+// Provides ad-hoc PowerShell execution as an MQL resource. Initialize
+// it with a script string; the resource lazily executes the script via
+// PowerShell on the asset and surfaces the captured `stdout`, `stderr`,
+// and `exitcode`. Used as the Windows / cross-platform-PowerShell
+// counterpart to `command` for assertions that need PowerShell-only
+// surface area.
 powershell {
   init(script string)
   // Raw contents of the script
@@ -404,7 +474,15 @@ powershell {
 
 // File on the system
 //
-// Examine path, contents, size, ownership, and POSIX permissions
+// Examine a single file referenced by absolute path. Surfaces the path
+// itself, the basename and dirname, an `exists` flag, the lazily-loaded
+// `content` string, the file's size in bytes, an `empty` predicate, the
+// owning `user` and `group` as typed references, and a structured
+// `permissions` resource that explodes the POSIX mode into named user /
+// group / other read / write / execute bits, the SUID / SGID / sticky
+// bits, the `isFile` / `isDirectory` / `isSymlink` discriminators, and
+// a printed mode string. The unit of file-level audits and the building
+// block most config-file resources read through.
 file @defaults("path size permissions.string") {
   init(path string)
   // Location of the file on the system
@@ -479,7 +557,9 @@ private file.permissions @defaults("string") {
 
 // File search and discovery namespace
 //
-// Use files.find to locate files by name, type, regex, or permissions
+// Empty top-level namespace whose only purpose is to host
+// `files.find`. Used so audits can write `files.find(...) {...}` to
+// locate files on the asset rather than enumerating known paths.
 files {}
 
 // Find files on the system
@@ -600,7 +680,14 @@ parse.openpgp {
 
 // User account on the system
 //
-// Examine UID, group, shell, home, SSH keys, and login state
+// Examine a single local user account: numeric UID and primary GID
+// (Windows SID where applicable), name, home directory, configured
+// login shell, and an `enabled` flag. Surfaces the typed primary
+// `group` reference, the `authorizedkeys` resource that parses the
+// user's `~/.ssh/authorized_keys`, the SSH private keys discovered in
+// the user's home, and a `loggedIn` predicate that reflects whether
+// the user currently has an active session. Used for identity audits,
+// dormant-account hygiene, and SSH-key inventories.
 user @defaults("name uid gid") {
   // User ID
   uid int
@@ -628,7 +715,11 @@ user @defaults("name uid gid") {
 
 // Private key on disk
 //
-// Examine PEM data and whether the key is encrypted
+// Examine a PEM-encoded private key file: the typed `file` reference,
+// the raw PEM `pem` payload, and an `encrypted` flag indicating whether
+// the key uses a passphrase. Used to inventory SSH or service-account
+// keys discovered on the asset and to flag unencrypted private keys
+// stored in user home directories.
 privatekey {
   // PEM data
   pem string
@@ -642,14 +733,24 @@ privatekey {
 
 // All user accounts configured on the system
 //
-// Iterate every user across the asset for filtering and aggregation
+// Iterable collection of every local `user` on the asset. Use it as
+// the entry point for fleet-wide identity audits — e.g., asserting
+// that every account with UID < 1000 is enabled, that no account
+// shares another's home directory, or that no human user has the
+// shell set to `/bin/bash` outside an approved list.
 users {
   []user
 }
 
 // SSH authorized_keys file
 //
-// Examine entries that grant key-based SSH login for a user
+// Examine a single `authorized_keys` file: its path, the typed `file`
+// reference, the raw `content` string, and the parsed `[]entry` list
+// where each entry surfaces the line number, key type, key material,
+// label, and any `command=` / `from=` / `no-port-forwarding` SSH
+// options. Used to audit which keys actually grant SSH access to a
+// given user and to detect entries with no source / command
+// restrictions.
 authorizedkeys {
   []authorizedkeys.entry(file, content)
   init(path string)
@@ -679,7 +780,10 @@ authorizedkeys.entry @defaults("key") {
 
 // Group on the system
 //
-// Examine GID, name, and member users for a single group
+// Examine a single local group: numeric GID (or SID on Windows), group
+// name, and the typed `members()` list of users in the group. Used to
+// audit privileged-group membership (`sudo`, `wheel`, `docker`, `adm`,
+// etc.) and to confirm only expected accounts are present.
 group @defaults("name gid") {
   init(id string)
   // Group ID
@@ -694,14 +798,26 @@ group @defaults("name gid") {
 
 // All groups configured on the system
 //
-// Iterate every group across the asset for filtering and aggregation
+// Iterable collection of every local `group`. Use it as the entry
+// point for fleet-wide group-membership audits (every member of a
+// privileged group, no two groups sharing a GID, no human user in
+// `wheel` outside an approved list, etc.).
 groups {
   []group
 }
 
 // Installed package on the platform or OS
 //
-// Examine name, version, status, package URL, and origin metadata
+// Examine a single package known to the asset's native package
+// manager (rpm, deb, apk, pkg, msi, nuget, pacman, etc.). Surfaces
+// the package name, description, currently-installed `version`,
+// architecture, epoch, package format, install status, package URL,
+// the CPE list mapping the package to NVD identifiers, the package
+// origin, the latest `available` version known to the package
+// manager, the `installed` and `outdated` flags, the file
+// inventory the package contributed, and the package vendor.
+// The unit of asset-level package audits and the join key for
+// vulnerability correlation.
 package @defaults("name version") {
   // May be initialized with the name only, in which case it will look up
   // The package with the given name on the system.
@@ -754,7 +870,9 @@ private pkgFileInfo @defaults("path") {
 
 // All packages installed on the system
 //
-// Iterate the full inventory across the asset's package manager(s)
+// Iterable collection of every `package` known to the asset's native
+// package manager(s). Used as the entry point for fleet-wide patch
+// audits, banned-package checks, and inventory exports.
 packages {
   []package
 }
