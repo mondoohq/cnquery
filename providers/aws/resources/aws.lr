@@ -672,13 +672,13 @@ private aws.waf.rule.statement.bytematchstatement @defaults("searchString") {
 
 // Component of an HTTP request that a WAF rule inspects (URI, headers, body, cookies, etc.)
 private aws.waf.rule.fieldtomatch @defaults("target") {
-  // Request component being inspected (e.g., METHOD, URI_PATH, QUERY_STRING, BODY, HEADERS)
+  // Inspected request component (one of: SingleHeader, SingleQueryArgument, allQueryArguments, Body, Cookies, HeaderOrder, JA3Fingerprint, Headers, JsonBody, QueryString, Method, UriPath)
   target string
   // Name of the rule this statement belongs to
   ruleName string
   // ID of the statement
   statementID string
-  // Whether to match the HTTP method: GET or POST
+  // Whether the rule inspects the HTTP method of the request
   method bool
   // Whether to match the URI path
   uriPath bool
