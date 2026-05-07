@@ -4,7 +4,11 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/network"
 option go_package = "go.mondoo.com/mql/v13/providers/network/resources"
 
-// Network socket: protocol, port, and target address
+// Network socket
+//
+// Examine an addressable network endpoint by `protocol`, `port`, and
+// `address`. Used as a building block for higher-level resources like
+// `tls` that need to know "what to talk to".
 socket @defaults("protocol port address") {
   // Transport protocol (e.g., tcp, udp)
   protocol string
@@ -15,9 +19,21 @@ socket @defaults("protocol port address") {
 }
 
 // HTTP endpoint
+//
+// Empty namespace for HTTP probing. Use `http.get(url: "https://...")`
+// to perform a GET against a URL and inspect the response status,
+// headers (parsed into typed sub-resources for HSTS, CSP, cookies,
+// etc.), and body.
 http {}
 
-// HTTP GET requests
+// HTTP GET request
+//
+// Examine the result of an HTTP GET against a URL. Initialize with
+// `http.get(rawUrl: "https://example.com", followRedirects: true)`.
+// Surfaces the parsed `url`, the `statusCode`, the HTTP `version`,
+// the response `body`, and a typed `header` sub-resource exposing
+// HSTS, CSP, X-Frame-Options, X-XSS-Protection, X-Content-Type-Options,
+// Referrer-Policy, Content-Type, and Set-Cookie semantics.
 http.get @defaults("url statusCode") {
   init(rawUrl string, followRedirects bool)
   // URL for this request
@@ -95,8 +111,14 @@ private http.header.setCookie @defaults("name value") {
   params map[string]string
 }
 
-// URL resource, generally represented as:
-// [scheme:][//[user[:password]@]host[:port]][/]path[?query][#fragment]
+// Parsed URL
+//
+// Examine a parsed URL, generally represented as
+// `[scheme:][//[user[:password]@]host[:port]][/]path[?query][#fragment]`.
+// Initialize with `url(raw: "https://user:pass@host:443/p?q=1#f")` and
+// inspect any of the parsed components individually: scheme, user /
+// password user-info pair, host, port, path, parsed query map, raw
+// query string, and fragment.
 url @defaults("string") {
   init(raw string)
   // The full URL as a string
@@ -121,7 +143,17 @@ url @defaults("string") {
   rawFragment string
 }
 
-// TLS/SSL connection inspection: versions, ciphers, and certificates served by the endpoint
+// TLS/SSL connection inspection
+//
+// Examine the TLS posture of a network endpoint. Initialize with
+// `tls(target: "host:port")` (an optional `domainName` enables SNI
+// testing). Surfaces every TLS / SSL version the endpoint accepts,
+// the cipher suites and extensions advertised, the version / cipher
+// / key-exchange group a modern client actually negotiates, and the
+// served certificate chain — both the SNI-aware chain and the
+// non-SNI fallback. The resource an audit uses to find weak protocol
+// versions, weak ciphers, expired certs, and missing OCSP / SCT
+// support.
 tls @defaults("socket domainName") {
   init(target string)
   // Socket of this connection
@@ -148,14 +180,30 @@ tls @defaults("socket domainName") {
   nonSniCertificates(socket, domainName) []certificate
 }
 
-// X.509 certificates resource
+// X.509 certificate bundle
+//
+// Examine a list of certificates parsed from PEM content. Use it to
+// iterate over a chain and apply per-certificate checks, or to
+// extract the underlying `pem` source.
 certificates {
   []certificate
   // PEM content
   pem string
 }
 
-// X.509 certificate resource
+// X.509 certificate
+//
+// Examine a single X.509 certificate parsed from PEM. Surfaces the
+// raw PEM, every SHA-1 / SHA-256 fingerprint, the serial number, the
+// subject and authority key identifiers, the parsed PKIX subject and
+// issuer distinguished names, version, validity window
+// (`notBefore`, `notAfter`, `expiresIn`), signature and signing
+// algorithm, the `isCA` flag, key usages and extended key usages, the
+// raw and SAN extensions, policy identifiers, CRL distribution points,
+// OCSP server and issuing-certificate URLs, the revoked / verified /
+// expired flags, public-key algorithm and bit length, the
+// `hasSCTs` flag (Certificate Transparency) and the maximum CA chain
+// path length.
 certificate @defaults("serial subject.commonName subject.dn") {
   // PEM content
   pem string
@@ -219,7 +267,13 @@ certificate @defaults("serial subject.commonName subject.dn") {
   maxPathLen() int
 }
 
-// X.509 certificate PKIX name
+// X.509 PKIX name
+//
+// Examine a parsed RFC 5280 distinguished name (DN) — the structured
+// form of a certificate's subject or issuer. Surfaces the canonical
+// DN string, common name, country, organization and organizational
+// unit, locality, province, street address, postal code, serial
+// number, and any extra named attributes.
 pkix.name @defaults("id dn commonName") {
   // Cache key derived from the distinguished name
   id string
@@ -246,7 +300,11 @@ pkix.name @defaults("id dn commonName") {
   extraNames map[string]string
 }
 
-// X.509 certificate PKIX extension
+// X.509 PKIX extension
+//
+// Examine a single extension carried by an X.509 certificate: its
+// OID identifier (e.g., 2.5.29.37 for extKeyUsage), the `critical`
+// flag, and the raw extension value.
 pkix.extension @defaults("id") {
   // Cache key derived from the extension identifier
   id string
@@ -345,6 +403,12 @@ private openpgp.signature {
 }
 
 // Domain name
+//
+// Examine a parsed FQDN. Initialize with `domainName(fqdn: "x.example.com")`.
+// Surfaces the FQDN itself, the effective TLD plus one (the
+// registrable domain), the TLD, an `tldIcannManaged` flag indicating
+// whether the TLD is in the ICANN-managed list, and the individual
+// dot-separated labels.
 domainName @defaults("fqdn") {
   init(fqdn string)
   // Fully qualified domain name (FQDN)
@@ -360,6 +424,11 @@ domainName @defaults("fqdn") {
 }
 
 // DNS resource
+//
+// Examine the DNS records published for a fully-qualified domain
+// name. Initialize with `dns(fqdn: "example.com")`. Surfaces every
+// resolved record, the MX record list, and a parsed view of any DKIM
+// public-key records discovered for the domain.
 dns @defaults("fqdn") {
   init(fqdn string)
   // Fully qualified domain name (FQDN)
@@ -375,6 +444,10 @@ dns @defaults("fqdn") {
 }
 
 // DNS record
+//
+// Examine a single resolved DNS record: name, type, class, TTL, and
+// the rdata payload (IP addresses, hostnames, or other values
+// depending on the record type).
 dns.record @defaults("name type") {
   // DNS name
   name string
@@ -389,6 +462,10 @@ dns.record @defaults("name type") {
 }
 
 // DNS MX record
+//
+// Examine a single MX record: the record name, the resolved target
+// `domainName`, and the `preference` value used to choose between
+// multiple MX records.
 dns.mxRecord @defaults("domainName") {
   // Record name
   name string
@@ -398,7 +475,13 @@ dns.mxRecord @defaults("domainName") {
   domainName string
 }
 
-// DKIM public key representation as defined in RFC 6376
+// DKIM public-key DNS record (RFC 6376)
+//
+// Examine a parsed DKIM TXT record: the raw DNS text, the selector
+// domain, the version, the acceptable hash algorithms, the key type,
+// the base64-encoded public-key data, the service-type restrictions,
+// the DKIM flags, free-form notes, and a `valid()` predicate that
+// validates the record and its public key.
 dns.dkimRecord @defaults("dnsTxt") {
   // DNS text representation
   dnsTxt string
