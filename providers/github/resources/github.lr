@@ -42,7 +42,7 @@ private git.gpgSignature @defaults("sha") {
   verified bool
   // GPG signature payload
   payload string
-  // GPG signature
+  // Cryptographic signature value over the payload
   signature string
 }
 
@@ -92,7 +92,7 @@ github.organization @defaults("login name") {
   collaborators int
   // Organization billing email
   billingEmail string
-  // GitHub plan the organization is subscribed to
+  // GitHub plan details (name, seats, filled_seats, private_repos)
   plan dict
   // Whether two-factor authentication is required for all members. This value will be null if the API token does not have owner access on the organization.
   twoFactorRequirementEnabled bool
@@ -246,9 +246,9 @@ private github.organization.customRole @defaults("id name baseRole") {
   description string
   // Base role this is built on (read, triage, write, maintain, admin)
   baseRole string
-  // Permissions granted by the role
+  // Permission identifiers granted by the role (e.g., repository.read, team.admin)
   permissions []string
-  // Source of the role (e.g., Organization)
+  // Origin of the role (e.g., Organization, Enterprise)
   source string
   // Role creation time
   createdAt time
@@ -700,7 +700,7 @@ private github.repository.codeowners @defaults("path exists") {
   exists bool
   // Raw file contents (empty if not found)
   content string
-  // Parsed rules
+  // Parsed CODEOWNERS rules from the file
   rules []github.codeowners.rule
 }
 
@@ -802,11 +802,11 @@ private github.repositoryRuleset @defaults("id name enforcement") {
   source string
   // Enforcement level (active, evaluate, disabled)
   enforcement string
-  // Bypass actors
+  // Users, teams, or apps allowed to bypass this ruleset (each dict has actor type, id, and bypass mode)
   bypassActors []dict
-  // Branch/tag name conditions
+  // Conditions that select which refs the ruleset applies to (ref_name, repository_name patterns)
   conditions dict
-  // Rules in this ruleset
+  // Protection rules in this ruleset (each dict configures a constraint such as required reviews or status checks)
   rules []dict
   // Ruleset creation time
   createdAt time
@@ -896,7 +896,7 @@ private github.webhook @defaults("id name") {
   url string
   // List of events for the webhook
   events []string
-  // Webhook configuration including content type, secret, and SSL verification settings
+  // Webhook configuration: content_type (json/form), insecure_ssl (0/1), and a redacted secret reference
   config dict
   // Whether the webhook is active
   active bool
@@ -922,7 +922,7 @@ private github.workflow @defaults("id name") {
   updatedAt time
   // Workflow file
   file() github.file
-  // Workflow configuration
+  // Parsed workflow YAML (name, on, jobs, env, etc.)
   configuration() dict
 }
 
@@ -1004,7 +1004,7 @@ private github.commit @defaults("sha") {
   committer github.user
   // Commit resource object
   commit git.commit
-  // Commit stats
+  // Commit statistics: additions, deletions, total
   stats dict
   // Authored date
   authoredDate time
@@ -1026,7 +1026,7 @@ private github.mergeRequest @defaults("id state") {
   updatedAt time
   // Pull request close time (in UTC); null if the pull request is still open
   closedAt time
-  // Pull request labels
+  // Labels applied to the pull request (each dict: name, color, description)
   labels []dict
   // Pull request title
   title string
@@ -1082,7 +1082,7 @@ private github.installation @defaults("id appId") {
   repositorySelection string
   // Subscribed events
   events []string
-  // Permissions granted to this installation
+  // Permissions granted to this installation (resource type → access level, e.g., contents: read, pull_requests: write)
   permissions dict
   // Time the installation was suspended (null if not suspended)
   suspendedAt time
@@ -1182,7 +1182,7 @@ private github.issue @defaults("title") {
   closedAt time
   // User who opened the issue
   user github.user
-  // Issue labels
+  // Labels applied to the issue (each dict: name, color, description)
   labels []dict
   // Users to whom the issue is assigned
   assignees []github.user
@@ -1278,9 +1278,9 @@ private github.codeScanningAlert @defaults("number state") {
   number int
   // Alert state (open, closed, dismissed, fixed)
   state string
-  // The security rule that triggered the alert
+  // Rule metadata for the alert (id, severity, description, tags)
   rule dict
-  // The tool that generated the alert
+  // Analysis tool that produced the alert (name, version, GUID)
   tool dict
   // API URL
   url string
