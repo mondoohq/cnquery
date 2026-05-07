@@ -129,6 +129,7 @@ datastream
 DATAUSER
 DBFS
 DBRS
+DCs
 ddl
 ddos
 dedup
@@ -202,6 +203,7 @@ gcfs
 gcs
 gelf
 GENEVE
+geocode
 geomatchstatement
 GHSA
 gistfile
@@ -505,6 +507,7 @@ selfservice
 sentinelone
 serde
 serviceconnection
+servicedesk
 serviceprincipals
 Sflags
 sfn
