@@ -6,51 +6,51 @@ option go_package = "go.mondoo.com/mql/v13/providers/datadog/resources"
 
 // Datadog observability and security platform
 datadog {
-  // Users
+  // Datadog users in the organization
   users() []datadog.user
-  // Roles
+  // Roles defined for permissioning
   roles() []datadog.role
-  // Monitors
+  // Alerting monitors
   monitors() []datadog.monitor
-  // Dashboards
+  // Dashboards in the organization
   dashboards() []datadog.dashboard
-  // Synthetics tests
+  // Synthetics tests configured in the organization
   syntheticsTests() []datadog.syntheticsTest
-  // Service Level Objectives
+  // Service Level Objectives (SLOs)
   slos() []datadog.slo
-  // Log indexes
+  // Log indexes that organize ingested log data
   logIndexes() []datadog.logIndex
-  // Security monitoring rules
+  // Security monitoring rules that detect threats and policy violations
   securityRules() []datadog.securityRule
   // Downtimes (scheduled)
   downtimes() []datadog.downtime
-  // API keys
+  // API keys that allow agents and integrations to send data to Datadog
   apiKeys() []datadog.apiKey
-  // Application keys
+  // Application keys used by users for HTTP API calls
   applicationKeys() []datadog.applicationKey
   // IP allowlist entries
   ipAllowlistEntries() []dict
   // Whether the IP allowlist is enabled
   ipAllowlistEnabled() bool
-  // AWS integrations
+  // Configured AWS integrations (Datadog AWS account links)
   integrationAwsAccounts() []datadog.integration.aws
-  // Teams
+  // Datadog teams (groups of users)
   teams() []datadog.team
-  // Sensitive data scanner groups
+  // Sensitive Data Scanner groups (PII redaction rule containers)
   sensitiveDataScannerGroups() []datadog.sensitiveDataScannerGroup
-  // Security monitoring filters
+  // Security monitoring filters that exclude logs from rule evaluation
   securityFilters() []datadog.securityFilter
-  // Security monitoring suppressions
+  // Security monitoring suppressions that silence specific signals
   securitySuppressions() []datadog.securitySuppression
-  // Service accounts
+  // Service accounts (non-user identities for API access)
   serviceAccounts() []datadog.serviceAccount
-  // Logs archives
+  // Logs archives that ship logs to long-term storage
   logsArchives() []datadog.logsArchive
-  // RUM applications
+  // Real User Monitoring (RUM) applications
   rumApplications() []datadog.rumApplication
-  // Synthetics global variables
+  // Global variables shared across synthetics tests
   syntheticsGlobalVariables() []datadog.syntheticsGlobalVariable
-  // Synthetics private locations
+  // Private locations that run synthetics tests inside customer networks
   syntheticsPrivateLocations() []datadog.syntheticsPrivateLocation
 }
 
@@ -212,7 +212,7 @@ datadog.logIndex @defaults("name") {
   numRetentionDays int
   // Daily limit
   dailyLimit int
-  // Whether daily limit warning threshold percentage
+  // Daily-limit warning threshold as a percentage (0-100)
   dailyLimitWarningThresholdPercentage float
   // Is rate limited
   isRateLimited bool
@@ -474,7 +474,7 @@ datadog.syntheticsGlobalVariable @defaults("id name") {
   description string
   // Tags
   tags []string
-  // Whether the value is secure
+  // Whether the variable holds a Time-based One-Time Password (TOTP)
   isTotp bool
   // Whether the value is from a Fido device
   isFido bool
@@ -488,10 +488,10 @@ datadog.syntheticsPrivateLocation @defaults("id name") {
   id string
   // Location name
   name string
-  // Description (fetched from detail API)
+  // Description of the private location
   description() string
-  // Tags (fetched from detail API)
+  // Tags applied to the private location
   tags() []string
-  // Metadata (fetched from detail API)
+  // Metadata for the private location (region, OS, runtime details)
   metadata() dict
 }
