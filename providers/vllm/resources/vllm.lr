@@ -5,6 +5,12 @@ option provider = "go.mondoo.com/mql/providers/vllm"
 option go_package = "go.mondoo.com/mql/v13/providers/vllm/resources"
 
 // vLLM inference server
+//
+// Examine the security posture of a remote vLLM HTTP inference server:
+// the server-level summary, the per-endpoint anonymous-access probe
+// results, the minimal metrics-exposure posture, and the reported
+// vLLM version. Used to find vLLM deployments that expose admin,
+// profiler, or metrics endpoints without authentication.
 vllm {
   // Server-level HTTP posture summary
   server() vllm.server
@@ -17,6 +23,13 @@ vllm {
 }
 
 // vLLM server-level HTTP posture
+//
+// Examine the server-wide HTTP exposure findings: the base URL the
+// connection probed, whether the server is reachable, the reported
+// vLLM version, whether the connection is over TLS, and whether
+// FastAPI docs / OpenAPI / Prometheus metrics / /load / tokenizer-info
+// / dev / profiler endpoints are anonymously exposed. Also surfaces
+// CORS posture (configured at all, accepts any origin).
 vllm.server @defaults("baseUrl reachable version") {
   // Base URL used by this connection
   baseUrl() string
@@ -47,6 +60,13 @@ vllm.server @defaults("baseUrl reachable version") {
 }
 
 // vLLM HTTP endpoint posture
+//
+// Examine the probe result for a single vLLM HTTP endpoint, identified
+// by `path` and `method` (e.g., `vllm.endpoint(path: "/v1/models",
+// method: "GET")`). Each probe records the endpoint category, whether
+// the route was observed at all, the anonymous and authenticated
+// status codes, whether anonymous traffic reached the route or got an
+// auth-like rejection, and human-readable notes from the probe.
 vllm.endpoint @defaults("method path category present anonymousAccessible requiresAuth") {
   init(path string, method string)
   // HTTP method used by the probe
@@ -70,6 +90,11 @@ vllm.endpoint @defaults("method path category present anonymousAccessible requir
 }
 
 // Minimal vLLM metrics exposure posture
+//
+// Examine whether the metrics-related endpoints are anonymously
+// reachable: the Prometheus `/metrics` endpoint, the `/load` endpoint,
+// and whether `/load` returns enough state to leak load-tracking
+// information.
 vllm.metrics @defaults("prometheusExposed loadEndpointExposed") {
   // Whether /metrics is anonymously exposed
   prometheusExposed() bool
