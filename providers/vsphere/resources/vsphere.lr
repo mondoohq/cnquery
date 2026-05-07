@@ -379,11 +379,12 @@ private vsphere.host @defaults("moid name") {
   datastores() []vsphere.datastore
 }
 
+// DEPRECATED: will be replaced by vsphere.host.firewallRuleset.
 // ESXi firewall ruleset — one entry per network service (e.g., CIMHttpServer,
 // DVSSync, sshServer). Models the per-service rule definitions and their
 // allowed-IP scope; the global default-deny posture lives on
 // vsphere.host.firewallIncomingBlocked / firewallOutgoingBlocked.
-private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") {
+private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("deprecated") {
   // Identifier (host inventory path + ruleset key)
   id string
   // Service identifier (e.g., CIMHttpServer, DVSSync, sshServer)
@@ -406,8 +407,9 @@ private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") {
   rules []esxi.firewallRule
 }
 
+// DEPRECATED: will be replaced by vsphere.host.firewallRule.
 // Single port/protocol rule within an esxi.firewallRuleset.
-private esxi.firewallRule @defaults("port direction protocol") {
+private esxi.firewallRule @defaults("port direction protocol") @maturity("deprecated") {
   // Identifier (parent ruleset id + rule index)
   id string
   // Port number (or start port for a range)
@@ -716,8 +718,9 @@ private esxi.kernelmodule @defaults("name") {
   vibAcceptanceLevel string
 }
 
+// DEPRECATED: will be replaced by vsphere.host.service.
 // vSphere ESXi management service resource
-private esxi.service @defaults("key label") {
+private esxi.service @defaults("key label") @maturity("deprecated") {
   // Brief identifier for the service
   key string
   // Display label for the service
