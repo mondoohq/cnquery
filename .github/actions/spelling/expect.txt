@@ -100,6 +100,7 @@ cmnd
 cname
 CNs
 cocoapods
+Codeium
 codeowners
 codeql
 colo
@@ -532,6 +533,7 @@ stepfunctions
 streamable
 stringx
 Stus
+subkeys
 subnetted
 subscriptionfilter
 superusers
