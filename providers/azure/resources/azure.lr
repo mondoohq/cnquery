@@ -176,6 +176,8 @@ private azure.subscription.computeService {
   images() []azure.subscription.computeService.image
   // All Compute Galleries (Shared Image Galleries) under a subscription
   galleries() []azure.subscription.computeService.gallery
+  // All Azure Arc-enabled servers (Microsoft.HybridCompute/machines) under a subscription
+  hybridMachines() []azure.subscription.computeService.hybridMachine
 }
 
 // Azure Compute virtual machine
@@ -256,6 +258,68 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   patchMode string
   // Virtual Machine Scale Set that manages this VM, if any (resolved from managedBy)
   vmScaleSet() azure.subscription.computeService.vmScaleSet
+}
+
+// Azure Arc-enabled server (Microsoft.HybridCompute/machines)
+azure.subscription.computeService.hybridMachine @defaults("name location osName osVersion status") {
+  // ARM resource ID
+  id string
+  // Machine name (Azure resource name)
+  name string
+  // Location
+  location string
+  // Tags
+  tags map[string]string
+  // ARM resource type (Microsoft.HybridCompute/machines)
+  type string
+  // Connection status of the Arc agent. Possible values: "Connected", "Disconnected", "Error", "Expired"
+  status string
+  // Last time the Arc agent reported in
+  lastStatusChange time
+  // Connected Machine agent version
+  agentVersion string
+  // OS name reported by the agent (e.g. "windows", "linux")
+  osName string
+  // OS product SKU (e.g. "Windows Server 2019 Datacenter")
+  osSku string
+  // OS edition (e.g. "Datacenter", "Standard")
+  osEdition string
+  // OS version reported by the agent
+  osVersion string
+  // OS type as Azure classifies it ("Windows" / "Linux")
+  osType string
+  // Azure-side display name for the machine
+  displayName string
+  // Hybrid machine FQDN
+  machineFqdn string
+  // DNS-resolvable FQDN
+  dnsFqdn string
+  // AD domain the machine is joined to (Windows only)
+  domainName string
+  // AD fully qualified display name
+  adFqdn string
+  // Hybrid machine unique ID (Arc-assigned)
+  vmId string
+  // Arc Machine's unique SMBIOS UUID
+  vmUuid string
+  // Provisioning state of the ARM resource
+  provisioningState string
+  // Resource ID of the parent Azure HCI cluster, if any
+  parentClusterResourceId string
+  // Resource ID of the private link scope this machine is assigned to, if any
+  privateLinkScopeResourceId string
+  // Detected agent-reported properties (azureResourceId, manufacturer, model, etc.)
+  detectedProperties map[string]string
+  // Detected cloud environment metadata (Azure/GCP/AWS/OCI provider, account, region) when applicable
+  cloudMetadata dict
+  // Windows license / ESU attestation profile
+  licenseProfile dict
+  // Raw HybridCompute machine properties
+  properties dict
+  // Azure Resource Manager system metadata (createdBy, createdAt, lastModifiedBy)
+  systemData dict
+  // Installed Arc machine extensions
+  extensions() []dict
 }
 
 // Azure compute disk resource

@@ -1392,6 +1392,7 @@ var azureServiceToARMMap = map[string]string{
 	"synapse":               "Microsoft.Synapse",
 	"operationalinsights":   "Microsoft.OperationalInsights",
 	"recoveryservices":      "Microsoft.RecoveryServices",
+	"hybridcompute":         "Microsoft.HybridCompute",
 }
 
 func azureServiceToARM(service string) string {
@@ -1534,6 +1535,9 @@ var azurePermissionOverrides = map[string]string{
 
 	// Network: privateDnsZoneGroups are nested under privateEndpoints/
 	"Microsoft.Network/privateDNSZoneGroups/read": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups/read",
+
+	// HybridCompute: machine extensions are nested under machines/, not a top-level type
+	"Microsoft.HybridCompute/machineExtensions/read": "Microsoft.HybridCompute/machines/extensions/read",
 }
 
 // azurePermission constructs the RBAC permission string.

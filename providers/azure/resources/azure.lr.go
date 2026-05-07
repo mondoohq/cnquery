@@ -23,6 +23,7 @@ const (
 	ResourceAzureSubscriptionResource                                                            string = "azure.subscription.resource"
 	ResourceAzureSubscriptionComputeService                                                      string = "azure.subscription.computeService"
 	ResourceAzureSubscriptionComputeServiceVm                                                    string = "azure.subscription.computeService.vm"
+	ResourceAzureSubscriptionComputeServiceHybridMachine                                         string = "azure.subscription.computeService.hybridMachine"
 	ResourceAzureSubscriptionComputeServiceDisk                                                  string = "azure.subscription.computeService.disk"
 	ResourceAzureSubscriptionComputeServiceDiskEncryptionSet                                     string = "azure.subscription.computeService.diskEncryptionSet"
 	ResourceAzureSubscriptionComputeServiceDiskAccess                                            string = "azure.subscription.computeService.diskAccess"
@@ -324,6 +325,10 @@ func init() {
 		"azure.subscription.computeService.vm": {
 			Init:   initAzureSubscriptionComputeServiceVm,
 			Create: createAzureSubscriptionComputeServiceVm,
+		},
+		"azure.subscription.computeService.hybridMachine": {
+			Init:   initAzureSubscriptionComputeServiceHybridMachine,
+			Create: createAzureSubscriptionComputeServiceHybridMachine,
 		},
 		"azure.subscription.computeService.disk": {
 			Init:   initAzureSubscriptionComputeServiceDisk,
@@ -1693,6 +1698,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.galleries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeService).GetGalleries()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.gallery")))
 	},
+	"azure.subscription.computeService.hybridMachines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeService).GetHybridMachines()).ToDataRes(types.Array(types.Resource("azure.subscription.computeService.hybridMachine")))
+	},
 	"azure.subscription.computeService.vm.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetId()).ToDataRes(types.String)
 	},
@@ -1806,6 +1814,93 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.vm.vmScaleSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetVmScaleSet()).ToDataRes(types.Resource("azure.subscription.computeService.vmScaleSet"))
+	},
+	"azure.subscription.computeService.hybridMachine.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.hybridMachine.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.lastStatusChange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetLastStatusChange()).ToDataRes(types.Time)
+	},
+	"azure.subscription.computeService.hybridMachine.agentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetAgentVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.osName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetOsName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.osSku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetOsSku()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.osEdition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetOsEdition()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.osVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetOsVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.osType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetOsType()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.machineFqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetMachineFqdn()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.dnsFqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetDnsFqdn()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetDomainName()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.adFqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetAdFqdn()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.vmId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetVmId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.vmUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetVmUuid()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.parentClusterResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetParentClusterResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.privateLinkScopeResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetPrivateLinkScopeResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.hybridMachine.detectedProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetDetectedProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.computeService.hybridMachine.cloudMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetCloudMetadata()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.hybridMachine.licenseProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetLicenseProfile()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.hybridMachine.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.hybridMachine.systemData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetSystemData()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.computeService.hybridMachine.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetExtensions()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.computeService.disk.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetId()).ToDataRes(types.String)
@@ -9892,6 +9987,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeService).Galleries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.hybridMachines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeService).HybridMachines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.vm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).__id, ok = v.Value.(string)
 		return
@@ -10046,6 +10145,126 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.vm.vmScaleSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).VmScaleSet, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceVmScaleSet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.lastStatusChange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).LastStatusChange, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.agentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).AgentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.osName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).OsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.osSku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).OsSku, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.osEdition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).OsEdition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.osVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).OsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.osType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).OsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.machineFqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).MachineFqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.dnsFqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).DnsFqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.adFqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).AdFqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.vmId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).VmId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.vmUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).VmUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.parentClusterResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).ParentClusterResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.privateLinkScopeResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).PrivateLinkScopeResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.detectedProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).DetectedProperties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.cloudMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).CloudMetadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.licenseProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).LicenseProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.systemData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).SystemData, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.hybridMachine.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceHybridMachine).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.disk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -22375,6 +22594,7 @@ type mqlAzureSubscriptionComputeService struct {
 	ProximityPlacementGroups plugin.TValue[[]any]
 	Images                   plugin.TValue[[]any]
 	Galleries                plugin.TValue[[]any]
+	HybridMachines           plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionComputeService creates a new instance of this resource
@@ -22575,6 +22795,22 @@ func (c *mqlAzureSubscriptionComputeService) GetGalleries() *plugin.TValue[[]any
 		}
 
 		return c.galleries()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeService) GetHybridMachines() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.HybridMachines, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.computeService", c.__id, "hybridMachines")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hybridMachines()
 	})
 }
 
@@ -22875,6 +23111,192 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetVmScaleSet() *plugin.TValue[*m
 		}
 
 		return c.vmScaleSet()
+	})
+}
+
+// mqlAzureSubscriptionComputeServiceHybridMachine for the azure.subscription.computeService.hybridMachine resource
+type mqlAzureSubscriptionComputeServiceHybridMachine struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceHybridMachineInternal it will be used here
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Location                   plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	Type                       plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	LastStatusChange           plugin.TValue[*time.Time]
+	AgentVersion               plugin.TValue[string]
+	OsName                     plugin.TValue[string]
+	OsSku                      plugin.TValue[string]
+	OsEdition                  plugin.TValue[string]
+	OsVersion                  plugin.TValue[string]
+	OsType                     plugin.TValue[string]
+	DisplayName                plugin.TValue[string]
+	MachineFqdn                plugin.TValue[string]
+	DnsFqdn                    plugin.TValue[string]
+	DomainName                 plugin.TValue[string]
+	AdFqdn                     plugin.TValue[string]
+	VmId                       plugin.TValue[string]
+	VmUuid                     plugin.TValue[string]
+	ProvisioningState          plugin.TValue[string]
+	ParentClusterResourceId    plugin.TValue[string]
+	PrivateLinkScopeResourceId plugin.TValue[string]
+	DetectedProperties         plugin.TValue[map[string]any]
+	CloudMetadata              plugin.TValue[any]
+	LicenseProfile             plugin.TValue[any]
+	Properties                 plugin.TValue[any]
+	SystemData                 plugin.TValue[any]
+	Extensions                 plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionComputeServiceHybridMachine creates a new instance of this resource
+func createAzureSubscriptionComputeServiceHybridMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceHybridMachine{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.hybridMachine", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) MqlName() string {
+	return "azure.subscription.computeService.hybridMachine"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetLastStatusChange() *plugin.TValue[*time.Time] {
+	return &c.LastStatusChange
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetAgentVersion() *plugin.TValue[string] {
+	return &c.AgentVersion
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetOsName() *plugin.TValue[string] {
+	return &c.OsName
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetOsSku() *plugin.TValue[string] {
+	return &c.OsSku
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetOsEdition() *plugin.TValue[string] {
+	return &c.OsEdition
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetOsVersion() *plugin.TValue[string] {
+	return &c.OsVersion
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetOsType() *plugin.TValue[string] {
+	return &c.OsType
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetMachineFqdn() *plugin.TValue[string] {
+	return &c.MachineFqdn
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetDnsFqdn() *plugin.TValue[string] {
+	return &c.DnsFqdn
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetAdFqdn() *plugin.TValue[string] {
+	return &c.AdFqdn
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetVmId() *plugin.TValue[string] {
+	return &c.VmId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetVmUuid() *plugin.TValue[string] {
+	return &c.VmUuid
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetParentClusterResourceId() *plugin.TValue[string] {
+	return &c.ParentClusterResourceId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetPrivateLinkScopeResourceId() *plugin.TValue[string] {
+	return &c.PrivateLinkScopeResourceId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetDetectedProperties() *plugin.TValue[map[string]any] {
+	return &c.DetectedProperties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetCloudMetadata() *plugin.TValue[any] {
+	return &c.CloudMetadata
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetLicenseProfile() *plugin.TValue[any] {
+	return &c.LicenseProfile
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetSystemData() *plugin.TValue[any] {
+	return &c.SystemData
+}
+
+func (c *mqlAzureSubscriptionComputeServiceHybridMachine) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		return c.extensions()
 	})
 }
 

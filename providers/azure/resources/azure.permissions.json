@@ -60,6 +60,8 @@
     "Microsoft.EventHub/namespaces/eventhubs/consumergroups/read",
     "Microsoft.EventHub/namespaces/eventhubs/read",
     "Microsoft.EventHub/namespaces/read",
+    "Microsoft.HybridCompute/machines/extensions/read",
+    "Microsoft.HybridCompute/machines/read",
     "Microsoft.Insights/activityLogAlerts/read",
     "Microsoft.Insights/components/read",
     "Microsoft.Insights/diagnosticSettings/read",
@@ -447,7 +449,7 @@
     {
       "permission": "Microsoft.DBforPostgreSQL/servers/read",
       "service": "Microsoft.DBforPostgreSQL",
-      "action": "NewListBySubscriptionPager",
+      "action": "NewListPager",
       "source_file": "postgresql.go"
     },
     {
@@ -497,6 +499,18 @@
       "service": "Microsoft.EventHub",
       "action": "NewListPager",
       "source_file": "eventhub.go"
+    },
+    {
+      "permission": "Microsoft.HybridCompute/machines/extensions/read",
+      "service": "Microsoft.HybridCompute",
+      "action": "NewListPager",
+      "source_file": "hybridcompute.go"
+    },
+    {
+      "permission": "Microsoft.HybridCompute/machines/read",
+      "service": "Microsoft.HybridCompute",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "hybridcompute.go"
     },
     {
       "permission": "Microsoft.Insights/activityLogAlerts/read",
@@ -561,7 +575,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
