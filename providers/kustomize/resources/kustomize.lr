@@ -4,13 +4,25 @@
 option provider = "go.mondoo.com/mql/v13/providers/kustomize"
 option go_package = "go.mondoo.com/mql/v13/providers/kustomize/resources"
 
-// Kustomize overlay analysis
+// Kustomize overlay
+//
+// Top-level entry point for analyzing one or more `kustomization.yaml`
+// trees. Exposes every parsed kustomization with its transformer
+// configuration, generators, patches, image overrides, replacements, and
+// the rendered Kubernetes resources — used to enforce policy on
+// Kustomize-driven manifests before they reach a cluster.
 kustomize {
   // List of all parsed kustomizations
   kustomizations() []kustomize.kustomization
 }
 
-// A kustomization.yaml configuration
+// kustomization.yaml configuration
+//
+// Examine a single kustomization: directory path, apiVersion / kind, the
+// namespace / namePrefix / nameSuffix / commonLabels / commonAnnotations
+// transformers, the raw resource and component references, declared patches,
+// ConfigMap and Secret generators, image overrides, replacements, and the
+// final rendered Kubernetes resources after running `kustomize build`.
 kustomize.kustomization @defaults("path") {
   // Path to the kustomization directory
   path string
@@ -46,7 +58,12 @@ kustomize.kustomization @defaults("path") {
   replacements() []kustomize.replacement
 }
 
-// A patch definition (strategic merge or JSON patch)
+// Kustomize patch (strategic merge or JSON patch)
+//
+// Examine a patch's content (inline YAML or file path), its target
+// selector (group, version, kind, name, namespace, label selector,
+// annotation selector) — the unit Kustomize uses to mutate base
+// resources during rendering.
 kustomize.patch @defaults("path") {
   // Patch content (inline YAML or file content)
   content string
@@ -68,7 +85,12 @@ kustomize.patch @defaults("path") {
   targetAnnotationSelector string
 }
 
-// A ConfigMap or Secret generator
+// Kustomize ConfigMap or Secret generator
+//
+// Examine a generator declared in a kustomization: its type (configmap or
+// secret), the literal key=value pairs, included files, env-file sources,
+// merge behavior (create / replace / merge), and namespace — useful for
+// surfacing inline secrets or ConfigMap drift.
 kustomize.generator @defaults("name type") {
   // Generator name
   name string
@@ -86,7 +108,11 @@ kustomize.generator @defaults("name type") {
   namespace string
 }
 
-// An image override
+// Kustomize image override
+//
+// Examine an `images:` entry: the original image name, the optional
+// replacement name, and either a new tag or new digest — used to detect
+// non-pinned tags or unintended image swaps during overlay rendering.
 kustomize.image @defaults("name newTag") {
   // Original image name
   name string
@@ -98,7 +124,12 @@ kustomize.image @defaults("name newTag") {
   digest string
 }
 
-// A rendered Kubernetes resource from kustomize build
+// Rendered Kubernetes resource from `kustomize build`
+//
+// Examine a Kubernetes manifest produced by running Kustomize over the
+// overlay tree: apiVersion, kind, name, namespace, labels, annotations
+// (all post-transformation), and the full manifest dict. Use this to
+// enforce policy on the final manifest a cluster will see.
 kustomize.resource @defaults("kind name") {
   // Kubernetes API version
   apiVersion string

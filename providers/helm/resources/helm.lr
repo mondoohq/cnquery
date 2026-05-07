@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/mql/v13/providers/helm"
 option go_package = "go.mondoo.com/mql/v13/providers/helm/resources"
 
-// Helm chart static analysis
+// Helm chart catalog
 //
 // Top-level entry point for analyzing Helm charts. Exposes every parsed
 // chart along with its metadata, templates, rendered Kubernetes resources,
@@ -15,7 +15,7 @@ helm {
   charts() []helm.chart
 }
 
-// A Helm chart
+// Helm chart
 //
 // Examine a chart's Chart.yaml metadata (name, version, apiVersion, type,
 // appVersion, description, keywords, home, sources, icon, deprecated flag),
@@ -59,7 +59,7 @@ helm.chart @defaults("name version") {
   files() []helm.file
 }
 
-// A Helm chart dependency
+// Helm chart dependency
 //
 // Examine an entry from a chart's `dependencies:` list — name, version
 // constraint, repository, conditional-enable expression, tag groupings,
@@ -81,7 +81,7 @@ helm.dependency @defaults("name version") {
   alias string
 }
 
-// A Helm chart maintainer
+// Helm chart maintainer
 //
 // Examine a `maintainers:` entry from Chart.yaml — name, email, and
 // optional URL — useful for supply-chain ownership and contact audits.
@@ -94,7 +94,7 @@ helm.maintainer @defaults("name email") {
   url string
 }
 
-// A Helm template file
+// Helm template file
 //
 // Examine a single file under templates/: its path, the raw Go-template
 // source, the rendered YAML produced by applying the chart's values, the
@@ -114,7 +114,7 @@ helm.template @defaults("name") {
   directives() []helm.directive
 }
 
-// A Go-template directive in a Helm template
+// Go-template directive in a Helm template
 //
 // Examine a single directive (if, range, include, tpl, define, with,
 // block) — type, full expression, and source line — useful for
@@ -129,7 +129,7 @@ helm.directive @defaults("type expression") {
   line int
 }
 
-// A Kubernetes resource rendered from a Helm template
+// Kubernetes resource rendered from a Helm template
 //
 // Examine a Kubernetes manifest produced by rendering a chart with its
 // values: apiVersion, kind, name, namespace, labels, annotations, the full
@@ -154,7 +154,7 @@ helm.resource @defaults("kind name") {
   template() helm.template
 }
 
-// A file within a Helm chart
+// File within a Helm chart
 //
 // Examine a single file shipped with the chart by relative path and lazy
 // content — useful for inspecting NOTES.txt, README, LICENSE, or auxiliary

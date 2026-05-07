@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/mql/v13/providers/depsdev"
 option go_package = "go.mondoo.com/mql/v13/providers/depsdev/resources"
 
-// deps.dev dependency analysis
+// deps.dev dependency catalog
 //
 // Top-level entry point for static analysis of a project's direct
 // dependencies via the deps.dev API. Currently exposes Go module

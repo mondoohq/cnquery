@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/mql/v13/providers/bicep"
 option go_package = "go.mondoo.com/mql/v13/providers/bicep/resources"
 
-// Bicep / ARM template static analysis
+// Bicep / ARM template
 //
 // Top-level entry point for analyzing Azure Bicep source or compiled ARM
 // JSON. Exposes the Bicep source files (parameters, variables, resources,
@@ -18,7 +18,7 @@ bicep {
   template() bicep.template
 }
 
-// A Bicep source file
+// Bicep source file
 //
 // Examine a single .bicep file: its target scope (resourceGroup,
 // subscription, managementGroup, tenant), declared parameters / variables /
@@ -80,7 +80,7 @@ bicep.variable @defaults("name") {
   description string
 }
 
-// A resource declaration in Bicep source
+// Bicep resource declaration
 //
 // Examine the symbolic name, Azure resource type and apiVersion, the
 // resolved name and location expressions, the full properties body, the
@@ -112,7 +112,7 @@ bicep.resource @defaults("type symbolicName") {
   decorators []string
 }
 
-// A Bicep module reference
+// Bicep module reference
 //
 // Examine a `module` declaration: symbolic name, source path or registry
 // reference (br: / ts: flags break the source out by kind), scope, the
@@ -139,7 +139,7 @@ bicep.module @defaults("name source") {
   decorators []string
 }
 
-// A Bicep output declaration
+// Bicep output declaration
 //
 // Examine an `output` statement: name, type, value expression, and
 // @description — useful for spotting outputs that leak secrets or
@@ -177,7 +177,7 @@ bicep.template @defaults("schema") {
   outputs() map[string]dict
 }
 
-// A resource in the compiled ARM template
+// Resource in the compiled ARM template
 //
 // Examine the resolved Azure resource type, apiVersion, name, location,
 // properties, dependsOn list, and the full ARM manifest for a single
