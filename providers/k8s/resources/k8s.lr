@@ -151,9 +151,9 @@ private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes
 
 // Kubernetes node taint
 private k8s.nodeTaint @defaults("key value effect") {
-  // Taint key
+  // Taint key that pods must tolerate to be scheduled on the node
   key string
-  // Taint value
+  // Taint value (optional) that pods must match alongside the key
   value string
   // Taint effect (NoSchedule, PreferNoSchedule, NoExecute)
   effect string
@@ -427,7 +427,7 @@ private k8s.container @defaults("name") {
   livenessProbe dict
   // Periodic probe of container service readiness
   readinessProbe dict
-  // Image pull policyL Always, Never, or IfNotPresent
+  // Image pull policy: Always, Never, or IfNotPresent
   imagePullPolicy string
   // Security options the pod should run with
   securityContext dict
@@ -801,7 +801,7 @@ private k8s.rbac.role @defaults("name namespace") {
   created time
   // Full resource manifest
   manifest() dict
-  // Cluster Role Rules
+  // Role rules defining the permissions granted within this namespace
   rules []dict
 }
 
@@ -1175,10 +1175,10 @@ private k8s.app {
   version string
   // Application instance
   instance string
-  // Managed by
+  // Tool managing the operation of the application (e.g., helm)
   managedBy string
   // Name of the higher-level application
   partOf string
-  // Components
+  // Component names within the architecture (e.g., database, cache, frontend)
   components []string
 }
