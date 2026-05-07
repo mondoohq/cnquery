@@ -26,7 +26,8 @@ extend asset {
   purl() string
 }
 
-// End-of-life information for the asset's operating system/platform
+// Operating system end-of-life status
+// Check whether the platform has reached vendor end-of-support
 asset.eol @defaults("date") {
   // Documentation URL
   docsUrl string
@@ -46,7 +47,8 @@ private mondoo.eol {
   date() time
 }
 
-// Asset vulnerability information
+// Asset vulnerability assessment
+// Examine CVEs, advisories, and affected packages from the intelligence feed
 vulnmgmt {
   // List of all CVEs affecting the asset
   cves() []vuln.cve
@@ -106,7 +108,8 @@ private vuln.package @defaults("name version") {
   arch string
 }
 
-// All platform/package advisories
+// All platform and package advisories
+// Examine vendor advisories with CVSS scores and severity counts
 platform.advisories {
   []audit.advisory
   // Worst CVSS score for all advisories
@@ -115,7 +118,8 @@ platform.advisories {
   stats() dict
 }
 
-// All platform/package CVEs
+// All platform and package CVEs
+// Examine known CVEs affecting the asset with CVSS scores and severity counts
 platform.cves {
   []audit.cve
   // Worst CVSS score for all CVEs
@@ -170,7 +174,8 @@ private audit.cve {
   worstScore    audit.cvss
 }
 
-// Hardware information from SMBIOS / DMI
+// Hardware identity from SMBIOS / DMI
+// Examine BIOS, system, baseboard, chassis, CPU, and Secure Boot details
 machine {}
 
 // SMBIOS BIOS information
@@ -250,6 +255,7 @@ machine.secureboot @defaults("enabled") {
 }
 
 // Operating system information
+// Examine hostname, uptime, environment, and pending updates
 os {
   // Pretty hostname on macOS/Linux or device name on Windows
   name() string
@@ -296,6 +302,7 @@ os.update @defaults("name")  {
 }
 
 // Generic operating system information common to all platforms
+// Examine identity, environment, users, groups, and update state
 os.base {
   embed machine
 
@@ -320,11 +327,13 @@ os.base {
 }
 
 // Operating system information for Unix-like platforms
+// Examine the cross-platform os.base attributes plus Unix-specific surfaces
 os.unix {
   embed os.base as base
 }
 
 // Operating system information for Linux platforms
+// Examine firewall, fstab, AppArmor, and other Linux-only surfaces
 os.linux {
   embed os.unix as unix
 
@@ -344,7 +353,8 @@ os.linux {
   apparmor() apparmor
 }
 
-// Operating system root certificates
+// Operating system root certificate trust store
+// Examine the certificates the OS trusts for TLS validation
 os.rootCertificates {
   []certificate(content)
   // List of files that define these certificates
@@ -353,6 +363,7 @@ os.rootCertificates {
 }
 
 // Results of running a command on the system
+// Examine stdout, stderr, and exit code from arbitrary system commands
 command {
   init(command string)
   // Raw contents of the command
@@ -366,6 +377,7 @@ command {
 }
 
 // Results of running a PowerShell script on the system
+// Examine stdout, stderr, and exit code from arbitrary PowerShell scripts
 powershell {
   init(script string)
   // Raw contents of the script
@@ -379,6 +391,7 @@ powershell {
 }
 
 // File on the system
+// Examine path, contents, size, ownership, and POSIX permissions
 file @defaults("path size permissions.string") {
   init(path string)
   // Location of the file on the system
@@ -451,7 +464,8 @@ private file.permissions @defaults("string") {
   string() string
 }
 
-// Namespace for file search and discovery resources
+// File search and discovery namespace
+// Use files.find to locate files by name, type, regex, or permissions
 files {}
 
 // Find files on the system
@@ -473,7 +487,8 @@ files.find {
   depth int
 }
 
-// Parse INI files
+// Parse INI configuration files
+// Examine sections and key-value pairs from any INI-formatted file
 parse.ini {
   init(path string, delimiter string)
   // Symbol that separates keys and values
@@ -489,6 +504,7 @@ parse.ini {
 }
 
 // Parse JSON files
+// Examine the parsed structure of any JSON document on disk
 parse.json {
   init(path string)
   // File that is parsed
@@ -500,6 +516,7 @@ parse.json {
 }
 
 // Parse XML files
+// Examine the parsed structure of any XML document on disk
 parse.xml {
   init(path string)
   // File that is parsed
@@ -510,7 +527,8 @@ parse.xml {
   params(content) dict
 }
 
-// Parse plist files
+// Parse Apple property list (plist) files
+// Examine the parsed structure of XML or binary plist files
 parse.plist {
   init(path string)
   // File that is parsed
@@ -522,6 +540,7 @@ parse.plist {
 }
 
 // Parse YAML files
+// Examine single- or multi-document YAML structures from disk
 parse.yaml {
   init(path string)
   // File that is parsed
@@ -534,7 +553,8 @@ parse.yaml {
   documents(content) []dict
 }
 
-// Parse certificates from files
+// Parse X.509 certificates from files
+// Examine PEM-encoded certificate chains and bundles
 parse.certificates {
   []network.certificate(content, path)
   init(path string)
@@ -546,7 +566,8 @@ parse.certificates {
   content(file) string
 }
 
-// Parse OpenPGP from files
+// Parse OpenPGP keys from files
+// Examine OpenPGP entities (keys, identities, subkeys) from key files
 parse.openpgp {
   []network.openpgp.entity(content)
   init(path string)
@@ -556,7 +577,8 @@ parse.openpgp {
   content(file) string
 }
 
-// User on this system
+// User account on the system
+// Examine UID, group, shell, home, SSH keys, and login state
 user @defaults("name uid gid") {
   // User ID
   uid int
@@ -582,7 +604,8 @@ user @defaults("name uid gid") {
   loggedIn() bool
 }
 
-// Private key resource
+// Private key on disk
+// Examine PEM data and whether the key is encrypted
 privatekey {
   // PEM data
   pem string
@@ -594,12 +617,14 @@ privatekey {
   encrypted bool
 }
 
-// Users configured on this system
+// All user accounts configured on the system
+// Iterate every user across the asset for filtering and aggregation
 users {
   []user
 }
 
-// List of SSH authorized keys
+// SSH authorized_keys file
+// Examine entries that grant key-based SSH login for a user
 authorizedkeys {
   []authorizedkeys.entry(file, content)
   init(path string)
@@ -627,7 +652,8 @@ authorizedkeys.entry @defaults("key") {
   file file
 }
 
-// Group on this system
+// Group on the system
+// Examine GID, name, and member users for a single group
 group @defaults("name gid") {
   init(id string)
   // Group ID
@@ -640,12 +666,14 @@ group @defaults("name gid") {
   members() []user
 }
 
-// Groups configured on this system
+// All groups configured on the system
+// Iterate every group across the asset for filtering and aggregation
 groups {
   []group
 }
 
-// Package on the platform or OS
+// Installed package on the platform or OS
+// Examine name, version, status, package URL, and origin metadata
 package @defaults("name version") {
   // May be initialized with the name only, in which case it will look up
   // The package with the given name on the system.
@@ -696,12 +724,14 @@ private pkgFileInfo @defaults("path") {
   path string
 }
 
-// List of packages on this system
+// All packages installed on the system
+// Iterate the full inventory across the asset's package manager(s)
 packages {
   []package
 }
 
-// PAM configuration (pluggable authentication module)
+// PAM (pluggable authentication module) configuration
+// Examine /etc/pam.d service entries with their type, control, and module
 pam.conf {
   init(path string)
   // List of files that make up the PAM configuration
@@ -730,10 +760,12 @@ private pam.conf.serviceEntry @defaults("service module") {
   options []string
 }
 
-// SSH server resource
+// OpenSSH server (sshd) namespace
+// Use sshd.config to examine the effective server settings and match blocks
 sshd {}
 
-// SSH server configuration
+// OpenSSH server (sshd) configuration
+// Examine ciphers, MACs, KEX algorithms, host keys, and Match blocks
 sshd.config {
   init(path? string)
   // File of this SSH server configuration
@@ -778,7 +810,8 @@ private sshd.config.matchBlock @defaults("criteria") @context("file.context") {
   permitRootLogin(params) []string
 }
 
-// auditd (Linux Audit Daemon) configuration
+// auditd (Linux Audit Daemon) global configuration
+// Examine /etc/audit/auditd.conf parameters
 auditd.config {
   init(path? string)
   // File of this auditd configuration
@@ -787,8 +820,8 @@ auditd.config {
   params(file) map[string]string
 }
 
-// auditd (Linux Audit Daemon) rules aggregated on disk
-// via /etc/audit/audit.rules by default
+// auditd (Linux Audit Daemon) ruleset on disk
+// Examine controls, file watches, and syscall rules from /etc/audit/audit.rules
 auditd.rules {
   // Path to folder to look up rules
   path() string
@@ -856,12 +889,14 @@ private auditd.rule.syscall @defaults("action list") {
 }
 
 // Apache2 HTTP Server
+// Examine server configuration and daemon version
 apache2 {
   // Apache2 version (e.g., "2.4.62")
   version() string
 }
 
 // Apache2 HTTP Server configuration
+// Examine directives, loaded modules, virtual hosts, and directory blocks
 apache2.conf {
   init(path? string)
   // Primary configuration file
@@ -926,6 +961,7 @@ private apache2.conf.directory @defaults("path") {
 }
 
 // Nginx HTTP Server
+// Examine server configuration, daemon version, and compiled-in modules
 nginx {
   // Nginx version (e.g., "1.25.3")
   version() string
@@ -934,6 +970,7 @@ nginx {
 }
 
 // Nginx HTTP Server configuration
+// Examine directives, server blocks, upstream pools, and listen addresses
 nginx.conf {
   init(path? string)
   // Primary configuration file
@@ -997,6 +1034,7 @@ private nginx.conf.location @defaults("path") {
 }
 
 // systemd journald configuration
+// Examine the [Journal] and other sections of journald.conf
 journald.config {
   init(path? string)
   // File of this journald configuration
@@ -1023,7 +1061,8 @@ journald.config.section.param @defaults("name value") {
   value string
 }
 
-// Service on this system
+// Service on the system
+// Examine install, enable, run state, type, and unit metadata
 service @defaults("name running enabled type") {
   init(name string)
   // Name of the service
@@ -1044,12 +1083,14 @@ service @defaults("name running enabled type") {
   static bool
 }
 
-// Services configured on this system
+// All services configured on the system
+// Iterate every service across the asset's init/service manager
 services {
   []service
 }
 
-// systemd timer unit on this system
+// systemd timer unit
+// Examine schedule, activation target, enable state, and run status
 systemd.timer @defaults("name enabled running") {
   init(name string)
   // Name of the timer unit (without .timer suffix)
@@ -1074,12 +1115,14 @@ systemd.timer @defaults("name enabled running") {
   persistent() bool
 }
 
-// All systemd timer units on this system
+// All systemd timer units on the system
+// Iterate every timer for filtering by schedule, target, or status
 systemd.timers {
   []systemd.timer
 }
 
-// systemd socket unit on this system
+// systemd socket unit
+// Examine listen addresses, activation target, and run state
 systemd.socket @defaults("name enabled running") {
   init(name string)
   // Name of the socket unit (without .socket suffix)
@@ -1104,12 +1147,14 @@ systemd.socket @defaults("name enabled running") {
   accept() bool
 }
 
-// All systemd socket units on this system
+// All systemd socket units on the system
+// Iterate every socket-activated unit for listen-address and target audits
 systemd.sockets {
   []systemd.socket
 }
 
-// System kernel information
+// Running kernel and its modules
+// Examine kernel info, sysctl parameters, loaded modules, and installed versions
 kernel @defaults("info") {
   // Active kernel information
   info() dict
@@ -1133,7 +1178,8 @@ kernel.module @defaults("name loaded") {
   loaded bool
 }
 
-// Docker host resource
+// Docker host
+// Examine images and containers managed by the Docker daemon
 docker {
   // List all Docker images
   images() []docker.image
@@ -1141,7 +1187,8 @@ docker {
   containers() []docker.container
 }
 
-// Dockerfile resource
+// Dockerfile parser
+// Examine instructions and per-stage FROM/RUN/COPY/ENV/EXPOSE/USER/HEALTHCHECK
 docker.file @defaults("file.path instructions.length stages.length") {
   init(path string)
   // File information about this Dockerfile
@@ -1292,7 +1339,8 @@ private docker.file.workdir @defaults("path") {
   path string
 }
 
-// Docker image
+// Single Docker image on the host
+// Examine ID, tags, repo digests, size, and labels
 docker.image {
   // Image ID
   id string
@@ -1306,7 +1354,8 @@ docker.image {
   labels map[string]string
 }
 
-// Docker container
+// Single Docker container on the host
+// Examine state, image, command, labels, and the container's embedded OS
 docker.container @defaults("names.first status"){
   embed os.linux as os
   // Container ID
@@ -1329,13 +1378,15 @@ docker.container @defaults("names.first status"){
   hostConfig() dict
 }
 
-// containerd host resource
+// containerd host
+// Examine containers managed by the containerd runtime
 containerd {
   // List all containerd containers
   containers() []containerd.container
 }
 
-// containerd container
+// Single containerd container
+// Examine ID, image, status, namespace, and runtime
 containerd.container @defaults("id status") {
   // Container ID
   id string
@@ -1355,7 +1406,8 @@ containerd.container @defaults("id status") {
   snapshotter string
 }
 
-// IPv4 tables
+// IPv4 packet filter (iptables)
+// Examine tables, chains, and default INPUT/OUTPUT/FORWARD policies
 iptables {
   // All tables (filter, nat, mangle, raw)
   tables() []iptables.table
@@ -1373,7 +1425,8 @@ iptables {
   outputPolicy() string
 }
 
-// IPv6 tables
+// IPv6 packet filter (ip6tables)
+// Examine tables, chains, and default INPUT/OUTPUT/FORWARD policies
 ip6tables {
   // All tables (filter, nat, mangle, raw)
   tables() []iptables.table
@@ -1440,6 +1493,7 @@ iptables.entry {
 }
 
 // nftables firewall
+// Examine tables, chains, rules, and named sets across all address families
 nftables @defaults("tables") {
   // nft version string (e.g., "1.0.2")
   version() string
@@ -1535,7 +1589,8 @@ private nftables.set @defaults("family table name") {
   timeout int
 }
 
-// UFW (Uncomplicated Firewall) status and rules
+// UFW (Uncomplicated Firewall) state and rules
+// Examine status, default policies, configured rules, and application profiles
 ufw @defaults("status rules") {
   // Whether UFW is active ("active", "inactive", "not installed")
   status() string
@@ -1589,7 +1644,8 @@ private ufw.application @defaults("name ports") {
   ports string
 }
 
-// firewalld - Dynamic firewall manager (RHEL/CentOS/Fedora)
+// firewalld dynamic firewall manager (RHEL/CentOS/Fedora)
+// Examine state, default zone, and per-zone services, ports, and rich rules
 firewalld @defaults("status defaultZone") {
   // Whether firewalld is running ("running", "not running", "not installed")
   status() string
@@ -1650,7 +1706,8 @@ private firewalld.richrule @defaults("family rule") {
   action string
 }
 
-// fstab file and entries
+// fstab persistent mount table
+// Examine mount entries with device, mount point, fstype, and options
 fstab @defaults("path") {
   init(path? string)
   path string
@@ -1676,6 +1733,7 @@ private fstab.entry @defaults("device mountpoint") {
 }
 
 // GRUB bootloader configuration
+// Examine /etc/default/grub parameters, menu entries, and password protection
 grub.config @defaults("defaultsPath grubPath") {
   init(defaultsPath? string, grubPath? string)
   // Path to /etc/default/grub (key-value defaults)
@@ -1702,7 +1760,8 @@ private grub.config.entry @defaults("title") {
   isSubmenu bool
 }
 
-// FreeBSD rc.conf system configuration via sysrc
+// FreeBSD rc.conf system configuration
+// Examine variable assignments across rc.conf and rc.conf.local
 sysrc @defaults("files") {
   init(path? string)
   // List of rc.conf files that make up the configuration
@@ -1723,7 +1782,8 @@ private sysrc.entry @defaults("name value") {
   file string
 }
 
-// Process on this system
+// Single process on the system
+// Examine PID, executable, command line, state, and runtime flags
 process @defaults("executable pid state") {
   init(pid int)
   // PID (process ID)
@@ -1738,12 +1798,14 @@ process @defaults("executable pid state") {
   flags() map[string]string
 }
 
-// Processes available on this system
+// All processes running on the system
+// Iterate every process for filtering by executable, user, or state
 processes {
   []process
 }
 
-// TCP/IP port on the system
+// Single TCP/UDP port on the system
+// Examine address, state, attached process, and remote peer
 port @defaults("port protocol address process.executable") {
   // Protocol of this port
   protocol string
@@ -1765,7 +1827,8 @@ port @defaults("port protocol address process.executable") {
   tls(address, port, protocol) network.tls
 }
 
-// TCP/IP ports on the system
+// All TCP/UDP ports on the system
+// Iterate every port — including the listening() subset for exposure audits
 ports {
   []port
   // All listening ports
@@ -1773,6 +1836,7 @@ ports {
 }
 
 // Windows audit policies
+// Examine inclusion and exclusion settings for every audit subcategory
 auditpol {
   []auditpol.entry
 }
@@ -1794,6 +1858,7 @@ auditpol.entry  @defaults("subcategory inclusionsetting exclusionsetting") {
 }
 
 // Windows local security policy
+// Examine system access, event audit, registry values, and privilege rights
 secpol {
   // System access
   systemaccess() map[string]string
@@ -1805,7 +1870,8 @@ secpol {
   privilegerights() map[string][]string
 }
 
-// NTP service configuration
+// NTP daemon configuration
+// Examine servers, restrict directives, fudge entries, and other settings
 ntp.conf {
   init(path string)
   // File of the NTP service configuration
@@ -1822,7 +1888,8 @@ ntp.conf {
   fudge(settings) []string
 }
 
-// rsyslog service configuration
+// rsyslog daemon configuration
+// Examine effective settings across the main file and included fragments
 rsyslog.conf {
   init(path string)
   // Path for the main rsyslog file and search
@@ -1835,7 +1902,8 @@ rsyslog.conf {
   settings(content) []string
 }
 
-// Shadow password suite configuration
+// Shadow password suite (login.defs) configuration
+// Examine password aging, UID/GID ranges, and login policy parameters
 logindefs {
   init(path string)
   // Current configuration file for resource
@@ -1846,7 +1914,8 @@ logindefs {
   params(content) map[string]string
 }
 
-// System resource limits configuration
+// PAM resource limits configuration (limits.conf)
+// Examine soft/hard caps on processes, files, memory, and other resources
 limits {
   // List of files that make up the limits configuration
   files() []file
@@ -1870,7 +1939,8 @@ private limits.entry @defaults("domain item") {
   value string
 }
 
-// Sudoers configuration
+// sudo authorization configuration
+// Examine user specifications, defaults, and aliases across sudoers files
 sudoers @defaults("files") {
   init(path? string)
   // List of files that make up the sudoers configuration
@@ -1941,7 +2011,8 @@ private sudoers.alias @defaults("type name") {
   members []string
 }
 
-// Unix list block devices
+// Unix block devices (lsblk)
+// Examine device names, filesystem types, labels, UUIDs, and mount points
 lsblk {
   []lsblk.entry
 }
@@ -1960,7 +2031,8 @@ lsblk.entry {
   mountpoints  []string
 }
 
-// AppArmor mandatory access control status
+// AppArmor mandatory access control
+// Examine status, loaded profiles, and processes under confinement
 apparmor @defaults("profiles") {
   // AppArmor status output version
   version() string
@@ -1990,7 +2062,8 @@ private apparmor.process @defaults("pid profile status") {
   status string
 }
 
-// SELinux mandatory access control status
+// SELinux mandatory access control
+// Examine enforcement mode, policy type, booleans, and loaded modules
 selinux @defaults("mode") {
   // Whether SELinux is installed on the system
   installed() bool
@@ -2024,7 +2097,8 @@ private selinux.module @defaults("name status") {
   priority int
 }
 
-// Kernel module configuration from modprobe.d
+// Kernel module configuration (modprobe.d)
+// Examine install, remove, blacklist, options, alias, and softdep directives
 modprobe @defaults("blacklists installs") {
   init(path? string)
   // List of files that make up the modprobe configuration
@@ -2117,7 +2191,8 @@ private modprobe.softdep @defaults("module") {
   post []string
 }
 
-// Unix mounted file system
+// Unix mount table
+// Iterate every mount point with device, fstype, options, and capacity
 mount {
   []mount.point
 }
@@ -2143,7 +2218,8 @@ mount.point @defaults("device path fstype") {
   available() int
 }
 
-// Shadowed password file
+// Shadow password file (/etc/shadow)
+// Examine per-user password aging, expiration, and lock state
 shadow {
   []shadow.entry
 }
@@ -2170,7 +2246,8 @@ shadow.entry {
   reserved string
 }
 
-// Yum package manager resource
+// Yum/DNF package manager
+// Examine yum variables and configured repositories
 yum {
   // Variables defined in Yum configuration files (/etc/yum.conf and all .repo files in the /etc/yum.repos.d/)
   vars() map[string]string
@@ -2206,6 +2283,7 @@ yum.repo {
 }
 
 // Windows registry key
+// Examine items, child keys, and existence at a given registry path
 registrykey @defaults("path") {
   init(path string)
   // Registry key path
@@ -2237,7 +2315,8 @@ registrykey.property @defaults("path name") {
   data() dict
 }
 
-// Container image
+// OCI/Docker container image reference
+// Examine fully-qualified name, tag/digest identifier, and source repository
 container.image @defaults("name") {
   // Image reference
   reference string
@@ -2252,6 +2331,7 @@ container.image @defaults("name") {
 }
 
 // Container registry repository
+// Examine registry, scheme, and full repository name for an image source
 container.repository {
   // Container registry repository name
   name string
@@ -2263,7 +2343,8 @@ container.repository {
   registry string
 }
 
-// Kubernetes kubelet configuration
+// Kubernetes kubelet on this node
+// Examine config-file parameters merged with the live process's CLI flags
 kubelet {
   // Kubelet config file
   configFile file
@@ -2273,7 +2354,8 @@ kubelet {
   configuration() dict
 }
 
-// Python package details found on the operating system image
+// Python package inventory
+// Examine all installed packages plus the explicitly-installed top level
 python {
   init(path? string)
   // Path to a specific site-packages location to exclusively scan (empty means scan default locations)
@@ -2317,7 +2399,8 @@ python.package @defaults("name version") {
   dependencies() []python.package
 }
 
-// npm packages
+// npm package inventory
+// Examine the project root, direct dependencies, and full transitive tree
 npm.packages {
   []npm.package
 
@@ -2358,7 +2441,8 @@ npm.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Go module packages
+// Go module inventory
+// Examine the root module, direct dependencies, and full transitive tree
 go.packages {
   []go.package
 
@@ -2393,7 +2477,8 @@ go.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Java packages (Maven, Gradle, JAR archives)
+// Java package inventory (Maven, Gradle, JAR archives)
+// Examine the root project, direct dependencies, and full transitive tree
 java.packages {
   []java.package
 
@@ -2428,7 +2513,8 @@ java.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Rust/Cargo packages
+// Rust/Cargo crate inventory
+// Examine the root crate, direct dependencies, and full transitive tree
 rust.packages {
   []rust.package
 
@@ -2463,7 +2549,8 @@ rust.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// .NET / NuGet packages
+// .NET / NuGet package inventory
+// Examine the root project, direct dependencies, and full transitive tree
 dotnet.packages {
   []dotnet.package
 
@@ -2498,7 +2585,8 @@ dotnet.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// PHP / Composer packages
+// PHP / Composer package inventory
+// Examine the root project, direct dependencies, and full transitive tree
 php.packages {
   []php.package
 
@@ -2533,7 +2621,8 @@ php.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// GitHub Actions dependencies
+// GitHub Actions workflow dependencies
+// Examine action references (owner/repo@version) used across workflow files
 githubactions.packages {
   []githubactions.package
 
@@ -2560,7 +2649,8 @@ githubactions.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Swift packages (SPM and CocoaPods)
+// Swift package inventory (SPM and CocoaPods)
+// Examine all referenced packages with their resolved versions
 swift.packages {
   []swift.package
 
@@ -2589,7 +2679,8 @@ swift.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Terraform provider dependencies (SBOM cataloger).
+// Terraform provider inventory (SBOM cataloger)
+// Examine provider versions pinned in .terraform.lock.hcl
 // Note: the terraform.* namespace is also used by the dedicated Terraform provider
 // for IaC resource scanning. These SBOM resources focus on provider version inventory
 // from .terraform.lock.hcl, not Terraform configuration analysis.
@@ -2621,7 +2712,8 @@ terraform.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Homebrew packages (macOS and Linux)
+// Homebrew package inventory (macOS and Linux)
+// Examine installed formulae and casks with version, tap, and update status
 homebrew.packages {
   []homebrew.package
 }
@@ -2662,7 +2754,8 @@ private homebrew.package @defaults("name version type") {
   prefix string
 }
 
-// Chocolatey packages (Windows)
+// Chocolatey package inventory (Windows)
+// Examine installed packages with version, license, dependencies, and pin state
 chocolatey.packages {
   []chocolatey.package
 }
@@ -2697,7 +2790,8 @@ private chocolatey.package @defaults("name version") {
   projectUrl string
 }
 
-// Jenkins plugin dependencies
+// Jenkins plugin inventory
+// Examine installed plugins with version and inter-plugin dependencies
 jenkins.packages {
   []jenkins.package
 
@@ -2728,7 +2822,8 @@ private jenkins.package @defaults("name version purl") {
   files []pkgFileInfo
 }
 
-// WordPress plugin dependencies
+// WordPress plugin inventory
+// Examine installed plugins with version and WordPress compatibility ranges
 wordpress.packages {
   []wordpress.package
 
@@ -2761,7 +2856,8 @@ private wordpress.package @defaults("name version purl") {
   files []pkgFileInfo
 }
 
-// Ruby/Gem packages
+// Ruby gem inventory
+// Examine the root project, direct dependencies, and full transitive tree
 ruby.packages {
   []ruby.package
 
@@ -2796,7 +2892,8 @@ ruby.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Dart/Flutter packages
+// Dart/Flutter package inventory
+// Examine the root project, direct dependencies, and full transitive tree
 dart.packages {
   []dart.package
 
@@ -2831,7 +2928,8 @@ dart.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Haskell packages (Stack and Cabal)
+// Haskell package inventory (Stack and Cabal)
+// Examine all locked packages with their resolved versions
 haskell.packages {
   []haskell.package
 
@@ -2858,7 +2956,8 @@ haskell.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Elixir packages (Hex via mix.lock)
+// Elixir Hex package inventory (mix.lock)
+// Examine all locked Hex packages with their resolved versions
 elixir.packages {
   []elixir.package
 
@@ -2885,7 +2984,8 @@ elixir.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Erlang packages (Hex via rebar.lock)
+// Erlang Hex package inventory (rebar.lock)
+// Examine all locked Hex packages with their resolved versions
 erlang.packages {
   []erlang.package
 
@@ -2912,7 +3012,8 @@ erlang.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// SWI-Prolog packs
+// SWI-Prolog pack inventory
+// Examine installed packs with their versions
 prolog.packages {
   []prolog.package
 
@@ -2939,7 +3040,8 @@ prolog.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Conda packages (conda-meta or environment.yml)
+// Conda package inventory
+// Examine installed packages from conda-meta or environment.yml
 conda.packages {
   []conda.package
 
@@ -2966,7 +3068,8 @@ private conda.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Julia packages (Manifest.toml)
+// Julia package inventory (Manifest.toml)
+// Examine all locked packages with their resolved versions
 julia.packages {
   []julia.package
 
@@ -2993,7 +3096,8 @@ private julia.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// R packages (renv.lock)
+// R package inventory (renv.lock)
+// Examine all locked packages with their resolved versions
 r.packages {
   []r.package
 
@@ -3020,7 +3124,8 @@ private r.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// Lua packages (LuaRocks)
+// Lua/LuaRocks package inventory
+// Examine all installed rocks with their versions
 lua.packages {
   []lua.package
 
@@ -3047,7 +3152,8 @@ private lua.package @defaults("name version purl") {
   files() []pkgFileInfo
 }
 
-// macOS specific resources
+// macOS-specific operating system surfaces
+// Examine computer name, user defaults, account policies, and system extensions
 macos {
   // macOS computer name
   computerName() string
@@ -3062,6 +3168,7 @@ macos {
 }
 
 // macOS hardware overview
+// Examine chip type, model, memory, serial, and Activation Lock status
 macos.hardware @defaults("machineName chipType physicalMemory serialNumber") {
   // Activation Lock security feature
   activationLockStatus string
@@ -3089,7 +3196,8 @@ macos.hardware @defaults("machineName chipType physicalMemory serialNumber") {
   serialNumber string
 }
 
-// macOS application layer firewall (ALF) service
+// macOS application layer firewall — raw ALF preference values
+// Prefer macos.firewall; this resource exposes the raw integer flags from ALF plist
 macos.alf {
   // Whether the firewall service allows downloaded software to receive incoming connections
   allowDownloadSignedEnabled int
@@ -3116,6 +3224,7 @@ macos.alf {
 }
 
 // macOS application layer firewall
+// Examine enable state, stealth mode, signed-app policy, and per-app rules
 macos.firewall @defaults("enabled stealthEnabled") {
   // Whether the firewall is enabled
   enabled() bool
@@ -3152,6 +3261,7 @@ private macos.firewall.app @defaults("name state") {
 }
 
 // macOS FileVault full-disk encryption
+// Examine enable state, encryption status, and configured recovery keys
 macos.filevault @defaults("enabled status") {
   // Whether FileVault is enabled
   enabled() bool
@@ -3166,6 +3276,7 @@ macos.filevault @defaults("enabled status") {
 }
 
 // macOS Gatekeeper application execution policy
+// Examine whether assessments are enabled and the Gatekeeper status message
 macos.gatekeeper @defaults("enabled status") {
   // Whether Gatekeeper assessments are enabled
   enabled() bool
@@ -3174,6 +3285,7 @@ macos.gatekeeper @defaults("enabled status") {
 }
 
 // macOS System Integrity Protection (SIP)
+// Examine whether SIP is enabled and the system status message
 macos.sip @defaults("enabled status") {
   // Whether System Integrity Protection is enabled
   enabled() bool
@@ -3181,14 +3293,16 @@ macos.sip @defaults("enabled status") {
   status() string
 }
 
-// macOS Time Machine
+// macOS Time Machine backup configuration
+// Examine destinations, schedule, and exclusion preferences
 macos.timemachine {
   // macOS Time Machine preferences
   preferences() dict
 }
 
-// macOS machine settings
-// Note: The resource requires at least admin privileges to run.
+// macOS machine settings via the systemsetup CLI
+// Examine date/time, sleep, remote login, power, and network-time configuration
+// Note: this resource requires at least admin privileges to run.
 macos.systemsetup {
   // Current date
   date() string
@@ -3232,7 +3346,8 @@ macos.systemsetup {
   disableKeyboardWhenEnclosureLockIsEngaged() string
 }
 
-// OpenBSM audit control configuration (used by macOS and other BSD systems)
+// OpenBSM audit_control configuration (macOS and BSD)
+// Examine audit flags, log retention, and policy parameters
 openBSMAudit @defaults("path") {
   init(path? string)
   // Path to the audit_control file
@@ -3267,7 +3382,8 @@ openBSMAudit @defaults("path") {
   memberClearSflagsMask(params) []string
 }
 
-// Windows-specific resource to get operating system details
+// Windows-specific operating system surfaces
+// Examine computer info, hotfixes, and server / optional features
 windows {
   // A consolidated object of system and operating system properties
   // see https://learn.microsoft.com/en-us/dotnet/api/microsoft.powershell.commands.computerinfo?view=powershellsdk-1.1.0 for more information
@@ -3307,7 +3423,8 @@ private macos.systemExtension @defaults("teamID identifier version state"){
   mdmManaged bool
 }
 
-// Safari browser resources (macOS only)
+// Safari browser (macOS only)
+// Examine all installed Safari extensions across users
 safari {
   // All installed Safari extensions
   extensions() []safari.extension
@@ -3338,6 +3455,7 @@ private safari.extension @defaults("name version identifier") {
 }
 
 // macOS launchd job configurations
+// Examine system, library, and user daemons / agents from their plist files
 launchd {
   // All launchd jobs from system and user directories
   jobs() []launchd.job
@@ -3443,7 +3561,8 @@ private windows.optionalFeature @defaults("name") {
   state int
 }
 
-// Windows Firewall resource
+// Windows Firewall (Advanced Security)
+// Examine global settings, per-profile defaults, and individual firewall rules
 windows.firewall {
   // Global firewall settings
   settings() dict
@@ -3534,7 +3653,8 @@ windows.firewall.rule {
   policyStoreSourceType int
 }
 
-// Windows BitLocker
+// Windows BitLocker drive encryption
+// Examine encryption, lock, and protection status across BitLocker volumes
 windows.bitlocker {
   // Windows BitLocker volumes
   volumes() []windows.bitlocker.volume
@@ -3565,7 +3685,8 @@ windows.bitlocker.volume {
   version dict
 }
 
-// Windows security products (antivirus, anti-spyware, firewall, etc.)
+// Windows registered security products
+// Examine antivirus, anti-spyware, and firewall providers from Security Center
 windows.security {
   products() []windows.security.product
 }
@@ -3588,7 +3709,8 @@ private windows.security.product {
   timestamp time
 }
 
-// Health of the Windows security provider
+// Windows Security Center health
+// Examine firewall, antivirus, anti-spyware, Auto-Update, UAC, and IE settings
 windows.security.health {
   // Windows Firewall status and configuration
   firewall dict
@@ -3606,7 +3728,8 @@ windows.security.health {
   securityCenterService dict
 }
 
-// Details about an asset in the cloud
+// Cloud-asset metadata
+// Examine the cloud provider and exposed instance metadata
 cloud @defaults("provider") {
   // Cloud provider (e.g. aws, azure, gcp)
   provider() string
@@ -3628,7 +3751,8 @@ private cloudInstance @defaults("publicHostname privateHostname") {
   metadata() dict
 }
 
-// IP address (v4 or v6) with additional networking details
+// IP address (v4 or v6) with networking details
+// Examine the address itself plus subnet, CIDR, broadcast, and gateway
 ipAddress @defaults("ip") {
   // Unique number that identifies a device on a network (e.g. 172.31.24.71 or 2001:0:2851:782c:869:1f7d:a331:f3e1)
   ip ip
@@ -3642,7 +3766,8 @@ ipAddress @defaults("ip") {
   gateway ip
 }
 
-// Network information on this system
+// Network configuration of this system
+// Examine interfaces, routes, and detected IPv4 / IPv6 addresses
 network {
   // Network interfaces
   interfaces() []networkInterface
@@ -3702,7 +3827,8 @@ private networkRoute @defaults("destination flags"){
   iface() networkInterface
 }
 
-// Chrome browser resources
+// Chromium-family browsers (Chrome, Brave, Edge variants)
+// Examine installed extensions and their content scripts across users and profiles
 chrome {
   // All installed Chrome extensions across all profiles and users
   extensions() []chrome.extension
@@ -3780,7 +3906,8 @@ private chrome.extensionContentScript @defaults("script match") {
   path string
 }
 
-// Firefox browser resources
+// Firefox-family browsers
+// Examine installed addons across all users and profiles
 firefox {
   // All installed Firefox addons across all profiles and users
   addons() []firefox.addon
@@ -3832,7 +3959,8 @@ private firefox.addon @defaults("name version active browser") {
   uid int
 }
 
-// Experimental: USB resource
+// USB device inventory (experimental)
+// Examine attached USB devices with vendor, product, class, and serial
 usb {
   // List of USB devices
   devices() []usb.device
@@ -3866,7 +3994,8 @@ private usb.device @defaults("manufacturer name") {
   isRemovable bool
 }
 
-// Crontab entries on the system
+// Crontab schedule on the system
+// Examine cron entries from system, user, and /etc/cron.* sources
 crontab {
   // All cron entries from system and user crontabs
   entries() []crontab.entry
@@ -3896,7 +4025,8 @@ private crontab.entry @defaults("user command") {
   file file
 }
 
-// Visual Studio Code editor resources
+// Visual Studio Code (and forks)
+// Examine installed extensions across VS Code, Cursor, Windsurf, and similar editors
 vscode {
   // All installed VS Code extensions across all users
   extensions() []vscode.extension
@@ -3928,7 +4058,8 @@ private vscode.extension @defaults("editor name version") {
   categories []string
 }
 
-// Logrotate configuration
+// logrotate configuration
+// Examine global directives and per-log rotation entries across logrotate.d
 logrotate {
   // List of configuration files (main + logrotate.d fragments)
   files() []file
@@ -3951,6 +4082,7 @@ private logrotate.entry @defaults("path") {
 }
 
 // Linux software RAID arrays (mdadm)
+// Examine arrays with their RAID level, state, member devices, and resync progress
 mdadm @defaults("arrays") {
   // List of all discovered RAID arrays
   arrays() []mdadm.array
@@ -3992,7 +4124,8 @@ private mdadm.device @defaults("name state") {
   state string
 }
 
-// ZFS storage pool and dataset management
+// ZFS storage pools and datasets
+// Examine pool health and capacity, vdev topology, and dataset properties
 zfs @defaults("pools") {
   // ZFS version string
   version() string
@@ -4100,7 +4233,8 @@ zfs.dataset @defaults("name type usedBytes") {
   snapshots() []zfs.dataset
 }
 
-// Claude Code instance configuration
+// Claude Code (Anthropic CLI agent) instance
+// Examine account, plugins, skills, projects, and configured MCP servers
 // URL: https://claude.ai/code
 claude.code @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4188,7 +4322,8 @@ private claude.code.mcpServer @defaults("name") @maturity("preview") {
   lastChecked string
 }
 
-// OpenAI Codex CLI instance configuration
+// OpenAI Codex CLI instance
+// Examine auth mode, plugins, skills, MCP servers, and OAuth connectors
 // URL: https://openai.com/index/introducing-codex/
 openai.codex @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4274,7 +4409,8 @@ private openai.codex.connector @defaults("name") @maturity("preview") {
   plugin string
 }
 
-// Cursor editor instance configuration
+// Cursor editor (AI-powered) instance
+// Examine MCP servers, global and project rules, and installed skills
 // URL: https://www.cursor.com/
 cursor @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4330,7 +4466,8 @@ private cursor.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// GitHub Copilot instance configuration
+// GitHub Copilot CLI instance
+// Examine authenticated accounts, MCP servers, and installed skills
 // URL: https://github.com/features/copilot
 github.copilot @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4382,7 +4519,8 @@ private github.copilot.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Goose AI agent configuration
+// Goose AI agent (Block) instance
+// Examine the active provider/model, telemetry, extensions, and skills
 // URL: https://block.github.io/goose/
 goose @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4434,7 +4572,8 @@ private goose.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Gemini CLI instance configuration
+// Gemini CLI (Google) instance
+// Examine auth type, settings, MCP servers, and installed skills
 // URL: https://github.com/google-gemini/gemini-cli
 gemini @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4480,7 +4619,8 @@ private gemini.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Windsurf editor instance configuration
+// Windsurf editor (Codeium) instance
+// Examine global rules / memories, MCP servers, and installed skills
 // URL: https://windsurf.com/
 windsurf @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4534,7 +4674,8 @@ private windsurf.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Zed editor instance configuration
+// Zed editor instance
+// Examine workspace settings and installed extensions
 // URL: https://zed.dev/
 zed @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4546,7 +4687,8 @@ zed @defaults("configPath") @maturity("preview") {
   extensions() []string
 }
 
-// Roo Code instance configuration
+// Roo Code editor instance
+// Examine installed skills
 // URL: https://roocode.com/
 roo @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4574,7 +4716,8 @@ private roo.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Cline instance configuration
+// Cline AI agent instance
+// Examine installed skills
 // URL: https://cline.bot/
 cline @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4602,7 +4745,8 @@ private cline.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Kiro CLI instance configuration
+// Kiro CLI (AWS) instance
+// Examine installed skills
 // URL: https://kiro.dev/
 kiro @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4630,7 +4774,8 @@ private kiro.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Continue instance configuration
+// Continue (open-source AI coding assistant) instance
+// Examine installed skills
 // URL: https://continue.dev/
 continuedev @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4658,7 +4803,8 @@ private continuedev.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Trae instance configuration
+// Trae AI assistant (ByteDance) instance
+// Examine installed skills
 // URL: https://trae.ai/
 trae @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4686,7 +4832,8 @@ private trae.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// OpenCode instance configuration
+// OpenCode AI coding assistant instance
+// Examine installed skills
 // URL: https://opencode.ai/
 opencode @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4714,7 +4861,8 @@ private opencode.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Pi instance configuration
+// Pi AI agent instance
+// Examine installed skills
 // URL: https://pi.dev/
 pi @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4742,7 +4890,8 @@ private pi.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Mistral Vibe instance configuration
+// Mistral Vibe (Mistral AI) instance
+// Examine installed skills
 // URL: https://docs.mistral.ai/tools/vibe/
 mistral.vibe @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4770,7 +4919,8 @@ private mistral.vibe.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Antigravity (Google) instance configuration
+// Antigravity (Google) instance
+// Examine installed skills
 // URL: https://antigravity.google/
 antigravity @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4798,7 +4948,8 @@ private antigravity.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// IBM Bob instance configuration
+// IBM Bob instance
+// Examine installed skills
 // URL: https://www.ibm.com/products/bob
 ibm.bob @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4826,7 +4977,8 @@ private ibm.bob.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// OpenClaw instance configuration
+// OpenClaw AI agent instance
+// Examine installed skills
 // URL: https://openclaw.ai/
 openclaw @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4854,7 +5006,8 @@ private openclaw.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Snowflake Cortex Code instance configuration
+// Snowflake Cortex Code instance
+// Examine installed skills
 // URL: https://www.snowflake.com/en/product/features/cortex-code/
 snowflake.cortex @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4882,7 +5035,8 @@ private snowflake.cortex.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Junie (JetBrains) instance configuration
+// Junie (JetBrains AI agent) instance
+// Examine installed skills
 // URL: https://www.jetbrains.com/junie/
 junie @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4910,7 +5064,8 @@ private junie.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Augment instance configuration
+// Augment Code instance
+// Examine installed skills
 // URL: https://www.augmentcode.com/
 augment @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4938,7 +5093,8 @@ private augment.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Warp AI terminal instance configuration
+// Warp AI terminal instance
+// Examine installed skills
 // URL: https://www.warp.dev/
 warp @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4966,7 +5122,8 @@ private warp.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Kilo Code instance configuration
+// Kilo Code AI agent instance
+// Examine installed skills
 // URL: https://kilocode.ai/
 kilocode @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -4994,7 +5151,8 @@ private kilocode.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// OpenHands instance configuration
+// OpenHands AI agent instance (formerly OpenDevin)
+// Examine installed skills
 // URL: https://www.all-hands.dev/
 openhands @defaults("configPath") @maturity("preview") {
   init(configPath? string)
@@ -5022,7 +5180,8 @@ private openhands.skill @defaults("name") @maturity("preview") {
   sha256() string
 }
 
-// Qwen Code (Alibaba) instance configuration
+// Qwen Code (Alibaba) instance
+// Examine installed skills
 // URL: https://qwen.ai/qwencode
 qwen.code @defaults("configPath") @maturity("preview") {
   init(configPath? string)
