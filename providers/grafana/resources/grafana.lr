@@ -5,6 +5,15 @@ option provider = "go.mondoo.com/mql/v13/providers/grafana"
 option go_package = "go.mondoo.com/mql/v13/providers/grafana/resources"
 
 // Grafana
+//
+// Examine a Grafana instance via its HTTP API: organization details,
+// human users with their roles and MFA / external-auth status, service
+// accounts and their tokens, configured datasources, alerting contact
+// points, the notification-policy routing tree, legacy API keys, RBAC
+// roles, and SSO settings (with a focused view of SAML configuration).
+// The surface auditors use to find weak datasource credentials, missing
+// MFA, expired or broad-scope tokens, deprecated API keys, and
+// permissive SSO configuration.
 grafana {
   // Organization details
   organization() grafana.organization
@@ -29,6 +38,10 @@ grafana {
 }
 
 // Grafana organization
+//
+// Examine the connected Grafana organization's identity: its numeric
+// ID and display name. Grafana organizations scope users, datasources,
+// and most other resources.
 grafana.organization @defaults("id name") {
   // Organization ID
   id int
@@ -37,6 +50,15 @@ grafana.organization @defaults("id name") {
 }
 
 // Grafana organization user
+//
+// Examine a single human user: identity (user ID, org ID, email,
+// display name, login handle), the org-level role (Admin / Editor /
+// Viewer), `lastSeenAt` and a human-readable age, the auth-module
+// the user authenticates against (e.g., `oauth_google`, `ldap`,
+// `saml`, empty for password), the auth labels Grafana attaches,
+// and the convenience predicates `isExternal`, `isGrafanaAdmin`,
+// `isDisabled`, and `mfaEnabled`. RBAC permissions granted to this
+// user are surfaced as an action → scope list map.
 grafana.user @defaults("login role") {
   // User ID
   userId int
@@ -71,6 +93,11 @@ grafana.user @defaults("login role") {
 }
 
 // Grafana service account
+//
+// Examine a service account: numeric ID, parent org ID, name and
+// login, the assigned role (Admin / Editor / Viewer), the `disabled`
+// and `external` flags, and the typed list of tokens issued for this
+// service account.
 grafana.serviceAccount @defaults("id name role") {
   // Service account ID
   id int
@@ -91,6 +118,13 @@ grafana.serviceAccount @defaults("id name role") {
 }
 
 // Grafana service account token
+//
+// Examine a single token issued for a Grafana service account: token
+// ID, the parent service-account ID, the token name, creation
+// timestamp, expiration timestamp (zero when none is configured), a
+// `hasExpiration` predicate, the seconds remaining until expiration
+// (negative when expired), and an `isExpired` flag — used for token
+// hygiene audits and rotation policies.
 grafana.serviceAccountToken @defaults("id name") {
   // Token ID
   id int
@@ -111,6 +145,17 @@ grafana.serviceAccountToken @defaults("id name") {
 }
 
 // Grafana datasource
+//
+// Examine a configured datasource: identity (numeric ID, UID, org
+// ID, name, type — prometheus, loki, mysql, …), access mode and URL,
+// the default-datasource and read-only flags, basic-auth status with
+// the inline username, the database name and DB user, predicates for
+// inline plaintext passwords (`hasPassword`, `hasBasicAuthPassword`)
+// — both legacy / insecure indicators — the
+// `withCredentials` cookie-forwarding flag, the names of secret
+// fields stored encrypted, the non-secret JSON config dict, and the
+// derived TLS posture (`isHttps`, `tlsSkipVerify`, `tlsClientAuth`,
+// `oauthPassThru`).
 grafana.datasource @defaults("id name type") {
   // Datasource ID
   id int
@@ -159,6 +204,13 @@ grafana.datasource @defaults("id name type") {
 }
 
 // Grafana alerting contact point
+//
+// Examine a single alerting contact point: UID, name, type (email,
+// slack, webhook, pagerduty, …), the `disableResolveMessage` flag,
+// the (non-secret) settings dict, the URL configured on the contact
+// point (when applicable), and derived posture predicates —
+// `isHttps`, `tlsSkipVerify`, `hasHttpAuth` — used to flag contact
+// points that route alerts over plaintext or with unverified TLS.
 grafana.contactPoint @defaults("uid name type") {
   // Contact point UID
   uid string
@@ -180,8 +232,15 @@ grafana.contactPoint @defaults("uid name type") {
   hasHttpAuth() bool
 }
 
-// DEPRECATED: legacy Grafana API key (distinct from service account tokens). Use
-// service accounts and tokens for new integrations; api keys are deprecated.
+// DEPRECATED: legacy Grafana API key
+//
+// Legacy API keys are distinct from service-account tokens; use
+// service accounts and tokens for new integrations. Examine a single
+// legacy API key: numeric ID and parent org ID, key name, granted
+// role (Admin / Editor / Viewer), expiration timestamp (zero when
+// none is set) plus `hasExpiration` and `isExpired` predicates, and
+// the service-account ID this key was migrated to (zero when not
+// migrated).
 grafana.apiKey @defaults("name role") @maturity("deprecated") {
   // API key ID
   id int
@@ -201,7 +260,14 @@ grafana.apiKey @defaults("name role") @maturity("deprecated") {
   serviceAccountId int
 }
 
-// Grafana RBAC role (Enterprise/Cloud)
+// Grafana RBAC role (Enterprise / Cloud)
+//
+// Examine a single RBAC role: UID, name (e.g.,
+// `fixed:datasources:writer`), display name, description, group,
+// version number, the `global` (built-in) and `hidden` flags, the
+// permissions map (action → scope list), and `created` / `updated`
+// timestamps. Iterate `grafana.roles` to audit which roles grant
+// which actions across the organization.
 grafana.role @defaults("name displayName") {
   // Role UID
   uid string
@@ -228,6 +294,14 @@ grafana.role @defaults("name displayName") {
 }
 
 // Grafana SSO settings for a single identity provider
+//
+// Examine the SSO configuration for one identity provider (saml,
+// github, google, generic_oauth, azuread, gitlab, okta, …): the
+// provider name, configuration source (`system` vs `database`),
+// enabled flag, the (non-secret) settings dict (Grafana redacts
+// secrets), the `allowSignUp` flag, and a `hasDomainRestriction`
+// predicate indicating whether the provider restricts sign-in to a
+// configured allowed-domains / orgs list.
 grafana.ssoSettings @defaults("provider source") {
   // Provider name (e.g., saml, github, google, generic_oauth, azuread, gitlab, okta)
   provider string
@@ -243,8 +317,16 @@ grafana.ssoSettings @defaults("provider source") {
   hasDomainRestriction bool
 }
 
-// Grafana SAML SSO settings (Enterprise/Cloud). Convenience view of the saml
-// entry from grafana.ssoSettings with security-relevant fields surfaced.
+// Grafana SAML SSO settings (Enterprise / Cloud)
+//
+// Examine the security-relevant fields of the SAML SSO configuration
+// (a focused view of the `saml` entry from `grafana.ssoSettings`):
+// enabled flag, configuration source (`system` vs `database`), the
+// signature algorithm (e.g., rsa-sha256), whether SP-initiated
+// requests are signed, single-logout enabled flag, whether
+// IdP-initiated SSO is allowed, the auto-signup flag, the
+// allowed-organizations list, the `skipOrgRoleSync` flag, and the
+// raw provider settings dict (with secrets redacted by Grafana).
 grafana.samlSettings @defaults("enabled") {
   // Whether SAML SSO is enabled
   enabled bool
@@ -269,6 +351,10 @@ grafana.samlSettings @defaults("enabled") {
 }
 
 // Grafana notification policy tree
+//
+// Examine the alerting notification-policy tree: the default receiver,
+// the labels alerts are grouped by, and the nested routing rules
+// dispatching alerts to specific contact points.
 grafana.notificationPolicy {
   // Default receiver name
   receiver string
