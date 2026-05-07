@@ -310,6 +310,7 @@ logstream
 LONGTERM
 longtermretentionpolicy
 lsp
+lstrip
 lvm
 lvmthin
 MACSEC
@@ -462,6 +463,7 @@ ratebasedstatement
 rbcd
 rdm
 Rdp
+readlines
 recaptcha
 regexmatchstatement
 regexpatternsetreferencestatement
@@ -479,6 +481,7 @@ RRULE
 RSASHA
 RSASSA
 RSession
+rstrip
 rtl
 rtsp
 rulegroup
@@ -526,6 +529,7 @@ srp
 sslv
 Sspr
 stan
+startswith
 stdio
 stdlib
 stepfunctions
