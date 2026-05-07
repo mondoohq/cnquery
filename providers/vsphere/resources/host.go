@@ -124,7 +124,7 @@ func (v *mqlVsphereHost) standardSwitch() ([]any, error) {
 
 	mqlVswitches := make([]any, len(vswitches))
 	for i, s := range vswitches {
-		name := s["Name"].(string)
+		name, _ := s["Name"].(string)
 		var mtu, numPorts, numPortsAvail int64
 		if cached, ok := vsByName[name]; ok {
 			mtu = int64(cached.Mtu)
@@ -162,6 +162,9 @@ func (v *mqlVsphereVswitchStandard) portGroups() ([]any, error) {
 	if v.parentResource == nil || v.parentResource.host == nil ||
 		v.parentResource.host.Config == nil || v.parentResource.host.Config.Network == nil {
 		return []any{}, nil
+	}
+	if v.parentResource.InventoryPath.Error != nil {
+		return nil, v.parentResource.InventoryPath.Error
 	}
 	hostPath := v.parentResource.InventoryPath.Data
 	switchName := v.Name.Data
@@ -202,7 +205,7 @@ func (v *mqlVsphereHost) distributedSwitch() ([]any, error) {
 
 	mqlVswitches := make([]any, len(vswitches))
 	for i, s := range vswitches {
-		name := s["Name"].(string)
+		name, _ := s["Name"].(string)
 		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vswitch.dvs", map[string]*llx.RawData{
 			"__id":       llx.StringData(esxiClient.InventoryPath + "/" + name),
 			"name":       llx.StringData(name),
@@ -377,7 +380,7 @@ func (v *mqlVsphereHost) vmknics() ([]any, error) {
 	mqlVmknics := make([]any, len(vmknics))
 	for i := range vmknics {
 		entry := vmknics[i]
-		nicName := entry.Properties["Name"].(string)
+		nicName, _ := entry.Properties["Name"].(string)
 
 		var (
 			mac, tcpipStack string
