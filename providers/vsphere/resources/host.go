@@ -300,7 +300,7 @@ func (v *mqlVsphereHost) packages() ([]any, error) {
 		}
 		installDate = &parsedInstall
 
-		mqlVib, err := CreateResource(v.MqlRuntime, "esxi.vib", map[string]*llx.RawData{
+		mqlVib, err := CreateResource(v.MqlRuntime, "vsphere.host.vib", map[string]*llx.RawData{
 			"id":              llx.StringData(vib.ID),
 			"name":            llx.StringData(vib.Name),
 			"acceptanceLevel": llx.StringData(vib.AcceptanceLevel),
@@ -339,7 +339,7 @@ func (v *mqlVsphereHost) kernelModules() ([]any, error) {
 
 	mqlModules := make([]any, len(modules))
 	for i, m := range modules {
-		mqlModule, err := CreateResource(v.MqlRuntime, "esxi.kernelmodule", map[string]*llx.RawData{
+		mqlModule, err := CreateResource(v.MqlRuntime, "vsphere.host.kernelModule", map[string]*llx.RawData{
 			"__id":                 llx.StringData(esxiClient.InventoryPath + "/" + m.Module),
 			"name":                 llx.StringData(m.Module),
 			"modulefile":           llx.StringData(m.ModuleFile),
@@ -398,7 +398,7 @@ func (v *mqlVsphereHost) services() ([]any, error) {
 	}
 	mqlServices := make([]any, len(services))
 	for i, s := range services {
-		mqlService, err := CreateResource(v.MqlRuntime, "esxi.service", map[string]*llx.RawData{
+		mqlService, err := CreateResource(v.MqlRuntime, "vsphere.host.service", map[string]*llx.RawData{
 			"__id":     llx.StringData(path + "/" + s.Key),
 			"key":      llx.StringData(s.Key),
 			"label":    llx.StringData(s.Label),
@@ -415,7 +415,7 @@ func (v *mqlVsphereHost) services() ([]any, error) {
 	return mqlServices, nil
 }
 
-func (v *mqlVsphereHost) timezone() (*mqlEsxiTimezone, error) {
+func (v *mqlVsphereHost) timezone() (*mqlVsphereHostTimezone, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	vClient := getClientInstance(conn)
 
@@ -438,7 +438,7 @@ func (v *mqlVsphereHost) timezone() (*mqlEsxiTimezone, error) {
 		return nil, errors.New("vsphere does not return HostDateTimeSystem timezone information")
 	}
 
-	mqlTimezone, err := CreateResource(v.MqlRuntime, "esxi.timezone", map[string]*llx.RawData{
+	mqlTimezone, err := CreateResource(v.MqlRuntime, "vsphere.host.timezone", map[string]*llx.RawData{
 		"__id":        llx.StringData(path + "/" + datetimeinfo.TimeZone.Key),
 		"key":         llx.StringData(datetimeinfo.TimeZone.Key),
 		"name":        llx.StringData(datetimeinfo.TimeZone.Name),
@@ -448,10 +448,10 @@ func (v *mqlVsphereHost) timezone() (*mqlEsxiTimezone, error) {
 	if err != nil {
 		return nil, err
 	}
-	return mqlTimezone.(*mqlEsxiTimezone), nil
+	return mqlTimezone.(*mqlVsphereHostTimezone), nil
 }
 
-func (v *mqlVsphereHost) ntp() (*mqlEsxiNtpconfig, error) {
+func (v *mqlVsphereHost) ntp() (*mqlVsphereHostNtpConfig, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	vClient := getClientInstance(conn)
 
@@ -478,7 +478,7 @@ func (v *mqlVsphereHost) ntp() (*mqlEsxiNtpconfig, error) {
 		config = convert.SliceAnyToInterface(datetimeinfo.NtpConfig.ConfigFile)
 	}
 
-	mqlNtpConfig, err := CreateResource(v.MqlRuntime, "esxi.ntpconfig", map[string]*llx.RawData{
+	mqlNtpConfig, err := CreateResource(v.MqlRuntime, "vsphere.host.ntpConfig", map[string]*llx.RawData{
 		"id":     llx.StringData("ntp/" + host.InventoryPath),
 		"server": llx.ArrayData(server, types.String),
 		"config": llx.ArrayData(config, types.String),
@@ -487,7 +487,7 @@ func (v *mqlVsphereHost) ntp() (*mqlEsxiNtpconfig, error) {
 		return nil, err
 	}
 
-	return mqlNtpConfig.(*mqlEsxiNtpconfig), nil
+	return mqlNtpConfig.(*mqlVsphereHostNtpConfig), nil
 }
 
 func (v *mqlVsphereHost) snmp() (map[string]any, error) {
@@ -535,7 +535,7 @@ func (v *mqlVsphereHost) firewallRulesets() ([]any, error) {
 		mqlRules := make([]any, len(rs.Rule))
 		for i, r := range rs.Rule {
 			ruleId := rsId + "/" + strconv.Itoa(i)
-			mqlRule, err := CreateResource(v.MqlRuntime, "esxi.firewallRule", map[string]*llx.RawData{
+			mqlRule, err := CreateResource(v.MqlRuntime, "vsphere.host.firewallRule", map[string]*llx.RawData{
 				"__id":      llx.StringData(ruleId),
 				"id":        llx.StringData(ruleId),
 				"port":      llx.IntData(int64(r.Port)),
@@ -550,7 +550,7 @@ func (v *mqlVsphereHost) firewallRulesets() ([]any, error) {
 			mqlRules[i] = mqlRule
 		}
 
-		mqlRs, err := CreateResource(v.MqlRuntime, "esxi.firewallRuleset", map[string]*llx.RawData{
+		mqlRs, err := CreateResource(v.MqlRuntime, "vsphere.host.firewallRuleset", map[string]*llx.RawData{
 			"__id":               llx.StringData(rsId),
 			"id":                 llx.StringData(rsId),
 			"key":                llx.StringData(rs.Key),
@@ -561,7 +561,7 @@ func (v *mqlVsphereHost) firewallRulesets() ([]any, error) {
 			"allIpsAllowed":      llx.BoolData(allIp),
 			"allowedIpAddresses": llx.ArrayData(allowedIPs, types.String),
 			"allowedIpNetworks":  llx.ArrayData(allowedNetworks, types.Dict),
-			"rules":              llx.ArrayData(mqlRules, types.Resource("esxi.firewallRule")),
+			"rules":              llx.ArrayData(mqlRules, types.Resource("vsphere.host.firewallRule")),
 		})
 		if err != nil {
 			return nil, err
@@ -592,7 +592,7 @@ func (v *mqlVsphereHost) iscsiAdapters() ([]any, error) {
 		}
 		auth := hba.AuthenticationProperties
 		id := hostPath + "/iscsi/" + hba.Device
-		mqlAdapter, err := CreateResource(v.MqlRuntime, "esxi.iscsiAdapter", map[string]*llx.RawData{
+		mqlAdapter, err := CreateResource(v.MqlRuntime, "vsphere.host.iscsiAdapter", map[string]*llx.RawData{
 			"__id":                         llx.StringData(id),
 			"id":                           llx.StringData(id),
 			"device":                       llx.StringData(hba.Device),
@@ -612,7 +612,7 @@ func (v *mqlVsphereHost) iscsiAdapters() ([]any, error) {
 	return mqlAdapters, nil
 }
 
-func (v *mqlVsphereHost) certificate() (*mqlEsxiCertificate, error) {
+func (v *mqlVsphereHost) certificate() (*mqlVsphereHostCertificate, error) {
 	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
 	vClient := getClientInstance(conn)
 
@@ -667,9 +667,9 @@ func (v *mqlVsphereHost) certificate() (*mqlEsxiCertificate, error) {
 		args["notAfter"] = llx.TimeData(time.Time{})
 	}
 
-	mqlCert, err := CreateResource(v.MqlRuntime, "esxi.certificate", args)
+	mqlCert, err := CreateResource(v.MqlRuntime, "vsphere.host.certificate", args)
 	if err != nil {
 		return nil, err
 	}
-	return mqlCert.(*mqlEsxiCertificate), nil
+	return mqlCert.(*mqlVsphereHostCertificate), nil
 }

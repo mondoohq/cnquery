@@ -334,19 +334,19 @@ private vsphere.host @defaults("moid name") {
   // Virtual network interface that is used by the VMKernel
   vmknics() []vsphere.vmknic
   // All VIBs installed on your ESXi host
-  packages() []esxi.vib
+  packages() []vsphere.host.vib
   // Host-level VIB acceptance level
   acceptanceLevel() string
   // Kernel modules (drivers) on ESXi
-  kernelModules() []esxi.kernelmodule
+  kernelModules() []vsphere.host.kernelModule
   // ESXi host advanced settings
   advancedSettings() map[string]string
   // List of ESXi management services
-  services() []esxi.service
+  services() []vsphere.host.service
   // Host timezone settings
-  timezone() esxi.timezone
+  timezone() vsphere.host.timezone
   // Host NTP configuration
-  ntp() esxi.ntpconfig
+  ntp() vsphere.host.ntpConfig
   // Host SNMP configuration
   snmp() map[string]string
   //Host tags
@@ -360,7 +360,7 @@ private vsphere.host @defaults("moid name") {
   // Whether the host firmware reports UEFI Secure Boot was used during system boot (requires vSphere 8.0.3 or later)
   secureBootEnabled bool
   // Host SSL/TLS certificate
-  certificate() esxi.certificate
+  certificate() vsphere.host.certificate
   // Hardware vendor (as reported by SMBIOS)
   vendor string
   // Hardware model (as reported by SMBIOS)
@@ -370,21 +370,20 @@ private vsphere.host @defaults("moid name") {
   // Number of physical CPU cores across all sockets
   numCpuCores int
   // ESXi firewall rulesets — per-service rule definitions (CIM, SSH, NTP, vMotion, etc.)
-  firewallRulesets() []esxi.firewallRuleset
+  firewallRulesets() []vsphere.host.firewallRuleset
   // iSCSI host bus adapters configured on the host (zero entries if iSCSI is not in use)
-  iscsiAdapters() []esxi.iscsiAdapter
+  iscsiAdapters() []vsphere.host.iscsiAdapter
   // Cluster the host belongs to, resolved against vsphere.datacenters[].clusters; null for standalone hosts
   cluster() vsphere.cluster
   // Datastores mounted on the host, resolved against vsphere.datacenters[].datastores
   datastores() []vsphere.datastore
 }
 
-// DEPRECATED: will be replaced by vsphere.host.firewallRuleset.
 // ESXi firewall ruleset — one entry per network service (e.g., CIMHttpServer,
 // DVSSync, sshServer). Models the per-service rule definitions and their
 // allowed-IP scope; the global default-deny posture lives on
 // vsphere.host.firewallIncomingBlocked / firewallOutgoingBlocked.
-private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("deprecated") {
+private vsphere.host.firewallRuleset @defaults("key enabled allIpsAllowed") {
   // Identifier (host inventory path + ruleset key)
   id string
   // Service identifier (e.g., CIMHttpServer, DVSSync, sshServer)
@@ -395,7 +394,7 @@ private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("d
   enabled bool
   // Whether the ruleset is required by ESXi and cannot be disabled
   required bool
-  // Backing service name (matches an esxi.service.key); empty if no daemon service
+  // Backing service name (matches a vsphere.host.service.key); empty if no daemon service
   service string
   // Whether traffic is allowed from any IP. When false, callers should consult allowedIpAddresses / allowedIpNetworks.
   allIpsAllowed bool
@@ -404,12 +403,11 @@ private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("d
   // Specific IP networks allowed (only populated when allIpsAllowed == false). Each entry is a dict with `network` and `prefixLength`.
   allowedIpNetworks []dict
   // Port and protocol rules opened by this ruleset
-  rules []esxi.firewallRule
+  rules []vsphere.host.firewallRule
 }
 
-// DEPRECATED: will be replaced by vsphere.host.firewallRule.
-// Single port/protocol rule within an esxi.firewallRuleset.
-private esxi.firewallRule @defaults("port direction protocol") @maturity("deprecated") {
+// Single port/protocol rule within a vsphere.host.firewallRuleset.
+private vsphere.host.firewallRule @defaults("port direction protocol") {
   // Identifier (parent ruleset id + rule index)
   id string
   // Port number (or start port for a range)
@@ -426,7 +424,7 @@ private esxi.firewallRule @defaults("port direction protocol") @maturity("deprec
 
 // ESXi iSCSI host bus adapter. Exposes the IQN and CHAP authentication
 // posture (policy + username only — secrets are intentionally not exposed).
-private esxi.iscsiAdapter @defaults("device iScsiName") {
+private vsphere.host.iscsiAdapter @defaults("device iScsiName") {
   // Identifier (host inventory path + device name)
   id string
   // HBA device name (e.g., vmhba65)
@@ -447,8 +445,8 @@ private esxi.iscsiAdapter @defaults("device iScsiName") {
   mutualChapName string
 }
 
-// ESXi host SSL/TLS certificate (from HostCertificateManager)
-private esxi.certificate @defaults("subject status notAfter") {
+// ESXi host SSL/TLS certificate (from HostCertificateManager).
+private vsphere.host.certificate @defaults("subject status notAfter") {
   // Identifier (host inventory path + cert kind)
   id string
   // Certificate kind (e.g. machine, vmca); empty/unset means the host machine cert
@@ -462,6 +460,54 @@ private esxi.certificate @defaults("subject status notAfter") {
   // Validity end (expiration)
   notAfter time
   // Status reported by vCenter (good, expiring, expired, expiringShortly, unknown, etc.)
+  status string
+}
+
+// DEPRECATED: use vsphere.host.firewallRuleset instead.
+private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("deprecated") {
+  id string
+  key string
+  label string
+  enabled bool
+  required bool
+  service string
+  allIpsAllowed bool
+  allowedIpAddresses []string
+  allowedIpNetworks []dict
+  rules []esxi.firewallRule
+}
+
+// DEPRECATED: use vsphere.host.firewallRule instead.
+private esxi.firewallRule @defaults("port direction protocol") @maturity("deprecated") {
+  id string
+  port int
+  endPort int
+  direction string
+  portType string
+  protocol string
+}
+
+// DEPRECATED: use vsphere.host.iscsiAdapter instead.
+private esxi.iscsiAdapter @defaults("device iScsiName") @maturity("deprecated") {
+  id string
+  device string
+  iScsiName string
+  iScsiAlias string
+  chapAuthEnabled bool
+  chapAuthenticationType string
+  chapName string
+  mutualChapAuthenticationType string
+  mutualChapName string
+}
+
+// DEPRECATED: use vsphere.host.certificate instead.
+private esxi.certificate @defaults("subject status notAfter") @maturity("deprecated") {
+  id string
+  kind string
+  subject string
+  issuer string
+  notBefore time
+  notAfter time
   status string
 }
 
@@ -661,12 +707,11 @@ private vsphere.vmknic @defaults("name") {
 }
 
 // VMware ESXi resource
-esxi {}
-
-// Run a command on ESXi
-esxi.command {
+// Run a command on an ESXi host. The connected target must be a host
+// (use --platform-id to select one when connecting through vCenter).
+vsphere.host.command {
   init(command string)
-  // vSphere inventory path
+  // vSphere inventory path of the host the command runs on
   inventoryPath string
   // Raw command
   command string
@@ -674,8 +719,8 @@ esxi.command {
   result() []dict
 }
 
-// vSphere installation bundle resource
-private esxi.vib @defaults("id name") {
+// vSphere installation bundle (VIB) installed on an ESXi host.
+private vsphere.host.vib @defaults("id name") {
   // VIB ID
   id string
   // Bundle name
@@ -694,19 +739,19 @@ private esxi.vib @defaults("id name") {
   version string
 }
 
-// vSphere ESXi kernel module resource
-private esxi.kernelmodule @defaults("name") {
+// ESXi kernel module (driver).
+private vsphere.host.kernelModule @defaults("name") {
   // Module name
   name string
   // Module file location
   modulefile string
   // Module version
   version string
-  // Flag if the module is loaded
+  // Whether the module is currently loaded
   loaded bool
   // Module license
   license string
-  // Flag if the module is enabled
+  // Whether the module is enabled
   enabled bool
   // Module signed status
   signedStatus string
@@ -718,25 +763,25 @@ private esxi.kernelmodule @defaults("name") {
   vibAcceptanceLevel string
 }
 
-// DEPRECATED: will be replaced by vsphere.host.service.
-// vSphere ESXi management service resource
-private esxi.service @defaults("key label") @maturity("deprecated") {
+// ESXi management service (host daemon) — running state, start policy, and
+// the firewall rulesets it gates.
+private vsphere.host.service @defaults("key label") {
   // Brief identifier for the service
   key string
   // Display label for the service
   label string
-  // Flag indicating whether the service is required and cannot be disabled
+  // Whether the service is required and cannot be disabled
   required bool
-  // Flag indicating whether the service is currently running
+  // Whether the service is currently running
   running bool
-  // Firewall rulesets used by this service
+  // Firewall rulesets used by this service (matches vsphere.host.firewallRuleset.key)
   ruleset []string
-  // Service activation policy
+  // Service activation policy (on, off, automatic)
   policy string
 }
 
-// vSphere ESXi timezone resource
-private esxi.timezone @defaults("key name") {
+// ESXi host time zone settings.
+private vsphere.host.timezone @defaults("key name") {
   // Identifier for the time zone
   key string
   // Time zone name
@@ -747,12 +792,74 @@ private esxi.timezone @defaults("key name") {
   offset int
 }
 
-// vSphere ESXi NTP configuration resource
-private esxi.ntpconfig @defaults("id") {
+// ESXi host NTP configuration.
+private vsphere.host.ntpConfig @defaults("id") {
   // NTP config ID
   id string
   // List of time servers, specified as either IP addresses or fully qualified domain names (FQDNs)
   server []string
   // Content of ntp.conf host configuration file, split by lines
+  config []string
+}
+
+// DEPRECATED: kept for backward compatibility; the namespace is no longer used.
+esxi @maturity("deprecated") {}
+
+// DEPRECATED: use vsphere.host.command instead.
+esxi.command @maturity("deprecated") {
+  init(command string)
+  inventoryPath string
+  command string
+  result() []dict
+}
+
+// DEPRECATED: use vsphere.host.vib instead.
+private esxi.vib @defaults("id name") @maturity("deprecated") {
+  id string
+  name string
+  acceptanceLevel string
+  creationDate time
+  installDate time
+  status string
+  vendor string
+  version string
+}
+
+// DEPRECATED: use vsphere.host.kernelModule instead.
+private esxi.kernelmodule @defaults("name") @maturity("deprecated") {
+  name string
+  modulefile string
+  version string
+  loaded bool
+  license string
+  enabled bool
+  signedStatus string
+  signatureDigest string
+  signatureFingerprint string
+  vibAcceptanceLevel string
+}
+
+// DEPRECATED: use vsphere.host.service instead.
+private esxi.service @defaults("key label") @maturity("deprecated") {
+  key string
+  label string
+  required bool
+  running bool
+  ruleset []string
+  policy string
+}
+
+// DEPRECATED: use vsphere.host.timezone instead.
+private esxi.timezone @defaults("key name") @maturity("deprecated") {
+  key string
+  name string
+  description string
+  offset int
+}
+
+// DEPRECATED: use vsphere.host.ntpConfig instead.
+private esxi.ntpconfig @defaults("id") @maturity("deprecated") {
+  id string
+  server []string
   config []string
 }

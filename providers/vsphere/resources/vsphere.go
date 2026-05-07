@@ -455,32 +455,45 @@ func (v *mqlEsxiCommand) id() (string, error) {
 	return v.Command.Data, nil
 }
 
-func initEsxiCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+func (v *mqlVsphereHostCommand) id() (string, error) {
+	return v.Command.Data, nil
+}
+
+// populateHostCommandArgs resolves the active host's inventoryPath from the
+// connection so the command knows which ESXi host to run on. Shared by both
+// initEsxiCommand and initVsphereHostCommand.
+func populateHostCommandArgs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, error) {
 	conn := runtime.Connection.(*connection.VsphereConnection)
 
 	if len(args) > 2 {
-		return args, nil, nil
+		return args, nil
+	}
+	if args["command"] == nil {
+		return args, nil
 	}
 
-	// check if the command arg is provided
-	commandRaw := args["command"]
-	if commandRaw == nil {
-		return args, nil, nil
-	}
-
-	// check if the connection was initialized with a specific host
 	identifier, err := conn.Identifier()
 	if err != nil || !connection.IsVsphereResourceID(identifier) {
-		return nil, nil, errors.New("could not determine inventoryPath from provider connection")
+		return nil, errors.New("could not determine inventoryPath from provider connection")
 	}
 
 	h, err := hostSystem(conn, identifier)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	args["inventoryPath"] = llx.StringData(h.InventoryPath)
-	return args, nil, nil
+	return args, nil
+}
+
+func initEsxiCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	args, err := populateHostCommandArgs(runtime, args)
+	return args, nil, err
+}
+
+func initVsphereHostCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	args, err := populateHostCommandArgs(runtime, args)
+	return args, nil, err
 }
 
 func hostSystem(conn *connection.VsphereConnection, identifier string) (*object.HostSystem, error) {
@@ -506,36 +519,38 @@ func hostSystem(conn *connection.VsphereConnection, identifier string) (*object.
 	return h, nil
 }
 
-func (v *mqlEsxiCommand) result() ([]any, error) {
-	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+func runHostCommand(runtime *plugin.Runtime, inventoryPath plugin.TValue[string], command plugin.TValue[string]) ([]any, error) {
+	conn := runtime.Connection.(*connection.VsphereConnection)
 
-	if v.InventoryPath.Error != nil {
-		return nil, v.InventoryPath.Error
+	if inventoryPath.Error != nil {
+		return nil, inventoryPath.Error
 	}
-	path := v.InventoryPath.Data
+	if command.Error != nil {
+		return nil, command.Error
+	}
 
-	esxiClient, err := esxiClient(conn, path)
+	esxiClient, err := esxiClient(conn, inventoryPath.Data)
 	if err != nil {
 		return nil, err
 	}
 
-	if v.Command.Error != nil {
-		return nil, v.Command.Error
-	}
-	cmd := v.Command.Data
-
-	res := []any{}
-
-	resp, err := esxiClient.Command(cmd)
+	resp, err := esxiClient.Command(command.Data)
 	if err != nil {
 		return nil, err
 	}
-
+	res := make([]any, len(resp))
 	for i := range resp {
-		res = append(res, resp[i])
+		res[i] = resp[i]
 	}
-
 	return res, nil
+}
+
+func (v *mqlEsxiCommand) result() ([]any, error) {
+	return runHostCommand(v.MqlRuntime, v.InventoryPath, v.Command)
+}
+
+func (v *mqlVsphereHostCommand) result() ([]any, error) {
+	return runHostCommand(v.MqlRuntime, v.InventoryPath, v.Command)
 }
 
 func (v *mqlVsphereLicense) id() (string, error) {
@@ -550,7 +565,15 @@ func (v *mqlEsxiVib) id() (string, error) {
 	return v.Id.Data, nil
 }
 
+func (v *mqlVsphereHostVib) id() (string, error) {
+	return v.Id.Data, nil
+}
+
 func (v *mqlEsxiKernelmodule) id() (string, error) {
+	return v.Name.Data, nil
+}
+
+func (v *mqlVsphereHostKernelModule) id() (string, error) {
 	return v.Name.Data, nil
 }
 
@@ -558,11 +581,23 @@ func (v *mqlEsxiService) id() (string, error) {
 	return v.Key.Data, nil
 }
 
+func (v *mqlVsphereHostService) id() (string, error) {
+	return v.Key.Data, nil
+}
+
 func (v *mqlEsxiTimezone) id() (string, error) {
 	return v.Key.Data, nil
 }
 
+func (v *mqlVsphereHostTimezone) id() (string, error) {
+	return v.Key.Data, nil
+}
+
 func (v *mqlEsxiNtpconfig) id() (string, error) {
+	return v.Id.Data, nil
+}
+
+func (v *mqlVsphereHostNtpConfig) id() (string, error) {
 	return v.Id.Data, nil
 }
 
@@ -578,6 +613,10 @@ func (v *mqlEsxiCertificate) id() (string, error) {
 	return v.Id.Data, nil
 }
 
+func (v *mqlVsphereHostCertificate) id() (string, error) {
+	return v.Id.Data, nil
+}
+
 func (v *mqlVsphereFolder) id() (string, error) {
 	return v.Moid.Data, nil
 }
@@ -590,11 +629,23 @@ func (v *mqlEsxiFirewallRuleset) id() (string, error) {
 	return v.Id.Data, nil
 }
 
+func (v *mqlVsphereHostFirewallRuleset) id() (string, error) {
+	return v.Id.Data, nil
+}
+
 func (v *mqlEsxiFirewallRule) id() (string, error) {
 	return v.Id.Data, nil
 }
 
+func (v *mqlVsphereHostFirewallRule) id() (string, error) {
+	return v.Id.Data, nil
+}
+
 func (v *mqlEsxiIscsiAdapter) id() (string, error) {
+	return v.Id.Data, nil
+}
+
+func (v *mqlVsphereHostIscsiAdapter) id() (string, error) {
 	return v.Id.Data, nil
 }
 

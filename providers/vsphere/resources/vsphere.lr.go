@@ -16,44 +16,54 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset                   string = "asset"
-	ResourceVulnmgmt                string = "vulnmgmt"
-	ResourceVulnCve                 string = "vuln.cve"
-	ResourceVulnAdvisory            string = "vuln.advisory"
-	ResourceVulnPackage             string = "vuln.package"
-	ResourceAuditCvss               string = "audit.cvss"
-	ResourceVsphere                 string = "vsphere"
-	ResourceVspherePermission       string = "vsphere.permission"
-	ResourceVsphereFolder           string = "vsphere.folder"
-	ResourceVsphereIdentitysource   string = "vsphere.identitysource"
-	ResourceVsphereKmsCluster       string = "vsphere.kmsCluster"
-	ResourceVsphereRole             string = "vsphere.role"
-	ResourceVsphereLicense          string = "vsphere.license"
-	ResourceVsphereDatacenter       string = "vsphere.datacenter"
-	ResourceVsphereResourcepool     string = "vsphere.resourcepool"
-	ResourceVsphereDatastore        string = "vsphere.datastore"
-	ResourceVsphereCluster          string = "vsphere.cluster"
-	ResourceVsphereHost             string = "vsphere.host"
-	ResourceEsxiFirewallRuleset     string = "esxi.firewallRuleset"
-	ResourceEsxiFirewallRule        string = "esxi.firewallRule"
-	ResourceEsxiIscsiAdapter        string = "esxi.iscsiAdapter"
-	ResourceEsxiCertificate         string = "esxi.certificate"
-	ResourceVsphereVm               string = "vsphere.vm"
-	ResourceVsphereVmSnapshot       string = "vsphere.vm.snapshot"
-	ResourceVsphereVmDisk           string = "vsphere.vm.disk"
-	ResourceVsphereEncryptionKey    string = "vsphere.encryptionKey"
-	ResourceVsphereVswitchStandard  string = "vsphere.vswitch.standard"
-	ResourceVsphereVswitchDvs       string = "vsphere.vswitch.dvs"
-	ResourceVsphereVswitchPortgroup string = "vsphere.vswitch.portgroup"
-	ResourceVsphereVmnic            string = "vsphere.vmnic"
-	ResourceVsphereVmknic           string = "vsphere.vmknic"
-	ResourceEsxi                    string = "esxi"
-	ResourceEsxiCommand             string = "esxi.command"
-	ResourceEsxiVib                 string = "esxi.vib"
-	ResourceEsxiKernelmodule        string = "esxi.kernelmodule"
-	ResourceEsxiService             string = "esxi.service"
-	ResourceEsxiTimezone            string = "esxi.timezone"
-	ResourceEsxiNtpconfig           string = "esxi.ntpconfig"
+	ResourceAsset                      string = "asset"
+	ResourceVulnmgmt                   string = "vulnmgmt"
+	ResourceVulnCve                    string = "vuln.cve"
+	ResourceVulnAdvisory               string = "vuln.advisory"
+	ResourceVulnPackage                string = "vuln.package"
+	ResourceAuditCvss                  string = "audit.cvss"
+	ResourceVsphere                    string = "vsphere"
+	ResourceVspherePermission          string = "vsphere.permission"
+	ResourceVsphereFolder              string = "vsphere.folder"
+	ResourceVsphereIdentitysource      string = "vsphere.identitysource"
+	ResourceVsphereKmsCluster          string = "vsphere.kmsCluster"
+	ResourceVsphereRole                string = "vsphere.role"
+	ResourceVsphereLicense             string = "vsphere.license"
+	ResourceVsphereDatacenter          string = "vsphere.datacenter"
+	ResourceVsphereResourcepool        string = "vsphere.resourcepool"
+	ResourceVsphereDatastore           string = "vsphere.datastore"
+	ResourceVsphereCluster             string = "vsphere.cluster"
+	ResourceVsphereHost                string = "vsphere.host"
+	ResourceVsphereHostFirewallRuleset string = "vsphere.host.firewallRuleset"
+	ResourceVsphereHostFirewallRule    string = "vsphere.host.firewallRule"
+	ResourceVsphereHostIscsiAdapter    string = "vsphere.host.iscsiAdapter"
+	ResourceVsphereHostCertificate     string = "vsphere.host.certificate"
+	ResourceEsxiFirewallRuleset        string = "esxi.firewallRuleset"
+	ResourceEsxiFirewallRule           string = "esxi.firewallRule"
+	ResourceEsxiIscsiAdapter           string = "esxi.iscsiAdapter"
+	ResourceEsxiCertificate            string = "esxi.certificate"
+	ResourceVsphereVm                  string = "vsphere.vm"
+	ResourceVsphereVmSnapshot          string = "vsphere.vm.snapshot"
+	ResourceVsphereVmDisk              string = "vsphere.vm.disk"
+	ResourceVsphereEncryptionKey       string = "vsphere.encryptionKey"
+	ResourceVsphereVswitchStandard     string = "vsphere.vswitch.standard"
+	ResourceVsphereVswitchDvs          string = "vsphere.vswitch.dvs"
+	ResourceVsphereVswitchPortgroup    string = "vsphere.vswitch.portgroup"
+	ResourceVsphereVmnic               string = "vsphere.vmnic"
+	ResourceVsphereVmknic              string = "vsphere.vmknic"
+	ResourceVsphereHostCommand         string = "vsphere.host.command"
+	ResourceVsphereHostVib             string = "vsphere.host.vib"
+	ResourceVsphereHostKernelModule    string = "vsphere.host.kernelModule"
+	ResourceVsphereHostService         string = "vsphere.host.service"
+	ResourceVsphereHostTimezone        string = "vsphere.host.timezone"
+	ResourceVsphereHostNtpConfig       string = "vsphere.host.ntpConfig"
+	ResourceEsxi                       string = "esxi"
+	ResourceEsxiCommand                string = "esxi.command"
+	ResourceEsxiVib                    string = "esxi.vib"
+	ResourceEsxiKernelmodule           string = "esxi.kernelmodule"
+	ResourceEsxiService                string = "esxi.service"
+	ResourceEsxiTimezone               string = "esxi.timezone"
+	ResourceEsxiNtpconfig              string = "esxi.ntpconfig"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -132,6 +142,22 @@ func init() {
 			Init:   initVsphereHost,
 			Create: createVsphereHost,
 		},
+		"vsphere.host.firewallRuleset": {
+			// to override args, implement: initVsphereHostFirewallRuleset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostFirewallRuleset,
+		},
+		"vsphere.host.firewallRule": {
+			// to override args, implement: initVsphereHostFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostFirewallRule,
+		},
+		"vsphere.host.iscsiAdapter": {
+			// to override args, implement: initVsphereHostIscsiAdapter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostIscsiAdapter,
+		},
+		"vsphere.host.certificate": {
+			// to override args, implement: initVsphereHostCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostCertificate,
+		},
 		"esxi.firewallRuleset": {
 			// to override args, implement: initEsxiFirewallRuleset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createEsxiFirewallRuleset,
@@ -183,6 +209,30 @@ func init() {
 		"vsphere.vmknic": {
 			// to override args, implement: initVsphereVmknic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereVmknic,
+		},
+		"vsphere.host.command": {
+			Init:   initVsphereHostCommand,
+			Create: createVsphereHostCommand,
+		},
+		"vsphere.host.vib": {
+			// to override args, implement: initVsphereHostVib(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostVib,
+		},
+		"vsphere.host.kernelModule": {
+			// to override args, implement: initVsphereHostKernelModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostKernelModule,
+		},
+		"vsphere.host.service": {
+			// to override args, implement: initVsphereHostService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostService,
+		},
+		"vsphere.host.timezone": {
+			// to override args, implement: initVsphereHostTimezone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostTimezone,
+		},
+		"vsphere.host.ntpConfig": {
+			// to override args, implement: initVsphereHostNtpConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostNtpConfig,
 		},
 		"esxi": {
 			// to override args, implement: initEsxi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -653,25 +703,25 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlVsphereHost).GetVmknics()).ToDataRes(types.Array(types.Resource("vsphere.vmknic")))
 	},
 	"vsphere.host.packages": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereHost).GetPackages()).ToDataRes(types.Array(types.Resource("esxi.vib")))
+		return (r.(*mqlVsphereHost).GetPackages()).ToDataRes(types.Array(types.Resource("vsphere.host.vib")))
 	},
 	"vsphere.host.acceptanceLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetAcceptanceLevel()).ToDataRes(types.String)
 	},
 	"vsphere.host.kernelModules": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereHost).GetKernelModules()).ToDataRes(types.Array(types.Resource("esxi.kernelmodule")))
+		return (r.(*mqlVsphereHost).GetKernelModules()).ToDataRes(types.Array(types.Resource("vsphere.host.kernelModule")))
 	},
 	"vsphere.host.advancedSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetAdvancedSettings()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"vsphere.host.services": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereHost).GetServices()).ToDataRes(types.Array(types.Resource("esxi.service")))
+		return (r.(*mqlVsphereHost).GetServices()).ToDataRes(types.Array(types.Resource("vsphere.host.service")))
 	},
 	"vsphere.host.timezone": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereHost).GetTimezone()).ToDataRes(types.Resource("esxi.timezone"))
+		return (r.(*mqlVsphereHost).GetTimezone()).ToDataRes(types.Resource("vsphere.host.timezone"))
 	},
 	"vsphere.host.ntp": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereHost).GetNtp()).ToDataRes(types.Resource("esxi.ntpconfig"))
+		return (r.(*mqlVsphereHost).GetNtp()).ToDataRes(types.Resource("vsphere.host.ntpConfig"))
 	},
 	"vsphere.host.snmp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetSnmp()).ToDataRes(types.Map(types.String, types.String))
@@ -692,7 +742,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlVsphereHost).GetSecureBootEnabled()).ToDataRes(types.Bool)
 	},
 	"vsphere.host.certificate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereHost).GetCertificate()).ToDataRes(types.Resource("esxi.certificate"))
+		return (r.(*mqlVsphereHost).GetCertificate()).ToDataRes(types.Resource("vsphere.host.certificate"))
 	},
 	"vsphere.host.vendor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetVendor()).ToDataRes(types.String)
@@ -707,16 +757,112 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlVsphereHost).GetNumCpuCores()).ToDataRes(types.Int)
 	},
 	"vsphere.host.firewallRulesets": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereHost).GetFirewallRulesets()).ToDataRes(types.Array(types.Resource("esxi.firewallRuleset")))
+		return (r.(*mqlVsphereHost).GetFirewallRulesets()).ToDataRes(types.Array(types.Resource("vsphere.host.firewallRuleset")))
 	},
 	"vsphere.host.iscsiAdapters": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereHost).GetIscsiAdapters()).ToDataRes(types.Array(types.Resource("esxi.iscsiAdapter")))
+		return (r.(*mqlVsphereHost).GetIscsiAdapters()).ToDataRes(types.Array(types.Resource("vsphere.host.iscsiAdapter")))
 	},
 	"vsphere.host.cluster": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetCluster()).ToDataRes(types.Resource("vsphere.cluster"))
 	},
 	"vsphere.host.datastores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetDatastores()).ToDataRes(types.Array(types.Resource("vsphere.datastore")))
+	},
+	"vsphere.host.firewallRuleset.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRuleset).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.host.firewallRuleset.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRuleset).GetKey()).ToDataRes(types.String)
+	},
+	"vsphere.host.firewallRuleset.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRuleset).GetLabel()).ToDataRes(types.String)
+	},
+	"vsphere.host.firewallRuleset.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRuleset).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.firewallRuleset.required": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRuleset).GetRequired()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.firewallRuleset.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRuleset).GetService()).ToDataRes(types.String)
+	},
+	"vsphere.host.firewallRuleset.allIpsAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRuleset).GetAllIpsAllowed()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.firewallRuleset.allowedIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRuleset).GetAllowedIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.host.firewallRuleset.allowedIpNetworks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRuleset).GetAllowedIpNetworks()).ToDataRes(types.Array(types.Dict))
+	},
+	"vsphere.host.firewallRuleset.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRuleset).GetRules()).ToDataRes(types.Array(types.Resource("vsphere.host.firewallRule")))
+	},
+	"vsphere.host.firewallRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRule).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.host.firewallRule.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRule).GetPort()).ToDataRes(types.Int)
+	},
+	"vsphere.host.firewallRule.endPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRule).GetEndPort()).ToDataRes(types.Int)
+	},
+	"vsphere.host.firewallRule.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRule).GetDirection()).ToDataRes(types.String)
+	},
+	"vsphere.host.firewallRule.portType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRule).GetPortType()).ToDataRes(types.String)
+	},
+	"vsphere.host.firewallRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostFirewallRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"vsphere.host.iscsiAdapter.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIscsiAdapter).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.host.iscsiAdapter.device": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIscsiAdapter).GetDevice()).ToDataRes(types.String)
+	},
+	"vsphere.host.iscsiAdapter.iScsiName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIscsiAdapter).GetIScsiName()).ToDataRes(types.String)
+	},
+	"vsphere.host.iscsiAdapter.iScsiAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIscsiAdapter).GetIScsiAlias()).ToDataRes(types.String)
+	},
+	"vsphere.host.iscsiAdapter.chapAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIscsiAdapter).GetChapAuthEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.iscsiAdapter.chapAuthenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIscsiAdapter).GetChapAuthenticationType()).ToDataRes(types.String)
+	},
+	"vsphere.host.iscsiAdapter.chapName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIscsiAdapter).GetChapName()).ToDataRes(types.String)
+	},
+	"vsphere.host.iscsiAdapter.mutualChapAuthenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIscsiAdapter).GetMutualChapAuthenticationType()).ToDataRes(types.String)
+	},
+	"vsphere.host.iscsiAdapter.mutualChapName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIscsiAdapter).GetMutualChapName()).ToDataRes(types.String)
+	},
+	"vsphere.host.certificate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostCertificate).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.host.certificate.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostCertificate).GetKind()).ToDataRes(types.String)
+	},
+	"vsphere.host.certificate.subject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostCertificate).GetSubject()).ToDataRes(types.String)
+	},
+	"vsphere.host.certificate.issuer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostCertificate).GetIssuer()).ToDataRes(types.String)
+	},
+	"vsphere.host.certificate.notBefore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostCertificate).GetNotBefore()).ToDataRes(types.Time)
+	},
+	"vsphere.host.certificate.notAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostCertificate).GetNotAfter()).ToDataRes(types.Time)
+	},
+	"vsphere.host.certificate.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostCertificate).GetStatus()).ToDataRes(types.String)
 	},
 	"esxi.firewallRuleset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlEsxiFirewallRuleset).GetId()).ToDataRes(types.String)
@@ -1044,6 +1190,108 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vmknic.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVmknic).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.host.command.inventoryPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostCommand).GetInventoryPath()).ToDataRes(types.String)
+	},
+	"vsphere.host.command.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostCommand).GetCommand()).ToDataRes(types.String)
+	},
+	"vsphere.host.command.result": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostCommand).GetResult()).ToDataRes(types.Array(types.Dict))
+	},
+	"vsphere.host.vib.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVib).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.host.vib.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVib).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.host.vib.acceptanceLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVib).GetAcceptanceLevel()).ToDataRes(types.String)
+	},
+	"vsphere.host.vib.creationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVib).GetCreationDate()).ToDataRes(types.Time)
+	},
+	"vsphere.host.vib.installDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVib).GetInstallDate()).ToDataRes(types.Time)
+	},
+	"vsphere.host.vib.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVib).GetStatus()).ToDataRes(types.String)
+	},
+	"vsphere.host.vib.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVib).GetVendor()).ToDataRes(types.String)
+	},
+	"vsphere.host.vib.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostVib).GetVersion()).ToDataRes(types.String)
+	},
+	"vsphere.host.kernelModule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostKernelModule).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.host.kernelModule.modulefile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostKernelModule).GetModulefile()).ToDataRes(types.String)
+	},
+	"vsphere.host.kernelModule.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostKernelModule).GetVersion()).ToDataRes(types.String)
+	},
+	"vsphere.host.kernelModule.loaded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostKernelModule).GetLoaded()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.kernelModule.license": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostKernelModule).GetLicense()).ToDataRes(types.String)
+	},
+	"vsphere.host.kernelModule.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostKernelModule).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.kernelModule.signedStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostKernelModule).GetSignedStatus()).ToDataRes(types.String)
+	},
+	"vsphere.host.kernelModule.signatureDigest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostKernelModule).GetSignatureDigest()).ToDataRes(types.String)
+	},
+	"vsphere.host.kernelModule.signatureFingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostKernelModule).GetSignatureFingerprint()).ToDataRes(types.String)
+	},
+	"vsphere.host.kernelModule.vibAcceptanceLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostKernelModule).GetVibAcceptanceLevel()).ToDataRes(types.String)
+	},
+	"vsphere.host.service.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostService).GetKey()).ToDataRes(types.String)
+	},
+	"vsphere.host.service.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostService).GetLabel()).ToDataRes(types.String)
+	},
+	"vsphere.host.service.required": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostService).GetRequired()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.service.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostService).GetRunning()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.service.ruleset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostService).GetRuleset()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.host.service.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostService).GetPolicy()).ToDataRes(types.String)
+	},
+	"vsphere.host.timezone.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostTimezone).GetKey()).ToDataRes(types.String)
+	},
+	"vsphere.host.timezone.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostTimezone).GetName()).ToDataRes(types.String)
+	},
+	"vsphere.host.timezone.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostTimezone).GetDescription()).ToDataRes(types.String)
+	},
+	"vsphere.host.timezone.offset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostTimezone).GetOffset()).ToDataRes(types.Int)
+	},
+	"vsphere.host.ntpConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostNtpConfig).GetId()).ToDataRes(types.String)
+	},
+	"vsphere.host.ntpConfig.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostNtpConfig).GetServer()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.host.ntpConfig.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostNtpConfig).GetConfig()).ToDataRes(types.Array(types.String))
 	},
 	"esxi.command.inventoryPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlEsxiCommand).GetInventoryPath()).ToDataRes(types.String)
@@ -1744,11 +1992,11 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"vsphere.host.timezone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).Timezone, ok = plugin.RawToTValue[*mqlEsxiTimezone](v.Value, v.Error)
+		r.(*mqlVsphereHost).Timezone, ok = plugin.RawToTValue[*mqlVsphereHostTimezone](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.ntp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).Ntp, ok = plugin.RawToTValue[*mqlEsxiNtpconfig](v.Value, v.Error)
+		r.(*mqlVsphereHost).Ntp, ok = plugin.RawToTValue[*mqlVsphereHostNtpConfig](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.snmp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1776,7 +2024,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"vsphere.host.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereHost).Certificate, ok = plugin.RawToTValue[*mqlEsxiCertificate](v.Value, v.Error)
+		r.(*mqlVsphereHost).Certificate, ok = plugin.RawToTValue[*mqlVsphereHostCertificate](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1809,6 +2057,150 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.datastores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).Datastores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRuleset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.firewallRuleset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRuleset.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRuleset.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRuleset.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRuleset.required": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRuleset.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRuleset.allIpsAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).AllIpsAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRuleset.allowedIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).AllowedIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRuleset.allowedIpNetworks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).AllowedIpNetworks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRuleset.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRuleset).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRule).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.firewallRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRule.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRule).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRule.endPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRule).EndPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRule.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRule).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRule.portType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRule).PortType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.firewallRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostFirewallRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.iscsiAdapter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIscsiAdapter).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.iscsiAdapter.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIscsiAdapter).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.iscsiAdapter.device": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIscsiAdapter).Device, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.iscsiAdapter.iScsiName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIscsiAdapter).IScsiName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.iscsiAdapter.iScsiAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIscsiAdapter).IScsiAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.iscsiAdapter.chapAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIscsiAdapter).ChapAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.iscsiAdapter.chapAuthenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIscsiAdapter).ChapAuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.iscsiAdapter.chapName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIscsiAdapter).ChapName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.iscsiAdapter.mutualChapAuthenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIscsiAdapter).MutualChapAuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.iscsiAdapter.mutualChapName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIscsiAdapter).MutualChapName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.certificate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCertificate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.certificate.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCertificate).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.certificate.subject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCertificate).Subject, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.certificate.issuer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCertificate).Issuer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.certificate.notBefore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCertificate).NotBefore, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.certificate.notAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCertificate).NotAfter, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.certificate.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCertificate).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"esxi.firewallRuleset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2297,6 +2689,166 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vmknic.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVmknic).Tags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.command.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCommand).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.command.inventoryPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCommand).InventoryPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.command.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCommand).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.command.result": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostCommand).Result, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vib.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVib).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.vib.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVib).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vib.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVib).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vib.acceptanceLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVib).AcceptanceLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vib.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVib).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vib.installDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVib).InstallDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vib.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVib).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vib.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVib).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.vib.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostVib).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.kernelModule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.kernelModule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.kernelModule.modulefile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).Modulefile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.kernelModule.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.kernelModule.loaded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).Loaded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.kernelModule.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.kernelModule.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.kernelModule.signedStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).SignedStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.kernelModule.signatureDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).SignatureDigest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.kernelModule.signatureFingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).SignatureFingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.kernelModule.vibAcceptanceLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostKernelModule).VibAcceptanceLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostService).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.service.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostService).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.service.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostService).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.service.required": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostService).Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.service.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostService).Running, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.service.ruleset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostService).Ruleset, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.service.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostService).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.timezone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostTimezone).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.timezone.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostTimezone).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.timezone.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostTimezone).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.timezone.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostTimezone).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.timezone.offset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostTimezone).Offset, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ntpConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostNtpConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.ntpConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostNtpConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ntpConfig.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostNtpConfig).Server, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ntpConfig.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostNtpConfig).Config, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"esxi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4078,15 +4630,15 @@ type mqlVsphereHost struct {
 	KernelModules           plugin.TValue[[]any]
 	AdvancedSettings        plugin.TValue[map[string]any]
 	Services                plugin.TValue[[]any]
-	Timezone                plugin.TValue[*mqlEsxiTimezone]
-	Ntp                     plugin.TValue[*mqlEsxiNtpconfig]
+	Timezone                plugin.TValue[*mqlVsphereHostTimezone]
+	Ntp                     plugin.TValue[*mqlVsphereHostNtpConfig]
 	Snmp                    plugin.TValue[map[string]any]
 	Tags                    plugin.TValue[[]any]
 	LockdownMode            plugin.TValue[string]
 	FirewallIncomingBlocked plugin.TValue[bool]
 	FirewallOutgoingBlocked plugin.TValue[bool]
 	SecureBootEnabled       plugin.TValue[bool]
-	Certificate             plugin.TValue[*mqlEsxiCertificate]
+	Certificate             plugin.TValue[*mqlVsphereHostCertificate]
 	Vendor                  plugin.TValue[string]
 	Model                   plugin.TValue[string]
 	CpuMhz                  plugin.TValue[int64]
@@ -4274,15 +4826,15 @@ func (c *mqlVsphereHost) GetServices() *plugin.TValue[[]any] {
 	})
 }
 
-func (c *mqlVsphereHost) GetTimezone() *plugin.TValue[*mqlEsxiTimezone] {
-	return plugin.GetOrCompute[*mqlEsxiTimezone](&c.Timezone, func() (*mqlEsxiTimezone, error) {
+func (c *mqlVsphereHost) GetTimezone() *plugin.TValue[*mqlVsphereHostTimezone] {
+	return plugin.GetOrCompute[*mqlVsphereHostTimezone](&c.Timezone, func() (*mqlVsphereHostTimezone, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "timezone")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlEsxiTimezone), nil
+				return d.Value.(*mqlVsphereHostTimezone), nil
 			}
 		}
 
@@ -4290,15 +4842,15 @@ func (c *mqlVsphereHost) GetTimezone() *plugin.TValue[*mqlEsxiTimezone] {
 	})
 }
 
-func (c *mqlVsphereHost) GetNtp() *plugin.TValue[*mqlEsxiNtpconfig] {
-	return plugin.GetOrCompute[*mqlEsxiNtpconfig](&c.Ntp, func() (*mqlEsxiNtpconfig, error) {
+func (c *mqlVsphereHost) GetNtp() *plugin.TValue[*mqlVsphereHostNtpConfig] {
+	return plugin.GetOrCompute[*mqlVsphereHostNtpConfig](&c.Ntp, func() (*mqlVsphereHostNtpConfig, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "ntp")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlEsxiNtpconfig), nil
+				return d.Value.(*mqlVsphereHostNtpConfig), nil
 			}
 		}
 
@@ -4332,15 +4884,15 @@ func (c *mqlVsphereHost) GetSecureBootEnabled() *plugin.TValue[bool] {
 	return &c.SecureBootEnabled
 }
 
-func (c *mqlVsphereHost) GetCertificate() *plugin.TValue[*mqlEsxiCertificate] {
-	return plugin.GetOrCompute[*mqlEsxiCertificate](&c.Certificate, func() (*mqlEsxiCertificate, error) {
+func (c *mqlVsphereHost) GetCertificate() *plugin.TValue[*mqlVsphereHostCertificate] {
+	return plugin.GetOrCompute[*mqlVsphereHostCertificate](&c.Certificate, func() (*mqlVsphereHostCertificate, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "certificate")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlEsxiCertificate), nil
+				return d.Value.(*mqlVsphereHostCertificate), nil
 			}
 		}
 
@@ -4426,6 +4978,342 @@ func (c *mqlVsphereHost) GetDatastores() *plugin.TValue[[]any] {
 
 		return c.datastores()
 	})
+}
+
+// mqlVsphereHostFirewallRuleset for the vsphere.host.firewallRuleset resource
+type mqlVsphereHostFirewallRuleset struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostFirewallRulesetInternal it will be used here
+	Id                 plugin.TValue[string]
+	Key                plugin.TValue[string]
+	Label              plugin.TValue[string]
+	Enabled            plugin.TValue[bool]
+	Required           plugin.TValue[bool]
+	Service            plugin.TValue[string]
+	AllIpsAllowed      plugin.TValue[bool]
+	AllowedIpAddresses plugin.TValue[[]any]
+	AllowedIpNetworks  plugin.TValue[[]any]
+	Rules              plugin.TValue[[]any]
+}
+
+// createVsphereHostFirewallRuleset creates a new instance of this resource
+func createVsphereHostFirewallRuleset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostFirewallRuleset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.firewallRuleset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostFirewallRuleset) MqlName() string {
+	return "vsphere.host.firewallRuleset"
+}
+
+func (c *mqlVsphereHostFirewallRuleset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostFirewallRuleset) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereHostFirewallRuleset) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlVsphereHostFirewallRuleset) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlVsphereHostFirewallRuleset) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlVsphereHostFirewallRuleset) GetRequired() *plugin.TValue[bool] {
+	return &c.Required
+}
+
+func (c *mqlVsphereHostFirewallRuleset) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlVsphereHostFirewallRuleset) GetAllIpsAllowed() *plugin.TValue[bool] {
+	return &c.AllIpsAllowed
+}
+
+func (c *mqlVsphereHostFirewallRuleset) GetAllowedIpAddresses() *plugin.TValue[[]any] {
+	return &c.AllowedIpAddresses
+}
+
+func (c *mqlVsphereHostFirewallRuleset) GetAllowedIpNetworks() *plugin.TValue[[]any] {
+	return &c.AllowedIpNetworks
+}
+
+func (c *mqlVsphereHostFirewallRuleset) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+// mqlVsphereHostFirewallRule for the vsphere.host.firewallRule resource
+type mqlVsphereHostFirewallRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostFirewallRuleInternal it will be used here
+	Id        plugin.TValue[string]
+	Port      plugin.TValue[int64]
+	EndPort   plugin.TValue[int64]
+	Direction plugin.TValue[string]
+	PortType  plugin.TValue[string]
+	Protocol  plugin.TValue[string]
+}
+
+// createVsphereHostFirewallRule creates a new instance of this resource
+func createVsphereHostFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostFirewallRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.firewallRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostFirewallRule) MqlName() string {
+	return "vsphere.host.firewallRule"
+}
+
+func (c *mqlVsphereHostFirewallRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostFirewallRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereHostFirewallRule) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlVsphereHostFirewallRule) GetEndPort() *plugin.TValue[int64] {
+	return &c.EndPort
+}
+
+func (c *mqlVsphereHostFirewallRule) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlVsphereHostFirewallRule) GetPortType() *plugin.TValue[string] {
+	return &c.PortType
+}
+
+func (c *mqlVsphereHostFirewallRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+// mqlVsphereHostIscsiAdapter for the vsphere.host.iscsiAdapter resource
+type mqlVsphereHostIscsiAdapter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostIscsiAdapterInternal it will be used here
+	Id                           plugin.TValue[string]
+	Device                       plugin.TValue[string]
+	IScsiName                    plugin.TValue[string]
+	IScsiAlias                   plugin.TValue[string]
+	ChapAuthEnabled              plugin.TValue[bool]
+	ChapAuthenticationType       plugin.TValue[string]
+	ChapName                     plugin.TValue[string]
+	MutualChapAuthenticationType plugin.TValue[string]
+	MutualChapName               plugin.TValue[string]
+}
+
+// createVsphereHostIscsiAdapter creates a new instance of this resource
+func createVsphereHostIscsiAdapter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostIscsiAdapter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.iscsiAdapter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostIscsiAdapter) MqlName() string {
+	return "vsphere.host.iscsiAdapter"
+}
+
+func (c *mqlVsphereHostIscsiAdapter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostIscsiAdapter) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereHostIscsiAdapter) GetDevice() *plugin.TValue[string] {
+	return &c.Device
+}
+
+func (c *mqlVsphereHostIscsiAdapter) GetIScsiName() *plugin.TValue[string] {
+	return &c.IScsiName
+}
+
+func (c *mqlVsphereHostIscsiAdapter) GetIScsiAlias() *plugin.TValue[string] {
+	return &c.IScsiAlias
+}
+
+func (c *mqlVsphereHostIscsiAdapter) GetChapAuthEnabled() *plugin.TValue[bool] {
+	return &c.ChapAuthEnabled
+}
+
+func (c *mqlVsphereHostIscsiAdapter) GetChapAuthenticationType() *plugin.TValue[string] {
+	return &c.ChapAuthenticationType
+}
+
+func (c *mqlVsphereHostIscsiAdapter) GetChapName() *plugin.TValue[string] {
+	return &c.ChapName
+}
+
+func (c *mqlVsphereHostIscsiAdapter) GetMutualChapAuthenticationType() *plugin.TValue[string] {
+	return &c.MutualChapAuthenticationType
+}
+
+func (c *mqlVsphereHostIscsiAdapter) GetMutualChapName() *plugin.TValue[string] {
+	return &c.MutualChapName
+}
+
+// mqlVsphereHostCertificate for the vsphere.host.certificate resource
+type mqlVsphereHostCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostCertificateInternal it will be used here
+	Id        plugin.TValue[string]
+	Kind      plugin.TValue[string]
+	Subject   plugin.TValue[string]
+	Issuer    plugin.TValue[string]
+	NotBefore plugin.TValue[*time.Time]
+	NotAfter  plugin.TValue[*time.Time]
+	Status    plugin.TValue[string]
+}
+
+// createVsphereHostCertificate creates a new instance of this resource
+func createVsphereHostCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.certificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostCertificate) MqlName() string {
+	return "vsphere.host.certificate"
+}
+
+func (c *mqlVsphereHostCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostCertificate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereHostCertificate) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlVsphereHostCertificate) GetSubject() *plugin.TValue[string] {
+	return &c.Subject
+}
+
+func (c *mqlVsphereHostCertificate) GetIssuer() *plugin.TValue[string] {
+	return &c.Issuer
+}
+
+func (c *mqlVsphereHostCertificate) GetNotBefore() *plugin.TValue[*time.Time] {
+	return &c.NotBefore
+}
+
+func (c *mqlVsphereHostCertificate) GetNotAfter() *plugin.TValue[*time.Time] {
+	return &c.NotAfter
+}
+
+func (c *mqlVsphereHostCertificate) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlEsxiFirewallRuleset for the esxi.firewallRuleset resource
@@ -5658,6 +6546,442 @@ func (c *mqlVsphereVmknic) GetIpv6() *plugin.TValue[[]any] {
 
 func (c *mqlVsphereVmknic) GetTags() *plugin.TValue[[]any] {
 	return &c.Tags
+}
+
+// mqlVsphereHostCommand for the vsphere.host.command resource
+type mqlVsphereHostCommand struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostCommandInternal it will be used here
+	InventoryPath plugin.TValue[string]
+	Command       plugin.TValue[string]
+	Result        plugin.TValue[[]any]
+}
+
+// createVsphereHostCommand creates a new instance of this resource
+func createVsphereHostCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostCommand{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.command", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostCommand) MqlName() string {
+	return "vsphere.host.command"
+}
+
+func (c *mqlVsphereHostCommand) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostCommand) GetInventoryPath() *plugin.TValue[string] {
+	return &c.InventoryPath
+}
+
+func (c *mqlVsphereHostCommand) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlVsphereHostCommand) GetResult() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Result, func() ([]any, error) {
+		return c.result()
+	})
+}
+
+// mqlVsphereHostVib for the vsphere.host.vib resource
+type mqlVsphereHostVib struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostVibInternal it will be used here
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	AcceptanceLevel plugin.TValue[string]
+	CreationDate    plugin.TValue[*time.Time]
+	InstallDate     plugin.TValue[*time.Time]
+	Status          plugin.TValue[string]
+	Vendor          plugin.TValue[string]
+	Version         plugin.TValue[string]
+}
+
+// createVsphereHostVib creates a new instance of this resource
+func createVsphereHostVib(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostVib{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.vib", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostVib) MqlName() string {
+	return "vsphere.host.vib"
+}
+
+func (c *mqlVsphereHostVib) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostVib) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereHostVib) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereHostVib) GetAcceptanceLevel() *plugin.TValue[string] {
+	return &c.AcceptanceLevel
+}
+
+func (c *mqlVsphereHostVib) GetCreationDate() *plugin.TValue[*time.Time] {
+	return &c.CreationDate
+}
+
+func (c *mqlVsphereHostVib) GetInstallDate() *plugin.TValue[*time.Time] {
+	return &c.InstallDate
+}
+
+func (c *mqlVsphereHostVib) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlVsphereHostVib) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlVsphereHostVib) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+// mqlVsphereHostKernelModule for the vsphere.host.kernelModule resource
+type mqlVsphereHostKernelModule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostKernelModuleInternal it will be used here
+	Name                 plugin.TValue[string]
+	Modulefile           plugin.TValue[string]
+	Version              plugin.TValue[string]
+	Loaded               plugin.TValue[bool]
+	License              plugin.TValue[string]
+	Enabled              plugin.TValue[bool]
+	SignedStatus         plugin.TValue[string]
+	SignatureDigest      plugin.TValue[string]
+	SignatureFingerprint plugin.TValue[string]
+	VibAcceptanceLevel   plugin.TValue[string]
+}
+
+// createVsphereHostKernelModule creates a new instance of this resource
+func createVsphereHostKernelModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostKernelModule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.kernelModule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostKernelModule) MqlName() string {
+	return "vsphere.host.kernelModule"
+}
+
+func (c *mqlVsphereHostKernelModule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostKernelModule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereHostKernelModule) GetModulefile() *plugin.TValue[string] {
+	return &c.Modulefile
+}
+
+func (c *mqlVsphereHostKernelModule) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlVsphereHostKernelModule) GetLoaded() *plugin.TValue[bool] {
+	return &c.Loaded
+}
+
+func (c *mqlVsphereHostKernelModule) GetLicense() *plugin.TValue[string] {
+	return &c.License
+}
+
+func (c *mqlVsphereHostKernelModule) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlVsphereHostKernelModule) GetSignedStatus() *plugin.TValue[string] {
+	return &c.SignedStatus
+}
+
+func (c *mqlVsphereHostKernelModule) GetSignatureDigest() *plugin.TValue[string] {
+	return &c.SignatureDigest
+}
+
+func (c *mqlVsphereHostKernelModule) GetSignatureFingerprint() *plugin.TValue[string] {
+	return &c.SignatureFingerprint
+}
+
+func (c *mqlVsphereHostKernelModule) GetVibAcceptanceLevel() *plugin.TValue[string] {
+	return &c.VibAcceptanceLevel
+}
+
+// mqlVsphereHostService for the vsphere.host.service resource
+type mqlVsphereHostService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostServiceInternal it will be used here
+	Key      plugin.TValue[string]
+	Label    plugin.TValue[string]
+	Required plugin.TValue[bool]
+	Running  plugin.TValue[bool]
+	Ruleset  plugin.TValue[[]any]
+	Policy   plugin.TValue[string]
+}
+
+// createVsphereHostService creates a new instance of this resource
+func createVsphereHostService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostService) MqlName() string {
+	return "vsphere.host.service"
+}
+
+func (c *mqlVsphereHostService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostService) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlVsphereHostService) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlVsphereHostService) GetRequired() *plugin.TValue[bool] {
+	return &c.Required
+}
+
+func (c *mqlVsphereHostService) GetRunning() *plugin.TValue[bool] {
+	return &c.Running
+}
+
+func (c *mqlVsphereHostService) GetRuleset() *plugin.TValue[[]any] {
+	return &c.Ruleset
+}
+
+func (c *mqlVsphereHostService) GetPolicy() *plugin.TValue[string] {
+	return &c.Policy
+}
+
+// mqlVsphereHostTimezone for the vsphere.host.timezone resource
+type mqlVsphereHostTimezone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostTimezoneInternal it will be used here
+	Key         plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Offset      plugin.TValue[int64]
+}
+
+// createVsphereHostTimezone creates a new instance of this resource
+func createVsphereHostTimezone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostTimezone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.timezone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostTimezone) MqlName() string {
+	return "vsphere.host.timezone"
+}
+
+func (c *mqlVsphereHostTimezone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostTimezone) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlVsphereHostTimezone) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVsphereHostTimezone) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlVsphereHostTimezone) GetOffset() *plugin.TValue[int64] {
+	return &c.Offset
+}
+
+// mqlVsphereHostNtpConfig for the vsphere.host.ntpConfig resource
+type mqlVsphereHostNtpConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostNtpConfigInternal it will be used here
+	Id     plugin.TValue[string]
+	Server plugin.TValue[[]any]
+	Config plugin.TValue[[]any]
+}
+
+// createVsphereHostNtpConfig creates a new instance of this resource
+func createVsphereHostNtpConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostNtpConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.ntpConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostNtpConfig) MqlName() string {
+	return "vsphere.host.ntpConfig"
+}
+
+func (c *mqlVsphereHostNtpConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostNtpConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVsphereHostNtpConfig) GetServer() *plugin.TValue[[]any] {
+	return &c.Server
+}
+
+func (c *mqlVsphereHostNtpConfig) GetConfig() *plugin.TValue[[]any] {
+	return &c.Config
 }
 
 // mqlEsxi for the esxi resource
