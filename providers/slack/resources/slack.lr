@@ -4,7 +4,13 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/slack"
 option go_package = "go.mondoo.com/mql/v13/providers/slack/resources"
 
-// Slack workspace and its resources (users, channels, user groups, access logs)
+// Slack workspace
+//
+// Examine a Slack workspace via the Web API: every login event in the
+// workspace access log (login activity, IP, user agent, ISP, geolocation)
+// and the user groups defined in the workspace. Pair with `slack.users`
+// for per-user identity / 2FA / role audits and `slack.conversations`
+// for channel sharing-and-membership reviews.
 slack {
   // Slack workspace access log entries (login activity)
   accessLogs() []slack.login
@@ -12,7 +18,11 @@ slack {
   userGroups() []slack.userGroup
 }
 
-// Slack conversations (channels, direct messages, and group messages)
+// Slack conversations
+//
+// Examine every conversation in the workspace — public channels,
+// private channels, and direct messages — together with split views
+// that return only the public, private, or direct-message subset.
 slack.conversations {
   []slack.conversation
   // List of private channels in a Slack team
@@ -24,6 +34,9 @@ slack.conversations {
 }
 
 // Slack team
+//
+// Examine the connected Slack team's identity: ID, name, domain
+// (the `<domain>.slack.com` host), and the workspace email domain.
 slack.team @defaults("id domain") {
   // ID of the team
   id string
@@ -35,7 +48,11 @@ slack.team @defaults("id domain") {
   emailDomain string
 }
 
-// Slack workspace users grouped by role (bots, members, admins, owners)
+// Slack workspace users
+//
+// Examine every user in the workspace, with role-filtered views for
+// `bots()`, `members()`, `admins()`, and `owners()`. The starting
+// point for 2FA, dormant-user, and admin-membership audits.
 slack.users {
   []slack.user
   // Bot users in the workspace
@@ -49,6 +66,16 @@ slack.users {
 }
 
 // Slack user
+//
+// Examine a single Slack user, identified by `id`. Surfaces username,
+// real name, profile dict, locale and timezone, presence (active /
+// away), the deactivated flag, the role flags
+// (`isAdmin`, `isOwner`, `isPrimaryOwner`, `isRestricted`,
+// `isUltraRestricted`, `isStranger`), bot-account markers (`isBot`,
+// `isAppUser`, `isConnectorBot`, `isWorkflowBot`, `isInvitedUser`),
+// the email-confirmed flag, two-factor enrollment (`has2FA`,
+// `twoFactorType`), and a typed link to the user's `enterpriseUser`
+// record on Slack Enterprise Grid.
 slack.user @defaults("id name") {
   // ID of the workspace user
   id string
@@ -109,6 +136,10 @@ slack.user @defaults("id name") {
 }
 
 // Slack Enterprise Grid user
+//
+// Examine the Enterprise-Grid record attached to a Slack user: the
+// enterprise user ID, the parent organization ID and name, and
+// whether the user is an admin or owner of the Enterprise Grid org.
 slack.enterpriseUser {
   // Enterprise user ID
    id string
@@ -122,7 +153,13 @@ slack.enterpriseUser {
    isOwner bool
 }
 
-// Slack user group (a group of workspace members addressable by handle)
+// Slack user group
+//
+// Examine a single user group — a group of workspace members
+// addressable by a `@handle`. Surfaces the handle, friendly name and
+// description, external-group flag, lifecycle timestamps with the
+// users that created / updated / deleted it, the member count, and
+// the typed members list.
 slack.userGroup @defaults("handle") {
   // Group ID
   id string
@@ -154,7 +191,14 @@ slack.userGroup @defaults("handle") {
   members() []slack.user
 }
 
-// Slack access log entry
+// Slack workspace access log entry
+//
+// Examine an access-log row that aggregates logins for one
+// (user, IP, user-agent) combination: the user ID and username,
+// the count of logins, the source IP and user agent, the best-guess
+// ISP, the IP-derived country and region, and the first / last
+// login timestamps. Used for impossible-travel and suspicious-IP
+// detection in workspace logins.
 slack.login @defaults("userID") {
   // User ID
   userID string
@@ -179,6 +223,15 @@ slack.login @defaults("userID") {
 }
 
 // Slack conversation
+//
+// Examine a single Slack conversation — a public or private channel,
+// direct message, or multi-party DM. Surfaces ID and name, the
+// creator and creation timestamp, locale, the topic and purpose
+// dicts, the lifecycle flags (`isArchived`, `isOpen`), the
+// channel-shape flags (`isPrivate`, `isIM`, `isMpim`, `isGroup`,
+// `isChannel`), the external-sharing flags (`isShared`,
+// `isExtShared`, `isPendingExtShared`, `isOrgShared`), the priority
+// score, and the typed member list.
 slack.conversation @defaults("id name") {
   // Conversation ID
   id string
