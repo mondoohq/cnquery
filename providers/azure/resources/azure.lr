@@ -1838,8 +1838,8 @@ private azure.subscription.networkService.privateEndpoint.serviceconnection @def
   id string
   // Connection name
   name string
-  // Resource ID of the private link service being connected to
-  privateLinkServiceId string
+  // DEPRECATED: use privateLinkService instead
+  privateLinkServiceId @maturity("deprecated") string
   // Private link service being connected to
   privateLinkService() azure.subscription.networkService.privateLinkService
   // Group IDs obtained from the remote resource
@@ -2466,8 +2466,8 @@ private azure.subscription.privateEndpointConnection @defaults("id name type") {
   type string
   // Private endpoint connection IP addresses
   ipAddresses []string
-  // ID of the associated private endpoint
-  privateEndpointId string
+  // DEPRECATED: use privateEndpoint instead
+  privateEndpointId @maturity("deprecated") string
   // Associated private endpoint
   privateEndpoint() azure.subscription.networkService.privateEndpoint
   // Private link service connection state details
@@ -5207,8 +5207,8 @@ private azure.subscription.cacheService.redisInstance.privateEndpointConnection 
   name string
   // Private endpoint connection type
   type string
-  // Private endpoint resource ID
-  privateEndpointId string
+  // DEPRECATED: use privateEndpoint instead
+  privateEndpointId @maturity("deprecated") string
   // Associated private endpoint
   privateEndpoint() azure.subscription.networkService.privateEndpoint
   // Connection status (Approved, Pending, Rejected)
