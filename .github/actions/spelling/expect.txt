@@ -310,6 +310,7 @@ logon
 logpull
 logpush
 logstream
+lon
 LONGTERM
 longtermretentionpolicy
 lsp
@@ -570,6 +571,7 @@ toport
 totp
 tpl
 tpu
+traceroute
 trae
 trainingjob
 transitgateway
