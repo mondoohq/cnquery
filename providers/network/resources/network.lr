@@ -272,6 +272,7 @@ private pkix.sanExtension @defaults("dnsNames") {
 	uris []string
 }
 
+// List of OpenPGP entities parsed from a string
 private openpgp.entities {
   []openpgp.entity(content)
   content string
