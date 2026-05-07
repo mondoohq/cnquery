@@ -349,7 +349,7 @@ private cloudflare.streams.video @defaults("name id") {
 	// Unique identifier
 	uid string
 
-	// Display name of the live input stream
+	// Display name of the video
 	name string
 
 	// Creator ID
