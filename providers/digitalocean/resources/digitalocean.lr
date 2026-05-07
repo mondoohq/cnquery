@@ -74,25 +74,25 @@ digitalocean.droplet @defaults("id name status") {
   id int
   // Droplet name
   name string
-  // Memory in MB
+  // Memory allocated to the droplet, in megabytes
   memory int
-  // Number of vCPUs
+  // Number of virtual CPUs allocated to the droplet
   vcpus int
-  // Disk size in GB
+  // Disk capacity allocated to the droplet, in gigabytes
   disk int
-  // Region slug
+  // Region slug (DigitalOcean datacenter identifier, e.g., nyc3, ams3)
   region string
-  // Size slug
+  // Size slug (DigitalOcean droplet size identifier, e.g., s-1vcpu-1gb)
   size string
   // Status (new, active, off, archive)
   status string
-  // Created at
+  // Time the resource was created
   createdAt time
   // Public IPv4 address
   publicIpv4 string
   // Private IPv4 address
   privateIpv4 string
-  // Tags
+  // Tags applied to the droplet
   tags []string
   // DEPRECATED: use vpc() instead. VPC UUID
   vpcUuid @maturity("deprecated") string
@@ -104,7 +104,7 @@ digitalocean.droplet @defaults("id name status") {
   backupsEnabled bool
   // Monitoring enabled
   monitoringEnabled bool
-  // Image information
+  // Image details (id, name, distribution, slug, type, public, regions)
   image dict
   // Firewalls covering this droplet (by id or matching tag)
   firewalls() []digitalocean.firewall
@@ -120,11 +120,11 @@ digitalocean.firewall @defaults("id name status") {
   name string
   // Status (waiting, succeeded, failed)
   status string
-  // Created at
+  // Time the resource was created
   createdAt time
-  // Inbound rules
+  // Rules controlling incoming traffic to protected droplets
   inboundRules []dict
-  // Outbound rules
+  // Rules controlling outgoing traffic from protected droplets
   outboundRules []dict
   // DEPRECATED: use droplets() instead. Droplet IDs protected by this firewall
   dropletIds @maturity("deprecated") []int
@@ -152,7 +152,7 @@ digitalocean.database @defaults("id name engine") {
   region string
   // Status (creating, online, resizing, migrating, forking)
   status string
-  // Created at
+  // Time the resource was created
   createdAt time
   // Private network UUID
   privateNetworkUuid string
@@ -166,7 +166,7 @@ digitalocean.database @defaults("id name engine") {
   connectionHost string
   // Public connection port
   connectionPort int
-  // Maintenance window
+  // Maintenance window configuration (day, hour, pending status)
   maintenanceWindow dict
   // Database users
   users() []digitalocean.database.user
@@ -178,7 +178,7 @@ digitalocean.database @defaults("id name engine") {
 
 // DigitalOcean database user
 private digitalocean.database.user @defaults("name role") {
-  // Database ID (parent)
+  // ID of the parent database cluster
   databaseId string
   // Username
   name string
@@ -188,31 +188,31 @@ private digitalocean.database.user @defaults("name role") {
 
 // DigitalOcean database replica
 private digitalocean.database.replica @defaults("name status") {
-  // Database ID (parent)
+  // ID of the parent database cluster
   databaseId string
   // Replica name
   name string
   // Region slug
   region string
-  // Status
+  // Replica status (e.g., creating, online, forking, migrating, offline)
   status string
-  // Created at
+  // Time the resource was created
   createdAt time
-  // Size slug
+  // Size slug (DigitalOcean droplet size identifier)
   size string
-  // Tags
+  // Tags applied to the replica
   tags []string
 }
 
 // DigitalOcean database connection pool
 private digitalocean.database.pool @defaults("name mode") {
-  // Database ID (parent)
+  // ID of the parent database cluster
   databaseId string
   // Pool name
   name string
-  // Database name
+  // Database name the pool connects to
   database string
-  // User
+  // Database user the pool authenticates as
   user string
   // Pool size
   size int
@@ -234,7 +234,7 @@ digitalocean.domain @defaults("name") {
 
 // DigitalOcean DNS record
 private digitalocean.domain.record @defaults("type name data") {
-  // Domain name (parent)
+  // Name of the parent domain
   domainName string
   // Record ID
   id int
@@ -270,7 +270,7 @@ digitalocean.volume @defaults("id name sizeGigabytes") {
   filesystemType string
   // Filesystem label
   filesystemLabel string
-  // Created at
+  // Time the resource was created
   createdAt time
   // Tags
   tags []string
@@ -292,7 +292,7 @@ digitalocean.loadBalancer @defaults("id name status") {
   status string
   // Region slug
   region string
-  // Created at
+  // Time the resource was created
   createdAt time
   // Algorithm (round_robin, least_connections)
   algorithm string
@@ -334,7 +334,7 @@ digitalocean.vpc @defaults("id name region") {
   ipRange string
   // Region slug
   region string
-  // Created at
+  // Time the resource was created
   createdAt time
   // Whether this is the default VPC
   default bool
@@ -350,7 +350,7 @@ digitalocean.vpcPeering @defaults("id name status") {
   vpcIds []string
   // Status
   status string
-  // Created at
+  // Time the resource was created
   createdAt time
 }
 
@@ -366,7 +366,7 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   region string
   // Status (running, provisioning, degraded, error, deleted, upgrading)
   status string
-  // Created at
+  // Time the resource was created
   createdAt time
   // Updated at
   updatedAt time
@@ -418,11 +418,11 @@ private digitalocean.kubernetes.nodePool @defaults("id name size") {
   minNodes int
   // Maximum nodes (if auto-scale)
   maxNodes int
-  // Tags
+  // Tags applied to nodes in this pool
   tags []string
-  // Labels
+  // Kubernetes labels applied to nodes in this pool
   labels dict
-  // Taints
+  // Kubernetes taints applied to nodes in this pool (each dict: key, value, effect)
   taints []dict
 }
 
@@ -438,7 +438,7 @@ digitalocean.project @defaults("id name environment") {
   purpose string
   // Environment (Development, Staging, Production)
   environment string
-  // Created at
+  // Time the resource was created
   createdAt time
   // Updated at
   updatedAt time
@@ -474,7 +474,7 @@ digitalocean.certificate @defaults("id name state") {
   dnsNames []string
   // Expiration
   notAfter time
-  // Created at
+  // Time the resource was created
   createdAt time
 }
 
@@ -486,7 +486,7 @@ digitalocean.registry @defaults("name region") {
   storageUsageBytes int
   // Region slug
   region string
-  // Created at
+  // Time the resource was created
   createdAt time
   // Subscription tier
   subscriptionTier string
@@ -526,7 +526,7 @@ digitalocean.app @defaults("id name") {
   name string
   // Live URL
   liveUrl string
-  // Created at
+  // Time the resource was created
   createdAt time
   // Updated at
   updatedAt time
@@ -592,7 +592,7 @@ digitalocean.cdn @defaults("id origin") {
   certificateId string
   // Custom domain
   customDomain string
-  // Created at
+  // Time the resource was created
   createdAt time
 }
 
@@ -612,6 +612,6 @@ digitalocean.spacesKey @defaults("name accessKey") {
   accessKey string
   // Grants (bucket permissions)
   grants []dict
-  // Created at
+  // Time the resource was created
   createdAt time
 }
