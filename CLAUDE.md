@@ -21,6 +21,46 @@ The primary task in this repo is adding or modifying resources. Follow this life
 Resources are defined in `.lr` files (e.g., `providers/aws/resources/aws.lr`). This acts as the GraphQL-like schema.
 *   **Action**: Edit the `.lr` file to add new resources or fields.
 
+#### Resource doc-comment format
+
+Every top-level resource (anything users will query directly — including singular records like `aws.ec2.instance` and namespace roots like `aws`) must have a two-part doc-comment immediately above the `resource {` line:
+
+1. **Title.** A simple, technically correct one-line name for the item — a noun phrase, no leading article ("A" / "An"), no trailing verbs like "static analysis" or "configuration analysis". The title belongs to *what the resource is*, not what you do with it. Deprecated resources keep `DEPRECATED:` at the start of the title.
+2. **Single empty `//` line.**
+3. **Description.** Multi-line prose describing what's queryable through the resource — fields, sub-resources, derived predicates, the audits it enables. Lead with `Examine ...` (or `Iterate ...` for collection wrappers, `Use ...` for namespaces that exist mainly to host other resources). When the resource is keyed by a specific field, mention that field as the selection key with a concrete example. The description gets machine-parsed into the website-rendered resource docs, so favor depth and self-containment over single-line brevity.
+
+```
+// Apache2 HTTP Server
+//
+// Examine server configuration and daemon version. The configuration
+// includes loaded modules, virtual hosts, and directory directives.
+apache2 { ... }
+```
+
+Selection-keyed example:
+
+```
+// Section of the Arista EOS running-config
+//
+// Examine a single named section of the running-config when you need the
+// raw text of one configuration block rather than the whole device. The
+// `name` field selects the section as it appears in the running-config —
+// for example `arista.eos.runningConfig.section(name: "interface Ethernet1")`
+// or `... section(name: "router bgp 65001")` — and `content` returns the
+// raw text of that block.
+arista.eos.runningConfig.section { ... }
+```
+
+**Style rules:**
+- Title is a name-like noun phrase. No leading "A" / "An". No "static analysis" / "configuration analysis" verbs in the title. `DEPRECATED:` stays in the title for deprecated resources.
+- Exactly one blank `//` separator between title and description.
+- Don't reference the parent resource as a navigation hint ("read from the parent device as ...", "iterate from the parent ..."). Just describe what *this* resource examines.
+- Don't use developer jargon ("Singleton", "Top-level entry point" is OK if it adds meaning, otherwise drop it). Write user-facing prose.
+- Cross-reference sibling resources only when it genuinely helps the reader — e.g., pointing from a raw view (`apache2.conf`) at a richer typed view (`apache2.conf.module`).
+- Private resources and pure sub-row types (rows of a parent collection like `*.entry`) typically don't need the two-part form — a single-line comment is fine.
+
+Field-level comments (`// foo bar` above a field declaration) stay as one-line summaries, no blank `//` separator. The two-part form is for the *resource* doc-comment only.
+
 ### Step 2: Code Generation
 **Crucial:** You must generate Go interfaces after modifying `.lr` files.
 ```bash
