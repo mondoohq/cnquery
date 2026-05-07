@@ -5,6 +5,15 @@ option provider = "go.mondoo.com/cnquery/v9/providers/google-workspace"
 option go_package = "go.mondoo.com/mql/v13/providers/google-workspace/resources"
 
 // Google Workspace organization
+//
+// Examine a Google Workspace customer organization: the organizational-
+// unit hierarchy, every user account and the user's tokens / OAuth
+// scopes, the groups (with members and security settings), the
+// registered domains and their verification state, the admin roles
+// and their privileges, the third-party OAuth-connected apps with
+// aggregated scopes, and the user calendars together with their ACL
+// rules — the surface auditors use for identity hygiene, sharing
+// reviews, and 2-step-verification enforcement checks.
 googleworkspace {
   // Organizational units in the account hierarchy
   orgUnits() []googleworkspace.orgUnit
