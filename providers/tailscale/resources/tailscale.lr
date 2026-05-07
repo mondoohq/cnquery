@@ -26,7 +26,7 @@ tailscale {
   networkFlowLoggingEnabled() bool
   // Whether device posture identity collection is enabled for the tailnet
   postureIdentityCollectionEnabled() bool
-  // Which user role is allowed to join external tailnets ('none', 'admin', or 'member')
+  // Lowest user role allowed to join external tailnets: 'none' (disabled), 'admin' (admins only), or 'member' (any member)
   usersRoleAllowedToJoinExternalTailnets() string
   // Tailnet ACL (access control list) policy
   aclPolicy() tailscale.aclPolicy
@@ -45,7 +45,7 @@ tailscale.device @defaults("id hostname os") {
   os string
   // MagicDNS name of the device
   name string
-  // User who registered the node (For untagged nodes, this user is the device owner.)
+  // User who registered the device. For untagged devices this is also the device owner.
   user string
   // An identity for the device that is separate from human users (used as part of an ACL to restrict access)
   tags []string
@@ -111,10 +111,7 @@ tailscale.user @defaults("id displayName type") {
   deviceCount int
   // Time the user joined the tailnet
   createdAt time
-  // Either:
-  // a) The last time any of the user's nodes were connected to the network
-  // or
-  // b) The last time the user authenticated to any Tailscale service, including the admin panel
+  // Last time the user was active on the tailnet — either via a node connection or by authenticating to a Tailscale service (including the admin panel)
   lastSeenAt time
   // Whether the user is currently connected to the tailnet
   currentlyConnected bool
@@ -147,11 +144,7 @@ tailscale.aclPolicy @defaults("tailnet") {
   autoApproverExitNodes []string
   // Subnet routes that are auto-approved when advertised by listed users/groups (CIDR → owners)
   autoApproverRoutes map[string][]string
-  // Default device-posture rule names applied to every ACL src that doesn't
-  // specify its own srcPosture. Maps to the SDK's `DefaultSourcePosture` /
-  // policy `defaultSrcPosture`, which is a `[]string` of posture names — not
-  // a map, despite the JSON-style name. Empty when the experimental posture
-  // feature is unused.
+  // Default device-posture rule names applied to every ACL source that doesn't specify its own srcPosture. Empty when posture rules are unused.
   defaultSourcePosture []string
   // Named device posture rules referenced by name from src/defaultSrcPosture (rule name -> list of posture conditions)
   postures map[string][]string
