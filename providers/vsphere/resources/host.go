@@ -244,7 +244,10 @@ func (v *mqlVsphereHost) adapters() ([]any, error) {
 	pauseParams := map[string]map[string]any{}
 	// sort pause params by nic
 	for i, p := range pParams {
-		nicName := pParams[i]["NIC"].(string)
+		nicName, _ := pParams[i]["NIC"].(string)
+		if nicName == "" {
+			continue
+		}
 		pauseParams[nicName] = p
 	}
 
@@ -259,9 +262,12 @@ func (v *mqlVsphereHost) adapters() ([]any, error) {
 		}
 	}
 
-	mqlAdapters := make([]any, len(adapters))
-	for i, a := range adapters {
-		nicName := a["Name"].(string)
+	mqlAdapters := make([]any, 0, len(adapters))
+	for _, a := range adapters {
+		nicName, _ := a["Name"].(string)
+		if nicName == "" {
+			continue
+		}
 		pParams := pauseParams[nicName]
 
 		var (
@@ -299,7 +305,7 @@ func (v *mqlVsphereHost) adapters() ([]any, error) {
 		r.hostInventoryPath = esxiClient.InventoryPath
 		r.parentResource = v
 
-		mqlAdapters[i] = mqlAdapter
+		mqlAdapters = append(mqlAdapters, mqlAdapter)
 	}
 
 	return mqlAdapters, nil

@@ -49,7 +49,7 @@ func (c *Client) ListDatacenters() ([]*object.Datacenter, error) {
 	finder := find.NewFinder(c.Client.Client, true)
 	l, err := finder.ManagedObjectListChildren(context.Background(), "/")
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	var dcs []*object.Datacenter
 	for _, item := range l {

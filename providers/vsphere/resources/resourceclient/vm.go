@@ -35,6 +35,9 @@ func AdvancedSettings(vm *object.VirtualMachine) (map[string]any, error) {
 	}
 
 	advancedProps := map[string]any{}
+	if vmInfo == nil || vmInfo.Config == nil {
+		return advancedProps, nil
+	}
 	for i := range vmInfo.Config.ExtraConfig {
 		prop := vmInfo.Config.ExtraConfig[i]
 		key := prop.GetOptionValue().Key

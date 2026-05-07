@@ -154,7 +154,7 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 				},
 				Connections: []*inventory.Config{clonedConfig}, // pass-in the parent connection config
 				Labels:      labels,
-				State:       mapHostPowerstateToState(mqlHost.host.Runtime.PowerState),
+				State:       hostPowerState(mqlHost),
 				PlatformIds: []string{platformID},
 			})
 		}
@@ -190,13 +190,34 @@ func discoverDatacenter(conn *connection.VsphereConnection, datacenterResource *
 				Platform:    &inventory.Platform{},
 				Connections: []*inventory.Config{clonedConfig},
 				Labels:      labels,
-				State:       mapVmGuestState(vm.vm.Guest.GuestState),
+				State:       vmGuestState(vm),
 				PlatformIds: []string{platformID},
 			})
 		}
 	}
 
 	return assetList, nil
+}
+
+// hostPowerState reports a host's power state for asset discovery, guarding
+// against missing cached host data (mqlHost.host is nil when the resource was
+// created via initVsphereHost rather than fetched during datacenter
+// discovery).
+func hostPowerState(mqlHost *mqlVsphereHost) inventory.State {
+	if mqlHost == nil || mqlHost.host == nil {
+		return inventory.State_STATE_UNKNOWN
+	}
+	return mapHostPowerstateToState(mqlHost.host.Runtime.PowerState)
+}
+
+// vmGuestState reports a VM's guest power state for asset discovery, guarding
+// against the VM having no Guest info (templates, suspended VMs, VMs without
+// VMware Tools all leave Guest nil).
+func vmGuestState(vm *mqlVsphereVm) inventory.State {
+	if vm == nil || vm.vm == nil || vm.vm.Guest == nil {
+		return inventory.State_STATE_UNKNOWN
+	}
+	return mapVmGuestState(vm.vm.Guest.GuestState)
 }
 
 func mapHostPowerstateToState(hostPowerState types.HostSystemPowerState) inventory.State {

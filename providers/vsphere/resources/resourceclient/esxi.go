@@ -263,14 +263,25 @@ func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 		return nil, err
 	}
 
-	vmknics := make([]VmKernelNic, len(res.Values))
-	for i, val := range res.Values {
+	vmknics := make([]VmKernelNic, 0, len(res.Values))
+	for _, val := range res.Values {
+		// `network ip interface list` always reports Name and NetstackInstance
+		// as a single-string column on supported ESXi releases, but defend
+		// against an unexpected schema rather than panicking on missing keys.
+		nameCol := val["Name"]
+		netstackCol := val["NetstackInstance"]
+		if len(nameCol) == 0 || len(netstackCol) == 0 {
+			continue
+		}
+		name := nameCol[0]
+		netstack := netstackCol[0]
+		if name == "" {
+			continue
+		}
+
 		nic := VmKernelNic{
 			Properties: esxiValuesToDict(val),
 		}
-
-		name := val["Name"][0]
-		netstack := val["NetstackInstance"][0]
 
 		// gather ipv4 information
 		ipv4Params, err := esxi.VmknicIp(name, netstack, "ipv4")
@@ -293,7 +304,7 @@ func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 		}
 		nic.Tags = tags
 
-		vmknics[i] = nic
+		vmknics = append(vmknics, nic)
 	}
 	return vmknics, nil
 }
@@ -414,6 +425,11 @@ func (esxi *Esxi) Vibs() ([]EsxiVib, error) {
 }
 
 // ($ESXCli).software.acceptance.get()
+//
+// `software acceptance get` returns a single string value (e.g.
+// "PartnerSupported"). govmomi's esx executor surfaces that on res.String;
+// on some ESXi releases it lands in res.Values as a single-key map. Try
+// both before reporting "unknown".
 func (esxi *Esxi) SoftwareAcceptance() (string, error) {
 	e, err := esx.NewExecutor(context.Background(), esxi.c.Client, esxi.host)
 	if err != nil {
@@ -425,9 +441,14 @@ func (esxi *Esxi) SoftwareAcceptance() (string, error) {
 		return "", err
 	}
 
-	if len(res.Values) == 0 {
-		if res.String != "" {
-			return res.String, nil
+	if res.String != "" {
+		return res.String, nil
+	}
+	for _, v := range res.Values {
+		for _, vals := range v {
+			if len(vals) > 0 && vals[0] != "" {
+				return vals[0], nil
+			}
 		}
 	}
 
@@ -569,7 +590,7 @@ func (esxi *Esxi) KernelModuleDetails(modulename string) (*EsxiKernelModule, err
 			case "ContainingVIB":
 				module.ContainingVIB = value
 			case "FileVersion":
-				module.ContainingVIB = value
+				module.FileVersion = value
 			case "License":
 				module.License = value
 			case "Module":

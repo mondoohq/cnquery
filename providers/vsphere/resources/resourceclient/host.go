@@ -135,7 +135,7 @@ func HostLicenses(client *vim25.Client, hostID string) ([]types.LicenseManagerLi
 
 	res := make([]types.LicenseManagerLicenseInfo, len(assignedLicenses))
 	for i := range assignedLicenses {
-		res[i] = assignedLicenses[0].AssignedLicense
+		res[i] = assignedLicenses[i].AssignedLicense
 	}
 	return res, nil
 }

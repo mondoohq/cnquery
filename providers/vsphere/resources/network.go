@@ -82,9 +82,7 @@ func (v *mqlVsphereVswitchStandard) uplinks() ([]any, error) {
 	}
 
 	uplinksRaw := properties["Uplinks"]
-
-	// no uplinks for dvs
-	if properties == nil {
+	if uplinksRaw == nil {
 		return nil, nil
 	}
 
@@ -119,8 +117,10 @@ func findHostAdapter(host *mqlVsphereHost, uplinkNames []any) ([]any, error) {
 		name := adapter.Name.Data
 
 		for i := range uplinkNames {
-			uplinkName := uplinkNames[i].(string)
-
+			uplinkName, ok := uplinkNames[i].(string)
+			if !ok {
+				continue
+			}
 			if name == uplinkName {
 				mqlUplinks = append(mqlUplinks, adapter)
 			}
