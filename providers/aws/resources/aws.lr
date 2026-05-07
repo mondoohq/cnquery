@@ -478,6 +478,7 @@ private aws.waf.rule.action @defaults("action") {
   responseCode string
 }
 
+// AWS WAF rule statement (matching condition for a WAF rule)
 private aws.waf.rule.statement @defaults("kind") {
   // ID of the statement
   id string
@@ -539,6 +540,7 @@ private aws.waf.rule.statement.ipsetreferencestatement {
   ipSetForwardedIPConfig aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig
 }
 
+// Forwarded-IP configuration for an IPSet reference statement
 private aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig {
   // Name of the rule this statement belongs to
   ruleName string
@@ -552,6 +554,7 @@ private aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig {
   fallbackBehavior string
 }
 
+// Rule statement that matches requests by labels added by previously evaluated rules
 private aws.waf.rule.statement.labelmatchstatement {
   // Name of the rule this statement belongs to
   ruleName string
@@ -5777,6 +5780,7 @@ private aws.eventbridge.pipe.sourceParameters @defaults("type") {
   filterCriteria() aws.eventbridge.pipe.filterCriteria
 }
 
+// EventBridge Pipe SQS source parameters
 private aws.eventbridge.pipe.sourceParameters.sqs @defaults("batchSize") {
   // Maximum messages per batch
   batchSize int
@@ -5784,6 +5788,7 @@ private aws.eventbridge.pipe.sourceParameters.sqs @defaults("batchSize") {
   maximumBatchingWindowInSeconds int
 }
 
+// EventBridge Pipe Kinesis stream source parameters
 private aws.eventbridge.pipe.sourceParameters.kinesisStream @defaults("startingPosition batchSize") {
   // Starting position: TRIM_HORIZON, LATEST, AT_TIMESTAMP
   startingPosition string
@@ -5805,6 +5810,7 @@ private aws.eventbridge.pipe.sourceParameters.kinesisStream @defaults("startingP
   deadLetterConfig() aws.eventbridge.pipe.deadLetterConfig
 }
 
+// EventBridge Pipe DynamoDB stream source parameters
 private aws.eventbridge.pipe.sourceParameters.dynamodbStream @defaults("startingPosition batchSize") {
   // Starting position: TRIM_HORIZON or LATEST
   startingPosition string
@@ -5824,6 +5830,7 @@ private aws.eventbridge.pipe.sourceParameters.dynamodbStream @defaults("starting
   deadLetterConfig() aws.eventbridge.pipe.deadLetterConfig
 }
 
+// EventBridge Pipe Amazon MQ ActiveMQ source parameters
 private aws.eventbridge.pipe.sourceParameters.activeMQ @defaults("queueName batchSize") {
   // Source queue name on the broker
   queueName string
@@ -5835,6 +5842,7 @@ private aws.eventbridge.pipe.sourceParameters.activeMQ @defaults("queueName batc
   credentialsSecret() aws.secretsmanager.secret
 }
 
+// EventBridge Pipe Amazon MQ RabbitMQ source parameters
 private aws.eventbridge.pipe.sourceParameters.rabbitMQ @defaults("queueName virtualHost batchSize") {
   // Source queue name on the broker
   queueName string
@@ -5848,6 +5856,7 @@ private aws.eventbridge.pipe.sourceParameters.rabbitMQ @defaults("queueName virt
   credentialsSecret() aws.secretsmanager.secret
 }
 
+// EventBridge Pipe Amazon MSK source parameters
 private aws.eventbridge.pipe.sourceParameters.msk @defaults("topicName credentialsType batchSize") {
   // Kafka topic to consume
   topicName string
@@ -5865,6 +5874,7 @@ private aws.eventbridge.pipe.sourceParameters.msk @defaults("topicName credentia
   credentialsSecret() aws.secretsmanager.secret
 }
 
+// EventBridge Pipe self-managed Apache Kafka source parameters
 private aws.eventbridge.pipe.sourceParameters.selfManagedKafka @defaults("topicName credentialsType batchSize") {
   // Kafka topic to consume
   topicName string
@@ -5930,16 +5940,19 @@ private aws.eventbridge.pipe.targetParameters @defaults("type") {
   http() aws.eventbridge.pipe.targetParameters.http
 }
 
+// EventBridge Pipe Lambda target parameters
 private aws.eventbridge.pipe.targetParameters.lambda @defaults("invocationType") {
   // Invocation type: REQUEST_RESPONSE or FIRE_AND_FORGET
   invocationType string
 }
 
+// EventBridge Pipe Step Functions target parameters
 private aws.eventbridge.pipe.targetParameters.stepFunctions @defaults("invocationType") {
   // Invocation type: REQUEST_RESPONSE or FIRE_AND_FORGET
   invocationType string
 }
 
+// EventBridge Pipe SQS target parameters
 private aws.eventbridge.pipe.targetParameters.sqs @defaults("messageGroupId") {
   // Message group ID for FIFO queues
   messageGroupId string
@@ -5947,11 +5960,13 @@ private aws.eventbridge.pipe.targetParameters.sqs @defaults("messageGroupId") {
   messageDeduplicationId string
 }
 
+// EventBridge Pipe Kinesis stream target parameters
 private aws.eventbridge.pipe.targetParameters.kinesisStream @defaults("partitionKey") {
   // Partition key for the record
   partitionKey string
 }
 
+// EventBridge Pipe ECS task target parameters
 private aws.eventbridge.pipe.targetParameters.ecsTask @defaults("launchType taskCount") {
   // Launch type: EC2, FARGATE, EXTERNAL
   launchType string
@@ -5983,6 +5998,7 @@ private aws.eventbridge.pipe.targetParameters.ecsTask @defaults("launchType task
   tags map[string]string
 }
 
+// ECS task network configuration for an EventBridge Pipe target
 private aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration @defaults("assignPublicIp") {
   // Whether to assign a public IP to the task ENI: ENABLED or DISABLED — audit signal
   assignPublicIp string
@@ -5992,6 +6008,7 @@ private aws.eventbridge.pipe.targetParameters.ecsTask.networkConfiguration @defa
   securityGroups() []aws.ec2.securitygroup
 }
 
+// EventBridge Pipe Batch job target parameters
 private aws.eventbridge.pipe.targetParameters.batchJob @defaults("jobDefinition jobName") {
   // Batch job definition (name or ARN)
   jobDefinition string
@@ -6013,6 +6030,7 @@ private aws.eventbridge.pipe.targetParameters.batchJob @defaults("jobDefinition 
   parameters map[string]string
 }
 
+// EventBridge Pipe CloudWatch Logs target parameters
 private aws.eventbridge.pipe.targetParameters.cloudwatchLogs @defaults("logStreamName") {
   // Log stream name
   logStreamName string
@@ -6020,6 +6038,7 @@ private aws.eventbridge.pipe.targetParameters.cloudwatchLogs @defaults("logStrea
   timestamp string
 }
 
+// EventBridge Pipe EventBridge bus target parameters
 private aws.eventbridge.pipe.targetParameters.eventBridge @defaults("source detailType") {
   // Source field of the emitted event
   source string
@@ -6033,6 +6052,7 @@ private aws.eventbridge.pipe.targetParameters.eventBridge @defaults("source deta
   time string
 }
 
+// EventBridge Pipe Redshift Data API target parameters
 private aws.eventbridge.pipe.targetParameters.redshiftData @defaults("database statementName") {
   // Target database
   database string
@@ -6052,11 +6072,13 @@ private aws.eventbridge.pipe.targetParameters.redshiftData @defaults("database s
   credentialsSecret() aws.secretsmanager.secret
 }
 
+// EventBridge Pipe SageMaker pipeline target parameters
 private aws.eventbridge.pipe.targetParameters.sagemakerPipeline {
   // Pipeline parameter names (keys only — values may contain PII)
   pipelineParameterNames []string
 }
 
+// EventBridge Pipe Timestream target parameters
 private aws.eventbridge.pipe.targetParameters.timestream @defaults("databaseName tableName") {
   // Target database
   databaseName string
@@ -6104,16 +6126,19 @@ private aws.eventbridge.pipe.logConfiguration @defaults("level hasAnyDestination
   s3() aws.eventbridge.pipe.logConfiguration.s3
 }
 
+// CloudWatch Logs destination for EventBridge Pipe logs
 private aws.eventbridge.pipe.logConfiguration.cloudwatchLogs {
   // CloudWatch log group receiving pipe logs
   logGroup() aws.cloudwatch.loggroup
 }
 
+// Firehose destination for EventBridge Pipe logs
 private aws.eventbridge.pipe.logConfiguration.firehose {
   // Firehose delivery stream receiving pipe logs
   deliveryStream() aws.kinesis.firehoseDeliveryStream
 }
 
+// S3 destination for EventBridge Pipe logs
 private aws.eventbridge.pipe.logConfiguration.s3 @defaults("bucketOwner prefix outputFormat") {
   // S3 bucket receiving pipe logs
   bucket() aws.s3.bucket
@@ -7041,6 +7066,7 @@ private aws.s3.bucket.policy @defaults("bucketName version") {
   statements() []dict
 }
 
+// Amazon S3 bucket static-website hosting configuration
 private aws.s3.bucket.websiteConfiguration {
   // Name of the index document
   indexDocument string
@@ -7052,6 +7078,7 @@ private aws.s3.bucket.websiteConfiguration {
   routingRules []aws.s3.bucket.websiteConfiguration.routingRule
 }
 
+// Redirect-all-requests configuration for an S3 bucket website
 private aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf @defaults("hostname protocol") {
   // Hostname to redirect all requests to
   hostname string
@@ -7059,6 +7086,7 @@ private aws.s3.bucket.websiteConfiguration.redirectAllRequestsToConf @defaults("
   protocol string
 }
 
+// Routing rule for an S3 bucket website
 private aws.s3.bucket.websiteConfiguration.routingRule {
   // Redirect configuration for the routing rule
   redirect aws.s3.bucket.websiteConfiguration.routingRule.redirectConf
@@ -7066,6 +7094,7 @@ private aws.s3.bucket.websiteConfiguration.routingRule {
   condition aws.s3.bucket.websiteConfiguration.routingRule.conditionConf
 }
 
+// Redirect target for an S3 bucket website routing rule
 private aws.s3.bucket.websiteConfiguration.routingRule.redirectConf {
   // Hostname to redirect to
   hostname string
@@ -7079,6 +7108,7 @@ private aws.s3.bucket.websiteConfiguration.routingRule.redirectConf {
   replaceKeyWith string
 }
 
+// Condition matcher for an S3 bucket website routing rule
 private aws.s3.bucket.websiteConfiguration.routingRule.conditionConf {
   // HTTP error code to apply the routing rule to
   httpErrorCodeReturnedEquals string
@@ -8041,6 +8071,7 @@ aws.rds.parameterGroup @defaults("name family region arn") {
   parameters() []aws.rds.parameterGroup.parameter
 }
 
+// Single parameter belonging to an Amazon RDS (cluster) parameter group
 aws.rds.parameterGroup.parameter @defaults("name value") {
   // Specifies the valid range of values for the parameter
   allowedValues string
@@ -9753,6 +9784,7 @@ private aws.ec2.networkacl @defaults("id region") {
   associations []aws.ec2.networkacl.association
 }
 
+// Association between an Amazon EC2 network ACL and a VPC subnet
 private aws.ec2.networkacl.association @defaults("associationId subnetId") {
   // ID for the association
   associationId string
