@@ -124,7 +124,7 @@ private arista.eos.interface @defaults("name") {
   name string
   // Interface bandwidth
   bandwidth int
-  // 'burned in' address of the interface
+  // Burned-in (factory-assigned) MAC address of the interface
   burnedInAddress string
   // Interface description
   description string
@@ -184,7 +184,7 @@ arista.eos.stp.mst @defaults("instanceId name") {
   instanceId string
   // MST instance name
   name string
-  // SPT protocol
+  // Spanning Tree Protocol variant for this MST instance
   protocol string
   // Detailed bridge information (Forward Delay, MAC, Priority)
   bridge dict
@@ -467,10 +467,7 @@ arista.eos.aaa {
   tacacsServers []string
   // RADIUS server hosts
   radiusServers []string
-  // True when the default authentication list contains "local" with no
-  // `group` token preceding it — i.e. the local user database is the only
-  // authentication source for the default login list, with no remote AAA
-  // group configured before local.
+  // Whether the default authentication list uses only the local user database (no remote AAA configured before local)
   defaultLoginPermitsLocalOnly bool
 }
 
