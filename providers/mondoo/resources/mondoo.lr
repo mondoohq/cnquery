@@ -8,12 +8,20 @@ option provider = "go.mondoo.com/mql/v13/providers/mondoo"
 option go_package = "go.mondoo.com/mql/v13/providers/mondoo/resources"
 
 // Mondoo Client
+//
+// Examine the Mondoo Resource Name (MRN) of the client (cnspec / cnquery /
+// the platform agent) executing the current scan — the identifier audits
+// can use to attribute findings back to a specific Mondoo client.
 mondoo.client @defaults("mrn") {
   // Client identifier
   mrn string
 }
 
 // Mondoo Organization
+//
+// Examine an organization in Mondoo Platform: its display name, its MRN
+// (Mondoo Resource Name), and the spaces it contains. Use it to walk
+// the organization → space → asset hierarchy from policy.
 mondoo.organization @defaults ("name mrn") {
   // Organization name
   name string
@@ -24,6 +32,10 @@ mondoo.organization @defaults ("name mrn") {
 }
 
 // Mondoo Space
+//
+// Examine a space in Mondoo Platform: its display name, its MRN, and the
+// assets that have been registered into it. Spaces are the unit of
+// access control and policy assignment in Mondoo.
 mondoo.space @defaults("name mrn") {
   // Space name
   name string
