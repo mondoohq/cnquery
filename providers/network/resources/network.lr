@@ -4,13 +4,13 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/network"
 option go_package = "go.mondoo.com/mql/v13/providers/network/resources"
 
-// Socket
+// Network socket: protocol, port, and target address
 socket @defaults("protocol port address") {
-  // Protocol for this socket
+  // Transport protocol (e.g., tcp, udp)
   protocol string
   // Port number
   port int
-  // Target address
+  // Target address (hostname or IP)
   address string
 }
 
@@ -121,7 +121,7 @@ url @defaults("string") {
   rawFragment string
 }
 
-// TLS
+// TLS/SSL connection inspection: versions, ciphers, and certificates served by the endpoint
 tls @defaults("socket domainName") {
   init(target string)
   // Socket of this connection
@@ -167,9 +167,9 @@ certificate @defaults("serial subject.commonName subject.dn") {
   subjectKeyID() string
   // Authority key identifier
   authorityKeyID() string
-  // Subject
+  // Distinguished name of the certificate subject
   subject() pkix.name
-  // Issuer
+  // Distinguished name of the certificate issuer
   issuer() pkix.name
   // Version number
   version() int
@@ -195,7 +195,7 @@ certificate @defaults("serial subject.commonName subject.dn") {
   policyIdentifier() []string
   // CRL distribution points
   crlDistributionPoints() []string
-  // OCSP
+  // OCSP responder URLs for revocation checking
   ocspServer() []string
   // Issuing certificate URL
   issuingCertificateUrl() []string
@@ -221,7 +221,7 @@ certificate @defaults("serial subject.commonName subject.dn") {
 
 // X.509 certificate PKIX name
 pkix.name @defaults("id dn commonName") {
-  // ID
+  // Cache key derived from the distinguished name
   id string
   // Distinguished name qualifier
   dn string
@@ -248,9 +248,9 @@ pkix.name @defaults("id dn commonName") {
 
 // X.509 certificate PKIX extension
 pkix.extension @defaults("id") {
-  // ID
+  // Cache key derived from the extension identifier
   id string
-  // Extension identifier
+  // Extension identifier (OID, e.g., 2.5.29.37 for extKeyUsage)
   identifier string
   // Whether the extension is critical
   critical bool
@@ -293,7 +293,7 @@ private openpgp.publicKey {
   version int
   // Key fingerprint
   fingerprint string
-  // Key algorithm
+  // Public key algorithm (e.g., RSA, ECDSA, Ed25519)
   keyAlgorithm string
   // Key bit length
   bitLength int
@@ -307,11 +307,11 @@ private openpgp.identity {
   fingerprint string
   // Full name in form of `Full Name (comment) <email@example.com>`
   id string
-  // Name
+  // Real name from the OpenPGP user ID
   name string
-  // Email
+  // Email address from the OpenPGP user ID
   email string
-  // Comment
+  // Free-form comment from the OpenPGP user ID
   comment string
   // Identity signatures
   signatures() []openpgp.signature
@@ -329,7 +329,7 @@ private openpgp.signature {
   version int
   // Signature type
   signatureType string
-  // Hash algorithm
+  // Public key algorithm used to make the signature (e.g., RSA, ECDSA, Ed25519)
   keyAlgorithm string
   // Creation time
   creationTime time
@@ -409,13 +409,13 @@ dns.dkimRecord @defaults("dnsTxt") {
   hashAlgorithms []string
   // Key type
   keyType string
-  // Notes
+  // Free-form notes about the DKIM record
   notes string
   // Public key data base64-encoded
   publicKeyData string
-  // Service types
+  // Service types this DKIM key is restricted to (e.g., email, *)
   serviceTypes []string
-  // Flags
+  // DKIM flags (e.g., y for testing, s to require exact selector match)
   flags []string
   // Whether the DKIM entry and public key is valid
   valid() bool
