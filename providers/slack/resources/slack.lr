@@ -4,11 +4,11 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/slack"
 option go_package = "go.mondoo.com/mql/v13/providers/slack/resources"
 
-// Slack
+// Slack workspace and its resources (users, channels, user groups, access logs)
 slack {
-  // Slack access logs
+  // Slack workspace access log entries (login activity)
   accessLogs() []slack.login
-  // List of Slack user groups
+  // User groups defined in the workspace
   userGroups() []slack.userGroup
 }
 
@@ -35,7 +35,7 @@ slack.team @defaults("id domain") {
   emailDomain string
 }
 
-// Slack users
+// Slack workspace users grouped by role (bots, members, admins, owners)
 slack.users {
   []slack.user
   // Bot users in the workspace
@@ -58,11 +58,11 @@ slack.user @defaults("id name") {
   teamId string
   // Whether the user has been deactivated
   deleted bool
-  // Special user color
+  // Hex color used to display the user's name in clients
   color string
   // User's first and last name
   realName string
-  // Geographic timezone-related region
+  // IANA timezone identifier for the user (e.g., America/Los_Angeles)
   timeZone string
   // Commonly used name of the timezone
   timeZoneLabel string
@@ -98,7 +98,7 @@ slack.user @defaults("id name") {
   twoFactorType string
   // Whether the user owns files
   hasFiles bool
-  // Presence of the user
+  // Current presence status (active or away)
   presence string
   // IETF language code that represents this user's chosen display language
   locale string
@@ -122,7 +122,7 @@ slack.enterpriseUser {
    isOwner bool
 }
 
-// Slack user groups
+// Slack user group (a group of workspace members addressable by handle)
 slack.userGroup @defaults("handle") {
   // Group ID
   id string
@@ -168,9 +168,9 @@ slack.login @defaults("userID") {
   userAgent string
   // Best guess at the internet service provider
   isp string
-  // Best guesses at where the access originated, based on the IP address
+  // Country derived from IP-address geolocation
   country string
-  // Best guesses at where the access originated, based on the IP address
+  // Region/sub-country derived from IP-address geolocation
   region string
   // First access log entry for user, IP address, and user agent combination
   dateFirst time
@@ -190,9 +190,9 @@ slack.conversation @defaults("id name") {
   created time
   // IETF language code that represents chosen language
   locale string
-  // Information about the channel topic
+  // Channel topic with value, creator, and last-set timestamp
   topic dict
-  // Information about the channel purpose
+  // Channel purpose with value, creator, and last-set timestamp
   purpose dict
   // Whether the conversation is archived
   isArchived bool
