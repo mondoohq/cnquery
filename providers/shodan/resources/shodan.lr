@@ -5,9 +5,24 @@ option provider = "go.mondoo.com/mql/v13/providers/shodan"
 option go_package = "go.mondoo.com/mql/v13/providers/shodan/resources"
 
 // Shodan Search Engine
+//
+// Empty namespace for the Shodan provider. Use `shodan.host(ip: "...")`,
+// `shodan.domain(name: "...")`, `shodan.profile`, and `shodan.apiPlan`
+// to query host posture, domain DNS state, the connected Shodan
+// account, and the API plan limits.
 shodan {}
 
-// Shodan Search Engine host information
+// Shodan host information
+//
+// Examine what Shodan knows about a single internet-reachable host,
+// identified by `ip` (e.g., `shodan.host(ip: "1.2.3.4")`). Surfaces
+// reverse-DNS hostnames and ASN / ISP / organization ownership, the
+// open-port list and the per-banner service inventory, geolocation
+// (country, region, city, postal, lat/lon), Shodan's tag set with
+// derived predicates (`isCloud`, `isCdn`, `isVpn`, `isTor`, `isProxy`,
+// `isInfrastructure`), the `lastUpdate` timestamp, and the host-level
+// vulnerability list (with CVSS and severity per CVE) plus the
+// per-banner vulnerabilities through `services()`.
 shodan.host @defaults("ip") {
   init(ip string)
   // Host IP
@@ -191,7 +206,11 @@ private shodan.host.vulnerability @defaults("cve cvss severity") {
   references []string
 }
 
-// Shodan Search Engine domain information
+// Shodan domain information
+//
+// Examine what Shodan knows about a domain, identified by `name`
+// (e.g., `shodan.domain(name: "example.com")`): tags, the discovered
+// subdomain list, and the DNS NS records Shodan has seen.
 shodan.domain @defaults("name") {
   init(name string)
   // Domain name
@@ -219,6 +238,10 @@ private shodan.nsrecord @defaults("domain subdomain type") {
 }
 
 // Shodan Search Engine account
+//
+// Examine the Shodan account that the API key belongs to: display
+// name, whether it's a member account, the number of remaining search
+// credits, and the account creation timestamp.
 shodan.profile @defaults("displayName"){
   // Whether the account is a member
   member bool
@@ -231,6 +254,11 @@ shodan.profile @defaults("displayName"){
 }
 
 // Shodan Search Engine API plan information
+//
+// Examine the API plan attached to the connected account: plan name,
+// whether the plan is active (`unlocked`), the scan-credit total and
+// remaining count, the `telnet` permission, and the number of
+// monitored IPs allowed by the plan.
 shodan.apiPlan @defaults("plan"){
   // Number of scan credits
   scanCredits int
