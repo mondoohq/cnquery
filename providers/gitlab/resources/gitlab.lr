@@ -35,7 +35,7 @@ gitlab.settings @defaults("requireTwoFactorAuthentication") {
 gitlab.user @defaults("username name state") {
   // User ID
   id int
-  // Username
+  // GitLab login name (handle) of the user
   username string
   // Display name
   name string
@@ -101,9 +101,9 @@ private gitlab.user.sshKey @defaults("id title createdAt") {
 private gitlab.member @defaults("user role") {
   // Member ID
   id int
-  // Member user
+  // User associated with this membership
   user gitlab.user
-  // Member role
+  // Access level of the user within the group or project (e.g., Guest, Reporter, Developer, Maintainer, Owner)
   role string
 }
 
@@ -251,13 +251,13 @@ private gitlab.group.auditEvent @defaults("id eventName createdAt") {
   entityPath string
   // Whether this was a failed login event
   failedLogin string
-  // Typed reference to the user who performed the action (null if authorId is unknown)
+  // User who performed the action (null if the author cannot be resolved)
   author() gitlab.user
-  // Typed reference to the entity user when entityType is "User" (null otherwise)
+  // User entity targeted by this audit event when entityType is "User" (null otherwise)
   entityUser() gitlab.user
-  // Typed reference to the entity group when entityType is "Group" (null otherwise)
+  // Group entity targeted by this audit event when entityType is "Group" (null otherwise)
   entityGroup() gitlab.group
-  // Typed reference to the entity project when entityType is "Project" (null otherwise)
+  // Project entity targeted by this audit event when entityType is "Project" (null otherwise)
   entityProject() gitlab.project
 }
 
@@ -409,7 +409,7 @@ private gitlab.project.protectedBranch @defaults("name allowForcePush") {
   allowForcePush bool
   // Whether this is the default branch
   defaultBranch bool
-  // Whether code owner approval required
+  // Whether code owner approval is required
   codeOwnerApproval bool
 }
 
