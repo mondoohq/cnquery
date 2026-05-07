@@ -4,7 +4,13 @@
 option provider = "go.mondoo.com/mql/v13/providers/bicep"
 option go_package = "go.mondoo.com/mql/v13/providers/bicep/resources"
 
-// Bicep/ARM template analysis
+// Bicep / ARM template static analysis
+//
+// Top-level entry point for analyzing Azure Bicep source or compiled ARM
+// JSON. Exposes the Bicep source files (parameters, variables, resources,
+// modules, outputs) and, when available, the compiled ARM template — the
+// surface for IaC policy checks of Azure infrastructure-as-code without
+// deploying it.
 bicep {
   // All Bicep source files found
   files() []bicep.file
@@ -13,6 +19,11 @@ bicep {
 }
 
 // A Bicep source file
+//
+// Examine a single .bicep file: its target scope (resourceGroup,
+// subscription, managementGroup, tenant), declared parameters / variables /
+// resources / modules / outputs, and the raw file content for pattern
+// matching that the typed views can't express.
 bicep.file @defaults("path") {
   // File path
   path string
@@ -32,7 +43,12 @@ bicep.file @defaults("path") {
   content string
 }
 
-// A parameter declaration
+// Bicep parameter declaration
+//
+// Examine the name, type, default value, @description, @secure flag,
+// @allowed values, and the full raw decorator list — used to flag
+// missing @secure on credential-shaped parameters or unbounded @allowed
+// sets.
 bicep.parameter @defaults("name type") {
   // Parameter name
   name string
@@ -50,7 +66,11 @@ bicep.parameter @defaults("name type") {
   decorators []string
 }
 
-// A variable declaration
+// Bicep variable declaration
+//
+// Examine the variable name, the raw value expression, and any
+// @description decorator — useful for tracking how derived values flow
+// into resource bodies.
 bicep.variable @defaults("name") {
   // Variable name
   name string
@@ -61,6 +81,12 @@ bicep.variable @defaults("name") {
 }
 
 // A resource declaration in Bicep source
+//
+// Examine the symbolic name, Azure resource type and apiVersion, the
+// resolved name and location expressions, the full properties body, the
+// existing-resource flag, conditional-deployment expression, parent /
+// dependsOn relationships, and decorators — the surface IaC policies
+// match against to enforce Azure resource-shape rules.
 bicep.resource @defaults("type symbolicName") {
   // Symbolic name in the Bicep file
   symbolicName string
@@ -86,7 +112,12 @@ bicep.resource @defaults("type symbolicName") {
   decorators []string
 }
 
-// A module reference
+// A Bicep module reference
+//
+// Examine a `module` declaration: symbolic name, source path or registry
+// reference (br: / ts: flags break the source out by kind), scope, the
+// parameter values passed in, conditional-deployment expression,
+// description and decorators — the unit of cross-file Bicep composition.
 bicep.module @defaults("name source") {
   // Symbolic name
   name string
@@ -108,7 +139,11 @@ bicep.module @defaults("name source") {
   decorators []string
 }
 
-// An output declaration
+// A Bicep output declaration
+//
+// Examine an `output` statement: name, type, value expression, and
+// @description — useful for spotting outputs that leak secrets or
+// expose resource IDs unintentionally.
 bicep.output @defaults("name type") {
   // Output name
   name string
@@ -121,6 +156,12 @@ bicep.output @defaults("name type") {
 }
 
 // Compiled ARM template (from ARM JSON input)
+//
+// Examine the resolved schema URL, content version, parameters, variables,
+// resources, and outputs of an ARM template — the post-`bicep build`
+// view, where expressions have been resolved and resources are listed
+// flat. Use this for policy checks that need final values rather than
+// Bicep-level expressions.
 bicep.template @defaults("schema") {
   // ARM schema URL
   schema() string
@@ -137,6 +178,10 @@ bicep.template @defaults("schema") {
 }
 
 // A resource in the compiled ARM template
+//
+// Examine the resolved Azure resource type, apiVersion, name, location,
+// properties, dependsOn list, and the full ARM manifest for a single
+// resource — the form Azure Resource Manager actually deploys.
 bicep.template.resource @defaults("type name") {
   // Azure resource type
   type string
