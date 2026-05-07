@@ -5,12 +5,22 @@ option provider = "go.mondoo.com/mql/v13/providers/nmap"
 option go_package = "go.mondoo.com/mql/v13/providers/nmap/resources"
 
 // Nmap network scanner
+//
+// Examine the local nmap installation that the provider invokes for
+// scans, including its version and build information (libraries it
+// was compiled with, supported nsock engines, target platform).
 nmap {
   // Nmap installation version and build info
   version() nmap.versionInformation
 }
 
 // Nmap network scan target
+//
+// Examine the result of running nmap against a `target` (IP address,
+// hostname, or CIDR range). Surfaces the discovered hosts and any
+// warnings or errors emitted during the scan. Initialize with the
+// target string, e.g., `nmap.network(target: "192.0.2.0/24")` or
+// `nmap.network(target: "example.com")`.
 nmap.network {
   init(target string)
   // Target IP address, hostname, or CIDR range
@@ -22,6 +32,12 @@ nmap.network {
 }
 
 // Nmap discovered host
+//
+// Examine a single host returned by an nmap scan, identified by its
+// hostname or IP address: state (up / down / unknown), all known IP
+// and MAC addresses, DNS hostnames, OS-detection result, network
+// distance and traceroute hops, scan-end timestamp, and the discovered
+// ports with their states (open / closed / filtered).
 nmap.host @defaults("name") {
  init(name string)
  // Hostname or IP address
