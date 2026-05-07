@@ -257,3 +257,53 @@ func stringPolicyValue(p *types.StringPolicy) string {
 	}
 	return p.Value
 }
+
+// ---------- standard vSwitch port group policies ----------
+
+func (p *mqlVsphereVswitchStandardPortgroup) securityPolicySettings() (*mqlVsphereVswitchSecurityPolicy, error) {
+	if p.policy == nil {
+		p.SecurityPolicySettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := buildHostSecurityPolicy(p.MqlRuntime, p.parent+"/policy/security", p.policy.Security)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		p.SecurityPolicySettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res, nil
+}
+
+func (p *mqlVsphereVswitchStandardPortgroup) failoverPolicySettings() (*mqlVsphereVswitchFailoverPolicy, error) {
+	if p.policy == nil {
+		p.FailoverPolicySettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := buildHostFailoverPolicy(p.MqlRuntime, p.parent+"/policy/failover", p.policy.NicTeaming)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		p.FailoverPolicySettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res, nil
+}
+
+func (p *mqlVsphereVswitchStandardPortgroup) shapingPolicySettings() (*mqlVsphereVswitchShapingPolicy, error) {
+	if p.policy == nil {
+		p.ShapingPolicySettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := buildHostShapingPolicy(p.MqlRuntime, p.parent+"/policy/shaping", p.policy.ShapingPolicy)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		p.ShapingPolicySettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res, nil
+}

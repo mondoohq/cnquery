@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/vmware/govmomi/vim25/mo"
@@ -111,13 +112,32 @@ func (v *mqlVsphereHost) standardSwitch() ([]any, error) {
 		return nil, err
 	}
 
+	// Index the host's cached HostVirtualSwitch records by name so we can
+	// hydrate mtu / numPorts / numPortsAvailable without an extra SOAP call.
+	vsByName := map[string]*vimtypes.HostVirtualSwitch{}
+	if v.host != nil && v.host.Config != nil && v.host.Config.Network != nil {
+		for i := range v.host.Config.Network.Vswitch {
+			vsw := &v.host.Config.Network.Vswitch[i]
+			vsByName[vsw.Name] = vsw
+		}
+	}
+
 	mqlVswitches := make([]any, len(vswitches))
 	for i, s := range vswitches {
 		name := s["Name"].(string)
+		var mtu, numPorts, numPortsAvail int64
+		if cached, ok := vsByName[name]; ok {
+			mtu = int64(cached.Mtu)
+			numPorts = int64(cached.NumPorts)
+			numPortsAvail = int64(cached.NumPortsAvailable)
+		}
 		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vswitch.standard", map[string]*llx.RawData{
-			"__id":       llx.StringData(esxiClient.InventoryPath + "/" + name),
-			"name":       llx.StringData(name),
-			"properties": llx.DictData(s),
+			"__id":              llx.StringData(esxiClient.InventoryPath + "/" + name),
+			"name":              llx.StringData(name),
+			"properties":        llx.DictData(s),
+			"mtu":               llx.IntData(mtu),
+			"numPorts":          llx.IntData(numPorts),
+			"numPortsAvailable": llx.IntData(numPortsAvail),
 		})
 		if err != nil {
 			return nil, err
@@ -132,6 +152,41 @@ func (v *mqlVsphereHost) standardSwitch() ([]any, error) {
 	}
 
 	return mqlVswitches, nil
+}
+
+// portGroups enumerates the standard vSwitch port groups attached to this
+// switch. Sourced from mo.HostSystem.Config.Network.Portgroup with a
+// VswitchName filter; effective policy is the host-computed merge of the
+// port-group override and the parent vSwitch's policy.
+func (v *mqlVsphereVswitchStandard) portGroups() ([]any, error) {
+	if v.parentResource == nil || v.parentResource.host == nil ||
+		v.parentResource.host.Config == nil || v.parentResource.host.Config.Network == nil {
+		return []any{}, nil
+	}
+	hostPath := v.parentResource.InventoryPath.Data
+	switchName := v.Name.Data
+	out := []any{}
+	for i := range v.parentResource.host.Config.Network.Portgroup {
+		pg := &v.parentResource.host.Config.Network.Portgroup[i]
+		if pg.Spec.VswitchName != switchName {
+			continue
+		}
+		id := hostPath + "/portgroup/" + pg.Spec.Name
+		mqlPG, err := CreateResource(v.MqlRuntime, "vsphere.vswitch.standard.portgroup", map[string]*llx.RawData{
+			"__id":        llx.StringData(id),
+			"id":          llx.StringData(id),
+			"name":        llx.StringData(pg.Spec.Name),
+			"vSwitchName": llx.StringData(pg.Spec.VswitchName),
+			"vlanId":      llx.IntData(int64(pg.Spec.VlanId)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlPG.(*mqlVsphereVswitchStandardPortgroup).policy = &pg.ComputedPolicy
+		mqlPG.(*mqlVsphereVswitchStandardPortgroup).parent = id
+		out = append(out, mqlPG)
+	}
+	return out, nil
 }
 
 func (v *mqlVsphereHost) distributedSwitch() ([]any, error) {
@@ -190,16 +245,47 @@ func (v *mqlVsphereHost) adapters() ([]any, error) {
 		pauseParams[nicName] = p
 	}
 
+	// Index PhysicalNic records from the cached host config so we can hydrate
+	// MAC, link speed/duplex, driver, and Wake-on-LAN support without extra
+	// SOAP calls.
+	pnicByName := map[string]*vimtypes.PhysicalNic{}
+	if v.host != nil && v.host.Config != nil && v.host.Config.Network != nil {
+		for i := range v.host.Config.Network.Pnic {
+			p := &v.host.Config.Network.Pnic[i]
+			pnicByName[p.Device] = p
+		}
+	}
+
 	mqlAdapters := make([]any, len(adapters))
 	for i, a := range adapters {
 		nicName := a["Name"].(string)
 		pParams := pauseParams[nicName]
 
+		var (
+			mac, driver         string
+			linkSpeedMb         int64
+			fullDuplex, wolSupp bool
+		)
+		if pn, ok := pnicByName[nicName]; ok {
+			mac = pn.Mac
+			driver = pn.Driver
+			wolSupp = pn.WakeOnLanSupported
+			if pn.LinkSpeed != nil {
+				linkSpeedMb = int64(pn.LinkSpeed.SpeedMb)
+				fullDuplex = pn.LinkSpeed.Duplex
+			}
+		}
+
 		mqlAdapter, err := CreateResource(v.MqlRuntime, "vsphere.vmnic", map[string]*llx.RawData{
-			"__id":        llx.StringData(esxiClient.InventoryPath + "/" + nicName),
-			"name":        llx.StringData(nicName),
-			"properties":  llx.DictData(a),
-			"pauseParams": llx.DictData(pParams),
+			"__id":               llx.StringData(esxiClient.InventoryPath + "/" + nicName),
+			"name":               llx.StringData(nicName),
+			"properties":         llx.DictData(a),
+			"pauseParams":        llx.DictData(pParams),
+			"mac":                llx.StringData(mac),
+			"linkSpeedMb":        llx.IntData(linkSpeedMb),
+			"fullDuplex":         llx.BoolData(fullDuplex),
+			"driver":             llx.StringData(driver),
+			"wakeOnLanSupported": llx.BoolData(wolSupp),
 		})
 		if err != nil {
 			return nil, err
@@ -208,6 +294,7 @@ func (v *mqlVsphereHost) adapters() ([]any, error) {
 		// set inventory path
 		r := mqlAdapter.(*mqlVsphereVmnic)
 		r.hostInventoryPath = esxiClient.InventoryPath
+		r.parentResource = v
 
 		mqlAdapters[i] = mqlAdapter
 	}
@@ -221,6 +308,16 @@ func (v *mqlVsphereVmnic) id() (string, error) {
 
 type mqlVsphereVmnicInternal struct {
 	hostInventoryPath string
+	parentResource    *mqlVsphereHost
+}
+
+type mqlVsphereVmknicInternal struct {
+	parentResource *mqlVsphereHost
+}
+
+type mqlVsphereVswitchStandardPortgroupInternal struct {
+	policy *vimtypes.HostNetworkPolicy
+	parent string
 }
 
 func (v *mqlVsphereVmnic) esxiClient() (*resourceclient.Esxi, error) {
@@ -249,22 +346,81 @@ func (v *mqlVsphereHost) vmknics() ([]any, error) {
 		return nil, err
 	}
 
+	// Index HostVirtualNic records by device name and build a service →
+	// vnic-keys lookup so we can attach MAC, MTU, TCP/IP stack, port group
+	// binding, and the enabled-services list to each vmknic.
+	vnicByDevice := map[string]*vimtypes.HostVirtualNic{}
+	servicesByVnicKey := map[string][]any{}
+	if v.host != nil && v.host.Config != nil {
+		if v.host.Config.Network != nil {
+			for i := range v.host.Config.Network.Vnic {
+				vn := &v.host.Config.Network.Vnic[i]
+				vnicByDevice[vn.Device] = vn
+			}
+		}
+		if vn := v.host.Config.VirtualNicManagerInfo; vn != nil {
+			// SelectedVnic entries are formatted "<nicType>.<vnicKey>"; strip
+			// the prefix so the key matches HostVirtualNic.Key.
+			for _, nc := range vn.NetConfig {
+				prefix := nc.NicType + "."
+				for _, sel := range nc.SelectedVnic {
+					vnicKey := sel
+					if strings.HasPrefix(sel, prefix) {
+						vnicKey = sel[len(prefix):]
+					}
+					servicesByVnicKey[vnicKey] = append(servicesByVnicKey[vnicKey], nc.NicType)
+				}
+			}
+		}
+	}
+
 	mqlVmknics := make([]any, len(vmknics))
 	for i := range vmknics {
 		entry := vmknics[i]
 		nicName := entry.Properties["Name"].(string)
-		mqlVswitch, err := CreateResource(v.MqlRuntime, "vsphere.vmknic", map[string]*llx.RawData{
-			"__id":       llx.StringData(esxiClient.InventoryPath + "/" + nicName),
-			"name":       llx.StringData(nicName),
-			"properties": llx.DictData(entry.Properties),
-			"ipv4":       llx.ArrayData(entry.Ipv4, types.Dict),
-			"ipv6":       llx.ArrayData(entry.Ipv6, types.Dict),
-			"tags":       llx.ArrayData(convert.SliceAnyToInterface(entry.Tags), types.String),
+
+		var (
+			mac, tcpipStack string
+			mtu             int64
+			dhcp            bool
+			pgName, pgMoid  string
+			services        []any
+		)
+		if vn, ok := vnicByDevice[nicName]; ok {
+			mac = vn.Spec.Mac
+			mtu = int64(vn.Spec.Mtu)
+			tcpipStack = vn.Spec.NetStackInstanceKey
+			pgName = vn.Portgroup
+			if vn.Spec.DistributedVirtualPort != nil {
+				pgMoid = vn.Spec.DistributedVirtualPort.PortgroupKey
+			}
+			if vn.Spec.Ip != nil {
+				dhcp = vn.Spec.Ip.Dhcp
+			}
+			// Map host-internal vnic key to service names.
+			services = servicesByVnicKey[vn.Key]
+		}
+
+		mqlVmknic, err := CreateResource(v.MqlRuntime, "vsphere.vmknic", map[string]*llx.RawData{
+			"__id":          llx.StringData(esxiClient.InventoryPath + "/" + nicName),
+			"name":          llx.StringData(nicName),
+			"properties":    llx.DictData(entry.Properties),
+			"ipv4":          llx.ArrayData(entry.Ipv4, types.Dict),
+			"ipv6":          llx.ArrayData(entry.Ipv6, types.Dict),
+			"tags":          llx.ArrayData(convert.SliceAnyToInterface(entry.Tags), types.String),
+			"mac":           llx.StringData(mac),
+			"mtu":           llx.IntData(mtu),
+			"tcpipStack":    llx.StringData(tcpipStack),
+			"dhcp":          llx.BoolData(dhcp),
+			"portGroupName": llx.StringData(pgName),
+			"portGroupMoid": llx.StringData(pgMoid),
+			"services":      llx.ArrayData(services, types.String),
 		})
 		if err != nil {
 			return nil, err
 		}
-		mqlVmknics[i] = mqlVswitch
+		mqlVmknic.(*mqlVsphereVmknic).parentResource = v
+		mqlVmknics[i] = mqlVmknic
 	}
 
 	return mqlVmknics, nil

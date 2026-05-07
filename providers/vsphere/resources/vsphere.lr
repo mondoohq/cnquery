@@ -821,49 +821,83 @@ private vsphere.encryptionKey @defaults("keyId providerId") {
   kmsCluster() vsphere.kmsCluster
 }
 
-// vSphere standard virtual switch
+// Standard virtual switch on an ESXi host. Per-host (not shared across the
+// cluster), unlike a distributed virtual switch.
 private vsphere.vswitch.standard @defaults("name") {
-  // Virtual switch name
+  // vSwitch name (unique within the host, e.g. "vSwitch0")
   name string
-  // Virtual switch properties
+  // Raw output of `esxcli network vswitch standard list` for this switch, as a dict
   properties dict
+  // MTU in bytes for traffic on this vSwitch — typically 1500, or 9000 for jumbo-frame fabrics. 0 when the host doesn't expose it.
+  mtu int
+  // Total ports configured on the switch (the pre-allocated capacity, not the number currently in use)
+  numPorts int
+  // Free ports remaining — equal to numPorts minus the ports consumed by attached VMkernel and VM NICs
+  numPortsAvailable int
   // DEPRECATED: use failoverPolicySettings instead.
   failoverPolicy() @maturity("deprecated") dict
   // DEPRECATED: use securityPolicySettings instead.
   securityPolicy() @maturity("deprecated") dict
   // DEPRECATED: use shapingPolicySettings instead.
   shapingPolicy() @maturity("deprecated") dict
-  // NIC teaming / failover policy at vSwitch level
+  // NIC teaming / failover policy applied to traffic on this vSwitch
   failoverPolicySettings() vsphere.vswitch.failoverPolicy
-  // Layer-2 security policy at vSwitch level (promiscuous mode, MAC changes, forged transmits)
+  // Layer-2 security policy applied to traffic on this vSwitch (promiscuous mode, MAC changes, forged transmits)
   securityPolicySettings() vsphere.vswitch.securityPolicy
-  // Traffic shaping policy at vSwitch level
+  // Traffic shaping policy applied to outbound traffic on this vSwitch
   shapingPolicySettings() vsphere.vswitch.shapingPolicy
-  // List of physical NICs currently configured as uplinks
+  // Physical NICs currently bound to this vSwitch as uplinks
   uplinks() []vsphere.vmnic
+  // Port groups attached to this vSwitch
+  portGroups() []vsphere.vswitch.standard.portgroup
 }
 
-// vSphere distributed virtual switch
-private vsphere.vswitch.dvs @defaults("name") {
-  // vSphere managed object ID
-  moid string
-  // Virtual switch name
+// Standard vSwitch port group on an ESXi host (e.g. "Management Network",
+// "VM Network"). Unlike DVS port groups, standard port groups are per-host:
+// the same name on two different hosts is two distinct objects. The policy
+// methods return the effective policy after the host merges any port-group
+// override with the parent vSwitch's policy.
+private vsphere.vswitch.standard.portgroup @defaults("name vlanId vSwitchName") {
+  // Stable identifier built from the host inventory path and the port-group name
+  id string
+  // Port group name (unique within the host)
   name string
-  // Virtual switch properties
+  // Name of the parent standard vSwitch this port group is attached to
+  vSwitchName string
+  // VLAN tag carried on this port group's traffic. 0 means untagged (native VLAN); 4095 means VLAN trunking (the port group sees frames for all VLANs); any other value is a single tag.
+  vlanId int
+  // Effective layer-2 security policy after merging any port-group override with the parent vSwitch's policy
+  securityPolicySettings() vsphere.vswitch.securityPolicy
+  // Effective NIC teaming / failover policy after merging any port-group override with the parent vSwitch's policy
+  failoverPolicySettings() vsphere.vswitch.failoverPolicy
+  // Effective traffic shaping policy after merging any port-group override with the parent vSwitch's policy
+  shapingPolicySettings() vsphere.vswitch.shapingPolicy
+}
+
+// vSphere Distributed Switch (vDS) — a switch managed at the cluster /
+// datacenter level whose port groups are shared across all member hosts.
+private vsphere.vswitch.dvs @defaults("name") {
+  // Encoded ManagedObjectReference of the DVS
+  moid string
+  // DVS name
+  name string
+  // Raw output of `esxcli network vswitch dvs vmware list` for this DVS, as a dict
   properties dict
-  // List of physical NICs currently configured as uplinks
+  // Physical NICs the host (or all member hosts) contribute as uplinks to this DVS
   uplinks() []vsphere.vmnic
 }
 
-// vSphere distributed virtual port group
+// Distributed virtual port group on a DVS. Port groups on a DVS are
+// cluster-scoped — one object shared across every host attached to the
+// switch — so they're identified by moid rather than by name.
 private vsphere.vswitch.portgroup @defaults("name vlanId") {
-  // vSphere managed object ID
+  // Encoded ManagedObjectReference of the distributed port group
   moid string
   // Port group name
   name string
-  // Port group properties
+  // Generated dict view of the port-group config (DefaultPortConfig, policy overrides, etc.); use the typed `*PolicySettings` methods for audit-friendly access.
   properties dict
-  // VLAN ID assigned to the port group (0 means untagged / VLAN trunking ranges; check properties for trunked specs)
+  // VLAN tag carried on this port group's traffic. 0 means untagged; non-zero is a single tag. For VLAN trunking or PVLAN configurations vlanId is reported as 0 — inspect `properties` for the full VLAN spec.
   vlanId int
   // Layer-2 security policy from the port group's DefaultPortConfig
   securityPolicySettings() vsphere.vswitch.securityPolicy
@@ -878,11 +912,11 @@ private vsphere.vswitch.portgroup @defaults("name vlanId") {
 // (DVSSecurityPolicy). Each field defaults to false when the underlying
 // API value is unset/inherited.
 private vsphere.vswitch.securityPolicy @defaults("allowPromiscuous allowForgedTransmits allowMacChanges") {
-  // Whether the port can accept promiscuous-mode traffic from the guest
+  // Whether a guest VM on this port can put its NIC in promiscuous mode and observe traffic destined for other ports on the segment. CIS hardening typically requires this be false on production port groups.
   allowPromiscuous bool
-  // Whether the guest may transmit frames with a forged source MAC
+  // Whether the guest may transmit frames with a source MAC different from the one assigned by ESXi. When false, the host silently drops mismatched frames.
   allowForgedTransmits bool
-  // Whether the guest may change its effective MAC at runtime
+  // Whether the guest may change the effective MAC of its NIC at runtime (away from the initial MAC assignment). When false, the host drops frames after a guest-initiated MAC change.
   allowMacChanges bool
 }
 
@@ -919,30 +953,57 @@ private vsphere.vswitch.shapingPolicy @defaults("enabled averageBandwidth peakBa
   burstSize int
 }
 
-// vSphere ESXi physical network interface resource
-private vsphere.vmnic @defaults("name") {
-  // NIC name
+// Physical (uplink) NIC on an ESXi host — one entry per pNIC bound to a
+// vSwitch or available for binding. Identified by device name (e.g. "vmnic0").
+private vsphere.vmnic @defaults("name mac linkSpeedMb") {
+  // Device name as ESXi exposes it (e.g. "vmnic0", "vmnic1")
   name string
-  // NIC properties
+  // Raw output of `esxcli network nic list` for this device, as a dict
   properties dict
-  // Generic configuration of a network device
+  // Output of `esxcli network nic get` for this device — driver, advertised auto-negotiation modes, VMDirectPath capability, virtual address. Lazy-loaded; one ESXCli call per access.
   details() dict
-  // NIC pause parameters
+  // 802.3x (Ethernet flow-control) pause-frame parameters reported by the driver
   pauseParams dict
+  // Hardware MAC address
+  mac string
+  // Current negotiated link speed in megabits/second; 0 when the link is down
+  linkSpeedMb int
+  // Whether the link negotiated full duplex (only meaningful when linkSpeedMb > 0)
+  fullDuplex bool
+  // Kernel module name driving this NIC (e.g. "ixgbe", "nvmxnet3")
+  driver string
+  // Whether the NIC's hardware advertises Wake-on-LAN support (capability, not whether WoL is currently enabled on the host)
+  wakeOnLanSupported bool
 }
 
-// vSphere ESXi virtual network interface resource
-private vsphere.vmknic @defaults("name") {
-  // Interface name
+// VMkernel virtual network interface on an ESXi host — the host's own
+// network endpoint for management, vMotion, vSAN, FT, replication, etc.
+// Identified by device name (e.g. "vmk0").
+private vsphere.vmknic @defaults("name portGroupName tcpipStack") {
+  // Device name as ESXi exposes it (e.g. "vmk0", "vmk1")
   name string
-  // Interface properties
+  // Raw output of `esxcli network ip interface list` for this device, as a dict
   properties dict
-  // IPv4 information
+  // Per-IPv4 address records (Address, Netmask, Type — DHCP / STATIC). One entry per assigned address.
   ipv4 []dict
-  // IPv6 information
+  // Per-IPv6 address records (Address, PrefixLength, Type — autoconf / DHCP / static / linklayer). One entry per assigned address.
   ipv6 []dict
-  // Network interface tag
+  // Optional ESXi-managed tag list on the VMkernel NIC; rarely populated, useful for vendor-specific labelling.
   tags []string
+  // MAC address of the VMkernel NIC
+  mac string
+  // Configured MTU in bytes (typically 1500, or 9000 for jumbo frames)
+  mtu int
+  // TCP/IP stack the VMkernel NIC is bound to. Common values: `defaultTcpipStack`, `vmotion`, `vSphereProvisioning`, `vxlan`.
+  tcpipStack string
+  // Whether the VMkernel NIC's IPv4 address is provided by DHCP (false when statically configured)
+  dhcp bool
+  // Standard-vSwitch port group the VMkernel NIC is attached to; empty when bound to a DVS port group instead — exactly one of `portGroupName` / `portGroupMoid` is populated.
+  portGroupName string
+  // Encoded ManagedObjectReference of the DistributedVirtualPortgroup the VMkernel NIC is attached to; empty when bound to a standard-vSwitch port group instead.
+  portGroupMoid string
+  // Host services this VMkernel NIC currently carries. Possible values: `management`, `vmotion`, `vsan`, `faultToleranceLogging`, `vSphereReplication`, `vSphereReplicationNFC`, `vSphereProvisioning`, `vSphereBackupNFC`, `ptp`. Empty when the NIC carries no managed services.
+  services []string
 }
 
 // Run a command on an ESXi host. The connected target must be a host

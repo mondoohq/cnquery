@@ -625,6 +625,10 @@ func (v *mqlVsphereVswitchFailoverPolicy) id() (string, error) {
 	return v.MqlID(), nil
 }
 
+func (v *mqlVsphereVswitchStandardPortgroup) id() (string, error) {
+	return v.Id.Data, nil
+}
+
 func (v *mqlVsphereVswitchShapingPolicy) id() (string, error) {
 	return v.MqlID(), nil
 }
