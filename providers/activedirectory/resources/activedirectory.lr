@@ -5,6 +5,8 @@ option provider = "go.mondoo.com/mql/v13/providers/activedirectory"
 option go_package = "go.mondoo.com/mql/v13/providers/activedirectory/resources"
 
 // Active Directory Domain Services
+//
+// Examine the domain, its controllers, principals, GPOs, ADCS templates, trusts, password policy, and DC hardening signals
 activedirectory @defaults("domain functionalLevel") {
   // Domain DNS name (e.g., corp.example.com)
   domain string
@@ -74,7 +76,9 @@ activedirectory @defaults("domain functionalLevel") {
   ldapChannelBindingRequired() bool
 }
 
-// Active Directory Domain Controller
+// Active Directory domain controller
+//
+// Examine hostname, OS version, role flags (Global Catalog, RODC), site, and recent password / logon timestamps
 activedirectory.domainController @defaults("name operatingSystem") {
   // DNS hostname
   name string
@@ -96,7 +100,9 @@ activedirectory.domainController @defaults("name operatingSystem") {
   site string
 }
 
-// Active Directory default domain password policy
+// Active Directory default-domain password policy
+//
+// Examine length, age, history, complexity, lockout, and reversible-encryption settings applied to users without a fine-grained policy
 activedirectory.domainPasswordPolicy @defaults("minPasswordLength maxPasswordAge lockoutThreshold") {
   // Minimum password length
   minPasswordLength int
@@ -118,7 +124,9 @@ activedirectory.domainPasswordPolicy @defaults("minPasswordLength maxPasswordAge
   lockoutObservationWindow int
 }
 
-// Active Directory Fine-Grained Password Policy
+// Active Directory fine-grained password policy
+//
+// Examine per-PSO length, age, history, complexity, lockout overrides, precedence, and the principals it applies to
 activedirectory.fineGrainedPasswordPolicy @defaults("name precedence minPasswordLength") {
   // Policy name
   name string
@@ -147,6 +155,8 @@ activedirectory.fineGrainedPasswordPolicy @defaults("name precedence minPassword
 }
 
 // Active Directory user account
+//
+// Examine identity, UAC flags, group memberships, SPNs, delegation, password aging, and Kerberos / privilege risk indicators
 activedirectory.user @defaults("sAMAccountName displayName enabled") {
   // sAMAccountName (pre-Windows 2000 logon name)
   sAMAccountName string
@@ -219,6 +229,8 @@ activedirectory.user @defaults("sAMAccountName displayName enabled") {
 }
 
 // Active Directory group
+//
+// Examine name, type (security/distribution, scope), members, member count, privileged-group status, and OU placement
 activedirectory.group @defaults("sAMAccountName groupType") {
   // sAMAccountName
   sAMAccountName string
@@ -261,6 +273,8 @@ activedirectory.groupMember @defaults("name type") {
 }
 
 // Active Directory computer account
+//
+// Examine OS, UAC flags, delegation (unconstrained / constrained / RBCD), SPNs, LAPS state, password aging, and DC role
 activedirectory.computer @defaults("name operatingSystem enabled") {
   // sAMAccountName (includes trailing $)
   sAMAccountName string
@@ -316,7 +330,9 @@ activedirectory.computer @defaults("name operatingSystem enabled") {
   protocolTransition bool
 }
 
-// Active Directory Organizational Unit
+// Active Directory organizational unit
+//
+// Examine the OU's identity, GPO inheritance / linked GPOs, and creation timestamp
 activedirectory.ou @defaults("name") {
   // OU name
   name string
@@ -333,6 +349,8 @@ activedirectory.ou @defaults("name") {
 }
 
 // Active Directory Group Policy Object
+//
+// Examine the GPO's identity, status, SYSVOL path, link metadata, and version
 activedirectory.gpo @defaults("displayName") {
   // GPO GUID
   id string
@@ -369,6 +387,8 @@ activedirectory.gpoLink @defaults("target") {
 }
 
 // Active Directory domain trust
+//
+// Examine trust type, direction, transitivity, encryption (AES vs RC4), TGT delegation, SID filtering, and selective authentication
 activedirectory.trust @defaults("targetDomain trustType trustDirection") {
   // Target domain name
   targetDomain string
@@ -401,6 +421,8 @@ activedirectory.trust @defaults("targetDomain trustType trustDirection") {
 }
 
 // Active Directory Certificate Services template
+//
+// Examine EKUs, enrollment flags, manager approval, enrollment ACLs, and ESC1 / ESC2 / ESC3 / ESC4 / ESC9 / ESC13 vulnerability indicators
 activedirectory.certificateTemplate @defaults("name") {
   // Template common name
   name string
@@ -462,7 +484,9 @@ activedirectory.certificateTemplate @defaults("name") {
   isVulnerableESC13 bool
 }
 
-// Active Directory Certificate Authority (Enrollment Service)
+// Active Directory Certificate Services certificate authority
+//
+// Examine published templates, ManageCA / ManageCertificates ACLs (ESC7), HTTP enrollment endpoints (ESC8), and enrollment-agent restrictions
 activedirectory.certificateAuthority @defaults("name") {
   // CA name
   name string
@@ -488,7 +512,9 @@ activedirectory.certificateAuthority @defaults("name") {
   enrollmentAgentRestrictionsConfigured bool
 }
 
-// Active Directory PKI object under CN=Public Key Services for ESC5 analysis
+// Active Directory PKI object under CN=Public Key Services
+//
+// Examine object class and dangerous write-equivalent ACLs that enable ESC5 takeover of the AD CS environment
 activedirectory.pkiObject @defaults("name objectClass") {
   // Relative name of the PKI object
   name string
@@ -507,6 +533,8 @@ activedirectory.pkiObject @defaults("name objectClass") {
 }
 
 // Active Directory-integrated DNS zone
+//
+// Examine zone type and dynamic-update policy (open, secure-only, or disabled)
 activedirectory.dnsZone @defaults("name") {
   // Zone name
   name string
@@ -520,11 +548,9 @@ activedirectory.dnsZone @defaults("name") {
   secureOnly bool
 }
 
-// Dangerous ACL delegation found on a critical AD object.
-// These represent attack paths where a low-privilege principal holds
-// powerful rights (GenericAll, WriteDACL, WriteOwner, DCSync, etc.)
-// on sensitive objects like the domain head, AdminSDHolder, or
-// privileged group/DC computer accounts.
+// Dangerous ACL delegation on a critical AD object
+//
+// Examine attack paths where a low-privilege principal holds powerful rights (GenericAll, WriteDACL, WriteOwner, GenericWrite, DCSync, ForceChangePassword) on sensitive objects like the domain head, AdminSDHolder, or privileged group / DC accounts
 activedirectory.dangerousPermission @defaults("targetName rightType principalSID") {
   // DN of the AD object with the dangerous ACL
   targetDN string
