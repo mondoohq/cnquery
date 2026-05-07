@@ -27,14 +27,16 @@ func (v *mqlVsphereHost) bootInfo() (*mqlVsphereHostBootInfo, error) {
 		biosVersion                                        string
 		biosMajor, biosMinor, firmwareMajor, firmwareMinor int64
 	)
-	if bios := v.host.Hardware.BiosInfo; bios != nil {
-		biosVersion = bios.BiosVersion
-		biosMajor = int64(bios.MajorRelease)
-		biosMinor = int64(bios.MinorRelease)
-		firmwareMajor = int64(bios.FirmwareMajorRelease)
-		firmwareMinor = int64(bios.FirmwareMinorRelease)
-		if bios.ReleaseDate != nil {
-			releaseDate = *bios.ReleaseDate
+	if v.host.Hardware != nil {
+		if bios := v.host.Hardware.BiosInfo; bios != nil {
+			biosVersion = bios.BiosVersion
+			biosMajor = int64(bios.MajorRelease)
+			biosMinor = int64(bios.MinorRelease)
+			firmwareMajor = int64(bios.FirmwareMajorRelease)
+			firmwareMinor = int64(bios.FirmwareMinorRelease)
+			if bios.ReleaseDate != nil {
+				releaseDate = *bios.ReleaseDate
+			}
 		}
 	}
 
@@ -56,7 +58,7 @@ func (v *mqlVsphereHost) bootInfo() (*mqlVsphereHostBootInfo, error) {
 }
 
 func (v *mqlVsphereHost) systemInfo() (*mqlVsphereHostSystemInfo, error) {
-	if v.host == nil {
+	if v.host == nil || v.host.Hardware == nil {
 		v.SystemInfo.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -115,6 +117,10 @@ func (v *mqlVsphereHost) dnsConfig() (*mqlVsphereHostDnsConfig, error) {
 		return nil, nil
 	}
 	dns := v.host.Config.Network.DnsConfig.GetHostDnsConfig()
+	if dns == nil {
+		v.DnsConfig.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	fqdn := dns.HostName
 	if dns.HostName != "" && dns.DomainName != "" {
 		fqdn = dns.HostName + "." + dns.DomainName
@@ -143,6 +149,10 @@ func (v *mqlVsphereHost) ipRouteConfig() (*mqlVsphereHostIpRouteConfig, error) {
 		return nil, nil
 	}
 	ipr := v.host.Config.Network.IpRouteConfig.GetHostIpRouteConfig()
+	if ipr == nil {
+		v.IpRouteConfig.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 
 	id := v.InventoryPath.Data + "/ipRouteConfig"
 	res, err := CreateResource(v.MqlRuntime, "vsphere.host.ipRouteConfig", map[string]*llx.RawData{

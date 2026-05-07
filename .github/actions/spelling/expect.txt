@@ -60,6 +60,7 @@ bigquery
 bigtable
 BINPACK
 blackhole
+BMC
 breakglass
 broadwell
 bumpable
@@ -224,6 +225,7 @@ hostedzone
 hostkeyalgorithms
 hostkeys
 hotlink
+HPE
 hpi
 hsts
 hvm
@@ -375,6 +377,7 @@ NUnit
 objectstorage
 ocr
 Odr
+oem
 oid
 oidc
 ondemand
