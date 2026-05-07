@@ -4,7 +4,14 @@
 option provider = "go.mondoo.com/mql/v13/providers/cloudformation"
 option go_package = "go.mondoo.com/mql/v13/providers/cloudformation/resources"
 
-// AWS CloudFormation Template
+// AWS CloudFormation template
+//
+// Top-level entry point for static analysis of a CloudFormation template
+// (or SAM template via Transform). Exposes the template metadata
+// (AWSTemplateFormatVersion, Transform, Description), the parameter /
+// mapping / condition / rule / global / metadata sections, the declared
+// resources, the outputs, and the full set of resource types referenced
+// — the surface for IaC policy checks of AWS infrastructure-as-code.
 cloudformation.template @defaults("description") {
   // Template format version
   version string
@@ -32,7 +39,12 @@ cloudformation.template @defaults("description") {
   types() []string
 }
 
-// AWS CloudFormation Resource
+// AWS CloudFormation resource declaration
+//
+// Examine a single declared resource: logical name, AWS resource type,
+// condition, full properties body, attributes, dependsOn list, and the
+// documentation URL — the unit IaC policies match against to enforce
+// resource-shape rules (encryption, public access, tags, etc.).
 cloudformation.resource @defaults("name") {
   // Resource name
   name string
@@ -50,7 +62,11 @@ cloudformation.resource @defaults("name") {
   dependsOn []string
 }
 
-// AWS CloudFormation Output
+// AWS CloudFormation output
+//
+// Examine a single Outputs section entry: name and the properties body
+// (Value, Description, Export, Condition) — useful for spotting outputs
+// that leak resource ARNs, secrets, or sensitive state across stacks.
 cloudformation.output @defaults("name") {
   // Output name
   name string
