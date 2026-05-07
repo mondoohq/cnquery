@@ -183,31 +183,31 @@ machine.bios {
 
 // SMBIOS system information
 machine.system {
-  // Manufacturer
+  // System manufacturer name (SMBIOS Type 1)
   manufacturer string
-  // Product name
+  // System product name
   product string
-  // Version
+  // System version string
   version string
-  // Serial number
+  // System serial number
   serial string
-  // UUID
+  // System UUID
   uuid string
   // SKU number
   sku string
-  // Family
+  // System family/series
   family string
 }
 
 // SMBIOS baseboard (or module) information
 machine.baseboard {
-  // Manufacturer
+  // Baseboard manufacturer name (SMBIOS Type 2)
   manufacturer string
-  // Product
+  // Baseboard product name
   product string
-  // Version
+  // Baseboard version string
   version string
-  // Serial number
+  // Baseboard serial number
   serial string
   // Asset tag
   assetTag string
@@ -410,7 +410,7 @@ private file.context @defaults("file.path range content") {
 
 // Access permissions for a given file
 private file.permissions @defaults("string") {
-  // Raw POSIX mode for the permissions
+  // POSIX file mode as a decimal integer (e.g., 33188 = 0100644)
   mode int
   // Whether the file is readable by its owner
   user_readable bool
@@ -1008,7 +1008,9 @@ journald.config.section @defaults("name") {
 }
 
 journald.config.section.param @defaults("name value") {
+  // Configuration parameter name
   name string
+  // Configuration parameter value
   value string
 }
 
@@ -1414,9 +1416,9 @@ iptables.entry {
   protocol string
   // IP options
   opt string
-  // Input
+  // Input network interface the rule matches on (empty for any)
   in string
-  // Output
+  // Output network interface the rule matches on (empty for any)
   out string
   // Source address field that tells the receiver where the packet came from
   source string
@@ -2114,9 +2116,9 @@ mount {
 // Unix mount point
 mount.point @defaults("device path fstype") {
   init(path string)
-  // Device
+  // Block device or filesystem source backing the mount (e.g., /dev/sda1)
   device string
-  // Path
+  // Mount point path where the filesystem is attached (e.g., /var)
   path string
   // File system type
   fstype string
@@ -2139,7 +2141,7 @@ shadow {
 
 // Shadowed password file entry
 shadow.entry {
-  // User
+  // Username from the /etc/shadow entry
   user string
   // Password
   password string
@@ -3355,7 +3357,7 @@ private launchd.job @defaults("label type") {
   userName string
   // Group the job runs as
   groupName string
-  // Process type
+  // macOS launchd process type (e.g., Adaptive, Interactive, Background, Standard)
   processType string
   // Interval between runs (seconds)
   startInterval int
@@ -3843,7 +3845,7 @@ private usb.device @defaults("manufacturer name") {
   className string
   // USB device subclass
   subclass string
-  // Protocol
+  // USB protocol code within the device class
   protocol string
   // Removable device
   isRemovable bool
