@@ -5,6 +5,10 @@ option provider = "go.mondoo.com/cnquery/v9/providers/equinix"
 option go_package = "go.mondoo.com/mql/v13/providers/equinix/resources"
 
 // Equinix Metal project
+//
+// Top-level entry point for an Equinix Metal project. Examine the project's
+// identity and lifecycle timestamps, the parent organization, the SSH keys
+// authorized for it, and the bare-metal devices provisioned within it.
 equinix.metal.project @defaults("name") {
   // Project ID
   id string
@@ -25,6 +29,10 @@ equinix.metal.project @defaults("name") {
 }
 
 // Equinix Metal organization
+//
+// Examine an Equinix Metal organization: identity, contact / billing /
+// address details, credit amount, lifecycle timestamps, and the users
+// who are members of it.
 equinix.metal.organization @defaults("name") {
   // Organization ID
   id string
@@ -91,6 +99,10 @@ private equinix.metal.user @defaults("email") {
 }
 
 // Equinix Metal SSH key
+//
+// Examine an SSH key authorized in Equinix Metal: identity, label, public-
+// key material in OpenSSH format, fingerprint, and lifecycle timestamps —
+// useful for finding shared / orphaned / weak keys across projects.
 equinix.metal.sshkey @defaults("label") {
   // ID of the SSH key
   id string
@@ -108,7 +120,12 @@ equinix.metal.sshkey @defaults("label") {
   url string
 }
 
-// Equinix Metal device
+// Equinix Metal bare-metal device
+//
+// Examine a single provisioned device: identity (id, short ID, URL,
+// hostname, description), current state, lifecycle timestamps, lock state,
+// billing cycle, whether it's a Spot instance, and the operating system
+// it's running.
 equinix.metal.device {
   // Device ID
   id string
