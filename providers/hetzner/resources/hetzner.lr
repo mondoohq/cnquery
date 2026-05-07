@@ -89,7 +89,7 @@ private hetzner.server @defaults("id name status") {
   placementGroup() hetzner.placementGroup
   // ISO attached to the server (nullable)
   iso() hetzner.iso
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
   // Resource protection (delete, rebuild)
   protection dict
@@ -101,7 +101,7 @@ private hetzner.server.privateNet @defaults("ip macAddress") {
   serverId int
   // Attached network ID (composite key)
   networkId int
-  // Attached network (typed reference)
+  // Hetzner Cloud network attached to the server
   network() hetzner.network
   // IP address on the network
   ip string
@@ -144,7 +144,7 @@ private hetzner.serverType.location @defaults("available recommended") {
   serverTypeId int
   // Location ID (composite key)
   locationId int
-  // Location (typed reference)
+  // Hetzner location where the server type is offered
   location() hetzner.location
   // Whether new servers of this type can be created in this location
   available bool
@@ -183,7 +183,7 @@ private hetzner.image @defaults("id name type") {
   protection dict
   // Deprecation timestamp (nullable)
   deprecated time
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
   // Bound server (nullable, for snapshots/backups)
   boundServer() hetzner.server
@@ -204,7 +204,7 @@ private hetzner.sshKey @defaults("id name fingerprint") {
   publicKey string
   // Creation timestamp
   created time
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
 }
 
@@ -231,7 +231,7 @@ private hetzner.volume @defaults("id name size") {
   format string
   // Resource protection (delete)
   protection dict
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
 }
 
@@ -256,7 +256,7 @@ private hetzner.network @defaults("id name ipRange") {
   exposeRoutesToVswitch bool
   // Resource protection (delete)
   protection dict
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
 }
 
@@ -283,7 +283,7 @@ private hetzner.floatingIp @defaults("id ip type") {
   dnsPtr []dict
   // Resource protection (delete)
   protection dict
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
   // Creation timestamp
   created time
@@ -316,7 +316,7 @@ private hetzner.primaryIp @defaults("id ip type") {
   dnsPtr []dict
   // Resource protection (delete)
   protection dict
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
   // Creation timestamp
   created time
@@ -345,7 +345,7 @@ private hetzner.loadBalancer @defaults("id name") {
   targets() []hetzner.loadBalancer.target
   // Resource protection (delete)
   protection dict
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
   // Creation timestamp
   created time
@@ -363,7 +363,7 @@ private hetzner.loadBalancer.privateNet @defaults("ip") {
   loadBalancerId int
   // Attached network ID (composite key)
   networkId int
-  // Attached network (typed reference)
+  // Hetzner Cloud network attached to the load balancer
   network() hetzner.network
   // IP address on the network
   ip string
@@ -443,7 +443,7 @@ private hetzner.firewall @defaults("id name") {
   servers() []hetzner.server
   // Label selectors the firewall is applied to (type=label_selector entries)
   labelSelectors []string
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
 }
 
@@ -472,7 +472,7 @@ private hetzner.certificate @defaults("id name type") {
   servers() []hetzner.server
   // Load balancers using this certificate (type=load_balancer entries in usedBy)
   loadBalancers() []hetzner.loadBalancer
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
 }
 
@@ -489,7 +489,7 @@ private hetzner.placementGroup @defaults("id name type") {
   created time
   // Servers in the placement group
   servers() []hetzner.server
-  // Labels
+  // User-defined labels for organizing the resource
   labels map[string]string
 }
 
