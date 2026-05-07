@@ -4,7 +4,12 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/atlassian"
 option go_package = "go.mondoo.com/mql/v13/providers/atlassian/resources"
 
-// Atlassian SCIM (Cross-domain Identity Management) provisioning
+// Atlassian SCIM (System for Cross-domain Identity Management) directory
+//
+// Entry point for the SCIM provisioning surface — the source of record for
+// users and groups synced into Atlassian Cloud from an external IdP. Use it
+// to inventory provisioned identities and detect orphans, drift between the
+// IdP and Atlassian, or unexpected group membership.
 atlassian.scim {
   // Provisioned SCIM users
   users() []atlassian.scim.user
@@ -13,6 +18,10 @@ atlassian.scim {
 }
 
 // Atlassian SCIM provisioned user
+//
+// Examine the SCIM identifier, login name, display name, organization
+// membership, and job title for a user provisioned through the SCIM
+// directory.
 atlassian.scim.user @defaults("displayName") {
   // SCIM user ID
   id string
@@ -27,6 +36,9 @@ atlassian.scim.user @defaults("displayName") {
 }
 
 // Atlassian SCIM provisioned group
+//
+// Examine the SCIM group ID and name for a group provisioned through the
+// SCIM directory.
 atlassian.scim.group @defaults("name") {
   // SCIM group ID
   id string
@@ -35,6 +47,12 @@ atlassian.scim.group @defaults("name") {
 }
 
 // Atlassian Admin organization
+//
+// Top-level entry point for Atlassian Admin. Examine the org's identity and
+// type, the security and data-residency policies it enforces, the verified
+// domains it owns, and the users it manages — the surface auditors check
+// for org-wide identity controls (IP allowlists, data residency, verified
+// domains, managed accounts) and access reviews.
 atlassian.admin.organization @defaults("name") {
   // Organization ID
   id string
@@ -50,7 +68,12 @@ atlassian.admin.organization @defaults("name") {
   managedUsers() []atlassian.admin.organization.managedUser
 }
 
-// Atlassian managed user in an organization
+// Atlassian Admin managed user
+//
+// Examine a user managed by an Atlassian organization: account type
+// (atlassian / customer / app), email, status (active / inactive / closed),
+// last-active timestamp, and per-product access — the granularity needed
+// for managed-account access reviews and dormant-account cleanup.
 atlassian.admin.organization.managedUser @defaults("name") {
   // User ID
   id string
@@ -68,7 +91,12 @@ atlassian.admin.organization.managedUser @defaults("name") {
   productAccess []dict
 }
 
-// Atlassian organization policy
+// Atlassian Admin organization policy
+//
+// Examine an organization-level policy (e.g., IP allowlist, data residency)
+// — its identity, type, and enabled / disabled status — to verify the
+// policies an organization is supposed to enforce are actually present and
+// enabled.
 atlassian.admin.organization.policy @defaults("name") {
   // Policy ID
   id string
@@ -82,7 +110,11 @@ atlassian.admin.organization.policy @defaults("name") {
   status string
 }
 
-// Atlassian verified domain
+// Atlassian Admin verified domain
+//
+// Examine a verified email domain attached to an Atlassian organization —
+// its name and verification type — used to scope which user accounts the
+// organization controls.
 atlassian.admin.organization.domain @defaults("name") {
   // Domain ID
   id string
@@ -93,6 +125,12 @@ atlassian.admin.organization.domain @defaults("name") {
 }
 
 // Atlassian Jira instance
+//
+// Top-level entry point for a Jira Cloud / Server / Data Center instance.
+// Examine deployment metadata via serverInfos, all users / groups /
+// projects / issues, and the recent audit-log records — the surface
+// auditors check for least-privilege project permissions, dormant users,
+// and suspicious admin activity.
 atlassian.jira {
   // All Jira users
   users() []atlassian.jira.user
@@ -109,6 +147,11 @@ atlassian.jira {
 }
 
 // Jira audit log record
+//
+// Examine an entry from Jira's audit log: the audited action and category,
+// event source, the principal who triggered it, the originating IP, the
+// target object, and any recorded property changes — the input for
+// detecting privileged-action sequences and authentication anomalies.
 atlassian.jira.auditRecord @defaults("summary createdAt") {
   // Audit record ID
   id int
@@ -135,6 +178,11 @@ atlassian.jira.auditRecord @defaults("summary createdAt") {
 }
 
 // Jira issue (ticket)
+//
+// Examine the full state of a single issue: identity (key, summary,
+// description), workflow state and resolution, parent project, type,
+// priority, labels, the lifecycle timestamps (created, updated, resolved,
+// due), and the typed creator / assignee / reporter user references.
 atlassian.jira.issue @defaults("key summary status") {
   // Issue ID
   id string
@@ -175,6 +223,10 @@ atlassian.jira.issue @defaults("key summary status") {
 }
 
 // Jira server information
+//
+// Examine deployment metadata for the connected Jira instance: base URL,
+// build number, server title, and deployment type (Cloud / Server / Data
+// Center) — useful for version-driven branching in policies.
 atlassian.jira.serverInfo @defaults("serverTitle") {
   // Jira instance base URL
   baseUrl string
@@ -187,6 +239,10 @@ atlassian.jira.serverInfo @defaults("serverTitle") {
 }
 
 // Jira user account
+//
+// Examine an Atlassian account as it appears in Jira: account ID, display
+// name, account type (atlassian / app / customer), avatar, group memberships,
+// and the application roles the user is granted (e.g., jira-software-users).
 atlassian.jira.user @defaults("name") {
   // Atlassian account ID
   id string
@@ -203,6 +259,10 @@ atlassian.jira.user @defaults("name") {
 }
 
 // Jira application role
+//
+// Examine an application-role assignment: its key (e.g., jira-software,
+// jira-servicedesk) and display name. Application roles control which
+// Atlassian products a user is licensed to access.
 atlassian.jira.applicationRole @defaults("name") {
   // Role key
   id string
@@ -211,6 +271,11 @@ atlassian.jira.applicationRole @defaults("name") {
 }
 
 // Jira project
+//
+// Examine a project's identity (id, key, name, UUID, URL, email), its
+// privacy / archived / deleted state, custom properties, and the typed
+// permission scheme attached to it — the unit of access control for
+// project-level audits.
 atlassian.jira.project @defaults("name") {
   // Project ID
   id string
@@ -237,6 +302,10 @@ atlassian.jira.project @defaults("name") {
 }
 
 // Jira permission scheme
+//
+// Examine a permission scheme: identity, description, and the list of
+// permission grants it contains. Use it to verify that schemes attached to
+// projects only grant the permissions they should.
 atlassian.jira.permissionScheme @defaults("name") {
   // Permission scheme ID
   id int
@@ -248,7 +317,12 @@ atlassian.jira.permissionScheme @defaults("name") {
   grants() []atlassian.jira.permissionScheme.grant
 }
 
-// Individual permission grant within a permission scheme
+// Individual permission grant within a Jira permission scheme
+//
+// Examine the permission key being granted (e.g., CREATE_ISSUES,
+// ADMINISTER_PROJECTS), the holder type (user, group, projectRole,
+// applicationRole, anyone), and the holder parameter that selects who
+// receives it. The unit of grant-level project-permission audits.
 atlassian.jira.permissionScheme.grant @defaults("permission holderType") {
   // Grant ID (composite of scheme + grant id)
   id string
@@ -261,12 +335,19 @@ atlassian.jira.permissionScheme.grant @defaults("permission holderType") {
 }
 
 // Jira project custom property
+//
+// Examine the key of a custom property attached to a project — used by
+// Jira apps and integrations to attach scoped configuration to a project.
 atlassian.jira.project.property @defaults("id") {
   // Property key
   id string
 }
 
 // Jira user group
+//
+// Examine a user group used by Jira permission schemes and application
+// roles — its identity and name. Group membership drives most of Jira's
+// access control.
 atlassian.jira.group @defaults("name") {
   // Group ID
   id string
@@ -275,6 +356,11 @@ atlassian.jira.group @defaults("name") {
 }
 
 // Atlassian Confluence instance
+//
+// Top-level entry point for a Confluence Cloud / Server / Data Center
+// instance. Examine all users and all spaces — the surface auditors use
+// to find unprotected content (anonymous- or unlicensed-accessible spaces),
+// inappropriate space-level permissions, and page-level restrictions.
 atlassian.confluence {
   // All Confluence users
   users() []atlassian.confluence.user
@@ -283,6 +369,9 @@ atlassian.confluence {
 }
 
 // Confluence user account
+//
+// Examine an Atlassian account as it appears in Confluence: account ID,
+// display name, and account type (atlassian / app / customer).
 atlassian.confluence.user @defaults("name") {
   // Atlassian account ID
   id string
@@ -306,6 +395,12 @@ private atlassian.confluence.group @defaults("id name") {
 }
 
 // Confluence space
+//
+// Examine a single Confluence space: identity (key, name, id), type
+// (global / personal), status (current / archived), whether anonymous or
+// unlicensed users have any access, the raw permission entries, the typed
+// users and groups they reference, and the pages within the space —
+// everything needed for space-level access reviews.
 atlassian.confluence.space @defaults("name key type") {
   // Numeric space ID
   id int
@@ -332,6 +427,11 @@ atlassian.confluence.space @defaults("name key type") {
 }
 
 // Confluence page (content with type=page)
+//
+// Examine a single page: identity, status (current / trashed / draft), the
+// space it lives in, whether any explicit read or update restrictions are
+// applied, and the per-operation restriction set with its users and groups
+// — the unit of page-level access reviews.
 atlassian.confluence.page @defaults("title status") {
   // Content ID
   id string
@@ -350,6 +450,10 @@ atlassian.confluence.page @defaults("title status") {
 }
 
 // Per-operation restriction on a Confluence page
+//
+// Examine which Atlassian accounts and groups hold read or update access on
+// a page that has explicit restrictions configured, both as raw IDs / names
+// and as typed user / group references.
 atlassian.confluence.page.restriction @defaults("operation") {
   // Identifier of the restriction, unique per (page, operation) pair
   id string
