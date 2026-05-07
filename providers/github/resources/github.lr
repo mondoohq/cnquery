@@ -4,6 +4,7 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/github"
 option go_package = "go.mondoo.com/mql/v13/providers/github/resources"
 
+// GitHub resource
 private github {}
 
 // Git commit
