@@ -339,7 +339,7 @@ atlassian.confluence.page @defaults("title status") {
   title string
   // Content status (current, trashed, draft)
   status string
-  // Content type (always "page")
+  // Confluence content type (page)
   type string
   // Key of the space the page lives in
   spaceKey string
@@ -351,7 +351,7 @@ atlassian.confluence.page @defaults("title status") {
 
 // Per-operation restriction on a Confluence page
 atlassian.confluence.page.restriction @defaults("operation") {
-  // Composite ID (page id + operation)
+  // Identifier of the restriction, unique per (page, operation) pair
   id string
   // Operation restricted (read, update)
   operation string
