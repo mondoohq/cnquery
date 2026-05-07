@@ -4,13 +4,24 @@
 option provider = "go.mondoo.com/mql/v13/providers/helm"
 option go_package = "go.mondoo.com/mql/v13/providers/helm/resources"
 
-// Helm chart analysis
+// Helm chart static analysis
+//
+// Top-level entry point for analyzing Helm charts. Exposes every parsed
+// chart along with its metadata, templates, rendered Kubernetes resources,
+// dependencies, and bundled files — used to enforce policy on
+// Kubernetes manifests before they ever reach a cluster.
 helm {
   // List of all parsed Helm charts
   charts() []helm.chart
 }
 
 // A Helm chart
+//
+// Examine a chart's Chart.yaml metadata (name, version, apiVersion, type,
+// appVersion, description, keywords, home, sources, icon, deprecated flag),
+// its declared dependencies and maintainers, the Go template files, the
+// default values.yaml, every rendered Kubernetes resource, and the chart's
+// files on disk.
 helm.chart @defaults("name version") {
   // Chart name from Chart.yaml
   name string
@@ -49,6 +60,10 @@ helm.chart @defaults("name version") {
 }
 
 // A Helm chart dependency
+//
+// Examine an entry from a chart's `dependencies:` list — name, version
+// constraint, repository, conditional-enable expression, tag groupings,
+// the resolved enabled flag, and any alias.
 helm.dependency @defaults("name version") {
   // Dependency name
   name string
@@ -67,6 +82,9 @@ helm.dependency @defaults("name version") {
 }
 
 // A Helm chart maintainer
+//
+// Examine a `maintainers:` entry from Chart.yaml — name, email, and
+// optional URL — useful for supply-chain ownership and contact audits.
 helm.maintainer @defaults("name email") {
   // Maintainer name
   name string
@@ -77,6 +95,12 @@ helm.maintainer @defaults("name email") {
 }
 
 // A Helm template file
+//
+// Examine a single file under templates/: its path, the raw Go-template
+// source, the rendered YAML produced by applying the chart's values, the
+// Kubernetes resources that render produces, and the directives (if /
+// range / include / tpl / define / with / block) detected in the raw
+// source.
 helm.template @defaults("name") {
   // Template file name (e.g., templates/deployment.yaml)
   name string
@@ -90,7 +114,12 @@ helm.template @defaults("name") {
   directives() []helm.directive
 }
 
-// A Go template directive found in a raw template
+// A Go-template directive in a Helm template
+//
+// Examine a single directive (if, range, include, tpl, define, with,
+// block) — type, full expression, and source line — useful for
+// flagging dynamic constructs that policy can't reason about (e.g., `tpl`
+// of unbounded user input).
 helm.directive @defaults("type expression") {
   // Directive type (if, range, include, tpl, define, with, block)
   type string
@@ -100,7 +129,12 @@ helm.directive @defaults("type expression") {
   line int
 }
 
-// A Kubernetes resource defined in a Helm template
+// A Kubernetes resource rendered from a Helm template
+//
+// Examine a Kubernetes manifest produced by rendering a chart with its
+// values: apiVersion, kind, name, namespace, labels, annotations, the full
+// manifest dict, and the typed reference back to the template that
+// produced it.
 helm.resource @defaults("kind name") {
   // Kubernetes API version
   apiVersion string
@@ -120,7 +154,11 @@ helm.resource @defaults("kind name") {
   template() helm.template
 }
 
-// A file within the Helm chart
+// A file within a Helm chart
+//
+// Examine a single file shipped with the chart by relative path and lazy
+// content — useful for inspecting NOTES.txt, README, LICENSE, or auxiliary
+// scripts.
 helm.file @defaults("path") {
   // File path relative to chart root
   path string
