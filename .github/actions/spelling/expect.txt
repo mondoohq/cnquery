@@ -401,7 +401,7 @@ openssl
 openvpn
 openzfs
 operationalinsights
-ords
+ORDS
 orstatement
 OSGi
 ospf

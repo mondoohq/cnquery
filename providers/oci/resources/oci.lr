@@ -66,7 +66,7 @@ private oci.identity.user @defaults("name") {
   id string
   // Compartment OCID containing the user
   compartmentID string
-  // Username
+  // User's login name within the OCI tenancy
   name string
   // User description
   description string
@@ -374,7 +374,7 @@ private oci.compute.bootVolume @defaults("name") {
 oci.network {
   // Virtual Cloud Networks (VCNs)
   vcns() []oci.network.vcn
-  // Subnets
+  // Subnets within the VCNs of the tenancy
   subnets() []oci.network.subnet
   // VCN security lists
   securityLists() []oci.network.securityList
@@ -1292,7 +1292,7 @@ private oci.oke.nodePool @defaults("name") {
   nodeImageName string
   // SSH public key on nodes (should be empty for security)
   sshPublicKey string
-  // Subnets the nodes are placed into (sourced from `NodeConfigDetails.PlacementConfigs[].SubnetId`; falls back to the top-level `SubnetIds` for older node pools)
+  // Subnets where Kubernetes nodes are placed (per-placement-config on newer node pools; node-pool-level fallback on older ones)
   subnets() []oci.network.subnet
   // Network Security Groups attached to the node VNICs (empty when nodes are governed only by subnet security lists)
   networkSecurityGroups() []oci.network.networkSecurityGroup
@@ -1618,9 +1618,9 @@ private oci.database.dbSystem @defaults("name") {
   databaseEdition string
   // Disk redundancy (HIGH, NORMAL, FLEX)
   diskRedundancy string
-  // Hostname
+  // Hostname of the database system
   hostname string
-  // Domain
+  // DNS domain name configured on the database system
   domain string
   // Oracle Database version
   version string
@@ -1702,7 +1702,7 @@ private oci.database.autonomousDatabase @defaults("name") {
   privateEndpointIp string
   // Private endpoint label
   privateEndpointLabel string
-  // Publicly reachable management and user URLs (sqlDevWebUrl, apexUrl, graphStudioUrl, ordsUrl, mongoDbUrl, machineLearningNotebookUrl, machineLearningUserManagementUrl, databaseTransformsUrl); populated when the database is publicly accessible or when a private endpoint URL is reachable through allowed networks
+  // Connection URLs for management and user interfaces (SQL Developer Web, APEX, GraphStudio, ORDS, MongoDB, Machine Learning Notebook/User Management, Database Transforms); populated when the database is publicly accessible or reachable via an allowed private endpoint
   connectionUrls dict
   // Lifecycle state (e.g., PROVISIONING, AVAILABLE, STOPPING, STOPPED, STARTING, TERMINATING, TERMINATED, UNAVAILABLE, RESTORE_IN_PROGRESS, RESTORE_FAILED, BACKUP_IN_PROGRESS, SCALE_IN_PROGRESS, AVAILABLE_NEEDS_ATTENTION, UPDATING, MAINTENANCE_IN_PROGRESS, RESTARTING, RECREATING, ROLE_CHANGE_IN_PROGRESS, UPGRADING, INACCESSIBLE, STANDBY)
   state string
@@ -1780,7 +1780,7 @@ private oci.apigateway.deployment @defaults("name pathPrefix") {
   endpoint string
   // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
   state string
-  // Authentication policy type (NONE if no authentication policy is configured, otherwise TOKEN_AUTHENTICATION, JWT_AUTHENTICATION, or CUSTOM_AUTHENTICATION)
+  // Authentication method configured for this deployment: NONE, TOKEN_AUTHENTICATION, JWT_AUTHENTICATION, or CUSTOM_AUTHENTICATION
   authenticationType() string
   // Whether anonymous (unauthenticated) access is allowed
   isAnonymousAccessAllowed() bool
