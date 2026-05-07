@@ -6,9 +6,6 @@ package resources
 import (
 	"errors"
 	"reflect"
-
-	"go.mondoo.com/mql/v13/providers/vsphere/connection"
-	"go.mondoo.com/mql/v13/providers/vsphere/resources/resourceclient"
 )
 
 type mqlVsphereVswitchStandardInternal struct {
@@ -18,53 +15,6 @@ type mqlVsphereVswitchStandardInternal struct {
 
 func (v *mqlVsphereVswitchStandard) id() (string, error) {
 	return v.Name.Data, v.Name.Error
-}
-
-func (v *mqlVsphereVswitchStandard) esxiClient() (*resourceclient.Esxi, error) {
-	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
-	return esxiClient(conn, v.hostInventoryPath)
-}
-
-func (v *mqlVsphereVswitchStandard) failoverPolicy() (map[string]any, error) {
-	if v.Name.Error != nil {
-		return nil, v.Name.Error
-	}
-	name := v.Name.Data
-
-	esxiClient, err := v.esxiClient()
-	if err != nil {
-		return nil, err
-	}
-
-	return esxiClient.VswitchStandardFailoverPolicy(name)
-}
-
-func (v *mqlVsphereVswitchStandard) securityPolicy() (map[string]any, error) {
-	if v.Name.Error != nil {
-		return nil, v.Name.Error
-	}
-	name := v.Name.Data
-
-	esxiClient, err := v.esxiClient()
-	if err != nil {
-		return nil, err
-	}
-
-	return esxiClient.VswitchStandardSecurityPolicy(name)
-}
-
-func (v *mqlVsphereVswitchStandard) shapingPolicy() (map[string]any, error) {
-	if v.Name.Error != nil {
-		return nil, v.Name.Error
-	}
-	name := v.Name.Data
-
-	esxiClient, err := v.esxiClient()
-	if err != nil {
-		return nil, err
-	}
-
-	return esxiClient.VswitchStandardShapingPolicy(name)
 }
 
 func (v *mqlVsphereVswitchStandard) uplinks() ([]any, error) {

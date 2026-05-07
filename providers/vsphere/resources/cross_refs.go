@@ -17,10 +17,11 @@ import (
 // `vsphere.vms { host datastores }` over N VMs would otherwise rebuild the
 // index 2N times.
 type vsphereInventory struct {
-	hosts      map[string]*mqlVsphereHost
-	vms        map[string]*mqlVsphereVm
-	datastores map[string]*mqlVsphereDatastore
-	clusters   map[string]*mqlVsphereCluster
+	hosts        map[string]*mqlVsphereHost
+	vms          map[string]*mqlVsphereVm
+	datastores   map[string]*mqlVsphereDatastore
+	clusters     map[string]*mqlVsphereCluster
+	dvPortGroups map[string]*mqlVsphereVswitchPortgroup
 }
 
 // mqlVsphereInternal extends mqlVspherePermissionInternal (already declared in
@@ -51,10 +52,11 @@ func buildVsphereInventory(v *mqlVsphere) (*vsphereInventory, error) {
 		return nil, dcs.Error
 	}
 	inv := &vsphereInventory{
-		hosts:      map[string]*mqlVsphereHost{},
-		vms:        map[string]*mqlVsphereVm{},
-		datastores: map[string]*mqlVsphereDatastore{},
-		clusters:   map[string]*mqlVsphereCluster{},
+		hosts:        map[string]*mqlVsphereHost{},
+		vms:          map[string]*mqlVsphereVm{},
+		datastores:   map[string]*mqlVsphereDatastore{},
+		clusters:     map[string]*mqlVsphereCluster{},
+		dvPortGroups: map[string]*mqlVsphereVswitchPortgroup{},
 	}
 	for _, d := range dcs.Data {
 		dc := d.(*mqlVsphereDatacenter)
@@ -80,6 +82,12 @@ func buildVsphereInventory(v *mqlVsphere) (*vsphereInventory, error) {
 			for _, c := range clusters.Data {
 				cl := c.(*mqlVsphereCluster)
 				inv.clusters[cl.Moid.Data] = cl
+			}
+		}
+		if pgs := dc.GetDistributedPortGroups(); pgs.Error == nil {
+			for _, p := range pgs.Data {
+				pg := p.(*mqlVsphereVswitchPortgroup)
+				inv.dvPortGroups[pg.Moid.Data] = pg
 			}
 		}
 	}

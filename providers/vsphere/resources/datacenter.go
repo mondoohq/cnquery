@@ -518,7 +518,9 @@ func (v *mqlVsphereDatacenter) distributedPortGroups() ([]any, error) {
 		// private-VLAN configurations leave vlanId at 0 — callers can
 		// inspect `properties` for the full VLAN spec.
 		var vlanId int64
+		var portCfgPtr *vimtypes.VMwareDVSPortSetting
 		if portCfg, ok := config.Config.DefaultPortConfig.(*vimtypes.VMwareDVSPortSetting); ok && portCfg != nil {
+			portCfgPtr = portCfg
 			if vlan, ok := portCfg.Vlan.(*vimtypes.VmwareDistributedVirtualSwitchVlanIdSpec); ok && vlan != nil {
 				vlanId = int64(vlan.VlanId)
 			}
@@ -535,7 +537,9 @@ func (v *mqlVsphereDatacenter) distributedPortGroups() ([]any, error) {
 			return nil, err
 		}
 
-		mqlPGs[i] = mqlDistPG.(*mqlVsphereVswitchPortgroup)
+		pg := mqlDistPG.(*mqlVsphereVswitchPortgroup)
+		pg.defaultPortConfig = portCfgPtr
+		mqlPGs[i] = pg
 	}
 
 	return mqlPGs, nil

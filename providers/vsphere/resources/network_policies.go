@@ -1,0 +1,259 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"github.com/vmware/govmomi/vim25/types"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	mqltypes "go.mondoo.com/mql/v13/types"
+)
+
+// ---------- standard vSwitch policies (sourced from cached *mo.HostSystem) ----------
+
+func (v *mqlVsphereVswitchStandard) findStandardSwitchSpec() *types.HostVirtualSwitchSpec {
+	if v.parentResource == nil || v.parentResource.host == nil ||
+		v.parentResource.host.Config == nil || v.parentResource.host.Config.Network == nil {
+		return nil
+	}
+	for i := range v.parentResource.host.Config.Network.Vswitch {
+		vsw := &v.parentResource.host.Config.Network.Vswitch[i]
+		if vsw.Name == v.Name.Data {
+			return &vsw.Spec
+		}
+	}
+	return nil
+}
+
+func (v *mqlVsphereVswitchStandard) securityPolicy() (*mqlVsphereVswitchSecurityPolicy, error) {
+	spec := v.findStandardSwitchSpec()
+	if spec == nil || spec.Policy == nil {
+		v.SecurityPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	id := standardSwitchPolicyID(v, "security")
+	res, err := buildHostSecurityPolicy(v.MqlRuntime, id, spec.Policy.Security)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		v.SecurityPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res, nil
+}
+
+func (v *mqlVsphereVswitchStandard) failoverPolicy() (*mqlVsphereVswitchFailoverPolicy, error) {
+	spec := v.findStandardSwitchSpec()
+	if spec == nil || spec.Policy == nil {
+		v.FailoverPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	id := standardSwitchPolicyID(v, "failover")
+	res, err := buildHostFailoverPolicy(v.MqlRuntime, id, spec.Policy.NicTeaming)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		v.FailoverPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res, nil
+}
+
+func (v *mqlVsphereVswitchStandard) shapingPolicy() (*mqlVsphereVswitchShapingPolicy, error) {
+	spec := v.findStandardSwitchSpec()
+	if spec == nil || spec.Policy == nil {
+		v.ShapingPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	id := standardSwitchPolicyID(v, "shaping")
+	res, err := buildHostShapingPolicy(v.MqlRuntime, id, spec.Policy.ShapingPolicy)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		v.ShapingPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res, nil
+}
+
+func standardSwitchPolicyID(v *mqlVsphereVswitchStandard, kind string) string {
+	host := ""
+	if v.parentResource != nil {
+		host = v.parentResource.InventoryPath.Data
+	}
+	return host + "/vswitch/" + v.Name.Data + "/policy/" + kind
+}
+
+func buildHostSecurityPolicy(runtime *plugin.Runtime, id string, p *types.HostNetworkSecurityPolicy) (*mqlVsphereVswitchSecurityPolicy, error) {
+	if p == nil {
+		return nil, nil
+	}
+	res, err := CreateResource(runtime, "vsphere.vswitch.securityPolicy", map[string]*llx.RawData{
+		"__id":                 llx.StringData(id),
+		"allowPromiscuous":     llx.BoolData(boolPtrOr(p.AllowPromiscuous, false)),
+		"allowForgedTransmits": llx.BoolData(boolPtrOr(p.ForgedTransmits, false)),
+		"allowMacChanges":      llx.BoolData(boolPtrOr(p.MacChanges, false)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlVsphereVswitchSecurityPolicy), nil
+}
+
+func buildHostFailoverPolicy(runtime *plugin.Runtime, id string, p *types.HostNicTeamingPolicy) (*mqlVsphereVswitchFailoverPolicy, error) {
+	if p == nil {
+		return nil, nil
+	}
+	var active, standby []any
+	if p.NicOrder != nil {
+		active = stringsToAny(p.NicOrder.ActiveNic)
+		standby = stringsToAny(p.NicOrder.StandbyNic)
+	}
+	checkBeacon := false
+	if p.FailureCriteria != nil && p.FailureCriteria.CheckBeacon != nil {
+		checkBeacon = *p.FailureCriteria.CheckBeacon
+	}
+	res, err := CreateResource(runtime, "vsphere.vswitch.failoverPolicy", map[string]*llx.RawData{
+		"__id":           llx.StringData(id),
+		"policy":         llx.StringData(p.Policy),
+		"reversePolicy":  llx.BoolData(boolPtrOr(p.ReversePolicy, false)),
+		"notifySwitches": llx.BoolData(boolPtrOr(p.NotifySwitches, false)),
+		"rollingOrder":   llx.BoolData(boolPtrOr(p.RollingOrder, false)),
+		"checkBeacon":    llx.BoolData(checkBeacon),
+		"activeNic":      llx.ArrayData(active, mqltypes.String),
+		"standbyNic":     llx.ArrayData(standby, mqltypes.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlVsphereVswitchFailoverPolicy), nil
+}
+
+func buildHostShapingPolicy(runtime *plugin.Runtime, id string, p *types.HostNetworkTrafficShapingPolicy) (*mqlVsphereVswitchShapingPolicy, error) {
+	if p == nil {
+		return nil, nil
+	}
+	res, err := CreateResource(runtime, "vsphere.vswitch.shapingPolicy", map[string]*llx.RawData{
+		"__id":             llx.StringData(id),
+		"enabled":          llx.BoolData(boolPtrOr(p.Enabled, false)),
+		"averageBandwidth": llx.IntData(p.AverageBandwidth),
+		"peakBandwidth":    llx.IntData(p.PeakBandwidth),
+		"burstSize":        llx.IntData(p.BurstSize),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlVsphereVswitchShapingPolicy), nil
+}
+
+// ---------- DVS port group policies (sourced from cached DefaultPortConfig) ----------
+
+type mqlVsphereVswitchPortgroupInternal struct {
+	defaultPortConfig *types.VMwareDVSPortSetting
+}
+
+func (p *mqlVsphereVswitchPortgroup) securityPolicy() (*mqlVsphereVswitchSecurityPolicy, error) {
+	if p.defaultPortConfig == nil || p.defaultPortConfig.SecurityPolicy == nil {
+		p.SecurityPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	id := p.Moid.Data + "/policy/security"
+	sp := p.defaultPortConfig.SecurityPolicy
+	res, err := CreateResource(p.MqlRuntime, "vsphere.vswitch.securityPolicy", map[string]*llx.RawData{
+		"__id":                 llx.StringData(id),
+		"allowPromiscuous":     llx.BoolData(boolPolicyValue(sp.AllowPromiscuous)),
+		"allowForgedTransmits": llx.BoolData(boolPolicyValue(sp.ForgedTransmits)),
+		"allowMacChanges":      llx.BoolData(boolPolicyValue(sp.MacChanges)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlVsphereVswitchSecurityPolicy), nil
+}
+
+func (p *mqlVsphereVswitchPortgroup) failoverPolicy() (*mqlVsphereVswitchFailoverPolicy, error) {
+	if p.defaultPortConfig == nil || p.defaultPortConfig.UplinkTeamingPolicy == nil {
+		p.FailoverPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	tp := p.defaultPortConfig.UplinkTeamingPolicy
+
+	var active, standby []any
+	if tp.UplinkPortOrder != nil {
+		active = stringsToAny(tp.UplinkPortOrder.ActiveUplinkPort)
+		standby = stringsToAny(tp.UplinkPortOrder.StandbyUplinkPort)
+	}
+	checkBeacon := false
+	if tp.FailureCriteria != nil {
+		checkBeacon = boolPolicyValue(tp.FailureCriteria.CheckBeacon)
+	}
+	id := p.Moid.Data + "/policy/failover"
+	res, err := CreateResource(p.MqlRuntime, "vsphere.vswitch.failoverPolicy", map[string]*llx.RawData{
+		"__id":           llx.StringData(id),
+		"policy":         llx.StringData(stringPolicyValue(tp.Policy)),
+		"reversePolicy":  llx.BoolData(boolPolicyValue(tp.ReversePolicy)),
+		"notifySwitches": llx.BoolData(boolPolicyValue(tp.NotifySwitches)),
+		"rollingOrder":   llx.BoolData(boolPolicyValue(tp.RollingOrder)),
+		"checkBeacon":    llx.BoolData(checkBeacon),
+		"activeNic":      llx.ArrayData(active, mqltypes.String),
+		"standbyNic":     llx.ArrayData(standby, mqltypes.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlVsphereVswitchFailoverPolicy), nil
+}
+
+func (p *mqlVsphereVswitchPortgroup) shapingPolicy() (*mqlVsphereVswitchShapingPolicy, error) {
+	if p.defaultPortConfig == nil || p.defaultPortConfig.InShapingPolicy == nil {
+		p.ShapingPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	sp := p.defaultPortConfig.InShapingPolicy
+	id := p.Moid.Data + "/policy/shaping"
+	res, err := CreateResource(p.MqlRuntime, "vsphere.vswitch.shapingPolicy", map[string]*llx.RawData{
+		"__id":             llx.StringData(id),
+		"enabled":          llx.BoolData(boolPolicyValue(sp.Enabled)),
+		"averageBandwidth": llx.IntData(longPolicyValue(sp.AverageBandwidth)),
+		"peakBandwidth":    llx.IntData(longPolicyValue(sp.PeakBandwidth)),
+		"burstSize":        llx.IntData(longPolicyValue(sp.BurstSize)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlVsphereVswitchShapingPolicy), nil
+}
+
+// ---------- helpers for the *Policy wrappers and *bool ----------
+
+func boolPtrOr(b *bool, fallback bool) bool {
+	if b == nil {
+		return fallback
+	}
+	return *b
+}
+
+func boolPolicyValue(p *types.BoolPolicy) bool {
+	if p == nil || p.Value == nil {
+		return false
+	}
+	return *p.Value
+}
+
+func longPolicyValue(p *types.LongPolicy) int64 {
+	if p == nil {
+		return 0
+	}
+	return p.Value
+}
+
+func stringPolicyValue(p *types.StringPolicy) string {
+	if p == nil {
+		return ""
+	}
+	return p.Value
+}

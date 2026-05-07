@@ -717,6 +717,8 @@ private vsphere.vm.networkAdapter @defaults("label adapterType macAddress connec
   portGroupName string
   // DistributedVirtualSwitchPortConnection.PortgroupKey (the moid of the distributed port group); empty for standard portgroup or opaque backings
   portGroupMoid string
+  // Distributed port group the adapter is connected to, resolved against vsphere.datacenters[].distributedPortGroups; null for standard portgroup or opaque backings, or when the port group isn't visible in inventory
+  portGroup() vsphere.vswitch.portgroup
 }
 
 // CPU resource allocation for a VM — reservation, limit, and shares.
@@ -825,12 +827,12 @@ private vsphere.vswitch.standard @defaults("name") {
   name string
   // Virtual switch properties
   properties dict
-  // NIC teaming policy
-  failoverPolicy() dict
-  // Security policy
-  securityPolicy() dict
-  // Shaping policy
-  shapingPolicy() dict
+  // NIC teaming / failover policy at vSwitch level
+  failoverPolicy() vsphere.vswitch.failoverPolicy
+  // Layer-2 security policy at vSwitch level (promiscuous mode, MAC changes, forged transmits)
+  securityPolicy() vsphere.vswitch.securityPolicy
+  // Traffic shaping policy at vSwitch level
+  shapingPolicy() vsphere.vswitch.shapingPolicy
   // List of physical NICs currently configured as uplinks
   uplinks() []vsphere.vmnic
 }
@@ -857,6 +859,58 @@ private vsphere.vswitch.portgroup @defaults("name vlanId") {
   properties dict
   // VLAN ID assigned to the port group (0 means untagged / VLAN trunking ranges; check properties for trunked specs)
   vlanId int
+  // Layer-2 security policy from the port group's DefaultPortConfig
+  securityPolicy() vsphere.vswitch.securityPolicy
+  // Uplink teaming / failover policy from the port group's DefaultPortConfig
+  failoverPolicy() vsphere.vswitch.failoverPolicy
+  // Inbound traffic shaping policy from the port group's DefaultPortConfig
+  shapingPolicy() vsphere.vswitch.shapingPolicy
+}
+
+// Layer-2 security policy applied at vSwitch or port group level. Used by
+// both standard vSwitches (HostNetworkSecurityPolicy) and DVS port groups
+// (DVSSecurityPolicy). Each field defaults to false when the underlying
+// API value is unset/inherited.
+private vsphere.vswitch.securityPolicy @defaults("allowPromiscuous allowForgedTransmits allowMacChanges") {
+  // Whether the port can accept promiscuous-mode traffic from the guest
+  allowPromiscuous bool
+  // Whether the guest may transmit frames with a forged source MAC
+  allowForgedTransmits bool
+  // Whether the guest may change its effective MAC at runtime
+  allowMacChanges bool
+}
+
+// NIC teaming / failover policy applied at vSwitch or port group level.
+// Used by both standard vSwitches (HostNicTeamingPolicy) and DVS port groups
+// (VmwareUplinkPortTeamingPolicy).
+private vsphere.vswitch.failoverPolicy @defaults("policy notifySwitches") {
+  // Load-balancing algorithm: loadbalance_ip, loadbalance_srcmac, loadbalance_srcid, loadbalance_loadbased (DVS only), failover_explicit
+  policy string
+  // Whether load-balanced flows are reversed back after a failback (deprecated; system default applies)
+  reversePolicy bool
+  // Whether to notify upstream switches when failover happens
+  notifySwitches bool
+  // Whether the rolling-failover ordering is honored (instead of immediate failback)
+  rollingOrder bool
+  // Whether beacon probing is used as a failover detection method
+  checkBeacon bool
+  // Active uplink names in priority order
+  activeNic []string
+  // Standby uplink names in priority order
+  standbyNic []string
+}
+
+// Traffic shaping policy applied at vSwitch or port group level. Bandwidth
+// values are in bits per second; burst size is in bytes.
+private vsphere.vswitch.shapingPolicy @defaults("enabled averageBandwidth peakBandwidth") {
+  // Whether shaping is currently enabled
+  enabled bool
+  // Average bandwidth in bps
+  averageBandwidth int
+  // Peak bandwidth in bps
+  peakBandwidth int
+  // Burst size in bytes
+  burstSize int
 }
 
 // vSphere ESXi physical network interface resource

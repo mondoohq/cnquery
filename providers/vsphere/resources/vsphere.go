@@ -617,6 +617,18 @@ func (v *mqlVsphereHostCertificate) id() (string, error) {
 	return v.Id.Data, nil
 }
 
+func (v *mqlVsphereVswitchSecurityPolicy) id() (string, error) {
+	return v.MqlID(), nil
+}
+
+func (v *mqlVsphereVswitchFailoverPolicy) id() (string, error) {
+	return v.MqlID(), nil
+}
+
+func (v *mqlVsphereVswitchShapingPolicy) id() (string, error) {
+	return v.MqlID(), nil
+}
+
 func (v *mqlVsphereHostBootInfo) id() (string, error) {
 	return v.MqlID(), nil
 }

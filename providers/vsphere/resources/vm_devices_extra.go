@@ -249,3 +249,23 @@ func buildAllocationResource(runtime *plugin.Runtime, resName, id string, ra *ty
 	}
 	return CreateResource(runtime, resName, args)
 }
+
+// portGroup resolves the DVS port group the adapter is connected to. Returns
+// null for standard portgroup or opaque-network backings (which have no
+// portGroupMoid) and for DVS backings whose port group isn't in inventory.
+func (n *mqlVsphereVmNetworkAdapter) portGroup() (*mqlVsphereVswitchPortgroup, error) {
+	moid := n.PortGroupMoid.Data
+	if moid == "" {
+		n.PortGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	inv, err := loadVsphereInventory(n.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	if pg, ok := inv.dvPortGroups[moid]; ok {
+		return pg, nil
+	}
+	n.PortGroup.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}

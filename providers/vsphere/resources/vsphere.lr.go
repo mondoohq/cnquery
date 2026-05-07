@@ -16,62 +16,65 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAsset                      string = "asset"
-	ResourceVulnmgmt                   string = "vulnmgmt"
-	ResourceVulnCve                    string = "vuln.cve"
-	ResourceVulnAdvisory               string = "vuln.advisory"
-	ResourceVulnPackage                string = "vuln.package"
-	ResourceAuditCvss                  string = "audit.cvss"
-	ResourceVsphere                    string = "vsphere"
-	ResourceVspherePermission          string = "vsphere.permission"
-	ResourceVsphereFolder              string = "vsphere.folder"
-	ResourceVsphereIdentitysource      string = "vsphere.identitysource"
-	ResourceVsphereKmsCluster          string = "vsphere.kmsCluster"
-	ResourceVsphereRole                string = "vsphere.role"
-	ResourceVsphereLicense             string = "vsphere.license"
-	ResourceVsphereDatacenter          string = "vsphere.datacenter"
-	ResourceVsphereResourcepool        string = "vsphere.resourcepool"
-	ResourceVsphereDatastore           string = "vsphere.datastore"
-	ResourceVsphereCluster             string = "vsphere.cluster"
-	ResourceVsphereHost                string = "vsphere.host"
-	ResourceVsphereHostBootInfo        string = "vsphere.host.bootInfo"
-	ResourceVsphereHostSystemInfo      string = "vsphere.host.systemInfo"
-	ResourceVsphereHostDnsConfig       string = "vsphere.host.dnsConfig"
-	ResourceVsphereHostIpRouteConfig   string = "vsphere.host.ipRouteConfig"
-	ResourceVsphereHostFirewallRuleset string = "vsphere.host.firewallRuleset"
-	ResourceVsphereHostFirewallRule    string = "vsphere.host.firewallRule"
-	ResourceVsphereHostIscsiAdapter    string = "vsphere.host.iscsiAdapter"
-	ResourceVsphereHostCertificate     string = "vsphere.host.certificate"
-	ResourceEsxiFirewallRuleset        string = "esxi.firewallRuleset"
-	ResourceEsxiFirewallRule           string = "esxi.firewallRule"
-	ResourceEsxiIscsiAdapter           string = "esxi.iscsiAdapter"
-	ResourceEsxiCertificate            string = "esxi.certificate"
-	ResourceVsphereVm                  string = "vsphere.vm"
-	ResourceVsphereVmCdrom             string = "vsphere.vm.cdrom"
-	ResourceVsphereVmNetworkAdapter    string = "vsphere.vm.networkAdapter"
-	ResourceVsphereVmCpuAllocation     string = "vsphere.vm.cpuAllocation"
-	ResourceVsphereVmMemoryAllocation  string = "vsphere.vm.memoryAllocation"
-	ResourceVsphereVmSnapshot          string = "vsphere.vm.snapshot"
-	ResourceVsphereVmDisk              string = "vsphere.vm.disk"
-	ResourceVsphereEncryptionKey       string = "vsphere.encryptionKey"
-	ResourceVsphereVswitchStandard     string = "vsphere.vswitch.standard"
-	ResourceVsphereVswitchDvs          string = "vsphere.vswitch.dvs"
-	ResourceVsphereVswitchPortgroup    string = "vsphere.vswitch.portgroup"
-	ResourceVsphereVmnic               string = "vsphere.vmnic"
-	ResourceVsphereVmknic              string = "vsphere.vmknic"
-	ResourceVsphereHostCommand         string = "vsphere.host.command"
-	ResourceVsphereHostVib             string = "vsphere.host.vib"
-	ResourceVsphereHostKernelModule    string = "vsphere.host.kernelModule"
-	ResourceVsphereHostService         string = "vsphere.host.service"
-	ResourceVsphereHostTimezone        string = "vsphere.host.timezone"
-	ResourceVsphereHostNtpConfig       string = "vsphere.host.ntpConfig"
-	ResourceEsxi                       string = "esxi"
-	ResourceEsxiCommand                string = "esxi.command"
-	ResourceEsxiVib                    string = "esxi.vib"
-	ResourceEsxiKernelmodule           string = "esxi.kernelmodule"
-	ResourceEsxiService                string = "esxi.service"
-	ResourceEsxiTimezone               string = "esxi.timezone"
-	ResourceEsxiNtpconfig              string = "esxi.ntpconfig"
+	ResourceAsset                        string = "asset"
+	ResourceVulnmgmt                     string = "vulnmgmt"
+	ResourceVulnCve                      string = "vuln.cve"
+	ResourceVulnAdvisory                 string = "vuln.advisory"
+	ResourceVulnPackage                  string = "vuln.package"
+	ResourceAuditCvss                    string = "audit.cvss"
+	ResourceVsphere                      string = "vsphere"
+	ResourceVspherePermission            string = "vsphere.permission"
+	ResourceVsphereFolder                string = "vsphere.folder"
+	ResourceVsphereIdentitysource        string = "vsphere.identitysource"
+	ResourceVsphereKmsCluster            string = "vsphere.kmsCluster"
+	ResourceVsphereRole                  string = "vsphere.role"
+	ResourceVsphereLicense               string = "vsphere.license"
+	ResourceVsphereDatacenter            string = "vsphere.datacenter"
+	ResourceVsphereResourcepool          string = "vsphere.resourcepool"
+	ResourceVsphereDatastore             string = "vsphere.datastore"
+	ResourceVsphereCluster               string = "vsphere.cluster"
+	ResourceVsphereHost                  string = "vsphere.host"
+	ResourceVsphereHostBootInfo          string = "vsphere.host.bootInfo"
+	ResourceVsphereHostSystemInfo        string = "vsphere.host.systemInfo"
+	ResourceVsphereHostDnsConfig         string = "vsphere.host.dnsConfig"
+	ResourceVsphereHostIpRouteConfig     string = "vsphere.host.ipRouteConfig"
+	ResourceVsphereHostFirewallRuleset   string = "vsphere.host.firewallRuleset"
+	ResourceVsphereHostFirewallRule      string = "vsphere.host.firewallRule"
+	ResourceVsphereHostIscsiAdapter      string = "vsphere.host.iscsiAdapter"
+	ResourceVsphereHostCertificate       string = "vsphere.host.certificate"
+	ResourceEsxiFirewallRuleset          string = "esxi.firewallRuleset"
+	ResourceEsxiFirewallRule             string = "esxi.firewallRule"
+	ResourceEsxiIscsiAdapter             string = "esxi.iscsiAdapter"
+	ResourceEsxiCertificate              string = "esxi.certificate"
+	ResourceVsphereVm                    string = "vsphere.vm"
+	ResourceVsphereVmCdrom               string = "vsphere.vm.cdrom"
+	ResourceVsphereVmNetworkAdapter      string = "vsphere.vm.networkAdapter"
+	ResourceVsphereVmCpuAllocation       string = "vsphere.vm.cpuAllocation"
+	ResourceVsphereVmMemoryAllocation    string = "vsphere.vm.memoryAllocation"
+	ResourceVsphereVmSnapshot            string = "vsphere.vm.snapshot"
+	ResourceVsphereVmDisk                string = "vsphere.vm.disk"
+	ResourceVsphereEncryptionKey         string = "vsphere.encryptionKey"
+	ResourceVsphereVswitchStandard       string = "vsphere.vswitch.standard"
+	ResourceVsphereVswitchDvs            string = "vsphere.vswitch.dvs"
+	ResourceVsphereVswitchPortgroup      string = "vsphere.vswitch.portgroup"
+	ResourceVsphereVswitchSecurityPolicy string = "vsphere.vswitch.securityPolicy"
+	ResourceVsphereVswitchFailoverPolicy string = "vsphere.vswitch.failoverPolicy"
+	ResourceVsphereVswitchShapingPolicy  string = "vsphere.vswitch.shapingPolicy"
+	ResourceVsphereVmnic                 string = "vsphere.vmnic"
+	ResourceVsphereVmknic                string = "vsphere.vmknic"
+	ResourceVsphereHostCommand           string = "vsphere.host.command"
+	ResourceVsphereHostVib               string = "vsphere.host.vib"
+	ResourceVsphereHostKernelModule      string = "vsphere.host.kernelModule"
+	ResourceVsphereHostService           string = "vsphere.host.service"
+	ResourceVsphereHostTimezone          string = "vsphere.host.timezone"
+	ResourceVsphereHostNtpConfig         string = "vsphere.host.ntpConfig"
+	ResourceEsxi                         string = "esxi"
+	ResourceEsxiCommand                  string = "esxi.command"
+	ResourceEsxiVib                      string = "esxi.vib"
+	ResourceEsxiKernelmodule             string = "esxi.kernelmodule"
+	ResourceEsxiService                  string = "esxi.service"
+	ResourceEsxiTimezone                 string = "esxi.timezone"
+	ResourceEsxiNtpconfig                string = "esxi.ntpconfig"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -241,6 +244,18 @@ func init() {
 		"vsphere.vswitch.portgroup": {
 			// to override args, implement: initVsphereVswitchPortgroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereVswitchPortgroup,
+		},
+		"vsphere.vswitch.securityPolicy": {
+			// to override args, implement: initVsphereVswitchSecurityPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVswitchSecurityPolicy,
+		},
+		"vsphere.vswitch.failoverPolicy": {
+			// to override args, implement: initVsphereVswitchFailoverPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVswitchFailoverPolicy,
+		},
+		"vsphere.vswitch.shapingPolicy": {
+			// to override args, implement: initVsphereVswitchShapingPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVswitchShapingPolicy,
 		},
 		"vsphere.vmnic": {
 			// to override args, implement: initVsphereVmnic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1258,6 +1273,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vm.networkAdapter.portGroupMoid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVmNetworkAdapter).GetPortGroupMoid()).ToDataRes(types.String)
 	},
+	"vsphere.vm.networkAdapter.portGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetPortGroup()).ToDataRes(types.Resource("vsphere.vswitch.portgroup"))
+	},
 	"vsphere.vm.cpuAllocation.reservationMHz": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVmCpuAllocation).GetReservationMHz()).ToDataRes(types.Int)
 	},
@@ -1373,13 +1391,13 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlVsphereVswitchStandard).GetProperties()).ToDataRes(types.Dict)
 	},
 	"vsphere.vswitch.standard.failoverPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVswitchStandard).GetFailoverPolicy()).ToDataRes(types.Dict)
+		return (r.(*mqlVsphereVswitchStandard).GetFailoverPolicy()).ToDataRes(types.Resource("vsphere.vswitch.failoverPolicy"))
 	},
 	"vsphere.vswitch.standard.securityPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVswitchStandard).GetSecurityPolicy()).ToDataRes(types.Dict)
+		return (r.(*mqlVsphereVswitchStandard).GetSecurityPolicy()).ToDataRes(types.Resource("vsphere.vswitch.securityPolicy"))
 	},
 	"vsphere.vswitch.standard.shapingPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVswitchStandard).GetShapingPolicy()).ToDataRes(types.Dict)
+		return (r.(*mqlVsphereVswitchStandard).GetShapingPolicy()).ToDataRes(types.Resource("vsphere.vswitch.shapingPolicy"))
 	},
 	"vsphere.vswitch.standard.uplinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchStandard).GetUplinks()).ToDataRes(types.Array(types.Resource("vsphere.vmnic")))
@@ -1407,6 +1425,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vswitch.portgroup.vlanId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchPortgroup).GetVlanId()).ToDataRes(types.Int)
+	},
+	"vsphere.vswitch.portgroup.securityPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetSecurityPolicy()).ToDataRes(types.Resource("vsphere.vswitch.securityPolicy"))
+	},
+	"vsphere.vswitch.portgroup.failoverPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetFailoverPolicy()).ToDataRes(types.Resource("vsphere.vswitch.failoverPolicy"))
+	},
+	"vsphere.vswitch.portgroup.shapingPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetShapingPolicy()).ToDataRes(types.Resource("vsphere.vswitch.shapingPolicy"))
+	},
+	"vsphere.vswitch.securityPolicy.allowPromiscuous": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchSecurityPolicy).GetAllowPromiscuous()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.securityPolicy.allowForgedTransmits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchSecurityPolicy).GetAllowForgedTransmits()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.securityPolicy.allowMacChanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchSecurityPolicy).GetAllowMacChanges()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.failoverPolicy.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchFailoverPolicy).GetPolicy()).ToDataRes(types.String)
+	},
+	"vsphere.vswitch.failoverPolicy.reversePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchFailoverPolicy).GetReversePolicy()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.failoverPolicy.notifySwitches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchFailoverPolicy).GetNotifySwitches()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.failoverPolicy.rollingOrder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchFailoverPolicy).GetRollingOrder()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.failoverPolicy.checkBeacon": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchFailoverPolicy).GetCheckBeacon()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.failoverPolicy.activeNic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchFailoverPolicy).GetActiveNic()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.vswitch.failoverPolicy.standbyNic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchFailoverPolicy).GetStandbyNic()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.vswitch.shapingPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchShapingPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"vsphere.vswitch.shapingPolicy.averageBandwidth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchShapingPolicy).GetAverageBandwidth()).ToDataRes(types.Int)
+	},
+	"vsphere.vswitch.shapingPolicy.peakBandwidth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchShapingPolicy).GetPeakBandwidth()).ToDataRes(types.Int)
+	},
+	"vsphere.vswitch.shapingPolicy.burstSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchShapingPolicy).GetBurstSize()).ToDataRes(types.Int)
 	},
 	"vsphere.vmnic.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVmnic).GetName()).ToDataRes(types.String)
@@ -2963,6 +3032,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereVmNetworkAdapter).PortGroupMoid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"vsphere.vm.networkAdapter.portGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).PortGroup, ok = plugin.RawToTValue[*mqlVsphereVswitchPortgroup](v.Value, v.Error)
+		return
+	},
 	"vsphere.vm.cpuAllocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVmCpuAllocation).__id, ok = v.Value.(string)
 		return
@@ -3140,15 +3213,15 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"vsphere.vswitch.standard.failoverPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).FailoverPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).FailoverPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchFailoverPolicy](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.securityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).SecurityPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).SecurityPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchSecurityPolicy](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.shapingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).ShapingPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).ShapingPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchShapingPolicy](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.uplinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3193,6 +3266,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vswitch.portgroup.vlanId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVswitchPortgroup).VlanId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.securityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).SecurityPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchSecurityPolicy](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.failoverPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).FailoverPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchFailoverPolicy](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.portgroup.shapingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).ShapingPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchShapingPolicy](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.securityPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchSecurityPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vswitch.securityPolicy.allowPromiscuous": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchSecurityPolicy).AllowPromiscuous, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.securityPolicy.allowForgedTransmits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchSecurityPolicy).AllowForgedTransmits, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.securityPolicy.allowMacChanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchSecurityPolicy).AllowMacChanges, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.failoverPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchFailoverPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vswitch.failoverPolicy.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchFailoverPolicy).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.failoverPolicy.reversePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchFailoverPolicy).ReversePolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.failoverPolicy.notifySwitches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchFailoverPolicy).NotifySwitches, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.failoverPolicy.rollingOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchFailoverPolicy).RollingOrder, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.failoverPolicy.checkBeacon": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchFailoverPolicy).CheckBeacon, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.failoverPolicy.activeNic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchFailoverPolicy).ActiveNic, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.failoverPolicy.standbyNic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchFailoverPolicy).StandbyNic, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.shapingPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchShapingPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vswitch.shapingPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchShapingPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.shapingPolicy.averageBandwidth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchShapingPolicy).AverageBandwidth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.shapingPolicy.peakBandwidth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchShapingPolicy).PeakBandwidth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.shapingPolicy.burstSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchShapingPolicy).BurstSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"vsphere.vmnic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7016,6 +7169,7 @@ type mqlVsphereVmNetworkAdapter struct {
 	BackingType        plugin.TValue[string]
 	PortGroupName      plugin.TValue[string]
 	PortGroupMoid      plugin.TValue[string]
+	PortGroup          plugin.TValue[*mqlVsphereVswitchPortgroup]
 }
 
 // createVsphereVmNetworkAdapter creates a new instance of this resource
@@ -7096,6 +7250,22 @@ func (c *mqlVsphereVmNetworkAdapter) GetPortGroupName() *plugin.TValue[string] {
 
 func (c *mqlVsphereVmNetworkAdapter) GetPortGroupMoid() *plugin.TValue[string] {
 	return &c.PortGroupMoid
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetPortGroup() *plugin.TValue[*mqlVsphereVswitchPortgroup] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchPortgroup](&c.PortGroup, func() (*mqlVsphereVswitchPortgroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm.networkAdapter", c.__id, "portGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereVswitchPortgroup), nil
+			}
+		}
+
+		return c.portGroup()
+	})
 }
 
 // mqlVsphereVmCpuAllocation for the vsphere.vm.cpuAllocation resource
@@ -7516,9 +7686,9 @@ type mqlVsphereVswitchStandard struct {
 	mqlVsphereVswitchStandardInternal
 	Name           plugin.TValue[string]
 	Properties     plugin.TValue[any]
-	FailoverPolicy plugin.TValue[any]
-	SecurityPolicy plugin.TValue[any]
-	ShapingPolicy  plugin.TValue[any]
+	FailoverPolicy plugin.TValue[*mqlVsphereVswitchFailoverPolicy]
+	SecurityPolicy plugin.TValue[*mqlVsphereVswitchSecurityPolicy]
+	ShapingPolicy  plugin.TValue[*mqlVsphereVswitchShapingPolicy]
 	Uplinks        plugin.TValue[[]any]
 }
 
@@ -7567,20 +7737,50 @@ func (c *mqlVsphereVswitchStandard) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlVsphereVswitchStandard) GetFailoverPolicy() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.FailoverPolicy, func() (any, error) {
+func (c *mqlVsphereVswitchStandard) GetFailoverPolicy() *plugin.TValue[*mqlVsphereVswitchFailoverPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchFailoverPolicy](&c.FailoverPolicy, func() (*mqlVsphereVswitchFailoverPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.standard", c.__id, "failoverPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereVswitchFailoverPolicy), nil
+			}
+		}
+
 		return c.failoverPolicy()
 	})
 }
 
-func (c *mqlVsphereVswitchStandard) GetSecurityPolicy() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.SecurityPolicy, func() (any, error) {
+func (c *mqlVsphereVswitchStandard) GetSecurityPolicy() *plugin.TValue[*mqlVsphereVswitchSecurityPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchSecurityPolicy](&c.SecurityPolicy, func() (*mqlVsphereVswitchSecurityPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.standard", c.__id, "securityPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereVswitchSecurityPolicy), nil
+			}
+		}
+
 		return c.securityPolicy()
 	})
 }
 
-func (c *mqlVsphereVswitchStandard) GetShapingPolicy() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.ShapingPolicy, func() (any, error) {
+func (c *mqlVsphereVswitchStandard) GetShapingPolicy() *plugin.TValue[*mqlVsphereVswitchShapingPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchShapingPolicy](&c.ShapingPolicy, func() (*mqlVsphereVswitchShapingPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.standard", c.__id, "shapingPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereVswitchShapingPolicy), nil
+			}
+		}
+
 		return c.shapingPolicy()
 	})
 }
@@ -7681,11 +7881,14 @@ func (c *mqlVsphereVswitchDvs) GetUplinks() *plugin.TValue[[]any] {
 type mqlVsphereVswitchPortgroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVsphereVswitchPortgroupInternal it will be used here
-	Moid       plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Properties plugin.TValue[any]
-	VlanId     plugin.TValue[int64]
+	mqlVsphereVswitchPortgroupInternal
+	Moid           plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Properties     plugin.TValue[any]
+	VlanId         plugin.TValue[int64]
+	SecurityPolicy plugin.TValue[*mqlVsphereVswitchSecurityPolicy]
+	FailoverPolicy plugin.TValue[*mqlVsphereVswitchFailoverPolicy]
+	ShapingPolicy  plugin.TValue[*mqlVsphereVswitchShapingPolicy]
 }
 
 // createVsphereVswitchPortgroup creates a new instance of this resource
@@ -7739,6 +7942,256 @@ func (c *mqlVsphereVswitchPortgroup) GetProperties() *plugin.TValue[any] {
 
 func (c *mqlVsphereVswitchPortgroup) GetVlanId() *plugin.TValue[int64] {
 	return &c.VlanId
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetSecurityPolicy() *plugin.TValue[*mqlVsphereVswitchSecurityPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchSecurityPolicy](&c.SecurityPolicy, func() (*mqlVsphereVswitchSecurityPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "securityPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereVswitchSecurityPolicy), nil
+			}
+		}
+
+		return c.securityPolicy()
+	})
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetFailoverPolicy() *plugin.TValue[*mqlVsphereVswitchFailoverPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchFailoverPolicy](&c.FailoverPolicy, func() (*mqlVsphereVswitchFailoverPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "failoverPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereVswitchFailoverPolicy), nil
+			}
+		}
+
+		return c.failoverPolicy()
+	})
+}
+
+func (c *mqlVsphereVswitchPortgroup) GetShapingPolicy() *plugin.TValue[*mqlVsphereVswitchShapingPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchShapingPolicy](&c.ShapingPolicy, func() (*mqlVsphereVswitchShapingPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "shapingPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereVswitchShapingPolicy), nil
+			}
+		}
+
+		return c.shapingPolicy()
+	})
+}
+
+// mqlVsphereVswitchSecurityPolicy for the vsphere.vswitch.securityPolicy resource
+type mqlVsphereVswitchSecurityPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereVswitchSecurityPolicyInternal it will be used here
+	AllowPromiscuous     plugin.TValue[bool]
+	AllowForgedTransmits plugin.TValue[bool]
+	AllowMacChanges      plugin.TValue[bool]
+}
+
+// createVsphereVswitchSecurityPolicy creates a new instance of this resource
+func createVsphereVswitchSecurityPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVswitchSecurityPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vswitch.securityPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVswitchSecurityPolicy) MqlName() string {
+	return "vsphere.vswitch.securityPolicy"
+}
+
+func (c *mqlVsphereVswitchSecurityPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVswitchSecurityPolicy) GetAllowPromiscuous() *plugin.TValue[bool] {
+	return &c.AllowPromiscuous
+}
+
+func (c *mqlVsphereVswitchSecurityPolicy) GetAllowForgedTransmits() *plugin.TValue[bool] {
+	return &c.AllowForgedTransmits
+}
+
+func (c *mqlVsphereVswitchSecurityPolicy) GetAllowMacChanges() *plugin.TValue[bool] {
+	return &c.AllowMacChanges
+}
+
+// mqlVsphereVswitchFailoverPolicy for the vsphere.vswitch.failoverPolicy resource
+type mqlVsphereVswitchFailoverPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereVswitchFailoverPolicyInternal it will be used here
+	Policy         plugin.TValue[string]
+	ReversePolicy  plugin.TValue[bool]
+	NotifySwitches plugin.TValue[bool]
+	RollingOrder   plugin.TValue[bool]
+	CheckBeacon    plugin.TValue[bool]
+	ActiveNic      plugin.TValue[[]any]
+	StandbyNic     plugin.TValue[[]any]
+}
+
+// createVsphereVswitchFailoverPolicy creates a new instance of this resource
+func createVsphereVswitchFailoverPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVswitchFailoverPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vswitch.failoverPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVswitchFailoverPolicy) MqlName() string {
+	return "vsphere.vswitch.failoverPolicy"
+}
+
+func (c *mqlVsphereVswitchFailoverPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVswitchFailoverPolicy) GetPolicy() *plugin.TValue[string] {
+	return &c.Policy
+}
+
+func (c *mqlVsphereVswitchFailoverPolicy) GetReversePolicy() *plugin.TValue[bool] {
+	return &c.ReversePolicy
+}
+
+func (c *mqlVsphereVswitchFailoverPolicy) GetNotifySwitches() *plugin.TValue[bool] {
+	return &c.NotifySwitches
+}
+
+func (c *mqlVsphereVswitchFailoverPolicy) GetRollingOrder() *plugin.TValue[bool] {
+	return &c.RollingOrder
+}
+
+func (c *mqlVsphereVswitchFailoverPolicy) GetCheckBeacon() *plugin.TValue[bool] {
+	return &c.CheckBeacon
+}
+
+func (c *mqlVsphereVswitchFailoverPolicy) GetActiveNic() *plugin.TValue[[]any] {
+	return &c.ActiveNic
+}
+
+func (c *mqlVsphereVswitchFailoverPolicy) GetStandbyNic() *plugin.TValue[[]any] {
+	return &c.StandbyNic
+}
+
+// mqlVsphereVswitchShapingPolicy for the vsphere.vswitch.shapingPolicy resource
+type mqlVsphereVswitchShapingPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereVswitchShapingPolicyInternal it will be used here
+	Enabled          plugin.TValue[bool]
+	AverageBandwidth plugin.TValue[int64]
+	PeakBandwidth    plugin.TValue[int64]
+	BurstSize        plugin.TValue[int64]
+}
+
+// createVsphereVswitchShapingPolicy creates a new instance of this resource
+func createVsphereVswitchShapingPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVswitchShapingPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vswitch.shapingPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVswitchShapingPolicy) MqlName() string {
+	return "vsphere.vswitch.shapingPolicy"
+}
+
+func (c *mqlVsphereVswitchShapingPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVswitchShapingPolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlVsphereVswitchShapingPolicy) GetAverageBandwidth() *plugin.TValue[int64] {
+	return &c.AverageBandwidth
+}
+
+func (c *mqlVsphereVswitchShapingPolicy) GetPeakBandwidth() *plugin.TValue[int64] {
+	return &c.PeakBandwidth
+}
+
+func (c *mqlVsphereVswitchShapingPolicy) GetBurstSize() *plugin.TValue[int64] {
+	return &c.BurstSize
 }
 
 // mqlVsphereVmnic for the vsphere.vmnic resource
