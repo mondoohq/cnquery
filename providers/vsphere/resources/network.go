@@ -6,6 +6,9 @@ package resources
 import (
 	"errors"
 	"reflect"
+
+	"go.mondoo.com/mql/v13/providers/vsphere/connection"
+	"go.mondoo.com/mql/v13/providers/vsphere/resources/resourceclient"
 )
 
 type mqlVsphereVswitchStandardInternal struct {
@@ -15,6 +18,51 @@ type mqlVsphereVswitchStandardInternal struct {
 
 func (v *mqlVsphereVswitchStandard) id() (string, error) {
 	return v.Name.Data, v.Name.Error
+}
+
+func (v *mqlVsphereVswitchStandard) esxiClient() (*resourceclient.Esxi, error) {
+	conn := v.MqlRuntime.Connection.(*connection.VsphereConnection)
+	return esxiClient(conn, v.hostInventoryPath)
+}
+
+// failoverPolicy is the legacy ESXCli-sourced dict view of the vSwitch's NIC
+// teaming policy. Superseded by failoverSettings() which returns a typed
+// resource sourced directly from the cached host config.
+func (v *mqlVsphereVswitchStandard) failoverPolicy() (map[string]any, error) {
+	if v.Name.Error != nil {
+		return nil, v.Name.Error
+	}
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+	return esxiClient.VswitchStandardFailoverPolicy(v.Name.Data)
+}
+
+// securityPolicy is the legacy ESXCli-sourced dict view of the vSwitch's
+// layer-2 security policy. Superseded by securitySettings().
+func (v *mqlVsphereVswitchStandard) securityPolicy() (map[string]any, error) {
+	if v.Name.Error != nil {
+		return nil, v.Name.Error
+	}
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+	return esxiClient.VswitchStandardSecurityPolicy(v.Name.Data)
+}
+
+// shapingPolicy is the legacy ESXCli-sourced dict view of the vSwitch's
+// traffic shaping policy. Superseded by shapingSettings().
+func (v *mqlVsphereVswitchStandard) shapingPolicy() (map[string]any, error) {
+	if v.Name.Error != nil {
+		return nil, v.Name.Error
+	}
+	esxiClient, err := v.esxiClient()
+	if err != nil {
+		return nil, err
+	}
+	return esxiClient.VswitchStandardShapingPolicy(v.Name.Data)
 }
 
 func (v *mqlVsphereVswitchStandard) uplinks() ([]any, error) {

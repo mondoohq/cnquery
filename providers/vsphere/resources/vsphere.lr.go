@@ -1391,13 +1391,22 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlVsphereVswitchStandard).GetProperties()).ToDataRes(types.Dict)
 	},
 	"vsphere.vswitch.standard.failoverPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVswitchStandard).GetFailoverPolicy()).ToDataRes(types.Resource("vsphere.vswitch.failoverPolicy"))
+		return (r.(*mqlVsphereVswitchStandard).GetFailoverPolicy()).ToDataRes(types.Dict)
 	},
 	"vsphere.vswitch.standard.securityPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVswitchStandard).GetSecurityPolicy()).ToDataRes(types.Resource("vsphere.vswitch.securityPolicy"))
+		return (r.(*mqlVsphereVswitchStandard).GetSecurityPolicy()).ToDataRes(types.Dict)
 	},
 	"vsphere.vswitch.standard.shapingPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVswitchStandard).GetShapingPolicy()).ToDataRes(types.Resource("vsphere.vswitch.shapingPolicy"))
+		return (r.(*mqlVsphereVswitchStandard).GetShapingPolicy()).ToDataRes(types.Dict)
+	},
+	"vsphere.vswitch.standard.failoverSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchStandard).GetFailoverSettings()).ToDataRes(types.Resource("vsphere.vswitch.failoverPolicy"))
+	},
+	"vsphere.vswitch.standard.securitySettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchStandard).GetSecuritySettings()).ToDataRes(types.Resource("vsphere.vswitch.securityPolicy"))
+	},
+	"vsphere.vswitch.standard.shapingSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchStandard).GetShapingSettings()).ToDataRes(types.Resource("vsphere.vswitch.shapingPolicy"))
 	},
 	"vsphere.vswitch.standard.uplinks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchStandard).GetUplinks()).ToDataRes(types.Array(types.Resource("vsphere.vmnic")))
@@ -1426,14 +1435,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.vswitch.portgroup.vlanId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchPortgroup).GetVlanId()).ToDataRes(types.Int)
 	},
-	"vsphere.vswitch.portgroup.securityPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVswitchPortgroup).GetSecurityPolicy()).ToDataRes(types.Resource("vsphere.vswitch.securityPolicy"))
+	"vsphere.vswitch.portgroup.securitySettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetSecuritySettings()).ToDataRes(types.Resource("vsphere.vswitch.securityPolicy"))
 	},
-	"vsphere.vswitch.portgroup.failoverPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVswitchPortgroup).GetFailoverPolicy()).ToDataRes(types.Resource("vsphere.vswitch.failoverPolicy"))
+	"vsphere.vswitch.portgroup.failoverSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetFailoverSettings()).ToDataRes(types.Resource("vsphere.vswitch.failoverPolicy"))
 	},
-	"vsphere.vswitch.portgroup.shapingPolicy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVsphereVswitchPortgroup).GetShapingPolicy()).ToDataRes(types.Resource("vsphere.vswitch.shapingPolicy"))
+	"vsphere.vswitch.portgroup.shapingSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVswitchPortgroup).GetShapingSettings()).ToDataRes(types.Resource("vsphere.vswitch.shapingPolicy"))
 	},
 	"vsphere.vswitch.securityPolicy.allowPromiscuous": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVswitchSecurityPolicy).GetAllowPromiscuous()).ToDataRes(types.Bool)
@@ -3213,15 +3222,27 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"vsphere.vswitch.standard.failoverPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).FailoverPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchFailoverPolicy](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).FailoverPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.securityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).SecurityPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchSecurityPolicy](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).SecurityPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.shapingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchStandard).ShapingPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchShapingPolicy](v.Value, v.Error)
+		r.(*mqlVsphereVswitchStandard).ShapingPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.standard.failoverSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchStandard).FailoverSettings, ok = plugin.RawToTValue[*mqlVsphereVswitchFailoverPolicy](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.standard.securitySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchStandard).SecuritySettings, ok = plugin.RawToTValue[*mqlVsphereVswitchSecurityPolicy](v.Value, v.Error)
+		return
+	},
+	"vsphere.vswitch.standard.shapingSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchStandard).ShapingSettings, ok = plugin.RawToTValue[*mqlVsphereVswitchShapingPolicy](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.standard.uplinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3268,16 +3289,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVsphereVswitchPortgroup).VlanId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"vsphere.vswitch.portgroup.securityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchPortgroup).SecurityPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchSecurityPolicy](v.Value, v.Error)
+	"vsphere.vswitch.portgroup.securitySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).SecuritySettings, ok = plugin.RawToTValue[*mqlVsphereVswitchSecurityPolicy](v.Value, v.Error)
 		return
 	},
-	"vsphere.vswitch.portgroup.failoverPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchPortgroup).FailoverPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchFailoverPolicy](v.Value, v.Error)
+	"vsphere.vswitch.portgroup.failoverSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).FailoverSettings, ok = plugin.RawToTValue[*mqlVsphereVswitchFailoverPolicy](v.Value, v.Error)
 		return
 	},
-	"vsphere.vswitch.portgroup.shapingPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVsphereVswitchPortgroup).ShapingPolicy, ok = plugin.RawToTValue[*mqlVsphereVswitchShapingPolicy](v.Value, v.Error)
+	"vsphere.vswitch.portgroup.shapingSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVswitchPortgroup).ShapingSettings, ok = plugin.RawToTValue[*mqlVsphereVswitchShapingPolicy](v.Value, v.Error)
 		return
 	},
 	"vsphere.vswitch.securityPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7684,12 +7705,15 @@ type mqlVsphereVswitchStandard struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlVsphereVswitchStandardInternal
-	Name           plugin.TValue[string]
-	Properties     plugin.TValue[any]
-	FailoverPolicy plugin.TValue[*mqlVsphereVswitchFailoverPolicy]
-	SecurityPolicy plugin.TValue[*mqlVsphereVswitchSecurityPolicy]
-	ShapingPolicy  plugin.TValue[*mqlVsphereVswitchShapingPolicy]
-	Uplinks        plugin.TValue[[]any]
+	Name             plugin.TValue[string]
+	Properties       plugin.TValue[any]
+	FailoverPolicy   plugin.TValue[any]
+	SecurityPolicy   plugin.TValue[any]
+	ShapingPolicy    plugin.TValue[any]
+	FailoverSettings plugin.TValue[*mqlVsphereVswitchFailoverPolicy]
+	SecuritySettings plugin.TValue[*mqlVsphereVswitchSecurityPolicy]
+	ShapingSettings  plugin.TValue[*mqlVsphereVswitchShapingPolicy]
+	Uplinks          plugin.TValue[[]any]
 }
 
 // createVsphereVswitchStandard creates a new instance of this resource
@@ -7737,10 +7761,28 @@ func (c *mqlVsphereVswitchStandard) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
 
-func (c *mqlVsphereVswitchStandard) GetFailoverPolicy() *plugin.TValue[*mqlVsphereVswitchFailoverPolicy] {
-	return plugin.GetOrCompute[*mqlVsphereVswitchFailoverPolicy](&c.FailoverPolicy, func() (*mqlVsphereVswitchFailoverPolicy, error) {
+func (c *mqlVsphereVswitchStandard) GetFailoverPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.FailoverPolicy, func() (any, error) {
+		return c.failoverPolicy()
+	})
+}
+
+func (c *mqlVsphereVswitchStandard) GetSecurityPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SecurityPolicy, func() (any, error) {
+		return c.securityPolicy()
+	})
+}
+
+func (c *mqlVsphereVswitchStandard) GetShapingPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ShapingPolicy, func() (any, error) {
+		return c.shapingPolicy()
+	})
+}
+
+func (c *mqlVsphereVswitchStandard) GetFailoverSettings() *plugin.TValue[*mqlVsphereVswitchFailoverPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchFailoverPolicy](&c.FailoverSettings, func() (*mqlVsphereVswitchFailoverPolicy, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.standard", c.__id, "failoverPolicy")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.standard", c.__id, "failoverSettings")
 			if err != nil {
 				return nil, err
 			}
@@ -7749,14 +7791,14 @@ func (c *mqlVsphereVswitchStandard) GetFailoverPolicy() *plugin.TValue[*mqlVsphe
 			}
 		}
 
-		return c.failoverPolicy()
+		return c.failoverSettings()
 	})
 }
 
-func (c *mqlVsphereVswitchStandard) GetSecurityPolicy() *plugin.TValue[*mqlVsphereVswitchSecurityPolicy] {
-	return plugin.GetOrCompute[*mqlVsphereVswitchSecurityPolicy](&c.SecurityPolicy, func() (*mqlVsphereVswitchSecurityPolicy, error) {
+func (c *mqlVsphereVswitchStandard) GetSecuritySettings() *plugin.TValue[*mqlVsphereVswitchSecurityPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchSecurityPolicy](&c.SecuritySettings, func() (*mqlVsphereVswitchSecurityPolicy, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.standard", c.__id, "securityPolicy")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.standard", c.__id, "securitySettings")
 			if err != nil {
 				return nil, err
 			}
@@ -7765,14 +7807,14 @@ func (c *mqlVsphereVswitchStandard) GetSecurityPolicy() *plugin.TValue[*mqlVsphe
 			}
 		}
 
-		return c.securityPolicy()
+		return c.securitySettings()
 	})
 }
 
-func (c *mqlVsphereVswitchStandard) GetShapingPolicy() *plugin.TValue[*mqlVsphereVswitchShapingPolicy] {
-	return plugin.GetOrCompute[*mqlVsphereVswitchShapingPolicy](&c.ShapingPolicy, func() (*mqlVsphereVswitchShapingPolicy, error) {
+func (c *mqlVsphereVswitchStandard) GetShapingSettings() *plugin.TValue[*mqlVsphereVswitchShapingPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchShapingPolicy](&c.ShapingSettings, func() (*mqlVsphereVswitchShapingPolicy, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.standard", c.__id, "shapingPolicy")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.standard", c.__id, "shapingSettings")
 			if err != nil {
 				return nil, err
 			}
@@ -7781,7 +7823,7 @@ func (c *mqlVsphereVswitchStandard) GetShapingPolicy() *plugin.TValue[*mqlVspher
 			}
 		}
 
-		return c.shapingPolicy()
+		return c.shapingSettings()
 	})
 }
 
@@ -7882,13 +7924,13 @@ type mqlVsphereVswitchPortgroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlVsphereVswitchPortgroupInternal
-	Moid           plugin.TValue[string]
-	Name           plugin.TValue[string]
-	Properties     plugin.TValue[any]
-	VlanId         plugin.TValue[int64]
-	SecurityPolicy plugin.TValue[*mqlVsphereVswitchSecurityPolicy]
-	FailoverPolicy plugin.TValue[*mqlVsphereVswitchFailoverPolicy]
-	ShapingPolicy  plugin.TValue[*mqlVsphereVswitchShapingPolicy]
+	Moid             plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Properties       plugin.TValue[any]
+	VlanId           plugin.TValue[int64]
+	SecuritySettings plugin.TValue[*mqlVsphereVswitchSecurityPolicy]
+	FailoverSettings plugin.TValue[*mqlVsphereVswitchFailoverPolicy]
+	ShapingSettings  plugin.TValue[*mqlVsphereVswitchShapingPolicy]
 }
 
 // createVsphereVswitchPortgroup creates a new instance of this resource
@@ -7944,10 +7986,10 @@ func (c *mqlVsphereVswitchPortgroup) GetVlanId() *plugin.TValue[int64] {
 	return &c.VlanId
 }
 
-func (c *mqlVsphereVswitchPortgroup) GetSecurityPolicy() *plugin.TValue[*mqlVsphereVswitchSecurityPolicy] {
-	return plugin.GetOrCompute[*mqlVsphereVswitchSecurityPolicy](&c.SecurityPolicy, func() (*mqlVsphereVswitchSecurityPolicy, error) {
+func (c *mqlVsphereVswitchPortgroup) GetSecuritySettings() *plugin.TValue[*mqlVsphereVswitchSecurityPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchSecurityPolicy](&c.SecuritySettings, func() (*mqlVsphereVswitchSecurityPolicy, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "securityPolicy")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "securitySettings")
 			if err != nil {
 				return nil, err
 			}
@@ -7956,14 +7998,14 @@ func (c *mqlVsphereVswitchPortgroup) GetSecurityPolicy() *plugin.TValue[*mqlVsph
 			}
 		}
 
-		return c.securityPolicy()
+		return c.securitySettings()
 	})
 }
 
-func (c *mqlVsphereVswitchPortgroup) GetFailoverPolicy() *plugin.TValue[*mqlVsphereVswitchFailoverPolicy] {
-	return plugin.GetOrCompute[*mqlVsphereVswitchFailoverPolicy](&c.FailoverPolicy, func() (*mqlVsphereVswitchFailoverPolicy, error) {
+func (c *mqlVsphereVswitchPortgroup) GetFailoverSettings() *plugin.TValue[*mqlVsphereVswitchFailoverPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchFailoverPolicy](&c.FailoverSettings, func() (*mqlVsphereVswitchFailoverPolicy, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "failoverPolicy")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "failoverSettings")
 			if err != nil {
 				return nil, err
 			}
@@ -7972,14 +8014,14 @@ func (c *mqlVsphereVswitchPortgroup) GetFailoverPolicy() *plugin.TValue[*mqlVsph
 			}
 		}
 
-		return c.failoverPolicy()
+		return c.failoverSettings()
 	})
 }
 
-func (c *mqlVsphereVswitchPortgroup) GetShapingPolicy() *plugin.TValue[*mqlVsphereVswitchShapingPolicy] {
-	return plugin.GetOrCompute[*mqlVsphereVswitchShapingPolicy](&c.ShapingPolicy, func() (*mqlVsphereVswitchShapingPolicy, error) {
+func (c *mqlVsphereVswitchPortgroup) GetShapingSettings() *plugin.TValue[*mqlVsphereVswitchShapingPolicy] {
+	return plugin.GetOrCompute[*mqlVsphereVswitchShapingPolicy](&c.ShapingSettings, func() (*mqlVsphereVswitchShapingPolicy, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "shapingPolicy")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vswitch.portgroup", c.__id, "shapingSettings")
 			if err != nil {
 				return nil, err
 			}
@@ -7988,7 +8030,7 @@ func (c *mqlVsphereVswitchPortgroup) GetShapingPolicy() *plugin.TValue[*mqlVsphe
 			}
 		}
 
-		return c.shapingPolicy()
+		return c.shapingSettings()
 	})
 }
 

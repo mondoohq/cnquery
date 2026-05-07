@@ -26,10 +26,10 @@ func (v *mqlVsphereVswitchStandard) findStandardSwitchSpec() *types.HostVirtualS
 	return nil
 }
 
-func (v *mqlVsphereVswitchStandard) securityPolicy() (*mqlVsphereVswitchSecurityPolicy, error) {
+func (v *mqlVsphereVswitchStandard) securitySettings() (*mqlVsphereVswitchSecurityPolicy, error) {
 	spec := v.findStandardSwitchSpec()
 	if spec == nil || spec.Policy == nil {
-		v.SecurityPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		v.SecuritySettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	id := standardSwitchPolicyID(v, "security")
@@ -38,16 +38,16 @@ func (v *mqlVsphereVswitchStandard) securityPolicy() (*mqlVsphereVswitchSecurity
 		return nil, err
 	}
 	if res == nil {
-		v.SecurityPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		v.SecuritySettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return res, nil
 }
 
-func (v *mqlVsphereVswitchStandard) failoverPolicy() (*mqlVsphereVswitchFailoverPolicy, error) {
+func (v *mqlVsphereVswitchStandard) failoverSettings() (*mqlVsphereVswitchFailoverPolicy, error) {
 	spec := v.findStandardSwitchSpec()
 	if spec == nil || spec.Policy == nil {
-		v.FailoverPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		v.FailoverSettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	id := standardSwitchPolicyID(v, "failover")
@@ -56,16 +56,16 @@ func (v *mqlVsphereVswitchStandard) failoverPolicy() (*mqlVsphereVswitchFailover
 		return nil, err
 	}
 	if res == nil {
-		v.FailoverPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		v.FailoverSettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return res, nil
 }
 
-func (v *mqlVsphereVswitchStandard) shapingPolicy() (*mqlVsphereVswitchShapingPolicy, error) {
+func (v *mqlVsphereVswitchStandard) shapingSettings() (*mqlVsphereVswitchShapingPolicy, error) {
 	spec := v.findStandardSwitchSpec()
 	if spec == nil || spec.Policy == nil {
-		v.ShapingPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		v.ShapingSettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	id := standardSwitchPolicyID(v, "shaping")
@@ -74,7 +74,7 @@ func (v *mqlVsphereVswitchStandard) shapingPolicy() (*mqlVsphereVswitchShapingPo
 		return nil, err
 	}
 	if res == nil {
-		v.ShapingPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		v.ShapingSettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return res, nil
@@ -156,9 +156,9 @@ type mqlVsphereVswitchPortgroupInternal struct {
 	defaultPortConfig *types.VMwareDVSPortSetting
 }
 
-func (p *mqlVsphereVswitchPortgroup) securityPolicy() (*mqlVsphereVswitchSecurityPolicy, error) {
+func (p *mqlVsphereVswitchPortgroup) securitySettings() (*mqlVsphereVswitchSecurityPolicy, error) {
 	if p.defaultPortConfig == nil || p.defaultPortConfig.SecurityPolicy == nil {
-		p.SecurityPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		p.SecuritySettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	id := p.Moid.Data + "/policy/security"
@@ -175,9 +175,9 @@ func (p *mqlVsphereVswitchPortgroup) securityPolicy() (*mqlVsphereVswitchSecurit
 	return res.(*mqlVsphereVswitchSecurityPolicy), nil
 }
 
-func (p *mqlVsphereVswitchPortgroup) failoverPolicy() (*mqlVsphereVswitchFailoverPolicy, error) {
+func (p *mqlVsphereVswitchPortgroup) failoverSettings() (*mqlVsphereVswitchFailoverPolicy, error) {
 	if p.defaultPortConfig == nil || p.defaultPortConfig.UplinkTeamingPolicy == nil {
-		p.FailoverPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		p.FailoverSettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	tp := p.defaultPortConfig.UplinkTeamingPolicy
@@ -208,9 +208,9 @@ func (p *mqlVsphereVswitchPortgroup) failoverPolicy() (*mqlVsphereVswitchFailove
 	return res.(*mqlVsphereVswitchFailoverPolicy), nil
 }
 
-func (p *mqlVsphereVswitchPortgroup) shapingPolicy() (*mqlVsphereVswitchShapingPolicy, error) {
+func (p *mqlVsphereVswitchPortgroup) shapingSettings() (*mqlVsphereVswitchShapingPolicy, error) {
 	if p.defaultPortConfig == nil || p.defaultPortConfig.InShapingPolicy == nil {
-		p.ShapingPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		p.ShapingSettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	sp := p.defaultPortConfig.InShapingPolicy
