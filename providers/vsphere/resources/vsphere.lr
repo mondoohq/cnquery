@@ -651,6 +651,105 @@ private vsphere.vm @defaults("moid name") {
   snapshots() []vsphere.vm.snapshot
   // Virtual disks attached to the VM, in device order
   disks() []vsphere.vm.disk
+  // Virtual CD/DVD devices attached to the VM (in device order)
+  cdroms() []vsphere.vm.cdrom
+  // Virtual network adapters attached to the VM (in device order)
+  networkAdapters() []vsphere.vm.networkAdapter
+  // CPU resource allocation (reservation, limit, shares)
+  cpuAllocation() vsphere.vm.cpuAllocation
+  // Memory resource allocation (reservation, limit, shares, overhead limit)
+  memoryAllocation() vsphere.vm.memoryAllocation
+  // VM instance UUID — stable across vCenter migrations (vc.uuid + InstanceUuid bit), unique per vCenter
+  instanceUuid string
+  // SMBIOS UUID exposed to the guest OS via virtual BIOS; can be reused if a VM is cloned with same uuid setting
+  biosUuid string
+  // Whether this entry is a VM template rather than a runnable VM
+  template bool
+}
+
+// One virtual CD/DVD device attached to a VM. Modeled from VirtualCdrom
+// devices in vmConfig.hardware.device. Audit-relevant for "no ISOs attached
+// to running production VMs" type checks.
+private vsphere.vm.cdrom @defaults("label backingType connected") {
+  // Device key (unique within the parent VM, stable across reconfigure)
+  key int
+  // Device label (e.g., "CD/DVD drive 1")
+  label string
+  // Backing variant: iso (file on a datastore), atapi (host ATAPI passthrough), passthrough (host CD/DVD), remoteAtapi, remotePassthrough, or empty for an unknown backing
+  backingType string
+  // ISO file path in datastore-bracket form (e.g. "[datastore1] isos/install.iso"); empty unless backingType is iso
+  isoPath string
+  // Whether the drive is currently connected to the VM
+  connected bool
+  // Whether the drive auto-connects when the VM powers on
+  connectedAtPowerOn bool
+  // Whether the guest OS can connect / disconnect this device at runtime
+  allowGuestControl bool
+  // Datastore backing the ISO file, resolved against vsphere.datacenters[].datastores; null when the backing isn't ISO-on-datastore or the datastore isn't visible in inventory
+  datastore() vsphere.datastore
+}
+
+// One virtual network adapter attached to a VM. Modeled from
+// VirtualEthernetCard devices in vmConfig.hardware.device. Covers all NIC
+// variants (e1000, e1000e, vmxnet, vmxnet2, vmxnet3, pcnet32, sriov).
+private vsphere.vm.networkAdapter @defaults("label adapterType macAddress connected") {
+  // Device key (unique within the parent VM, stable across reconfigure)
+  key int
+  // Device label (e.g., "Network adapter 1")
+  label string
+  // Adapter virtual hardware type: e1000, e1000e, vmxnet, vmxnet2, vmxnet3, pcnet32, sriov, or empty for unknown
+  adapterType string
+  // MAC address as ESXi reports it
+  macAddress string
+  // MAC address assignment mode: manual (set by user), generated (auto by ESXi), assigned (assigned by vCenter)
+  addressType string
+  // Whether the adapter is currently connected to the network
+  connected bool
+  // Whether the adapter auto-connects when the VM powers on
+  connectedAtPowerOn bool
+  // Whether the guest OS can connect / disconnect this adapter at runtime
+  allowGuestControl bool
+  // Whether Wake-on-LAN is enabled on the virtual NIC
+  wakeOnLan bool
+  // Backing variant: network (standard portgroup by name), dvs (distributed port group), opaque (NSX-T logical switch), or empty for unknown
+  backingType string
+  // Port group name (human-readable). For DVS backings this is the port group label; for standard backings this is the network/portgroup name.
+  portGroupName string
+  // Encoded ManagedObjectReference of the distributed port group; empty for standard portgroup or opaque backings
+  portGroupMoid string
+}
+
+// CPU resource allocation for a VM — reservation, limit, and shares.
+// Sourced from vmConfig.cpuAllocation. Reservation/limit are in MHz.
+private vsphere.vm.cpuAllocation @defaults("reservationMHz limitMHz sharesLevel") {
+  // Guaranteed CPU reservation in MHz
+  reservationMHz int
+  // CPU limit in MHz; -1 means unlimited
+  limitMHz int
+  // Whether the reservation can grow dynamically beyond the configured value
+  expandableReservation bool
+  // Shares level: low, normal, high, or custom
+  sharesLevel string
+  // Numeric share weight (only meaningful when sharesLevel == "custom")
+  shares int
+}
+
+// Memory resource allocation for a VM — reservation, limit, shares, and the
+// overhead limit cap. Sourced from vmConfig.memoryAllocation; values are in
+// megabytes.
+private vsphere.vm.memoryAllocation @defaults("reservationMB limitMB sharesLevel") {
+  // Guaranteed memory reservation in MB
+  reservationMB int
+  // Memory limit in MB; -1 means unlimited
+  limitMB int
+  // Whether the reservation can grow dynamically beyond the configured value
+  expandableReservation bool
+  // Shares level: low, normal, high, or custom
+  sharesLevel string
+  // Numeric share weight (only meaningful when sharesLevel == "custom")
+  shares int
+  // Cap on virtualization overhead memory in MB; -1 means unlimited (the default)
+  overheadLimitMB int
 }
 
 // One snapshot in a VM's snapshot tree. The tree is flattened — use

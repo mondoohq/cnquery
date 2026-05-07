@@ -355,6 +355,8 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 			guestHostname                         string
 			encrypted, vtpmPresent                bool
 			encryptionKeyId                       string
+			instanceUuid, biosUuid                string
+			template                              bool
 		)
 		if s.vmInfo != nil {
 			powerState = string(s.vmInfo.Runtime.PowerState)
@@ -391,6 +393,11 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 					encrypted = true
 					encryptionKeyId = cfg.KeyId.KeyId
 				}
+				instanceUuid = cfg.InstanceUuid
+				biosUuid = cfg.Uuid
+				if cfg.Template {
+					template = true
+				}
 				for _, dev := range cfg.Hardware.Device {
 					if _, ok := dev.(*vimtypes.VirtualTPM); ok {
 						vtpmPresent = true
@@ -423,6 +430,9 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 			"vmwareToolsVersion":  llx.StringData(vmwareToolsVersion),
 			"guestIpAddress":      llx.StringData(guestIpAddress),
 			"guestHostname":       llx.StringData(guestHostname),
+			"instanceUuid":        llx.StringData(instanceUuid),
+			"biosUuid":            llx.StringData(biosUuid),
+			"template":            llx.BoolData(template),
 		})
 		if err != nil {
 			return nil, err

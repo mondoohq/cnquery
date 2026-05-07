@@ -47,6 +47,10 @@ const (
 	ResourceEsxiIscsiAdapter           string = "esxi.iscsiAdapter"
 	ResourceEsxiCertificate            string = "esxi.certificate"
 	ResourceVsphereVm                  string = "vsphere.vm"
+	ResourceVsphereVmCdrom             string = "vsphere.vm.cdrom"
+	ResourceVsphereVmNetworkAdapter    string = "vsphere.vm.networkAdapter"
+	ResourceVsphereVmCpuAllocation     string = "vsphere.vm.cpuAllocation"
+	ResourceVsphereVmMemoryAllocation  string = "vsphere.vm.memoryAllocation"
 	ResourceVsphereVmSnapshot          string = "vsphere.vm.snapshot"
 	ResourceVsphereVmDisk              string = "vsphere.vm.disk"
 	ResourceVsphereEncryptionKey       string = "vsphere.encryptionKey"
@@ -197,6 +201,22 @@ func init() {
 		"vsphere.vm": {
 			// to override args, implement: initVsphereVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVsphereVm,
+		},
+		"vsphere.vm.cdrom": {
+			// to override args, implement: initVsphereVmCdrom(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVmCdrom,
+		},
+		"vsphere.vm.networkAdapter": {
+			// to override args, implement: initVsphereVmNetworkAdapter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVmNetworkAdapter,
+		},
+		"vsphere.vm.cpuAllocation": {
+			// to override args, implement: initVsphereVmCpuAllocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVmCpuAllocation,
+		},
+		"vsphere.vm.memoryAllocation": {
+			// to override args, implement: initVsphereVmMemoryAllocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereVmMemoryAllocation,
 		},
 		"vsphere.vm.snapshot": {
 			// to override args, implement: initVsphereVmSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1156,6 +1176,120 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.vm.disks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVm).GetDisks()).ToDataRes(types.Array(types.Resource("vsphere.vm.disk")))
+	},
+	"vsphere.vm.cdroms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetCdroms()).ToDataRes(types.Array(types.Resource("vsphere.vm.cdrom")))
+	},
+	"vsphere.vm.networkAdapters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetNetworkAdapters()).ToDataRes(types.Array(types.Resource("vsphere.vm.networkAdapter")))
+	},
+	"vsphere.vm.cpuAllocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetCpuAllocation()).ToDataRes(types.Resource("vsphere.vm.cpuAllocation"))
+	},
+	"vsphere.vm.memoryAllocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetMemoryAllocation()).ToDataRes(types.Resource("vsphere.vm.memoryAllocation"))
+	},
+	"vsphere.vm.instanceUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetInstanceUuid()).ToDataRes(types.String)
+	},
+	"vsphere.vm.biosUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetBiosUuid()).ToDataRes(types.String)
+	},
+	"vsphere.vm.template": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVm).GetTemplate()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.cdrom.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCdrom).GetKey()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.cdrom.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCdrom).GetLabel()).ToDataRes(types.String)
+	},
+	"vsphere.vm.cdrom.backingType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCdrom).GetBackingType()).ToDataRes(types.String)
+	},
+	"vsphere.vm.cdrom.isoPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCdrom).GetIsoPath()).ToDataRes(types.String)
+	},
+	"vsphere.vm.cdrom.connected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCdrom).GetConnected()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.cdrom.connectedAtPowerOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCdrom).GetConnectedAtPowerOn()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.cdrom.allowGuestControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCdrom).GetAllowGuestControl()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.cdrom.datastore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCdrom).GetDatastore()).ToDataRes(types.Resource("vsphere.datastore"))
+	},
+	"vsphere.vm.networkAdapter.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetKey()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.networkAdapter.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetLabel()).ToDataRes(types.String)
+	},
+	"vsphere.vm.networkAdapter.adapterType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetAdapterType()).ToDataRes(types.String)
+	},
+	"vsphere.vm.networkAdapter.macAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetMacAddress()).ToDataRes(types.String)
+	},
+	"vsphere.vm.networkAdapter.addressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetAddressType()).ToDataRes(types.String)
+	},
+	"vsphere.vm.networkAdapter.connected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetConnected()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.networkAdapter.connectedAtPowerOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetConnectedAtPowerOn()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.networkAdapter.allowGuestControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetAllowGuestControl()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.networkAdapter.wakeOnLan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetWakeOnLan()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.networkAdapter.backingType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetBackingType()).ToDataRes(types.String)
+	},
+	"vsphere.vm.networkAdapter.portGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetPortGroupName()).ToDataRes(types.String)
+	},
+	"vsphere.vm.networkAdapter.portGroupMoid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmNetworkAdapter).GetPortGroupMoid()).ToDataRes(types.String)
+	},
+	"vsphere.vm.cpuAllocation.reservationMHz": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCpuAllocation).GetReservationMHz()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.cpuAllocation.limitMHz": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCpuAllocation).GetLimitMHz()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.cpuAllocation.expandableReservation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCpuAllocation).GetExpandableReservation()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.cpuAllocation.sharesLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCpuAllocation).GetSharesLevel()).ToDataRes(types.String)
+	},
+	"vsphere.vm.cpuAllocation.shares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmCpuAllocation).GetShares()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.memoryAllocation.reservationMB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmMemoryAllocation).GetReservationMB()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.memoryAllocation.limitMB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmMemoryAllocation).GetLimitMB()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.memoryAllocation.expandableReservation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmMemoryAllocation).GetExpandableReservation()).ToDataRes(types.Bool)
+	},
+	"vsphere.vm.memoryAllocation.sharesLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmMemoryAllocation).GetSharesLevel()).ToDataRes(types.String)
+	},
+	"vsphere.vm.memoryAllocation.shares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmMemoryAllocation).GetShares()).ToDataRes(types.Int)
+	},
+	"vsphere.vm.memoryAllocation.overheadLimitMB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereVmMemoryAllocation).GetOverheadLimitMB()).ToDataRes(types.Int)
 	},
 	"vsphere.vm.snapshot.moid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereVmSnapshot).GetMoid()).ToDataRes(types.String)
@@ -2711,6 +2845,174 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.vm.disks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereVm).Disks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cdroms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).Cdroms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).NetworkAdapters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cpuAllocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).CpuAllocation, ok = plugin.RawToTValue[*mqlVsphereVmCpuAllocation](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.memoryAllocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).MemoryAllocation, ok = plugin.RawToTValue[*mqlVsphereVmMemoryAllocation](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.instanceUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).InstanceUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.biosUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).BiosUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.template": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVm).Template, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cdrom.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCdrom).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vm.cdrom.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCdrom).Key, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cdrom.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCdrom).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cdrom.backingType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCdrom).BackingType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cdrom.isoPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCdrom).IsoPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cdrom.connected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCdrom).Connected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cdrom.connectedAtPowerOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCdrom).ConnectedAtPowerOn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cdrom.allowGuestControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCdrom).AllowGuestControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cdrom.datastore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCdrom).Datastore, ok = plugin.RawToTValue[*mqlVsphereDatastore](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vm.networkAdapter.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).Key, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.adapterType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).AdapterType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.macAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).MacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.addressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).AddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.connected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).Connected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.connectedAtPowerOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).ConnectedAtPowerOn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.allowGuestControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).AllowGuestControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.wakeOnLan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).WakeOnLan, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.backingType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).BackingType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.portGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).PortGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.networkAdapter.portGroupMoid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmNetworkAdapter).PortGroupMoid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cpuAllocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCpuAllocation).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vm.cpuAllocation.reservationMHz": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCpuAllocation).ReservationMHz, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cpuAllocation.limitMHz": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCpuAllocation).LimitMHz, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cpuAllocation.expandableReservation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCpuAllocation).ExpandableReservation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cpuAllocation.sharesLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCpuAllocation).SharesLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.cpuAllocation.shares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmCpuAllocation).Shares, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.memoryAllocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmMemoryAllocation).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.vm.memoryAllocation.reservationMB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmMemoryAllocation).ReservationMB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.memoryAllocation.limitMB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmMemoryAllocation).LimitMB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.memoryAllocation.expandableReservation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmMemoryAllocation).ExpandableReservation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.memoryAllocation.sharesLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmMemoryAllocation).SharesLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.memoryAllocation.shares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmMemoryAllocation).Shares, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.vm.memoryAllocation.overheadLimitMB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereVmMemoryAllocation).OverheadLimitMB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"vsphere.vm.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6306,6 +6608,13 @@ type mqlVsphereVm struct {
 	Datastores          plugin.TValue[[]any]
 	Snapshots           plugin.TValue[[]any]
 	Disks               plugin.TValue[[]any]
+	Cdroms              plugin.TValue[[]any]
+	NetworkAdapters     plugin.TValue[[]any]
+	CpuAllocation       plugin.TValue[*mqlVsphereVmCpuAllocation]
+	MemoryAllocation    plugin.TValue[*mqlVsphereVmMemoryAllocation]
+	InstanceUuid        plugin.TValue[string]
+	BiosUuid            plugin.TValue[string]
+	Template            plugin.TValue[bool]
 }
 
 // createVsphereVm creates a new instance of this resource
@@ -6521,6 +6830,405 @@ func (c *mqlVsphereVm) GetDisks() *plugin.TValue[[]any] {
 
 		return c.disks()
 	})
+}
+
+func (c *mqlVsphereVm) GetCdroms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Cdroms, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "cdroms")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cdroms()
+	})
+}
+
+func (c *mqlVsphereVm) GetNetworkAdapters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkAdapters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "networkAdapters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkAdapters()
+	})
+}
+
+func (c *mqlVsphereVm) GetCpuAllocation() *plugin.TValue[*mqlVsphereVmCpuAllocation] {
+	return plugin.GetOrCompute[*mqlVsphereVmCpuAllocation](&c.CpuAllocation, func() (*mqlVsphereVmCpuAllocation, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "cpuAllocation")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereVmCpuAllocation), nil
+			}
+		}
+
+		return c.cpuAllocation()
+	})
+}
+
+func (c *mqlVsphereVm) GetMemoryAllocation() *plugin.TValue[*mqlVsphereVmMemoryAllocation] {
+	return plugin.GetOrCompute[*mqlVsphereVmMemoryAllocation](&c.MemoryAllocation, func() (*mqlVsphereVmMemoryAllocation, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm", c.__id, "memoryAllocation")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereVmMemoryAllocation), nil
+			}
+		}
+
+		return c.memoryAllocation()
+	})
+}
+
+func (c *mqlVsphereVm) GetInstanceUuid() *plugin.TValue[string] {
+	return &c.InstanceUuid
+}
+
+func (c *mqlVsphereVm) GetBiosUuid() *plugin.TValue[string] {
+	return &c.BiosUuid
+}
+
+func (c *mqlVsphereVm) GetTemplate() *plugin.TValue[bool] {
+	return &c.Template
+}
+
+// mqlVsphereVmCdrom for the vsphere.vm.cdrom resource
+type mqlVsphereVmCdrom struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVsphereVmCdromInternal
+	Key                plugin.TValue[int64]
+	Label              plugin.TValue[string]
+	BackingType        plugin.TValue[string]
+	IsoPath            plugin.TValue[string]
+	Connected          plugin.TValue[bool]
+	ConnectedAtPowerOn plugin.TValue[bool]
+	AllowGuestControl  plugin.TValue[bool]
+	Datastore          plugin.TValue[*mqlVsphereDatastore]
+}
+
+// createVsphereVmCdrom creates a new instance of this resource
+func createVsphereVmCdrom(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVmCdrom{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vm.cdrom", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVmCdrom) MqlName() string {
+	return "vsphere.vm.cdrom"
+}
+
+func (c *mqlVsphereVmCdrom) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVmCdrom) GetKey() *plugin.TValue[int64] {
+	return &c.Key
+}
+
+func (c *mqlVsphereVmCdrom) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlVsphereVmCdrom) GetBackingType() *plugin.TValue[string] {
+	return &c.BackingType
+}
+
+func (c *mqlVsphereVmCdrom) GetIsoPath() *plugin.TValue[string] {
+	return &c.IsoPath
+}
+
+func (c *mqlVsphereVmCdrom) GetConnected() *plugin.TValue[bool] {
+	return &c.Connected
+}
+
+func (c *mqlVsphereVmCdrom) GetConnectedAtPowerOn() *plugin.TValue[bool] {
+	return &c.ConnectedAtPowerOn
+}
+
+func (c *mqlVsphereVmCdrom) GetAllowGuestControl() *plugin.TValue[bool] {
+	return &c.AllowGuestControl
+}
+
+func (c *mqlVsphereVmCdrom) GetDatastore() *plugin.TValue[*mqlVsphereDatastore] {
+	return plugin.GetOrCompute[*mqlVsphereDatastore](&c.Datastore, func() (*mqlVsphereDatastore, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.vm.cdrom", c.__id, "datastore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereDatastore), nil
+			}
+		}
+
+		return c.datastore()
+	})
+}
+
+// mqlVsphereVmNetworkAdapter for the vsphere.vm.networkAdapter resource
+type mqlVsphereVmNetworkAdapter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereVmNetworkAdapterInternal it will be used here
+	Key                plugin.TValue[int64]
+	Label              plugin.TValue[string]
+	AdapterType        plugin.TValue[string]
+	MacAddress         plugin.TValue[string]
+	AddressType        plugin.TValue[string]
+	Connected          plugin.TValue[bool]
+	ConnectedAtPowerOn plugin.TValue[bool]
+	AllowGuestControl  plugin.TValue[bool]
+	WakeOnLan          plugin.TValue[bool]
+	BackingType        plugin.TValue[string]
+	PortGroupName      plugin.TValue[string]
+	PortGroupMoid      plugin.TValue[string]
+}
+
+// createVsphereVmNetworkAdapter creates a new instance of this resource
+func createVsphereVmNetworkAdapter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVmNetworkAdapter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vm.networkAdapter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVmNetworkAdapter) MqlName() string {
+	return "vsphere.vm.networkAdapter"
+}
+
+func (c *mqlVsphereVmNetworkAdapter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetKey() *plugin.TValue[int64] {
+	return &c.Key
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetAdapterType() *plugin.TValue[string] {
+	return &c.AdapterType
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetMacAddress() *plugin.TValue[string] {
+	return &c.MacAddress
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetAddressType() *plugin.TValue[string] {
+	return &c.AddressType
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetConnected() *plugin.TValue[bool] {
+	return &c.Connected
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetConnectedAtPowerOn() *plugin.TValue[bool] {
+	return &c.ConnectedAtPowerOn
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetAllowGuestControl() *plugin.TValue[bool] {
+	return &c.AllowGuestControl
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetWakeOnLan() *plugin.TValue[bool] {
+	return &c.WakeOnLan
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetBackingType() *plugin.TValue[string] {
+	return &c.BackingType
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetPortGroupName() *plugin.TValue[string] {
+	return &c.PortGroupName
+}
+
+func (c *mqlVsphereVmNetworkAdapter) GetPortGroupMoid() *plugin.TValue[string] {
+	return &c.PortGroupMoid
+}
+
+// mqlVsphereVmCpuAllocation for the vsphere.vm.cpuAllocation resource
+type mqlVsphereVmCpuAllocation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereVmCpuAllocationInternal it will be used here
+	ReservationMHz        plugin.TValue[int64]
+	LimitMHz              plugin.TValue[int64]
+	ExpandableReservation plugin.TValue[bool]
+	SharesLevel           plugin.TValue[string]
+	Shares                plugin.TValue[int64]
+}
+
+// createVsphereVmCpuAllocation creates a new instance of this resource
+func createVsphereVmCpuAllocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVmCpuAllocation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vm.cpuAllocation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVmCpuAllocation) MqlName() string {
+	return "vsphere.vm.cpuAllocation"
+}
+
+func (c *mqlVsphereVmCpuAllocation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVmCpuAllocation) GetReservationMHz() *plugin.TValue[int64] {
+	return &c.ReservationMHz
+}
+
+func (c *mqlVsphereVmCpuAllocation) GetLimitMHz() *plugin.TValue[int64] {
+	return &c.LimitMHz
+}
+
+func (c *mqlVsphereVmCpuAllocation) GetExpandableReservation() *plugin.TValue[bool] {
+	return &c.ExpandableReservation
+}
+
+func (c *mqlVsphereVmCpuAllocation) GetSharesLevel() *plugin.TValue[string] {
+	return &c.SharesLevel
+}
+
+func (c *mqlVsphereVmCpuAllocation) GetShares() *plugin.TValue[int64] {
+	return &c.Shares
+}
+
+// mqlVsphereVmMemoryAllocation for the vsphere.vm.memoryAllocation resource
+type mqlVsphereVmMemoryAllocation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereVmMemoryAllocationInternal it will be used here
+	ReservationMB         plugin.TValue[int64]
+	LimitMB               plugin.TValue[int64]
+	ExpandableReservation plugin.TValue[bool]
+	SharesLevel           plugin.TValue[string]
+	Shares                plugin.TValue[int64]
+	OverheadLimitMB       plugin.TValue[int64]
+}
+
+// createVsphereVmMemoryAllocation creates a new instance of this resource
+func createVsphereVmMemoryAllocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereVmMemoryAllocation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.vm.memoryAllocation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereVmMemoryAllocation) MqlName() string {
+	return "vsphere.vm.memoryAllocation"
+}
+
+func (c *mqlVsphereVmMemoryAllocation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereVmMemoryAllocation) GetReservationMB() *plugin.TValue[int64] {
+	return &c.ReservationMB
+}
+
+func (c *mqlVsphereVmMemoryAllocation) GetLimitMB() *plugin.TValue[int64] {
+	return &c.LimitMB
+}
+
+func (c *mqlVsphereVmMemoryAllocation) GetExpandableReservation() *plugin.TValue[bool] {
+	return &c.ExpandableReservation
+}
+
+func (c *mqlVsphereVmMemoryAllocation) GetSharesLevel() *plugin.TValue[string] {
+	return &c.SharesLevel
+}
+
+func (c *mqlVsphereVmMemoryAllocation) GetShares() *plugin.TValue[int64] {
+	return &c.Shares
+}
+
+func (c *mqlVsphereVmMemoryAllocation) GetOverheadLimitMB() *plugin.TValue[int64] {
+	return &c.OverheadLimitMB
 }
 
 // mqlVsphereVmSnapshot for the vsphere.vm.snapshot resource
