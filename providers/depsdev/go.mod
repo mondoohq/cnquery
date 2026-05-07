@@ -7,7 +7,7 @@ go 1.26.2
 require (
 	github.com/cockroachdb/errors v1.13.0
 	github.com/rs/zerolog v1.35.1
-	go.mondoo.com/mql/v13 v13.8.0
+	go.mondoo.com/mql/v13 v13.8.2
 	golang.org/x/mod v0.35.0
 )
 
@@ -59,8 +59,8 @@ require (
 	github.com/getsentry/sentry-go v0.46.2 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.8.0 // indirect
-	github.com/go-git/go-git/v5 v5.18.0 // indirect
+	github.com/go-git/go-billy/v5 v5.9.0 // indirect
+	github.com/go-git/go-git/v5 v5.19.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect

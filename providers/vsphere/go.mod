@@ -9,8 +9,8 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/vmware/govmomi v0.53.1
-	go.mondoo.com/mondoo-go v0.0.0-20260430122853-c770cea4fd7f
-	go.mondoo.com/mql/v13 v13.8.0
+	go.mondoo.com/mondoo-go v0.0.0-20260507131635-9258b2e56607
+	go.mondoo.com/mql/v13 v13.8.2
 	golang.org/x/sync v0.20.0
 )
 
@@ -71,8 +71,8 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/getsentry/sentry-go v0.46.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.8.0 // indirect
-	github.com/go-git/go-git/v5 v5.18.0 // indirect
+	github.com/go-git/go-billy/v5 v5.9.0 // indirect
+	github.com/go-git/go-git/v5 v5.19.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
