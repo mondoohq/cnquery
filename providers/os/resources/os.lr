@@ -4208,13 +4208,13 @@ private firefox.addon @defaults("name version active browser") {
 // USB device inventory (experimental)
 //
 // Examine attached USB devices with vendor, product, class, and serial
-usb {
+usb @maturity("experimental") {
   // List of USB devices
   devices() []usb.device
 }
 
 // Experimental: USB device
-private usb.device @defaults("manufacturer name") {
+private usb.device @defaults("manufacturer name") @maturity("experimental") {
   // USB device vendor id
   vendorId string
   // USB manufacturer

@@ -283,7 +283,7 @@ private unicode.category @defaults("category count") {
 // Examine a single vulnerability identifier as published by an
 // upstream feed: the vulnerability `id` (e.g., CVE-2025-12345) and
 // the `source` registry that published it (NVD, GHSA, …).
-vulnerability.exchange @defaults("id source") {
+vulnerability.exchange @defaults("id source") @maturity("experimental") {
   // Vulnerability ID, eg. CVE-2025-12345
   id string
   // Source/registry that published the vulnerability record (e.g., NVD, GHSA)
