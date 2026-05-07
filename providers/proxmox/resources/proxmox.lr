@@ -66,7 +66,7 @@ proxmox.cluster.haResource @defaults("id type status") {
 proxmox.node @defaults("name status") {
   // Node hostname
   name string
-  // Current status (online, offline)
+  // Connectivity status of the node (online or offline)
   status string
   // Node IP address
   ip string
@@ -298,7 +298,7 @@ proxmox.storage @defaults("id type enabled") {
   id string
   // Storage type (dir, lvm, lvmthin, nfs, cifs, zfspool, ceph, etc.)
   type string
-  // Allowed content types (images, rootdir, vztmpl, backup, iso, snippets)
+  // Allowed content types as a comma-separated string (e.g., "images,rootdir,vztmpl,backup,iso,snippets")
   content string
   // Storage path (for local storage types)
   path string
@@ -422,7 +422,7 @@ proxmox.repository @defaults("name enabled") {
   name string
   // Whether the repository is enabled
   enabled bool
-  // Repository types (deb, deb-src)
+  // Repository types declared on the entry (e.g., deb, deb-src)
   types []string
   // Repository URIs
   uris []string
