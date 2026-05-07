@@ -4,9 +4,12 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/ipmi"
 option go_package = "go.mondoo.com/mql/v13/providers/ipmi/resources"
 
-// Intelligent Platform Management Interface (IPMI) resource
+// Intelligent Platform Management Interface (IPMI)
 //
-// Provides access to BIOS and UEFI configuration
+// Top-level entry point for an IPMI BMC connection. Examine the management
+// controller's device ID (firmware revision, IPMI version, manufacturer,
+// product ID) and its globally unique GUID — the identity an audit needs
+// to confirm out-of-band management firmware before checking chassis state.
 ipmi {
   // The hardware & firmware device ID
   deviceID() dict
@@ -14,7 +17,11 @@ ipmi {
   guid() string
 }
 
-// IPMI system chassis resource
+// IPMI system chassis
+//
+// Examine the high-level chassis status (power state, fault flags, intrusion
+// detection, drive / cooling fault, last power event) and the configured
+// system boot options for a server reachable via IPMI.
 ipmi.chassis {
   // High-level status of the system chassis and main power subsystem
   status() dict
