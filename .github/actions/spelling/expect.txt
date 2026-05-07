@@ -517,6 +517,7 @@ sriov
 srp
 sslv
 Sspr
+stan
 stdio
 stdlib
 stepfunctions

@@ -827,18 +827,18 @@ private vsphere.vswitch.standard @defaults("name") {
   name string
   // Virtual switch properties
   properties dict
-  // DEPRECATED: use failoverSettings instead.
+  // DEPRECATED: use failoverPolicySettings instead.
   failoverPolicy() @maturity("deprecated") dict
-  // DEPRECATED: use securitySettings instead.
+  // DEPRECATED: use securityPolicySettings instead.
   securityPolicy() @maturity("deprecated") dict
-  // DEPRECATED: use shapingSettings instead.
+  // DEPRECATED: use shapingPolicySettings instead.
   shapingPolicy() @maturity("deprecated") dict
   // NIC teaming / failover policy at vSwitch level
-  failoverSettings() vsphere.vswitch.failoverPolicy
+  failoverPolicySettings() vsphere.vswitch.failoverPolicy
   // Layer-2 security policy at vSwitch level (promiscuous mode, MAC changes, forged transmits)
-  securitySettings() vsphere.vswitch.securityPolicy
+  securityPolicySettings() vsphere.vswitch.securityPolicy
   // Traffic shaping policy at vSwitch level
-  shapingSettings() vsphere.vswitch.shapingPolicy
+  shapingPolicySettings() vsphere.vswitch.shapingPolicy
   // List of physical NICs currently configured as uplinks
   uplinks() []vsphere.vmnic
 }
@@ -866,11 +866,11 @@ private vsphere.vswitch.portgroup @defaults("name vlanId") {
   // VLAN ID assigned to the port group (0 means untagged / VLAN trunking ranges; check properties for trunked specs)
   vlanId int
   // Layer-2 security policy from the port group's DefaultPortConfig
-  securitySettings() vsphere.vswitch.securityPolicy
+  securityPolicySettings() vsphere.vswitch.securityPolicy
   // Uplink teaming / failover policy from the port group's DefaultPortConfig
-  failoverSettings() vsphere.vswitch.failoverPolicy
+  failoverPolicySettings() vsphere.vswitch.failoverPolicy
   // Inbound traffic shaping policy from the port group's DefaultPortConfig
-  shapingSettings() vsphere.vswitch.shapingPolicy
+  shapingPolicySettings() vsphere.vswitch.shapingPolicy
 }
 
 // Layer-2 security policy applied at vSwitch or port group level. Used by
