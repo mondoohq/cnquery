@@ -4,6 +4,7 @@
 option provider = "go.mondoo.com/mql/v13/providers/snowflake"
 option go_package = "go.mondoo.com/mql/v13/providers/snowflake/resources"
 
+// Snowflake resource
 snowflake {
   // Current role
   currentRole() string
