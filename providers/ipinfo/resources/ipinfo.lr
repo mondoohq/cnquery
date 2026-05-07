@@ -4,7 +4,13 @@
 option provider = "go.mondoo.com/cnquery/providers/ipinfo"
 option go_package = "go.mondoo.com/mql/v13/providers/ipinfo/resources"
 
-// IP information from ipinfo.io service
+// IP information from the ipinfo.io service
+//
+// Top-level entry point for IP lookups. Given an IP (or your own public
+// IP if none is supplied), examine the resolved hostname, geographic
+// location (city, region, country, EU flag, geocode coordinates, postal,
+// timezone), the owning organization (ASN + name), and whether the address
+// is in a special-use bogon range.
 ipinfo @defaults("returned_ip hostname city") {
   init(ip ip)
   // The IP address that was requested (empty if querying for your public IP)
