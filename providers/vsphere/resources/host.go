@@ -130,6 +130,22 @@ func (v *mqlVsphereHost) hostObject() (*object.HostSystem, error) {
 	return getClientInstance(conn).HostByInventoryPath(v.InventoryPath.Data)
 }
 
+// pathAndHost returns the host's inventory path string (for stable __id
+// construction in lazy accessors) plus a govmomi *object.HostSystem handle
+// (for ESXCli / ConfigManager calls), propagating any InventoryPath error.
+// Pulls together the common boilerplate of services / timezone / ntp /
+// certificate.
+func (v *mqlVsphereHost) pathAndHost() (string, *object.HostSystem, error) {
+	if v.InventoryPath.Error != nil {
+		return "", nil, v.InventoryPath.Error
+	}
+	host, err := v.hostObject()
+	if err != nil {
+		return "", nil, err
+	}
+	return v.InventoryPath.Data, host, nil
+}
+
 func (v *mqlVsphereHost) standardSwitch() ([]any, error) {
 	esxiClient, err := v.esxiClient()
 	if err != nil {
@@ -567,12 +583,7 @@ func (v *mqlVsphereHost) advancedSettings() (map[string]any, error) {
 }
 
 func (v *mqlVsphereHost) services() ([]any, error) {
-	if v.InventoryPath.Error != nil {
-		return nil, v.InventoryPath.Error
-	}
-	path := v.InventoryPath.Data
-
-	host, err := v.hostObject()
+	path, host, err := v.pathAndHost()
 	if err != nil {
 		return nil, err
 	}
@@ -601,12 +612,7 @@ func (v *mqlVsphereHost) services() ([]any, error) {
 }
 
 func (v *mqlVsphereHost) timezone() (*mqlVsphereHostTimezone, error) {
-	if v.InventoryPath.Error != nil {
-		return nil, v.InventoryPath.Error
-	}
-	path := v.InventoryPath.Data
-
-	host, err := v.hostObject()
+	path, host, err := v.pathAndHost()
 	if err != nil {
 		return nil, err
 	}
@@ -634,12 +640,7 @@ func (v *mqlVsphereHost) timezone() (*mqlVsphereHostTimezone, error) {
 }
 
 func (v *mqlVsphereHost) ntp() (*mqlVsphereHostNtpConfig, error) {
-	if v.InventoryPath.Error != nil {
-		return nil, v.InventoryPath.Error
-	}
-	path := v.InventoryPath.Data
-
-	host, err := v.hostObject()
+	path, host, err := v.pathAndHost()
 	if err != nil {
 		return nil, err
 	}
@@ -716,7 +717,10 @@ func (v *mqlVsphereHost) firewallRulesets() ([]any, error) {
 			// Build a stable key from the rule's natural fields rather than
 			// the slice index — vCenter doesn't guarantee Config.Firewall.Ruleset[].Rule
 			// ordering across calls, and an index-based __id would
-			// re-create resources on every refetch.
+			// re-create resources on every refetch. Two rules with an
+			// identical (port, endPort, protocol, direction, portType) tuple
+			// describe the same firewall opening — collapsing them onto a
+			// single cached resource is the desired behavior, not a bug.
 			ruleKey := strconv.Itoa(int(r.Port)) + "-" + strconv.Itoa(int(r.EndPort)) +
 				"-" + r.Protocol + "-" + string(r.Direction) + "-" + string(r.PortType)
 			ruleId := rsId + "/" + ruleKey
@@ -798,12 +802,7 @@ func (v *mqlVsphereHost) iscsiAdapters() ([]any, error) {
 }
 
 func (v *mqlVsphereHost) certificate() (*mqlVsphereHostCertificate, error) {
-	if v.InventoryPath.Error != nil {
-		return nil, v.InventoryPath.Error
-	}
-	path := v.InventoryPath.Data
-
-	host, err := v.hostObject()
+	path, host, err := v.pathAndHost()
 	if err != nil {
 		return nil, err
 	}

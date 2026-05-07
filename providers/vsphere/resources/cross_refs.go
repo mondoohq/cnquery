@@ -40,30 +40,22 @@ func loadVsphereInventory(runtime *plugin.Runtime) (*vsphereInventory, error) {
 		return nil, err
 	}
 	v := res.(*mqlVsphere)
-	// Only memoize successful builds. A transient sub-fetch error must NOT
-	// pin a partial inventory in place — that turns a single network blip
-	// into a permanently broken cross-reference index until provider
-	// restart. On error, build runs again next call.
+	// Hold the mutex across the build so concurrent callers serialize on the
+	// first builder rather than each running their own redundant build (the
+	// thundering-herd shape that double-checked locking would allow). Only
+	// memoize on success — a transient sub-fetch error must not pin a partial
+	// inventory in place, since that would permanently break cross-reference
+	// resolution until provider restart.
 	v.inventoryMu.Lock()
+	defer v.inventoryMu.Unlock()
 	if v.inventory != nil {
-		inv := v.inventory
-		v.inventoryMu.Unlock()
-		return inv, nil
+		return v.inventory, nil
 	}
-	v.inventoryMu.Unlock()
-
 	inv, err := buildVsphereInventory(v)
 	if err != nil {
 		return nil, err
 	}
-	v.inventoryMu.Lock()
-	if v.inventory == nil {
-		v.inventory = inv
-	} else {
-		// A concurrent caller already memoized — return theirs to keep pointer identity.
-		inv = v.inventory
-	}
-	v.inventoryMu.Unlock()
+	v.inventory = inv
 	return inv, nil
 }
 
