@@ -100,8 +100,11 @@ regex {
   creditCard() regex
 }
 
-// Common parsers (json, ini, certs, and so on). Also exposes parser functions: date(value, format) time, duration(value) time.
+// Common parsers (json, ini, certs, and so on)
 parse {
+  // Built-in functions:
+  // date(value, format) time
+  // duration(value) time
 }
 
 // UUIDs based on RFC 4122 and DCE 1.1
