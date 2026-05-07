@@ -126,6 +126,7 @@ vsphere.datastore.vms 13.0.12
 vsphere.encryptionKey 13.1.1
 vsphere.encryptionKey.keyId 13.1.1
 vsphere.encryptionKey.kmsCluster 13.1.1
+vsphere.encryptionKey.providerId 13.1.1
 vsphere.folder 13.0.12
 vsphere.folder.childCount 13.0.12
 vsphere.folder.childTypes 13.0.12

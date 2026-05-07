@@ -17,10 +17,6 @@ type mqlVsphereVmDiskInternal struct {
 	cacheKeyProviderId string
 }
 
-type mqlVsphereEncryptionKeyInternal struct {
-	cacheProviderId string
-}
-
 func (v *mqlVsphereVm) snapshots() ([]any, error) {
 	if v.vm == nil || v.vm.Snapshot == nil {
 		return []any{}, nil
@@ -206,20 +202,24 @@ func (d *mqlVsphereVmDisk) encryptionKey() (*mqlVsphereEncryptionKey, error) {
 		d.EncryptionKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
+	id := d.cacheKeyId
+	if d.cacheKeyProviderId != "" {
+		id = d.cacheKeyProviderId + "/" + d.cacheKeyId
+	}
 	res, err := CreateResource(d.MqlRuntime, "vsphere.encryptionKey", map[string]*llx.RawData{
-		"__id":  llx.StringData(d.cacheKeyProviderId + "/" + d.cacheKeyId),
-		"keyId": llx.StringData(d.cacheKeyId),
+		"__id":       llx.StringData(id),
+		"keyId":      llx.StringData(d.cacheKeyId),
+		"providerId": llx.StringData(d.cacheKeyProviderId),
 	})
 	if err != nil {
 		return nil, err
 	}
-	key := res.(*mqlVsphereEncryptionKey)
-	key.cacheProviderId = d.cacheKeyProviderId
-	return key, nil
+	return res.(*mqlVsphereEncryptionKey), nil
 }
 
 func (k *mqlVsphereEncryptionKey) kmsCluster() (*mqlVsphereKmsCluster, error) {
-	if k.cacheProviderId == "" {
+	providerId := k.ProviderId.Data
+	if providerId == "" {
 		k.KmsCluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -233,7 +233,7 @@ func (k *mqlVsphereEncryptionKey) kmsCluster() (*mqlVsphereKmsCluster, error) {
 	}
 	for _, c := range clusters.Data {
 		cluster := c.(*mqlVsphereKmsCluster)
-		if cluster.ClusterId.Data == k.cacheProviderId {
+		if cluster.ClusterId.Data == providerId {
 			return cluster, nil
 		}
 	}

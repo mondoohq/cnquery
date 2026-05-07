@@ -583,9 +583,11 @@ private vsphere.vm.disk @defaults("label capacityBytes diskMode") {
 // vSphere VM Encryption key reference — the CryptoKeyId on an encrypted
 // resource. vCenter only tracks the key's identifier and which provider holds
 // it; the key material itself lives in the KMS.
-private vsphere.encryptionKey @defaults("keyId") {
+private vsphere.encryptionKey @defaults("keyId providerId") {
   // CryptoKeyId.KeyId — UUID assigned by the KMS provider
   keyId string
+  // CryptoKeyId.ProviderId — KMS provider/cluster identifier; empty when the key isn't tied to a registered provider
+  providerId string
   // KMS cluster that issued the key, resolved against vsphere.kmsClusters; null when the provider isn't registered
   kmsCluster() vsphere.kmsCluster
 }

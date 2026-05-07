@@ -970,6 +970,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vsphere.encryptionKey.keyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereEncryptionKey).GetKeyId()).ToDataRes(types.String)
 	},
+	"vsphere.encryptionKey.providerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereEncryptionKey).GetProviderId()).ToDataRes(types.String)
+	},
 	"vsphere.encryptionKey.kmsCluster": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereEncryptionKey).GetKmsCluster()).ToDataRes(types.Resource("vsphere.kmsCluster"))
 	},
@@ -2174,6 +2177,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.encryptionKey.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereEncryptionKey).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.encryptionKey.providerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereEncryptionKey).ProviderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vsphere.encryptionKey.kmsCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5224,8 +5231,9 @@ func (c *mqlVsphereVmDisk) GetDatastore() *plugin.TValue[*mqlVsphereDatastore] {
 type mqlVsphereEncryptionKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlVsphereEncryptionKeyInternal
+	// optional: if you define mqlVsphereEncryptionKeyInternal it will be used here
 	KeyId      plugin.TValue[string]
+	ProviderId plugin.TValue[string]
 	KmsCluster plugin.TValue[*mqlVsphereKmsCluster]
 }
 
@@ -5263,6 +5271,10 @@ func (c *mqlVsphereEncryptionKey) MqlID() string {
 
 func (c *mqlVsphereEncryptionKey) GetKeyId() *plugin.TValue[string] {
 	return &c.KeyId
+}
+
+func (c *mqlVsphereEncryptionKey) GetProviderId() *plugin.TValue[string] {
+	return &c.ProviderId
 }
 
 func (c *mqlVsphereEncryptionKey) GetKmsCluster() *plugin.TValue[*mqlVsphereKmsCluster] {
