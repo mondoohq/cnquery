@@ -255,6 +255,7 @@ ipsetreferencestatement
 isos
 issuewild
 istio
+ixgbe
 jamf
 JFi
 jira
@@ -292,6 +293,7 @@ launchtemplate
 ldapmain
 lfs
 limitrange
+linklayer
 linuxbrew
 linuxefi
 liveanalytics
@@ -376,6 +378,7 @@ nss
 nullgroup
 nullstring
 NUnit
+nvmxnet
 objectstorage
 ocr
 Odr
@@ -436,6 +439,7 @@ pubspec
 pushconfig
 pve
 PVEAPI
+PVLAN
 PVR
 pyspark
 pzi
@@ -536,6 +540,7 @@ tailnets
 tailscale
 tanium
 targetgroup
+tcpip
 tde
 temurin
 tensorboard
@@ -591,6 +596,7 @@ vmdk
 vmfs
 vmhba
 VMID
+vmotion
 vmstate
 VMX
 vmxnet
@@ -603,6 +609,7 @@ vulnerabilityassessmentsettings
 vulnmgmt
 vulns
 VVOL
+vxlan
 vztmpl
 webauthn
 webcam
