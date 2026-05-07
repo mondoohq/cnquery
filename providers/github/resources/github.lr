@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/github"
 option go_package = "go.mondoo.com/mql/v13/providers/github/resources"
 
-// GitHub resource
+// GitHub — entry point for inspecting organizations, repositories, teams, users, packages, deploy keys, and security/governance settings
 private github {}
 
 // Git commit
