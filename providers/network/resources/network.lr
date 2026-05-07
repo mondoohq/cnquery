@@ -329,7 +329,7 @@ private openpgp.signature {
   version int
   // Signature type
   signatureType string
-  // Public key algorithm used to make the signature (e.g., RSA, ECDSA, Ed25519)
+  // Public-key algorithm of the signing key (e.g., RSA, ECDSA, Ed25519)
   keyAlgorithm string
   // Creation time
   creationTime time
