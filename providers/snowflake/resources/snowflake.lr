@@ -91,9 +91,9 @@ snowflake.user @defaults("name") {
   createdAt time
   // When the user expires
   expiresAt time
-  // Whether the user has MFA enabled
+  // Whether the user is enrolled in Duo MFA via Snowflake's external authenticator
   extAuthnDuo bool
-  // MFA user ID
+  // Duo external-authentication user ID linking the Snowflake user to their Duo account
   extAuthnUid string
   // Parameters for the user
   parameters() []snowflake.parameter
@@ -115,9 +115,9 @@ snowflake.role @defaults("name") {
   isInherited bool
   // Number of users assigned to the role
   assignedToUsers int
-  // Number of roles granted to
+  // Number of other roles to which this role is granted (this role's grantees)
   grantedToRoles int
-  // Number of roles granted
+  // Number of roles granted to this role (this role's privileges)
   grantedRoles int
   // Owner of the role
   owner string
@@ -167,7 +167,7 @@ snowflake.passwordPolicy @defaults("name") {
   databaseName string
   // Name of the schema
   schemaName string
-  // Name of the kind
+  // Policy kind classifier (e.g., PASSWORD)
   kind string
   // Name of the owner
   owner string
@@ -229,7 +229,7 @@ snowflake.networkPolicy @defaults("name") {
 snowflake.procedure @defaults("name") {
   // Name of the procedure
   name string
-  // Procedure description
+  // Description of the procedure's purpose and behavior
   description string
   // Schema name
   schemaName string
@@ -243,7 +243,7 @@ snowflake.procedure @defaults("name") {
   minNumberOfArguments int
   // Maximum number of arguments
   maxNumberOfArguments int
-  // Procedure arguments
+  // Comma-separated argument signature with type information
   arguments string
   // Catalog name
   catalogName string
@@ -297,7 +297,7 @@ snowflake.stage @defaults("name") {
   storeIntegration string
   // Endpoint of the stage
   endpoint string
-  // Owner role type
+  // Type of the role that owns the resource (ROLE or DATABASE_ROLE)
   ownerRoleType string
   // Whether a directory table is enabled for the stage
   directoryEnabled bool
@@ -381,7 +381,7 @@ snowflake.warehouse @defaults("name") {
   resourceMonitor string
   // Scaling policy of the warehouse
   scalingPolicy string
-  // Owner role type
+  // Type of the role that owns the resource (ROLE or DATABASE_ROLE)
   ownerRoleType string
   // When the warehouse was created
   createdAt time
@@ -425,7 +425,7 @@ snowflake.sessionPolicy @defaults("name sessionIdleTimeoutMins") {
   kind string
   // Owner of the session policy
   owner string
-  // Owner role type
+  // Type of the role that owns the resource (ROLE or DATABASE_ROLE)
   ownerRoleType string
   // Comment for the session policy
   comment string
@@ -598,7 +598,7 @@ snowflake.view @defaults("name") {
   isSecure bool
   // Whether the view is materialized
   isMaterialized bool
-  // Owner role type
+  // Type of the role that owns the resource (ROLE or DATABASE_ROLE)
   ownerRoleType string
   // View change tracking
   changeTracking string
