@@ -151,6 +151,10 @@ func (a *mqlAzureSubscriptionComputeService) hybridMachines() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionComputeServiceHybridMachine) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionComputeServiceHybridMachine) extensions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	id := a.Id.Data

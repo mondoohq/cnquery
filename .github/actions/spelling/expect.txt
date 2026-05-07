@@ -218,6 +218,7 @@ groupname
 gvnic
 hadoop
 HBFNV
+HCI
 HCMCLOUD
 headerorder
 hec
@@ -619,7 +620,6 @@ webcam
 webide
 WEBSERVERS
 Webstore
-wil
 Wjki
 wordpress
 workdir
