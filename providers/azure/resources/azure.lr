@@ -490,7 +490,7 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   systemData dict
   // VMs that belong to this scale set
   instances() []azure.subscription.computeService.vmScaleSet.instance
-  // VMSS extensions (raw)
+  // Extensions installed on the scale set (each dict describes one extension)
   extensions() []dict
 }
 
@@ -538,7 +538,7 @@ azure.subscription.computeService.dedicatedHostGroup @defaults("name location pl
   type string
   // Availability zones for the dedicated host group (single zone supported)
   zones []string
-  // Resource properties (raw)
+  // Unmodeled resource properties returned by the Azure API
   properties dict
   // Number of fault domains used by the host group
   platformFaultDomainCount int
@@ -566,7 +566,7 @@ azure.subscription.computeService.dedicatedHost @defaults("name sku.name provisi
   type string
   // Dedicated host SKU (name, tier, family)
   sku dict
-  // Resource properties (raw)
+  // Unmodeled resource properties returned by the Azure API
   properties dict
   // The fault domain of the host within its group
   platformFaultDomain int
@@ -600,7 +600,7 @@ azure.subscription.computeService.proximityPlacementGroup @defaults("name locati
   type string
   // Availability zones (Ultra type only — Standard does not support zones)
   zones []string
-  // Resource properties (raw)
+  // Unmodeled resource properties returned by the Azure API
   properties dict
   // Group type: Standard (latency-sensitive) or Ultra (lowest-latency)
   proximityPlacementGroupType string
@@ -626,7 +626,7 @@ azure.subscription.computeService.image @defaults("name location hyperVGeneratio
   tags map[string]string
   // Image resource type
   type string
-  // Resource properties (raw)
+  // Unmodeled resource properties returned by the Azure API
   properties dict
   // Source VM ARM ID this image was captured from
   sourceVirtualMachineId string
@@ -650,7 +650,7 @@ azure.subscription.computeService.gallery @defaults("name location description")
   tags map[string]string
   // Gallery resource type
   type string
-  // Resource properties (raw)
+  // Unmodeled resource properties returned by the Azure API
   properties dict
   // Gallery description
   description string
@@ -680,7 +680,7 @@ azure.subscription.computeService.gallery.image @defaults("name osType osState h
   tags map[string]string
   // Image definition resource type
   type string
-  // Resource properties (raw)
+  // Unmodeled resource properties returned by the Azure API
   properties dict
   // Description of the image definition
   description string
@@ -728,7 +728,7 @@ azure.subscription.computeService.gallery.image.version @defaults("name location
   tags map[string]string
   // Image version resource type
   type string
-  // Resource properties (raw)
+  // Unmodeled resource properties returned by the Azure API
   properties dict
   // Publishing profile (replication, target regions, end-of-life)
   publishingProfile dict
@@ -4015,7 +4015,7 @@ private azure.subscription.monitorService.applicationInsight @defaults("name loc
   retentionInDays int
   // Log Analytics workspace resource ID
   workspaceResourceId string
-  // Log Analytics workspace (typed reference)
+  // Log Analytics workspace where the diagnostic data is sent
   workspace() azure.subscription.monitorService.workspace
 }
 
@@ -5001,9 +5001,9 @@ private azure.subscription.iotService.iotHub @defaults("id name location") {
   name string
   // Resource type
   type string
-  // Location
+  // Azure region the IoT hub is deployed in
   location string
-  // Tags
+  // Tags applied to the IoT hub
   tags map[string]string
   // SKU details
   sku dict
@@ -5163,7 +5163,7 @@ azure.subscription.dataFactoryService.factory @defaults("name location") {
   tags map[string]string
   // Resource type
   type string
-  // Raw properties
+  // Unmodeled resource properties returned by the Azure API
   properties dict
   // Whether public network access is enabled ("Enabled" or "Disabled")
   publicNetworkAccess string
@@ -5201,7 +5201,7 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   tags map[string]string
   // Resource type
   type string
-  // Raw properties
+  // Unmodeled resource properties returned by the Azure API
   properties dict
   // Identity configuration
   identity dict
