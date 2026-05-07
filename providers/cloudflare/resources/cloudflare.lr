@@ -324,6 +324,7 @@ private cloudflare.account.settings {
 	enforceTwoFactor bool
 }
 
+// Cloudflare Stream namespace (live inputs and videos)
 private cloudflare.streams {}
 
 // Cloudflare live input (stream)
