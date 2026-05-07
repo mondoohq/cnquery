@@ -6,7 +6,19 @@ option go_package = "go.mondoo.com/mql/v13/providers/activedirectory/resources"
 
 // Active Directory Domain Services
 //
-// Examine the domain, its controllers, principals, GPOs, ADCS templates, trusts, password policy, and DC hardening signals
+// Top-level entry point for an Active Directory domain accessed over LDAP
+// against a domain controller. Exposes the domain's identity (DNS name,
+// NetBIOS name, distinguished name, SID, functional level, forest), the
+// principals (users, groups, computers), the OU and GPO topology, the
+// domain trusts, the default and fine-grained password policies, the
+// AD CS surface (certificate templates, certificate authorities, PKI
+// objects under CN=Public Key Services), DNS-integrated zones, and the
+// hardening signals auditors check on the contacted DC — LDAP signing,
+// LDAP channel binding, SMB signing, SMBv1 still accepted, SMB3 encryption,
+// SMB null / guest sessions, the highest negotiated SMB dialect — plus
+// metadata used by attack-path tooling (LAPS schema extension, machine-
+// account quota, AD Recycle Bin, schema version) and the dangerous-ACL
+// delegations across critical objects.
 activedirectory @defaults("domain functionalLevel") {
   // Domain DNS name (e.g., corp.example.com)
   domain string
@@ -78,7 +90,11 @@ activedirectory @defaults("domain functionalLevel") {
 
 // Active Directory domain controller
 //
-// Examine hostname, OS version, role flags (Global Catalog, RODC), site, and recent password / logon timestamps
+// Examine a single domain controller computer object: DNS hostname,
+// distinguished name, OS name and version, role flags (Global Catalog,
+// Read-Only DC), site placement, and the most recent password-set and
+// logon-timestamp values. Use it to inventory DCs, find unsupported OS
+// versions, and detect DCs that haven't replicated recently.
 activedirectory.domainController @defaults("name operatingSystem") {
   // DNS hostname
   name string
@@ -102,7 +118,13 @@ activedirectory.domainController @defaults("name operatingSystem") {
 
 // Active Directory default-domain password policy
 //
-// Examine length, age, history, complexity, lockout, and reversible-encryption settings applied to users without a fine-grained policy
+// Examine the password policy applied to every user that isn't covered
+// by a fine-grained policy: minimum / maximum password age, minimum
+// length, password-history depth, complexity-required flag, and the
+// reversible-encryption flag (which weakens password storage). Also
+// exposes the account-lockout configuration: threshold, duration, and
+// observation window. Auditors read this to verify the domain meets
+// password and lockout benchmarks.
 activedirectory.domainPasswordPolicy @defaults("minPasswordLength maxPasswordAge lockoutThreshold") {
   // Minimum password length
   minPasswordLength int
@@ -126,7 +148,14 @@ activedirectory.domainPasswordPolicy @defaults("minPasswordLength maxPasswordAge
 
 // Active Directory fine-grained password policy
 //
-// Examine per-PSO length, age, history, complexity, lockout overrides, precedence, and the principals it applies to
+// Examine a single Password Settings Object (PSO) that overrides the
+// default-domain password policy for a specific set of principals:
+// minimum / maximum age, minimum length, history depth, complexity-
+// required flag, reversible-encryption flag, and the lockout threshold
+// and duration. Each PSO carries a precedence (lower wins) and an
+// `appliesTo` list naming the users or groups it covers. Use it to
+// confirm that privileged groups are bound to a stronger PSO than the
+// default domain policy.
 activedirectory.fineGrainedPasswordPolicy @defaults("name precedence minPasswordLength") {
   // Policy name
   name string
@@ -156,7 +185,22 @@ activedirectory.fineGrainedPasswordPolicy @defaults("name precedence minPassword
 
 // Active Directory user account
 //
-// Examine identity, UAC flags, group memberships, SPNs, delegation, password aging, and Kerberos / privilege risk indicators
+// Examine a single user object: identity (sAMAccountName, UPN, display
+// name, distinguished name, SID), enabled state, lifecycle timestamps
+// (creation, password-last-set, last-logon, password age, days-since-
+// last-logon), group memberships, OU placement, email and description
+// fields, and SID history. The resource also surfaces the security-
+// relevant userAccountControl flags as named booleans (password never
+// expires, password not required, sensitive-and-cannot-be-delegated,
+// reversible-encryption, DES-only Kerberos, AS-REP-roastable via
+// pre-auth-not-required) plus the delegation surface (Service Principal
+// Names, Kerberoastable flag, constrained-delegation targets, GMSA
+// flag, Protected Users membership), the adminCount flag indicating
+// adminSDHolder protection, and convenience predicates for Domain
+// Admins / Enterprise Admins / Schema Admins / generic privileged-group
+// membership and stale-account state — the surface auditors use for
+// privilege reviews, Kerberos-attack-path analysis, and dormant-account
+// hygiene.
 activedirectory.user @defaults("sAMAccountName displayName enabled") {
   // sAMAccountName (pre-Windows 2000 logon name)
   sAMAccountName string
@@ -230,7 +274,14 @@ activedirectory.user @defaults("sAMAccountName displayName enabled") {
 
 // Active Directory group
 //
-// Examine name, type (security/distribution, scope), members, member count, privileged-group status, and OU placement
+// Examine a single group object: identity (sAMAccountName, distinguished
+// name, display name, SID), the human-readable groupType description
+// (Security vs Distribution, Global / Universal / DomainLocal scope) plus
+// the raw groupType bitmask, description, adminCount flag, OU placement,
+// and creation timestamp. Iterate `members()` for typed user / group /
+// computer references and use `memberCount()` for size-based rules; the
+// `isPrivileged` flag highlights built-in privileged groups that warrant
+// extra scrutiny in access reviews.
 activedirectory.group @defaults("sAMAccountName groupType") {
   // sAMAccountName
   sAMAccountName string
@@ -274,7 +325,17 @@ activedirectory.groupMember @defaults("name type") {
 
 // Active Directory computer account
 //
-// Examine OS, UAC flags, delegation (unconstrained / constrained / RBCD), SPNs, LAPS state, password aging, and DC role
+// Examine a single computer object: identity (sAMAccountName with the
+// trailing `$`, DNS hostname, distinguished name, SID), enabled state,
+// the OS name / version / service pack, lifecycle timestamps (created,
+// password-last-set, last-logon-timestamp, password age, days-since-
+// last-logon, stale flag), the raw userAccountControl bitmask plus
+// delegation surface (unconstrained delegation, constrained delegation
+// and its targets, resource-based constrained delegation, protocol
+// transition / TRUSTED_TO_AUTH_FOR_DELEGATION), the configured Service
+// Principal Names, LAPS deployment and password expiration, OU placement,
+// and whether the computer is a domain controller. Used for inventory,
+// stale-machine cleanup, and Kerberos-delegation attack-path reviews.
 activedirectory.computer @defaults("name operatingSystem enabled") {
   // sAMAccountName (includes trailing $)
   sAMAccountName string
@@ -332,7 +393,11 @@ activedirectory.computer @defaults("name operatingSystem enabled") {
 
 // Active Directory organizational unit
 //
-// Examine the OU's identity, GPO inheritance / linked GPOs, and creation timestamp
+// Examine a single OU: name, distinguished name, description, creation
+// timestamp, whether GPO inheritance is blocked, and the typed list of
+// linked GPOs in link order. OUs are the unit of policy delegation and
+// scoping, so they're the primary container audits walk to find where a
+// GPO actually applies and whether inheritance is being short-circuited.
 activedirectory.ou @defaults("name") {
   // OU name
   name string
@@ -350,7 +415,13 @@ activedirectory.ou @defaults("name") {
 
 // Active Directory Group Policy Object
 //
-// Examine the GPO's identity, status, SYSVOL path, link metadata, and version
+// Examine a single GPO: GUID and display name, distinguished name, GPO
+// status (enabled / disabled / user-side disabled / computer-side
+// disabled), SYSVOL file-system path containing the policy template,
+// version number, creation and last-modified timestamps, whether the
+// GPO is linked anywhere, and the per-link metadata (target OU/domain/
+// site, link order, enforced flag, enabled flag) showing exactly where
+// the policy applies.
 activedirectory.gpo @defaults("displayName") {
   // GPO GUID
   id string
@@ -388,7 +459,14 @@ activedirectory.gpoLink @defaults("target") {
 
 // Active Directory domain trust
 //
-// Examine trust type, direction, transitivity, encryption (AES vs RC4), TGT delegation, SID filtering, and selective authentication
+// Examine a single trust relationship from the source domain to a target
+// domain: trust type (External, Forest, ParentChild, CrossLink, MIT),
+// trust direction (Inbound / Outbound / Bidirectional), transitivity,
+// the cryptographic posture (AES vs weak RC4 encryption), TGT-delegation
+// flag, SID filtering and SID-history flags, selective-authentication
+// flag, the Azure-AD-trust marker, the raw trust-attributes bitmask, and
+// the trust creation timestamp. Used for forest-attack-path reviews and
+// confirming hardening of cross-domain authentication.
 activedirectory.trust @defaults("targetDomain trustType trustDirection") {
   // Target domain name
   targetDomain string
@@ -422,7 +500,19 @@ activedirectory.trust @defaults("targetDomain trustType trustDirection") {
 
 // Active Directory Certificate Services template
 //
-// Examine EKUs, enrollment flags, manager approval, enrollment ACLs, and ESC1 / ESC2 / ESC3 / ESC4 / ESC9 / ESC13 vulnerability indicators
+// Examine a single AD CS certificate template: identity (common name,
+// display name, distinguished name, OID, schema version), the validity
+// and renewal periods, whether the template is published on at least
+// one Enterprise CA, and the security-relevant configuration:
+// enrollee-supplies-subject (ESC1 indicator), the EKU set including
+// authentication / Any-Purpose / no-EKU markers, the manager-approval
+// requirement, authorized-signature count, the raw msPKI-Enrollment-Flag
+// and msPKI-Certificate-Name-Flag bitmasks, the issuance-policy OID
+// list, and the enrollment ACL with a low-privileged-enrollment marker.
+// Pre-computed boolean flags surface AD CS escalation risks (ESC1,
+// ESC2, ESC3, ESC4, ESC9 from no-security-extension, ESC13 via
+// privileged-group-linked issuance policy) so policies can fire
+// directly on those.
 activedirectory.certificateTemplate @defaults("name") {
   // Template common name
   name string
@@ -486,7 +576,15 @@ activedirectory.certificateTemplate @defaults("name") {
 
 // Active Directory Certificate Services certificate authority
 //
-// Examine published templates, ManageCA / ManageCertificates ACLs (ESC7), HTTP enrollment endpoints (ESC8), and enrollment-agent restrictions
+// Examine a single Enterprise CA's enrollment-service entry: identity,
+// distinguished name, the DNS hostname of the CA server, CA type
+// (Enterprise Root, Enterprise Subordinate, etc.), the CA certificate
+// expiration, and the templates published on this CA. Surfaces the
+// security-relevant ACLs and endpoints — whether any low-privileged
+// principal holds ManageCA or ManageCertificates rights (ESC7) along
+// with the principal list, whether the CA exposes HTTP (non-TLS)
+// enrollment endpoints (ESC8) along with the endpoint URLs, and
+// whether enrollment-agent restrictions are configured.
 activedirectory.certificateAuthority @defaults("name") {
   // CA name
   name string
@@ -514,7 +612,13 @@ activedirectory.certificateAuthority @defaults("name") {
 
 // Active Directory PKI object under CN=Public Key Services
 //
-// Examine object class and dangerous write-equivalent ACLs that enable ESC5 takeover of the AD CS environment
+// Examine a single PKI container or object below `CN=Public Key
+// Services,CN=Services,CN=Configuration` (NTAuthCertificates, AIA, the
+// Certificate Templates container, Enrollment Services, etc.): name,
+// distinguished name, primary object class, and its lifecycle
+// timestamps. The `isVulnerableESC5` flag and `dangerousAclPrincipals`
+// list highlight write-equivalent ACL grants on these objects, which
+// allow domain-wide AD CS takeover.
 activedirectory.pkiObject @defaults("name objectClass") {
   // Relative name of the PKI object
   name string
@@ -534,7 +638,12 @@ activedirectory.pkiObject @defaults("name objectClass") {
 
 // Active Directory-integrated DNS zone
 //
-// Examine zone type and dynamic-update policy (open, secure-only, or disabled)
+// Examine a DNS zone whose records are stored in AD itself: zone name,
+// distinguished name, zone type (forward / reverse / stub / etc.), and
+// the dynamic-update posture — whether dynamic updates are accepted at
+// all and whether the zone is restricted to secure-only updates. The
+// combination of these two flags is the standard "DNS hardening"
+// finding for AD-integrated zones.
 activedirectory.dnsZone @defaults("name") {
   // Zone name
   name string
@@ -550,7 +659,15 @@ activedirectory.dnsZone @defaults("name") {
 
 // Dangerous ACL delegation on a critical AD object
 //
-// Examine attack paths where a low-privilege principal holds powerful rights (GenericAll, WriteDACL, WriteOwner, GenericWrite, DCSync, ForceChangePassword) on sensitive objects like the domain head, AdminSDHolder, or privileged group / DC accounts
+// Examine a single attack-path finding where a low-privileged principal
+// holds rights — GenericAll, WriteDACL, WriteOwner, GenericWrite,
+// DCSync, ForceChangePassword — on a sensitive Active Directory object.
+// Each finding records the target distinguished name and friendly name,
+// the target category (domain head, AdminSDHolder, privileged group, DC
+// computer, user, or OU), the principal SID that received the grant,
+// the type of right granted, and the raw access mask. Iterating
+// `activedirectory.dangerousPermissions` surfaces the canonical AD
+// take-over primitives auditors check for.
 activedirectory.dangerousPermission @defaults("targetName rightType principalSID") {
   // DN of the AD object with the dangerous ACL
   targetDN string
