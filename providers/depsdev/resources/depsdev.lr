@@ -5,12 +5,22 @@ option provider = "go.mondoo.com/mql/v13/providers/depsdev"
 option go_package = "go.mondoo.com/mql/v13/providers/depsdev/resources"
 
 // deps.dev dependency analysis
+//
+// Top-level entry point for static analysis of a project's direct
+// dependencies via the deps.dev API. Currently exposes Go module
+// dependencies parsed from go.mod, each enriched with version history,
+// upstream project metadata, and OpenSSF Scorecard data.
 depsdev {
   // List of packages from go.mod direct dependencies
   packages() []depsdev.package
 }
 
-// deps.dev Go package information
+// deps.dev Go package metadata
+//
+// Examine a Go module's pinned version, the full version history with
+// publication dates and licenses, the latest published version and its
+// timestamp, and the typed link to the upstream source project — useful
+// for stale-dependency, lagging-patch, and license audits.
 depsdev.package @defaults("name currentVersion latestVersion latestPublished") {
   init(name string)
   // Go module path
@@ -39,7 +49,13 @@ private depsdev.packageVersion @defaults("version publishedAt") {
   licenses []string
 }
 
-// deps.dev source project (GitHub/GitLab repository)
+// deps.dev upstream source project (GitHub / GitLab repository)
+//
+// Examine the upstream repository associated with a package: identity,
+// description, homepage, license, archived state, social-proof signals
+// (stars, forks, open-issue count), and the OpenSSF Scorecard scores
+// — input for supply-chain risk policies (unmaintained / archived
+// dependencies, low-scorecard libraries).
 depsdev.project @defaults("id starsCount forksCount") {
   init(id string)
   // Project identifier (e.g. github.com/rs/zerolog)
