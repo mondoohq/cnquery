@@ -598,7 +598,7 @@ gcp.recommendation {
   zoneName string
   // Description of the recommendation
   name string
-  // Recommender
+  // ID of the recommender that produced this recommendation
   recommender string
   // The primary impact that this recommendation can have
   primaryImpact dict
@@ -1342,7 +1342,7 @@ gcp.project.computeService.subnetwork @defaults("name") {
   privateIpv6GoogleAccess string
   // Purpose of the resource
   purpose string
-  // Region
+  // GCP compute region this resource belongs to
   region() gcp.project.computeService.region
   // Region URL
   regionUrl string
@@ -1590,7 +1590,7 @@ private gcp.project.storageService.bucket @defaults("id") {
   retentionPolicyLocked bool
   // Whether bucket access logs are configured (logging.logBucket is set)
   loggingEnabled bool
-  // Encryption
+  // Customer-managed encryption configuration (CMEK key, default key, etc.)
   encryption dict
   // Default Cloud KMS encryption key for new objects in this bucket
   defaultKmsKey() gcp.project.kmsService.keyring.cryptokey
@@ -1748,11 +1748,11 @@ private gcp.project.sqlService.instance @defaults("name") {
   maxDiskSize int
   // Instance name
   name string
-  // Region
+  // Cloud SQL region the instance is deployed in
   region string
-  // Replicas
+  // Names of read-replica instances of this primary
   replicaNames []string
-  // Settings
+  // Detailed Cloud SQL instance configuration (tier, flags, backups, network, IAM)
   settings gcp.project.sqlService.instance.settings
   // Whether the instance is reachable on a public IP — flat hoist of settings.ipConfiguration.ipv4Enabled
   publicIpEnabled() bool
@@ -1810,7 +1810,7 @@ private gcp.project.sqlService.instance.database @defaults("name") {
   projectId string
   // Character set value
   charset string
-  // Collation
+  // Sort/collation order for the database
   collation string
   // Name of the Cloud SQL instance
   instance string
@@ -3293,7 +3293,7 @@ private gcp.project.apiKey @defaults("name") {
   name string
   // Full resource path
   resourcePath string
-  // Annotations
+  // System-managed annotation metadata on the resource
   annotations map[string]string
   // Creation timestamp
   created time
@@ -3445,7 +3445,7 @@ private gcp.project.loggingservice.sink @defaults("destination") {
 private gcp.project.loggingservice.exclusion @defaults("name disabled") {
   // Exclusion name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Advanced logs filter that matches log entries to be excluded
   filter string
@@ -3475,7 +3475,7 @@ private gcp.project.iamService.role @defaults("title name") {
   name string
   // Title of the role
   title string
-  // Description
+  // Human-readable description of the resource
   description string
   // Launch stage of the role (ALPHA, BETA, GA, DEPRECATED, DISABLED)
   stage string
@@ -3964,7 +3964,7 @@ private gcp.project.dataprocService.job @defaults("name status") {
   jobType string
   // Cluster the job is submitted to
   clusterName string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Whether the job is complete
   done bool
@@ -4016,7 +4016,7 @@ private gcp.project.cloudRunService.service @defaults("name") {
   id string
   // Project ID
   projectId string
-  // Region
+  // GCP region of the resource
   region string
   // Service name
   name string
@@ -4185,7 +4185,7 @@ private gcp.project.cloudRunService.job {
   id string
   // Project ID
   projectId string
-  // Region
+  // GCP region of the resource
   region string
   // Job name
   name string
@@ -4383,7 +4383,7 @@ private gcp.project.monitoringService.notificationChannel @defaults("displayName
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Channel type (email, sms, slack, pagerduty, webhook_tokenauth, etc.)
   type string
@@ -4502,7 +4502,7 @@ private gcp.project.binaryAuthorizationControl.admissionRule {
 private gcp.project.binaryAuthorizationControl.attestor @defaults("name") {
   // Full resource name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // User-owned Grafeas note reference and properties
   userOwnedGrafeasNote dict
@@ -4822,7 +4822,7 @@ private gcp.project.spannerService.instanceConfig @defaults("name displayName") 
   configType string
   // Free instance availability (AVAILABLE, UNSUPPORTED, DISABLED, QUOTA_EXCEEDED)
   freeInstanceAvailability string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Replicas available to be used but not currently in the base configuration
   optionalReplicas []dict
@@ -5212,11 +5212,11 @@ private gcp.project.computeService.securityPolicy @defaults("name type") {
   id string
   // Security policy name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // The type of security policy (CLOUD_ARMOR, CLOUD_ARMOR_EDGE, CLOUD_ARMOR_NETWORK)
   type string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Adaptive protection configuration
   adaptiveProtectionConfig dict
@@ -5272,7 +5272,7 @@ private gcp.project.computeService.sslPolicy @defaults("name profile minTlsVersi
   id string
   // SSL policy name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Profile (COMPATIBLE, MODERN, RESTRICTED, CUSTOM)
   profile string
@@ -5288,7 +5288,7 @@ private gcp.project.computeService.sslPolicy @defaults("name profile minTlsVersi
   regionUrl string
   // Self-link URL
   selfLink string
-  // Warnings
+  // Configuration warnings reported by the API for this resource
   warnings []dict
   // Creation timestamp
   createdAt time
@@ -5300,7 +5300,7 @@ private gcp.project.computeService.sslCertificate @defaults("name type") {
   id string
   // Certificate name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Certificate type (SELF_MANAGED, MANAGED)
   type string
@@ -5486,7 +5486,7 @@ private gcp.project.certificateAuthorityService.caPool @defaults("name tier") {
   resourcePath string
   // CA pool name
   name string
-  // Location
+  // GCP region or multi-region the resource is hosted in
   location string
   // Tier (ENTERPRISE, DEVOPS)
   tier string
@@ -5494,7 +5494,7 @@ private gcp.project.certificateAuthorityService.caPool @defaults("name tier") {
   issuancePolicy dict
   // Publishing options
   publishingOptions dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Certificate authorities in this pool
   certificateAuthorities() []gcp.project.certificateAuthorityService.certificateAuthority
@@ -5510,7 +5510,7 @@ private gcp.project.certificateAuthorityService.certificateAuthority @defaults("
   resourcePath string
   // Certificate authority name
   name string
-  // Location
+  // GCP region or multi-region the resource is hosted in
   location string
   // CA pool name
   caPool string
@@ -5528,7 +5528,7 @@ private gcp.project.certificateAuthorityService.certificateAuthority @defaults("
   pemCaCertificates []string
   // Subordinate configuration
   subordinateConfig dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // GCS bucket for published CRL and CA certificates
   gcsBucket string
@@ -5552,7 +5552,7 @@ private gcp.project.certificateAuthorityService.certificate @defaults("name") {
   resourcePath string
   // Certificate name
   name string
-  // Location
+  // GCP region or multi-region the resource is hosted in
   location string
   // CA pool name
   caPool string
@@ -5570,7 +5570,7 @@ private gcp.project.certificateAuthorityService.certificate @defaults("name") {
   pemCertificateChain []string
   // Revocation details
   revocationDetails dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Time created
   createdAt time
@@ -5622,7 +5622,7 @@ private gcp.orgPolicy.constraint @defaults("name") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Default behavior when the constraint is not explicitly set (CONSTRAINT_DEFAULT_ALLOW, CONSTRAINT_DEFAULT_DENY)
   constraintDefault string
@@ -5640,7 +5640,7 @@ private gcp.project.computeService.instanceGroup @defaults("name size") {
   projectId string
   // Name of the instance group
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Zone URL
   zoneUrl string
@@ -5668,7 +5668,7 @@ private gcp.project.computeService.instanceGroupManager @defaults("name targetSi
   projectId string
   // Name of the instance group manager
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Zone URL (empty for regional)
   zoneUrl string
@@ -5706,7 +5706,7 @@ private gcp.project.computeService.firewallPolicy @defaults("name") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Server-defined URL for the resource
   selfLink string
@@ -5732,7 +5732,7 @@ private gcp.project.computeService.firewallPolicy.rule @defaults("priority actio
   action string
   // Direction of traffic (INGRESS, EGRESS)
   direction string
-  // Description
+  // Human-readable description of the resource
   description string
   // Whether the rule is disabled
   disabled bool
@@ -5978,7 +5978,7 @@ private gcp.project.computeService.healthCheck @defaults("name type") {
   projectId string
   // Name of the health check
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Type of health check (HTTP, HTTPS, TCP, SSL, HTTP2, GRPC)
   type string
@@ -6020,7 +6020,7 @@ private gcp.project.computeService.urlMap @defaults("name") {
   projectId string
   // Name of the URL map
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Default backend service URL
   defaultService string
@@ -6046,7 +6046,7 @@ private gcp.project.computeService.targetHttpProxy @defaults("name") {
   projectId string
   // Name of the target HTTP proxy
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // URL map URL
   urlMapUrl string
@@ -6070,7 +6070,7 @@ private gcp.project.computeService.targetHttpsProxy @defaults("name") {
   projectId string
   // Name of the target HTTPS proxy
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // URL map URL
   urlMapUrl string
@@ -6128,7 +6128,7 @@ private gcp.project.computeService.route @defaults("name destRange") {
   id string
   // Route name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Destination IP range
   destRange string
@@ -6162,7 +6162,7 @@ private gcp.project.computeService.route @defaults("name destRange") {
   tags []string
   // AS paths
   asPaths []dict
-  // Warnings
+  // Configuration warnings reported by the API for this resource
   warnings []dict
   // Creation timestamp
   created time
@@ -6176,7 +6176,7 @@ private gcp.project.computeService.serviceAttachment @defaults("name connectionP
   id string
   // Service attachment name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Connection preference (ACCEPT_AUTOMATIC, ACCEPT_MANUAL)
   connectionPreference string
@@ -6202,7 +6202,7 @@ private gcp.project.computeService.serviceAttachment @defaults("name connectionP
   regionUrl string
   // Self-link URL
   selfLink string
-  // Fingerprint
+  // Resource fingerprint used to detect concurrent modifications
   fingerprint string
   // Creation timestamp
   created time
@@ -6214,7 +6214,7 @@ private gcp.project.computeService.networkEndpointGroup @defaults("name networkE
   id string
   // NEG name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Network endpoint type (GCE_VM_IP, GCE_VM_IP_PORT, SERVERLESS, PRIVATE_SERVICE_CONNECT, INTERNET_IP_PORT, INTERNET_FQDN_PORT)
   networkEndpointType string
@@ -6244,7 +6244,7 @@ private gcp.project.computeService.networkEndpointGroup @defaults("name networkE
   pscTargetService string
   // PSC data
   pscData dict
-  // Annotations
+  // System-managed annotation metadata on the resource
   annotations map[string]string
   // Self-link URL
   selfLink string
@@ -6258,7 +6258,7 @@ private gcp.project.computeService.interconnect @defaults("name interconnectType
   id string
   // Interconnect name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Whether administrative traffic is enabled
   adminEnabled bool
@@ -6288,7 +6288,7 @@ private gcp.project.computeService.interconnect @defaults("name interconnectType
   location string
   // Remote location (for Cross-Cloud Interconnect)
   remoteLocation string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Available features (e.g., IF_MACSEC)
   availableFeatures []string
@@ -6314,7 +6314,7 @@ private gcp.project.computeService.interconnectAttachment @defaults("name type s
   id string
   // Attachment name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Whether administrative traffic is enabled
   adminEnabled bool
@@ -6368,11 +6368,11 @@ private gcp.project.computeService.externalVpnGateway @defaults("name redundancy
   id string
   // Gateway name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Redundancy type (SINGLE_IP_INTERNALLY_REDUNDANT, TWO_IPS_REDUNDANCY, FOUR_IPS_REDUNDANCY)
   redundancyType string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Interfaces (IP addresses of the peer gateway)
   interfaces []dict
@@ -6388,7 +6388,7 @@ private gcp.project.computeService.targetTcpProxy @defaults("name") {
   id string
   // Proxy name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Proxy header mode (NONE, PROXY_V1)
   proxyHeader string
@@ -6410,7 +6410,7 @@ private gcp.project.computeService.targetSslProxy @defaults("name") {
   id string
   // Proxy name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Proxy header mode (NONE, PROXY_V1)
   proxyHeader string
@@ -6436,7 +6436,7 @@ private gcp.project.computeService.packetMirroring @defaults("name enable") {
   id string
   // Name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Whether packet mirroring is enabled (TRUE, FALSE)
   enable string
@@ -6464,7 +6464,7 @@ private gcp.project.computeService.backendBucket @defaults("name enableCdn") {
   id string
   // Backend bucket name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Cloud Storage bucket name
   bucketName string
@@ -6490,7 +6490,7 @@ private gcp.project.computeService.targetPool @defaults("name") {
   id string
   // Target pool name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Session affinity (NONE, CLIENT_IP, CLIENT_IP_PROTO, CLIENT_IP_PORT_PROTO)
   sessionAffinity string
@@ -6518,7 +6518,7 @@ private gcp.project.computeService.publicAdvertisedPrefix @defaults("name ipCidr
   id string
   // Prefix name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // IP CIDR range
   ipCidrRange string
@@ -6534,7 +6534,7 @@ private gcp.project.computeService.publicAdvertisedPrefix @defaults("name ipCidr
   publicDelegatedPrefixes []dict
   // Self-link URL
   selfLink string
-  // Fingerprint
+  // Resource fingerprint used to detect concurrent modifications
   fingerprint string
   // Creation timestamp
   created time
@@ -6546,7 +6546,7 @@ private gcp.project.computeService.instanceTemplate @defaults("name description"
   id string
   // Instance template name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Self-link URL
   selfLink string
@@ -6576,7 +6576,7 @@ private gcp.project.cloudDeployService.deliveryPipeline @defaults("name") {
   name string
   // User-assigned unique identifier
   uid string
-  // Description
+  // Human-readable description of the resource
   description string
   // Resource annotations
   annotations map[string]string
@@ -6604,7 +6604,7 @@ private gcp.project.cloudDeployService.target @defaults("name") {
   name string
   // User-assigned unique identifier
   uid string
-  // Description
+  // Human-readable description of the resource
   description string
   // Resource annotations
   annotations map[string]string
@@ -6632,7 +6632,7 @@ private gcp.project.cloudDeployService.release @defaults("name") {
   name string
   // Unique identifier
   uid string
-  // Description
+  // Human-readable description of the resource
   description string
   // Whether the release was abandoned
   abandoned bool
@@ -6852,7 +6852,7 @@ private gcp.project.backupdrService {
 private gcp.project.backupdrService.managementServer @defaults("name state") {
   // Full resource name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Current state (CREATING, READY, UPDATING, DELETING, REPAIRING, ERROR)
   state string
@@ -6866,9 +6866,9 @@ private gcp.project.backupdrService.managementServer @defaults("name state") {
   oauth2ClientId string
   // Whether the resource satisfies PZS
   satisfiesPzs bool
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Creation time
   createdAt time
@@ -6880,7 +6880,7 @@ private gcp.project.backupdrService.managementServer @defaults("name state") {
 private gcp.project.backupdrService.backupVault @defaults("name state") {
   // Full resource name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Current state
   state string
@@ -6888,7 +6888,7 @@ private gcp.project.backupdrService.backupVault @defaults("name state") {
   backupMinimumEnforcedRetentionDuration string
   // Whether the vault is deletable
   deletable bool
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
   // Effective time
   effectiveTime time
@@ -6900,9 +6900,9 @@ private gcp.project.backupdrService.backupVault @defaults("name state") {
   totalStoredBytes int
   // Access restriction
   accessRestriction string
-  // Annotations
+  // System-managed annotation metadata on the resource
   annotations map[string]string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Creation time
   createdAt time
@@ -6918,7 +6918,7 @@ private gcp.project.backupdrService.dataSource @defaults("name state") {
   name string
   // Current state
   state string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Data source GCP resource
   dataSourceGcpResource dict
@@ -6928,7 +6928,7 @@ private gcp.project.backupdrService.dataSource @defaults("name state") {
   totalStoredBytes int
   // Backup count
   backupCount int
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
   // Configuration state
   configState string
@@ -6942,7 +6942,7 @@ private gcp.project.backupdrService.dataSource @defaults("name state") {
 private gcp.project.backupdrService.backupPlan @defaults("name state") {
   // Full resource name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Current state
   state string
@@ -6952,11 +6952,11 @@ private gcp.project.backupdrService.backupPlan @defaults("name state") {
   backupVault() gcp.project.backupdrService.backupVault
   // Backup vault service account
   backupVaultServiceAccount string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Backup rules
   backupRules []dict
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
   // Creation time
   createdAt time
@@ -6994,7 +6994,7 @@ private gcp.project.vertexaiService.model @defaults("name displayName") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Version ID
   versionId string
@@ -7018,9 +7018,9 @@ private gcp.project.vertexaiService.model @defaults("name displayName") {
   artifactUri string
   // Encryption spec (CMEK)
   encryptionSpec dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
   // Creation time
   createdAt time
@@ -7034,7 +7034,7 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Deployed models
   deployedModels []dict
@@ -7046,9 +7046,9 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   enablePrivateServiceConnect bool
   // Traffic split (model ID to traffic percentage)
   trafficSplit map[string]int
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
   // Creation time
   createdAt time
@@ -7068,9 +7068,9 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   pipelineSpec dict
   // Runtime config
   runtimeConfig dict
-  // Service account
+  // Service account email used by the resource
   serviceAccount string
-  // Network
+  // VPC network the resource is attached to
   network string
   // Encryption spec
   encryptionSpec dict
@@ -7078,7 +7078,7 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   templateUri string
   // Template metadata
   templateMetadata dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Creation time
   createdAt time
@@ -7096,17 +7096,17 @@ private gcp.project.vertexaiService.dataset @defaults("name displayName") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Metadata schema URI
   metadataSchemaUri string
-  // Metadata
+  // User-defined metadata payload conforming to metadataSchemaUri
   metadata dict
   // Encryption spec
   encryptionSpec dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
   // Creation time
   createdAt time
@@ -7128,9 +7128,9 @@ private gcp.project.vertexaiService.featureOnlineStore @defaults("name state") {
   dedicatedServingEndpoint dict
   // Encryption spec
   encryptionSpec dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
   // Whether the resource satisfies PZS
   satisfiesPzs bool
@@ -7148,11 +7148,11 @@ private gcp.project.vertexaiService.tensorboard @defaults("displayName") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Whether this is the default Tensorboard
   isDefault bool
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Encryption spec
   encryptionSpec dict
@@ -7172,7 +7172,7 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   state string
   // Job spec (worker pool specs, scheduling, etc.)
   jobSpec dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Encryption spec
   encryptionSpec dict
@@ -7194,7 +7194,7 @@ private gcp.project.vertexaiService.index @defaults("displayName") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Metadata schema URI
   metadataSchemaUri string
@@ -7202,7 +7202,7 @@ private gcp.project.vertexaiService.index @defaults("displayName") {
   metadata dict
   // Deployed indexes
   deployedIndexes []dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Encryption spec
   encryptionSpec dict
@@ -7222,7 +7222,7 @@ private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Deployed indexes
   deployedIndexes []dict
@@ -7232,7 +7232,7 @@ private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
   publicEndpointEnabled bool
   // Public endpoint domain name
   publicEndpointDomainName string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Encryption spec
   encryptionSpec dict
@@ -7258,7 +7258,7 @@ private gcp.scc.source @defaults("name displayName") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Canonical name
   canonicalName string
@@ -7304,7 +7304,7 @@ private gcp.scc.finding @defaults("name category severity") {
 private gcp.scc.notificationConfig @defaults("name") {
   // Full resource name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Pub/Sub topic for notifications
   pubsubTopic string
@@ -7320,7 +7320,7 @@ private gcp.scc.muteConfig @defaults("name") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Filter expression
   filter string
@@ -7336,7 +7336,7 @@ private gcp.scc.muteConfig @defaults("name") {
 private gcp.scc.bigQueryExport @defaults("name") {
   // Full resource name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // BigQuery dataset (projects/{project}/datasets/{dataset})
   dataset string
@@ -7358,7 +7358,7 @@ private gcp.accesscontextmanager.accessPolicy @defaults("name title") {
   title string
   // Parent organization (organizations/{orgId})
   parent string
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
   // Access levels within this policy
   accessLevels() []gcp.accesscontextmanager.accessLevel
@@ -7372,7 +7372,7 @@ private gcp.accesscontextmanager.accessLevel @defaults("name title") {
   name string
   // Human-readable title
   title string
-  // Description
+  // Human-readable description of the resource
   description string
   // Basic access level conditions
   basic dict
@@ -7390,7 +7390,7 @@ private gcp.accesscontextmanager.servicePerimeter @defaults("name title") {
   name string
   // Human-readable title
   title string
-  // Description
+  // Human-readable description of the resource
   description string
   // Perimeter type (PERIMETER_TYPE_REGULAR, PERIMETER_TYPE_BRIDGE)
   perimeterType string
@@ -7504,7 +7504,7 @@ private gcp.project.eventarcService.trigger @defaults("name") {
   transport dict
   // Channel name (if using a channel)
   channelName string
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Trigger condition
   conditions map[string]string
@@ -7572,7 +7572,7 @@ private gcp.project.dlpService.inspectTemplate @defaults("name displayName") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Inspect configuration (info types, rules, limits)
   inspectConfig dict
@@ -7588,7 +7588,7 @@ private gcp.project.dlpService.deidentifyTemplate @defaults("name displayName") 
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Deidentify configuration
   deidentifyConfig dict
@@ -7604,7 +7604,7 @@ private gcp.project.dlpService.jobTrigger @defaults("name displayName status") {
   name string
   // Display name
   displayName string
-  // Description
+  // Human-readable description of the resource
   description string
   // Trigger status (HEALTHY, PAUSED, CANCELLED)
   status string
@@ -7656,7 +7656,7 @@ private gcp.project.batchService.job @defaults("name") {
   allocationPolicy dict
   // Job status
   status dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Logs policy
   logsPolicy dict
@@ -7702,7 +7702,7 @@ private gcp.project.idsService {
 private gcp.project.idsService.endpoint @defaults("name severity state") {
   // Full resource name
   name string
-  // Description
+  // Human-readable description of the resource
   description string
   // Network URL
   networkUrl string
@@ -7718,7 +7718,7 @@ private gcp.project.idsService.endpoint @defaults("name severity state") {
   state string
   // Whether traffic logs are enabled
   trafficLogs bool
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // Creation time
   created time
@@ -7746,7 +7746,7 @@ private gcp.project.gkeBackupService.backupPlan @defaults("name") {
   name string
   // Unique identifier
   uid string
-  // Description
+  // Human-readable description of the resource
   description string
   // Source GKE cluster name
   cluster string
@@ -7758,7 +7758,7 @@ private gcp.project.gkeBackupService.backupPlan @defaults("name") {
   backupConfig dict
   // Whether the plan is deactivated
   deactivated bool
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // State (CLUSTER_PENDING, PROVISIONING, READY, FAILED, DEACTIVATED, DELETING)
   state string
@@ -7766,7 +7766,7 @@ private gcp.project.gkeBackupService.backupPlan @defaults("name") {
   stateReason string
   // Protected pod count
   protectedPodCount int
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
   // Creation time
   created time
@@ -7780,7 +7780,7 @@ private gcp.project.gkeBackupService.restorePlan @defaults("name") {
   name string
   // Unique identifier
   uid string
-  // Description
+  // Human-readable description of the resource
   description string
   // Source backup plan name
   backupPlanName string
@@ -7790,13 +7790,13 @@ private gcp.project.gkeBackupService.restorePlan @defaults("name") {
   cluster string
   // Restore configuration
   restoreConfig dict
-  // Labels
+  // User-defined key/value labels for organizing the resource
   labels map[string]string
   // State (CLUSTER_PENDING, READY, FAILED, DELETING)
   state string
   // State reason
   stateReason string
-  // Etag
+  // ETag used for concurrency control on resource updates
   etag string
   // Creation time
   created time
