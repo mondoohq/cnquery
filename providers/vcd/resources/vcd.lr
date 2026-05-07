@@ -114,7 +114,7 @@ vcd.networkPool {
   name string
   // Whether the network pool is busy
   isBusy bool
-  // Type of network pool (0=Vlan backed network pool; 1=vNI backed network pool;2=Portgroup backed network pool)
+  // Type of network pool (0=VLAN-backed, 1=vNI-backed, 2=portgroup-backed)
   networkPoolType int
 }
 
@@ -248,7 +248,7 @@ vcd.vdc {
   id string
   // Name of the VDC
   name string
-  // Creation status of the VDC (0=creating, 1=ready, -1=error)
+  // Creation status of the VDC (-1=error, 0=creating, 1=ready)
   status int
   // Optional description
   description string
@@ -258,7 +258,7 @@ vcd.vdc {
   nicQuota int
   // Maximum number of network objects allowed (0=unlimited)
   networkQuota int
-  // Number of networks in use for/by this VDC
+  // Count of networks currently in use by this VDC
   usedNetworkCount int
   // Quota of VMs that can be created in this VDC
   vmQuota int
