@@ -6,6 +6,7 @@ package windows
 import (
 	"io"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -81,20 +82,52 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 		entry := keys[i]
 		rawValue := entry.Value()
 
-		valuesT := strings.Split(rawValue, ",")
+		rawValues := strings.Split(rawValue, ",")
+		valuesT := make([]string, 0, len(rawValues))
+		for i := range rawValues {
+			val, ok := normalizePrivilegeRight(rawValues[i])
+			if ok {
+				valuesT = append(valuesT, val)
+			}
+		}
 		sort.Strings(valuesT)
 
 		values := make([]any, len(valuesT))
 		for i := range valuesT {
-			val := valuesT[i]
-			val = strings.Replace(val, "*S", "S", 1)
-			values[i] = val
+			values[i] = valuesT[i]
 		}
 
 		res.PrivilegeRights[entry.Name()] = values
 	}
 
 	return res, nil
+}
+
+func normalizePrivilegeRight(value string) (string, bool) {
+	sid := strings.TrimSpace(value)
+	sid = strings.TrimPrefix(sid, "*")
+	if !isSecurityIdentifier(sid) {
+		return "", false
+	}
+	return sid, true
+}
+
+func isSecurityIdentifier(value string) bool {
+	parts := strings.Split(value, "-")
+	if len(parts) < 3 || parts[0] != "S" {
+		return false
+	}
+
+	for _, part := range parts[1:] {
+		if part == "" {
+			return false
+		}
+		if _, err := strconv.ParseUint(part, 10, 64); err != nil {
+			return false
+		}
+	}
+
+	return true
 }
 
 // SecpolScript exports the local security policy and resolves any non-SID
@@ -104,6 +137,26 @@ const SecpolScript = `
 secedit /export /cfg out.cfg | Out-Null
 $raw = Get-Content out.cfg
 Remove-Item .\out.cfg | Out-Null
+function Resolve-PrivilegeRightSid($v) {
+    $v = $v.Trim()
+    if ($v -eq '') { return $null }
+    if ($v -match '^\*S-') { return $v }
+    if ($v -match '^S-') { return ('*' + $v) }
+    if ($v -eq 'Guest') {
+        try {
+            $guest = Get-LocalUser -Name "Guest" -ErrorAction Stop
+            if ($null -ne $guest.SID -and $guest.SID.Value -match '^S-') {
+                return ('*' + $guest.SID.Value)
+            }
+        } catch {}
+    }
+    try {
+        $a = [System.Security.Principal.NTAccount]::new($v)
+        return ('*' + $a.Translate([System.Security.Principal.SecurityIdentifier]).Value)
+    } catch {
+        return $null
+    }
+}
 $inPR = $false
 $out = @()
 foreach ($l in $raw) {
@@ -115,17 +168,8 @@ foreach ($l in $raw) {
         $vs = $l.Substring($i + 3) -split ','
         $rs = @()
         foreach ($v in $vs) {
-            $v = $v.Trim()
-            if ($v -match '^\*S-' -or $v -eq '') {
-                $rs += $v
-            } else {
-                try {
-                    $a = [System.Security.Principal.NTAccount]::new($v)
-                    $rs += ('*' + $a.Translate([System.Security.Principal.SecurityIdentifier]).Value)
-                } catch {
-                    $rs += $v
-                }
-            }
+            $sid = Resolve-PrivilegeRightSid $v
+            if ($null -ne $sid) { $rs += $sid }
         }
         $out += ($k + ' = ' + ($rs -join ','))
     } else {

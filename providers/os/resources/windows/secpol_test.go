@@ -33,9 +33,8 @@ func TestParseSecpol(t *testing.T) {
 }
 
 func TestParseSecpolWithNonSIDEntries(t *testing.T) {
-	// Simulate secedit output where the script could not resolve a name to a SID
-	// (e.g., on non-English Windows where "Guest" might appear as "Gast").
-	// The parser should pass through non-SID entries as-is.
+	// Simulate secedit output where the script could not resolve a name to a SID.
+	// The parser should keep secpol.privilegerights output restricted to SIDs.
 	input := `[Unicode]
 Unicode=yes
 [System Access]
@@ -54,7 +53,27 @@ Revision=1
 	secpol, err := ParseSecpol(strings.NewReader(input))
 	require.NoError(t, err)
 
-	// Non-SID entries are kept as-is (sorted alphabetically)
-	assert.Equal(t, []any{"S-1-5-32-544", "Guest"}, secpol.PrivilegeRights["SeDenyNetworkLogonRight"])
-	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-32-545", "Gast"}, secpol.PrivilegeRights["SeInteractiveLogonRight"])
+	assert.Equal(t, []any{"S-1-5-32-544"}, secpol.PrivilegeRights["SeDenyNetworkLogonRight"])
+	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-32-545"}, secpol.PrivilegeRights["SeInteractiveLogonRight"])
+}
+
+func TestParseSecpolNormalizesPrivilegeRightSIDs(t *testing.T) {
+	input := `[Unicode]
+Unicode=yes
+[System Access]
+MinimumPasswordAge = 0
+[Event Audit]
+AuditSystemEvents = 0
+[Registry Values]
+MACHINE\System\foo=4,0
+[Privilege Rights]
+SeDenyNetworkLogonRight = S-1-5-32-545,*S-1-5-32-544,Guest,,not-a-sid,S-1-X-0
+[Version]
+signature="$CHICAGO$"
+Revision=1
+`
+	secpol, err := ParseSecpol(strings.NewReader(input))
+	require.NoError(t, err)
+
+	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-32-545"}, secpol.PrivilegeRights["SeDenyNetworkLogonRight"])
 }
