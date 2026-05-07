@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/okta"
 option go_package = "go.mondoo.com/mql/v13/providers/okta/resources"
 
-// Okta
+// Okta organization: users, groups, applications, policies, and access logs
 okta {
   // Okta users
   users() []okta.user
@@ -144,12 +144,7 @@ private okta.userFactor @defaults("factorType status") {
   lastUpdated time
   // The user this factor belongs to
   user() okta.user
-  // Provider/factor-type-specific data. Shape depends on factorType:
-  // - sms/call: { phoneNumber }
-  // - push: { name, platform, version, deviceType, ... }
-  // - webauthn: { credentialId, authenticatorName, ... }
-  // - token:software:totp: { credentialId }
-  // - question: { question, questionText }
+  // Provider- and factor-type-specific profile data (e.g., phone number for SMS, credential metadata for WebAuthn)
   profile dict
 }
 
@@ -349,7 +344,7 @@ private okta.policy @defaults("name") {
   priority int
   // Status of the policy: ACTIVE or INACTIVE
   status string
-  // Whether the policy is a system policy
+  // Whether the policy is system-managed (built-in and not user-editable)
   system bool
   // Specifies the type of policy
   type string
@@ -375,7 +370,7 @@ private okta.policyRule @defaults("name") {
   priority int
   // Status of the rule: ACTIVE or INACTIVE
   status string
-  // Whether the rule is a system policy rule
+  // Whether the rule is system-managed (built-in and not user-editable)
   system bool
   // Rule type
   type string
@@ -425,7 +420,7 @@ private okta.network @defaults("name type") {
   lastUpdated time
   // Status of the network zone
   status string
-  // Whether the network zone is system-defined
+  // Whether the network zone is system-managed (built-in and not user-editable)
   system bool
   // ISP ASNs for the network zone
   asns []string
