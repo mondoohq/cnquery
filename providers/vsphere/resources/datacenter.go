@@ -395,9 +395,7 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 				}
 				instanceUuid = cfg.InstanceUuid
 				biosUuid = cfg.Uuid
-				if cfg.Template {
-					template = true
-				}
+				template = cfg.Template
 				for _, dev := range cfg.Hardware.Device {
 					if _, ok := dev.(*vimtypes.VirtualTPM); ok {
 						vtpmPresent = true

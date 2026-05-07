@@ -29,6 +29,7 @@ artifactregistry
 asdk
 ASGs
 aspnet
+atapi
 atlassian
 auditlog
 Auths
@@ -73,6 +74,7 @@ cbf
 ccf
 CCN
 cdn
+cdroms
 Centrify
 ceph
 certificatechains
@@ -407,6 +409,7 @@ panos
 parallelquery
 passthrough
 PAYG
+pcnet
 pdp
 persistentvolume
 persistentvolumeclaim
@@ -510,6 +513,7 @@ spo
 sqli
 sqlimatchstatement
 sqlserver
+sriov
 srp
 sslv
 Sspr
@@ -588,6 +592,7 @@ vmhba
 VMID
 vmstate
 VMX
+vmxnet
 vnet
 vnic
 vpus

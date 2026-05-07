@@ -713,9 +713,9 @@ private vsphere.vm.networkAdapter @defaults("label adapterType macAddress connec
   wakeOnLan bool
   // Backing variant: network (standard portgroup by name), dvs (distributed port group), opaque (NSX-T logical switch), or empty for unknown
   backingType string
-  // Port group name (human-readable). For DVS backings this is the port group label; for standard backings this is the network/portgroup name.
+  // Network or portgroup name (human-readable). Populated for standard portgroup backings (`backingType == "network"`) and opaque-network backings; empty for DVS backings — use `portGroupMoid` to identify the port group instead.
   portGroupName string
-  // Encoded ManagedObjectReference of the distributed port group; empty for standard portgroup or opaque backings
+  // DistributedVirtualSwitchPortConnection.PortgroupKey (the moid of the distributed port group); empty for standard portgroup or opaque backings
   portGroupMoid string
 }
 
