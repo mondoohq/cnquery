@@ -377,6 +377,86 @@ private vsphere.host @defaults("moid name") {
   cluster() vsphere.cluster
   // Datastores mounted on the host, resolved against vsphere.datacenters[].datastores
   datastores() []vsphere.datastore
+  // Last-boot timestamp + BIOS / firmware identity
+  bootInfo() vsphere.host.bootInfo
+  // Hardware identity — UUID, serial, asset/service tag, install date
+  systemInfo() vsphere.host.systemInfo
+  // Host DNS configuration
+  dnsConfig() vsphere.host.dnsConfig
+  // Host IP routing (default gateways)
+  ipRouteConfig() vsphere.host.ipRouteConfig
+}
+
+// Last-boot timestamp and BIOS / platform-firmware identity for an ESXi host.
+// All fields source from mo.HostSystem.Runtime.BootTime and Hardware.BiosInfo.
+private vsphere.host.bootInfo @defaults("bootTime biosVersion") {
+  // Last time the host booted; zero time if vCenter has never observed a boot
+  bootTime time
+  // BIOS version string as reported by SMBIOS
+  biosVersion string
+  // BIOS release date
+  biosReleaseDate time
+  // BIOS major release number (vendor-specific)
+  biosMajorRelease int
+  // BIOS minor release number
+  biosMinorRelease int
+  // Platform firmware major release (UEFI / BMC), separate from system BIOS
+  firmwareMajorRelease int
+  // Platform firmware minor release
+  firmwareMinorRelease int
+}
+
+// Hardware identity for an ESXi host: vendor SMBIOS plus the typed pieces of
+// HostSystemIdentificationInfo that map to known keys (asset tag, service tag,
+// install date). Anything else lands in oemSpecific so unusual platforms
+// (HPE iLO, IBM, custom OEM) don't lose data.
+private vsphere.host.systemInfo @defaults("model serialNumber") {
+  // Hardware vendor (SMBIOS) — same value as vsphere.host.vendor, exposed here for grouping
+  vendor string
+  // Hardware model (SMBIOS)
+  model string
+  // Hardware UUID (SMBIOS UUID, stable per chassis)
+  uuid string
+  // Vendor-assigned serial number; empty when not reported
+  serialNumber string
+  // Asset tag from SMBIOS, when populated by the vendor
+  assetTag string
+  // Service tag (Dell-specific identifier; empty on non-Dell hardware)
+  serviceTag string
+  // ESXi install date (vSphere 7+); zero time when the platform doesn't report it
+  installDate time
+  // Other vendor-specific identifying info that doesn't map to the named fields above (key → value)
+  oemSpecific map[string]string
+}
+
+// Host DNS configuration sourced from mo.HostSystem.Config.Network.DnsConfig.
+private vsphere.host.dnsConfig @defaults("hostName domain") {
+  // Whether DNS settings come from DHCP (when true, the static fields below may be ignored)
+  dhcp bool
+  // Hostname portion (no domain)
+  hostName string
+  // DNS domain
+  domain string
+  // FQDN convenience: hostName + "." + domain when both are set, otherwise just hostName
+  fqdn string
+  // Configured DNS server addresses
+  servers []string
+  // DNS search domains
+  searchDomains []string
+  // VMkernel NIC the DNS configuration is bound to (e.g. "vmk0"); empty when not pinned
+  virtualNicDevice string
+}
+
+// Host IP routing (default gateway) sourced from mo.HostSystem.Config.Network.IpRouteConfig.
+private vsphere.host.ipRouteConfig @defaults("defaultGateway ipv6DefaultGateway") {
+  // IPv4 default gateway; empty when not configured
+  defaultGateway string
+  // IPv6 default gateway; empty when not configured
+  ipv6DefaultGateway string
+  // VMkernel NIC the IPv4 default gateway is bound to (e.g. "vmk0")
+  gatewayDevice string
+  // VMkernel NIC the IPv6 default gateway is bound to
+  ipv6GatewayDevice string
 }
 
 // ESXi firewall ruleset — one entry per network service (e.g., CIMHttpServer,

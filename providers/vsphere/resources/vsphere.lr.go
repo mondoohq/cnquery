@@ -34,6 +34,10 @@ const (
 	ResourceVsphereDatastore           string = "vsphere.datastore"
 	ResourceVsphereCluster             string = "vsphere.cluster"
 	ResourceVsphereHost                string = "vsphere.host"
+	ResourceVsphereHostBootInfo        string = "vsphere.host.bootInfo"
+	ResourceVsphereHostSystemInfo      string = "vsphere.host.systemInfo"
+	ResourceVsphereHostDnsConfig       string = "vsphere.host.dnsConfig"
+	ResourceVsphereHostIpRouteConfig   string = "vsphere.host.ipRouteConfig"
 	ResourceVsphereHostFirewallRuleset string = "vsphere.host.firewallRuleset"
 	ResourceVsphereHostFirewallRule    string = "vsphere.host.firewallRule"
 	ResourceVsphereHostIscsiAdapter    string = "vsphere.host.iscsiAdapter"
@@ -141,6 +145,22 @@ func init() {
 		"vsphere.host": {
 			Init:   initVsphereHost,
 			Create: createVsphereHost,
+		},
+		"vsphere.host.bootInfo": {
+			// to override args, implement: initVsphereHostBootInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostBootInfo,
+		},
+		"vsphere.host.systemInfo": {
+			// to override args, implement: initVsphereHostSystemInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostSystemInfo,
+		},
+		"vsphere.host.dnsConfig": {
+			// to override args, implement: initVsphereHostDnsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostDnsConfig,
+		},
+		"vsphere.host.ipRouteConfig": {
+			// to override args, implement: initVsphereHostIpRouteConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVsphereHostIpRouteConfig,
 		},
 		"vsphere.host.firewallRuleset": {
 			// to override args, implement: initVsphereHostFirewallRuleset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -767,6 +787,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vsphere.host.datastores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHost).GetDatastores()).ToDataRes(types.Array(types.Resource("vsphere.datastore")))
+	},
+	"vsphere.host.bootInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetBootInfo()).ToDataRes(types.Resource("vsphere.host.bootInfo"))
+	},
+	"vsphere.host.systemInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetSystemInfo()).ToDataRes(types.Resource("vsphere.host.systemInfo"))
+	},
+	"vsphere.host.dnsConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetDnsConfig()).ToDataRes(types.Resource("vsphere.host.dnsConfig"))
+	},
+	"vsphere.host.ipRouteConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHost).GetIpRouteConfig()).ToDataRes(types.Resource("vsphere.host.ipRouteConfig"))
+	},
+	"vsphere.host.bootInfo.bootTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostBootInfo).GetBootTime()).ToDataRes(types.Time)
+	},
+	"vsphere.host.bootInfo.biosVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostBootInfo).GetBiosVersion()).ToDataRes(types.String)
+	},
+	"vsphere.host.bootInfo.biosReleaseDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostBootInfo).GetBiosReleaseDate()).ToDataRes(types.Time)
+	},
+	"vsphere.host.bootInfo.biosMajorRelease": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostBootInfo).GetBiosMajorRelease()).ToDataRes(types.Int)
+	},
+	"vsphere.host.bootInfo.biosMinorRelease": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostBootInfo).GetBiosMinorRelease()).ToDataRes(types.Int)
+	},
+	"vsphere.host.bootInfo.firmwareMajorRelease": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostBootInfo).GetFirmwareMajorRelease()).ToDataRes(types.Int)
+	},
+	"vsphere.host.bootInfo.firmwareMinorRelease": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostBootInfo).GetFirmwareMinorRelease()).ToDataRes(types.Int)
+	},
+	"vsphere.host.systemInfo.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSystemInfo).GetVendor()).ToDataRes(types.String)
+	},
+	"vsphere.host.systemInfo.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSystemInfo).GetModel()).ToDataRes(types.String)
+	},
+	"vsphere.host.systemInfo.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSystemInfo).GetUuid()).ToDataRes(types.String)
+	},
+	"vsphere.host.systemInfo.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSystemInfo).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"vsphere.host.systemInfo.assetTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSystemInfo).GetAssetTag()).ToDataRes(types.String)
+	},
+	"vsphere.host.systemInfo.serviceTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSystemInfo).GetServiceTag()).ToDataRes(types.String)
+	},
+	"vsphere.host.systemInfo.installDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSystemInfo).GetInstallDate()).ToDataRes(types.Time)
+	},
+	"vsphere.host.systemInfo.oemSpecific": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostSystemInfo).GetOemSpecific()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"vsphere.host.dnsConfig.dhcp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostDnsConfig).GetDhcp()).ToDataRes(types.Bool)
+	},
+	"vsphere.host.dnsConfig.hostName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostDnsConfig).GetHostName()).ToDataRes(types.String)
+	},
+	"vsphere.host.dnsConfig.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostDnsConfig).GetDomain()).ToDataRes(types.String)
+	},
+	"vsphere.host.dnsConfig.fqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostDnsConfig).GetFqdn()).ToDataRes(types.String)
+	},
+	"vsphere.host.dnsConfig.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostDnsConfig).GetServers()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.host.dnsConfig.searchDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostDnsConfig).GetSearchDomains()).ToDataRes(types.Array(types.String))
+	},
+	"vsphere.host.dnsConfig.virtualNicDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostDnsConfig).GetVirtualNicDevice()).ToDataRes(types.String)
+	},
+	"vsphere.host.ipRouteConfig.defaultGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIpRouteConfig).GetDefaultGateway()).ToDataRes(types.String)
+	},
+	"vsphere.host.ipRouteConfig.ipv6DefaultGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIpRouteConfig).GetIpv6DefaultGateway()).ToDataRes(types.String)
+	},
+	"vsphere.host.ipRouteConfig.gatewayDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIpRouteConfig).GetGatewayDevice()).ToDataRes(types.String)
+	},
+	"vsphere.host.ipRouteConfig.ipv6GatewayDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVsphereHostIpRouteConfig).GetIpv6GatewayDevice()).ToDataRes(types.String)
 	},
 	"vsphere.host.firewallRuleset.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVsphereHostFirewallRuleset).GetId()).ToDataRes(types.String)
@@ -2057,6 +2167,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vsphere.host.datastores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVsphereHost).Datastores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.bootInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).BootInfo, ok = plugin.RawToTValue[*mqlVsphereHostBootInfo](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.systemInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).SystemInfo, ok = plugin.RawToTValue[*mqlVsphereHostSystemInfo](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.dnsConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).DnsConfig, ok = plugin.RawToTValue[*mqlVsphereHostDnsConfig](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ipRouteConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHost).IpRouteConfig, ok = plugin.RawToTValue[*mqlVsphereHostIpRouteConfig](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.bootInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostBootInfo).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.bootInfo.bootTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostBootInfo).BootTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.bootInfo.biosVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostBootInfo).BiosVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.bootInfo.biosReleaseDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostBootInfo).BiosReleaseDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.bootInfo.biosMajorRelease": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostBootInfo).BiosMajorRelease, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.bootInfo.biosMinorRelease": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostBootInfo).BiosMinorRelease, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.bootInfo.firmwareMajorRelease": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostBootInfo).FirmwareMajorRelease, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.bootInfo.firmwareMinorRelease": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostBootInfo).FirmwareMinorRelease, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.systemInfo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSystemInfo).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.systemInfo.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSystemInfo).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.systemInfo.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSystemInfo).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.systemInfo.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSystemInfo).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.systemInfo.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSystemInfo).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.systemInfo.assetTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSystemInfo).AssetTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.systemInfo.serviceTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSystemInfo).ServiceTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.systemInfo.installDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSystemInfo).InstallDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.systemInfo.oemSpecific": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostSystemInfo).OemSpecific, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.dnsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostDnsConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.dnsConfig.dhcp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostDnsConfig).Dhcp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.dnsConfig.hostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostDnsConfig).HostName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.dnsConfig.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostDnsConfig).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.dnsConfig.fqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostDnsConfig).Fqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.dnsConfig.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostDnsConfig).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.dnsConfig.searchDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostDnsConfig).SearchDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.dnsConfig.virtualNicDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostDnsConfig).VirtualNicDevice, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ipRouteConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIpRouteConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"vsphere.host.ipRouteConfig.defaultGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIpRouteConfig).DefaultGateway, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ipRouteConfig.ipv6DefaultGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIpRouteConfig).Ipv6DefaultGateway, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ipRouteConfig.gatewayDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIpRouteConfig).GatewayDevice, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vsphere.host.ipRouteConfig.ipv6GatewayDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVsphereHostIpRouteConfig).Ipv6GatewayDevice, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vsphere.host.firewallRuleset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4647,6 +4893,10 @@ type mqlVsphereHost struct {
 	IscsiAdapters           plugin.TValue[[]any]
 	Cluster                 plugin.TValue[*mqlVsphereCluster]
 	Datastores              plugin.TValue[[]any]
+	BootInfo                plugin.TValue[*mqlVsphereHostBootInfo]
+	SystemInfo              plugin.TValue[*mqlVsphereHostSystemInfo]
+	DnsConfig               plugin.TValue[*mqlVsphereHostDnsConfig]
+	IpRouteConfig           plugin.TValue[*mqlVsphereHostIpRouteConfig]
 }
 
 // createVsphereHost creates a new instance of this resource
@@ -4978,6 +5228,376 @@ func (c *mqlVsphereHost) GetDatastores() *plugin.TValue[[]any] {
 
 		return c.datastores()
 	})
+}
+
+func (c *mqlVsphereHost) GetBootInfo() *plugin.TValue[*mqlVsphereHostBootInfo] {
+	return plugin.GetOrCompute[*mqlVsphereHostBootInfo](&c.BootInfo, func() (*mqlVsphereHostBootInfo, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "bootInfo")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereHostBootInfo), nil
+			}
+		}
+
+		return c.bootInfo()
+	})
+}
+
+func (c *mqlVsphereHost) GetSystemInfo() *plugin.TValue[*mqlVsphereHostSystemInfo] {
+	return plugin.GetOrCompute[*mqlVsphereHostSystemInfo](&c.SystemInfo, func() (*mqlVsphereHostSystemInfo, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "systemInfo")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereHostSystemInfo), nil
+			}
+		}
+
+		return c.systemInfo()
+	})
+}
+
+func (c *mqlVsphereHost) GetDnsConfig() *plugin.TValue[*mqlVsphereHostDnsConfig] {
+	return plugin.GetOrCompute[*mqlVsphereHostDnsConfig](&c.DnsConfig, func() (*mqlVsphereHostDnsConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "dnsConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereHostDnsConfig), nil
+			}
+		}
+
+		return c.dnsConfig()
+	})
+}
+
+func (c *mqlVsphereHost) GetIpRouteConfig() *plugin.TValue[*mqlVsphereHostIpRouteConfig] {
+	return plugin.GetOrCompute[*mqlVsphereHostIpRouteConfig](&c.IpRouteConfig, func() (*mqlVsphereHostIpRouteConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vsphere.host", c.__id, "ipRouteConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVsphereHostIpRouteConfig), nil
+			}
+		}
+
+		return c.ipRouteConfig()
+	})
+}
+
+// mqlVsphereHostBootInfo for the vsphere.host.bootInfo resource
+type mqlVsphereHostBootInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostBootInfoInternal it will be used here
+	BootTime             plugin.TValue[*time.Time]
+	BiosVersion          plugin.TValue[string]
+	BiosReleaseDate      plugin.TValue[*time.Time]
+	BiosMajorRelease     plugin.TValue[int64]
+	BiosMinorRelease     plugin.TValue[int64]
+	FirmwareMajorRelease plugin.TValue[int64]
+	FirmwareMinorRelease plugin.TValue[int64]
+}
+
+// createVsphereHostBootInfo creates a new instance of this resource
+func createVsphereHostBootInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostBootInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.bootInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostBootInfo) MqlName() string {
+	return "vsphere.host.bootInfo"
+}
+
+func (c *mqlVsphereHostBootInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostBootInfo) GetBootTime() *plugin.TValue[*time.Time] {
+	return &c.BootTime
+}
+
+func (c *mqlVsphereHostBootInfo) GetBiosVersion() *plugin.TValue[string] {
+	return &c.BiosVersion
+}
+
+func (c *mqlVsphereHostBootInfo) GetBiosReleaseDate() *plugin.TValue[*time.Time] {
+	return &c.BiosReleaseDate
+}
+
+func (c *mqlVsphereHostBootInfo) GetBiosMajorRelease() *plugin.TValue[int64] {
+	return &c.BiosMajorRelease
+}
+
+func (c *mqlVsphereHostBootInfo) GetBiosMinorRelease() *plugin.TValue[int64] {
+	return &c.BiosMinorRelease
+}
+
+func (c *mqlVsphereHostBootInfo) GetFirmwareMajorRelease() *plugin.TValue[int64] {
+	return &c.FirmwareMajorRelease
+}
+
+func (c *mqlVsphereHostBootInfo) GetFirmwareMinorRelease() *plugin.TValue[int64] {
+	return &c.FirmwareMinorRelease
+}
+
+// mqlVsphereHostSystemInfo for the vsphere.host.systemInfo resource
+type mqlVsphereHostSystemInfo struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostSystemInfoInternal it will be used here
+	Vendor       plugin.TValue[string]
+	Model        plugin.TValue[string]
+	Uuid         plugin.TValue[string]
+	SerialNumber plugin.TValue[string]
+	AssetTag     plugin.TValue[string]
+	ServiceTag   plugin.TValue[string]
+	InstallDate  plugin.TValue[*time.Time]
+	OemSpecific  plugin.TValue[map[string]any]
+}
+
+// createVsphereHostSystemInfo creates a new instance of this resource
+func createVsphereHostSystemInfo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostSystemInfo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.systemInfo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostSystemInfo) MqlName() string {
+	return "vsphere.host.systemInfo"
+}
+
+func (c *mqlVsphereHostSystemInfo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostSystemInfo) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlVsphereHostSystemInfo) GetModel() *plugin.TValue[string] {
+	return &c.Model
+}
+
+func (c *mqlVsphereHostSystemInfo) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlVsphereHostSystemInfo) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlVsphereHostSystemInfo) GetAssetTag() *plugin.TValue[string] {
+	return &c.AssetTag
+}
+
+func (c *mqlVsphereHostSystemInfo) GetServiceTag() *plugin.TValue[string] {
+	return &c.ServiceTag
+}
+
+func (c *mqlVsphereHostSystemInfo) GetInstallDate() *plugin.TValue[*time.Time] {
+	return &c.InstallDate
+}
+
+func (c *mqlVsphereHostSystemInfo) GetOemSpecific() *plugin.TValue[map[string]any] {
+	return &c.OemSpecific
+}
+
+// mqlVsphereHostDnsConfig for the vsphere.host.dnsConfig resource
+type mqlVsphereHostDnsConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostDnsConfigInternal it will be used here
+	Dhcp             plugin.TValue[bool]
+	HostName         plugin.TValue[string]
+	Domain           plugin.TValue[string]
+	Fqdn             plugin.TValue[string]
+	Servers          plugin.TValue[[]any]
+	SearchDomains    plugin.TValue[[]any]
+	VirtualNicDevice plugin.TValue[string]
+}
+
+// createVsphereHostDnsConfig creates a new instance of this resource
+func createVsphereHostDnsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostDnsConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.dnsConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostDnsConfig) MqlName() string {
+	return "vsphere.host.dnsConfig"
+}
+
+func (c *mqlVsphereHostDnsConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostDnsConfig) GetDhcp() *plugin.TValue[bool] {
+	return &c.Dhcp
+}
+
+func (c *mqlVsphereHostDnsConfig) GetHostName() *plugin.TValue[string] {
+	return &c.HostName
+}
+
+func (c *mqlVsphereHostDnsConfig) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlVsphereHostDnsConfig) GetFqdn() *plugin.TValue[string] {
+	return &c.Fqdn
+}
+
+func (c *mqlVsphereHostDnsConfig) GetServers() *plugin.TValue[[]any] {
+	return &c.Servers
+}
+
+func (c *mqlVsphereHostDnsConfig) GetSearchDomains() *plugin.TValue[[]any] {
+	return &c.SearchDomains
+}
+
+func (c *mqlVsphereHostDnsConfig) GetVirtualNicDevice() *plugin.TValue[string] {
+	return &c.VirtualNicDevice
+}
+
+// mqlVsphereHostIpRouteConfig for the vsphere.host.ipRouteConfig resource
+type mqlVsphereHostIpRouteConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVsphereHostIpRouteConfigInternal it will be used here
+	DefaultGateway     plugin.TValue[string]
+	Ipv6DefaultGateway plugin.TValue[string]
+	GatewayDevice      plugin.TValue[string]
+	Ipv6GatewayDevice  plugin.TValue[string]
+}
+
+// createVsphereHostIpRouteConfig creates a new instance of this resource
+func createVsphereHostIpRouteConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVsphereHostIpRouteConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vsphere.host.ipRouteConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVsphereHostIpRouteConfig) MqlName() string {
+	return "vsphere.host.ipRouteConfig"
+}
+
+func (c *mqlVsphereHostIpRouteConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVsphereHostIpRouteConfig) GetDefaultGateway() *plugin.TValue[string] {
+	return &c.DefaultGateway
+}
+
+func (c *mqlVsphereHostIpRouteConfig) GetIpv6DefaultGateway() *plugin.TValue[string] {
+	return &c.Ipv6DefaultGateway
+}
+
+func (c *mqlVsphereHostIpRouteConfig) GetGatewayDevice() *plugin.TValue[string] {
+	return &c.GatewayDevice
+}
+
+func (c *mqlVsphereHostIpRouteConfig) GetIpv6GatewayDevice() *plugin.TValue[string] {
+	return &c.Ipv6GatewayDevice
 }
 
 // mqlVsphereHostFirewallRuleset for the vsphere.host.firewallRuleset resource

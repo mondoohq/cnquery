@@ -617,6 +617,22 @@ func (v *mqlVsphereHostCertificate) id() (string, error) {
 	return v.Id.Data, nil
 }
 
+func (v *mqlVsphereHostBootInfo) id() (string, error) {
+	return v.MqlID(), nil
+}
+
+func (v *mqlVsphereHostSystemInfo) id() (string, error) {
+	return v.MqlID(), nil
+}
+
+func (v *mqlVsphereHostDnsConfig) id() (string, error) {
+	return v.MqlID(), nil
+}
+
+func (v *mqlVsphereHostIpRouteConfig) id() (string, error) {
+	return v.MqlID(), nil
+}
+
 func (v *mqlVsphereFolder) id() (string, error) {
 	return v.Moid.Data, nil
 }
