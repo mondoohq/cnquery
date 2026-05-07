@@ -76,14 +76,14 @@ func (v *mqlVsphereVswitchStandard) uplinks() ([]any, error) {
 		return nil, errors.New("unexpected properties structure for vsphere switch")
 	}
 
-	// if no properties are set, we have no uplinks for dvs
+	// if no properties are set, we have no uplinks for the switch
 	if properties == nil {
-		return nil, nil
+		return []any{}, nil
 	}
 
 	uplinksRaw := properties["Uplinks"]
 	if uplinksRaw == nil {
-		return nil, nil
+		return []any{}, nil
 	}
 
 	uplinkNames, ok := uplinksRaw.([]any)
@@ -150,20 +150,14 @@ func (v *mqlVsphereVswitchDvs) uplinks() ([]any, error) {
 		return nil, errors.New("unexpected properties structure for vsphere switch")
 	}
 
-	// if no properties are set, we have no uplinks for dvs
+	// if no properties are set, we have no uplinks for the dvs
 	if properties == nil {
-		return nil, nil
+		return []any{}, nil
 	}
 
 	uplinksRaw, ok := properties["Uplinks"]
-	if !ok {
-		// no uplinks for dvs
-		return nil, nil
-	}
-
-	// empty uplinks for dvs
-	if uplinksRaw == nil {
-		return nil, nil
+	if !ok || uplinksRaw == nil {
+		return []any{}, nil
 	}
 
 	uplinkNames, ok := uplinksRaw.([]any)

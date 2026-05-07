@@ -444,6 +444,8 @@ func (esxi *Esxi) SoftwareAcceptance() (string, error) {
 	if res.String != "" {
 		return res.String, nil
 	}
+	// `software acceptance get` returns a single key/value, so iteration
+	// order across the maps is irrelevant — return the first populated value.
 	for _, v := range res.Values {
 		for _, vals := range v {
 			if len(vals) > 0 && vals[0] != "" {
