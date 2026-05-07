@@ -26,6 +26,7 @@ extend asset {
   purl() string
 }
 
+// End-of-life information for the asset's operating system/platform
 asset.eol @defaults("date") {
   // Documentation URL
   docsUrl string
@@ -169,6 +170,7 @@ private audit.cve {
   worstScore    audit.cvss
 }
 
+// Hardware information from SMBIOS / DMI
 machine {}
 
 // SMBIOS BIOS information
@@ -293,6 +295,7 @@ os.update @defaults("name")  {
   format string
 }
 
+// Generic operating system information common to all platforms
 os.base {
   embed machine
 
@@ -316,10 +319,12 @@ os.base {
   users() users
 }
 
+// Operating system information for Unix-like platforms
 os.unix {
   embed os.base as base
 }
 
+// Operating system information for Linux platforms
 os.linux {
   embed os.unix as unix
 
@@ -446,6 +451,7 @@ private file.permissions @defaults("string") {
   string() string
 }
 
+// Namespace for file search and discovery resources
 files {}
 
 // Find files on the system
@@ -684,6 +690,7 @@ package @defaults("name version") {
   vendor string
 }
 
+// File installed by a package
 private pkgFileInfo @defaults("path") {
   // Path to the file
   path string
@@ -707,6 +714,7 @@ pam.conf {
   entries(files) map[string][]pam.conf.serviceEntry
 }
 
+// A single entry within a PAM service configuration
 private pam.conf.serviceEntry @defaults("service module") {
   // Service file that the entry is from
   service string
@@ -1007,6 +1015,7 @@ journald.config.section @defaults("name") {
   params []journald.config.section.param
 }
 
+// A key-value parameter inside a journald configuration section
 journald.config.section.param @defaults("name value") {
   // Configuration parameter name
   name string
@@ -2333,6 +2342,7 @@ npm.packages {
   scripts() map[string]string
 }
 
+// npm package dependency
 npm.package @defaults("name version purl") {
   // ID is the npm.package unique identifier
   id string
@@ -2367,6 +2377,7 @@ go.packages {
   files() []pkgFileInfo
 }
 
+// Go module dependency
 go.package @defaults("name version purl") {
   // ID is the go.package unique identifier
   id string
@@ -2401,6 +2412,7 @@ java.packages {
   files() []pkgFileInfo
 }
 
+// Java package (Maven, Gradle, or JAR archive)
 java.package @defaults("name version purl") {
   // ID is the java.package unique identifier
   id string
@@ -2435,6 +2447,7 @@ rust.packages {
   files() []pkgFileInfo
 }
 
+// Rust/Cargo crate dependency
 rust.package @defaults("name version purl") {
   // ID is the rust.package unique identifier
   id string
@@ -2469,6 +2482,7 @@ dotnet.packages {
   files() []pkgFileInfo
 }
 
+// .NET / NuGet package dependency
 dotnet.package @defaults("name version purl") {
   // ID is the dotnet.package unique identifier
   id string
@@ -2503,6 +2517,7 @@ php.packages {
   files() []pkgFileInfo
 }
 
+// PHP / Composer package dependency
 php.package @defaults("name version purl") {
   // ID is the php.package unique identifier
   id string
