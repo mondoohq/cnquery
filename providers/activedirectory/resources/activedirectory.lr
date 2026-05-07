@@ -174,7 +174,7 @@ activedirectory.user @defaults("sAMAccountName displayName enabled") {
   useDesKeyOnly bool
   // Whether reversible password encryption is allowed for the account
   reversibleEncryption bool
-  // userAccountControl raw flags
+  // Raw userAccountControl bitmask combining account-status flags (disabled, locked, password-not-required, etc.)
   userAccountControl int
   // Admin count flag (indicates adminSDHolder protection)
   adminCount bool
@@ -290,7 +290,7 @@ activedirectory.computer @defaults("name operatingSystem enabled") {
   daysSinceLastLogon int
   // Whether the account is stale (>90 days)
   isStale bool
-  // userAccountControl flags
+  // Raw userAccountControl bitmask combining account-status, delegation, and encryption flags
   userAccountControl int
   // Whether unconstrained delegation is enabled
   unconstrainedDelegation bool
@@ -426,9 +426,9 @@ activedirectory.certificateTemplate @defaults("name") {
   managerApprovalRequired bool
   // Number of authorized signatures required
   authorizedSignaturesRequired int
-  // Enrollment flags raw value
+  // Raw msPKI-Enrollment-Flag bitmask controlling template enrollment behavior (auto-enrollment, user interaction, publishing)
   enrollmentFlags int
-  // Certificate name flags raw value
+  // Raw msPKI-Certificate-Name-Flag bitmask controlling subject-name encoding and SAN inclusion
   certificateNameFlags int
   // Validity period
   validityPeriod string
