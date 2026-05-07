@@ -4,13 +4,24 @@
 option provider = "go.mondoo.com/mql/v13/providers/ansible"
 option go_package = "go.mondoo.com/mql/v13/providers/ansible/resources"
 
-// Ansible playbook configuration
+// Ansible playbook
+//
+// Entry point for static analysis of an Ansible playbook file. Exposes the
+// list of plays so audits can inspect what each play targets, what privileges
+// it escalates to, and which tasks and handlers it runs — without executing
+// the playbook against any inventory.
 ansible {
   // Plays defined in the playbook
   plays() []ansible.play
 }
 
-// Ansible play targeting hosts with tasks
+// Ansible play within a playbook
+//
+// Examine which hosts a play targets, which user it connects as, whether it
+// uses become / sudo (and to which user via which method), the fact-gathering
+// policy, the failure-handling strategy (max_fail_percentage, any_errors_fatal,
+// ignore_unreachable), and the variables, roles, tasks, and handlers it
+// declares.
 ansible.play @defaults("name") {
   // Play name displayed during execution
   name string
@@ -46,7 +57,12 @@ ansible.play @defaults("name") {
   handlers() []ansible.handler
 }
 
-// Ansible task within a play
+// Ansible task within a play or block
+//
+// Examine the module action and arguments, conditional execution (when /
+// failed_when / changed_when), task-level variables, registered output, the
+// handlers it notifies, any imported / included playbooks or task files, and
+// nested block / rescue tasks for error handling.
 ansible.task @defaults("name"){
   // Task name displayed during execution
   name string
@@ -79,6 +95,9 @@ ansible.task @defaults("name"){
 }
 
 // Ansible handler triggered by task notifications
+//
+// Examine the name a task references via `notify` and the module action the
+// handler runs once at the end of a play when notified.
 ansible.handler @defaults("name"){
   // Handler name (referenced in notify)
   name string
