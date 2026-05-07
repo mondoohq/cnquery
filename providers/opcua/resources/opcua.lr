@@ -5,6 +5,11 @@ option provider = "go.mondoo.com/cnquery/v9/providers/opcua"
 option go_package = "go.mondoo.com/mql/v13/providers/opcua/resources"
 
 // OPC UA (Open Platform Communications Unified Architecture) server
+//
+// Examine the connected OPC UA server: every namespace it advertises,
+// the root node of its address space, and a flat list of every node
+// reachable in that address space. The starting point for industrial
+// control systems / OT audits expressed in MQL.
 opcua {
   // Namespaces
   namespaces() []opcua.namespace
@@ -15,6 +20,12 @@ opcua {
 }
 
 // OPC UA server information
+//
+// Examine the OPC UA server's identity and lifecycle: its server-status
+// node, build information (manufacturer, product, software version,
+// build date), the current time as reported by the server, the time
+// when the server started, and the server state (Running, Failed,
+// NoConfiguration, Suspended, Shutdown).
 opcua.server {
   // Reference to node
   node opcua.node
