@@ -936,6 +936,8 @@ private azure.subscription.networkService {
   applicationFirewallPolicies() []azure.subscription.networkService.applicationFirewallPolicy
   // List of private endpoints
   privateEndpoints() []azure.subscription.networkService.privateEndpoint
+  // List of Private Link services (provider-side resources exposing services through Private Link)
+  privateLinkServices() []azure.subscription.networkService.privateLinkService
   // List of route tables
   routeTables() []azure.subscription.networkService.routeTable
   // List of DDoS protection plans
@@ -1838,12 +1840,82 @@ private azure.subscription.networkService.privateEndpoint.serviceconnection @def
   name string
   // Resource ID of the private link service being connected to
   privateLinkServiceId string
+  // Private link service being connected to
+  privateLinkService() azure.subscription.networkService.privateLinkService
   // Group IDs obtained from the remote resource
   groupIds []string
   // Connection status ("Approved", "Pending", "Rejected", "Disconnected")
   connectionStatus string
   // Message passed to the service owner with this connection request
   requestMessage string
+}
+
+// Azure Private Link service (provider-side resource that exposes a service via Private Link)
+private azure.subscription.networkService.privateLinkService @defaults("id name location alias") {
+  // Private Link service ID
+  id string
+  // Private Link service name
+  name string
+  // Private Link service location
+  location string
+  // Private Link service tags
+  tags map[string]string
+  // Private Link service resource type
+  type string
+  // Private Link service etag
+  etag string
+  // Provisioning state ("Succeeded", "Updating", "Deleting", "Failed")
+  provisioningState string
+  // Globally unique alias used by consumers in other tenants to reference this service
+  alias string
+  // Access mode ("Default" allows any subscription to connect; "Restricted" limits to the visibility list)
+  accessMode string
+  // Whether proxy protocol is enabled (forwards consumer source IP to the service)
+  enableProxyProtocol bool
+  // Destination IP address for traffic exiting the service
+  destinationIPAddress string
+  // FQDNs the Private Link service answers to
+  fqdns []string
+  // Subscription IDs allowed to see (and connect to) this service
+  visibilitySubscriptions []string
+  // Subscription IDs whose connection requests are auto-approved
+  autoApprovalSubscriptions []string
+  // IP configurations associated with the Private Link service (each entry: { id, name, primary, privateIPAddress, privateIPAddressVersion, privateIPAllocationMethod, subnetId, provisioningState })
+  ipConfigurations []dict
+  // Resource IDs of load balancer frontend IP configurations the service is fronted by
+  loadBalancerFrontendIpConfigurationIds []string
+  // Resource IDs of network interfaces auto-created for this Private Link service
+  networkInterfaceIds []string
+  // Endpoint connections to this Private Link service
+  privateEndpointConnections() []azure.subscription.networkService.privateLinkService.privateEndpointConnection
+}
+
+// Endpoint connection to a Private Link service (provider's view of an incoming consumer request)
+private azure.subscription.networkService.privateLinkService.privateEndpointConnection @defaults("id name connectionStatus") {
+  // Connection ID
+  id string
+  // Connection name
+  name string
+  // Connection resource type
+  type string
+  // Connection etag
+  etag string
+  // Consumer link identifier
+  linkIdentifier string
+  // Resource ID of the consumer's private endpoint
+  privateEndpointId string
+  // Consumer's private endpoint
+  privateEndpoint() azure.subscription.networkService.privateEndpoint
+  // Location of the consumer private endpoint
+  privateEndpointLocation string
+  // Connection status ("Approved", "Pending", "Rejected", "Disconnected")
+  connectionStatus string
+  // Description of the connection state (reason for approval/rejection)
+  connectionDescription string
+  // Required actions on the consumer side
+  actionsRequired string
+  // Provisioning state of the endpoint connection ("Succeeded", "Updating", "Deleting", "Failed")
+  provisioningState string
 }
 
 // Azure network route table
@@ -2396,6 +2468,8 @@ private azure.subscription.privateEndpointConnection @defaults("id name type") {
   ipAddresses []string
   // ID of the associated private endpoint
   privateEndpointId string
+  // Associated private endpoint
+  privateEndpoint() azure.subscription.networkService.privateEndpoint
   // Private link service connection state details
   privateLinkServiceConnectionState azure.subscription.privateEndpointConnection.connectionState
   // Provisioning state of the private endpoint connection
@@ -5135,6 +5209,8 @@ private azure.subscription.cacheService.redisInstance.privateEndpointConnection 
   type string
   // Private endpoint resource ID
   privateEndpointId string
+  // Associated private endpoint
+  privateEndpoint() azure.subscription.networkService.privateEndpoint
   // Connection status (Approved, Pending, Rejected)
   status string
   // Reason for approval/rejection of the connection

@@ -83,6 +83,8 @@ const (
 	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                             string = "azure.subscription.networkService.applicationFirewallPolicy"
 	ResourceAzureSubscriptionNetworkServicePrivateEndpoint                                       string = "azure.subscription.networkService.privateEndpoint"
 	ResourceAzureSubscriptionNetworkServicePrivateEndpointServiceconnection                      string = "azure.subscription.networkService.privateEndpoint.serviceconnection"
+	ResourceAzureSubscriptionNetworkServicePrivateLinkService                                    string = "azure.subscription.networkService.privateLinkService"
+	ResourceAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection           string = "azure.subscription.networkService.privateLinkService.privateEndpointConnection"
 	ResourceAzureSubscriptionNetworkServiceRouteTable                                            string = "azure.subscription.networkService.routeTable"
 	ResourceAzureSubscriptionNetworkServiceRoute                                                 string = "azure.subscription.networkService.route"
 	ResourceAzureSubscriptionStorageService                                                      string = "azure.subscription.storageService"
@@ -556,12 +558,20 @@ func init() {
 			Create: createAzureSubscriptionNetworkServiceApplicationFirewallPolicy,
 		},
 		"azure.subscription.networkService.privateEndpoint": {
-			// to override args, implement: initAzureSubscriptionNetworkServicePrivateEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionNetworkServicePrivateEndpoint,
 			Create: createAzureSubscriptionNetworkServicePrivateEndpoint,
 		},
 		"azure.subscription.networkService.privateEndpoint.serviceconnection": {
 			// to override args, implement: initAzureSubscriptionNetworkServicePrivateEndpointServiceconnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServicePrivateEndpointServiceconnection,
+		},
+		"azure.subscription.networkService.privateLinkService": {
+			Init:   initAzureSubscriptionNetworkServicePrivateLinkService,
+			Create: createAzureSubscriptionNetworkServicePrivateLinkService,
+		},
+		"azure.subscription.networkService.privateLinkService.privateEndpointConnection": {
+			// to override args, implement: initAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection,
 		},
 		"azure.subscription.networkService.routeTable": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2703,6 +2713,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.privateEndpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetPrivateEndpoints()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.privateEndpoint")))
 	},
+	"azure.subscription.networkService.privateLinkServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetPrivateLinkServices()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.privateLinkService")))
+	},
 	"azure.subscription.networkService.routeTables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetRouteTables()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.routeTable")))
 	},
@@ -3810,6 +3823,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkServiceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).GetPrivateLinkServiceId()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).GetPrivateLinkService()).ToDataRes(types.Resource("azure.subscription.networkService.privateLinkService"))
+	},
 	"azure.subscription.networkService.privateEndpoint.serviceconnection.groupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).GetGroupIds()).ToDataRes(types.Array(types.String))
 	},
@@ -3818,6 +3834,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.privateEndpoint.serviceconnection.requestMessage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).GetRequestMessage()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.privateLinkService.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetAlias()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.accessMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetAccessMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.enableProxyProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetEnableProxyProtocol()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.privateLinkService.destinationIPAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetDestinationIPAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.fqdns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetFqdns()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.privateLinkService.visibilitySubscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetVisibilitySubscriptions()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.privateLinkService.autoApprovalSubscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetAutoApprovalSubscriptions()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.privateLinkService.ipConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetIpConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.networkService.privateLinkService.loadBalancerFrontendIpConfigurationIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetLoadBalancerFrontendIpConfigurationIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.privateLinkService.networkInterfaceIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetNetworkInterfaceIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.privateLinkService.privateEndpointConnection")))
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.linkIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetLinkIdentifier()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.privateEndpointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetPrivateEndpointId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.privateEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetPrivateEndpoint()).ToDataRes(types.Resource("azure.subscription.networkService.privateEndpoint"))
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.privateEndpointLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetPrivateEndpointLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.connectionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetConnectionStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.connectionDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetConnectionDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.actionsRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetActionsRequired()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).GetProvisioningState()).ToDataRes(types.String)
 	},
 	"azure.subscription.networkService.routeTable.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceRouteTable).GetId()).ToDataRes(types.String)
@@ -4502,6 +4608,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.privateEndpointConnection.privateEndpointId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetPrivateEndpointId()).ToDataRes(types.String)
+	},
+	"azure.subscription.privateEndpointConnection.privateEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetPrivateEndpoint()).ToDataRes(types.Resource("azure.subscription.networkService.privateEndpoint"))
 	},
 	"azure.subscription.privateEndpointConnection.privateLinkServiceConnectionState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPrivateEndpointConnection).GetPrivateLinkServiceConnectionState()).ToDataRes(types.Resource("azure.subscription.privateEndpointConnection.connectionState"))
@@ -7908,6 +8017,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.privateEndpointId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetPrivateEndpointId()).ToDataRes(types.String)
 	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.privateEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetPrivateEndpoint()).ToDataRes(types.Resource("azure.subscription.networkService.privateEndpoint"))
+	},
 	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).GetStatus()).ToDataRes(types.String)
 	},
@@ -11220,6 +11332,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkService).PrivateEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.privateLinkServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).PrivateLinkServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.routeTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkService).RouteTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -12860,6 +12976,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).PrivateLinkServiceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).PrivateLinkService, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServicePrivateLinkService](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.privateEndpoint.serviceconnection.groupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).GroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -12870,6 +12990,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.privateEndpoint.serviceconnection.requestMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).RequestMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.accessMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).AccessMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.enableProxyProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).EnableProxyProtocol, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.destinationIPAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).DestinationIPAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.fqdns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).Fqdns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.visibilitySubscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).VisibilitySubscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.autoApprovalSubscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).AutoApprovalSubscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.ipConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).IpConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.loadBalancerFrontendIpConfigurationIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).LoadBalancerFrontendIpConfigurationIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.networkInterfaceIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).NetworkInterfaceIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkService).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.linkIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).LinkIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.privateEndpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).PrivateEndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.privateEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).PrivateEndpoint, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.privateEndpointLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).PrivateEndpointLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.connectionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).ConnectionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.connectionDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).ConnectionDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.actionsRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).ActionsRequired, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateLinkService.privateEndpointConnection.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.routeTable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13878,6 +14126,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.privateEndpointConnection.privateEndpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPrivateEndpointConnection).PrivateEndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.privateEndpointConnection.privateEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPrivateEndpointConnection).PrivateEndpoint, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.privateEndpointConnection.privateLinkServiceConnectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18902,6 +19154,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.privateEndpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).PrivateEndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.privateEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).PrivateEndpoint, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cacheService.redisInstance.privateEndpointConnection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25011,6 +25267,7 @@ type mqlAzureSubscriptionNetworkService struct {
 	ApplicationGateways         plugin.TValue[[]any]
 	ApplicationFirewallPolicies plugin.TValue[[]any]
 	PrivateEndpoints            plugin.TValue[[]any]
+	PrivateLinkServices         plugin.TValue[[]any]
 	RouteTables                 plugin.TValue[[]any]
 	DdosProtectionPlans         plugin.TValue[[]any]
 	ServiceEndpointPolicies     plugin.TValue[[]any]
@@ -25294,6 +25551,22 @@ func (c *mqlAzureSubscriptionNetworkService) GetPrivateEndpoints() *plugin.TValu
 		}
 
 		return c.privateEndpoints()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkService) GetPrivateLinkServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateLinkServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "privateLinkServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateLinkServices()
 	})
 }
 
@@ -29403,6 +29676,7 @@ type mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection struct {
 	Id                   plugin.TValue[string]
 	Name                 plugin.TValue[string]
 	PrivateLinkServiceId plugin.TValue[string]
+	PrivateLinkService   plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateLinkService]
 	GroupIds             plugin.TValue[[]any]
 	ConnectionStatus     plugin.TValue[string]
 	RequestMessage       plugin.TValue[string]
@@ -29452,6 +29726,22 @@ func (c *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) Get
 	return &c.PrivateLinkServiceId
 }
 
+func (c *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) GetPrivateLinkService() *plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateLinkService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServicePrivateLinkService](&c.PrivateLinkService, func() (*mqlAzureSubscriptionNetworkServicePrivateLinkService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.privateEndpoint.serviceconnection", c.__id, "privateLinkService")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServicePrivateLinkService), nil
+			}
+		}
+
+		return c.privateLinkService()
+	})
+}
+
 func (c *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) GetGroupIds() *plugin.TValue[[]any] {
 	return &c.GroupIds
 }
@@ -29462,6 +29752,268 @@ func (c *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) Get
 
 func (c *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) GetRequestMessage() *plugin.TValue[string] {
 	return &c.RequestMessage
+}
+
+// mqlAzureSubscriptionNetworkServicePrivateLinkService for the azure.subscription.networkService.privateLinkService resource
+type mqlAzureSubscriptionNetworkServicePrivateLinkService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServicePrivateLinkServiceInternal it will be used here
+	Id                                     plugin.TValue[string]
+	Name                                   plugin.TValue[string]
+	Location                               plugin.TValue[string]
+	Tags                                   plugin.TValue[map[string]any]
+	Type                                   plugin.TValue[string]
+	Etag                                   plugin.TValue[string]
+	ProvisioningState                      plugin.TValue[string]
+	Alias                                  plugin.TValue[string]
+	AccessMode                             plugin.TValue[string]
+	EnableProxyProtocol                    plugin.TValue[bool]
+	DestinationIPAddress                   plugin.TValue[string]
+	Fqdns                                  plugin.TValue[[]any]
+	VisibilitySubscriptions                plugin.TValue[[]any]
+	AutoApprovalSubscriptions              plugin.TValue[[]any]
+	IpConfigurations                       plugin.TValue[[]any]
+	LoadBalancerFrontendIpConfigurationIds plugin.TValue[[]any]
+	NetworkInterfaceIds                    plugin.TValue[[]any]
+	PrivateEndpointConnections             plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServicePrivateLinkService creates a new instance of this resource
+func createAzureSubscriptionNetworkServicePrivateLinkService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServicePrivateLinkService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.privateLinkService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) MqlName() string {
+	return "azure.subscription.networkService.privateLinkService"
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetAccessMode() *plugin.TValue[string] {
+	return &c.AccessMode
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetEnableProxyProtocol() *plugin.TValue[bool] {
+	return &c.EnableProxyProtocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetDestinationIPAddress() *plugin.TValue[string] {
+	return &c.DestinationIPAddress
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetFqdns() *plugin.TValue[[]any] {
+	return &c.Fqdns
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetVisibilitySubscriptions() *plugin.TValue[[]any] {
+	return &c.VisibilitySubscriptions
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetAutoApprovalSubscriptions() *plugin.TValue[[]any] {
+	return &c.AutoApprovalSubscriptions
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetIpConfigurations() *plugin.TValue[[]any] {
+	return &c.IpConfigurations
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetLoadBalancerFrontendIpConfigurationIds() *plugin.TValue[[]any] {
+	return &c.LoadBalancerFrontendIpConfigurationIds
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetNetworkInterfaceIds() *plugin.TValue[[]any] {
+	return &c.NetworkInterfaceIds
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkService) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.privateLinkService", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection for the azure.subscription.networkService.privateLinkService.privateEndpointConnection resource
+type mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnectionInternal it will be used here
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Type                    plugin.TValue[string]
+	Etag                    plugin.TValue[string]
+	LinkIdentifier          plugin.TValue[string]
+	PrivateEndpointId       plugin.TValue[string]
+	PrivateEndpoint         plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint]
+	PrivateEndpointLocation plugin.TValue[string]
+	ConnectionStatus        plugin.TValue[string]
+	ConnectionDescription   plugin.TValue[string]
+	ActionsRequired         plugin.TValue[string]
+	ProvisioningState       plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection creates a new instance of this resource
+func createAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.privateLinkService.privateEndpointConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) MqlName() string {
+	return "azure.subscription.networkService.privateLinkService.privateEndpointConnection"
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetLinkIdentifier() *plugin.TValue[string] {
+	return &c.LinkIdentifier
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetPrivateEndpointId() *plugin.TValue[string] {
+	return &c.PrivateEndpointId
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetPrivateEndpoint() *plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServicePrivateEndpoint](&c.PrivateEndpoint, func() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.privateLinkService.privateEndpointConnection", c.__id, "privateEndpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+			}
+		}
+
+		return c.privateEndpoint()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetPrivateEndpointLocation() *plugin.TValue[string] {
+	return &c.PrivateEndpointLocation
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetConnectionStatus() *plugin.TValue[string] {
+	return &c.ConnectionStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetConnectionDescription() *plugin.TValue[string] {
+	return &c.ConnectionDescription
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetActionsRequired() *plugin.TValue[string] {
+	return &c.ActionsRequired
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
 }
 
 // mqlAzureSubscriptionNetworkServiceRouteTable for the azure.subscription.networkService.routeTable resource
@@ -31888,6 +32440,7 @@ type mqlAzureSubscriptionPrivateEndpointConnection struct {
 	Type                              plugin.TValue[string]
 	IpAddresses                       plugin.TValue[[]any]
 	PrivateEndpointId                 plugin.TValue[string]
+	PrivateEndpoint                   plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint]
 	PrivateLinkServiceConnectionState plugin.TValue[*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState]
 	ProvisioningState                 plugin.TValue[string]
 	Properties                        plugin.TValue[any]
@@ -31943,6 +32496,22 @@ func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetIpAddresses() *plugin
 
 func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetPrivateEndpointId() *plugin.TValue[string] {
 	return &c.PrivateEndpointId
+}
+
+func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetPrivateEndpoint() *plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServicePrivateEndpoint](&c.PrivateEndpoint, func() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.privateEndpointConnection", c.__id, "privateEndpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+			}
+		}
+
+		return c.privateEndpoint()
+	})
 }
 
 func (c *mqlAzureSubscriptionPrivateEndpointConnection) GetPrivateLinkServiceConnectionState() *plugin.TValue[*mqlAzureSubscriptionPrivateEndpointConnectionConnectionState] {
@@ -44559,6 +45128,7 @@ type mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection stru
 	Name              plugin.TValue[string]
 	Type              plugin.TValue[string]
 	PrivateEndpointId plugin.TValue[string]
+	PrivateEndpoint   plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint]
 	Status            plugin.TValue[string]
 	Description       plugin.TValue[string]
 	ProvisioningState plugin.TValue[string]
@@ -44615,6 +45185,22 @@ func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection)
 
 func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetPrivateEndpointId() *plugin.TValue[string] {
 	return &c.PrivateEndpointId
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetPrivateEndpoint() *plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateEndpoint] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServicePrivateEndpoint](&c.PrivateEndpoint, func() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cacheService.redisInstance.privateEndpointConnection", c.__id, "privateEndpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+			}
+		}
+
+		return c.privateEndpoint()
+	})
 }
 
 func (c *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) GetStatus() *plugin.TValue[string] {

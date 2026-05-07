@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.9.2",
-  "generated_at": "2026-05-07T09:11:27-07:00",
+  "generated_at": "2026-05-07T09:42:13-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/classicAdministrators/read",
@@ -87,6 +87,7 @@
     "Microsoft.Network/privateDnsZones/virtualNetworkLinks/read",
     "Microsoft.Network/privateEndpoints/privateDnsZoneGroups/read",
     "Microsoft.Network/privateEndpoints/read",
+    "Microsoft.Network/privateLinkServices/read",
     "Microsoft.Network/publicIPAddresses/read",
     "Microsoft.Network/routeTables/read",
     "Microsoft.Network/serviceEndpointPolicies/read",
@@ -272,7 +273,7 @@
     {
       "permission": "Microsoft.Compute/disks/read",
       "service": "Microsoft.Compute",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "compute.go"
     },
     {
@@ -350,7 +351,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/credentialSets/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "containerregistry.go"
     },
     {
@@ -362,7 +363,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/scopeMaps/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "containerregistry.go"
     },
     {
@@ -386,7 +387,7 @@
     {
       "permission": "Microsoft.DBforMySQL/servers/configurations/read",
       "service": "Microsoft.DBforMySQL",
-      "action": "Get",
+      "action": "NewListByServerPager",
       "source_file": "mysql.go"
     },
     {
@@ -476,7 +477,7 @@
     {
       "permission": "Microsoft.DocumentDB/sQLResources/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListSQLRoleAssignmentsPager",
+      "action": "NewListSQLRoleDefinitionsPager",
       "source_file": "cosmosdb.go"
     },
     {
@@ -530,7 +531,7 @@
     {
       "permission": "Microsoft.KeyVault/vaults/read",
       "service": "Microsoft.KeyVault",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "keyvault.go"
     },
     {
@@ -542,7 +543,7 @@
     {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -596,7 +597,7 @@
     {
       "permission": "Microsoft.Network/firewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -666,6 +667,12 @@
       "source_file": "network.go"
     },
     {
+      "permission": "Microsoft.Network/privateLinkServices/read",
+      "service": "Microsoft.Network",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "network.go"
+    },
+    {
       "permission": "Microsoft.Network/publicIPAddresses/read",
       "service": "Microsoft.Network",
       "action": "Get",
@@ -698,7 +705,7 @@
     {
       "permission": "Microsoft.Network/virtualNetworks/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -1082,7 +1089,7 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListFunctionsPager",
+      "action": "NewListSlotsPager",
       "source_file": "web.go"
     }
   ]

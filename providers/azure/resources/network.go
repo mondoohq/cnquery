@@ -1586,58 +1586,106 @@ func (a *mqlAzureSubscriptionNetworkService) privateEndpoints() ([]any, error) {
 			return nil, err
 		}
 		for _, pe := range page.Value {
-			if pe == nil {
-				continue
-			}
-
-			var provisioningState, subnetId, customNicName string
-			var plsConns, manualPlsConns []any
-
-			if pe.Properties != nil {
-				if pe.Properties.ProvisioningState != nil {
-					provisioningState = string(*pe.Properties.ProvisioningState)
-				}
-				if pe.Properties.Subnet != nil {
-					subnetId = convert.ToValue(pe.Properties.Subnet.ID)
-				}
-				customNicName = convert.ToValue(pe.Properties.CustomNetworkInterfaceName)
-
-				for _, c := range pe.Properties.PrivateLinkServiceConnections {
-					mqlConn, err := privateLinkServiceConnectionToMql(a.MqlRuntime, c)
-					if err != nil {
-						return nil, err
-					}
-					plsConns = append(plsConns, mqlConn)
-				}
-				for _, c := range pe.Properties.ManualPrivateLinkServiceConnections {
-					mqlConn, err := privateLinkServiceConnectionToMql(a.MqlRuntime, c)
-					if err != nil {
-						return nil, err
-					}
-					manualPlsConns = append(manualPlsConns, mqlConn)
-				}
-			}
-
-			mqlPe, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.privateEndpoint",
-				map[string]*llx.RawData{
-					"id":                                  llx.StringDataPtr(pe.ID),
-					"name":                                llx.StringDataPtr(pe.Name),
-					"location":                            llx.StringDataPtr(pe.Location),
-					"tags":                                llx.MapData(convert.PtrMapStrToInterface(pe.Tags), types.String),
-					"type":                                llx.StringDataPtr(pe.Type),
-					"provisioningState":                   llx.StringData(provisioningState),
-					"subnetId":                            llx.StringData(subnetId),
-					"customNetworkInterfaceName":          llx.StringData(customNicName),
-					"privateLinkServiceConnections":       llx.ArrayData(plsConns, types.ResourceLike),
-					"manualPrivateLinkServiceConnections": llx.ArrayData(manualPlsConns, types.ResourceLike),
-				})
+			mqlPe, err := privateEndpointToMql(a.MqlRuntime, pe)
 			if err != nil {
 				return nil, err
+			}
+			if mqlPe == nil {
+				continue
 			}
 			res = append(res, mqlPe)
 		}
 	}
 	return res, nil
+}
+
+func privateEndpointToMql(runtime *plugin.Runtime, pe *network.PrivateEndpoint) (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+	if pe == nil {
+		return nil, nil
+	}
+
+	var provisioningState, subnetId, customNicName string
+	var plsConns, manualPlsConns []any
+
+	if pe.Properties != nil {
+		if pe.Properties.ProvisioningState != nil {
+			provisioningState = string(*pe.Properties.ProvisioningState)
+		}
+		if pe.Properties.Subnet != nil {
+			subnetId = convert.ToValue(pe.Properties.Subnet.ID)
+		}
+		customNicName = convert.ToValue(pe.Properties.CustomNetworkInterfaceName)
+
+		for _, c := range pe.Properties.PrivateLinkServiceConnections {
+			mqlConn, err := privateLinkServiceConnectionToMql(runtime, c)
+			if err != nil {
+				return nil, err
+			}
+			plsConns = append(plsConns, mqlConn)
+		}
+		for _, c := range pe.Properties.ManualPrivateLinkServiceConnections {
+			mqlConn, err := privateLinkServiceConnectionToMql(runtime, c)
+			if err != nil {
+				return nil, err
+			}
+			manualPlsConns = append(manualPlsConns, mqlConn)
+		}
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.networkService.privateEndpoint",
+		map[string]*llx.RawData{
+			"id":                                  llx.StringDataPtr(pe.ID),
+			"name":                                llx.StringDataPtr(pe.Name),
+			"location":                            llx.StringDataPtr(pe.Location),
+			"tags":                                llx.MapData(convert.PtrMapStrToInterface(pe.Tags), types.String),
+			"type":                                llx.StringDataPtr(pe.Type),
+			"provisioningState":                   llx.StringData(provisioningState),
+			"subnetId":                            llx.StringData(subnetId),
+			"customNetworkInterfaceName":          llx.StringData(customNicName),
+			"privateLinkServiceConnections":       llx.ArrayData(plsConns, types.ResourceLike),
+			"manualPrivateLinkServiceConnections": llx.ArrayData(manualPlsConns, types.ResourceLike),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+}
+
+func initAzureSubscriptionNetworkServicePrivateEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id := args["id"].Value.(string)
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	name, err := resourceID.Component("privateEndpoints")
+	if err != nil {
+		return nil, nil, err
+	}
+	client, err := network.NewPrivateEndpointsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, name, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlPe, err := privateEndpointToMql(runtime, &resp.PrivateEndpoint)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlPe, nil
 }
 
 // privateDnsZoneGroups fetches the Private DNS Zone Groups attached to this PE.
@@ -1739,6 +1787,337 @@ func privateLinkServiceConnectionToMql(runtime *plugin.Runtime, c *network.Priva
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) privateLinkService() (*mqlAzureSubscriptionNetworkServicePrivateLinkService, error) {
+	plsId := a.PrivateLinkServiceId.Data
+	if plsId == "" {
+		a.PrivateLinkService.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.privateLinkService", map[string]*llx.RawData{
+		"id": llx.StringData(plsId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateLinkService), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServicePrivateLinkService) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkService) privateLinkServices() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewPrivateLinkServicesClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListBySubscriptionPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, pls := range page.Value {
+			mqlPls, err := privateLinkServiceToMql(a.MqlRuntime, pls)
+			if err != nil {
+				return nil, err
+			}
+			if mqlPls == nil {
+				continue
+			}
+			res = append(res, mqlPls)
+		}
+	}
+	return res, nil
+}
+
+func privateLinkServiceToMql(runtime *plugin.Runtime, pls *network.PrivateLinkService) (*mqlAzureSubscriptionNetworkServicePrivateLinkService, error) {
+	if pls == nil {
+		return nil, nil
+	}
+
+	var (
+		provisioningState, alias, accessMode, destIP string
+		enableProxy                                  bool
+		fqdns                                        []any
+		visibility                                   []any
+		autoApproval                                 []any
+		ipConfigs                                    []any
+		lbFrontendIds                                []any
+		nicIds                                       []any
+	)
+
+	if pls.Properties != nil {
+		if pls.Properties.ProvisioningState != nil {
+			provisioningState = string(*pls.Properties.ProvisioningState)
+		}
+		alias = convert.ToValue(pls.Properties.Alias)
+		if pls.Properties.AccessMode != nil {
+			accessMode = string(*pls.Properties.AccessMode)
+		}
+		destIP = convert.ToValue(pls.Properties.DestinationIPAddress)
+		enableProxy = convert.ToValue(pls.Properties.EnableProxyProtocol)
+
+		for _, f := range pls.Properties.Fqdns {
+			if f != nil {
+				fqdns = append(fqdns, *f)
+			}
+		}
+		if pls.Properties.Visibility != nil {
+			for _, s := range pls.Properties.Visibility.Subscriptions {
+				if s != nil {
+					visibility = append(visibility, *s)
+				}
+			}
+		}
+		if pls.Properties.AutoApproval != nil {
+			for _, s := range pls.Properties.AutoApproval.Subscriptions {
+				if s != nil {
+					autoApproval = append(autoApproval, *s)
+				}
+			}
+		}
+		for _, ipc := range pls.Properties.IPConfigurations {
+			if ipc == nil {
+				continue
+			}
+			entry := map[string]any{
+				"id":   convert.ToValue(ipc.ID),
+				"name": convert.ToValue(ipc.Name),
+			}
+			if ipc.Properties != nil {
+				if ipc.Properties.Primary != nil {
+					entry["primary"] = *ipc.Properties.Primary
+				}
+				entry["privateIPAddress"] = convert.ToValue(ipc.Properties.PrivateIPAddress)
+				if ipc.Properties.PrivateIPAddressVersion != nil {
+					entry["privateIPAddressVersion"] = string(*ipc.Properties.PrivateIPAddressVersion)
+				}
+				if ipc.Properties.PrivateIPAllocationMethod != nil {
+					entry["privateIPAllocationMethod"] = string(*ipc.Properties.PrivateIPAllocationMethod)
+				}
+				if ipc.Properties.Subnet != nil {
+					entry["subnetId"] = convert.ToValue(ipc.Properties.Subnet.ID)
+				}
+				if ipc.Properties.ProvisioningState != nil {
+					entry["provisioningState"] = string(*ipc.Properties.ProvisioningState)
+				}
+			}
+			ipConfigs = append(ipConfigs, entry)
+		}
+		for _, lb := range pls.Properties.LoadBalancerFrontendIPConfigurations {
+			if lb != nil && lb.ID != nil {
+				lbFrontendIds = append(lbFrontendIds, *lb.ID)
+			}
+		}
+		for _, nic := range pls.Properties.NetworkInterfaces {
+			if nic != nil && nic.ID != nil {
+				nicIds = append(nicIds, *nic.ID)
+			}
+		}
+	}
+
+	var etag string
+	if pls.Etag != nil {
+		etag = *pls.Etag
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.networkService.privateLinkService",
+		map[string]*llx.RawData{
+			"id":                                     llx.StringDataPtr(pls.ID),
+			"name":                                   llx.StringDataPtr(pls.Name),
+			"location":                               llx.StringDataPtr(pls.Location),
+			"tags":                                   llx.MapData(convert.PtrMapStrToInterface(pls.Tags), types.String),
+			"type":                                   llx.StringDataPtr(pls.Type),
+			"etag":                                   llx.StringData(etag),
+			"provisioningState":                      llx.StringData(provisioningState),
+			"alias":                                  llx.StringData(alias),
+			"accessMode":                             llx.StringData(accessMode),
+			"enableProxyProtocol":                    llx.BoolData(enableProxy),
+			"destinationIPAddress":                   llx.StringData(destIP),
+			"fqdns":                                  llx.ArrayData(fqdns, types.String),
+			"visibilitySubscriptions":                llx.ArrayData(visibility, types.String),
+			"autoApprovalSubscriptions":              llx.ArrayData(autoApproval, types.String),
+			"ipConfigurations":                       llx.ArrayData(ipConfigs, types.Dict),
+			"loadBalancerFrontendIpConfigurationIds": llx.ArrayData(lbFrontendIds, types.String),
+			"networkInterfaceIds":                    llx.ArrayData(nicIds, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateLinkService), nil
+}
+
+func initAzureSubscriptionNetworkServicePrivateLinkService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id := args["id"].Value.(string)
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	name, err := resourceID.Component("privateLinkServices")
+	if err != nil {
+		return nil, nil, err
+	}
+	client, err := network.NewPrivateLinkServicesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, name, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlPls, err := privateLinkServiceToMql(runtime, &resp.PrivateLinkService)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlPls, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServicePrivateLinkService) privateEndpointConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	id := a.Id.Data
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	name, err := resourceID.Component("privateLinkServices")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := network.NewPrivateLinkServicesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPrivateEndpointConnectionsPager(resourceID.ResourceGroup, name, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, pec := range page.Value {
+			mqlPec, err := plsEndpointConnectionToMql(a.MqlRuntime, pec)
+			if err != nil {
+				return nil, err
+			}
+			if mqlPec == nil {
+				continue
+			}
+			res = append(res, mqlPec)
+		}
+	}
+	return res, nil
+}
+
+func plsEndpointConnectionToMql(runtime *plugin.Runtime, pec *network.PrivateEndpointConnection) (*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection, error) {
+	if pec == nil {
+		return nil, nil
+	}
+
+	var (
+		linkID, peID, peLocation, status, description, actions, provState string
+	)
+	if pec.Properties != nil {
+		linkID = convert.ToValue(pec.Properties.LinkIdentifier)
+		if pec.Properties.PrivateEndpoint != nil {
+			peID = convert.ToValue(pec.Properties.PrivateEndpoint.ID)
+		}
+		peLocation = convert.ToValue(pec.Properties.PrivateEndpointLocation)
+		if pec.Properties.PrivateLinkServiceConnectionState != nil {
+			status = convert.ToValue(pec.Properties.PrivateLinkServiceConnectionState.Status)
+			description = convert.ToValue(pec.Properties.PrivateLinkServiceConnectionState.Description)
+			actions = convert.ToValue(pec.Properties.PrivateLinkServiceConnectionState.ActionsRequired)
+		}
+		if pec.Properties.ProvisioningState != nil {
+			provState = string(*pec.Properties.ProvisioningState)
+		}
+	}
+
+	var etag string
+	if pec.Etag != nil {
+		etag = *pec.Etag
+	}
+
+	res, err := CreateResource(runtime, "azure.subscription.networkService.privateLinkService.privateEndpointConnection",
+		map[string]*llx.RawData{
+			"id":                      llx.StringDataPtr(pec.ID),
+			"name":                    llx.StringDataPtr(pec.Name),
+			"type":                    llx.StringDataPtr(pec.Type),
+			"etag":                    llx.StringData(etag),
+			"linkIdentifier":          llx.StringData(linkID),
+			"privateEndpointId":       llx.StringData(peID),
+			"privateEndpointLocation": llx.StringData(peLocation),
+			"connectionStatus":        llx.StringData(status),
+			"connectionDescription":   llx.StringData(description),
+			"actionsRequired":         llx.StringData(actions),
+			"provisioningState":       llx.StringData(provState),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection) privateEndpoint() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+	peId := a.PrivateEndpointId.Data
+	if peId == "" {
+		a.PrivateEndpoint.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.privateEndpoint", map[string]*llx.RawData{
+		"id": llx.StringData(peId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+}
+
+func (a *mqlAzureSubscriptionPrivateEndpointConnection) privateEndpoint() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+	peId := a.PrivateEndpointId.Data
+	if peId == "" {
+		a.PrivateEndpoint.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.privateEndpoint", map[string]*llx.RawData{
+		"id": llx.StringData(peId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkService) routeTables() ([]any, error) {

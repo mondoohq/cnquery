@@ -402,3 +402,18 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstancePatchSchedule) id() (strin
 func (a *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) id() (string, error) {
 	return a.Id.Data, nil
 }
+
+func (a *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) privateEndpoint() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+	peId := a.PrivateEndpointId.Data
+	if peId == "" {
+		a.PrivateEndpoint.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.privateEndpoint", map[string]*llx.RawData{
+		"id": llx.StringData(peId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+}
