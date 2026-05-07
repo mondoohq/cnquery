@@ -319,7 +319,41 @@ azure.subscription.computeService.hybridMachine @defaults("name location osName 
   // Azure Resource Manager system metadata (createdBy, createdAt, lastModifiedBy)
   systemData dict
   // Installed Arc machine extensions
-  extensions() []dict
+  extensions() []azure.subscription.computeService.hybridMachine.extension
+}
+
+// Extension installed on an Azure Arc-enabled server (Microsoft.HybridCompute/machines/extensions)
+private azure.subscription.computeService.hybridMachine.extension @defaults("name extensionType publisher provisioningState") {
+  // ARM resource ID
+  id string
+  // Extension name
+  name string
+  // ARM resource type (Microsoft.HybridCompute/machines/extensions)
+  type string
+  // Geo-location
+  location string
+  // Resource tags
+  tags map[string]string
+  // Extension handler publisher (e.g. "Microsoft.Azure.Monitor")
+  publisher string
+  // Extension type (e.g. "AzureMonitorLinuxAgent")
+  extensionType string
+  // Version of the extension handler
+  typeHandlerVersion string
+  // Whether the extension uses a newer minor version if one is available at deployment time
+  autoUpgradeMinorVersion bool
+  // Whether the platform automatically upgrades the extension to a newer version
+  enableAutomaticUpgrade bool
+  // Provisioning state of the extension
+  provisioningState string
+  // Public JSON settings passed to the extension handler
+  settings dict
+  // Tag used to trigger a re-run of the extension handler even when settings are unchanged
+  forceUpdateTag string
+  // Azure Resource Manager system metadata (createdBy, createdAt, lastModifiedBy)
+  systemData dict
+  // Latest extension instance view reported by the handler (status code, level, display status, message)
+  instanceView dict
 }
 
 // Azure compute disk resource

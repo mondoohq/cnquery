@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.10.0",
-  "generated_at": "2026-05-07T14:50:56+02:00",
+  "generated_at": "2026-05-07T10:16:50-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Authorization/classicAdministrators/read",
@@ -389,7 +389,7 @@
     {
       "permission": "Microsoft.DBforMySQL/servers/configurations/read",
       "service": "Microsoft.DBforMySQL",
-      "action": "NewListByServerPager",
+      "action": "Get",
       "source_file": "mysql.go"
     },
     {
@@ -449,7 +449,7 @@
     {
       "permission": "Microsoft.DBforPostgreSQL/servers/read",
       "service": "Microsoft.DBforPostgreSQL",
-      "action": "NewListPager",
+      "action": "NewListBySubscriptionPager",
       "source_file": "postgresql.go"
     },
     {
@@ -545,7 +545,7 @@
     {
       "permission": "Microsoft.KeyVault/vaults/read",
       "service": "Microsoft.KeyVault",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "keyvault.go"
     },
     {
@@ -557,13 +557,13 @@
     {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
       "permission": "Microsoft.Network/applicationGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -575,7 +575,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -611,7 +611,7 @@
     {
       "permission": "Microsoft.Network/firewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -683,7 +683,7 @@
     {
       "permission": "Microsoft.Network/privateLinkServices/read",
       "service": "Microsoft.Network",
-      "action": "NewListBySubscriptionPager",
+      "action": "NewListPrivateEndpointConnectionsPager",
       "source_file": "network.go"
     },
     {

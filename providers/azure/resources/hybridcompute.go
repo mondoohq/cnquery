@@ -155,8 +155,15 @@ func (a *mqlAzureSubscriptionComputeServiceHybridMachine) id() (string, error) {
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionComputeServiceHybridMachineExtension) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionComputeServiceHybridMachine) extensions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	// id is pre-normalized to lowercase by the lister (see hybridMachines), so
+	// downstream ARM lookups via Component("machines") receive a lowercase name.
+	// ARM is case-insensitive on resource names, so this is safe.
 	id := a.Id.Data
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
@@ -189,15 +196,72 @@ func (a *mqlAzureSubscriptionComputeServiceHybridMachine) extensions() ([]any, e
 			if ext == nil {
 				continue
 			}
-			dict, err := convert.JsonToDict(ext.Properties)
+			mqlExt, err := hybridMachineExtensionToMql(a.MqlRuntime, ext)
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, dict)
+			res = append(res, mqlExt)
 		}
 	}
 
 	return res, nil
+}
+
+func hybridMachineExtensionToMql(runtime *plugin.Runtime, ext *hybridcompute.MachineExtension) (*mqlAzureSubscriptionComputeServiceHybridMachineExtension, error) {
+	var (
+		publisher, extensionType, typeHandlerVersion, provisioningState, forceUpdateTag *string
+		autoUpgradeMinorVersion, enableAutomaticUpgrade                                 *bool
+		settingsDict, instanceViewDict                                                  map[string]any
+	)
+	if p := ext.Properties; p != nil {
+		publisher = p.Publisher
+		extensionType = p.Type
+		typeHandlerVersion = p.TypeHandlerVersion
+		provisioningState = p.ProvisioningState
+		forceUpdateTag = p.ForceUpdateTag
+		autoUpgradeMinorVersion = p.AutoUpgradeMinorVersion
+		enableAutomaticUpgrade = p.EnableAutomaticUpgrade
+		if p.Settings != nil {
+			s, err := convert.JsonToDict(p.Settings)
+			if err != nil {
+				return nil, err
+			}
+			settingsDict = s
+		}
+		if p.InstanceView != nil {
+			v, err := convert.JsonToDict(p.InstanceView)
+			if err != nil {
+				return nil, err
+			}
+			instanceViewDict = v
+		}
+	}
+	systemData, err := convert.JsonToDict(ext.SystemData)
+	if err != nil {
+		return nil, err
+	}
+	mqlExt, err := CreateResource(runtime, "azure.subscription.computeService.hybridMachine.extension",
+		map[string]*llx.RawData{
+			"id":                      llx.StringDataPtr(ext.ID),
+			"name":                    llx.StringDataPtr(ext.Name),
+			"type":                    llx.StringDataPtr(ext.Type),
+			"location":                llx.StringDataPtr(ext.Location),
+			"tags":                    llx.MapData(convert.PtrMapStrToInterface(ext.Tags), types.String),
+			"publisher":               llx.StringDataPtr(publisher),
+			"extensionType":           llx.StringDataPtr(extensionType),
+			"typeHandlerVersion":      llx.StringDataPtr(typeHandlerVersion),
+			"autoUpgradeMinorVersion": llx.BoolDataPtr(autoUpgradeMinorVersion),
+			"enableAutomaticUpgrade":  llx.BoolDataPtr(enableAutomaticUpgrade),
+			"provisioningState":       llx.StringDataPtr(provisioningState),
+			"settings":                llx.DictData(settingsDict),
+			"forceUpdateTag":          llx.StringDataPtr(forceUpdateTag),
+			"systemData":              llx.DictData(systemData),
+			"instanceView":            llx.DictData(instanceViewDict),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlExt.(*mqlAzureSubscriptionComputeServiceHybridMachineExtension), nil
 }
 
 func initAzureSubscriptionComputeServiceHybridMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
