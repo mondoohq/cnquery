@@ -706,7 +706,6 @@ private vsphere.vmknic @defaults("name") {
   tags []string
 }
 
-// VMware ESXi resource
 // Run a command on an ESXi host. The connected target must be a host
 // (use --platform-id to select one when connecting through vCenter).
 vsphere.host.command {
