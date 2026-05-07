@@ -4,7 +4,14 @@
 option provider = "go.mondoo.com/mql/v13/providers/tailscale"
 option go_package = "go.mondoo.com/mql/v13/providers/tailscale/resources"
 
-// Tailscale organization
+// Tailscale tailnet
+//
+// Examine a Tailscale tailnet (organization): its name, the devices and
+// users it contains, the configured global DNS nameservers, the ACL
+// policy, and the tailnet-wide hardening flags — device-approval and
+// user-approval requirements, automatic-update enrollment, the auth-key
+// expiration window, network-flow logging, posture identity collection,
+// and which user role is allowed to join external tailnets.
 tailscale {
   // Tailnet organization name
   tailnet string
@@ -32,7 +39,17 @@ tailscale {
   aclPolicy() tailscale.aclPolicy
 }
 
-// A Tailscale device (sometimes referred to as node or machine)
+// Tailscale device (also called a node or machine)
+//
+// Examine a single device registered in the tailnet, identified by `id`:
+// hostname, operating system, MagicDNS name, the user that registered
+// it, ACL tags, all assigned Tailscale IP addresses (IPv4 and IPv6),
+// the Tailscale client version and update-availability flag, the
+// machine and node keys, tailnet-lock signing state, posture flags
+// (`blocksIncomingConnections`, `authorized`, `isExternal`,
+// `keyExpiryDisabled`), lifecycle timestamps (`createdAt`, `expiresAt`,
+// `lastSeenAt`), and the advertised vs enabled subnet routes (each
+// fetched per-device on demand).
 tailscale.device @defaults("id hostname os") {
   init(id? string)
   // Legacy identifier for a device
@@ -84,6 +101,15 @@ tailscale.device @defaults("id hostname os") {
 }
 
 // Tailscale user
+//
+// Examine a single user known to the tailnet, identified by `id`:
+// display name, login name, profile picture, the owning tailnet,
+// relation type (member vs shared), role (owner / admin / member /
+// etc.), status (active / idle / suspended / needs-approval /
+// over-billing-limit), the count of devices the user owns,
+// `createdAt` / `lastSeenAt` lifecycle timestamps, and a
+// `currentlyConnected` flag — used for access reviews and dormant /
+// suspended-account hygiene.
 tailscale.user @defaults("id displayName type") {
   init(id? string)
   // Unique identifier for the user
@@ -119,9 +145,15 @@ tailscale.user @defaults("id displayName type") {
 
 // Tailscale tailnet ACL (access control list) policy
 //
-// The ACL policy governs which users and devices can talk to which other users and
-// devices. The structured representation here is parsed from the tailnet's HuJSON
-// policy file (https://tailscale.com/kb/1018/acls).
+// Examine the tailnet's parsed HuJSON ACL policy
+// (https://tailscale.com/kb/1018/acls). The policy governs which
+// users and devices can reach which others, and the resource exposes
+// the ACL rules, named groups, host aliases, tag-owner assignments,
+// Tailscale SSH rules, embedded connectivity tests, per-node attribute
+// grants, exit-node and subnet-route auto-approvers, default and named
+// device-posture rules, the IPv4-disabled flag, the OneCGNATRoute
+// setting, the randomize-client-port flag, the policy `etag`, and the
+// raw HuJSON for fall-through pattern matching.
 tailscale.aclPolicy @defaults("tailnet") {
   // Tailnet name this ACL policy belongs to
   tailnet string
