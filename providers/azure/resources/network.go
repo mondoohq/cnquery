@@ -1852,26 +1852,27 @@ func privateLinkServiceToMql(runtime *plugin.Runtime, pls *network.PrivateLinkSe
 	}
 
 	var (
-		provisioningState, alias, accessMode, destIP string
-		enableProxy                                  bool
-		fqdns                                        []any
-		visibility                                   []any
-		autoApproval                                 []any
-		ipConfigs                                    []any
-		lbFrontendIds                                []any
-		nicIds                                       []any
+		provisioningState, accessMode string
+		enableProxyPtr                *bool
+		fqdns                         []any
+		visibility                    []any
+		autoApproval                  []any
+		ipConfigs                     []any
+		lbFrontendIds                 []any
+		nicIds                        []any
 	)
 
+	var aliasPtr, destIPPtr *string
 	if pls.Properties != nil {
 		if pls.Properties.ProvisioningState != nil {
 			provisioningState = string(*pls.Properties.ProvisioningState)
 		}
-		alias = convert.ToValue(pls.Properties.Alias)
+		aliasPtr = pls.Properties.Alias
 		if pls.Properties.AccessMode != nil {
 			accessMode = string(*pls.Properties.AccessMode)
 		}
-		destIP = convert.ToValue(pls.Properties.DestinationIPAddress)
-		enableProxy = convert.ToValue(pls.Properties.EnableProxyProtocol)
+		destIPPtr = pls.Properties.DestinationIPAddress
+		enableProxyPtr = pls.Properties.EnableProxyProtocol
 
 		for _, f := range pls.Properties.Fqdns {
 			if f != nil {
@@ -1932,11 +1933,6 @@ func privateLinkServiceToMql(runtime *plugin.Runtime, pls *network.PrivateLinkSe
 		}
 	}
 
-	var etag string
-	if pls.Etag != nil {
-		etag = *pls.Etag
-	}
-
 	res, err := CreateResource(runtime, "azure.subscription.networkService.privateLinkService",
 		map[string]*llx.RawData{
 			"id":                                     llx.StringDataPtr(pls.ID),
@@ -1944,12 +1940,12 @@ func privateLinkServiceToMql(runtime *plugin.Runtime, pls *network.PrivateLinkSe
 			"location":                               llx.StringDataPtr(pls.Location),
 			"tags":                                   llx.MapData(convert.PtrMapStrToInterface(pls.Tags), types.String),
 			"type":                                   llx.StringDataPtr(pls.Type),
-			"etag":                                   llx.StringData(etag),
+			"etag":                                   llx.StringDataPtr(pls.Etag),
 			"provisioningState":                      llx.StringData(provisioningState),
-			"alias":                                  llx.StringData(alias),
+			"alias":                                  llx.StringDataPtr(aliasPtr),
 			"accessMode":                             llx.StringData(accessMode),
-			"enableProxyProtocol":                    llx.BoolData(enableProxy),
-			"destinationIPAddress":                   llx.StringData(destIP),
+			"enableProxyProtocol":                    llx.BoolDataPtr(enableProxyPtr),
+			"destinationIPAddress":                   llx.StringDataPtr(destIPPtr),
 			"fqdns":                                  llx.ArrayData(fqdns, types.String),
 			"visibilitySubscriptions":                llx.ArrayData(visibility, types.String),
 			"autoApprovalSubscriptions":              llx.ArrayData(autoApproval, types.String),
