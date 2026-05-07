@@ -4,7 +4,7 @@
 option provider = "go.mondoo.com/mql/v13/providers/snowflake"
 option go_package = "go.mondoo.com/mql/v13/providers/snowflake/resources"
 
-// Snowflake resource
+// Snowflake Data Cloud — entry point for inspecting accounts, users, roles, grants, databases, warehouses, shares, and network/password/session policies
 snowflake {
   // Current role
   currentRole() string
