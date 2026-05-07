@@ -2744,6 +2744,7 @@ private gcp.project.gkeService.cluster.nodepool.upgradeSettings @defaults("strat
   blueGreenSettings dict
 }
 
+// Google Kubernetes Engine (GKE) node pool autoscaling configuration
 private gcp.project.gkeService.cluster.nodepool.autoscaling @defaults( "enabled" ) {
   // Is autoscaling enabled for this node pool.
   enabled bool
@@ -4461,6 +4462,7 @@ private gcp.project.monitoringService.service.slo @defaults("name displayName go
   userLabels map[string]string
 }
 
+// Google Cloud (GCP) Binary Authorization
 private gcp.project.binaryAuthorizationControl {
   // The policy for container image binary authorization
   policy gcp.project.binaryAuthorizationControl.policy
@@ -4468,6 +4470,7 @@ private gcp.project.binaryAuthorizationControl {
   attestors() []gcp.project.binaryAuthorizationControl.attestor
 }
 
+// Google Cloud (GCP) Binary Authorization policy
 private gcp.project.binaryAuthorizationControl.policy {
   // The resource name
   name string
@@ -4489,6 +4492,7 @@ private gcp.project.binaryAuthorizationControl.policy {
   updated time
 }
 
+// Google Cloud (GCP) Binary Authorization admission rule
 private gcp.project.binaryAuthorizationControl.admissionRule {
   // How this admission rule will be evaluated
   evaluationMode string
