@@ -59,13 +59,13 @@ private cloudflare.zone @defaults("name account.name") {
 	// Live inputs
 	liveInputs() []cloudflare.streams.liveInput
 
-	// Videos
+	// Stream video assets uploaded or streamed through Cloudflare
 	videos() []cloudflare.streams.video
 
-	// R2
+	// Cloudflare R2 storage (account-scoped, exposed on zone for consistency)
 	r2() cloudflare.r2
 
-  // Workers
+  // Cloudflare Workers configuration and deployments
 	workers() cloudflare.workers
 
 	// Cloudflare One (Zero Trust)
@@ -80,7 +80,7 @@ private cloudflare.zone @defaults("name account.name") {
 
 	// Firewall rules (legacy)
 	firewallRules() []cloudflare.zone.firewallRule
-	// Rulesets
+	// Managed and custom rulesets evaluated for this zone
 	rulesets() []cloudflare.zone.ruleset
 	// Page rules
 	pageRules() []cloudflare.zone.pageRule
@@ -242,9 +242,9 @@ private cloudflare.dns.record @defaults("type content name") {
 
   // Record name
 	name string
-	// Comment
+	// Free-form comment or description for the DNS record
 	comment string
-	// Tags
+	// Tags for organizing and filtering DNS records
 	tags []string
 	// Whether the record is proxied (false indicated DNS only)
 	proxied bool
@@ -278,7 +278,7 @@ private cloudflare.account @defaults("name") {
 	// Account type
 	type string
 
-	// Settings
+	// Account-level configuration and preferences
 	settings cloudflare.account.settings
 
 	// Time the account was created
@@ -287,7 +287,7 @@ private cloudflare.account @defaults("name") {
 	// Live inputs
 	liveInputs() []cloudflare.streams.liveInput
 
-	// Videos
+	// Stream video assets uploaded or streamed through Cloudflare
 	videos() []cloudflare.streams.video
 
 	// Account roles
@@ -314,7 +314,7 @@ private cloudflare.apiToken @defaults("name status expiresOn") {
 	ipIn []string
 	// IP addresses blocked from using the token (CIDR list)
 	ipNotIn []string
-	// Token policies (effect, resources, permission groups) as raw structured data
+	// Token policies (each dict has effect, resources, and permission groups defining what the token can do)
 	policies []dict
 }
 
@@ -349,7 +349,7 @@ private cloudflare.streams.video @defaults("name id") {
 	// Unique identifier
 	uid string
 
-	// Name
+	// Display name of the live input stream
 	name string
 
 	// Creator ID
@@ -400,6 +400,7 @@ private cloudflare.streams.video @defaults("name id") {
 
 // Cloudflare R2
 private cloudflare.r2 @defaults("name location") {
+	// R2 buckets in the account
 	buckets() []cloudflare.r2.bucket
 }
 
@@ -463,13 +464,19 @@ private cloudflare.workers.page @defaults("shortId") {
 	id string
 	// Worker short ID
 	shortId string
+	// Pages project identifier
 	projectId string
+	// Pages project name
 	projectName string
+	// Deployment environment (preview or production)
 	environment string
+	// Public URL of the deployment
 	url string
 
+	// Custom domain aliases pointing at this deployment
 	aliases []string
 
+	// Branch from which production deployments are built
 	productionBranch string
 
   // Time the worker was created
@@ -1147,7 +1154,7 @@ private cloudflare.zone.emailRouting @defaults("enabled status") {
 	createdAt time
 	// Time the configuration was last modified
 	modifiedAt time
-	// Suggested DNS records (MX, SPF/TXT, DKIM/TXT, DMARC) returned by the email-routing settings endpoint as raw record dicts
+	// Suggested DNS records (MX, SPF/TXT, DKIM/TXT, DMARC) required for email-routing configuration
 	dnsRecords() []dict
 	// Whether at least one MX record consistent with email-routing is in place
 	mxConfigured() bool
