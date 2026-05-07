@@ -474,9 +474,9 @@ datadog.syntheticsGlobalVariable @defaults("id name") {
   description string
   // Tags
   tags []string
-  // Whether the variable holds a Time-based One-Time Password (TOTP)
+  // Whether the variable is a Time-based One-Time Password (TOTP/MFA) variable
   isTotp bool
-  // Whether the value is from a Fido device
+  // Whether the variable is a FIDO variable
   isFido bool
   // Parse test public ID (source test)
   parseTestPublicId string
