@@ -242,6 +242,67 @@ use (
 The more time we spend building providers, the more we learn how to do better in the future. Here we describe learnings
 that will help you get started with providers development.
 
+### Document every resource and field
+
+Every resource and field declared in a `.lr` schema **must** have a `//`-comment immediately above it. These comments
+are not just for code readers — the code generator emits them as the `title`/`desc` for each resource and field in the
+generated `*.resources.json`, which is what powers our user-facing docs and IDE autocomplete. A field with no comment
+ends up as an empty entry in the docs.
+
+Write the comment for someone who has never seen the provider's Go code:
+
+- **Describe what it represents, not how it's implemented.** "Static IP address reserved for a project" is useful;
+  "Returned by the Compute API" is not.
+- **Be specific.** A top-level provider resource is the worst place for a generic "X resource" comment, because that
+  string is the heading of the entire provider's docs. Name what the provider exposes — for example, "GitHub — entry
+  point for inspecting organizations, repositories, teams, users, packages, deploy keys, and security/governance
+  settings" beats a bare "GitHub resource".
+- **Match the SDK/API vocabulary** that someone reading docs would search for (e.g., "Amazon S3 bucket lifecycle rule",
+  not "lifecycle entry on the bucket").
+- **For deprecated fields**, prefix the comment with `DEPRECATED:` and name the replacement (see the `@maturity`
+  section in `CLAUDE.md`).
+
+```lr
+// Snowflake Data Cloud — entry point for inspecting accounts, users, roles, grants, databases,
+// warehouses, shares, and network/password/session policies
+snowflake {
+  // Role currently in use for this Snowflake session
+  currentRole() string
+}
+
+// Snowflake user account, including authentication and session settings
+snowflake.user @defaults("name") {
+  // User name
+  name string
+  // Email address
+  email string
+  // Whether the user has an RSA public key configured for key-pair authentication
+  hasRsaPublicKey bool
+}
+```
+
+A quick way to find resources across all providers that are missing comments:
+
+```bash
+python3 - <<'EOF'
+import glob, re
+skip = ('import ', 'option ', 'alias ', 'extend ', 'embed ')
+res_re = re.compile(r'^(private\s+)?[a-zA-Z][\w.]*\s*(@\w+\([^)]*\)\s*)*\{')
+for path in sorted(glob.glob('providers/*/resources/*.lr')):
+    with open(path) as f:
+        lines = f.readlines()
+    for i, line in enumerate(lines):
+        s = line.lstrip()
+        if any(s.startswith(p) for p in skip) or not res_re.match(s):
+            continue
+        j = i - 1
+        while j >= 0 and not lines[j].strip():
+            j -= 1
+        if j < 0 or not lines[j].strip().startswith('//'):
+            print(f'{path}:{i+1}: {line.rstrip()}')
+EOF
+```
+
 ### Referencing MQL resources
 
 Often we have a top-level MQL resource, which we want to reference in another top-level resource.
