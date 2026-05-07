@@ -546,9 +546,9 @@ private aws.waf.rule.statement.ipsetreferencestatement.ipsetforwardedipconfig {
   statementID string
   // Name of the header
   headerName string
-  // Position
+  // Position of the IP within the forwarded-IP header to inspect: FIRST, LAST, or ANY
   position string
-  // Fallback behavior
+  // Behavior when the forwarded-IP header is missing or malformed: MATCH or NO_MATCH
   fallbackBehavior string
 }
 
@@ -557,9 +557,9 @@ private aws.waf.rule.statement.labelmatchstatement {
   ruleName string
   // ID of the statement
   statementID string
-  // Key
+  // Label key to match against the labels added by previously evaluated rules
   key string
-  // Scope
+  // Match scope: LABEL (full label) or NAMESPACE (label namespace prefix)
   scope string
 }
 
@@ -569,9 +569,9 @@ private aws.waf.rule.statement.managedrulegroupstatement @defaults("name") {
   ruleName string
   // ID of the statement
   statementID string
-  // Name
+  // Name of the managed rule group (e.g., AWSManagedRulesCommonRuleSet)
   name string
-  // Vendor name
+  // Vendor that publishes the managed rule group (e.g., AWS)
   vendorName string
 }
 
@@ -642,7 +642,7 @@ private aws.waf.rule.statement.sizeconstraintstatement {
   size int
   // How to compare the size
   comparisonOperator string
-  // Field to match
+  // HTTP request component this rule inspects
   fieldToMatch aws.waf.rule.fieldtomatch
 }
 
@@ -652,7 +652,7 @@ private aws.waf.rule.statement.regexmatchstatement {
   ruleName string
   // ID of the statement
   statementID string
-  // Field to match
+  // HTTP request component this rule inspects
   fieldToMatch aws.waf.rule.fieldtomatch
   // Regex pattern to match
   regexString string
@@ -664,14 +664,15 @@ private aws.waf.rule.statement.bytematchstatement @defaults("searchString") {
   ruleName string
   // ID of the statement
   statementID string
-  // Field to match
+  // HTTP request component this rule inspects
   fieldToMatch aws.waf.rule.fieldtomatch
   // String to search for
   searchString string
 }
 
-// Field to match
+// Component of an HTTP request that a WAF rule inspects (URI, headers, body, cookies, etc.)
 private aws.waf.rule.fieldtomatch @defaults("target") {
+  // Request component being inspected (e.g., METHOD, URI_PATH, QUERY_STRING, BODY, HEADERS)
   target string
   // Name of the rule this statement belongs to
   ruleName string
@@ -703,7 +704,7 @@ private aws.waf.rule.fieldtomatch @defaults("target") {
   singleQueryArgument aws.waf.rule.fieldtomatch.singlequeryargument
 }
 
-// Body of the field to match
+// Request body inspection settings for a WAF rule
 private aws.waf.rule.fieldtomatch.body {
   // Name of the rule this statement belongs to
   ruleName string
@@ -713,7 +714,7 @@ private aws.waf.rule.fieldtomatch.body {
   overSizeHandling string
 }
 
-// Cookie of the field to match
+// Cookie inspection settings for a WAF rule
 private aws.waf.rule.fieldtomatch.cookie {
   // Name of the rule this statement belongs to
   ruleName string
@@ -723,7 +724,7 @@ private aws.waf.rule.fieldtomatch.cookie {
   overSizeHandling string
 }
 
-// Order of headers of the field to match
+// Header-order inspection settings for a WAF rule
 private aws.waf.rule.fieldtomatch.headerorder {
   // Name of the rule this statement belongs to
   ruleName string
@@ -733,7 +734,7 @@ private aws.waf.rule.fieldtomatch.headerorder {
   overSizeHandling string
 }
 
-// Single header of the field to match
+// Single named header inspection settings for a WAF rule
 private aws.waf.rule.fieldtomatch.singleheader {
   // Name of the rule this statement belongs to
   ruleName string
@@ -743,7 +744,7 @@ private aws.waf.rule.fieldtomatch.singleheader {
   name string
 }
 
-// Single query argument
+// Single named query-argument inspection settings for a WAF rule
 private aws.waf.rule.fieldtomatch.singlequeryargument {
   // Name of the rule this statement belongs to
   ruleName string
@@ -753,17 +754,17 @@ private aws.waf.rule.fieldtomatch.singlequeryargument {
   name string
 }
 
-// JA3 fingerprint
+// JA3 TLS fingerprint inspection settings for a WAF rule
 private aws.waf.rule.fieldtomatch.ja3fingerprint {
   // Name of the rule this statement belongs to
   ruleName string
   // ID of the statement
   statementID string
-  // FallbackBehavior
+  // Behavior when the JA3 fingerprint cannot be computed: MATCH or NO_MATCH
   fallbackBehavior string
 }
 
-// Request body as JSON
+// JSON request-body inspection settings for a WAF rule
 private aws.waf.rule.fieldtomatch.jsonbody {
   // Name of the rule this statement belongs to
   ruleName string
@@ -771,51 +772,51 @@ private aws.waf.rule.fieldtomatch.jsonbody {
   statementID string
   // What to do if the body is over size
   overSizeHandling string
-  // Match scope
+  // Part of the JSON to inspect: ALL, KEY, or VALUE
   matchScope string
   // What to do if the body is not valid JSON
   invalidFallbackBehavior string
-  // Match pattern
+  // JSON paths included in or excluded from inspection
   matchPattern aws.waf.rule.fieldtomatch.jsonbody.matchpattern
 }
 
-// Pattern to match
+// JSON paths within the request body that a WAF rule inspects
 private aws.waf.rule.fieldtomatch.jsonbody.matchpattern {
   // Name of the rule this statement belongs to
   ruleName string
   // ID of the statement
   statementID string
-  // Whether to match all
+  // Whether to inspect every JSON path (overrides includePaths)
   all bool
-  // Paths to include
+  // JSON paths to inspect
   includePaths []string
 }
 
-// Headers
+// Header inspection settings for a WAF rule
 private aws.waf.rule.fieldtomatch.headers {
   // Name of the rule this statement belongs to
   ruleName string
   // ID of the statement
   statementID string
-  // Match scope
+  // Part of each header to inspect: ALL, KEY, or VALUE
   matchScope string
-  // What to do if the headers are over size
+  // What to do if the headers exceed the inspection size limit
   overSizeHandling string
-  // Match pattern
+  // Header names included in or excluded from inspection
   matchPattern aws.waf.rule.fieldtomatch.headers.matchpattern
 }
 
-// Pattern to match
+// Header names that a WAF rule inspects
 private aws.waf.rule.fieldtomatch.headers.matchpattern {
   // Name of the rule this statement belongs to
   ruleName string
   // ID of the statement
   statementID string
-  // Whether to match all
+  // Whether to inspect every header (overrides includeHeaders/excludeHeaders)
   all bool
-  // Headers to include
+  // Header names to inspect
   includeHeaders []string
-  // Headers to exclude
+  // Header names to skip
   excludeHeaders []string
 }
 
@@ -826,7 +827,7 @@ private aws.waf.rule.statement.xssmatchstatement {
   ruleName string
   // ID of the statement
   statementID string
-  // Field to match
+  // HTTP request component this rule inspects
   fieldToMatch aws.waf.rule.fieldtomatch
 }
 
@@ -836,7 +837,7 @@ private aws.waf.rule.statement.sqlimatchstatement {
   ruleName string
   // ID of the statement
   statementID string
-  // Field to match
+  // HTTP request component this rule inspects
   fieldToMatch aws.waf.rule.fieldtomatch
   // How aggressive the statement matches
   sensitivityLevel string
@@ -923,7 +924,7 @@ private aws.networkfirewall.firewall @defaults("arn name region") {
   policy() aws.networkfirewall.policy
   // Subnet mappings for the firewall
   subnetMappings []dict
-  // Encryption configuration
+  // Customer-managed KMS encryption configuration for firewall resources
   encryptionConfiguration dict
   // Tags on the firewall
   tags map[string]string
@@ -1682,11 +1683,11 @@ private aws.iam.accessanalyzer.analyzer @defaults("name type region status") {
 
 // AWS IAM Access Analyzer finding
 private aws.iam.accessanalyzer.finding @defaults("resourceType region type status") {
-  // Finding id
+  // ID of the finding
   id string
-  // Error message
+  // Error message describing why analysis failed (if any)
   error string
-  // Resource
+  // ARN of the resource the finding applies to
   resourceArn string
   // Resource owner
   resourceOwnerAccount string
@@ -2192,7 +2193,7 @@ private aws.sagemaker.inferenceComponent @defaults("arn name status") {
   endpointName string
   // ARN of the parent endpoint
   endpointArn string
-  // Typed reference to the parent endpoint
+  // SageMaker endpoint hosting this inference component
   endpoint() aws.sagemaker.endpoint
   // Production variant name
   variantName string
@@ -2600,7 +2601,7 @@ private aws.sagemaker.monitoringSchedule @defaults("arn name status") {
   monitoringJobDefinitionName() string
   // Name of the endpoint being monitored
   endpointName() string
-  // Typed reference to the endpoint being monitored
+  // SageMaker endpoint covered by this monitoring schedule
   endpoint() aws.sagemaker.endpoint
   // Failure reason if the monitoring schedule failed
   failureReason() string
@@ -3064,7 +3065,7 @@ private aws.sagemaker.transformJob @defaults("arn name status") {
   tags() map[string]string
   // Name of the model used
   modelName() string
-  // Typed reference to the model
+  // SageMaker model used by this transform job
   model() aws.sagemaker.model
   // Maximum concurrent transforms
   maxConcurrentTransforms() int
@@ -3238,11 +3239,11 @@ private aws.sagemaker.appImageConfig @defaults("arn name") {
   createdAt time
   // Time when the config was last modified
   lastModifiedAt time
-  // KernelGateway image configuration (raw structure)
+  // Image and kernel specification for the KernelGateway app
   kernelGatewayImageConfig() dict
-  // JupyterLab app image configuration (raw structure)
+  // Image and container settings for the JupyterLab app
   jupyterLabAppImageConfig() dict
-  // Code Editor app image configuration (raw structure)
+  // Image and container settings for the Code Editor app
   codeEditorAppImageConfig() dict
   // Tags for the app image config
   tags() map[string]string
@@ -4535,9 +4536,9 @@ private aws.guardduty.finding @defaults("title region severity") {
   id string
   // Region where the finding was found
   region string
-  // Title
+  // Title of the finding
   title string
-  // Description
+  // Description of the finding
   description string
   // Severity of the finding
   severity float
@@ -6172,7 +6173,7 @@ private aws.eventbridge.schedule @defaults("arn name state") {
   retryPolicy() aws.eventbridge.schedule.retryPolicy
   // Flexible time window (jitter) configuration
   flexibleTimeWindow() aws.eventbridge.schedule.flexibleTimeWindow
-  // Target invocation configuration (typed reference + templated parameters per target type)
+  // Target invoked by this schedule (Lambda, SQS, SNS, ECS task, etc.) and its input
   target() aws.eventbridge.schedule.target
   // Tags for the schedule
   tags() map[string]string
@@ -6569,7 +6570,7 @@ private aws.cloudfront.anycastIpList @defaults("name status ipCount") {
   lastModifiedAt time
   // Tags associated with the Anycast IP list
   tags() map[string]string
-  // Region
+  // AWS region the Anycast IP list is allocated in
   region string
 }
 
@@ -8051,7 +8052,7 @@ aws.rds.parameterGroup.parameter @defaults("name value") {
   dataType string
   // Provides a description of the parameter
   description string
-  // being changed
+  // Whether the parameter can be modified by the customer
   isModifiable bool
   // The earliest engine version to which the parameter can apply
   minimumEngineVersion string
@@ -9282,7 +9283,7 @@ private aws.lambda.function.version @defaults("arn version") {
   handler string
   // SHA-256 hash of the deployment package
   codeSha256 string
-  // Description
+  // Description of the Lambda function
   description string
   // Memory size in MB
   memorySize int
@@ -9372,7 +9373,7 @@ private aws.lambda.layer.version @defaults("layerVersionArn version") {
   layerVersionArn string
   // Version number
   version int
-  // Description
+  // Description of the layer version
   description string
   // When this version was created
   createdDate time
@@ -10228,9 +10229,9 @@ private aws.ec2.vpcEndpointServiceConfiguration @defaults("id name state") {
   supportedIpAddressTypes []string
   // Tags on the service configuration
   tags map[string]string
-  // Network load balancers backing this service (typed references)
+  // Network Load Balancers fronting this VPC endpoint service
   networkLoadBalancers() []aws.elb.loadbalancer
-  // Gateway load balancers backing this service (typed references)
+  // Gateway Load Balancers fronting this VPC endpoint service
   gatewayLoadBalancers() []aws.elb.loadbalancer
   // Principals allowed to discover the service
   allowedPrincipals() []string
@@ -12090,7 +12091,7 @@ private aws.documentdb.globalCluster.member @defaults("isWriter cluster") {
   cluster() aws.documentdb.cluster
   // Whether this member is the global writer
   isWriter bool
-  // Reader cluster members (typed references to clusters that read from this writer)
+  // Read replica clusters that replicate from this writer (only set when isWriter is true)
   readers() []aws.documentdb.cluster
 }
 
@@ -13023,19 +13024,19 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   networkSettingsArn string
   // DEPRECATED: use userSettings() instead
   userSettingsArn @maturity("deprecated") string
-  // Associated user settings (typed reference, null if not configured)
+  // User session and browser settings applied to this portal; null if not configured
   userSettings() aws.workspacesweb.userSetting
   // DEPRECATED: use trustStore() instead
   trustStoreArn @maturity("deprecated") string
-  // Associated trust store (typed reference, null if not configured)
+  // Certificate trust store used to verify peer certificates for this portal; null if not configured
   trustStore() aws.workspacesweb.trustStore
   // DEPRECATED: use ipAccessSettings() instead
   ipAccessSettingsArn @maturity("deprecated") string
-  // Associated IP access settings (typed reference, null if not configured)
+  // IP-based access controls applied to this portal; null if not configured
   ipAccessSettings() aws.workspacesweb.ipAccessSetting
   // DEPRECATED: use userAccessLoggingSetting() instead
   userAccessLoggingSettingsArn @maturity("deprecated") string
-  // Associated user access logging settings (typed reference, null if not configured)
+  // User access logging configuration for this portal; null if not configured
   userAccessLoggingSetting() aws.workspacesweb.userAccessLoggingSetting
   // Associated data protection settings ARN
   dataProtectionSettingsArn string
@@ -13395,7 +13396,7 @@ private aws.kinesis.firehoseDeliveryStream.destination.s3 @defaults("bucketArn c
   dynamicPartitioning dict
   // Data processing configuration
   processingConfiguration dict
-  // Region
+  // AWS region of the delivery destination
   region string
 }
 
@@ -13419,7 +13420,7 @@ private aws.kinesis.firehoseDeliveryStream.destination.redshift @defaults("clust
   processingConfiguration dict
   // Retry duration in seconds
   retryDurationInSeconds int
-  // Region
+  // AWS region of the delivery destination
   region string
 }
 
@@ -13447,7 +13448,7 @@ private aws.kinesis.firehoseDeliveryStream.destination.elasticsearch @defaults("
   processingConfiguration dict
   // Retry duration in seconds
   retryDurationInSeconds int
-  // Region
+  // AWS region of the delivery destination
   region string
 }
 
@@ -13475,7 +13476,7 @@ private aws.kinesis.firehoseDeliveryStream.destination.opensearch @defaults("dom
   processingConfiguration dict
   // Retry duration in seconds
   retryDurationInSeconds int
-  // Region
+  // AWS region of the delivery destination
   region string
 }
 
@@ -13499,7 +13500,7 @@ private aws.kinesis.firehoseDeliveryStream.destination.splunk @defaults("hecEndp
   processingConfiguration dict
   // Retry duration in seconds
   retryDurationInSeconds int
-  // Region
+  // AWS region of the delivery destination
   region string
 }
 
@@ -13525,7 +13526,7 @@ private aws.kinesis.firehoseDeliveryStream.destination.httpEndpoint @defaults("e
   requestConfiguration dict
   // Retry duration in seconds
   retryDurationInSeconds int
-  // Region
+  // AWS region of the delivery destination
   region string
 }
 
@@ -15975,7 +15976,7 @@ private aws.appmesh.virtualRouter @defaults("arn name") {
   name string
   // Mesh name this router belongs to
   meshName string
-  // Region
+  // AWS region of the virtual router
   region string
   // Status: ACTIVE, INACTIVE, DELETED
   status() string
@@ -15983,7 +15984,7 @@ private aws.appmesh.virtualRouter @defaults("arn name") {
   listeners() []dict
   // Routes for this virtual router
   routes() []aws.appmesh.route
-  // Tags
+  // Tags on the virtual router
   tags() map[string]string
 }
 
@@ -15997,13 +15998,13 @@ private aws.appmesh.route @defaults("name") {
   meshName string
   // Virtual router name
   virtualRouterName string
-  // Region
+  // AWS region of the route
   region string
   // Status: ACTIVE, INACTIVE, DELETED
   status() string
   // Route specification (match, action, retry policy, timeout)
   spec() dict
-  // Tags
+  // Tags on the route
   tags() map[string]string
 }
 
