@@ -223,19 +223,12 @@ func (k *mqlVsphereEncryptionKey) kmsCluster() (*mqlVsphereKmsCluster, error) {
 		k.KmsCluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	res, err := CreateResource(k.MqlRuntime, "vsphere", map[string]*llx.RawData{})
+	inv, err := loadVsphereInventory(k.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	clusters := res.(*mqlVsphere).GetKmsClusters()
-	if clusters.Error != nil {
-		return nil, clusters.Error
-	}
-	for _, c := range clusters.Data {
-		cluster := c.(*mqlVsphereKmsCluster)
-		if cluster.ClusterId.Data == providerId {
-			return cluster, nil
-		}
+	if cluster, ok := inv.kmsClusters[providerId]; ok {
+		return cluster, nil
 	}
 	k.KmsCluster.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil

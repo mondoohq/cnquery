@@ -22,16 +22,16 @@ type vsphereInventory struct {
 	datastores   map[string]*mqlVsphereDatastore
 	clusters     map[string]*mqlVsphereCluster
 	dvPortGroups map[string]*mqlVsphereVswitchPortgroup
+	kmsClusters  map[string]*mqlVsphereKmsCluster // keyed by clusterId
 }
 
 // mqlVsphereInternal extends mqlVspherePermissionInternal (already declared in
 // vsphere.go); the codegen embeds both fields into the generated resource
-// struct. The sync.Once ensures the inventory index is built exactly once per
-// scan even when called concurrently from multiple cross-reference accessors.
+// struct. The mutex serializes the first-build race; only successful builds
+// are memoized so a transient error doesn't pin a partial inventory in place.
 type mqlVsphereInternal struct {
-	inventoryOnce sync.Once
-	inventory     *vsphereInventory
-	inventoryErr  error
+	inventoryMu sync.Mutex
+	inventory   *vsphereInventory
 }
 
 func loadVsphereInventory(runtime *plugin.Runtime) (*vsphereInventory, error) {
@@ -40,10 +40,31 @@ func loadVsphereInventory(runtime *plugin.Runtime) (*vsphereInventory, error) {
 		return nil, err
 	}
 	v := res.(*mqlVsphere)
-	v.inventoryOnce.Do(func() {
-		v.inventory, v.inventoryErr = buildVsphereInventory(v)
-	})
-	return v.inventory, v.inventoryErr
+	// Only memoize successful builds. A transient sub-fetch error must NOT
+	// pin a partial inventory in place — that turns a single network blip
+	// into a permanently broken cross-reference index until provider
+	// restart. On error, build runs again next call.
+	v.inventoryMu.Lock()
+	if v.inventory != nil {
+		inv := v.inventory
+		v.inventoryMu.Unlock()
+		return inv, nil
+	}
+	v.inventoryMu.Unlock()
+
+	inv, err := buildVsphereInventory(v)
+	if err != nil {
+		return nil, err
+	}
+	v.inventoryMu.Lock()
+	if v.inventory == nil {
+		v.inventory = inv
+	} else {
+		// A concurrent caller already memoized — return theirs to keep pointer identity.
+		inv = v.inventory
+	}
+	v.inventoryMu.Unlock()
+	return inv, nil
 }
 
 func buildVsphereInventory(v *mqlVsphere) (*vsphereInventory, error) {
@@ -57,38 +78,55 @@ func buildVsphereInventory(v *mqlVsphere) (*vsphereInventory, error) {
 		datastores:   map[string]*mqlVsphereDatastore{},
 		clusters:     map[string]*mqlVsphereCluster{},
 		dvPortGroups: map[string]*mqlVsphereVswitchPortgroup{},
+		kmsClusters:  map[string]*mqlVsphereKmsCluster{},
+	}
+	if kms := v.GetKmsClusters(); kms.Error == nil {
+		for _, c := range kms.Data {
+			cluster := c.(*mqlVsphereKmsCluster)
+			inv.kmsClusters[cluster.ClusterId.Data] = cluster
+		}
 	}
 	for _, d := range dcs.Data {
 		dc := d.(*mqlVsphereDatacenter)
-		if hosts := dc.GetHosts(); hosts.Error == nil {
-			for _, h := range hosts.Data {
-				host := h.(*mqlVsphereHost)
-				inv.hosts[host.Moid.Data] = host
-			}
+		hosts := dc.GetHosts()
+		if hosts.Error != nil {
+			return nil, hosts.Error
 		}
-		if vms := dc.GetVms(); vms.Error == nil {
-			for _, vm := range vms.Data {
-				m := vm.(*mqlVsphereVm)
-				inv.vms[m.Moid.Data] = m
-			}
+		for _, h := range hosts.Data {
+			host := h.(*mqlVsphereHost)
+			inv.hosts[host.Moid.Data] = host
 		}
-		if datastores := dc.GetDatastores(); datastores.Error == nil {
-			for _, ds := range datastores.Data {
-				s := ds.(*mqlVsphereDatastore)
-				inv.datastores[s.Moid.Data] = s
-			}
+		vms := dc.GetVms()
+		if vms.Error != nil {
+			return nil, vms.Error
 		}
-		if clusters := dc.GetClusters(); clusters.Error == nil {
-			for _, c := range clusters.Data {
-				cl := c.(*mqlVsphereCluster)
-				inv.clusters[cl.Moid.Data] = cl
-			}
+		for _, vm := range vms.Data {
+			m := vm.(*mqlVsphereVm)
+			inv.vms[m.Moid.Data] = m
 		}
-		if pgs := dc.GetDistributedPortGroups(); pgs.Error == nil {
-			for _, p := range pgs.Data {
-				pg := p.(*mqlVsphereVswitchPortgroup)
-				inv.dvPortGroups[pg.Moid.Data] = pg
-			}
+		datastores := dc.GetDatastores()
+		if datastores.Error != nil {
+			return nil, datastores.Error
+		}
+		for _, ds := range datastores.Data {
+			s := ds.(*mqlVsphereDatastore)
+			inv.datastores[s.Moid.Data] = s
+		}
+		clusters := dc.GetClusters()
+		if clusters.Error != nil {
+			return nil, clusters.Error
+		}
+		for _, c := range clusters.Data {
+			cl := c.(*mqlVsphereCluster)
+			inv.clusters[cl.Moid.Data] = cl
+		}
+		pgs := dc.GetDistributedPortGroups()
+		if pgs.Error != nil {
+			return nil, pgs.Error
+		}
+		for _, p := range pgs.Data {
+			pg := p.(*mqlVsphereVswitchPortgroup)
+			inv.dvPortGroups[pg.Moid.Data] = pg
 		}
 	}
 	return inv, nil

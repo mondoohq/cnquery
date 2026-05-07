@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/vmware/govmomi/find"
@@ -23,15 +24,32 @@ import (
 
 // mqlVsphereClusterInternal caches the underlying ClusterComputeResource so
 // cross-reference accessors (e.g. cluster.hosts()) can avoid redundant fetches.
+// `clusterOnce` makes the post-CreateResource population race-free when the
+// same cluster resource is reached via multiple discovery paths.
 type mqlVsphereClusterInternal struct {
-	cluster *mo.ClusterComputeResource
+	cluster     *mo.ClusterComputeResource
+	clusterOnce sync.Once
+}
+
+func (v *mqlVsphereCluster) setCluster(c *mo.ClusterComputeResource) {
+	v.clusterOnce.Do(func() {
+		v.cluster = c
+	})
 }
 
 // mqlVsphereDatastoreInternal caches the Datastore mo so cross-reference
 // accessors (datastore.vms(), datastore.hosts()) can resolve typed refs from
-// already-fetched property data.
+// already-fetched property data. `dsOnce` is the same first-write-wins guard
+// described on mqlVsphereClusterInternal.
 type mqlVsphereDatastoreInternal struct {
-	ds *mo.Datastore
+	ds     *mo.Datastore
+	dsOnce sync.Once
+}
+
+func (v *mqlVsphereDatastore) setDs(d *mo.Datastore) {
+	v.dsOnce.Do(func() {
+		v.ds = d
+	})
 }
 
 // countSnapshots returns the total snapshot count in a VM's snapshot tree
@@ -150,7 +168,7 @@ func newVsphereHostResources(vClient *resourceclient.Client, runtime *plugin.Run
 		if err != nil {
 			return nil, err
 		}
-		mqlHost.(*mqlVsphereHost).host = s.hostInfo
+		mqlHost.(*mqlVsphereHost).setHost(s.hostInfo)
 		mqlHosts[i] = mqlHost
 	}
 	return mqlHosts, nil
@@ -242,7 +260,7 @@ func (v *mqlVsphereDatacenter) clusters() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlCluster.(*mqlVsphereCluster).cluster = moc
+		mqlCluster.(*mqlVsphereCluster).setCluster(moc)
 
 		mqlClusters[i] = mqlCluster
 	}
@@ -435,7 +453,7 @@ func (v *mqlVsphereDatacenter) vms() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlVm.(*mqlVsphereVm).vm = s.vmInfo
+		mqlVm.(*mqlVsphereVm).setVm(s.vmInfo)
 		mqlVms[i] = mqlVm
 	}
 	return mqlVms, nil
@@ -635,7 +653,7 @@ func (v *mqlVsphereDatacenter) datastores() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlDs.(*mqlVsphereDatastore).ds = s.props
+		mqlDs.(*mqlVsphereDatastore).setDs(s.props)
 		mqlDss[i] = mqlDs
 	}
 	return mqlDss, nil

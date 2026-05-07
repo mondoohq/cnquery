@@ -4,15 +4,23 @@
 package resources
 
 import (
+	"sync"
+
 	"github.com/vmware/govmomi/vim25/mo"
-	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/vsphere/connection"
 	"go.mondoo.com/mql/v13/providers/vsphere/resources/resourceclient"
 )
 
 type mqlVsphereVmInternal struct {
-	vm *mo.VirtualMachine
+	vm     *mo.VirtualMachine
+	vmOnce sync.Once
+}
+
+func (v *mqlVsphereVm) setVm(m *mo.VirtualMachine) {
+	v.vmOnce.Do(func() {
+		v.vm = m
+	})
 }
 
 func (v *mqlVsphereVm) id() (string, error) {
@@ -37,9 +45,8 @@ func (v *mqlVsphereVm) advancedSettings() (map[string]any, error) {
 }
 
 // kmsCluster resolves the typed vsphere.kmsCluster providing this VM's
-// encryption key. Walks vsphere.kmsClusters (single SOAP call, cached) and
-// matches by clusterId; null when the VM isn't encrypted or its provider isn't
-// in the registered list.
+// encryption key via the kmsClusters map on the cached inventory; null when
+// the VM isn't encrypted or the provider isn't in the registered list.
 func (v *mqlVsphereVm) kmsCluster() (*mqlVsphereKmsCluster, error) {
 	if v.vm == nil || v.vm.Config == nil || v.vm.Config.KeyId == nil || v.vm.Config.KeyId.ProviderId == nil {
 		v.KmsCluster.State = plugin.StateIsNull | plugin.StateIsSet
@@ -50,20 +57,12 @@ func (v *mqlVsphereVm) kmsCluster() (*mqlVsphereKmsCluster, error) {
 		v.KmsCluster.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
-
-	res, err := CreateResource(v.MqlRuntime, "vsphere", map[string]*llx.RawData{})
+	inv, err := loadVsphereInventory(v.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	clusters := res.(*mqlVsphere).GetKmsClusters()
-	if clusters.Error != nil {
-		return nil, clusters.Error
-	}
-	for _, c := range clusters.Data {
-		cluster := c.(*mqlVsphereKmsCluster)
-		if cluster.ClusterId.Data == providerId {
-			return cluster, nil
-		}
+	if cluster, ok := inv.kmsClusters[providerId]; ok {
+		return cluster, nil
 	}
 	v.KmsCluster.State = plugin.StateIsNull | plugin.StateIsSet
 	return nil, nil

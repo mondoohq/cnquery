@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi/vapi/tags"
 	"github.com/vmware/govmomi/vim25/mo"
 	vmwaretypes "github.com/vmware/govmomi/vim25/types"
@@ -42,12 +43,14 @@ func BatchGetTags(ctx context.Context, refs []mo.Reference, conn *connection.Vsp
 
 	restClient, err := conn.RestClient(ctx)
 	if err != nil {
+		log.Debug().Err(err).Msg("vsphere> vAPI rest client unavailable; falling back to mo.ManagedEntity.Tag")
 		return out
 	}
 	tagManager := tags.NewManager(restClient)
 
 	attached, err := tagManager.GetAttachedTagsOnObjects(ctx, refs)
 	if err != nil {
+		log.Debug().Err(err).Msg("vsphere> GetAttachedTagsOnObjects failed; falling back to mo.ManagedEntity.Tag")
 		return out
 	}
 

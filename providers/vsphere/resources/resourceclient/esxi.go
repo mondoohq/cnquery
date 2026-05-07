@@ -252,6 +252,13 @@ type VmKernelNic struct {
 }
 
 // (Get-EsxCli).network.ip.interface.list()
+//
+// Per-host ESXCli ipv4/ipv6 enumeration is batched once per protocol — the
+// list-without-interface-name form returns every vmkernel NIC's IP info in a
+// single call. That cuts vmknic ESXCli call count from `1 + 3N` (list + 3
+// per-NIC) to `3 + N` (list + ipv4-batch + ipv6-batch + per-NIC tags) for
+// hosts with N vmkernel NICs. Tags don't have an esxcli-list form, so they
+// stay per-NIC.
 func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 	e, err := esx.NewExecutor(context.Background(), esxi.c.Client, esxi.host)
 	if err != nil {
@@ -259,6 +266,15 @@ func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 	}
 
 	res, err := e.Run(context.Background(), []string{"network", "ip", "interface", "list"})
+	if err != nil {
+		return nil, err
+	}
+
+	ipv4ByName, err := esxi.vmknicIpAll("ipv4")
+	if err != nil {
+		return nil, err
+	}
+	ipv6ByName, err := esxi.vmknicIpAll("ipv6")
 	if err != nil {
 		return nil, err
 	}
@@ -274,30 +290,17 @@ func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 			continue
 		}
 		name := nameCol[0]
-		netstack := netstackCol[0]
 		if name == "" {
 			continue
 		}
 
 		nic := VmKernelNic{
 			Properties: esxiValuesToDict(val),
+			Ipv4:       ipv4ByName[name],
+			Ipv6:       ipv6ByName[name],
 		}
 
-		// gather ipv4 information
-		ipv4Params, err := esxi.VmknicIp(name, netstack, "ipv4")
-		if err != nil {
-			return nil, err
-		}
-		nic.Ipv4 = ipv4Params
-
-		// gather ipv6 information
-		ipv6Params, err := esxi.VmknicIp(name, netstack, "ipv6")
-		if err != nil {
-			return nil, err
-		}
-		nic.Ipv6 = ipv6Params
-
-		// gather tags
+		// Tags are still per-interface — esxcli has no list form for them.
 		tags, err := esxi.VmknicTags(name)
 		if err != nil {
 			return nil, err
@@ -307,6 +310,32 @@ func (esxi *Esxi) Vmknics() ([]VmKernelNic, error) {
 		vmknics = append(vmknics, nic)
 	}
 	return vmknics, nil
+}
+
+// vmknicIpAll returns ipv4 / ipv6 records for every vmkernel NIC in a single
+// ESXCli call, indexed by interface name. Replaces N per-interface
+// VmknicIp() calls in the Vmknics() loop.
+func (esxi *Esxi) vmknicIpAll(ipprotocol string) (map[string][]any, error) {
+	e, err := esx.NewExecutor(context.Background(), esxi.c.Client, esxi.host)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := e.Run(context.Background(), []string{"network", "ip", "interface", ipprotocol, "get"})
+	if err != nil {
+		return nil, err
+	}
+
+	out := map[string][]any{}
+	for i := range resp.Values {
+		val := resp.Values[i]
+		nameCol := val["Name"]
+		if len(nameCol) == 0 {
+			continue
+		}
+		name := nameCol[0]
+		out[name] = append(out[name], esxiValuesToDict(val))
+	}
+	return out, nil
 }
 
 // (Get-EsxCli).network.ip.interface.ipv4.get('vmk0', 'defaultTcpipStack')

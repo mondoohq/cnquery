@@ -160,7 +160,9 @@ func (v *mqlVsphere) permissions() ([]any, error) {
 		if p.Group {
 			principalKind = "group"
 		}
-		id := entityMoid + ":" + principalKind + ":" + p.Principal
+		// Include role-id so root-level permissions (entityMoid empty) don't
+		// collide when two distinct grants for the same principal exist.
+		id := entityMoid + ":" + principalKind + ":" + p.Principal + ":" + strconv.FormatInt(int64(p.RoleId), 10)
 		mqlPerm, err := CreateResource(v.MqlRuntime, "vsphere.permission", map[string]*llx.RawData{
 			"__id":       llx.StringData(id),
 			"id":         llx.StringData(id),
@@ -461,11 +463,13 @@ func (v *mqlVsphereHostCommand) id() (string, error) {
 
 // populateHostCommandArgs resolves the active host's inventoryPath from the
 // connection so the command knows which ESXi host to run on. Shared by both
-// initEsxiCommand and initVsphereHostCommand.
+// initEsxiCommand and initVsphereHostCommand. If the caller already supplied
+// inventoryPath we leave it alone; otherwise we look up the host via the
+// connection's platform identifier.
 func populateHostCommandArgs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, error) {
 	conn := runtime.Connection.(*connection.VsphereConnection)
 
-	if len(args) > 2 {
+	if args["inventoryPath"] != nil {
 		return args, nil
 	}
 	if args["command"] == nil {
