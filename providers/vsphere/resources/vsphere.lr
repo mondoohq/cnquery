@@ -114,7 +114,7 @@ private vsphere.permission @defaults("principal entityType entityMoid") {
   principal string
   // Whether the principal is a group (true) or a user (false)
   group bool
-  // RBAC role granted by this permission (typed reference; resolved lazily against vsphere.roles)
+  // RBAC role granted by this permission
   role() vsphere.role
   // Whether the permission propagates to children of the entity in the inventory hierarchy
   propagate bool
