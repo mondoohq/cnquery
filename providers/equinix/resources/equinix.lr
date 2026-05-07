@@ -16,11 +16,11 @@ equinix.metal.project @defaults("name") {
   createdAt time
   // When the project was last updated
   updatedAt time
-  // URL
+  // Equinix Metal API URL of the project
   url string
-  // SSH keys
+  // SSH keys associated with the project
   sshKeys() []equinix.metal.sshkey
-  // Devices
+  // Devices provisioned in the project
   devices() []equinix.metal.device
 }
 
@@ -50,7 +50,7 @@ equinix.metal.organization @defaults("name") {
   billingPhone string
   // Organization's credit amount
   creditAmount float
-  // URL
+  // Equinix Metal API URL of the organization
   url string
   // Users in the organization
  	users() []equinix.metal.user
@@ -86,7 +86,7 @@ private equinix.metal.user @defaults("email") {
   timezone string
   // User's phone number
   phoneNumber string
-  // URL
+  // Equinix Metal API URL of the user
   url string
 }
 
@@ -96,15 +96,15 @@ equinix.metal.sshkey @defaults("label") {
   id string
   // Label of the SSH key
   label string
-  // Key
+  // SSH public key material (OpenSSH authorized_keys format)
   key string
-  // Finger print
+  // Fingerprint of the SSH public key
   fingerPrint string
   // When the key was created
   createdAt time
   // When the key was last updated
   updatedAt time
-  // URL
+  // Equinix Metal API URL of the SSH key
   url string
 }
 
