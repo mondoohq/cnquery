@@ -32,7 +32,7 @@ terraform.resources {
 
 // Terraform configuration file (.tf or .tf.json file)
 private terraform.file @defaults("path") {
-  // Terraform (.tf or tf.json file)
+  // Path to the Terraform configuration file on disk
   path string
   // All blocks within the file
   blocks() []terraform.block
@@ -54,7 +54,7 @@ terraform.fileposition {
 private terraform.block @defaults("type labels") {
   // Block type
   type string
-  // Block Labels
+  // Labels that identify the block (e.g., resource type and name)
   labels []string
   // Block name label
   nameLabel() string
@@ -91,7 +91,7 @@ terraform.module @defaults("key source") {
 
 // Terraform settings
 terraform.settings {
-  // Settings block
+  // The terraform { ... } block holding required_providers, backend, and version constraints
   block terraform.block
   // Provider requirements
   requiredProviders []terraform.settings.requiredProvider
@@ -153,7 +153,7 @@ terraform.state.module @defaults("address") {
 terraform.state.resource @defaults("type name") {
   // Address is the absolute resource address
   address string
-  // Mode: managed or data
+  // Resource mode: "managed" (created/updated by Terraform) or "data" (read-only data source)
   mode string
   // Resource type
   type string
@@ -167,7 +167,7 @@ terraform.state.resource @defaults("type name") {
   values dict
   // List of the resource's dependencies
   dependsOn []string
-  // Whether the resource is tainted in the Terraform state
+  // Whether the resource is marked tainted (will be destroyed and recreated on the next apply)
   tainted bool
   // Whether the resource is deposed in the Terraform state
   deposedKey string
@@ -233,7 +233,7 @@ terraform.plan.resourceChange @defaults("type name") {
 terraform.plan.proposedChange @defaults("actions after") {
   // Resource address
   address string
-  // Actions that wil be taken for on the object
+  // Actions Terraform will apply to the resource (e.g., "create", "read", "update", "delete", "no-op")
   actions []string
   // Resource before values
   before dict
