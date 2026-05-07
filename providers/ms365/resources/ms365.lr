@@ -952,7 +952,7 @@ private microsoft.device @defaults("id displayName") {
   isCompliant bool
   // Whether the device is managed by a Mobile Device Management (MDM) app
   isManaged bool
-  // Manufacturer
+  // Device manufacturer or vendor name
   manufacturer string
   // Whether the device is rooted or jail-broken
   isRooted bool
@@ -1039,11 +1039,11 @@ microsoft.application @defaults("id name hasExpiredCredentials") {
   appId string
   // Application display name
   name string
-  // Description
+  // Free-form description of the application
   description string
-  // Notes
+  // Internal notes about the application (admin-only)
   notes string
-  // Tags
+  // Custom tags for organizing the application
   tags []string
   // Application template ID
   applicationTemplateId string
@@ -1069,7 +1069,7 @@ microsoft.application @defaults("id name hasExpiredCredentials") {
   spa dict
   // Client secrets
   secrets []microsoft.passwordCredential
-  // Certificates
+  // X.509 key credentials used for application authentication
   certificates []microsoft.keyCredential
   // Whether the credentials have expired
   hasExpiredCredentials() bool
@@ -1113,9 +1113,9 @@ private microsoft.application.role @defaults("name value isEnabled"){
   id string
   // Display name
   name string
-  // Description
+  // Description of the permissions granted by the role
   description string
-  // Value
+  // Role value as it appears in the roles claim of issued tokens
   value string
   // Allowed member types
   allowedMemberTypes []string
@@ -1127,7 +1127,7 @@ private microsoft.application.role @defaults("name value isEnabled"){
 private microsoft.keyCredential @defaults("thumbprint description expires keyId") {
   // Certificate ID
   keyId string
-  // Description
+  // Free-form description of the certificate's purpose
   description string
   // Certificate thumbprint
   thumbprint string
@@ -1147,7 +1147,7 @@ private microsoft.keyCredential @defaults("thumbprint description expires keyId"
 private microsoft.passwordCredential @defaults("description expires keyId") {
   // Secret ID
   keyId string
-  // Description
+  // Free-form description of the client secret's purpose
   description string
   // Secret hint
   hint string
@@ -1215,7 +1215,7 @@ microsoft.serviceprincipal @defaults("name") {
   isFirstParty() bool
   // Application roles
   appRoles []microsoft.application.role
-  // Permissions
+  // API permissions and scopes assigned to this service principal
   permissions() []microsoft.application.permission
   // Alternative names for the service principal
   alternativeNames []string
@@ -1249,7 +1249,7 @@ private microsoft.application.permission @defaults("appName name type status") {
   description string
   // Type eg. `application` or `delegated`
   type string
-  // Status
+  // Permission grant status (e.g., Granted, ConsentRequired)
   status string
 }
 
