@@ -1,6 +1,7 @@
 aad
 accesscontextmanager
 ACCOUNTADMIN
+ACI
 ACR
 actioncable
 actionpack
@@ -73,6 +74,7 @@ bytematchstatement
 cafd
 cavium
 cbf
+cce
 ccf
 CCN
 cdn
@@ -109,6 +111,7 @@ computeagent
 continuedev
 cooldown
 corosync
+cosmosdb
 cowlib
 cpe
 CPWn
@@ -119,6 +122,7 @@ ctx
 customresources
 cwes
 cyclonedx
+dapr
 dast
 databricks
 datadog
@@ -277,6 +281,7 @@ junos
 jupyter
 JVM
 jwks
+KEDA
 kerberoastable
 keymap
 keyspace
@@ -350,6 +355,7 @@ msk
 mtls
 MULTIAZ
 multiplatform
+myacr
 myapp
 mychart
 myproject
@@ -378,6 +384,7 @@ nodekey
 nodepool
 nokeys
 NONSHARDED
+Noreuse
 notebookinstancedetails
 nproc
 nsg
