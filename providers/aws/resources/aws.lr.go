@@ -2250,7 +2250,7 @@ func init() {
 			Create: createAwsRds,
 		},
 		"aws.rds.optionGroup": {
-			// to override args, implement: initAwsRdsOptionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsRdsOptionGroup,
 			Create: createAwsRdsOptionGroup,
 		},
 		"aws.rds.globalCluster": {

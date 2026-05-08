@@ -1684,37 +1684,53 @@ func (a *mqlAwsRdsOptionGroup) vpc() (*mqlAwsVpc, error) {
 	return mqlVpc.(*mqlAwsVpc), nil
 }
 
+// initAwsRdsOptionGroup resolves an option group by name using the parent
+// `aws.rds.optionGroups` listing (which is cached after the first call), so
+// per-DB-instance accessors share fetched data with the top-level list and
+// don't issue a fresh DescribeOptionGroups for every membership.
+func initAwsRdsOptionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 || args["optionGroupName"] == nil {
+		return args, nil, nil
+	}
+	name, ok := args["optionGroupName"].Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
+
+	obj, err := CreateResource(runtime, "aws.rds", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	rdsRes := obj.(*mqlAwsRds)
+	rawResources := rdsRes.GetOptionGroups()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+	for _, rawResource := range rawResources.Data {
+		og := rawResource.(*mqlAwsRdsOptionGroup)
+		if og.OptionGroupName.Data == name {
+			return args, og, nil
+		}
+	}
+	return args, nil, nil
+}
+
 func (a *mqlAwsRdsDbinstance) optionGroups() ([]any, error) {
 	if len(a.cacheOptionGroupNames) == 0 {
 		return []any{}, nil
 	}
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	region := a.region
-	if region == "" {
-		region = a.Region.Data
-	}
-	svc := conn.Rds(region)
-	ctx := context.Background()
-
 	res := []any{}
 	for _, name := range a.cacheOptionGroupNames {
-		name := name
-		resp, err := svc.DescribeOptionGroups(ctx, &rds.DescribeOptionGroupsInput{
-			OptionGroupName: &name,
+		og, err := NewResource(a.MqlRuntime, "aws.rds.optionGroup", map[string]*llx.RawData{
+			"optionGroupName": llx.StringData(name),
 		})
 		if err != nil {
-			if Is400AccessDeniedError(err) {
-				continue
-			}
 			return nil, err
 		}
-		for _, og := range resp.OptionGroupsList {
-			mqlOG, err := newMqlAwsRdsOptionGroup(a.MqlRuntime, region, og)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlOG)
+		if og == nil {
+			continue
 		}
+		res = append(res, og)
 	}
 	return res, nil
 }
