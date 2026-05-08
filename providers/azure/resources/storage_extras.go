@@ -72,6 +72,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) fileShares() ([]any, error) 
 		page, err := pager.NextPage(ctx)
 		if err != nil {
 			if isFeatureNotSupportedForAccountError(err) {
+				a.FileShares.State = plugin.StateIsNull | plugin.StateIsSet
 				return nil, nil
 			}
 			return nil, err
@@ -189,9 +190,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) privateEndpointConnections()
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			if isFeatureNotSupportedForAccountError(err) {
-				return nil, nil
-			}
+			// Private endpoint connections are supported on virtually all storage
+			// account kinds, so a FeatureNotSupportedForAccount here would be
+			// surprising — surface it rather than swallowing.
 			return nil, err
 		}
 		for _, c := range page.Value {
@@ -258,6 +259,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) objectReplicationPolicies() 
 		page, err := pager.NextPage(ctx)
 		if err != nil {
 			if isFeatureNotSupportedForAccountError(err) {
+				a.ObjectReplicationPolicies.State = plugin.StateIsNull | plugin.StateIsSet
 				return nil, nil
 			}
 			return nil, err
