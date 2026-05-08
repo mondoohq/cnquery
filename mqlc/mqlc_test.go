@@ -2201,7 +2201,7 @@ func TestImplicitSuggestion(t *testing.T) {
 	res, _ := mqlc.Compile("sshd.", nil, conf)
 	require.NotEmpty(t, res.Suggestions)
 
-	assert.Equal(t, "SSH server configuration", res.Suggestions[0].Title)
+	assert.Equal(t, "OpenSSH server (sshd) configuration", res.Suggestions[0].Title)
 }
 
 func TestCompiler_Error(t *testing.T) {
