@@ -6438,8 +6438,9 @@ private azure.subscription.functionsService.functionApp.appSetting @defaults("na
   // Whether the setting's value is a Key Vault reference
   // (i.e., starts with `@Microsoft.KeyVault(...)`)
   hasKeyVaultReference bool
-  // Whether the setting name suggests it carries a secret —
-  // matches /key|password|secret|token|conn(ection)?_?str/i
+  // Whether the setting name suggests it carries a secret. True when the
+  // name (case-insensitively) contains "key", "password", "secret",
+  // "token", or a connection-string identifier ending in `str`.
   isLikelySecret bool
   // Whether the setting is "sticky" on slot swaps (configured via the
   // app's slot-config-names list)
