@@ -99,6 +99,7 @@ Codeium
 codeowners
 codeql
 colo
+colocation
 compressratio
 computeagent
 continuedev
@@ -165,6 +166,7 @@ ERPCLOUD
 eula
 evc
 eventarc
+eventhubs
 evs
 Exadata
 exo
@@ -213,6 +215,7 @@ gpu
 grafana
 groupname
 gvnic
+GZRS
 hadoop
 HBFNV
 HCMCLOUD
@@ -227,6 +230,7 @@ hostedzone
 hostkeyalgorithms
 hostkeys
 hotlink
+HPC
 hpi
 hsts
 hvm
@@ -403,6 +407,7 @@ OSGi
 ospf
 ovmf
 owpjy
+Paa
 pacman
 pagerduty
 panos
@@ -506,7 +511,7 @@ skaffold
 slo
 smbv
 snaptime
-Snat
+snat
 SNYK
 softdep
 spdx
@@ -606,7 +611,6 @@ VMX
 vmxnet
 vnet
 vnic
-VPS
 vpus
 vrf
 vtpm
@@ -636,5 +640,6 @@ zfs
 zfspool
 zookeeper
 zpool
+ZRS
 zrt
 zstd
