@@ -180,7 +180,7 @@ func (a *mqlAwsDetectiveGraph) datasourcePackages() (map[string]any, error) {
 			return nil, err
 		}
 		for pkg, info := range resp.DatasourcePackages {
-			res[pkg] = string(info.DatasourcePackageIngestState)
+			res[string(pkg)] = string(info.DatasourcePackageIngestState)
 		}
 		if resp.NextToken == nil || *resp.NextToken == "" {
 			break
