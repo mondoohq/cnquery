@@ -13,9 +13,11 @@ import (
 	cognitoidentityprovidertypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsCognito) id() (string, error) {
@@ -378,4 +380,278 @@ func (a *mqlAwsCognitoIdentityPool) tags() (map[string]any, error) {
 		return nil, err
 	}
 	return convert.MapToInterfaceMap(resp.IdentityPoolTags), nil
+}
+
+// User pool app clients
+
+type mqlAwsCognitoUserPoolClientInternal struct {
+	cacheRegion string
+}
+
+func (a *mqlAwsCognitoUserPool) clients() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	poolId := a.Id.Data
+	svc := conn.CognitoIdentityProvider(region)
+	ctx := context.Background()
+
+	res := []any{}
+	paginator := cognitoidentityprovider.NewListUserPoolClientsPaginator(svc, &cognitoidentityprovider.ListUserPoolClientsInput{
+		UserPoolId: &poolId,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, c := range page.UserPoolClients {
+			detail, err := svc.DescribeUserPoolClient(ctx, &cognitoidentityprovider.DescribeUserPoolClientInput{
+				UserPoolId: c.UserPoolId,
+				ClientId:   c.ClientId,
+			})
+			if err != nil {
+				log.Warn().Str("userPoolId", aws.ToString(c.UserPoolId)).Str("clientId", aws.ToString(c.ClientId)).Err(err).Msg("could not describe Cognito user pool client")
+				continue
+			}
+			if detail.UserPoolClient == nil {
+				continue
+			}
+			mqlClient, err := newMqlAwsCognitoUserPoolClient(a.MqlRuntime, region, detail.UserPoolClient)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlClient)
+		}
+	}
+	return res, nil
+}
+
+func newMqlAwsCognitoUserPoolClient(runtime *plugin.Runtime, region string, c *cognitoidentityprovidertypes.UserPoolClientType) (plugin.Resource, error) {
+	tokenUnits := map[string]any{}
+	if c.TokenValidityUnits != nil {
+		tokenUnits["accessToken"] = string(c.TokenValidityUnits.AccessToken)
+		tokenUnits["idToken"] = string(c.TokenValidityUnits.IdToken)
+		tokenUnits["refreshToken"] = string(c.TokenValidityUnits.RefreshToken)
+	}
+
+	authFlows := make([]any, 0, len(c.ExplicitAuthFlows))
+	for _, f := range c.ExplicitAuthFlows {
+		authFlows = append(authFlows, string(f))
+	}
+	oauthFlows := make([]any, 0, len(c.AllowedOAuthFlows))
+	for _, f := range c.AllowedOAuthFlows {
+		oauthFlows = append(oauthFlows, string(f))
+	}
+
+	res, err := CreateResource(runtime, "aws.cognito.userPoolClient", map[string]*llx.RawData{
+		"clientId":                        llx.StringDataPtr(c.ClientId),
+		"clientName":                      llx.StringDataPtr(c.ClientName),
+		"userPoolId":                      llx.StringDataPtr(c.UserPoolId),
+		"region":                          llx.StringData(region),
+		"generateSecret":                  llx.BoolData(c.ClientSecret != nil && *c.ClientSecret != ""),
+		"refreshTokenValidity":            llx.IntData(int64(c.RefreshTokenValidity)),
+		"accessTokenValidity":             llx.IntData(int64(aws.ToInt32(c.AccessTokenValidity))),
+		"idTokenValidity":                 llx.IntData(int64(aws.ToInt32(c.IdTokenValidity))),
+		"tokenValidityUnits":              llx.DictData(tokenUnits),
+		"explicitAuthFlows":               llx.ArrayData(authFlows, types.String),
+		"supportedIdentityProviders":      llx.ArrayData(stringsToAnyArray(c.SupportedIdentityProviders), types.String),
+		"callbackURLs":                    llx.ArrayData(stringsToAnyArray(c.CallbackURLs), types.String),
+		"logoutURLs":                      llx.ArrayData(stringsToAnyArray(c.LogoutURLs), types.String),
+		"defaultRedirectURI":              llx.StringDataPtr(c.DefaultRedirectURI),
+		"allowedOAuthFlows":               llx.ArrayData(oauthFlows, types.String),
+		"allowedOAuthScopes":              llx.ArrayData(stringsToAnyArray(c.AllowedOAuthScopes), types.String),
+		"allowedOAuthFlowsUserPoolClient": llx.BoolData(aws.ToBool(c.AllowedOAuthFlowsUserPoolClient)),
+		"preventUserExistenceErrors":      llx.StringData(string(c.PreventUserExistenceErrors)),
+		"enableTokenRevocation":           llx.BoolData(aws.ToBool(c.EnableTokenRevocation)),
+		"authSessionValidity":             llx.IntData(int64(aws.ToInt32(c.AuthSessionValidity))),
+		"createdAt":                       llx.TimeDataPtr(c.CreationDate),
+		"updatedAt":                       llx.TimeDataPtr(c.LastModifiedDate),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlClient := res.(*mqlAwsCognitoUserPoolClient)
+	mqlClient.cacheRegion = region
+	return mqlClient, nil
+}
+
+func stringsToAnyArray(ss []string) []any {
+	res := make([]any, len(ss))
+	for i, s := range ss {
+		res[i] = s
+	}
+	return res
+}
+
+func (a *mqlAwsCognitoUserPoolClient) id() (string, error) {
+	return a.UserPoolId.Data + "/" + a.ClientId.Data, nil
+}
+
+func (a *mqlAwsCognitoUserPoolClient) userPool() (*mqlAwsCognitoUserPool, error) {
+	mqlPool, err := NewResource(a.MqlRuntime, "aws.cognito.userPool",
+		map[string]*llx.RawData{"id": llx.StringData(a.UserPoolId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlPool.(*mqlAwsCognitoUserPool), nil
+}
+
+// User pool hosted UI domain
+
+type mqlAwsCognitoUserPoolDomainInternal struct {
+	cacheRegion string
+}
+
+func (a *mqlAwsCognitoUserPool) domain() (*mqlAwsCognitoUserPoolDomain, error) {
+	resp, err := a.fetchDescribeUserPool()
+	if err != nil || resp == nil || resp.UserPool == nil {
+		a.Domain.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, err
+	}
+
+	domain := aws.ToString(resp.UserPool.Domain)
+	custom := aws.ToString(resp.UserPool.CustomDomain)
+	name := custom
+	if name == "" {
+		name = domain
+	}
+	if name == "" {
+		a.Domain.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.CognitoIdentityProvider(region)
+	ctx := context.Background()
+	detail, err := svc.DescribeUserPoolDomain(ctx, &cognitoidentityprovider.DescribeUserPoolDomainInput{
+		Domain: &name,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.Domain.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	if detail.DomainDescription == nil || aws.ToString(detail.DomainDescription.UserPoolId) == "" {
+		a.Domain.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	dd := detail.DomainDescription
+	customConfig, _ := convert.JsonToDict(dd.CustomDomainConfig)
+
+	res, err := CreateResource(a.MqlRuntime, "aws.cognito.userPoolDomain", map[string]*llx.RawData{
+		"domain":                 llx.StringData(name),
+		"userPoolId":             llx.StringDataPtr(dd.UserPoolId),
+		"region":                 llx.StringData(region),
+		"status":                 llx.StringData(string(dd.Status)),
+		"cloudFrontDistribution": llx.StringDataPtr(dd.CloudFrontDistribution),
+		"s3Bucket":               llx.StringDataPtr(dd.S3Bucket),
+		"customDomainConfig":     llx.DictData(customConfig),
+		"version":                llx.StringDataPtr(dd.Version),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlDomain := res.(*mqlAwsCognitoUserPoolDomain)
+	mqlDomain.cacheRegion = region
+	return mqlDomain, nil
+}
+
+func (a *mqlAwsCognitoUserPoolDomain) id() (string, error) {
+	return a.UserPoolId.Data + "/" + a.Domain.Data, nil
+}
+
+func (a *mqlAwsCognitoUserPoolDomain) userPool() (*mqlAwsCognitoUserPool, error) {
+	mqlPool, err := NewResource(a.MqlRuntime, "aws.cognito.userPool",
+		map[string]*llx.RawData{"id": llx.StringData(a.UserPoolId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlPool.(*mqlAwsCognitoUserPool), nil
+}
+
+// User pool federated identity providers
+
+type mqlAwsCognitoUserPoolIdentityProviderInternal struct {
+	cacheRegion string
+}
+
+func (a *mqlAwsCognitoUserPool) identityProviders() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	poolId := a.Id.Data
+	svc := conn.CognitoIdentityProvider(region)
+	ctx := context.Background()
+
+	res := []any{}
+	paginator := cognitoidentityprovider.NewListIdentityProvidersPaginator(svc, &cognitoidentityprovider.ListIdentityProvidersInput{
+		UserPoolId: &poolId,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, p := range page.Providers {
+			detail, err := svc.DescribeIdentityProvider(ctx, &cognitoidentityprovider.DescribeIdentityProviderInput{
+				UserPoolId:   &poolId,
+				ProviderName: p.ProviderName,
+			})
+			if err != nil {
+				log.Warn().Str("userPoolId", poolId).Str("providerName", aws.ToString(p.ProviderName)).Err(err).Msg("could not describe Cognito identity provider")
+				continue
+			}
+			if detail.IdentityProvider == nil {
+				continue
+			}
+			mqlIdp, err := newMqlAwsCognitoUserPoolIdentityProvider(a.MqlRuntime, region, detail.IdentityProvider)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlIdp)
+		}
+	}
+	return res, nil
+}
+
+func newMqlAwsCognitoUserPoolIdentityProvider(runtime *plugin.Runtime, region string, p *cognitoidentityprovidertypes.IdentityProviderType) (plugin.Resource, error) {
+	res, err := CreateResource(runtime, "aws.cognito.userPoolIdentityProvider", map[string]*llx.RawData{
+		"providerName":     llx.StringDataPtr(p.ProviderName),
+		"providerType":     llx.StringData(string(p.ProviderType)),
+		"userPoolId":       llx.StringDataPtr(p.UserPoolId),
+		"region":           llx.StringData(region),
+		"attributeMapping": llx.MapData(convert.MapToInterfaceMap(p.AttributeMapping), types.String),
+		"idpIdentifiers":   llx.ArrayData(stringsToAnyArray(p.IdpIdentifiers), types.String),
+		"providerDetails":  llx.MapData(convert.MapToInterfaceMap(p.ProviderDetails), types.String),
+		"createdAt":        llx.TimeDataPtr(p.CreationDate),
+		"updatedAt":        llx.TimeDataPtr(p.LastModifiedDate),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlIdp := res.(*mqlAwsCognitoUserPoolIdentityProvider)
+	mqlIdp.cacheRegion = region
+	return mqlIdp, nil
+}
+
+func (a *mqlAwsCognitoUserPoolIdentityProvider) id() (string, error) {
+	return a.UserPoolId.Data + "/" + a.ProviderName.Data, nil
+}
+
+func (a *mqlAwsCognitoUserPoolIdentityProvider) userPool() (*mqlAwsCognitoUserPool, error) {
+	mqlPool, err := NewResource(a.MqlRuntime, "aws.cognito.userPool",
+		map[string]*llx.RawData{"id": llx.StringData(a.UserPoolId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlPool.(*mqlAwsCognitoUserPool), nil
 }

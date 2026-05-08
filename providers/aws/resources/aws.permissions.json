@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.21.3",
-  "generated_at": "2026-05-07T22:51:52Z",
+  "generated_at": "2026-05-07T22:38:41-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -99,8 +99,13 @@
     "codedeploy:ListTagsForResource",
     "cognito-identity:DescribeIdentityPool",
     "cognito-identity:ListIdentityPools",
+    "cognito-idp:DescribeIdentityProvider",
     "cognito-idp:DescribeUserPool",
+    "cognito-idp:DescribeUserPoolClient",
+    "cognito-idp:DescribeUserPoolDomain",
     "cognito-idp:GetUserPoolMfaConfig",
+    "cognito-idp:ListIdentityProviders",
+    "cognito-idp:ListUserPoolClients",
     "cognito-idp:ListUserPools",
     "config:DescribeComplianceByConfigRule",
     "config:DescribeConfigRules",
@@ -1261,15 +1266,45 @@
       "source_file": "aws_cognito.go"
     },
     {
+      "permission": "cognito-idp:DescribeIdentityProvider",
+      "service": "cognito-idp",
+      "action": "DescribeIdentityProvider",
+      "source_file": "aws_cognito.go"
+    },
+    {
       "permission": "cognito-idp:DescribeUserPool",
       "service": "cognito-idp",
       "action": "DescribeUserPool",
       "source_file": "aws_cognito.go"
     },
     {
+      "permission": "cognito-idp:DescribeUserPoolClient",
+      "service": "cognito-idp",
+      "action": "DescribeUserPoolClient",
+      "source_file": "aws_cognito.go"
+    },
+    {
+      "permission": "cognito-idp:DescribeUserPoolDomain",
+      "service": "cognito-idp",
+      "action": "DescribeUserPoolDomain",
+      "source_file": "aws_cognito.go"
+    },
+    {
       "permission": "cognito-idp:GetUserPoolMfaConfig",
       "service": "cognito-idp",
       "action": "GetUserPoolMfaConfig",
+      "source_file": "aws_cognito.go"
+    },
+    {
+      "permission": "cognito-idp:ListIdentityProviders",
+      "service": "cognito-idp",
+      "action": "ListIdentityProviders",
+      "source_file": "aws_cognito.go"
+    },
+    {
+      "permission": "cognito-idp:ListUserPoolClients",
+      "service": "cognito-idp",
+      "action": "ListUserPoolClients",
       "source_file": "aws_cognito.go"
     },
     {

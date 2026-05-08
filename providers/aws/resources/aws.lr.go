@@ -537,6 +537,9 @@ const (
 	ResourceAwsNeptuneSnapshot                                                  string = "aws.neptune.snapshot"
 	ResourceAwsCognito                                                          string = "aws.cognito"
 	ResourceAwsCognitoUserPool                                                  string = "aws.cognito.userPool"
+	ResourceAwsCognitoUserPoolClient                                            string = "aws.cognito.userPoolClient"
+	ResourceAwsCognitoUserPoolDomain                                            string = "aws.cognito.userPoolDomain"
+	ResourceAwsCognitoUserPoolIdentityProvider                                  string = "aws.cognito.userPoolIdentityProvider"
 	ResourceAwsCognitoIdentityPool                                              string = "aws.cognito.identityPool"
 	ResourceAwsDocumentdb                                                       string = "aws.documentdb"
 	ResourceAwsDocumentdbCluster                                                string = "aws.documentdb.cluster"
@@ -2829,6 +2832,18 @@ func init() {
 		"aws.cognito.userPool": {
 			// to override args, implement: initAwsCognitoUserPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCognitoUserPool,
+		},
+		"aws.cognito.userPoolClient": {
+			// to override args, implement: initAwsCognitoUserPoolClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCognitoUserPoolClient,
+		},
+		"aws.cognito.userPoolDomain": {
+			// to override args, implement: initAwsCognitoUserPoolDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCognitoUserPoolDomain,
+		},
+		"aws.cognito.userPoolIdentityProvider": {
+			// to override args, implement: initAwsCognitoUserPoolIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCognitoUserPoolIdentityProvider,
 		},
 		"aws.cognito.identityPool": {
 			// to override args, implement: initAwsCognitoIdentityPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -18158,11 +18173,146 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cognito.userPool.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"aws.cognito.userPool.clients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetClients()).ToDataRes(types.Array(types.Resource("aws.cognito.userPoolClient")))
+	},
+	"aws.cognito.userPool.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetDomain()).ToDataRes(types.Resource("aws.cognito.userPoolDomain"))
+	},
+	"aws.cognito.userPool.identityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetIdentityProviders()).ToDataRes(types.Array(types.Resource("aws.cognito.userPoolIdentityProvider")))
+	},
 	"aws.cognito.userPool.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.cognito.userPool.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.cognito.userPoolClient.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetClientId()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolClient.clientName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetClientName()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolClient.userPoolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetUserPoolId()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolClient.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolClient.userPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetUserPool()).ToDataRes(types.Resource("aws.cognito.userPool"))
+	},
+	"aws.cognito.userPoolClient.generateSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetGenerateSecret()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.userPoolClient.refreshTokenValidity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetRefreshTokenValidity()).ToDataRes(types.Int)
+	},
+	"aws.cognito.userPoolClient.accessTokenValidity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetAccessTokenValidity()).ToDataRes(types.Int)
+	},
+	"aws.cognito.userPoolClient.idTokenValidity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetIdTokenValidity()).ToDataRes(types.Int)
+	},
+	"aws.cognito.userPoolClient.tokenValidityUnits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetTokenValidityUnits()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPoolClient.explicitAuthFlows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetExplicitAuthFlows()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cognito.userPoolClient.supportedIdentityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetSupportedIdentityProviders()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cognito.userPoolClient.callbackURLs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetCallbackURLs()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cognito.userPoolClient.logoutURLs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetLogoutURLs()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cognito.userPoolClient.defaultRedirectURI": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetDefaultRedirectURI()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolClient.allowedOAuthFlows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetAllowedOAuthFlows()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cognito.userPoolClient.allowedOAuthScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetAllowedOAuthScopes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cognito.userPoolClient.allowedOAuthFlowsUserPoolClient": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetAllowedOAuthFlowsUserPoolClient()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.userPoolClient.preventUserExistenceErrors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetPreventUserExistenceErrors()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolClient.enableTokenRevocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetEnableTokenRevocation()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.userPoolClient.authSessionValidity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetAuthSessionValidity()).ToDataRes(types.Int)
+	},
+	"aws.cognito.userPoolClient.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.cognito.userPoolClient.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.cognito.userPoolDomain.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolDomain).GetDomain()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolDomain.userPoolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolDomain).GetUserPoolId()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolDomain.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolDomain).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolDomain.userPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolDomain).GetUserPool()).ToDataRes(types.Resource("aws.cognito.userPool"))
+	},
+	"aws.cognito.userPoolDomain.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolDomain).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolDomain.cloudFrontDistribution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolDomain).GetCloudFrontDistribution()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolDomain.s3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolDomain).GetS3Bucket()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolDomain.customDomainConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolDomain).GetCustomDomainConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPoolDomain.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolDomain).GetVersion()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolIdentityProvider.providerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolIdentityProvider).GetProviderName()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolIdentityProvider.providerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolIdentityProvider).GetProviderType()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolIdentityProvider.userPoolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolIdentityProvider).GetUserPoolId()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolIdentityProvider.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolIdentityProvider).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolIdentityProvider.userPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolIdentityProvider).GetUserPool()).ToDataRes(types.Resource("aws.cognito.userPool"))
+	},
+	"aws.cognito.userPoolIdentityProvider.attributeMapping": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolIdentityProvider).GetAttributeMapping()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.cognito.userPoolIdentityProvider.idpIdentifiers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolIdentityProvider).GetIdpIdentifiers()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cognito.userPoolIdentityProvider.providerDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolIdentityProvider).GetProviderDetails()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.cognito.userPoolIdentityProvider.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolIdentityProvider).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.cognito.userPoolIdentityProvider.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolIdentityProvider).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.cognito.identityPool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoIdentityPool).GetId()).ToDataRes(types.String)
@@ -45508,12 +45658,204 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCognitoUserPool).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"aws.cognito.userPool.clients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).Clients, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).Domain, ok = plugin.RawToTValue[*mqlAwsCognitoUserPoolDomain](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.identityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).IdentityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.cognito.userPool.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPool).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPool.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPool).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cognito.userPoolClient.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.clientName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).ClientName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.userPoolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).UserPoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.userPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).UserPool, ok = plugin.RawToTValue[*mqlAwsCognitoUserPool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.generateSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).GenerateSecret, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.refreshTokenValidity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).RefreshTokenValidity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.accessTokenValidity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).AccessTokenValidity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.idTokenValidity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).IdTokenValidity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.tokenValidityUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).TokenValidityUnits, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.explicitAuthFlows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).ExplicitAuthFlows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.supportedIdentityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).SupportedIdentityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.callbackURLs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).CallbackURLs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.logoutURLs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).LogoutURLs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.defaultRedirectURI": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).DefaultRedirectURI, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.allowedOAuthFlows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).AllowedOAuthFlows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.allowedOAuthScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).AllowedOAuthScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.allowedOAuthFlowsUserPoolClient": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).AllowedOAuthFlowsUserPoolClient, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.preventUserExistenceErrors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).PreventUserExistenceErrors, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.enableTokenRevocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).EnableTokenRevocation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.authSessionValidity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).AuthSessionValidity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolDomain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cognito.userPoolDomain.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolDomain.userPoolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).UserPoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolDomain.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolDomain.userPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).UserPool, ok = plugin.RawToTValue[*mqlAwsCognitoUserPool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolDomain.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolDomain.cloudFrontDistribution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).CloudFrontDistribution, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolDomain.s3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).S3Bucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolDomain.customDomainConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).CustomDomainConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolDomain.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolDomain).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.providerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).ProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.providerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).ProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.userPoolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).UserPoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.userPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).UserPool, ok = plugin.RawToTValue[*mqlAwsCognitoUserPool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.attributeMapping": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).AttributeMapping, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.idpIdentifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).IdpIdentifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.providerDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).ProviderDetails, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolIdentityProvider.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolIdentityProvider).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.identityPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -111184,6 +111526,9 @@ type mqlAwsCognitoUserPool struct {
 	PasswordPolicy       plugin.TValue[any]
 	AdvancedSecurityMode plugin.TValue[string]
 	Tags                 plugin.TValue[map[string]any]
+	Clients              plugin.TValue[[]any]
+	Domain               plugin.TValue[*mqlAwsCognitoUserPoolDomain]
+	IdentityProviders    plugin.TValue[[]any]
 	CreatedAt            plugin.TValue[*time.Time]
 	UpdatedAt            plugin.TValue[*time.Time]
 }
@@ -111270,11 +111615,437 @@ func (c *mqlAwsCognitoUserPool) GetTags() *plugin.TValue[map[string]any] {
 	})
 }
 
+func (c *mqlAwsCognitoUserPool) GetClients() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Clients, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "clients")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clients()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetDomain() *plugin.TValue[*mqlAwsCognitoUserPoolDomain] {
+	return plugin.GetOrCompute[*mqlAwsCognitoUserPoolDomain](&c.Domain, func() (*mqlAwsCognitoUserPoolDomain, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "domain")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCognitoUserPoolDomain), nil
+			}
+		}
+
+		return c.domain()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetIdentityProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IdentityProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "identityProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.identityProviders()
+	})
+}
+
 func (c *mqlAwsCognitoUserPool) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
 func (c *mqlAwsCognitoUserPool) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsCognitoUserPoolClient for the aws.cognito.userPoolClient resource
+type mqlAwsCognitoUserPoolClient struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCognitoUserPoolClientInternal
+	ClientId                        plugin.TValue[string]
+	ClientName                      plugin.TValue[string]
+	UserPoolId                      plugin.TValue[string]
+	Region                          plugin.TValue[string]
+	UserPool                        plugin.TValue[*mqlAwsCognitoUserPool]
+	GenerateSecret                  plugin.TValue[bool]
+	RefreshTokenValidity            plugin.TValue[int64]
+	AccessTokenValidity             plugin.TValue[int64]
+	IdTokenValidity                 plugin.TValue[int64]
+	TokenValidityUnits              plugin.TValue[any]
+	ExplicitAuthFlows               plugin.TValue[[]any]
+	SupportedIdentityProviders      plugin.TValue[[]any]
+	CallbackURLs                    plugin.TValue[[]any]
+	LogoutURLs                      plugin.TValue[[]any]
+	DefaultRedirectURI              plugin.TValue[string]
+	AllowedOAuthFlows               plugin.TValue[[]any]
+	AllowedOAuthScopes              plugin.TValue[[]any]
+	AllowedOAuthFlowsUserPoolClient plugin.TValue[bool]
+	PreventUserExistenceErrors      plugin.TValue[string]
+	EnableTokenRevocation           plugin.TValue[bool]
+	AuthSessionValidity             plugin.TValue[int64]
+	CreatedAt                       plugin.TValue[*time.Time]
+	UpdatedAt                       plugin.TValue[*time.Time]
+}
+
+// createAwsCognitoUserPoolClient creates a new instance of this resource
+func createAwsCognitoUserPoolClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCognitoUserPoolClient{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cognito.userPoolClient", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCognitoUserPoolClient) MqlName() string {
+	return "aws.cognito.userPoolClient"
+}
+
+func (c *mqlAwsCognitoUserPoolClient) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetClientName() *plugin.TValue[string] {
+	return &c.ClientName
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetUserPoolId() *plugin.TValue[string] {
+	return &c.UserPoolId
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetUserPool() *plugin.TValue[*mqlAwsCognitoUserPool] {
+	return plugin.GetOrCompute[*mqlAwsCognitoUserPool](&c.UserPool, func() (*mqlAwsCognitoUserPool, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPoolClient", c.__id, "userPool")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCognitoUserPool), nil
+			}
+		}
+
+		return c.userPool()
+	})
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetGenerateSecret() *plugin.TValue[bool] {
+	return &c.GenerateSecret
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetRefreshTokenValidity() *plugin.TValue[int64] {
+	return &c.RefreshTokenValidity
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetAccessTokenValidity() *plugin.TValue[int64] {
+	return &c.AccessTokenValidity
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetIdTokenValidity() *plugin.TValue[int64] {
+	return &c.IdTokenValidity
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetTokenValidityUnits() *plugin.TValue[any] {
+	return &c.TokenValidityUnits
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetExplicitAuthFlows() *plugin.TValue[[]any] {
+	return &c.ExplicitAuthFlows
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetSupportedIdentityProviders() *plugin.TValue[[]any] {
+	return &c.SupportedIdentityProviders
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetCallbackURLs() *plugin.TValue[[]any] {
+	return &c.CallbackURLs
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetLogoutURLs() *plugin.TValue[[]any] {
+	return &c.LogoutURLs
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetDefaultRedirectURI() *plugin.TValue[string] {
+	return &c.DefaultRedirectURI
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetAllowedOAuthFlows() *plugin.TValue[[]any] {
+	return &c.AllowedOAuthFlows
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetAllowedOAuthScopes() *plugin.TValue[[]any] {
+	return &c.AllowedOAuthScopes
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetAllowedOAuthFlowsUserPoolClient() *plugin.TValue[bool] {
+	return &c.AllowedOAuthFlowsUserPoolClient
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetPreventUserExistenceErrors() *plugin.TValue[string] {
+	return &c.PreventUserExistenceErrors
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetEnableTokenRevocation() *plugin.TValue[bool] {
+	return &c.EnableTokenRevocation
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetAuthSessionValidity() *plugin.TValue[int64] {
+	return &c.AuthSessionValidity
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsCognitoUserPoolDomain for the aws.cognito.userPoolDomain resource
+type mqlAwsCognitoUserPoolDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCognitoUserPoolDomainInternal
+	Domain                 plugin.TValue[string]
+	UserPoolId             plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	UserPool               plugin.TValue[*mqlAwsCognitoUserPool]
+	Status                 plugin.TValue[string]
+	CloudFrontDistribution plugin.TValue[string]
+	S3Bucket               plugin.TValue[string]
+	CustomDomainConfig     plugin.TValue[any]
+	Version                plugin.TValue[string]
+}
+
+// createAwsCognitoUserPoolDomain creates a new instance of this resource
+func createAwsCognitoUserPoolDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCognitoUserPoolDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cognito.userPoolDomain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) MqlName() string {
+	return "aws.cognito.userPoolDomain"
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) GetUserPoolId() *plugin.TValue[string] {
+	return &c.UserPoolId
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) GetUserPool() *plugin.TValue[*mqlAwsCognitoUserPool] {
+	return plugin.GetOrCompute[*mqlAwsCognitoUserPool](&c.UserPool, func() (*mqlAwsCognitoUserPool, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPoolDomain", c.__id, "userPool")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCognitoUserPool), nil
+			}
+		}
+
+		return c.userPool()
+	})
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) GetCloudFrontDistribution() *plugin.TValue[string] {
+	return &c.CloudFrontDistribution
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) GetS3Bucket() *plugin.TValue[string] {
+	return &c.S3Bucket
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) GetCustomDomainConfig() *plugin.TValue[any] {
+	return &c.CustomDomainConfig
+}
+
+func (c *mqlAwsCognitoUserPoolDomain) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+// mqlAwsCognitoUserPoolIdentityProvider for the aws.cognito.userPoolIdentityProvider resource
+type mqlAwsCognitoUserPoolIdentityProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsCognitoUserPoolIdentityProviderInternal
+	ProviderName     plugin.TValue[string]
+	ProviderType     plugin.TValue[string]
+	UserPoolId       plugin.TValue[string]
+	Region           plugin.TValue[string]
+	UserPool         plugin.TValue[*mqlAwsCognitoUserPool]
+	AttributeMapping plugin.TValue[map[string]any]
+	IdpIdentifiers   plugin.TValue[[]any]
+	ProviderDetails  plugin.TValue[map[string]any]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+}
+
+// createAwsCognitoUserPoolIdentityProvider creates a new instance of this resource
+func createAwsCognitoUserPoolIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCognitoUserPoolIdentityProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cognito.userPoolIdentityProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) MqlName() string {
+	return "aws.cognito.userPoolIdentityProvider"
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) GetProviderName() *plugin.TValue[string] {
+	return &c.ProviderName
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) GetProviderType() *plugin.TValue[string] {
+	return &c.ProviderType
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) GetUserPoolId() *plugin.TValue[string] {
+	return &c.UserPoolId
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) GetUserPool() *plugin.TValue[*mqlAwsCognitoUserPool] {
+	return plugin.GetOrCompute[*mqlAwsCognitoUserPool](&c.UserPool, func() (*mqlAwsCognitoUserPool, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPoolIdentityProvider", c.__id, "userPool")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCognitoUserPool), nil
+			}
+		}
+
+		return c.userPool()
+	})
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) GetAttributeMapping() *plugin.TValue[map[string]any] {
+	return &c.AttributeMapping
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) GetIdpIdentifiers() *plugin.TValue[[]any] {
+	return &c.IdpIdentifiers
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) GetProviderDetails() *plugin.TValue[map[string]any] {
+	return &c.ProviderDetails
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsCognitoUserPoolIdentityProvider) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
 }
 

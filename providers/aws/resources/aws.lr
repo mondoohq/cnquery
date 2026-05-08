@@ -11813,9 +11813,117 @@ private aws.cognito.userPool @defaults("arn name") {
   advancedSecurityMode() string
   // User pool tags
   tags() map[string]string
+  // App clients registered with the user pool
+  clients() []aws.cognito.userPoolClient
+  // Hosted UI domain for the user pool, or null if no domain is configured
+  domain() aws.cognito.userPoolDomain
+  // Federated identity providers configured on the user pool
+  identityProviders() []aws.cognito.userPoolIdentityProvider
   // Date the user pool was created
   createdAt time
   // Date the user pool was last modified
+  updatedAt time
+}
+
+// Cognito user pool app client
+private aws.cognito.userPoolClient @defaults("clientId clientName userPoolId") {
+  // Client ID
+  clientId string
+  // Friendly name of the app client
+  clientName string
+  // User pool ID this client belongs to
+  userPoolId string
+  // Region of the user pool
+  region string
+  // User pool that owns the client
+  userPool() aws.cognito.userPool
+  // Whether the app client has a generated client secret
+  generateSecret bool
+  // Refresh token validity (numeric value, see tokenValidityUnits for the unit)
+  refreshTokenValidity int
+  // Access token validity (numeric value, see tokenValidityUnits for the unit)
+  accessTokenValidity int
+  // ID token validity (numeric value, see tokenValidityUnits for the unit)
+  idTokenValidity int
+  // Time units applied to the *Validity numeric fields, keyed by token type
+  // (accessToken, idToken, refreshToken). Values are seconds, minutes, hours,
+  // or days.
+  tokenValidityUnits dict
+  // Permitted sign-in flows, e.g. ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH
+  explicitAuthFlows []string
+  // Identity providers the client can use, e.g. COGNITO, Google, SAML provider names
+  supportedIdentityProviders []string
+  // Allowed callback URLs after the hosted UI sign-in
+  callbackURLs []string
+  // Allowed sign-out URLs after hosted UI sign-out
+  logoutURLs []string
+  // Default redirect URI used when more than one is configured
+  defaultRedirectURI string
+  // Permitted OAuth grant flows: code, implicit, client_credentials
+  allowedOAuthFlows []string
+  // Permitted OAuth scopes: phone, email, openid, profile, aws.cognito.signin.user.admin
+  allowedOAuthScopes []string
+  // Whether OAuth via the hosted UI is enabled for the client
+  allowedOAuthFlowsUserPoolClient bool
+  // Behavior on unknown user errors during sign-in: LEGACY or ENABLED
+  preventUserExistenceErrors string
+  // Whether refresh-token revocation is enabled
+  enableTokenRevocation bool
+  // Authentication session validity in minutes
+  authSessionValidity int
+  // Date the client was created
+  createdAt time
+  // Date the client was last modified
+  updatedAt time
+}
+
+// Hosted UI domain for a Cognito user pool
+private aws.cognito.userPoolDomain @defaults("domain userPoolId status") {
+  // Domain name (the prefix-style or custom hostname users sign in at)
+  domain string
+  // User pool ID the domain serves
+  userPoolId string
+  // Region of the user pool
+  region string
+  // User pool that owns the domain
+  userPool() aws.cognito.userPool
+  // Status of the domain provisioning: CREATING, DELETING, UPDATING, ACTIVE, FAILED
+  status string
+  // CloudFront distribution backing the domain
+  cloudFrontDistribution string
+  // S3 bucket holding the hosted UI assets
+  s3Bucket string
+  // Configuration for a custom domain (ACM cert ARN), or null for prefix-style domains
+  customDomainConfig dict
+  // Hosted UI version configured on the domain
+  version string
+}
+
+// Federated identity provider configured on a Cognito user pool
+private aws.cognito.userPoolIdentityProvider @defaults("providerName providerType userPoolId") {
+  // Provider name (the identifier used in app clients to reference this IdP)
+  providerName string
+  // Provider type: SAML, OIDC, Google, Facebook, LoginWithAmazon, SignInWithApple
+  providerType string
+  // User pool ID this provider belongs to
+  userPoolId string
+  // Region of the user pool
+  region string
+  // User pool that owns the provider
+  userPool() aws.cognito.userPool
+  // Mapping from IdP attributes to Cognito user-pool attributes
+  attributeMapping map[string]string
+  // IdP-specific identifiers users can sign in with
+  idpIdentifiers []string
+  // Provider-specific configuration (client_id, client_secret, MetadataURL, etc.).
+  // Keys vary by providerType — for SAML: MetadataURL/MetadataFile, IDPSignout;
+  // for OIDC: client_id, client_secret, attributes_request_method, oidc_issuer,
+  // authorize_scopes; for Google/Facebook/Amazon/Apple: provider client credentials
+  // and scopes.
+  providerDetails map[string]string
+  // Date the provider was created
+  createdAt time
+  // Date the provider was last modified
   updatedAt time
 }
 
