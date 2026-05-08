@@ -638,6 +638,12 @@ github.repository @defaults("fullName") {
   secretScanningValidityChecksEnabled bool
   // Whether GitHub code security is enabled
   codeSecurityEnabled bool
+  // Whether Dependabot vulnerability alerts are enabled on the repository.
+  // Required for `dependabotSecurityUpdatesEnabled` to deliver auto-fix PRs.
+  vulnerabilityAlertsEnabled() bool
+  // Whether private vulnerability reporting is enabled on the repository.
+  // When true, security researchers can submit private advisories to maintainers.
+  privateVulnerabilityReportingEnabled() bool
   // Whether web-based commit signoff is required
   webCommitSignoffRequired bool
   // Repository rulesets

@@ -547,6 +547,7 @@ github.repository.openIssuesCount 9.0.0
 github.repository.openMergeRequests 9.0.0
 github.repository.owner 9.0.0
 github.repository.private 9.0.0
+github.repository.privateVulnerabilityReportingEnabled 13.2.4
 github.repository.pushedAt 9.0.0
 github.repository.releases 9.0.0
 github.repository.rulesets 11.4.131
@@ -593,6 +594,7 @@ github.repository.topics 9.0.0
 github.repository.updatedAt 9.0.0
 github.repository.variables 13.1.1
 github.repository.visibility 9.0.0
+github.repository.vulnerabilityAlertsEnabled 13.2.4
 github.repository.watchersCount 9.0.0
 github.repository.webCommitSignoffRequired 11.4.131
 github.repository.webhooks 9.0.0

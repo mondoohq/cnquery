@@ -1216,6 +1216,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.codeSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetCodeSecurityEnabled()).ToDataRes(types.Bool)
 	},
+	"github.repository.vulnerabilityAlertsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetVulnerabilityAlertsEnabled()).ToDataRes(types.Bool)
+	},
+	"github.repository.privateVulnerabilityReportingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetPrivateVulnerabilityReportingEnabled()).ToDataRes(types.Bool)
+	},
 	"github.repository.webCommitSignoffRequired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetWebCommitSignoffRequired()).ToDataRes(types.Bool)
 	},
@@ -3536,6 +3542,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.repository.codeSecurityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).CodeSecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.vulnerabilityAlertsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).VulnerabilityAlertsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"github.repository.privateVulnerabilityReportingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).PrivateVulnerabilityReportingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.repository.webCommitSignoffRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7535,84 +7549,86 @@ type mqlGithubRepository struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGithubRepositoryInternal
-	Id                                  plugin.TValue[int64]
-	Name                                plugin.TValue[string]
-	FullName                            plugin.TValue[string]
-	Description                         plugin.TValue[string]
-	CloneUrl                            plugin.TValue[string]
-	SshUrl                              plugin.TValue[string]
-	Homepage                            plugin.TValue[string]
-	Topics                              plugin.TValue[[]any]
-	Language                            plugin.TValue[string]
-	WatchersCount                       plugin.TValue[int64]
-	ForksCount                          plugin.TValue[int64]
-	StargazersCount                     plugin.TValue[int64]
-	OpenIssuesCount                     plugin.TValue[int64]
-	CreatedAt                           plugin.TValue[*time.Time]
-	UpdatedAt                           plugin.TValue[*time.Time]
-	PushedAt                            plugin.TValue[*time.Time]
-	Archived                            plugin.TValue[bool]
-	Disabled                            plugin.TValue[bool]
-	Private                             plugin.TValue[bool]
-	IsFork                              plugin.TValue[bool]
-	Visibility                          plugin.TValue[string]
-	AllowAutoMerge                      plugin.TValue[bool]
-	AllowForking                        plugin.TValue[bool]
-	AllowMergeCommit                    plugin.TValue[bool]
-	AllowRebaseMerge                    plugin.TValue[bool]
-	AllowSquashMerge                    plugin.TValue[bool]
-	HasIssues                           plugin.TValue[bool]
-	HasProjects                         plugin.TValue[bool]
-	HasWiki                             plugin.TValue[bool]
-	HasPages                            plugin.TValue[bool]
-	HasDownloads                        plugin.TValue[bool]
-	HasDiscussions                      plugin.TValue[bool]
-	IsTemplate                          plugin.TValue[bool]
-	CustomProperties                    plugin.TValue[any]
-	OpenMergeRequests                   plugin.TValue[[]any]
-	ClosedMergeRequests                 plugin.TValue[[]any]
-	AllMergeRequests                    plugin.TValue[[]any]
-	Branches                            plugin.TValue[[]any]
-	DefaultBranchName                   plugin.TValue[string]
-	DefaultBranch                       plugin.TValue[*mqlGithubBranch]
-	Commits                             plugin.TValue[[]any]
-	Contributors                        plugin.TValue[[]any]
-	Collaborators                       plugin.TValue[[]any]
-	AdminCollaborators                  plugin.TValue[[]any]
-	Files                               plugin.TValue[[]any]
-	Releases                            plugin.TValue[[]any]
-	Owner                               plugin.TValue[*mqlGithubUser]
-	Webhooks                            plugin.TValue[[]any]
-	Workflows                           plugin.TValue[[]any]
-	Forks                               plugin.TValue[[]any]
-	Stargazers                          plugin.TValue[[]any]
-	OpenIssues                          plugin.TValue[[]any]
-	ClosedIssues                        plugin.TValue[[]any]
-	Milestones                          plugin.TValue[[]any]
-	License                             plugin.TValue[*mqlGithubLicense]
-	CodeOfConductFile                   plugin.TValue[*mqlGithubFile]
-	SupportFile                         plugin.TValue[*mqlGithubFile]
-	SecurityFile                        plugin.TValue[*mqlGithubFile]
-	DependabotAlerts                    plugin.TValue[[]any]
-	SecretScanningAlerts                plugin.TValue[[]any]
-	CodeScanningAlerts                  plugin.TValue[[]any]
-	Runners                             plugin.TValue[[]any]
-	Environments                        plugin.TValue[[]any]
-	Deployments                         plugin.TValue[[]any]
-	SpdxSbom                            plugin.TValue[*mqlGithubRepositorySbom]
-	AdvancedSecurityEnabled             plugin.TValue[bool]
-	SecretScanningEnabled               plugin.TValue[bool]
-	SecretScanningPushProtectionEnabled plugin.TValue[bool]
-	DependabotSecurityUpdatesEnabled    plugin.TValue[bool]
-	SecretScanningValidityChecksEnabled plugin.TValue[bool]
-	CodeSecurityEnabled                 plugin.TValue[bool]
-	WebCommitSignoffRequired            plugin.TValue[bool]
-	Rulesets                            plugin.TValue[[]any]
-	ActionsSettings                     plugin.TValue[*mqlGithubRepositoryActionsSettings]
-	DeployKeys                          plugin.TValue[[]any]
-	Codeowners                          plugin.TValue[*mqlGithubRepositoryCodeowners]
-	Secrets                             plugin.TValue[[]any]
-	Variables                           plugin.TValue[[]any]
+	Id                                   plugin.TValue[int64]
+	Name                                 plugin.TValue[string]
+	FullName                             plugin.TValue[string]
+	Description                          plugin.TValue[string]
+	CloneUrl                             plugin.TValue[string]
+	SshUrl                               plugin.TValue[string]
+	Homepage                             plugin.TValue[string]
+	Topics                               plugin.TValue[[]any]
+	Language                             plugin.TValue[string]
+	WatchersCount                        plugin.TValue[int64]
+	ForksCount                           plugin.TValue[int64]
+	StargazersCount                      plugin.TValue[int64]
+	OpenIssuesCount                      plugin.TValue[int64]
+	CreatedAt                            plugin.TValue[*time.Time]
+	UpdatedAt                            plugin.TValue[*time.Time]
+	PushedAt                             plugin.TValue[*time.Time]
+	Archived                             plugin.TValue[bool]
+	Disabled                             plugin.TValue[bool]
+	Private                              plugin.TValue[bool]
+	IsFork                               plugin.TValue[bool]
+	Visibility                           plugin.TValue[string]
+	AllowAutoMerge                       plugin.TValue[bool]
+	AllowForking                         plugin.TValue[bool]
+	AllowMergeCommit                     plugin.TValue[bool]
+	AllowRebaseMerge                     plugin.TValue[bool]
+	AllowSquashMerge                     plugin.TValue[bool]
+	HasIssues                            plugin.TValue[bool]
+	HasProjects                          plugin.TValue[bool]
+	HasWiki                              plugin.TValue[bool]
+	HasPages                             plugin.TValue[bool]
+	HasDownloads                         plugin.TValue[bool]
+	HasDiscussions                       plugin.TValue[bool]
+	IsTemplate                           plugin.TValue[bool]
+	CustomProperties                     plugin.TValue[any]
+	OpenMergeRequests                    plugin.TValue[[]any]
+	ClosedMergeRequests                  plugin.TValue[[]any]
+	AllMergeRequests                     plugin.TValue[[]any]
+	Branches                             plugin.TValue[[]any]
+	DefaultBranchName                    plugin.TValue[string]
+	DefaultBranch                        plugin.TValue[*mqlGithubBranch]
+	Commits                              plugin.TValue[[]any]
+	Contributors                         plugin.TValue[[]any]
+	Collaborators                        plugin.TValue[[]any]
+	AdminCollaborators                   plugin.TValue[[]any]
+	Files                                plugin.TValue[[]any]
+	Releases                             plugin.TValue[[]any]
+	Owner                                plugin.TValue[*mqlGithubUser]
+	Webhooks                             plugin.TValue[[]any]
+	Workflows                            plugin.TValue[[]any]
+	Forks                                plugin.TValue[[]any]
+	Stargazers                           plugin.TValue[[]any]
+	OpenIssues                           plugin.TValue[[]any]
+	ClosedIssues                         plugin.TValue[[]any]
+	Milestones                           plugin.TValue[[]any]
+	License                              plugin.TValue[*mqlGithubLicense]
+	CodeOfConductFile                    plugin.TValue[*mqlGithubFile]
+	SupportFile                          plugin.TValue[*mqlGithubFile]
+	SecurityFile                         plugin.TValue[*mqlGithubFile]
+	DependabotAlerts                     plugin.TValue[[]any]
+	SecretScanningAlerts                 plugin.TValue[[]any]
+	CodeScanningAlerts                   plugin.TValue[[]any]
+	Runners                              plugin.TValue[[]any]
+	Environments                         plugin.TValue[[]any]
+	Deployments                          plugin.TValue[[]any]
+	SpdxSbom                             plugin.TValue[*mqlGithubRepositorySbom]
+	AdvancedSecurityEnabled              plugin.TValue[bool]
+	SecretScanningEnabled                plugin.TValue[bool]
+	SecretScanningPushProtectionEnabled  plugin.TValue[bool]
+	DependabotSecurityUpdatesEnabled     plugin.TValue[bool]
+	SecretScanningValidityChecksEnabled  plugin.TValue[bool]
+	CodeSecurityEnabled                  plugin.TValue[bool]
+	VulnerabilityAlertsEnabled           plugin.TValue[bool]
+	PrivateVulnerabilityReportingEnabled plugin.TValue[bool]
+	WebCommitSignoffRequired             plugin.TValue[bool]
+	Rulesets                             plugin.TValue[[]any]
+	ActionsSettings                      plugin.TValue[*mqlGithubRepositoryActionsSettings]
+	DeployKeys                           plugin.TValue[[]any]
+	Codeowners                           plugin.TValue[*mqlGithubRepositoryCodeowners]
+	Secrets                              plugin.TValue[[]any]
+	Variables                            plugin.TValue[[]any]
 }
 
 // createGithubRepository creates a new instance of this resource
@@ -8282,6 +8298,18 @@ func (c *mqlGithubRepository) GetSecretScanningValidityChecksEnabled() *plugin.T
 
 func (c *mqlGithubRepository) GetCodeSecurityEnabled() *plugin.TValue[bool] {
 	return &c.CodeSecurityEnabled
+}
+
+func (c *mqlGithubRepository) GetVulnerabilityAlertsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.VulnerabilityAlertsEnabled, func() (bool, error) {
+		return c.vulnerabilityAlertsEnabled()
+	})
+}
+
+func (c *mqlGithubRepository) GetPrivateVulnerabilityReportingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PrivateVulnerabilityReportingEnabled, func() (bool, error) {
+		return c.privateVulnerabilityReportingEnabled()
+	})
 }
 
 func (c *mqlGithubRepository) GetWebCommitSignoffRequired() *plugin.TValue[bool] {

@@ -2666,3 +2666,35 @@ func (g *mqlGithubRepository) actionsSettings() (*mqlGithubRepositoryActionsSett
 	}
 	return res.(*mqlGithubRepositoryActionsSettings), nil
 }
+
+func (g *mqlGithubRepository) vulnerabilityAlertsEnabled() (bool, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return false, err
+	}
+	enabled, _, err := conn.Client().Repositories.GetVulnerabilityAlerts(conn.Context(), ownerLogin, repoName)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			return false, nil
+		}
+		return false, err
+	}
+	return enabled, nil
+}
+
+func (g *mqlGithubRepository) privateVulnerabilityReportingEnabled() (bool, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return false, err
+	}
+	enabled, _, err := conn.Client().Repositories.IsPrivateReportingEnabled(conn.Context(), ownerLogin, repoName)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+			return false, nil
+		}
+		return false, err
+	}
+	return enabled, nil
+}
