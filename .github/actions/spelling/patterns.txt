@@ -143,3 +143,9 @@ mql shell.*
 
 # Ip.Foo is an acceptable value
 Ip\..*
+
+# .lr field/method form `apis()` and `@defaults("apis")` — these reference
+# field names that must stay lowercase per the .lr language. Prose still has
+# to use "APIs".
+\bapis\(\)
+"apis"
