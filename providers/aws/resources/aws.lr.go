@@ -2250,11 +2250,11 @@ func init() {
 			Create: createAwsRds,
 		},
 		"aws.rds.optionGroup": {
-			Init:   initAwsRdsOptionGroup,
+			// to override args, implement: initAwsRdsOptionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRdsOptionGroup,
 		},
 		"aws.rds.globalCluster": {
-			Init:   initAwsRdsGlobalCluster,
+			// to override args, implement: initAwsRdsGlobalCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRdsGlobalCluster,
 		},
 		"aws.rds.backupsetting": {
@@ -13035,8 +13035,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.optionGroup.allowsVpcAndNonVpcInstanceMemberships": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsOptionGroup).GetAllowsVpcAndNonVpcInstanceMemberships()).ToDataRes(types.Bool)
 	},
-	"aws.rds.optionGroup.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsRdsOptionGroup).GetVpcId()).ToDataRes(types.String)
+	"aws.rds.optionGroup.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
 	"aws.rds.optionGroup.sourceAccountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsOptionGroup).GetSourceAccountId()).ToDataRes(types.String)
@@ -38530,8 +38530,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsOptionGroup).AllowsVpcAndNonVpcInstanceMemberships, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"aws.rds.optionGroup.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsRdsOptionGroup).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.rds.optionGroup.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
 	"aws.rds.optionGroup.sourceAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -94350,7 +94350,7 @@ func (c *mqlAwsRds) GetGlobalClusters() *plugin.TValue[[]any] {
 type mqlAwsRdsOptionGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsRdsOptionGroupInternal it will be used here
+	mqlAwsRdsOptionGroupInternal
 	Arn                                   plugin.TValue[string]
 	OptionGroupName                       plugin.TValue[string]
 	Description                           plugin.TValue[string]
@@ -94358,7 +94358,7 @@ type mqlAwsRdsOptionGroup struct {
 	MajorEngineVersion                    plugin.TValue[string]
 	Region                                plugin.TValue[string]
 	AllowsVpcAndNonVpcInstanceMemberships plugin.TValue[bool]
-	VpcId                                 plugin.TValue[string]
+	Vpc                                   plugin.TValue[*mqlAwsVpc]
 	SourceAccountId                       plugin.TValue[string]
 	SourceOptionGroup                     plugin.TValue[string]
 	CopyTimestamp                         plugin.TValue[*time.Time]
@@ -94425,8 +94425,20 @@ func (c *mqlAwsRdsOptionGroup) GetAllowsVpcAndNonVpcInstanceMemberships() *plugi
 	return &c.AllowsVpcAndNonVpcInstanceMemberships
 }
 
-func (c *mqlAwsRdsOptionGroup) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAwsRdsOptionGroup) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.optionGroup", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
 func (c *mqlAwsRdsOptionGroup) GetSourceAccountId() *plugin.TValue[string] {

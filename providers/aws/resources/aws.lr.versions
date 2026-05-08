@@ -5176,7 +5176,7 @@ aws.rds.optionGroup.options 13.21.4
 aws.rds.optionGroup.region 13.21.4
 aws.rds.optionGroup.sourceAccountId 13.21.4
 aws.rds.optionGroup.sourceOptionGroup 13.21.4
-aws.rds.optionGroup.vpcId 13.21.4
+aws.rds.optionGroup.vpc 13.21.4
 aws.rds.optionGroups 13.21.4
 aws.rds.parameterGroup 11.15.2
 aws.rds.parameterGroup.arn 11.15.2

@@ -7760,8 +7760,9 @@ private aws.rds.optionGroup @defaults("optionGroupName engineName majorEngineVer
   region string
   // Whether the option group can be applied to both VPC and non-VPC instances
   allowsVpcAndNonVpcInstanceMemberships bool
-  // VPC ID the option group is restricted to, when applicable
-  vpcId string
+  // VPC the option group is restricted to, or null when the group can be applied
+  // to either VPC or non-VPC instances
+  vpc() aws.vpc
   // Account ID of the option group this one was copied from, when applicable
   sourceAccountId string
   // Source option group name when this group is a copy

@@ -1638,6 +1638,10 @@ func (a *mqlAwsRds) getOptionGroups(conn *connection.AwsConnection) []*jobpool.J
 	return tasks
 }
 
+type mqlAwsRdsOptionGroupInternal struct {
+	cacheVpcId string
+}
+
 func newMqlAwsRdsOptionGroup(runtime *plugin.Runtime, region string, og rds_types.OptionGroup) (*mqlAwsRdsOptionGroup, error) {
 	options, err := convert.JsonToDictSlice(og.Options)
 	if err != nil {
@@ -1652,7 +1656,6 @@ func newMqlAwsRdsOptionGroup(runtime *plugin.Runtime, region string, og rds_type
 		"majorEngineVersion":                    llx.StringDataPtr(og.MajorEngineVersion),
 		"region":                                llx.StringData(region),
 		"allowsVpcAndNonVpcInstanceMemberships": llx.BoolDataPtr(og.AllowsVpcAndNonVpcInstanceMemberships),
-		"vpcId":                                 llx.StringDataPtr(og.VpcId),
 		"sourceAccountId":                       llx.StringDataPtr(og.SourceAccountId),
 		"sourceOptionGroup":                     llx.StringDataPtr(og.SourceOptionGroup),
 		"copyTimestamp":                         llx.TimeDataPtr(og.CopyTimestamp),
@@ -1661,14 +1664,24 @@ func newMqlAwsRdsOptionGroup(runtime *plugin.Runtime, region string, og rds_type
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsRdsOptionGroup), nil
+	mqlOG := res.(*mqlAwsRdsOptionGroup)
+	if og.VpcId != nil {
+		mqlOG.cacheVpcId = *og.VpcId
+	}
+	return mqlOG, nil
 }
 
-func initAwsRdsOptionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) >= 2 {
-		return args, nil, nil
+func (a *mqlAwsRdsOptionGroup) vpc() (*mqlAwsVpc, error) {
+	if a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
-	return args, nil, nil
+	mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheVpcId)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlVpc.(*mqlAwsVpc), nil
 }
 
 func (a *mqlAwsRdsDbinstance) optionGroups() ([]any, error) {
@@ -1710,41 +1723,65 @@ func (a *mqlAwsRdsDbinstance) optionGroups() ([]any, error) {
 
 func (a *mqlAwsRds) globalClusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	regions, err := conn.Regions()
-	if err != nil {
-		return nil, err
+	pool := jobpool.CreatePool(a.getGlobalClusters(conn), 5)
+	pool.Run()
+	if pool.HasErrors() {
+		return nil, pool.GetErrors()
 	}
 
-	res := []any{}
+	// Aurora global clusters surface from any member region's regional
+	// endpoint, so deduplicate by ARN across the parallel region jobs.
 	seen := map[string]bool{}
-	ctx := context.Background()
-	for _, region := range regions {
-		svc := conn.Rds(region)
-		paginator := rds.NewDescribeGlobalClustersPaginator(svc, &rds.DescribeGlobalClustersInput{})
-	regionLoop:
-		for paginator.HasMorePages() {
-			page, err := paginator.NextPage(ctx)
-			if err != nil {
-				if Is400AccessDeniedError(err) {
-					log.Warn().Str("region", region).Msg("access denied describing RDS global clusters")
-					break regionLoop
-				}
-				return nil, err
+	res := []any{}
+	for i := range pool.Jobs {
+		for _, r := range pool.Jobs[i].Result.([]any) {
+			gc := r.(*mqlAwsRdsGlobalCluster)
+			arn := gc.Arn.Data
+			if arn == "" || seen[arn] {
+				continue
 			}
-			for _, gc := range page.GlobalClusters {
-				if gc.GlobalClusterArn == nil || seen[*gc.GlobalClusterArn] {
-					continue
-				}
-				seen[*gc.GlobalClusterArn] = true
-				mqlGc, err := newMqlAwsRdsGlobalCluster(a.MqlRuntime, gc)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, mqlGc)
-			}
+			seen[arn] = true
+			res = append(res, gc)
 		}
 	}
 	return res, nil
+}
+
+func (a *mqlAwsRds) getGlobalClusters(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+	for _, region := range regions {
+		region := region
+		f := func() (jobpool.JobResult, error) {
+			res := []any{}
+			svc := conn.Rds(region)
+			ctx := context.Background()
+			paginator := rds.NewDescribeGlobalClustersPaginator(svc, &rds.DescribeGlobalClustersInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("access denied describing RDS global clusters")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, gc := range page.GlobalClusters {
+					mqlGc, err := newMqlAwsRdsGlobalCluster(a.MqlRuntime, gc)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlGc)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
 }
 
 func newMqlAwsRdsGlobalCluster(runtime *plugin.Runtime, gc rds_types.GlobalCluster) (*mqlAwsRdsGlobalCluster, error) {
@@ -1777,13 +1814,6 @@ func newMqlAwsRdsGlobalCluster(runtime *plugin.Runtime, gc rds_types.GlobalClust
 		return nil, err
 	}
 	return res.(*mqlAwsRdsGlobalCluster), nil
-}
-
-func initAwsRdsGlobalCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) >= 2 {
-		return args, nil, nil
-	}
-	return args, nil, nil
 }
 
 func (a *mqlAwsRdsDbcluster) globalCluster() (*mqlAwsRdsGlobalCluster, error) {
