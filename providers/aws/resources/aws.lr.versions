@@ -15,11 +15,17 @@ aws.account.alternateContact.title 11.15.2
 aws.account.alternateContacts 11.15.2
 aws.account.billingContact 11.15.2
 aws.account.contactInformation 11.15.2
+aws.account.email 13.21.4
 aws.account.id 11.15.2
+aws.account.joinedMethod 13.21.4
+aws.account.joinedTimestamp 13.21.4
+aws.account.name 13.21.4
 aws.account.operationsContact 11.15.2
 aws.account.organization 11.15.2
 aws.account.paths 13.6.3
+aws.account.regionOptInStatus 13.21.4
 aws.account.securityContact 11.15.2
+aws.account.state 13.21.4
 aws.account.tags 11.15.2
 aws.acm 11.15.2
 aws.acm.certificate 11.15.2

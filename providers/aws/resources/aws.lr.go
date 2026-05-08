@@ -3749,6 +3749,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.account.paths": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccount).GetPaths()).ToDataRes(types.Array(types.String))
 	},
+	"aws.account.regionOptInStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetRegionOptInStatus()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.account.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetName()).ToDataRes(types.String)
+	},
+	"aws.account.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetEmail()).ToDataRes(types.String)
+	},
+	"aws.account.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetState()).ToDataRes(types.String)
+	},
+	"aws.account.joinedMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetJoinedMethod()).ToDataRes(types.String)
+	},
+	"aws.account.joinedTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAccount).GetJoinedTimestamp()).ToDataRes(types.Time)
+	},
 	"aws.account.alternateContact.accountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccountAlternateContact).GetAccountId()).ToDataRes(types.String)
 	},
@@ -24200,6 +24218,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.account.paths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAccount).Paths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.account.regionOptInStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).RegionOptInStatus, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.account.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.joinedMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).JoinedMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.account.joinedTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAccount).JoinedTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.account.alternateContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54361,7 +54403,7 @@ func (c *mqlAws) GetRegions() *plugin.TValue[[]any] {
 type mqlAwsAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsAccountInternal it will be used here
+	mqlAwsAccountInternal
 	Id                 plugin.TValue[string]
 	Aliases            plugin.TValue[[]any]
 	Organization       plugin.TValue[*mqlAwsOrganization]
@@ -54372,6 +54414,12 @@ type mqlAwsAccount struct {
 	BillingContact     plugin.TValue[*mqlAwsAccountAlternateContact]
 	OperationsContact  plugin.TValue[*mqlAwsAccountAlternateContact]
 	Paths              plugin.TValue[[]any]
+	RegionOptInStatus  plugin.TValue[map[string]any]
+	Name               plugin.TValue[string]
+	Email              plugin.TValue[string]
+	State              plugin.TValue[string]
+	JoinedMethod       plugin.TValue[string]
+	JoinedTimestamp    plugin.TValue[*time.Time]
 }
 
 // createAwsAccount creates a new instance of this resource
@@ -54516,6 +54564,42 @@ func (c *mqlAwsAccount) GetOperationsContact() *plugin.TValue[*mqlAwsAccountAlte
 func (c *mqlAwsAccount) GetPaths() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Paths, func() ([]any, error) {
 		return c.paths()
+	})
+}
+
+func (c *mqlAwsAccount) GetRegionOptInStatus() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.RegionOptInStatus, func() (map[string]any, error) {
+		return c.regionOptInStatus()
+	})
+}
+
+func (c *mqlAwsAccount) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlAwsAccount) GetEmail() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Email, func() (string, error) {
+		return c.email()
+	})
+}
+
+func (c *mqlAwsAccount) GetState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.State, func() (string, error) {
+		return c.state()
+	})
+}
+
+func (c *mqlAwsAccount) GetJoinedMethod() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.JoinedMethod, func() (string, error) {
+		return c.joinedMethod()
+	})
+}
+
+func (c *mqlAwsAccount) GetJoinedTimestamp() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.JoinedTimestamp, func() (*time.Time, error) {
+		return c.joinedTimestamp()
 	})
 }
 

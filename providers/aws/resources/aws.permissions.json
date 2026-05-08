@@ -7,6 +7,7 @@
     "access-analyzer:ListFindingsV2",
     "account:GetAlternateContact",
     "account:GetContactInformation",
+    "account:ListRegions",
     "acm-pca:ListCertificateAuthorities",
     "acm:DescribeCertificate",
     "acm:GetCertificate",
@@ -705,6 +706,12 @@
       "permission": "account:GetContactInformation",
       "service": "account",
       "action": "GetContactInformation",
+      "source_file": "aws_account.go"
+    },
+    {
+      "permission": "account:ListRegions",
+      "service": "account",
+      "action": "ListRegions",
       "source_file": "aws_account.go"
     },
     {

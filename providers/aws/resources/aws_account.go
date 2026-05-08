@@ -6,16 +6,56 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	orgtypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
+
+type mqlAwsAccountInternal struct {
+	descLock    sync.Mutex
+	descFetched bool
+	descAccount *orgtypes.Account
+}
+
+// fetchOrgAccountDescription retrieves and caches the AWS Organizations
+// DescribeAccount response. Returns (nil, nil) when the call is denied — the
+// caller is not in the management or a delegated administrator account.
+func (a *mqlAwsAccount) fetchOrgAccountDescription() (*orgtypes.Account, error) {
+	if a.descFetched {
+		return a.descAccount, nil
+	}
+	a.descLock.Lock()
+	defer a.descLock.Unlock()
+	if a.descFetched {
+		return a.descAccount, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	client := conn.Organizations("")
+	accountId := a.Id.Data
+	resp, err := client.DescribeAccount(context.Background(), &organizations.DescribeAccountInput{
+		AccountId: &accountId,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.descFetched = true
+			return nil, nil
+		}
+		return nil, err
+	}
+	a.descFetched = true
+	a.descAccount = resp.Account
+	return a.descAccount, nil
+}
 
 func (a *mqlAwsAccount) id() (string, error) {
 	return a.Id.Data, nil
@@ -501,4 +541,69 @@ func (a *mqlAwsOrganizationDelegatedAdministrator) account() (*mqlAwsAccount, er
 		return nil, err
 	}
 	return mqlAccount.(*mqlAwsAccount), nil
+}
+
+func (a *mqlAwsAccount) regionOptInStatus() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	client := conn.Account("")
+	ctx := context.Background()
+
+	res := map[string]any{}
+	paginator := account.NewListRegionsPaginator(client, &account.ListRegionsInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, r := range page.Regions {
+			if r.RegionName == nil {
+				continue
+			}
+			res[*r.RegionName] = string(r.RegionOptStatus)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsAccount) name() (string, error) {
+	acc, err := a.fetchOrgAccountDescription()
+	if err != nil || acc == nil {
+		return "", err
+	}
+	return aws.ToString(acc.Name), nil
+}
+
+func (a *mqlAwsAccount) email() (string, error) {
+	acc, err := a.fetchOrgAccountDescription()
+	if err != nil || acc == nil {
+		return "", err
+	}
+	return aws.ToString(acc.Email), nil
+}
+
+func (a *mqlAwsAccount) state() (string, error) {
+	acc, err := a.fetchOrgAccountDescription()
+	if err != nil || acc == nil {
+		return "", err
+	}
+	return string(acc.State), nil
+}
+
+func (a *mqlAwsAccount) joinedMethod() (string, error) {
+	acc, err := a.fetchOrgAccountDescription()
+	if err != nil || acc == nil {
+		return "", err
+	}
+	return string(acc.JoinedMethod), nil
+}
+
+func (a *mqlAwsAccount) joinedTimestamp() (*time.Time, error) {
+	acc, err := a.fetchOrgAccountDescription()
+	if err != nil || acc == nil {
+		return nil, err
+	}
+	return acc.JoinedTimestamp, nil
 }

@@ -48,6 +48,36 @@ aws.account @defaults("id aliases.first organization.id") {
 
   // Paths in the organization where the account exists
   paths() []string
+
+  // Opt-in status for each region available to the account, keyed by region name.
+  // Possible values are ENABLED, ENABLED_BY_DEFAULT, DISABLED, ENABLING, and DISABLING.
+  regionOptInStatus() map[string]string
+
+  // Friendly name of the account, as shown in AWS Organizations.
+  // Available only when the calling identity is the organization's management
+  // account or a delegated administrator. Otherwise empty.
+  name() string
+
+  // Root user email address associated with the account, as shown in AWS Organizations.
+  // Available only when the calling identity is the organization's management
+  // account or a delegated administrator. Otherwise empty.
+  email() string
+
+  // Lifecycle state of the account in the organization: PENDING_ACTIVATION, ACTIVE,
+  // SUSPENDED, PENDING_CLOSURE, or CLOSED.
+  // Available only when the calling identity is the organization's management
+  // account or a delegated administrator. Otherwise empty.
+  state() string
+
+  // How the account joined the organization: INVITED or CREATED.
+  // Available only when the calling identity is the organization's management
+  // account or a delegated administrator. Otherwise empty.
+  joinedMethod() string
+
+  // Timestamp at which the account joined the organization.
+  // Available only when the calling identity is the organization's management
+  // account or a delegated administrator.
+  joinedTimestamp() time
 }
 
 // AWS Account alternate contact
