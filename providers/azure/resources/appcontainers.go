@@ -94,23 +94,19 @@ func initAzureSubscriptionContainerAppService(runtime *plugin.Runtime, args map[
 	return args, nil, nil
 }
 
-// resourceIDFromARM extracts {resourceGroup, name} from an ARM resource ID
-// of the form /subscriptions/<sub>/resourceGroups/<rg>/providers/<ns>/<type>/<name>.
-// Returns empty strings when the ID is malformed.
-func resourceIDFromARM(id string) (resourceGroup, name string) {
-	if id == "" {
+// resourceGroupAndName parses an ARM resource ID and returns the resource
+// group plus the leaf component for `leafKey` (e.g. "managedEnvironments",
+// "containerApps"). Returns empty strings when the ID is malformed or the
+// leaf key is absent.
+func resourceGroupAndName(id, leafKey string) (resourceGroup, name string) {
+	parsed, err := ParseResourceID(id)
+	if err != nil {
 		return "", ""
 	}
-	parts := strings.Split(strings.Trim(id, "/"), "/")
-	for i := 0; i+1 < len(parts); i++ {
-		if strings.EqualFold(parts[i], "resourceGroups") {
-			resourceGroup = parts[i+1]
-		}
+	if leaf, lerr := parsed.Component(leafKey); lerr == nil {
+		name = leaf
 	}
-	if len(parts) > 0 {
-		name = parts[len(parts)-1]
-	}
-	return resourceGroup, name
+	return parsed.ResourceGroup, name
 }
 
 func imagePinnedByDigest(image *string) bool {
@@ -257,7 +253,7 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 	}
 
 	envRes := mqlEnv.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment)
-	rg, name := resourceIDFromARM(envRes.Id.Data)
+	rg, name := resourceGroupAndName(envRes.Id.Data, "managedEnvironments")
 	envRes.cacheRGAndName.resourceGroup = rg
 	envRes.cacheRGAndName.name = name
 	return envRes, nil
@@ -279,7 +275,7 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) daprComponen
 
 	rg, envName := a.cacheRGAndName.resourceGroup, a.cacheRGAndName.name
 	if rg == "" || envName == "" {
-		rg, envName = resourceIDFromARM(a.Id.Data)
+		rg, envName = resourceGroupAndName(a.Id.Data, "managedEnvironments")
 	}
 
 	client, err := apps.NewDaprComponentsClient(subId, conn.Token(), acaClientOptions(conn))
@@ -360,7 +356,7 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) certificates
 
 	rg, envName := a.cacheRGAndName.resourceGroup, a.cacheRGAndName.name
 	if rg == "" || envName == "" {
-		rg, envName = resourceIDFromARM(a.Id.Data)
+		rg, envName = resourceGroupAndName(a.Id.Data, "managedEnvironments")
 	}
 
 	client, err := apps.NewCertificatesClient(subId, conn.Token(), acaClientOptions(conn))
@@ -634,7 +630,7 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 	}
 
 	appRes := mqlApp.(*mqlAzureSubscriptionContainerAppServiceContainerApp)
-	rg, name := resourceIDFromARM(appRes.Id.Data)
+	rg, name := resourceGroupAndName(appRes.Id.Data, "containerApps")
 	appRes.cacheRGAndName.resourceGroup = rg
 	appRes.cacheRGAndName.name = name
 
@@ -760,7 +756,7 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) revisions() ([]any
 
 	rg, appName := a.cacheRGAndName.resourceGroup, a.cacheRGAndName.name
 	if rg == "" || appName == "" {
-		rg, appName = resourceIDFromARM(a.Id.Data)
+		rg, appName = resourceGroupAndName(a.Id.Data, "containerApps")
 	}
 
 	client, err := apps.NewContainerAppsRevisionsClient(subId, conn.Token(), acaClientOptions(conn))
@@ -834,7 +830,7 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) authConfigs() ([]a
 
 	rg, appName := a.cacheRGAndName.resourceGroup, a.cacheRGAndName.name
 	if rg == "" || appName == "" {
-		rg, appName = resourceIDFromARM(a.Id.Data)
+		rg, appName = resourceGroupAndName(a.Id.Data, "containerApps")
 	}
 
 	client, err := apps.NewContainerAppsAuthConfigsClient(subId, conn.Token(), acaClientOptions(conn))
