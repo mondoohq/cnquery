@@ -463,6 +463,20 @@ func hclFunctions() map[string]function.Function {
 	}
 }
 
+// appendCtyResult flattens nested []any results from getCtyValue into a single
+// slice, matching the existing TupleConsExpr/TemplateExpr behavior. nil
+// values are dropped.
+func appendCtyResult(out *[]any, v any) {
+	switch vv := v.(type) {
+	case nil:
+		// drop
+	case []any:
+		*out = append(*out, vv...)
+	default:
+		*out = append(*out, vv)
+	}
+}
+
 func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 	switch t := expr.(type) {
 	case *hclsyntax.TupleConsExpr:
@@ -513,8 +527,83 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 		subVal, err := t.Value(ctx)
 		if err == nil && subVal.Type() == cty.String {
 			results = append(results, subVal.AsString())
+			return results
+		}
+		// Unbound variables/refs: surface the references in each branch so
+		// policies can still inspect what the conditional depends on.
+		appendCtyResult(&results, getCtyValue(t.Condition, ctx))
+		appendCtyResult(&results, getCtyValue(t.TrueResult, ctx))
+		appendCtyResult(&results, getCtyValue(t.FalseResult, ctx))
+		return results
+	case *hclsyntax.ForExpr:
+		results := []any{}
+		appendCtyResult(&results, getCtyValue(t.CollExpr, ctx))
+		if t.KeyExpr != nil {
+			appendCtyResult(&results, getCtyValue(t.KeyExpr, ctx))
+		}
+		appendCtyResult(&results, getCtyValue(t.ValExpr, ctx))
+		if t.CondExpr != nil {
+			appendCtyResult(&results, getCtyValue(t.CondExpr, ctx))
 		}
 		return results
+	case *hclsyntax.IndexExpr:
+		results := []any{}
+		appendCtyResult(&results, getCtyValue(t.Collection, ctx))
+		appendCtyResult(&results, getCtyValue(t.Key, ctx))
+		return results
+	case *hclsyntax.BinaryOpExpr:
+		results := []any{}
+		appendCtyResult(&results, getCtyValue(t.LHS, ctx))
+		appendCtyResult(&results, getCtyValue(t.RHS, ctx))
+		return results
+	case *hclsyntax.UnaryOpExpr:
+		return getCtyValue(t.Val, ctx)
+	case *hclsyntax.SplatExpr:
+		results := []any{}
+		appendCtyResult(&results, getCtyValue(t.Source, ctx))
+		appendCtyResult(&results, getCtyValue(t.Each, ctx))
+		return results
+	case *hclsyntax.RelativeTraversalExpr:
+		// `(source).a.b` — append attribute names from the traversal to the
+		// source. Indexes are dropped, mirroring the existing
+		// ScopeTraversalExpr handling. When the source resolves to a single
+		// string ref (the common case, e.g. parenthesized scope traversal),
+		// produce a dotted ref; otherwise flatten into a list so we don't
+		// drop refs from a more complex source like an IndexExpr.
+		source := getCtyValue(t.Source, ctx)
+		pathParts := []string{}
+		for _, step := range t.Traversal {
+			if attr, ok := step.(hcl.TraverseAttr); ok {
+				pathParts = append(pathParts, attr.Name)
+			}
+		}
+		pathSuffix := strings.Join(pathParts, ".")
+		switch s := source.(type) {
+		case string:
+			if pathSuffix != "" {
+				return s + "." + pathSuffix
+			}
+			return s
+		case []any:
+			results := append([]any{}, s...)
+			if pathSuffix != "" {
+				results = append(results, pathSuffix)
+			}
+			return results
+		case nil:
+			if pathSuffix != "" {
+				return pathSuffix
+			}
+			return nil
+		default:
+			return source
+		}
+	case *hclsyntax.TemplateJoinExpr:
+		return getCtyValue(t.Tuple, ctx)
+	case *hclsyntax.AnonSymbolExpr:
+		// Placeholder for the iteration variable inside splat/for bodies —
+		// no static value to surface.
+		return nil
 	case *hclsyntax.LiteralValueExpr:
 		switch t.Val.Type() {
 		case cty.String:

@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	terraformHclPath       = "./testdata/terraform"
-	terraformHclModulePath = "./testdata/terraform-module"
-	terraformHclEmptyPath  = "./testdata/terraform-empty"
+	terraformHclPath            = "./testdata/terraform"
+	terraformHclModulePath      = "./testdata/terraform-module"
+	terraformHclEmptyPath       = "./testdata/terraform-empty"
+	terraformHclExpressionsPath = "./testdata/terraform-expressions"
 )
 
 func TestResource_Terraform(t *testing.T) {
@@ -284,6 +285,79 @@ func TestEmptyBlocks_NoStackOverflow(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, dataResp.Data.Array)
 	})
+}
+
+// TestHclExpressions_NoUnknownTypeWarnings is a regression test for HCL
+// files that use modern expression types (for, index, conditional with
+// unbound vars, binary ops, splat). Previously these triggered
+// "unknown type *hclsyntax.*" warnings and dropped data; now they should
+// surface the references contained within so MQL policies can inspect them.
+func TestHclExpressions_NoUnknownTypeWarnings(t *testing.T) {
+	srv, connRes := newTestService(HclConnectionType, terraformHclExpressionsPath)
+	require.NotEmpty(t, srv)
+
+	// fetch all blocks
+	dataResp, err := srv.GetData(&plugin.DataReq{
+		Connection: connRes.Id,
+		Resource:   "terraform",
+	})
+	require.NoError(t, err)
+	resourceID := string(dataResp.Data.Value)
+
+	dataResp, err = srv.GetData(&plugin.DataReq{
+		Connection: connRes.Id,
+		Resource:   "terraform",
+		ResourceId: resourceID,
+		Field:      "blocks",
+	})
+	require.NoError(t, err)
+	require.Len(t, dataResp.Data.Array, 2, "expected locals + module blocks")
+
+	// pick the locals block and read its arguments
+	var localsBlockID string
+	for _, b := range dataResp.Data.Array {
+		blockID := string(b.Value)
+		typeResp, err := srv.GetData(&plugin.DataReq{
+			Connection: connRes.Id,
+			Resource:   "terraform.block",
+			ResourceId: blockID,
+			Field:      "type",
+		})
+		require.NoError(t, err)
+		if string(typeResp.Data.Value) == "locals" {
+			localsBlockID = blockID
+			break
+		}
+	}
+	require.NotEmpty(t, localsBlockID, "locals block not found")
+
+	argsResp, err := srv.GetData(&plugin.DataReq{
+		Connection: connRes.Id,
+		Resource:   "terraform.block",
+		ResourceId: localsBlockID,
+		Field:      "arguments",
+	})
+	require.NoError(t, err)
+	require.Empty(t, argsResp.Error)
+
+	// arguments is a dict, encoded into Value as protobuf bytes. Rather than
+	// decoding it here, just verify the encoded value mentions each reference
+	// we expect to surface — previously these were silently dropped.
+	encoded := string(argsResp.Data.Value)
+	require.NotEmpty(t, encoded)
+	for _, expected := range []string{
+		"subnet_id_by_az_suffix", // ForExpr (object form) — attr key
+		"ami_id",                 // ConditionalExpr — attr key
+		"var.disaster_recovery_mode",
+		"data.aws_ami.shared_image.id",                // ConditionalExpr branch ref
+		"data.aws_instances.all",                      // SplatExpr source ref
+		"local.subnet_id_by_az_suffix",                // IndexExpr collection ref
+		"random_shuffle.ec2.result",                   // RelativeTraversal ref
+		"data.aws_caller_identity.current.account_id", // BinaryOp operand ref
+	} {
+		require.Contains(t, encoded, expected,
+			"arguments should surface %q", expected)
+	}
 }
 
 func TestKeyString(t *testing.T) {
