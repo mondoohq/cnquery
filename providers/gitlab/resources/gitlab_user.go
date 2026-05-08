@@ -8,11 +8,18 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/gitlab/connection"
 )
+
+// gitlabUserScopeWarn logs once per session when fetching /users/:id is
+// denied, so operators running with a non-admin token are alerted that the
+// admin-scoped accessors (isAdmin, isAuditor, lastSignInAt, ...) are silently
+// returning zero values rather than reflecting actual user state.
+var gitlabUserScopeWarn sync.Once
 
 // mqlGitlabUserInternal caches a fetched *gitlab.User so that multiple computed
 // methods (externalIdentities, etc.) only trigger a single GetUser API call.
@@ -88,7 +95,10 @@ func initGitlabUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 // fetchUser loads the full user record by ID (with double-checked locking).
 // Used as a fallback when no creator seeded the user data. Returns (nil, nil)
 // on 403/404 - non-admin tokens lack permission to read /users/:id but should
-// not fail the whole resource graph.
+// not fail the whole resource graph. The first such denial in a session emits
+// a warning so the operator knows admin-scoped accessors (isAdmin, isAuditor,
+// lastSignInAt, ...) are returning zero values rather than reflecting actual
+// state.
 func (u *mqlGitlabUser) fetchUser() (*gitlab.User, error) {
 	if u.fetched {
 		return u.user, nil
@@ -102,6 +112,10 @@ func (u *mqlGitlabUser) fetchUser() (*gitlab.User, error) {
 	user, resp, err := conn.Client().Users.GetUser(u.Id.Data, gitlab.GetUsersOptions{})
 	if err != nil {
 		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			gitlabUserScopeWarn.Do(func() {
+				log.Warn().Int("status", resp.StatusCode).
+					Msg("gitlab token cannot read /users/:id; admin-scoped user fields (isAdmin, isAuditor, lastSignInAt, ...) will return zero values")
+			})
 			u.fetched = true
 			return nil, nil
 		}

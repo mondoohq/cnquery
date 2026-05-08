@@ -32,6 +32,17 @@ gitlab.settings @defaults("requireTwoFactorAuthentication") {
 }
 
 // GitLab user
+//
+// Examine a single GitLab user account by id. Surfaces basic identity
+// (username, name, email, avatar), account state (locked, bot,
+// twoFactorEnabled), profile metadata (jobTitle, organization, location),
+// linked SSO identities and SSH keys, and admin-scoped fields (isAdmin,
+// isAuditor, external, lastSignInAt, currentSignInAt, lastActivityOn,
+// confirmedAt, note, usingLicenseSeat, canCreateGroup, canCreateProject,
+// privateProfile). The admin-scoped fields require the calling token to
+// be able to read `/users/:id` — with a non-admin token they return zero
+// values rather than failing the resource graph; a one-time warning is
+// emitted at runtime when this fallback is hit.
 gitlab.user @defaults("username name state") {
   // User ID
   id int
