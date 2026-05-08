@@ -3941,6 +3941,8 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   sqlRoleAssignments() []azure.subscription.cosmosDbService.account.sqlRoleAssignment
   // Diagnostic settings configured on the Cosmos DB account
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // SQL API databases hosted on the account (Core SQL API)
+  sqlDatabases() []azure.subscription.cosmosDbService.account.sqlDatabase
 }
 
 // Azure Cosmos DB account virtual network rule
@@ -3985,6 +3987,79 @@ private azure.subscription.cosmosDbService.account.sqlRoleAssignment @defaults("
   roleDefinitionId string
   // Data-plane scope this assignment applies to (account, database, or container)
   scope string
+}
+
+// Azure Cosmos DB SQL API database
+//
+// Examine a SQL-API (Core) database hosted on a Cosmos DB account.
+// Selectable by ARM id; surfaces the database-level throughput posture
+// (manual provisioned vs autoscale ceiling, with `throughputShared`
+// distinguishing the case where throughput is configured per-container
+// rather than at the database level) and exposes the contained
+// containers as a typed sub-resource.
+private azure.subscription.cosmosDbService.account.sqlDatabase @defaults("name throughputShared autoscaleEnabled manualThroughput") {
+  // ARM resource ID
+  id string
+  // Database name (Cosmos DB resource id; same as ARM child segment)
+  name string
+  // Resource type
+  type string
+  // Etag
+  etag string
+  // Whether throughput is shared across containers (i.e., the database has no
+  // explicit throughput offer of its own; throughput lives on each container)
+  throughputShared bool
+  // Manual provisioned throughput in RU/s; zero when shared or autoscale
+  manualThroughput int
+  // Autoscale max throughput in RU/s; zero when not autoscale or shared
+  autoscaleMaxThroughput int
+  // Whether autoscale is enabled at the database level
+  autoscaleEnabled bool
+  // Containers within the database
+  containers() []azure.subscription.cosmosDbService.account.sqlDatabase.container
+}
+
+// Azure Cosmos DB SQL API container
+//
+// Examine a SQL-API container within a Cosmos DB database. Selectable
+// by ARM id; surfaces the partition key, default TTL, indexing policy
+// mode, conflict resolution policy, unique-key constraints, and the
+// throughput posture (manual / autoscale / shared with parent database).
+private azure.subscription.cosmosDbService.account.sqlDatabase.container @defaults("name partitionKeyPaths defaultTtl") {
+  // ARM resource ID
+  id string
+  // Container name (Cosmos DB resource id; same as ARM child segment)
+  name string
+  // Resource type
+  type string
+  // Etag
+  etag string
+  // Partition key paths (e.g., ["/userId"])
+  partitionKeyPaths []string
+  // Partition key kind ("Hash", "Range", "MultiHash")
+  partitionKeyKind string
+  // Default time-to-live for items in seconds; -1 = no TTL, 0 or positive = TTL value
+  defaultTtl int
+  // Analytical store TTL in seconds; zero when analytical store is disabled
+  analyticalStorageTtl int
+  // Indexing policy mode ("Consistent", "Lazy", "None")
+  indexingMode string
+  // Whether automatic indexing is enabled
+  automaticIndexing bool
+  // Unique key constraints. Each entry has shape {paths: []string}.
+  uniqueKeys []dict
+  // Conflict resolution mode ("LastWriterWins", "Custom"); empty when default
+  conflictResolutionMode string
+  // Conflict resolution path (when mode == "LastWriterWins")
+  conflictResolutionPath string
+  // Whether throughput is shared with the parent database (no per-container throughput offer)
+  throughputShared bool
+  // Manual provisioned throughput in RU/s; zero when shared or autoscale
+  manualThroughput int
+  // Autoscale max throughput in RU/s; zero when not autoscale or shared
+  autoscaleMaxThroughput int
+  // Whether autoscale is enabled at the container level
+  autoscaleEnabled bool
 }
 
 // Azure Key Vault

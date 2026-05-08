@@ -169,6 +169,8 @@ const (
 	ResourceAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule                            string = "azure.subscription.cosmosDbService.account.virtualNetworkRule"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition                             string = "azure.subscription.cosmosDbService.account.sqlRoleDefinition"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment                             string = "azure.subscription.cosmosDbService.account.sqlRoleAssignment"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabase                                   string = "azure.subscription.cosmosDbService.account.sqlDatabase"
+	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer                          string = "azure.subscription.cosmosDbService.account.sqlDatabase.container"
 	ResourceAzureSubscriptionKeyVaultService                                                     string = "azure.subscription.keyVaultService"
 	ResourceAzureSubscriptionKeyVaultServiceManagedHsm                                           string = "azure.subscription.keyVaultService.managedHsm"
 	ResourceAzureSubscriptionKeyVaultServiceVault                                                string = "azure.subscription.keyVaultService.vault"
@@ -932,6 +934,14 @@ func init() {
 		"azure.subscription.cosmosDbService.account.sqlRoleAssignment": {
 			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment,
+		},
+		"azure.subscription.cosmosDbService.account.sqlDatabase": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountSqlDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountSqlDatabase,
+		},
+		"azure.subscription.cosmosDbService.account.sqlDatabase.container": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer,
 		},
 		"azure.subscription.keyVaultService": {
 			Init:   initAzureSubscriptionKeyVaultService,
@@ -6568,6 +6578,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.diagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetDiagnosticSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting")))
 	},
+	"azure.subscription.cosmosDbService.account.sqlDatabases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetSqlDatabases()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.sqlDatabase")))
+	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).GetId()).ToDataRes(types.String)
 	},
@@ -6615,6 +6628,84 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.throughputShared": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetThroughputShared()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.manualThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetManualThroughput()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.autoscaleMaxThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetAutoscaleMaxThroughput()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.autoscaleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetAutoscaleEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetContainers()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.sqlDatabase.container")))
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.partitionKeyPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetPartitionKeyPaths()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.partitionKeyKind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetPartitionKeyKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.defaultTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetDefaultTtl()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.analyticalStorageTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetAnalyticalStorageTtl()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.indexingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetIndexingMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.automaticIndexing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetAutomaticIndexing()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.uniqueKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetUniqueKeys()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.conflictResolutionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetConflictResolutionMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.conflictResolutionPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetConflictResolutionPath()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.throughputShared": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetThroughputShared()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.manualThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetManualThroughput()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.autoscaleMaxThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetAutoscaleMaxThroughput()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.autoscaleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetAutoscaleEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.keyVaultService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultService).GetSubscriptionId()).ToDataRes(types.String)
@@ -17906,6 +17997,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).DiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cosmosDbService.account.sqlDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).SqlDatabases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).__id, ok = v.Value.(string)
 		return
@@ -17980,6 +18075,118 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.throughputShared": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).ThroughputShared, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.manualThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).ManualThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.autoscaleMaxThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).AutoscaleMaxThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.autoscaleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).AutoscaleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.partitionKeyPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).PartitionKeyPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.partitionKeyKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).PartitionKeyKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.defaultTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).DefaultTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.analyticalStorageTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).AnalyticalStorageTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.indexingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).IndexingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.automaticIndexing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).AutomaticIndexing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.uniqueKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).UniqueKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.conflictResolutionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).ConflictResolutionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.conflictResolutionPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).ConflictResolutionPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.throughputShared": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).ThroughputShared, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.manualThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).ManualThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.autoscaleMaxThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).AutoscaleMaxThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.autoscaleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).AutoscaleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41288,6 +41495,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccount struct {
 	SqlRoleDefinitions                 plugin.TValue[[]any]
 	SqlRoleAssignments                 plugin.TValue[[]any]
 	DiagnosticSettings                 plugin.TValue[[]any]
+	SqlDatabases                       plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCosmosDbServiceAccount creates a new instance of this resource
@@ -41486,6 +41694,22 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetDiagnosticSettings() *pl
 	})
 }
 
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetSqlDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SqlDatabases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account", c.__id, "sqlDatabases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sqlDatabases()
+	})
+}
+
 // mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule for the azure.subscription.cosmosDbService.account.virtualNetworkRule resource
 type mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule struct {
 	MqlRuntime *plugin.Runtime
@@ -41681,6 +41905,236 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetRoleDef
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetScope() *plugin.TValue[string] {
 	return &c.Scope
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase for the azure.subscription.cosmosDbService.account.sqlDatabase resource
+type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseInternal it will be used here
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Etag                   plugin.TValue[string]
+	ThroughputShared       plugin.TValue[bool]
+	ManualThroughput       plugin.TValue[int64]
+	AutoscaleMaxThroughput plugin.TValue[int64]
+	AutoscaleEnabled       plugin.TValue[bool]
+	Containers             plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountSqlDatabase creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountSqlDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.sqlDatabase", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.sqlDatabase"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetThroughputShared() *plugin.TValue[bool] {
+	return &c.ThroughputShared
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetManualThroughput() *plugin.TValue[int64] {
+	return &c.ManualThroughput
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetAutoscaleMaxThroughput() *plugin.TValue[int64] {
+	return &c.AutoscaleMaxThroughput
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetAutoscaleEnabled() *plugin.TValue[bool] {
+	return &c.AutoscaleEnabled
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetContainers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Containers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.sqlDatabase", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.containers()
+	})
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer for the azure.subscription.cosmosDbService.account.sqlDatabase.container resource
+type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainerInternal it will be used here
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Etag                   plugin.TValue[string]
+	PartitionKeyPaths      plugin.TValue[[]any]
+	PartitionKeyKind       plugin.TValue[string]
+	DefaultTtl             plugin.TValue[int64]
+	AnalyticalStorageTtl   plugin.TValue[int64]
+	IndexingMode           plugin.TValue[string]
+	AutomaticIndexing      plugin.TValue[bool]
+	UniqueKeys             plugin.TValue[[]any]
+	ConflictResolutionMode plugin.TValue[string]
+	ConflictResolutionPath plugin.TValue[string]
+	ThroughputShared       plugin.TValue[bool]
+	ManualThroughput       plugin.TValue[int64]
+	AutoscaleMaxThroughput plugin.TValue[int64]
+	AutoscaleEnabled       plugin.TValue[bool]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.sqlDatabase.container", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.sqlDatabase.container"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetPartitionKeyPaths() *plugin.TValue[[]any] {
+	return &c.PartitionKeyPaths
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetPartitionKeyKind() *plugin.TValue[string] {
+	return &c.PartitionKeyKind
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetDefaultTtl() *plugin.TValue[int64] {
+	return &c.DefaultTtl
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetAnalyticalStorageTtl() *plugin.TValue[int64] {
+	return &c.AnalyticalStorageTtl
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetIndexingMode() *plugin.TValue[string] {
+	return &c.IndexingMode
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetAutomaticIndexing() *plugin.TValue[bool] {
+	return &c.AutomaticIndexing
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetUniqueKeys() *plugin.TValue[[]any] {
+	return &c.UniqueKeys
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetConflictResolutionMode() *plugin.TValue[string] {
+	return &c.ConflictResolutionMode
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetConflictResolutionPath() *plugin.TValue[string] {
+	return &c.ConflictResolutionPath
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetThroughputShared() *plugin.TValue[bool] {
+	return &c.ThroughputShared
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetManualThroughput() *plugin.TValue[int64] {
+	return &c.ManualThroughput
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetAutoscaleMaxThroughput() *plugin.TValue[int64] {
+	return &c.AutoscaleMaxThroughput
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetAutoscaleEnabled() *plugin.TValue[bool] {
+	return &c.AutoscaleEnabled
 }
 
 // mqlAzureSubscriptionKeyVaultService for the azure.subscription.keyVaultService resource

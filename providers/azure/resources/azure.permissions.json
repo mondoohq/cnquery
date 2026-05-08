@@ -572,6 +572,12 @@
       "source_file": "cosmosdb.go"
     },
     {
+      "permission": "Microsoft.DocumentDB/sQLResources/read",
+      "service": "Microsoft.DocumentDB",
+      "action": "NewListSQLContainersPager",
+      "source_file": "cosmosdb_extras.go"
+    },
+    {
       "permission": "Microsoft.EventHub/namespaces/eventhubs/consumergroups/read",
       "service": "Microsoft.EventHub",
       "action": "NewListByEventHubPager",
@@ -658,7 +664,7 @@
     {
       "permission": "Microsoft.Network/applicationGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -718,7 +724,7 @@
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -790,7 +796,7 @@
     {
       "permission": "Microsoft.Network/publicIPAddresses/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
