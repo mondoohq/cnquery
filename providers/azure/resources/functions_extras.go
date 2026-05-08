@@ -25,7 +25,11 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting) id() (string
 // secretLikeNamePattern matches setting names that almost always carry secret
 // content. The match is case-insensitive and substring-based so suffix-style
 // names ("DB_PASSWORD") and word-style names ("StorageAccountKey") both hit.
-var secretLikeNamePattern = regexp.MustCompile(`(?i)key|password|secret|token|connection`)
+//
+// The connection-string sub-pattern only matches `conn(ection)?_?str*` rather
+// than bare `connection` so settings like `connectionRetryCount` or
+// `connectionTimeout` aren't flagged as secret-like.
+var secretLikeNamePattern = regexp.MustCompile(`(?i)key|password|secret|token|conn(?:ection)?_?str`)
 
 // isLikelySecretName classifies a setting name as "looks like it carries a
 // secret" using the regex above. Surfaced as the `isLikelySecret` field so
@@ -70,7 +74,7 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) appSettings() ([]any, 
 		return nil, err
 	}
 
-	stickyAppSettings := stickyAppSettingNames(ctx, client, rg, site)
+	stickyAppSettings, _ := stickySlotNames(ctx, client, rg, site)
 
 	res := []any{}
 	keys := sortedSettingKeys(settings.Properties)
@@ -98,44 +102,33 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) appSettings() ([]any, 
 	return res, nil
 }
 
-// stickyAppSettingNames fetches the slot-config-names resource and returns a
-// set of setting names that are pinned to the slot they were configured on
-// (i.e., they survive a slot swap). Empty set on permission errors so the
-// `slotSetting` field stays false rather than failing the broader query.
-func stickyAppSettingNames(ctx context.Context, client *web.WebAppsClient, rg, site string) map[string]bool {
-	out := map[string]bool{}
+// stickySlotNames fetches the slot-config-names resource once and returns the
+// (appSettings, connectionStrings) sets of names pinned to the slot they were
+// configured on (i.e., they survive a slot swap). Empty sets on permission
+// errors so the `slotSetting` field stays false rather than failing the
+// broader query.
+//
+// Returning both maps from a single call avoids a redundant ARM round-trip
+// when a query accesses both `appSettings` and `connectionStrings` on the
+// same function app.
+func stickySlotNames(ctx context.Context, client *web.WebAppsClient, rg, site string) (appSettings, connectionStrings map[string]bool) {
+	appSettings = map[string]bool{}
+	connectionStrings = map[string]bool{}
 	resp, err := client.ListSlotConfigurationNames(ctx, rg, site, nil)
-	if err != nil {
-		return out
-	}
-	if resp.Properties == nil {
-		return out
+	if err != nil || resp.Properties == nil {
+		return
 	}
 	for _, n := range resp.Properties.AppSettingNames {
 		if n != nil {
-			out[*n] = true
+			appSettings[*n] = true
 		}
-	}
-	return out
-}
-
-// stickyConnectionStringNames is the connection-string equivalent of
-// stickyAppSettingNames — slot-config-names tracks both lists separately.
-func stickyConnectionStringNames(ctx context.Context, client *web.WebAppsClient, rg, site string) map[string]bool {
-	out := map[string]bool{}
-	resp, err := client.ListSlotConfigurationNames(ctx, rg, site, nil)
-	if err != nil {
-		return out
-	}
-	if resp.Properties == nil {
-		return out
 	}
 	for _, n := range resp.Properties.ConnectionStringNames {
 		if n != nil {
-			out[*n] = true
+			connectionStrings[*n] = true
 		}
 	}
-	return out
+	return
 }
 
 func sortedSettingKeys(m map[string]*string) []string {
@@ -184,7 +177,7 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) connectionStrings() ([
 		return nil, err
 	}
 
-	stickyCS := stickyConnectionStringNames(ctx, client, rg, site)
+	_, stickyCS := stickySlotNames(ctx, client, rg, site)
 
 	res := []any{}
 	keys := sortedConnectionStringKeys(cs.Properties)

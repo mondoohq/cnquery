@@ -22,6 +22,7 @@ antispam
 aof
 apm
 apparmor
+appsettings
 appslot
 armcontainerregistry
 armcontainerregistrytasks

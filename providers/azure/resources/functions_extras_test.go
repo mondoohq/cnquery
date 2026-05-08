@@ -24,7 +24,14 @@ func TestIsLikelySecretName(t *testing.T) {
 		{"ApiSecret", true},
 		{"my_token", true},
 		{"OAUTH_TOKEN", true},
-		{"DATABASE_CONNECTION", true},
+		// Bare "connection" should NOT be flagged — the pattern only fires
+		// on connection-string indicators ("connectionString", "connStr", etc).
+		{"DATABASE_CONNECTION", false},
+		{"connectionRetryCount", false},
+		{"connectionTimeout", false},
+		{"DefaultConnectionString", true},
+		{"AZURE_STORAGE_CONNECTION_STRING", true},
+		{"ConnStr", true},
 		{"ConnectionStrings:Default", true},
 		{"WEBSITE_INSTANCE_ID", false},
 	}
