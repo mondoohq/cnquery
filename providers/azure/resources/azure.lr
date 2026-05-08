@@ -7070,7 +7070,7 @@ private azure.subscription.eventHubService {
 // Azure Event Hubs namespace
 //
 // Examine an Event Hubs namespace — the streaming-ingestion entity
-// scope that owns event hubs and consumer groups. Surfaces the SKU
+// scope that owns Event Hubs and consumer groups. Surfaces the SKU
 // and tier (Basic, Standard, Premium, Dedicated), the throughput
 // units configured, auto-inflate state, Kafka-enabled flag, the
 // `disableLocalAuth` toggle, minimum TLS version, public network
