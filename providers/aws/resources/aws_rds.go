@@ -1684,53 +1684,38 @@ func (a *mqlAwsRdsOptionGroup) vpc() (*mqlAwsVpc, error) {
 	return mqlVpc.(*mqlAwsVpc), nil
 }
 
-// initAwsRdsOptionGroup resolves an option group by name using the parent
-// `aws.rds.optionGroups` listing (which is cached after the first call), so
-// per-DB-instance accessors share fetched data with the top-level list and
-// don't issue a fresh DescribeOptionGroups for every membership.
-func initAwsRdsOptionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 || args["optionGroupName"] == nil {
-		return args, nil, nil
-	}
-	name, ok := args["optionGroupName"].Value.(string)
-	if !ok || name == "" {
-		return args, nil, nil
-	}
-
-	obj, err := CreateResource(runtime, "aws.rds", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, nil, err
-	}
-	rdsRes := obj.(*mqlAwsRds)
-	rawResources := rdsRes.GetOptionGroups()
-	if rawResources.Error != nil {
-		return nil, nil, rawResources.Error
-	}
-	for _, rawResource := range rawResources.Data {
-		og := rawResource.(*mqlAwsRdsOptionGroup)
-		if og.OptionGroupName.Data == name {
-			return args, og, nil
-		}
-	}
-	return args, nil, nil
-}
-
+// optionGroups resolves the option groups attached to this DB instance by
+// looking them up in the parent aws.rds.optionGroups listing (cached after
+// the first call). This avoids issuing a fresh DescribeOptionGroups per
+// membership when both the top-level list and per-instance accessors are
+// queried in the same session, and keeps every returned resource
+// fully populated (ARN, region, options) rather than carrying just a name.
 func (a *mqlAwsRdsDbinstance) optionGroups() ([]any, error) {
 	if len(a.cacheOptionGroupNames) == 0 {
 		return []any{}, nil
 	}
+
+	obj, err := CreateResource(a.MqlRuntime, "aws.rds", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	rdsRes := obj.(*mqlAwsRds)
+	rawResources := rdsRes.GetOptionGroups()
+	if rawResources.Error != nil {
+		return nil, rawResources.Error
+	}
+
+	wanted := make(map[string]bool, len(a.cacheOptionGroupNames))
+	for _, n := range a.cacheOptionGroupNames {
+		wanted[n] = true
+	}
+
 	res := []any{}
-	for _, name := range a.cacheOptionGroupNames {
-		og, err := NewResource(a.MqlRuntime, "aws.rds.optionGroup", map[string]*llx.RawData{
-			"optionGroupName": llx.StringData(name),
-		})
-		if err != nil {
-			return nil, err
+	for _, raw := range rawResources.Data {
+		og := raw.(*mqlAwsRdsOptionGroup)
+		if wanted[og.OptionGroupName.Data] {
+			res = append(res, og)
 		}
-		if og == nil {
-			continue
-		}
-		res = append(res, og)
 	}
 	return res, nil
 }
