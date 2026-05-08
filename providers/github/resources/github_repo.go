@@ -2675,7 +2675,18 @@ func (g *mqlGithubRepository) vulnerabilityAlertsEnabled() (bool, error) {
 	}
 	enabled, _, err := conn.Client().Repositories.GetVulnerabilityAlerts(conn.Context(), ownerLogin, repoName)
 	if err != nil {
-		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+		// 404: feature does not apply to this repo (e.g., disabled at the
+		// org level on archived repos). Surface as `false` cleanly.
+		if strings.Contains(err.Error(), "404") {
+			return false, nil
+		}
+		// 403: caller lacks permission to read the setting. Returning
+		// `false` here would falsely report "alerts disabled", so we log a
+		// warning to surface the unreliable result and still return false
+		// so the rest of the audit row renders.
+		if strings.Contains(err.Error(), "403") {
+			log.Warn().Err(err).Str("owner", ownerLogin).Str("repo", repoName).
+				Msg("permission denied reading vulnerability-alerts setting; reporting as disabled")
 			return false, nil
 		}
 		return false, err
@@ -2691,7 +2702,12 @@ func (g *mqlGithubRepository) privateVulnerabilityReportingEnabled() (bool, erro
 	}
 	enabled, _, err := conn.Client().Repositories.IsPrivateReportingEnabled(conn.Context(), ownerLogin, repoName)
 	if err != nil {
-		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+		if strings.Contains(err.Error(), "404") {
+			return false, nil
+		}
+		if strings.Contains(err.Error(), "403") {
+			log.Warn().Err(err).Str("owner", ownerLogin).Str("repo", repoName).
+				Msg("permission denied reading private-vulnerability-reporting setting; reporting as disabled")
 			return false, nil
 		}
 		return false, err
