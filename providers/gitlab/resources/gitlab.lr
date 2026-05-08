@@ -76,8 +76,8 @@ gitlab.user @defaults("username name state") {
   isAdmin() bool
   // Whether the user has the Auditor role (read-only access across the instance)
   isAuditor() bool
-  // Whether the user is marked as external (read-only access by default,
-  // with no permission to create groups, projects, or namespaces)
+  // Whether the user is marked as external
+  // Externals get read-only access by default and cannot create groups, projects, or namespaces.
   external() bool
   // Whether the user's profile is private
   privateProfile() bool
@@ -91,13 +91,13 @@ gitlab.user @defaults("username name state") {
   lastSignInAt() time
   // Time of the user's current sign-in
   currentSignInAt() time
-  // Date of the user's most recent activity (commit, comment, etc.). The API
-  // returns this as a date (no time-of-day component).
+  // Date of the user's most recent activity (commit, comment, etc.)
+  // The API returns this as a date with no time-of-day component.
   lastActivityOn() time
   // Time when the user's email was confirmed
   confirmedAt() time
-  // Administrator note attached to the user account, often used to record
-  // the reason an account is restricted, banned, or kept under review
+  // Administrator note attached to the user account
+  // Often used to record the reason an account is restricted, banned, or kept under review.
   note() string
   // External SSO identities linked to this user (SAML, LDAP, OAuth providers, etc.)
   externalIdentities() []gitlab.user.externalIdentity

@@ -9,7 +9,14 @@ option go_package = "go.mondoo.com/mql/v13/providers/aws/resources"
 alias aws.accessAnalyzer = aws.iam.accessAnalyzer
 alias aws.accessAnalyzer.analyzer = aws.iam.accessanalyzer.analyzer
 
-// AWS resource
+// Amazon Web Services account
+//
+// Use the root namespace as the account-wide handle that service-specific
+// entry points hang off of (`aws.iam`, `aws.ec2`, `aws.s3`, and so on).
+// Iterate `vpcs()` for every VPC across all enabled regions and `regions()`
+// for the list of enabled regions in the account. The `account` field surfaces
+// identification, aliases, contacts, and organization membership for the
+// account being inspected.
 aws @defaults("account.id") {
   // List of `aws.vpc` objects representing all VPCs in the account across all enabled regions
   vpcs() []aws.vpc
@@ -17,7 +24,17 @@ aws @defaults("account.id") {
   regions() []string
 }
 
-// AWS Account
+// AWS account
+//
+// Examine identification, aliases, contacts, and organization metadata for
+// the AWS account being inspected. Surfaces the account ID and aliases, the
+// associated `organization` (when the account is part of AWS Organizations),
+// the primary `contactInformation` and the alternate `securityContact`,
+// `billingContact`, and `operationsContact` entries, the per-region opt-in
+// status (`regionOptInStatus`), and the organization-managed lifecycle fields
+// (`name`, `email`, `state`, `joinedMethod`, `joinedTimestamp`) that are
+// available only when the caller is the management account or a delegated
+// administrator.
 aws.account @defaults("id aliases.first organization.id") {
   // Account ID
   id string
@@ -98,7 +115,14 @@ private aws.account.alternateContact @defaults("contactType name emailAddress") 
   exists bool
 }
 
-// AWS Organization resource
+// AWS Organizations organization
+//
+// Examine the AWS Organizations entity that the account belongs to.
+// Surfaces the organization ID and ARN, the master (management) account
+// identifiers and email, the configured feature set
+// (`ALL` vs `CONSOLIDATED_BILLING`), the member `accounts` (when available
+// to the caller), the `delegatedAdministrators` registered for the org,
+// and the `organizationalUnits` that make up the org tree.
 aws.organization @defaults("id masterAccountEmail") {
   // ARN of the organization
   arn string
@@ -163,6 +187,13 @@ private aws.organization.organizationalUnit @defaults("id name path") {
 }
 
 // Amazon Virtual Private Cloud (VPC)
+//
+// Examine a VPC along with its subnets, route tables, internet/NAT gateways,
+// flow logs, peering connections, service endpoints, and VPN gateways.
+// Use the `id` field as the selection key — for example
+// `aws.vpc(id: "vpc-0a1b2c3d")`. Each row reports the IPv4 CIDR block, state,
+// default-VPC flag, instance tenancy, region, internet-gateway block mode,
+// tags, and the typed sub-resources for each component of the VPC topology.
 aws.vpc @defaults("id isDefault cidrBlock region") {
   // ARN of the VPC
   arn string
@@ -430,7 +461,15 @@ private aws.vpc.vpnGateway @defaults("id state") {
   vpnConnections() []aws.ec2.vpnconnection
 }
 
-// Amazon WAF v2
+// AWS WAF v2
+//
+// Use the WAF v2 namespace to enumerate web application firewall building
+// blocks attached to ALBs, API Gateway stages, AppSync APIs, and CloudFront
+// distributions. Iterate `acls()` for web ACLs (each carrying its rules,
+// default action, and logging configuration), `ruleGroups()` for reusable
+// rule groups, `ipSets()` for IP-set match references, and
+// `regexPatternSets()` for shared regex pattern sets. The `scope` field
+// records whether resources are CloudFront-scoped (global) or REGIONAL.
 aws.waf {
   // List of WAF ACLs
   acls() []aws.waf.acl
@@ -924,6 +963,13 @@ private aws.waf.acl.loggingConfiguration @defaults("arn") {
 }
 
 // AWS Network Firewall
+//
+// Use the Network Firewall namespace to enumerate VPC-level firewall
+// deployments and the policy building blocks they reference. Iterate
+// `firewalls()` for each deployed firewall (with its associated VPC,
+// subnets, logging configuration, and attached policy), `policies()` for
+// firewall policies that compose stateless and stateful rule groups, and
+// `ruleGroups()` for reusable Suricata-compatible or stateless rule groups.
 aws.networkfirewall @defaults("firewalls") {
   // List of Network Firewall firewalls
   firewalls() []aws.networkfirewall.firewall
@@ -1011,9 +1057,16 @@ private aws.networkfirewall.rulegroup @defaults("arn name region") {
   tags map[string]string
 }
 
-// AWS Elastic File System (EFS) service
+// AWS Elastic File System (EFS)
+//
+// Use the EFS namespace to enumerate elastic file systems across all
+// configured regions. Iterate `filesystems()` for each EFS file system —
+// every entry surfaces encryption settings, performance and throughput modes,
+// lifecycle and replication configurations, mount targets, and access points
+// for queries about NFS file shares used by EC2, ECS, Lambda, and on-premises
+// clients.
 aws.efs @defaults("filesystems") {
-  // A list of file systems managed by the service
+  // List of file systems managed by the service
   filesystems() []aws.efs.filesystem
 }
 
@@ -1143,15 +1196,21 @@ private aws.efs.accessPoint @defaults("accessPointId name") {
   region string
 }
 
-// AWS FSx service
+// AWS FSx
+//
+// Use the FSx namespace to enumerate managed file systems and the building
+// blocks around them. Iterate `fileSystems()` for Lustre, Windows File
+// Server, ONTAP, and OpenZFS file systems, `volumes()` for ONTAP and OpenZFS
+// volumes, `backups()` for backup snapshots, and `caches()` for Amazon File
+// Cache instances used to bridge on-premises and cloud storage.
 aws.fsx @defaults("fileSystems") {
-  // A list of FSx file systems
+  // List of FSx file systems
   fileSystems() []aws.fsx.filesystem
-  // A list of Amazon File Cache instances
+  // List of Amazon File Cache instances
   caches() []aws.fsx.cache
-  // A list of FSx backups
+  // List of FSx backups
   backups() []aws.fsx.backup
-  // A list of FSx volumes (ONTAP and OpenZFS)
+  // List of FSx volumes (ONTAP and OpenZFS)
   volumes() []aws.fsx.volume
 }
 
@@ -1304,8 +1363,15 @@ private aws.fsx.volume @defaults("id name lifecycle region") {
 }
 
 // AWS Key Management Service (KMS)
+//
+// Use the KMS namespace to enumerate customer-managed and AWS-managed keys
+// across all enabled regions. Iterate `keys()` for every KMS key in the
+// account — each entry surfaces aliases, key state and origin, key spec,
+// rotation status, key policy, and the grants attached to the key, which is
+// the data needed to audit which principals can encrypt and decrypt
+// account-encrypted resources.
 aws.kms @defaults("keys") {
-  // A list of all customer master keys (CMKs) in the caller's AWS account (across all regions)
+  // List of all customer master keys (CMKs) in the caller's AWS account across all regions
   keys() []aws.kms.key
 }
 
@@ -1394,7 +1460,17 @@ private aws.kms.grant @defaults("grantId granteePrincipal") {
 }
 
 
-// AWS service to create and manage permissions for users and groups
+// AWS Identity and Access Management (IAM)
+//
+// Use the IAM namespace to enumerate identities, permissions, and credential
+// posture for the account. Iterate `users()`, `roles()`, `groups()`,
+// `policies()`, `instanceProfiles()`, `samlProviders()`, `oidcProviders()`,
+// and `virtualMfaDevices()` for the principals and trust providers in the
+// account, and `serverCertificates()` for IAM-stored certs. Read
+// `credentialReport()` for the per-user password and access-key history,
+// `accountSummary()` for account-wide totals, `accountPasswordPolicy()` for
+// the password complexity rules, and `accountAlias()` for the account alias
+// when one is set.
 aws.iam {
   // List of IAM users in the account
   users() []aws.iam.user
@@ -1682,7 +1758,14 @@ private aws.iam.oidcProvider @defaults("arn url") {
   tags() map[string]string
 }
 
-// AWS IAM Access Analyzer resource (for assessing the configuration of AWS IAM Access Analyzer)
+// AWS IAM Access Analyzer
+//
+// Use the Access Analyzer namespace to enumerate analyzers and their
+// findings about external or unintended access to account resources.
+// Iterate `analyzers()` for every configured analyzer (account or
+// organization scope) across all enabled regions, `findings()` for the
+// active findings produced by those analyzers, and `archivedFindings()`
+// for findings that have been resolved or suppressed.
 aws.iam.accessAnalyzer @defaults("analyzers") {
   // List of `aws.iam.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account
   analyzers() []aws.iam.accessanalyzer.analyzer
@@ -1742,7 +1825,17 @@ private aws.iam.accessanalyzer.finding @defaults("resourceType region type statu
   analyzerArn string
 }
 
-// AWS SageMaker
+// Amazon SageMaker
+//
+// Use the SageMaker namespace to enumerate the building blocks of an
+// SageMaker workspace across all enabled regions: training and processing
+// jobs, models and inference endpoints, notebook instances, Studio domains
+// and user profiles, pipelines, feature groups, model packages, monitoring
+// schedules and data/model-quality job definitions, experiments and trials,
+// HyperPod clusters, AutoML and labeling jobs, and lineage entities. Iterate
+// the collection accessor that matches the workload you want to audit, then
+// traverse each row for IAM role bindings, KMS encryption, network isolation,
+// and lifecycle state.
 aws.sagemaker {
   // List of SageMaker endpoints
   endpoints() []aws.sagemaker.endpoint
@@ -3816,7 +3909,14 @@ private aws.sagemaker.lineageGroup @defaults("arn name") {
   tags() map[string]string
 }
 
-// AWS Simple Notification Service (SNS)
+// Amazon Simple Notification Service (SNS)
+//
+// Use the SNS namespace to enumerate publish/subscribe messaging topics
+// across all enabled regions. Iterate `topics()` for every SNS topic — each
+// row surfaces topic attributes, the access policy, KMS encryption key, FIFO
+// configuration, content-based deduplication, X-Ray tracing settings, the
+// data protection policy, the delivery policy, and the subscriptions
+// attached to the topic.
 aws.sns {
   // List of SNS topics
   topics() []aws.sns.topic
@@ -3886,7 +3986,14 @@ private aws.sns.subscription @defaults("arn") {
   pendingConfirmation() bool
 }
 
-// AWS Elasticsearch service
+// Amazon Elasticsearch Service (legacy)
+//
+// Use the Elasticsearch namespace to enumerate the legacy Amazon
+// Elasticsearch Service domains in the account. Iterate `domains()` for each
+// domain and read its endpoint, engine version, encryption-at-rest and
+// node-to-node settings, HTTPS enforcement, TLS policy, and audit-log
+// configuration. New deployments live under the OpenSearch namespace
+// (`aws.opensearch`).
 aws.es {
   // List of Elasticsearch domains
   domains() []aws.es.domain
@@ -3923,6 +4030,12 @@ private aws.es.domain @defaults("arn name") {
 }
 
 // Amazon OpenSearch Service
+//
+// Use the OpenSearch namespace to enumerate managed OpenSearch and legacy
+// Elasticsearch (OpenSearch-compatible) domains in the account. Iterate
+// `domains()` for each domain and traverse its endpoint, engine version,
+// encryption-at-rest, node-to-node encryption, HTTPS enforcement, TLS
+// security policy, and audit-log configuration.
 aws.opensearch @defaults("domains") {
   // List of OpenSearch domains
   domains() []aws.opensearch.domain
@@ -4040,9 +4153,16 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   subnets() []aws.vpc.subnet
 }
 
-// AWS Certificate Manager resource (for assessing the configuration of AWS Certificate Manager)
+// AWS Certificate Manager (ACM)
+//
+// Use the ACM namespace to enumerate TLS certificates issued or imported
+// in the account. Iterate `certificates()` for every ACM certificate across
+// all enabled regions — each row surfaces the domain name, issuer, source
+// (AMAZON_ISSUED or IMPORTED), validity window, status, key and signature
+// algorithms, the parsed `network.certificate`, and the renewal posture
+// needed to audit certificate hygiene.
 aws.acm @defaults("certificates") {
-  // List of `aws.acm.certificate` objects representing ACM certificates configured within the account
+  // List of ACM certificates configured within the account
   certificates() []aws.acm.certificate
 }
 
@@ -4084,7 +4204,13 @@ private aws.acm.certificate @defaults("domainName issuer createdAt notAfter") {
   signatureAlgorithm string
 }
 
-// AWS Auto Scaling
+// Amazon EC2 Auto Scaling
+//
+// Use the Auto Scaling namespace to enumerate EC2 Auto Scaling groups in
+// the account. Iterate `groups()` for every ASG across all enabled regions
+// — each row surfaces the launch template or configuration, attached load
+// balancers and target groups, capacity bounds (min/max/desired), instance
+// distribution across availability zones, and lifecycle hooks.
 aws.autoscaling @defaults("groups") {
   // List of autoscaling groups across the account
   groups() []aws.autoscaling.group
@@ -4198,7 +4324,14 @@ private aws.autoscaling.group.tag @defaults("key value propagateAtLaunch") {
   resourceType string
 }
 
-// AWS Elastic Load Balancing
+// AWS Elastic Load Balancing (ELB)
+//
+// Use the ELB namespace to enumerate load balancers in the account across
+// all enabled regions. Iterate `loadBalancers()` for application, gateway,
+// and network load balancers (ELBv2), and `classicLoadBalancers()` for the
+// legacy Classic Load Balancers (ELBv1). Each row surfaces the listeners,
+// target groups, attached security groups and subnets, scheme (internet-facing
+// vs internal), and access-log configuration.
 aws.elb {
   // List of classic load balancers
   classicLoadBalancers() []aws.elb.loadbalancer
@@ -4383,7 +4516,14 @@ private aws.elb.loadbalancer.attribute {
   connectionLogsBucket string
 }
 
-// AWS CodeBuild for building and testing code
+// AWS CodeBuild
+//
+// Use the CodeBuild namespace to enumerate build and test projects in the
+// account across all enabled regions. Iterate `projects()` for every
+// CodeBuild project — each row surfaces the source provider, build
+// environment (image, compute type, environment variables), service role,
+// VPC and security-group configuration, artifact destinations, and
+// CloudWatch log settings.
 aws.codebuild {
   // List of build projects
   projects() []aws.codebuild.project
@@ -4423,7 +4563,13 @@ private aws.codebuild.project @defaults("arn name") {
   queuedTimeoutInMinutes int
 }
 
-// Amazon GuardDuty for threat detection
+// Amazon GuardDuty
+//
+// Use the GuardDuty namespace to enumerate threat-detection coverage and
+// findings in the account. Iterate `detectors()` for the per-region detector
+// configurations (each carrying its enabled features such as S3 protection,
+// EKS audit-log monitoring, malware protection, and runtime monitoring), and
+// `findings()` for the active findings produced across regions.
 aws.guardduty {
   // List of GuardDuty active findings
   findings() []aws.guardduty.finding
@@ -4606,6 +4752,13 @@ private aws.guardduty.finding @defaults("title region severity") {
 }
 
 // Amazon Macie
+//
+// Use the Macie namespace to enumerate Macie data-protection coverage and
+// data-classification activity in the account. Iterate `sessions()` for the
+// per-region Macie enablement state and finding publishing frequency,
+// `classificationJobs()` for the S3 sensitive-data discovery jobs that have
+// been run, `customDataIdentifiers()` for tenant-defined regex/keyword
+// detectors, and `findings()` for the active findings produced.
 aws.macie {
   // List of Macie sessions
   sessions() []aws.macie.session
@@ -4722,6 +4875,13 @@ private aws.macie.customDataIdentifier @defaults("id name") {
 }
 
 // AWS Security Hub
+//
+// Use the Security Hub namespace to enumerate per-region Security Hub
+// enablement and the standards, findings, automation, and insights it
+// produces. Iterate `hubs()` for every region where Security Hub is enabled
+// — each hub surfaces its standard subscriptions and control details,
+// active findings, automation rules, insights, and the member accounts
+// administered through this hub.
 aws.securityhub {
   // List of Security Hubs in the account
   hubs() []aws.securityhub.hub
@@ -4915,6 +5075,13 @@ private aws.securityhub.enabledProduct @defaults("productArn") {
 }
 
 // AWS Shield Advanced
+//
+// Use the Shield namespace to inspect the account's Shield Advanced posture
+// against DDoS attacks. Read `subscriptionState` to confirm the service is
+// active, `subscription` for term and auto-renew details, `protections()`
+// and `protectionGroups()` for the resources covered, `drtAccess` for the
+// Shield Response Team access configuration, and `emergencyContacts()` for
+// the contacts notified during proactive engagement.
 aws.shield @defaults("subscriptionState") {
   // Whether Shield Advanced is active ("ACTIVE", "INACTIVE", or "UNKNOWN" if access is denied)
   subscriptionState() string
@@ -4999,12 +5166,26 @@ private aws.shield.emergencyContact @defaults("emailAddress") {
 }
 
 // AWS Secrets Manager
+//
+// Use the Secrets Manager namespace to enumerate secrets stored in the
+// account across all enabled regions. Iterate `secrets()` for every secret
+// — each row surfaces metadata, KMS encryption key, rotation configuration
+// and history, replica regions, version stages, the resource policy, and
+// when the secret was last accessed and changed.
 aws.secretsmanager {
   // List of secrets
   secrets() []aws.secretsmanager.secret
 }
 
 // AWS Secrets Manager secret
+//
+// Examine an individual Secrets Manager secret. Use the `arn` field as the
+// selection key — for example
+// `aws.secretsmanager.secret(arn: "arn:aws:secretsmanager:us-east-1:111122223333:secret:prod/db-AbCdEf")`.
+// Surfaces the secret's KMS encryption key, rotation Lambda and schedule,
+// replica regions, version history (with stage labels like AWSCURRENT and
+// AWSPENDING), resource-based access policy, owning service when the secret
+// is service-managed, and the last accessed, changed, and rotated dates.
 aws.secretsmanager.secret @defaults("arn name") {
   // ARN for the secret
   arn string
@@ -5093,6 +5274,14 @@ private aws.secretsmanager.secret.rotationRules {
 
 
 // Amazon Elastic Container Service (ECS)
+//
+// Use the ECS namespace to enumerate cluster, workload, and task-definition
+// state across all enabled regions. Iterate `clusters()` for ECS clusters
+// (with their services, container instances, capacity providers, and
+// settings), `containers()` for the running containers across those clusters,
+// `containerInstances()` for EC2-launch-type registered instances, and
+// `taskDefinitions()` for the task definition revisions registered in the
+// account.
 aws.ecs  @defaults("clusters containers containerInstances") {
   // List of AWS ECS Clusters
   clusters() []aws.ecs.cluster
@@ -5573,6 +5762,13 @@ private aws.ecs.taskDefinition.ephemeralStorage {
 }
 
 // Amazon EMR
+//
+// Use the EMR namespace to enumerate Elastic MapReduce clusters and
+// account-level guardrails. Iterate `clusters()` for every EMR cluster
+// across enabled regions (with its release label, applications, instance
+// groups, security configuration, and run-time status), and read
+// `blockPublicAccessConfiguration` for the account-level block public
+// access posture for cluster security groups.
 aws.emr {
   // List of EMR clusters
   clusters() []aws.emr.cluster
@@ -5687,6 +5883,16 @@ private aws.emr.cluster.bootstrapAction @defaults("name scriptPath") {
 }
 
 // Amazon EventBridge
+//
+// Use the EventBridge namespace to enumerate event-driven plumbing in the
+// account: event buses and the rules attached to them, EventBridge Pipes
+// for source-to-target streaming, and EventBridge Scheduler schedules and
+// schedule groups. Iterate `eventBuses()` for every bus (with its
+// resource policy, KMS encryption, and dead-letter configuration),
+// `rules()` for every rule across buses (with the event pattern or
+// schedule, targets, and IAM role), `pipes()` for filter/enrichment
+// pipelines, and `schedules()`/`scheduleGroups()` for cron and one-time
+// scheduled invocations.
 aws.eventbridge @defaults("eventBuses") {
   // List of EventBridge event buses
   eventBuses() []aws.eventbridge.eventBus
@@ -6386,6 +6592,14 @@ private aws.eventbridge.scheduleGroup @defaults("arn name state") {
 }
 
 // Amazon CloudWatch
+//
+// Use the CloudWatch namespace to enumerate metrics, alarms, and Logs
+// configuration in the account across all enabled regions. Iterate
+// `logGroups()` for CloudWatch Logs log groups (with retention, KMS
+// encryption, and metric filters), `alarms()` for metric alarms, `metrics()`
+// for metric definitions and their dimensions, `resourcePolicies()` and
+// `logDestinations()` for Logs delivery and cross-account destinations, and
+// `logInsightQueries()` for saved Logs Insights queries.
 aws.cloudwatch {
   // List of CloudWatch log groups
   logGroups() []aws.cloudwatch.loggroup
@@ -6444,6 +6658,11 @@ private aws.cloudwatch.metric @defaults("name region") {
 }
 
 // Amazon CloudWatch metric dimension
+//
+// Examine a name/value pair that scopes a CloudWatch metric — for example
+// the `InstanceId` dimension on an EC2 metric. Each dimension narrows the
+// metric to a single resource or facet; the parent metric exposes a list of
+// these as `dimensions()`.
 aws.cloudwatch.metricdimension @defaults("name value") {
   // Name of the dimension
   name string
@@ -6452,6 +6671,12 @@ aws.cloudwatch.metricdimension @defaults("name value") {
 }
 
 // Amazon CloudWatch metric statistics
+//
+// Examine the time-series datapoints (min/max/average/sum) for a CloudWatch
+// metric over the last 24 hours in hour intervals. The init constructor
+// takes `namespace`, `region`, and `name` — for example
+// `aws.cloudwatch.metricstatistics(namespace: "AWS/EC2", region: "us-east-1", name: "CPUUtilization")`.
+// Use `datapoints` to read the per-hour values.
 aws.cloudwatch.metricstatistics @defaults("name region") {
   init(namespace string, region string, name string)
   // Namespace for the metric
@@ -6586,6 +6811,14 @@ private aws.cloudwatch.resourcepolicy @defaults("policyName") {
 }
 
 // Amazon CloudFront
+//
+// Use the CloudFront namespace to enumerate the global CDN configuration
+// for the account. Iterate `distributions()` for every distribution (with
+// origins, default and ordered cache behaviors, viewer-protocol policy, WAF
+// and ACM associations, logging, and custom error responses), `functions()`
+// for the lightweight viewer-request/response functions, `anycastIpLists()`
+// for static-IP allocations, and `trustStores()` for the CA bundles used
+// for origin mTLS and Distribution Tenants.
 aws.cloudfront @defaults("distributions functions") {
   // List of CloudFront distributions
   distributions() []aws.cloudfront.distribution
@@ -6732,6 +6965,13 @@ private aws.cloudfront.function @defaults("name status") {
 }
 
 // AWS CloudTrail
+//
+// Use the CloudTrail namespace to enumerate audit-trail coverage for the
+// account. Iterate `trails()` for every CloudTrail trail (with its S3
+// destination, KMS encryption, log file validation, multi-region and
+// org-trail flags, event selectors, and CloudWatch Logs integration),
+// `eventDataStores()` for CloudTrail Lake event data stores, and
+// `channels()` for channels used to ingest events from external sources.
 aws.cloudtrail @defaults("trails") {
   // List of CloudTrail trails associated with the account
   trails() []aws.cloudtrail.trail
@@ -6929,13 +7169,26 @@ private aws.cloudtrail.channel @defaults("name sourceType") {
   tags() map[string]string
 }
 
-// Amazon S3 bucket control
+// Amazon S3 account-level controls
+//
+// Use the S3 Control namespace to inspect account-wide S3 settings that
+// apply to every bucket. Read `accountPublicAccessBlock` for the
+// account-level Block Public Access configuration (the four settings
+// that ignore or restrict bucket and object ACLs and policies allowing
+// public access).
 aws.s3control @defaults("accountPublicAccessBlock") {
   // Account level public access configuration for S3
   accountPublicAccessBlock() dict
 }
 
-// Amazon S3 cloud object storage
+// Amazon Simple Storage Service (S3)
+//
+// Use the S3 namespace to enumerate object storage buckets in the account.
+// Iterate `buckets()` for every S3 bucket — each row surfaces the bucket
+// policy, ACL, ownership controls, encryption settings, public access
+// block, versioning and replication, lifecycle rules, logging, CORS, tags,
+// website configuration, notification configuration, and the bucket's
+// region.
 aws.s3 @defaults("buckets") {
   // List of S3 buckets across the account
   buckets() []aws.s3.bucket
@@ -7157,6 +7410,15 @@ private aws.s3.bucket.websiteConfiguration.routingRule.conditionConf {
 }
 
 // AWS Application Auto Scaling
+//
+// Use the Application Auto Scaling namespace to inspect the scalable
+// targets and policies registered for a single service namespace — for
+// example `aws.applicationAutoscaling(namespace: "ecs")`. The `namespace`
+// field is the selection key (valid values include `ecs`, `rds`, `lambda`,
+// `dynamodb`, `sagemaker`, `elasticmapreduce`, `kafka`, `comprehend`,
+// `appstream`, `elasticache`, `cassandra`, `neptune`, `workspaces`, `ec2`,
+// and `custom-resource`). Iterate `scalableTargets()` for the registered
+// targets in that namespace.
 aws.applicationAutoscaling @defaults("namespace") {
   init(namespace string)
   // Service namespace to query for application auto scaling: comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, elasticache, or workspaces
@@ -7244,6 +7506,12 @@ private aws.applicationAutoscaling.scheduledAction @defaults("arn name schedule"
 }
 
 // AWS Elastic Disaster Recovery (DRS)
+//
+// Use the DRS namespace to enumerate the source servers replicated to the
+// account and the recovery operations performed on them. Iterate
+// `sourceServers()` for each replicated server (with its replication
+// progress, lifecycle state, and last launch result), and `jobs()` for the
+// recovery, drill, and failback jobs that have been kicked off.
 aws.drs @defaults("sourceServers") {
   // List of source servers being replicated
   sourceServers() []aws.drs.sourceServer
@@ -7357,6 +7625,13 @@ private aws.drs.launchConfiguration @defaults("sourceServerID") {
 }
 
 // AWS Backup
+//
+// Use the AWS Backup namespace to enumerate cross-service backup
+// configuration and the recovery points produced. Iterate `vaults()` for
+// every backup vault (with its KMS encryption, access policy, lock
+// configuration, and stored recovery points), and `plans()` for the backup
+// plans that drive scheduled backups across services like RDS, EBS, EFS,
+// FSx, DynamoDB, and S3.
 aws.backup @defaults("vaults") {
   // List of vaults for the service
   vaults() []aws.backup.vault
@@ -7511,6 +7786,15 @@ private aws.backup.plan.rule.copyAction @defaults("destinationBackupVaultArn") {
 }
 
 // Amazon DynamoDB
+//
+// Use the DynamoDB namespace to enumerate tables, replicas, backups, and
+// the in-memory accelerator. Iterate `tables()` for every DynamoDB table
+// (with its key schema, throughput mode, encryption, point-in-time recovery,
+// global secondary indexes, and stream specification), `globalTables()` for
+// multi-region replicated tables, `backups()` for on-demand and continuous
+// backups, `exports()` for table exports to S3, `daxClusters()` for DAX
+// (DynamoDB Accelerator) clusters, and `limits()` for per-region account
+// limits.
 aws.dynamodb {
   // List of backups for DynamoDB
   backups() []dict
@@ -7663,6 +7947,12 @@ private aws.dynamodb.table @defaults("name region") {
 }
 
 // Amazon Simple Queue Service (SQS)
+//
+// Use the SQS namespace to enumerate message queues in the account across
+// all enabled regions. Iterate `queues()` for every SQS queue — each row
+// surfaces the queue's KMS encryption, dead-letter queue, message retention
+// and visibility settings, FIFO and content-based deduplication flags,
+// access policy, and the per-queue delivery and receive-wait configuration.
 aws.sqs {
   // List of Amazon SQS queues
   queues() []aws.sqs.queue
@@ -7715,6 +8005,16 @@ private aws.sqs.queue {
 }
 
 // Amazon Relational Database Service (RDS)
+//
+// Use the RDS namespace to enumerate database instances, clusters, and the
+// configuration objects they reference. Iterate `instances()` for DB
+// instances, `clusters()` for Aurora and Multi-AZ DB clusters,
+// `globalClusters()` for cross-region Aurora global databases, `proxies()`
+// for RDS Proxy endpoints, `parameterGroups()` and `clusterParameterGroups()`
+// for parameter sets, `optionGroups()` for engine-specific options,
+// `eventSubscriptions()` for event notifications, and
+// `allPendingMaintenanceActions()` for the pending engine and OS maintenance
+// items across the account.
 aws.rds {
   // List of database instances
   instances() []aws.rds.dbinstance
@@ -7812,9 +8112,8 @@ private aws.rds.globalCluster @defaults("globalClusterIdentifier engine status")
   storageEncryptionType string
   // Pending or in-progress switchover/failover state, or null when none
   failoverState dict
-  // DB clusters that participate in the global cluster. Each entry contains
-  // dbClusterArn, isWriter, globalWriteForwardingStatus, synchronizationStatus,
-  // and readers (list of secondary cluster ARNs).
+  // Member DB clusters of the global cluster
+  // Each entry contains dbClusterArn, isWriter, globalWriteForwardingStatus, synchronizationStatus, and readers (list of secondary cluster ARNs).
   members []dict
 }
 
@@ -7843,6 +8142,14 @@ private aws.rds.backupsetting {
 }
 
 // Amazon RDS database cluster
+//
+// Examine an Aurora or Multi-AZ DB cluster and its members. Use the `id`
+// field as the selection key — for example
+// `aws.rds.dbcluster(id: "prod-aurora-cluster")`. Each row surfaces the
+// engine and version, member DB instances, snapshots, KMS encryption and
+// storage type, backup retention, deletion protection, IAM database
+// authentication, network exposure (publicly accessible, VPC, security
+// groups), and the pending maintenance actions for the cluster.
 aws.rds.dbcluster @defaults("id region engine engineVersion") {
   // ARN for the database cluster
   arn string
@@ -8009,6 +8316,15 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
 }
 
 // Amazon RDS database instance
+//
+// Examine an RDS DB instance — the per-engine database server that lives
+// either standalone or as a member of an Aurora or Multi-AZ cluster. Use
+// the `id` field as the selection key — for example
+// `aws.rds.dbinstance(id: "prod-mysql-01")`. Each row surfaces the engine
+// and version, instance class, KMS encryption, storage type and IOPS,
+// backup retention, deletion and minor-version-upgrade flags, public
+// accessibility, VPC and security-group placement, IAM authentication
+// state, parameter groups, snapshots, and pending maintenance actions.
 aws.rds.dbinstance @defaults("id region engine engineVersion") {
   // ARN for the database instance
   arn string
@@ -8170,7 +8486,15 @@ private aws.rds.pendingMaintenanceAction {
   optInStatus string
 }
 
-// Amazon RDS cluster parameter groups
+// Amazon RDS DB cluster parameter group
+//
+// Examine a named set of engine parameters that applies to one or more
+// Aurora or Multi-AZ DB clusters. Use the `name` field as the selection
+// key — for example
+// `aws.rds.clusterParameterGroup(name: "default.aurora-postgresql15")`.
+// Iterate `parameters()` for the individual parameter values configured in
+// the group; the `family` field records which engine version family the
+// group is compatible with.
 aws.rds.clusterParameterGroup @defaults("name family region arn") {
   // ARN for resource
   arn string
@@ -8185,7 +8509,14 @@ aws.rds.clusterParameterGroup @defaults("name family region arn") {
   parameters() []aws.rds.parameterGroup.parameter
 }
 
-// Amazon RDS parameter groups
+// Amazon RDS DB parameter group
+//
+// Examine a named set of engine parameters that applies to one or more RDS
+// DB instances. Use the `name` field as the selection key — for example
+// `aws.rds.parameterGroup(name: "default.mysql8.0")`. Iterate
+// `parameters()` for the individual parameter values configured in the
+// group; the `family` field records which engine version family the group
+// is compatible with.
 aws.rds.parameterGroup @defaults("name family region arn") {
   // ARN for resource
   arn string
@@ -8201,7 +8532,13 @@ aws.rds.parameterGroup @defaults("name family region arn") {
   parameters() []aws.rds.parameterGroup.parameter
 }
 
-// Single parameter belonging to an Amazon RDS (cluster) parameter group
+// Amazon RDS parameter
+//
+// Examine a single engine parameter belonging to an RDS DB parameter group
+// or cluster parameter group. Surfaces the parameter's name, current value,
+// allowed values, default vs user-set source, modifiability flag, when the
+// change is applied (immediate vs pending-reboot), and the data and apply
+// types reported by the engine.
 aws.rds.parameterGroup.parameter @defaults("name value") {
   // Specifies the valid range of values for the parameter
   allowedValues string
@@ -8229,6 +8566,15 @@ aws.rds.parameterGroup.parameter @defaults("name value") {
 
 
 // Amazon ElastiCache
+//
+// Use the ElastiCache namespace to enumerate Redis and Memcached cache
+// deployments and the configuration objects they reference. Iterate
+// `cacheClusters()` for cluster-mode deployments,
+// `serverlessCaches()` for serverless caches, `parameterGroups()` and
+// `subnetGroups()` for the parameter and subnet bindings used by clusters,
+// `users()` for the RBAC users defined for Redis access, `snapshots()` for
+// cache snapshots, and `serviceUpdates()` for available service updates
+// the account can apply.
 aws.elasticache @defaults("cacheClusters") {
   // List of cache clusters
   cacheClusters() []aws.elasticache.cluster
@@ -8472,6 +8818,15 @@ private aws.elasticache.snapshot @defaults("name status engine") {
 }
 
 // Amazon Redshift
+//
+// Use the Redshift namespace to enumerate provisioned Redshift data
+// warehouses and the configuration around them. Iterate `clusters()` for
+// every Redshift cluster (with its node type, encryption, audit logging,
+// VPC and security-group placement, IAM roles, parameter group, and
+// snapshot retention), `subnetGroups()` for cluster subnet groups,
+// `eventSubscriptions()` for event notifications, `scheduledActions()` for
+// scheduled resize/pause/resume actions, and `snapshotSchedules()` for
+// snapshot schedule definitions.
 aws.redshift @defaults("clusters") {
   // List of clusters
   clusters() []aws.redshift.cluster
@@ -8707,7 +9062,15 @@ private aws.redshift.snapshotSchedule @defaults("id description") {
   tags map[string]string
 }
 
-// Amazon Route 53 DNS service
+// Amazon Route 53
+//
+// Use the Route 53 namespace to enumerate DNS hosting and health-check
+// configuration for the account. Iterate `hostedZones()` for public and
+// private hosted zones (with their record sets, DNSSEC configuration, and
+// VPC associations), `healthChecks()` for the health checks used in
+// failover routing and CloudWatch alarms, `queryLoggingConfigs()` for the
+// CloudWatch Logs delivery of public-zone queries, and `domains()` for
+// domains registered through Route 53 Domains.
 aws.route53 {
   // List of all hosted zones in the account
   hostedZones() []aws.route53.hostedZone
@@ -8937,7 +9300,16 @@ private aws.route53.domain @defaults("domainName autoRenew transferLock") {
   abuseContactEmail() string
 }
 
-// AWS Elastic Container Registry (ECR)
+// Amazon Elastic Container Registry (ECR)
+//
+// Use the ECR namespace to enumerate container image registries and the
+// images they hold. Iterate `privateRepositories()` and
+// `publicRepositories()` for private (per-account) and public ECR
+// repositories (with their image-tag immutability, scan-on-push setting,
+// repository policy, and lifecycle policy), and `images()` for images
+// across those repos with their tags, digests, and image-scan findings.
+// Read `replicationConfiguration` for cross-region/account replication and
+// `scanningConfiguration` for the registry-level scanning posture.
 aws.ecr {
   // List of private repositories
   privateRepositories() []aws.ecr.repository
@@ -9092,20 +9464,36 @@ private aws.ecr.scanningConfiguration.rule @defaults("scanFrequency") {
 }
 
 // AWS Database Migration Service (DMS)
+//
+// Use the DMS namespace to enumerate the replication infrastructure
+// configured for database migration in the account. Iterate
+// `replicationInstances()` for the replication instances DMS uses to copy
+// data between source and target endpoints; each entry is exposed as a
+// dict that surfaces the instance class, engine version, allocated storage,
+// VPC and subnet placement, public accessibility, KMS encryption, and
+// pending modifications.
 aws.dms @defaults("replicationInstances") {
   // List of DMS replication instances
   replicationInstances() []dict
 }
 
-// Amazon API Gateway
+// Amazon API Gateway (REST APIs)
+//
+// Use the API Gateway namespace to enumerate REST APIs (the v1 product) and
+// the configuration around them. Iterate `restApis()` for every REST API
+// across enabled regions (with its stages, methods, authorizers, and
+// resource policies), `apiKeys()` for the API keys callers can use,
+// `usagePlans()` for throttling and quota plans bound to API stages, and
+// `vpcLinks()` for private integration links into VPCs. HTTP and WebSocket
+// APIs (the v2 product) live under `aws.apigatewayv2`.
 aws.apigateway @defaults("restApis") {
-  // List of `aws.apigateway.restapi` objects representing all rest APIs across all enabled regions in the account
+  // List of REST APIs across all enabled regions in the account
   restApis() []aws.apigateway.restapi
-  // List of `aws.apigateway.apiKey` objects representing all API keys across all enabled regions in the account
+  // List of API keys across all enabled regions in the account
   apiKeys() []aws.apigateway.apiKey
-  // List of `aws.apigateway.usagePlan` objects representing all usage plans across all enabled regions in the account
+  // List of usage plans across all enabled regions in the account
   usagePlans() []aws.apigateway.usagePlan
-  // List of `aws.apigateway.vpcLink` objects representing all VPC links across all enabled regions in the account
+  // List of VPC links across all enabled regions in the account
   vpcLinks() []aws.apigateway.vpcLink
 }
 
@@ -9547,6 +9935,15 @@ private aws.apigatewayv2.domainName @defaults("domainName routingMode") {
 }
 
 // AWS Lambda
+//
+// Use the Lambda namespace to enumerate serverless functions and the
+// building blocks around them. Iterate `functions()` for every Lambda
+// function across enabled regions (with its runtime, handler, package type,
+// IAM execution role, environment variables, KMS key, VPC configuration,
+// concurrency settings, code signing config, and resource policy),
+// `layers()` for shared Lambda layers, and `eventSourceMappings()` for the
+// event source mappings that connect functions to Kinesis, DynamoDB
+// Streams, SQS, MSK, MQ, and self-managed Kafka.
 aws.lambda {
   // List of Lambda functions across all regions in the account
   functions() []aws.lambda.function
@@ -9867,7 +10264,17 @@ private aws.lambda.codeSigningConfig @defaults("arn") {
   lastModified time
 }
 
-// Amazon Systems Manager
+// AWS Systems Manager (SSM)
+//
+// Use the SSM namespace to enumerate the operational fleet, automation, and
+// configuration objects Systems Manager manages. Iterate `instances()` for
+// SSM-managed nodes (EC2 and on-premises), `parameters()` for Parameter
+// Store entries, `documents()` for SSM documents, `patchBaselines()` for
+// the patch baselines applied by Patch Manager, `maintenanceWindows()` for
+// scheduled maintenance windows, `associations()` for State Manager
+// associations binding documents to managed nodes, and
+// `complianceSummaries()` for the per-resource compliance roll-ups SSM
+// produces.
 aws.ssm @defaults("instances") {
   // List of SSM instances
   instances() []aws.ssm.instance
@@ -9940,7 +10347,19 @@ private aws.ssm.instance @defaults("instanceId region platformName platformVersi
   computerName string
 }
 
-// Amazon EC2
+// Amazon Elastic Compute Cloud (EC2)
+//
+// Use the EC2 namespace to enumerate compute and networking primitives in
+// the account. Iterate `instances()` for EC2 instances, `volumes()` and
+// `snapshots()` for EBS storage, `securityGroups()` and `networkAcls()` for
+// L4 access controls, `images()` and `keypairs()` for AMIs and SSH key
+// pairs, `internetGateways()`, `transitGateways()`, `customerGateways()`,
+// `vpnConnections()`, `clientVpnEndpoints()`, and `eips()` for the
+// edge-network components, and `launchTemplates()` /
+// `launchConfigurations()` for the templates that drive Auto Scaling and
+// Spot fleets. Also surfaces account-level guardrails as maps keyed by
+// region (`ebsEncryptionByDefault`, `serialConsoleAccessEnabled`,
+// `imageBlockPublicAccess`).
 aws.ec2 {
   // List of security groups available to the account
   securityGroups() []aws.ec2.securitygroup
@@ -10804,6 +11223,12 @@ private aws.ec2.volume @defaults("id region volumeType size encrypted state") {
 }
 
 // Amazon Inspector
+//
+// Use the Inspector namespace to enumerate Inspector v2 vulnerability and
+// posture coverage in the account. Iterate `coverages()` for the per-resource
+// scan coverage status (which EC2 instances, ECR images, and Lambda
+// functions Inspector is currently scanning) and `findings()` for the
+// active findings produced across all enabled regions.
 aws.inspector {
   // List of coverage results for the AWS account
   coverages() []aws.inspector.coverage
@@ -11373,6 +11798,15 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
 }
 
 // AWS Config
+//
+// Use the Config namespace to enumerate AWS Config recording, rule
+// evaluation, and aggregation in the account. Iterate `recorders()` for
+// the per-region configuration recorders that capture resource state,
+// `deliveryChannels()` for the S3 bucket and SNS topic each recorder
+// publishes to, `rules()` for the managed and custom Config rules
+// evaluating compliance, `aggregators()` for cross-account/region
+// aggregators, and `conformancePacks()` for the pre-built compliance
+// frameworks deployed.
 aws.config {
   // List of configuration recorders for each region in the account
   recorders() []aws.config.recorder
@@ -11564,6 +11998,13 @@ private aws.config.aggregator.organizationAggregationSource {
 }
 
 // Amazon Elastic Kubernetes Service (EKS)
+//
+// Use the EKS namespace to enumerate Kubernetes clusters managed by EKS
+// across all enabled regions. Iterate `clusters()` for every EKS cluster —
+// each row surfaces the control-plane Kubernetes version, networking,
+// authentication mode, encryption configuration, IAM identity mappings,
+// node groups, Fargate profiles, add-ons, and the OIDC identity provider
+// associated with the cluster.
 aws.eks {
   // EKS clusters
   clusters() []aws.eks.cluster
@@ -11650,6 +12091,16 @@ private aws.eks.addon @defaults("name addonVersion status") {
 }
 
 // Amazon EKS cluster
+//
+// Examine an EKS Kubernetes cluster control plane. Use the `arn` field as
+// the selection key — for example
+// `aws.eks.cluster(arn: "arn:aws:eks:us-east-1:111122223333:cluster/prod")`.
+// Each row surfaces the Kubernetes server version, EKS platform version,
+// API endpoint, KMS envelope-encryption key, control-plane logging types
+// enabled, networking and Pod CIDR, IAM authentication mode, OIDC issuer
+// for IRSA, the EKS-managed node groups and Fargate profiles, installed
+// add-ons, identity-provider configurations, access entries, and
+// access-policy associations.
 aws.eks.cluster @defaults("arn version status") {
   // Name of the cluster
   name string
@@ -11917,6 +12368,13 @@ private aws.eks.addonVersion @defaults("addonName addonVersion") {
 }
 
 // Amazon Neptune
+//
+// Use the Neptune namespace to enumerate the managed graph database
+// deployments in the account. Iterate `clusters()` for Neptune DB clusters
+// (with their endpoints, IAM authentication, KMS encryption, backup
+// retention, parameter group, and reader/writer instances), and
+// `instances()` for individual Neptune DB instances and their per-instance
+// configuration.
 aws.neptune @defaults("clusters") {
   // List of database clusters
   clusters() []aws.neptune.cluster
@@ -12106,6 +12564,13 @@ private aws.neptune.snapshot @defaults("arn status createdAt") {
 }
 
 // Amazon Cognito
+//
+// Use the Cognito namespace to enumerate user-facing identity stores in
+// the account. Iterate `userPools()` for user-pool directories (with their
+// password policy, MFA configuration, app clients, identity providers,
+// hosted UI domain, and Lambda triggers), and `identityPools()` for
+// federated identity pools (with their authentication providers, role
+// mappings, and unauthenticated-identity policy).
 aws.cognito @defaults("userPools") {
   // List of Cognito user pools
   userPools() []aws.cognito.userPool
@@ -12274,6 +12739,16 @@ private aws.cognito.identityPool @defaults("id name") {
 }
 
 // Amazon DocumentDB
+//
+// Use the DocumentDB namespace to enumerate the MongoDB-compatible managed
+// document database deployments. Iterate `clusters()` for instance-based
+// clusters (with their writer/reader instances, KMS encryption, parameter
+// group, and audit-log configuration), `instances()` for individual cluster
+// members, `snapshots()` and `clusterParameterGroups()` for backup and
+// configuration objects, `globalClusters()` for cross-region replicated
+// global databases, `elasticClusters()` and `elasticSnapshots()` for the
+// shard-based elastic deployments, and `pendingMaintenanceActions()` for
+// pending engine maintenance items.
 aws.documentdb @defaults("clusters") {
   // List of DocumentDB clusters
   clusters() []aws.documentdb.cluster
@@ -12676,6 +13151,13 @@ private aws.documentdb.elasticSnapshot @defaults("name status snapshotType") {
 }
 
 // Amazon Timestream for LiveAnalytics
+//
+// Use the Timestream LiveAnalytics namespace to enumerate the time-series
+// databases and tables in the account's LiveAnalytics deployment. Iterate
+// `databases()` for the databases (with their KMS encryption and tables)
+// and `tables()` for the underlying tables (with retention windows for
+// memory and magnetic stores, the schema and partition keys, and any
+// scheduled query targets).
 aws.timestream.liveanalytics @defaults("databases") {
   // List of databases
   databases() []aws.timestream.liveanalytics.database
@@ -12727,6 +13209,12 @@ private aws.timestream.liveanalytics.table @defaults("name region") {
 }
 
 // AWS CodeDeploy
+//
+// Use the CodeDeploy namespace to enumerate deployment applications in
+// the account. Iterate `applications()` for every CodeDeploy application
+// across enabled regions — each entry surfaces its compute platform
+// (EC2/On-premises, Lambda, ECS), deployment groups, deployment
+// configurations, and the trigger and alarm settings used during rollouts.
 aws.codedeploy {
   // List of CodeDeploy applications across all enabled regions
   applications() []aws.codedeploy.application
@@ -12842,6 +13330,12 @@ private aws.codedeploy.deployment @defaults("deploymentId status applicationName
 }
 
 // Amazon WorkDocs
+//
+// Use the WorkDocs namespace to enumerate users provisioned in the
+// account's WorkDocs sites. Iterate `users()` for every WorkDocs user
+// across enabled regions — each entry reports the user's status, role,
+// time zone, organization assignment, storage allocation, and last
+// login.
 aws.workdocs {
   // List of WorkDocs users across all enabled regions
   users() []aws.workdocs.user
@@ -12888,6 +13382,14 @@ private aws.workdocs.user @defaults("username emailAddress status") {
 }
 
 // Amazon AppStream 2.0
+//
+// Use the AppStream namespace to enumerate the application-streaming
+// service deployments in the account. Iterate `fleets()` for the streaming
+// fleets, `stacks()` for the user-facing stacks bound to those fleets,
+// `imageBuilders()` for builder workstations, `images()` for streaming
+// images, `applications()` for application icons in app-block-based
+// fleets, and `users()` for the user-pool users (AuthenticationType =
+// USERPOOL; SAML and API users are not enumerable).
 aws.appstream @defaults("fleets") {
   // List of AppStream fleets across all enabled regions
   fleets() []aws.appstream.fleet
@@ -13216,6 +13718,22 @@ private aws.appstream.entitlement @defaults("name stackName appVisibility region
 }
 
 // Amazon Athena
+//
+// Use the Athena namespace to enumerate the serverless interactive
+// query-engine configuration in the account. Iterate `workgroups()` for
+// the query workgroups that scope query execution — each workgroup
+// surfaces its enforced result-location S3 bucket, KMS encryption mode
+// (SSE-S3, SSE-KMS, CSE-KMS), engine version (Athena SQL or Spark), the
+// per-query and per-workgroup data-scanned bytes limits, CloudWatch
+// metrics state, requester-pays setting, and whether the configuration
+// is enforced on submitted queries. Iterate `dataCatalogs()` for the
+// data catalogs registered against Athena (the AWS Glue Data Catalog
+// alongside any Hive metastore connectors, federated Lambda catalogs,
+// or cross-account catalogs) — each entry exposes its type, parameters,
+// and the associated connector. Iterate `namedQueries()` for the saved
+// queries belonging to those workgroups so audits can review the SQL
+// text, target database, owning workgroup, and owner of each saved
+// query.
 aws.athena @defaults("workgroups") {
   // List of Athena workgroups
   workgroups() []aws.athena.workgroup
@@ -13294,6 +13812,13 @@ private aws.athena.namedQuery @defaults("name database region") {
 }
 
 // AWS Directory Service
+//
+// Use the Directory Service namespace to enumerate Active Directory
+// deployments (AWS Managed Microsoft AD, AD Connector, and Simple AD) in
+// the account. Iterate `directories()` for every directory across enabled
+// regions — each entry surfaces the directory type, size, DNS IPs, the
+// VPC/subnet placement, trust relationships, SSO state, security
+// settings, and the AWS-applications enabled against the directory.
 aws.directoryservice @defaults("directories") {
   // List of directories across all enabled regions
   directories() []aws.directoryservice.directory
@@ -13421,7 +13946,15 @@ private aws.directoryservice.connectSettings @defaults("vpcId customerUserName")
   customerUserName string
 }
 
-// Amazon WorkSpaces service
+// Amazon WorkSpaces
+//
+// Use the WorkSpaces namespace to enumerate the persistent virtual desktop
+// service in the account. Iterate `directories()` for the registered
+// workspace directories (with their authentication settings and
+// SAML/Active-Directory bindings), `instances()` for the running WorkSpaces
+// (with running mode, root and user volume encryption, compute type, and
+// state), `ipGroups()` for IP access control groups, `images()` for
+// workspace images, and `bundles()` for the available workspace bundles.
 aws.workspaces @defaults("directories") {
   // List of registered workspace directories across all enabled regions
   directories() []aws.workspaces.directory
@@ -13471,7 +14004,15 @@ private aws.workspaces.directory @defaults("directoryId directoryName state regi
   region string
 }
 
-// Amazon WorkSpaces Web service
+// Amazon WorkSpaces Web
+//
+// Use the WorkSpaces Web namespace to enumerate the browser-based remote
+// access service in the account. Iterate `portals()` for the published
+// portals, `userAccessLoggingSettings()` for Kinesis Data Streams logging
+// configurations, `ipAccessSettings()` for IP allowlist policies,
+// `trustStores()` for trust stores backing certificate-based auth, and
+// `userSettings()` for the per-portal session policies (clipboard,
+// download/upload, print, and idle timeout).
 aws.workspacesweb @defaults("portals") {
   // List of WorkSpaces Web portals across all enabled regions
   portals() []aws.workspacesweb.portal
@@ -13724,6 +14265,14 @@ private aws.workspacesweb.userAccessLoggingSetting @defaults("userAccessLoggingS
 }
 
 // Amazon Kinesis
+//
+// Use the Kinesis namespace to enumerate streaming-data primitives in the
+// account. Iterate `streams()` for Kinesis Data Streams (with their
+// retention period, shard count, encryption, stream mode, and registered
+// consumers), `firehoseDeliveryStreams()` for Kinesis Data Firehose
+// delivery streams (with their source, destination, transformation, and
+// backup configuration), and `streamConsumers()` for the enhanced fan-out
+// consumers registered across all data streams.
 aws.kinesis @defaults("streams") {
   // List of Kinesis data streams
   streams() []aws.kinesis.stream
@@ -14023,6 +14572,14 @@ private aws.kinesis.firehoseDeliveryStream.destination.httpEndpoint @defaults("e
 }
 
 // Amazon MemoryDB
+//
+// Use the MemoryDB namespace to enumerate the Redis-compatible managed
+// in-memory database deployments in the account. Iterate `clusters()` for
+// every cluster (with its engine version, KMS encryption, parameter group,
+// auto-failover state, and replication topology), `acls()` and `users()`
+// for the RBAC primitives controlling client access, `snapshots()` for
+// cluster snapshots, and `subnetGroups()` for the VPC subnet bindings
+// clusters are launched into.
 aws.memorydb @defaults("clusters") {
   // List of MemoryDB clusters
   clusters() []aws.memorydb.cluster
@@ -14165,6 +14722,13 @@ private aws.memorydb.subnetGroup @defaults("name") {
 }
 
 // Amazon Timestream for InfluxDB
+//
+// Use the Timestream-for-InfluxDB namespace to enumerate the managed
+// InfluxDB time-series databases in the account. Iterate `instances()` for
+// individual InfluxDB DB instances and `clusters()` for multi-AZ clusters
+// — each row surfaces the instance class or cluster topology, network
+// type, allocated storage, deployment type, log delivery configuration,
+// VPC and subnet placement, and the assigned port.
 aws.timestream.influxdb @defaults("instances clusters") {
   // List of InfluxDB instances
   instances() []aws.timestream.influxdb.instance
@@ -14269,6 +14833,11 @@ private aws.timestream.influxdb.cluster @defaults("arn name status") {
 }
 
 // Amazon Aurora DSQL
+//
+// Use the DSQL namespace to enumerate Aurora DSQL clusters in the account.
+// Iterate `clusters()` for every Aurora DSQL cluster — each row surfaces
+// the cluster identifier, status, multi-region linked clusters, deletion
+// protection, witness region, KMS encryption settings, and creation time.
 aws.dsql @defaults("clusters") {
   // List of Aurora DSQL clusters
   clusters() []aws.dsql.cluster
@@ -14305,6 +14874,13 @@ private aws.dsql.cluster @defaults("arn identifier status region") {
 }
 
 // Amazon Neptune Analytics
+//
+// Use the Neptune Analytics namespace to enumerate the GPU-accelerated
+// graph analytics deployments in the account. Iterate `graphs()` for every
+// Neptune Analytics graph — each row surfaces the graph status,
+// provisioned memory units, replica count, KMS encryption, vector search
+// configuration, public connectivity, and the source S3 import or
+// snapshot the graph was created from.
 aws.neptuneAnalytics @defaults("graphs") {
   // List of Neptune Analytics graphs
   graphs() []aws.neptuneAnalytics.graph
@@ -14349,6 +14925,14 @@ private aws.neptuneAnalytics.graph @defaults("arn name status region") {
 }
 
 // AWS Glue
+//
+// Use the Glue namespace to enumerate the data-integration service in the
+// account. Iterate `crawlers()` for the crawlers populating the Data
+// Catalog, `jobs()` for ETL jobs, `databases()` for the catalog databases,
+// `workflows()` for orchestrated job/crawler workflows,
+// `securityConfigurations()` for the encryption settings reused across
+// jobs, and `catalogEncryptionSettings()` for the per-region Data Catalog
+// encryption posture.
 aws.glue @defaults("crawlers") {
   // List of Glue crawlers
   crawlers() []aws.glue.crawler
@@ -14511,6 +15095,13 @@ private aws.glue.database.table @defaults("name databaseName region") {
 }
 
 // AWS Elastic Beanstalk
+//
+// Use the Elastic Beanstalk namespace to enumerate platform-managed web
+// application deployments in the account. Iterate `applications()` for
+// every Beanstalk application (with its application versions and resource
+// lifecycle policy), and `environments()` for the running environments
+// (with their platform, solution stack, tier, configuration settings,
+// option settings, instance role, and health status).
 aws.elasticbeanstalk @defaults("environments") {
   // List of Elastic Beanstalk applications
   applications() []aws.elasticbeanstalk.application
@@ -14668,6 +15259,14 @@ private aws.glue.workflow @defaults("name region") {
 }
 
 // Amazon MSK (Managed Streaming for Apache Kafka)
+//
+// Use the MSK namespace to enumerate the managed Apache Kafka deployments
+// in the account. Iterate `clusters()` for MSK provisioned and serverless
+// clusters (with their broker count, instance type, encryption-at-rest and
+// in-transit settings, client authentication options, monitoring level,
+// and bootstrap broker endpoints), `configurations()` for the reusable
+// Kafka cluster configurations, and `replicators()` for the cross-cluster
+// MSK replicators.
 aws.msk @defaults("clusters replicators") {
   // List of MSK clusters
   clusters() []aws.msk.cluster
@@ -15216,6 +15815,13 @@ private aws.msk.replicator.logDelivery.s3 @defaults("enabled") {
 }
 
 // Amazon MQ
+//
+// Use the MQ namespace to enumerate managed message brokers in the
+// account. Iterate `brokers()` for every Amazon MQ broker — each row
+// surfaces the broker engine (ActiveMQ or RabbitMQ), engine version,
+// deployment mode (single-instance, active/standby, cluster), public
+// accessibility, instance type, KMS encryption, security groups and
+// subnets, the configuration revision, and the wire-protocol endpoints.
 aws.mq @defaults("brokers") {
   // List of MQ brokers
   brokers() []aws.mq.broker
@@ -15268,6 +15874,14 @@ private aws.mq.broker @defaults("name engineType deploymentMode state region") {
 }
 
 // AWS Batch
+//
+// Use the Batch namespace to enumerate the building blocks of managed
+// batch computing in the account. Iterate `computeEnvironments()` for the
+// EC2/Spot/Fargate compute environments, `jobQueues()` for the queues that
+// dispatch jobs into those environments, `jobDefinitions()` for reusable
+// container/EKS/multi-node job definitions, `schedulingPolicies()` for
+// fair-share scheduling policies, and `jobs()` for non-terminal jobs
+// currently in flight (SUBMITTED, PENDING, RUNNABLE, STARTING, RUNNING).
 aws.batch @defaults("computeEnvironments") {
   // List of Batch compute environments
   computeEnvironments() []aws.batch.computeEnvironment
@@ -15509,7 +16123,18 @@ private aws.batch.jobDefinition.timeout @defaults("attemptDurationSeconds") {
   attemptDurationSeconds int
 }
 
-// AWS Batch job (runtime). Lists default to non-terminal statuses only.
+// AWS Batch job
+//
+// Examine a single Batch job's runtime state. Use the `arn` field as the
+// selection key — for example
+// `aws.batch.job(arn: "arn:aws:batch:us-east-1:111122223333:job/abc123")`.
+// Each row surfaces the job's lifecycle (status, status reason, created /
+// started / stopped timestamps), typed references to the parent
+// `jobQueue()` and `jobDefinition()`, the `computeEnvironment()` the job
+// landed on, container/array/multi-node attempts, dependencies, and
+// retry/timeout settings. The parent collection only enumerates
+// non-terminal statuses by default (SUBMITTED, PENDING, RUNNABLE,
+// STARTING, RUNNING).
 aws.batch.job @defaults("id name status jobQueueArn") {
   // Job ID
   id string
@@ -15575,7 +16200,15 @@ private aws.batch.job.dependency @defaults("jobId type") {
   job() aws.batch.job
 }
 
-// AWS Batch fair-share scheduling policy
+// AWS Batch scheduling policy
+//
+// Examine a fair-share scheduling policy that governs how Batch
+// dispatches jobs across share identifiers within a queue. Use the `arn`
+// field as the selection key — for example
+// `aws.batch.schedulingPolicy(arn: "arn:aws:batch:us-east-1:111122223333:scheduling-policy/fairshare-prod")`.
+// Each row surfaces the share decay window, compute reservation, and
+// the list of share-distribution entries that bias scheduling weight
+// toward specific share identifiers.
 aws.batch.schedulingPolicy @defaults("arn name") {
   // ARN of the scheduling policy
   arn string
@@ -15684,6 +16317,17 @@ private aws.batch.jobDefinition.eksContainer @defaults("name image") {
 }
 
 // Amazon Lightsail
+//
+// Use the Lightsail namespace to enumerate the simplified VPS-style
+// resources Lightsail provisions in the account. Iterate `instances()`
+// for Lightsail compute instances (with their bundle, blueprint, public
+// and private IPs, attached static IPs, key-pair, and instance-level
+// firewall rules), `databases()` for managed relational databases (with
+// their engine, parameter snapshot, public accessibility, and backup
+// retention), `loadBalancers()` for Lightsail load balancers (with their
+// HTTPS certificates and attached instances), and `buckets()` for
+// Lightsail object-storage buckets (with their access rules and
+// resource attachments).
 aws.lightsail @defaults("instances") {
   // List of Lightsail instances
   instances() []aws.lightsail.instance
@@ -15844,6 +16488,15 @@ private aws.lightsail.bucket @defaults("name arn") {
 }
 
 // AWS CloudFormation
+//
+// Use the CloudFormation namespace to enumerate infrastructure-as-code
+// deployments in the account. Iterate `stacks()` for every CloudFormation
+// stack across enabled regions (with its template-driven parameters,
+// outputs, capabilities, drift status, deletion-protection flag,
+// rollback configuration, and notification ARNs), and `stackSets()` for
+// stack sets that deploy a single template across multiple accounts and
+// regions in an organization (with their permission model, deployment
+// targets, and stack instances).
 aws.cloudformation @defaults("stacks") {
   // List of CloudFormation stacks
   stacks() []aws.cloudformation.stack
@@ -15909,7 +16562,13 @@ private aws.cloudformation.stackSet @defaults("name status") {
   tags() map[string]string
 }
 
-// Amazon Keyspaces (Managed Apache Cassandra)
+// Amazon Keyspaces (for Apache Cassandra)
+//
+// Use the Keyspaces namespace to enumerate the managed Apache Cassandra
+// service in the account. Iterate `keyspaces()` for every keyspace
+// across enabled regions — each row surfaces the replication strategy
+// (single-region or multi-region), the regions a multi-region keyspace
+// is replicated to, and the tables defined in the keyspace.
 aws.keyspaces {
   // List of keyspaces
   keyspaces() []aws.keyspaces.keyspace
@@ -16198,7 +16857,16 @@ private aws.ec2.vpcEndpointServiceConfiguration.connection @defaults("endpointId
   createdAt time
 }
 
-// AWS Step Functions
+// AWS Step Functions (sfn)
+//
+// Use the `sfn` namespace to enumerate Step Functions state machines and
+// activity workers in the account. Iterate `stateMachines()` for every
+// state machine across enabled regions (with its type — STANDARD or
+// EXPRESS — definition, IAM execution role, logging configuration,
+// X-Ray tracing setting, and creation time), and `activities()` for the
+// long-poll worker activities that state machines can invoke. The
+// related `aws.stepfunctions` namespace surfaces the same service with a
+// slightly different schema; both are kept for backward compatibility.
 aws.sfn @defaults("stateMachines") {
   // List of Step Functions state machines
   stateMachines() []aws.sfn.stateMachine
@@ -16247,6 +16915,15 @@ private aws.sfn.activity @defaults("arn name") {
 }
 
 // AWS Resource Access Manager (RAM)
+//
+// Use the RAM namespace to enumerate cross-account resource shares the
+// account owns. Iterate `resourceShares()` for every share across
+// enabled regions — each row surfaces the principals invited to the
+// share, the resources attached to it (transit gateways, subnets,
+// licenses, Resolver rules, and so on), the share status, the
+// allow-external-principals flag, the associated permissions, and the
+// owning organization or organizational unit when the share is bound to
+// AWS Organizations.
 aws.ram @defaults("resourceShares") {
   // List of resource shares owned by this account
   resourceShares() []aws.ram.resourceShare
@@ -16277,6 +16954,15 @@ private aws.ram.resourceShare @defaults("arn name status") {
 }
 
 // AWS Transfer Family
+//
+// Use the Transfer Family namespace to enumerate the file-transfer
+// service in the account. Iterate `servers()` for SFTP, FTP, FTPS, and
+// AS2 server endpoints (with their identity provider, endpoint type,
+// host-key fingerprint, S3/EFS storage backing, structured-logging role,
+// and security policy), `connectors()` for outbound AS2 and SFTP
+// connectors used to push files to partners, `webApps()` for web-portal
+// access fronts, and `workflows()` for the post-upload processing
+// workflows triggered after a file lands.
 aws.transfer @defaults("servers") {
   // List of Transfer Family servers
   servers() []aws.transfer.server
@@ -16389,6 +17075,13 @@ private aws.transfer.server @defaults("arn serverId endpointType protocols") {
 }
 
 // AWS App Mesh
+//
+// Use the App Mesh namespace to enumerate service-mesh control-plane
+// configuration in the account. Iterate `meshes()` for every App Mesh
+// mesh — each row surfaces the egress filter type (DROP_ALL or
+// ALLOW_ALL), the IP preference for service-discovery, the mesh owner
+// (for shared meshes), and the virtual nodes, virtual services, virtual
+// routers, and routes that compose the mesh topology.
 aws.appmesh @defaults("meshes") {
   // List of App Mesh meshes
   meshes() []aws.appmesh.mesh
@@ -16500,7 +17193,15 @@ private aws.appmesh.route @defaults("name") {
   tags() map[string]string
 }
 
-// AWS IAM Identity Center (SSO)
+// AWS IAM Identity Center
+//
+// Use the Identity Center namespace (formerly AWS SSO) to enumerate the
+// workforce identity service in the organization. Iterate `instances()`
+// for every Identity Center instance attached to the account — each
+// instance surfaces the identity store backing it (the source of users
+// and groups), the configured permission sets, the AWS-account
+// assignments those permission sets are deployed against, and the
+// trusted token issuers used by application assignments.
 aws.identitycenter @defaults("instances") {
   // List of Identity Center instances
   instances() []aws.identitycenter.instance
@@ -16631,7 +17332,15 @@ private aws.identitycenter.user @defaults("userName displayName") {
   externalIds() []dict
 }
 
-// AWS Private Certificate Authority (ACM PCA)
+// AWS Private Certificate Authority (PCA)
+//
+// Use the Private CA namespace to enumerate AWS Private CA (formerly ACM
+// PCA) deployments in the account. Iterate `certificateAuthorities()`
+// for each CA across enabled regions — every entry surfaces the CA type
+// (ROOT or SUBORDINATE), key algorithm and signing algorithm, validity
+// window, status (ACTIVE, DISABLED, PENDING_CERTIFICATE, EXPIRED, etc.),
+// CRL and OCSP revocation configuration, the issuer chain, and the
+// resource policy that controls which principals can issue certificates.
 aws.privateca {
   // List of private certificate authorities
   certificateAuthorities() []aws.privateca.certificateAuthority
@@ -16684,6 +17393,15 @@ private aws.privateca.certificateAuthority @defaults("arn status type") {
 }
 
 // AWS Security Lake
+//
+// Use the Security Lake namespace to enumerate the centralized OCSF
+// security data lake deployment for the account. Iterate `dataLakes()`
+// for the per-region data-lake configurations (with their KMS
+// encryption, S3 storage classes, replication regions, and lifecycle
+// settings), and `subscribers()` for downstream consumers granted
+// access — each subscriber surfaces its source identifiers, access type
+// (S3 or Lake Formation), notification configuration, and the subset of
+// log sources it can read.
 aws.securitylake {
   // List of Security Lake data lakes
   dataLakes() []aws.securitylake.dataLake
@@ -16743,6 +17461,16 @@ private aws.securitylake.subscriber @defaults("subscriberArn subscriberName subs
 }
 
 // AWS Verified Access
+//
+// Use the Verified Access namespace to enumerate the zero-trust private
+// application access deployment in the account. Iterate `instances()`
+// for the per-region Verified Access instances (with their attached
+// trust providers and FIPS support), `trustProviders()` for the
+// identity and device trust providers (OIDC, IAM Identity Center,
+// CrowdStrike, Jamf, JumpCloud), `groups()` for the access groups that
+// share an access policy, and `endpoints()` for the application
+// endpoints (load balancer, network interface, RDS, or CIDR) that
+// Verified Access fronts.
 aws.verifiedaccess {
   // List of Verified Access instances
   instances() []aws.verifiedaccess.instance
@@ -16865,6 +17593,15 @@ private aws.verifiedaccess.instanceLoggingConfiguration @defaults("verifiedAcces
 }
 
 // AWS Control Tower
+//
+// Use the Control Tower namespace to enumerate the multi-account
+// landing-zone deployment for the AWS Organizations management account.
+// Iterate `landingZones()` for the deployed landing zones — each zone
+// surfaces its version, the home and governed regions, the drift
+// status, and the manifest that describes the configured baselines and
+// guardrails. Iterate `enabledBaselines()` for the baseline templates
+// applied to organizational units (the customizations Control Tower
+// applies to each enrolled OU).
 aws.controltower {
   // List of Control Tower landing zones
   landingZones() []aws.controltower.landingZone
@@ -16907,6 +17644,18 @@ private aws.controltower.enabledBaseline @defaults("arn baselineIdentifier") {
 }
 
 // Amazon Bedrock
+//
+// Use the Bedrock namespace to enumerate the foundation-model service
+// configuration in the account. Iterate `foundationModels()` for the
+// catalog of foundation models offered by Bedrock providers (with their
+// modalities, customization support, and inference types),
+// `customModels()` for fine-tuned or continued-pretraining models the
+// account owns, `guardrails()` for the content-policy guardrails (with
+// their topic, content, sensitive-information, and word-policy
+// filters), `provisionedModelThroughputs()` for committed
+// model-throughput allocations, and
+// `modelInvocationLoggingConfigurations()` for the per-region delivery
+// of model invocation logs to S3 and CloudWatch.
 aws.bedrock {
   // Foundation models available in Bedrock
   foundationModels() []aws.bedrock.foundationModel
@@ -17035,6 +17784,14 @@ private aws.bedrock.provisionedModelThroughput @defaults("provisionedModelName m
 }
 
 // AWS Step Functions
+//
+// Use the Step Functions namespace to enumerate state machines in the
+// account. Iterate `stateMachines()` for every state machine across
+// enabled regions — each row surfaces the type (STANDARD or EXPRESS),
+// the Amazon States Language definition, the IAM execution role,
+// logging and X-Ray tracing configuration, and creation time. The
+// related `aws.sfn` namespace exposes the same service with an extra
+// `activities()` accessor.
 aws.stepfunctions @defaults("stateMachines") {
   // List of state machines across all regions
   stateMachines() []aws.stepfunctions.stateMachine

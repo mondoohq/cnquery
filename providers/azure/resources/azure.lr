@@ -4007,15 +4007,14 @@ private azure.subscription.cosmosDbService.account.sqlDatabase @defaults("name t
   type string
   // Etag
   etag string
-  // Whether throughput is configured per-container instead of at the database
-  // level (true = each container manages its own throughput; equivalent to
-  // there being no database-scope throughput offer)
+  // Whether throughput is configured per-container instead of at the database level
+  // True means each container manages its own throughput, equivalent to there being no database-scope throughput offer.
   throughputPerContainer() bool
-  // Manual provisioned throughput in RU/s at the database level; zero when
-  // per-container or autoscale
+  // Manual provisioned throughput in RU/s at the database level
+  // Zero when configured per-container or when autoscale is enabled.
   manualThroughput() int
-  // Autoscale max throughput in RU/s at the database level; zero when not
-  // autoscale or per-container
+  // Autoscale max throughput in RU/s at the database level
+  // Zero when not autoscale or when configured per-container.
   autoscaleMaxThroughput() int
   // Whether autoscale is enabled at the database level
   autoscaleEnabled() bool
@@ -4061,15 +4060,14 @@ private azure.subscription.cosmosDbService.account.sqlDatabase.container @defaul
   conflictResolutionMode string
   // Conflict resolution path (when mode == "LastWriterWins")
   conflictResolutionPath string
-  // Whether throughput is inherited from the parent database (true = no
-  // container-level offer; the database scope provides the offer for this
-  // container)
+  // Whether throughput is inherited from the parent database
+  // True means there is no container-level offer and the database scope provides the offer for this container.
   throughputInherited() bool
-  // Manual provisioned throughput in RU/s at the container level; zero when
-  // inherited or autoscale
+  // Manual provisioned throughput in RU/s at the container level
+  // Zero when inherited or when autoscale is configured.
   manualThroughput() int
-  // Autoscale max throughput in RU/s at the container level; zero when not
-  // autoscale or inherited
+  // Autoscale max throughput in RU/s at the container level
+  // Zero when not autoscale or when inherited from the parent database.
   autoscaleMaxThroughput() int
   // Whether autoscale is enabled at the container level
   autoscaleEnabled() bool
