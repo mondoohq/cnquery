@@ -7730,6 +7730,91 @@ aws.rds {
   proxies() []aws.rds.proxy
   // List of RDS event subscriptions
   eventSubscriptions() []aws.rds.eventSubscription
+  // List of RDS option groups
+  optionGroups() []aws.rds.optionGroup
+  // List of Aurora global clusters
+  globalClusters() []aws.rds.globalCluster
+}
+
+// Amazon RDS option group
+//
+// Examine engine-specific feature options bundled into a named group and
+// attached to DB instances. Use the optionGroupName field as the selection
+// key — for example
+// `aws.rds.optionGroup(optionGroupName: "default:postgres-16")`. Each row
+// reports the engine name, major engine version, the configured options
+// (as a list of dicts), and whether the group can be applied to both VPC
+// and non-VPC instances.
+private aws.rds.optionGroup @defaults("optionGroupName engineName majorEngineVersion") {
+  // ARN of the option group
+  arn string
+  // Name of the option group
+  optionGroupName string
+  // Description of the option group
+  description string
+  // Engine the option group applies to (e.g. "mysql", "oracle-ee")
+  engineName string
+  // Major engine version the option group applies to
+  majorEngineVersion string
+  // Region where the option group exists
+  region string
+  // Whether the option group can be applied to both VPC and non-VPC instances
+  allowsVpcAndNonVpcInstanceMemberships bool
+  // VPC ID the option group is restricted to, when applicable
+  vpcId string
+  // Account ID of the option group this one was copied from, when applicable
+  sourceAccountId string
+  // Source option group name when this group is a copy
+  sourceOptionGroup string
+  // Time the option group was copied from another option group
+  copyTimestamp time
+  // Configured options in the group. Each entry contains optionName,
+  // optionVersion, optionDescription, persistent, permanent, port,
+  // optionSettings (list of name/value/allowed-values), vpcSecurityGroupMemberships,
+  // and dbSecurityGroupMemberships.
+  options []dict
+}
+
+// Amazon Aurora global cluster
+//
+// Examine an Aurora global database — a single cluster that spans multiple
+// regions with one writer and one or more reader regions. Use the
+// globalClusterIdentifier field as the selection key — for example
+// `aws.rds.globalCluster(globalClusterIdentifier: "my-aurora-global")`.
+// Each row reports the engine and version, member DB clusters, encryption
+// state, deletion-protection, the global write endpoint, and any pending
+// failover or switchover state.
+private aws.rds.globalCluster @defaults("globalClusterIdentifier engine status") {
+  // ARN of the global cluster
+  arn string
+  // Identifier (name) of the global cluster — selection key
+  globalClusterIdentifier string
+  // Resource ID of the global cluster (immutable AWS-assigned identifier)
+  globalClusterResourceId string
+  // Default database name within the global cluster
+  databaseName string
+  // Whether deletion protection is enabled
+  deletionProtection bool
+  // Writer endpoint for the global cluster
+  endpoint string
+  // Engine of the global cluster (e.g. "aurora-postgresql")
+  engine string
+  // Engine lifecycle support setting
+  engineLifecycleSupport string
+  // Engine version
+  engineVersion string
+  // Status of the global cluster
+  status string
+  // Whether storage is encrypted
+  storageEncrypted bool
+  // Storage encryption type
+  storageEncryptionType string
+  // Pending or in-progress switchover/failover state, or null when none
+  failoverState dict
+  // DB clusters that participate in the global cluster. Each entry contains
+  // dbClusterArn, isWriter, globalWriteForwardingStatus, synchronizationStatus,
+  // and readers (list of secondary cluster ARNs).
+  members []dict
 }
 
 // Amazon RDS Backup Setting
@@ -7842,6 +7927,8 @@ aws.rds.dbcluster @defaults("id region engine engineVersion") {
   parameterGroupName string
   // Global cluster identifier if the cluster is a global cluster member
   globalClusterIdentifier string
+  // Global cluster the DB cluster is a member of, or null when it isn't part of one
+  globalCluster() aws.rds.globalCluster
   // CloudWatch Database Insights mode. Possible values are `standard` and `advanced`
   databaseInsightsMode string
   // KMS key used for storage encryption
@@ -8048,6 +8135,8 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
   replicaMode string
   // Whether the DB instance is configured as Oracle multi-tenant CDB
   multiTenant bool
+  // Option groups attached to the DB instance
+  optionGroups() []aws.rds.optionGroup
 }
 
 // IAM role associated with an RDS DB instance for accessing other AWS services

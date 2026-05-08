@@ -457,6 +457,7 @@
     "rds:DescribeDBSubnetGroups",
     "rds:DescribeEventSubscriptions",
     "rds:DescribeGlobalClusters",
+    "rds:DescribeOptionGroups",
     "rds:DescribePendingMaintenanceActions",
     "rds:ListTagsForResource",
     "redshift:DescribeClusterParameters",
@@ -3541,6 +3542,18 @@
       "service": "rds",
       "action": "DescribeGlobalClusters",
       "source_file": "aws_documentdb.go"
+    },
+    {
+      "permission": "rds:DescribeGlobalClusters",
+      "service": "rds",
+      "action": "DescribeGlobalClusters",
+      "source_file": "aws_rds.go"
+    },
+    {
+      "permission": "rds:DescribeOptionGroups",
+      "service": "rds",
+      "action": "DescribeOptionGroups",
+      "source_file": "aws_rds.go"
     },
     {
       "permission": "rds:DescribePendingMaintenanceActions",

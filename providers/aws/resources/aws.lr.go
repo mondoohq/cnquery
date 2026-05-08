@@ -389,6 +389,8 @@ const (
 	ResourceAwsSqs                                                              string = "aws.sqs"
 	ResourceAwsSqsQueue                                                         string = "aws.sqs.queue"
 	ResourceAwsRds                                                              string = "aws.rds"
+	ResourceAwsRdsOptionGroup                                                   string = "aws.rds.optionGroup"
+	ResourceAwsRdsGlobalCluster                                                 string = "aws.rds.globalCluster"
 	ResourceAwsRdsBackupsetting                                                 string = "aws.rds.backupsetting"
 	ResourceAwsRdsDbcluster                                                     string = "aws.rds.dbcluster"
 	ResourceAwsRdsSnapshot                                                      string = "aws.rds.snapshot"
@@ -2246,6 +2248,14 @@ func init() {
 		"aws.rds": {
 			// to override args, implement: initAwsRds(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRds,
+		},
+		"aws.rds.optionGroup": {
+			Init:   initAwsRdsOptionGroup,
+			Create: createAwsRdsOptionGroup,
+		},
+		"aws.rds.globalCluster": {
+			Init:   initAwsRdsGlobalCluster,
+			Create: createAwsRdsGlobalCluster,
 		},
 		"aws.rds.backupsetting": {
 			// to override args, implement: initAwsRdsBackupsetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12998,6 +13008,90 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.rds.eventSubscriptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRds).GetEventSubscriptions()).ToDataRes(types.Array(types.Resource("aws.rds.eventSubscription")))
 	},
+	"aws.rds.optionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRds).GetOptionGroups()).ToDataRes(types.Array(types.Resource("aws.rds.optionGroup")))
+	},
+	"aws.rds.globalClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRds).GetGlobalClusters()).ToDataRes(types.Array(types.Resource("aws.rds.globalCluster")))
+	},
+	"aws.rds.optionGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.rds.optionGroup.optionGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetOptionGroupName()).ToDataRes(types.String)
+	},
+	"aws.rds.optionGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.rds.optionGroup.engineName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetEngineName()).ToDataRes(types.String)
+	},
+	"aws.rds.optionGroup.majorEngineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetMajorEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.rds.optionGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.rds.optionGroup.allowsVpcAndNonVpcInstanceMemberships": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetAllowsVpcAndNonVpcInstanceMemberships()).ToDataRes(types.Bool)
+	},
+	"aws.rds.optionGroup.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.rds.optionGroup.sourceAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetSourceAccountId()).ToDataRes(types.String)
+	},
+	"aws.rds.optionGroup.sourceOptionGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetSourceOptionGroup()).ToDataRes(types.String)
+	},
+	"aws.rds.optionGroup.copyTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetCopyTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.rds.optionGroup.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsOptionGroup).GetOptions()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.rds.globalCluster.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetArn()).ToDataRes(types.String)
+	},
+	"aws.rds.globalCluster.globalClusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetGlobalClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.rds.globalCluster.globalClusterResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetGlobalClusterResourceId()).ToDataRes(types.String)
+	},
+	"aws.rds.globalCluster.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"aws.rds.globalCluster.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"aws.rds.globalCluster.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.rds.globalCluster.engine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetEngine()).ToDataRes(types.String)
+	},
+	"aws.rds.globalCluster.engineLifecycleSupport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetEngineLifecycleSupport()).ToDataRes(types.String)
+	},
+	"aws.rds.globalCluster.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.rds.globalCluster.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.rds.globalCluster.storageEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetStorageEncrypted()).ToDataRes(types.Bool)
+	},
+	"aws.rds.globalCluster.storageEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetStorageEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.rds.globalCluster.failoverState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetFailoverState()).ToDataRes(types.Dict)
+	},
+	"aws.rds.globalCluster.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsGlobalCluster).GetMembers()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.rds.backupsetting.target": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsBackupsetting).GetTarget()).ToDataRes(types.String)
 	},
@@ -13153,6 +13247,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbcluster.globalClusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetGlobalClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.rds.dbcluster.globalCluster": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbcluster).GetGlobalCluster()).ToDataRes(types.Resource("aws.rds.globalCluster"))
 	},
 	"aws.rds.dbcluster.databaseInsightsMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbcluster).GetDatabaseInsightsMode()).ToDataRes(types.String)
@@ -13450,6 +13547,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.dbinstance.multiTenant": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetMultiTenant()).ToDataRes(types.Bool)
+	},
+	"aws.rds.dbinstance.optionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsDbinstance).GetOptionGroups()).ToDataRes(types.Array(types.Resource("aws.rds.optionGroup")))
 	},
 	"aws.rds.dbinstance.associatedRole.roleArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstanceAssociatedRole).GetRoleArn()).ToDataRes(types.String)
@@ -38390,6 +38490,126 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRds).EventSubscriptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.rds.optionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRds).OptionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRds).GlobalClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.rds.optionGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.optionGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).OptionGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.engineName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).EngineName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.majorEngineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).MajorEngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.allowsVpcAndNonVpcInstanceMemberships": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).AllowsVpcAndNonVpcInstanceMemberships, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.sourceAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).SourceAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.sourceOptionGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).SourceOptionGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.copyTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).CopyTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.rds.optionGroup.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsOptionGroup).Options, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.rds.globalCluster.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.globalClusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).GlobalClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.globalClusterResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).GlobalClusterResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.engineLifecycleSupport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).EngineLifecycleSupport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.storageEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).StorageEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.storageEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).StorageEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.failoverState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).FailoverState, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.rds.globalCluster.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsGlobalCluster).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.rds.backupsetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsBackupsetting).__id, ok = v.Value.(string)
 		return
@@ -38604,6 +38824,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.dbcluster.globalClusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbcluster).GlobalClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbcluster.globalCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbcluster).GlobalCluster, ok = plugin.RawToTValue[*mqlAwsRdsGlobalCluster](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbcluster.databaseInsightsMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39008,6 +39232,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.dbinstance.multiTenant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsDbinstance).MultiTenant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.rds.dbinstance.optionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsDbinstance).OptionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.associatedRole.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -93933,6 +94161,8 @@ type mqlAwsRds struct {
 	ClusterParameterGroups       plugin.TValue[[]any]
 	Proxies                      plugin.TValue[[]any]
 	EventSubscriptions           plugin.TValue[[]any]
+	OptionGroups                 plugin.TValue[[]any]
+	GlobalClusters               plugin.TValue[[]any]
 }
 
 // createAwsRds creates a new instance of this resource
@@ -94082,6 +94312,246 @@ func (c *mqlAwsRds) GetEventSubscriptions() *plugin.TValue[[]any] {
 
 		return c.eventSubscriptions()
 	})
+}
+
+func (c *mqlAwsRds) GetOptionGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OptionGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "optionGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.optionGroups()
+	})
+}
+
+func (c *mqlAwsRds) GetGlobalClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.GlobalClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds", c.__id, "globalClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.globalClusters()
+	})
+}
+
+// mqlAwsRdsOptionGroup for the aws.rds.optionGroup resource
+type mqlAwsRdsOptionGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRdsOptionGroupInternal it will be used here
+	Arn                                   plugin.TValue[string]
+	OptionGroupName                       plugin.TValue[string]
+	Description                           plugin.TValue[string]
+	EngineName                            plugin.TValue[string]
+	MajorEngineVersion                    plugin.TValue[string]
+	Region                                plugin.TValue[string]
+	AllowsVpcAndNonVpcInstanceMemberships plugin.TValue[bool]
+	VpcId                                 plugin.TValue[string]
+	SourceAccountId                       plugin.TValue[string]
+	SourceOptionGroup                     plugin.TValue[string]
+	CopyTimestamp                         plugin.TValue[*time.Time]
+	Options                               plugin.TValue[[]any]
+}
+
+// createAwsRdsOptionGroup creates a new instance of this resource
+func createAwsRdsOptionGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsOptionGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.optionGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsOptionGroup) MqlName() string {
+	return "aws.rds.optionGroup"
+}
+
+func (c *mqlAwsRdsOptionGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsOptionGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRdsOptionGroup) GetOptionGroupName() *plugin.TValue[string] {
+	return &c.OptionGroupName
+}
+
+func (c *mqlAwsRdsOptionGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsRdsOptionGroup) GetEngineName() *plugin.TValue[string] {
+	return &c.EngineName
+}
+
+func (c *mqlAwsRdsOptionGroup) GetMajorEngineVersion() *plugin.TValue[string] {
+	return &c.MajorEngineVersion
+}
+
+func (c *mqlAwsRdsOptionGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRdsOptionGroup) GetAllowsVpcAndNonVpcInstanceMemberships() *plugin.TValue[bool] {
+	return &c.AllowsVpcAndNonVpcInstanceMemberships
+}
+
+func (c *mqlAwsRdsOptionGroup) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsRdsOptionGroup) GetSourceAccountId() *plugin.TValue[string] {
+	return &c.SourceAccountId
+}
+
+func (c *mqlAwsRdsOptionGroup) GetSourceOptionGroup() *plugin.TValue[string] {
+	return &c.SourceOptionGroup
+}
+
+func (c *mqlAwsRdsOptionGroup) GetCopyTimestamp() *plugin.TValue[*time.Time] {
+	return &c.CopyTimestamp
+}
+
+func (c *mqlAwsRdsOptionGroup) GetOptions() *plugin.TValue[[]any] {
+	return &c.Options
+}
+
+// mqlAwsRdsGlobalCluster for the aws.rds.globalCluster resource
+type mqlAwsRdsGlobalCluster struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRdsGlobalClusterInternal it will be used here
+	Arn                     plugin.TValue[string]
+	GlobalClusterIdentifier plugin.TValue[string]
+	GlobalClusterResourceId plugin.TValue[string]
+	DatabaseName            plugin.TValue[string]
+	DeletionProtection      plugin.TValue[bool]
+	Endpoint                plugin.TValue[string]
+	Engine                  plugin.TValue[string]
+	EngineLifecycleSupport  plugin.TValue[string]
+	EngineVersion           plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	StorageEncrypted        plugin.TValue[bool]
+	StorageEncryptionType   plugin.TValue[string]
+	FailoverState           plugin.TValue[any]
+	Members                 plugin.TValue[[]any]
+}
+
+// createAwsRdsGlobalCluster creates a new instance of this resource
+func createAwsRdsGlobalCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRdsGlobalCluster{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.rds.globalCluster", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRdsGlobalCluster) MqlName() string {
+	return "aws.rds.globalCluster"
+}
+
+func (c *mqlAwsRdsGlobalCluster) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetGlobalClusterIdentifier() *plugin.TValue[string] {
+	return &c.GlobalClusterIdentifier
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetGlobalClusterResourceId() *plugin.TValue[string] {
+	return &c.GlobalClusterResourceId
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetEngine() *plugin.TValue[string] {
+	return &c.Engine
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetEngineLifecycleSupport() *plugin.TValue[string] {
+	return &c.EngineLifecycleSupport
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetStorageEncrypted() *plugin.TValue[bool] {
+	return &c.StorageEncrypted
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetStorageEncryptionType() *plugin.TValue[string] {
+	return &c.StorageEncryptionType
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetFailoverState() *plugin.TValue[any] {
+	return &c.FailoverState
+}
+
+func (c *mqlAwsRdsGlobalCluster) GetMembers() *plugin.TValue[[]any] {
+	return &c.Members
 }
 
 // mqlAwsRdsBackupsetting for the aws.rds.backupsetting resource
@@ -94237,6 +94707,7 @@ type mqlAwsRdsDbcluster struct {
 	HttpEndpointEnabled                plugin.TValue[bool]
 	ParameterGroupName                 plugin.TValue[string]
 	GlobalClusterIdentifier            plugin.TValue[string]
+	GlobalCluster                      plugin.TValue[*mqlAwsRdsGlobalCluster]
 	DatabaseInsightsMode               plugin.TValue[string]
 	KmsKey                             plugin.TValue[*mqlAwsKmsKey]
 	PerformanceInsightsEnabled         plugin.TValue[bool]
@@ -94494,6 +94965,22 @@ func (c *mqlAwsRdsDbcluster) GetParameterGroupName() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsDbcluster) GetGlobalClusterIdentifier() *plugin.TValue[string] {
 	return &c.GlobalClusterIdentifier
+}
+
+func (c *mqlAwsRdsDbcluster) GetGlobalCluster() *plugin.TValue[*mqlAwsRdsGlobalCluster] {
+	return plugin.GetOrCompute[*mqlAwsRdsGlobalCluster](&c.GlobalCluster, func() (*mqlAwsRdsGlobalCluster, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbcluster", c.__id, "globalCluster")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRdsGlobalCluster), nil
+			}
+		}
+
+		return c.globalCluster()
+	})
 }
 
 func (c *mqlAwsRdsDbcluster) GetDatabaseInsightsMode() *plugin.TValue[string] {
@@ -94834,6 +95321,7 @@ type mqlAwsRdsDbinstance struct {
 	DomainMemberships                  plugin.TValue[[]any]
 	ReplicaMode                        plugin.TValue[string]
 	MultiTenant                        plugin.TValue[bool]
+	OptionGroups                       plugin.TValue[[]any]
 }
 
 // createAwsRdsDbinstance creates a new instance of this resource
@@ -95231,6 +95719,22 @@ func (c *mqlAwsRdsDbinstance) GetReplicaMode() *plugin.TValue[string] {
 
 func (c *mqlAwsRdsDbinstance) GetMultiTenant() *plugin.TValue[bool] {
 	return &c.MultiTenant
+}
+
+func (c *mqlAwsRdsDbinstance) GetOptionGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OptionGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.rds.dbinstance", c.__id, "optionGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.optionGroups()
+	})
 }
 
 // mqlAwsRdsDbinstanceAssociatedRole for the aws.rds.dbinstance.associatedRole resource
