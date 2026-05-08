@@ -9224,6 +9224,228 @@ private aws.apigateway.vpcLink @defaults("name id status") {
   region string
 }
 
+// Amazon API Gateway v2 (HTTP and WebSocket APIs)
+//
+// Use the v2 namespace to enumerate HTTP and WebSocket APIs separately
+// from the REST APIs surfaced under aws.apigateway. Iterate `apis()` to
+// get every v2 API in the account across configured regions; on each
+// api, traverse its `stages()`, `routes()`, and `authorizers()` for the
+// security configuration that determines which callers can reach which
+// route. Use `domainNames()` for per-region custom-domain entries — the
+// best place to audit ACM cert mappings, mTLS authentication, and
+// domain routing modes.
+aws.apigatewayv2 @defaults("apis") {
+  // HTTP and WebSocket APIs across all configured regions
+  apis() []aws.apigatewayv2.api
+  // Custom domain names registered with the v2 service
+  domainNames() []aws.apigatewayv2.domainName
+}
+
+// HTTP or WebSocket API in API Gateway v2
+//
+// Examine an HTTP or WebSocket API along with its stages, routes, and
+// authorizers. Use the apiId field as the selection key — for example
+// `aws.apigatewayv2.api(apiId: "abc123xyz")`. The `protocolType` field
+// disambiguates HTTP versus WebSocket; for WebSocket APIs the
+// `routeSelectionExpression` is meaningful (it picks a route from the
+// incoming frame), while HTTP APIs use route keys directly.
+private aws.apigatewayv2.api @defaults("apiId name protocolType") {
+  // API ID
+  apiId string
+  // ARN of the API
+  arn string
+  // Friendly name of the API
+  name string
+  // Protocol of the API: HTTP or WEBSOCKET
+  protocolType string
+  // Region where the API exists
+  region string
+  // Description of the API
+  description string
+  // Default endpoint URL the service publishes for the API
+  apiEndpoint string
+  // Whether the default execute-api endpoint is disabled
+  disableExecuteApiEndpoint bool
+  // Whether request schema validation is disabled
+  disableSchemaValidation bool
+  // API key selection expression (e.g. `$request.header.x-api-key`)
+  apiKeySelectionExpression string
+  // Route selection expression (WebSocket APIs)
+  routeSelectionExpression string
+  // CORS configuration for HTTP APIs (allowMethods, allowHeaders,
+  // allowOrigins, allowCredentials, exposeHeaders, maxAge), or null when
+  // CORS is not configured
+  corsConfiguration dict
+  // IP address type configured on the API (ipv4 or dualstack)
+  ipAddressType string
+  // Whether the API is owned and managed by another AWS service
+  apiGatewayManaged bool
+  // OpenAPI version reported by the import that created the API
+  version string
+  // Stages deployed for the API
+  stages() []aws.apigatewayv2.stage
+  // Routes configured on the API
+  routes() []aws.apigatewayv2.route
+  // Authorizers configured on the API
+  authorizers() []aws.apigatewayv2.authorizer
+  // Tags on the API
+  tags map[string]string
+  // Date the API was created
+  createdAt time
+}
+
+// Stage of an API Gateway v2 API
+//
+// Examine a deployed stage — the named environment that exposes a
+// particular deployment of the parent API. Selection key is the
+// composite of api id and stage name. The `accessLogSettings` and
+// `defaultRouteSettings` fields drive logging and throttling audits;
+// the `routeSettings` map holds per-route overrides.
+private aws.apigatewayv2.stage @defaults("stageName apiId") {
+  // Stage name
+  stageName string
+  // API ID the stage belongs to
+  apiId string
+  // Region where the stage exists
+  region string
+  // API the stage belongs to
+  api() aws.apigatewayv2.api
+  // Description of the stage
+  description string
+  // Whether changes to routes auto-deploy
+  autoDeploy bool
+  // Deployment ID currently associated with the stage
+  deploymentId string
+  // Client certificate ID used for mutual TLS
+  clientCertificateId string
+  // Stage variables passed to integrations as `$stageVariables`
+  stageVariables map[string]string
+  // Default per-route settings: throttlingBurstLimit, throttlingRateLimit,
+  // detailedMetricsEnabled, dataTraceEnabled, loggingLevel
+  defaultRouteSettings dict
+  // Per-route setting overrides keyed by route key
+  routeSettings dict
+  // Access-log destination and format, or null when access logging is off
+  accessLogSettings dict
+  // Whether the stage is owned and managed by another AWS service
+  apiGatewayManaged bool
+  // Status message of the most recent deployment
+  lastDeploymentStatusMessage string
+  // Tags on the stage
+  tags map[string]string
+  // Date the stage was created
+  createdAt time
+  // Date the stage was last updated
+  updatedAt time
+}
+
+// Route in an API Gateway v2 API
+//
+// A route maps an incoming request (HTTP method+path, or WebSocket
+// route-selection value) to an integration target. Selection key is the
+// composite of api id and route id. The `authorizationType` and
+// `authorizerId` fields are the audit-relevant entry points for who is
+// allowed to reach the route.
+private aws.apigatewayv2.route @defaults("routeKey apiId authorizationType") {
+  // Route ID
+  routeId string
+  // API ID the route belongs to
+  apiId string
+  // Region where the route exists
+  region string
+  // API the route belongs to
+  api() aws.apigatewayv2.api
+  // Route key — for HTTP `METHOD /path`, for WebSocket the route value
+  // matched against the parent api's routeSelectionExpression
+  routeKey string
+  // Integration target reference (typically `integrations/{integrationId}`)
+  target string
+  // Authorization type: NONE, AWS_IAM, CUSTOM, JWT
+  authorizationType string
+  // Authorizer ID resolved on the parent api when authorizationType is JWT or CUSTOM
+  authorizerId string
+  // Authorization scopes required (JWT routes)
+  authorizationScopes []string
+  // Whether an API key is required to invoke the route
+  apiKeyRequired bool
+  // Operation name used in OpenAPI imports
+  operationName string
+  // Request models keyed by content type (HTTP) or selection (WebSocket)
+  requestModels map[string]string
+  // Whether the route is owned and managed by another AWS service
+  apiGatewayManaged bool
+}
+
+// Authorizer in an API Gateway v2 API
+//
+// An authorizer validates requests before they reach a route. Selection
+// key is the composite of api id and authorizer id. The
+// `authorizerType` field determines how the rest of the configuration
+// is interpreted — JWT uses `jwtConfiguration`, REQUEST uses
+// `authorizerUri` and `identitySource`.
+private aws.apigatewayv2.authorizer @defaults("name authorizerType apiId") {
+  // Authorizer ID
+  authorizerId string
+  // API ID the authorizer belongs to
+  apiId string
+  // Region where the authorizer exists
+  region string
+  // API the authorizer belongs to
+  api() aws.apigatewayv2.api
+  // Friendly name of the authorizer
+  name string
+  // Authorizer type: REQUEST or JWT
+  authorizerType string
+  // ARN of the IAM role API Gateway assumes to invoke a Lambda authorizer
+  authorizerCredentialsArn string
+  // Lambda function ARN invoked to authorize requests (REQUEST type)
+  authorizerUri string
+  // Lambda authorizer payload-format version (1.0 or 2.0)
+  authorizerPayloadFormatVersion string
+  // TTL for cached authorizer results, in seconds
+  authorizerResultTtlInSeconds int
+  // Whether the Lambda authorizer can return a simple iam-policy-free response
+  enableSimpleResponses bool
+  // Identity sources used to look up the caller (e.g. `$request.header.Authorization`)
+  identitySource []string
+  // Regex used to validate the identity source value (REQUEST type)
+  identityValidationExpression string
+  // JWT configuration: audience (list of allowed `aud` values) and issuer URL
+  jwtConfiguration dict
+}
+
+// Custom domain registered with API Gateway v2
+//
+// Examine a custom domain mapped to one or more v2 APIs. Selection key
+// is the domain name. Inspect `domainNameConfigurations` for the ACM
+// certificate ARN, security policy, and endpoint type per
+// configuration; `mutualTlsAuthentication` for client-cert-required
+// audits; and `routingMode` to see whether traffic is routed by api
+// mappings or routing rules.
+private aws.apigatewayv2.domainName @defaults("domainName routingMode") {
+  // Domain name
+  domainName string
+  // ARN of the domain
+  arn string
+  // Region where the domain is registered
+  region string
+  // Routing mode: API_MAPPING_ONLY or ROUTING_RULE_THEN_API_MAPPING
+  routingMode string
+  // API mapping selection expression
+  apiMappingSelectionExpression string
+  // Per-endpoint configurations. Each entry contains apiGatewayDomainName,
+  // certificateArn, certificateName, certificateUploadDate, domainNameStatus,
+  // domainNameStatusMessage, endpointType (REGIONAL or EDGE), hostedZoneId,
+  // ipAddressType, ownershipVerificationCertificateArn, and securityPolicy
+  // (TLS_1_0 or TLS_1_2).
+  domainNameConfigurations []dict
+  // Mutual TLS configuration: truststoreUri, truststoreVersion,
+  // truststoreWarnings. Null when mTLS is not configured.
+  mutualTlsAuthentication dict
+  // Tags on the domain
+  tags map[string]string
+}
+
 // AWS Lambda
 aws.lambda {
   // List of Lambda functions across all regions in the account

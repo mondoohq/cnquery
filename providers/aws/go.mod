@@ -14,6 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acm v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.46.14
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.3
+	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.16
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.14
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.58.0

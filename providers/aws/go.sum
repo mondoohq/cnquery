@@ -173,6 +173,8 @@ github.com/aws/aws-sdk-go-v2/service/acmpca v1.46.14 h1:Srm+IbQm8jjQoBQJ7tf/+etE
 github.com/aws/aws-sdk-go-v2/service/acmpca v1.46.14/go.mod h1:qFP+Zv26pVlLajTm293Ga9I82NRjnrTpXtMtkFFn5xc=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.3 h1:7MJlB7KGFd+KNKtnPgoFWYf52PGO1pd+1VHp10lNKhI=
 github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.3/go.mod h1:MwilTAruv11x8EFjsk1R0VfjMdCxB6JHVtanCqsTR5o=
+github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.34.3 h1:JqFmDekar5Ije9SKKBUAmvuqardAXgCoJV78dt2BQSI=
+github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.34.3/go.mod h1:+ONaMzn4bVIQwVsamP28xDWWZuYO+6cWupJpZOSlUNE=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.16 h1:9ePxWacyZEGJQIBfYxumxYjDZvvpCcUAnFQUQy4GI2U=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.41.16/go.mod h1:gR1tnThD1DBemyG1rmZ9U5+WbfGoiLUaZDvsQ6wbAjM=
 github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.14 h1:31mnzduRd3FyuGCwgdMfPAu6MG1XnQf4zJrPjpZvnbM=

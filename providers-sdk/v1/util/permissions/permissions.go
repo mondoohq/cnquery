@@ -297,6 +297,7 @@ var awsServiceNameOverrides = map[string]string{
 	"accessanalyzer":           "access-analyzer",
 	"acmpca":                   "acm-pca",
 	"ecrpublic":                "ecr-public",
+	"apigatewayv2":             "apigateway",
 	"eventbridge":              "events",
 	"sfn":                      "states",
 	"ssoadmin":                 "sso",
@@ -531,6 +532,7 @@ func awsConnectionMethodToService(method string) string {
 		"codedeploy":               "codedeploy",
 		"dsql":                     "dsql",
 		"neptunegraph":             "neptunegraph",
+		"apigatewayv2":             "apigatewayv2",
 	}
 	if svc, ok := knownMethods[lower]; ok {
 		return svc

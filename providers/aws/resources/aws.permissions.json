@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.21.3",
-  "generated_at": "2026-05-07T22:51:52Z",
+  "generated_at": "2026-05-07T22:38:41-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -14,9 +14,12 @@
     "acm:ListCertificates",
     "acm:ListTagsForCertificate",
     "apigateway:GetApiKeys",
+    "apigateway:GetApis",
     "apigateway:GetAuthorizers",
+    "apigateway:GetDomainNames",
     "apigateway:GetRequestValidators",
     "apigateway:GetRestApis",
+    "apigateway:GetRoutes",
     "apigateway:GetStages",
     "apigateway:GetUsagePlans",
     "apigateway:GetVpcLinks",
@@ -751,10 +754,28 @@
       "source_file": "aws_apigateway.go"
     },
     {
+      "permission": "apigateway:GetApis",
+      "service": "apigateway",
+      "action": "GetApis",
+      "source_file": "aws_apigatewayv2.go"
+    },
+    {
       "permission": "apigateway:GetAuthorizers",
       "service": "apigateway",
       "action": "GetAuthorizers",
       "source_file": "aws_apigateway.go"
+    },
+    {
+      "permission": "apigateway:GetAuthorizers",
+      "service": "apigateway",
+      "action": "GetAuthorizers",
+      "source_file": "aws_apigatewayv2.go"
+    },
+    {
+      "permission": "apigateway:GetDomainNames",
+      "service": "apigateway",
+      "action": "GetDomainNames",
+      "source_file": "aws_apigatewayv2.go"
     },
     {
       "permission": "apigateway:GetRequestValidators",
@@ -769,10 +790,22 @@
       "source_file": "aws_apigateway.go"
     },
     {
+      "permission": "apigateway:GetRoutes",
+      "service": "apigateway",
+      "action": "GetRoutes",
+      "source_file": "aws_apigatewayv2.go"
+    },
+    {
       "permission": "apigateway:GetStages",
       "service": "apigateway",
       "action": "GetStages",
       "source_file": "aws_apigateway.go"
+    },
+    {
+      "permission": "apigateway:GetStages",
+      "service": "apigateway",
+      "action": "GetStages",
+      "source_file": "aws_apigatewayv2.go"
     },
     {
       "permission": "apigateway:GetUsagePlans",

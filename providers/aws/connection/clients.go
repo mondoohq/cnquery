@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
@@ -712,6 +713,26 @@ func (t *AwsConnection) Apigateway(region string) *apigateway.Client {
 	client := apigateway.NewFromConfig(cfg)
 
 	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Apigatewayv2(region string) *apigatewayv2.Client {
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_apigatewayv2_" + region
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached apigatewayv2 client")
+		return c.Data.(*apigatewayv2.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := apigatewayv2.NewFromConfig(cfg)
+
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }
