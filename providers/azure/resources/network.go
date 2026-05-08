@@ -2452,19 +2452,6 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 				args["routingWeight"] = llx.IntDataDefault(c.Properties.RoutingWeight, 0)
 				args["ingressBytesTransferred"] = llx.IntDataDefault(c.Properties.IngressBytesTransferred, 0)
 				args["egressBytesTransferred"] = llx.IntDataDefault(c.Properties.EgressBytesTransferred, 0)
-			} else {
-				args["connectionType"] = llx.StringData("")
-				args["connectionStatus"] = llx.StringData("")
-				args["connectionMode"] = llx.StringData("")
-				args["connectionProtocol"] = llx.StringData("")
-				args["provisioningState"] = llx.StringData("")
-				args["enableBgp"] = llx.BoolData(false)
-				args["usePolicyBasedTrafficSelectors"] = llx.BoolData(false)
-				args["useLocalAzureIpAddress"] = llx.BoolData(false)
-				args["dpdTimeoutSeconds"] = llx.IntData(0)
-				args["routingWeight"] = llx.IntData(0)
-				args["ingressBytesTransferred"] = llx.IntData(0)
-				args["egressBytesTransferred"] = llx.IntData(0)
 			}
 			mqlConnection, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.connection", args)
 			if err != nil {
@@ -4042,7 +4029,7 @@ func newMqlLocalNetworkGateway(runtime *plugin.Runtime, lng *network.LocalNetwor
 		"tags":     llx.MapData(convert.PtrMapStrToInterface(lng.Tags), types.String),
 		"etag":     llx.StringDataPtr(lng.Etag),
 	}
-	var addressPrefixes []any
+	addressPrefixes := []any{}
 	if lng.Properties != nil {
 		args["gatewayIpAddress"] = llx.StringDataPtr(lng.Properties.GatewayIPAddress)
 		args["fqdn"] = llx.StringDataPtr(lng.Properties.Fqdn)
@@ -4051,14 +4038,6 @@ func newMqlLocalNetworkGateway(runtime *plugin.Runtime, lng *network.LocalNetwor
 		if lng.Properties.LocalNetworkAddressSpace != nil {
 			addressPrefixes = convert.SliceStrPtrToInterface(lng.Properties.LocalNetworkAddressSpace.AddressPrefixes)
 		}
-	} else {
-		args["gatewayIpAddress"] = llx.StringData("")
-		args["fqdn"] = llx.StringData("")
-		args["provisioningState"] = llx.StringData("")
-		args["resourceGuid"] = llx.StringData("")
-	}
-	if addressPrefixes == nil {
-		addressPrefixes = []any{}
 	}
 	args["localNetworkAddressSpacePrefixes"] = llx.ArrayData(addressPrefixes, types.String)
 	res, err := CreateResource(runtime, "azure.subscription.networkService.localNetworkGateway", args)
