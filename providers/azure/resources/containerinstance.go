@@ -193,7 +193,7 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 		}
 		containerSpecs = props.Containers
 		for _, ic := range props.InitContainers {
-			if ic == nil {
+			if ic == nil || ic.Properties == nil {
 				continue
 			}
 			c := &aci.Container{

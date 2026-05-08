@@ -6728,7 +6728,8 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   latestRevisionFqdn string
   // Whether ingress is enabled at all
   ingressEnabled bool
-  // External ingress (true) vs internal-only (false)
+  // External ingress (true) vs internal-only (false). Only meaningful when
+  // `ingressEnabled == true` — defaults to false when ingress is disabled.
   ingressExternal bool
   // Target port for ingress
   targetPort int

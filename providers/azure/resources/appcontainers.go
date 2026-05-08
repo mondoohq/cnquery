@@ -8,6 +8,7 @@ import (
 	"errors"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -25,10 +26,10 @@ type mqlAzureSubscriptionContainerAppServiceContainerAppInternal struct {
 		name          string
 	}
 	revisionsLock      sync.Mutex
-	revisionsFetched   bool
+	revisionsFetched   atomic.Bool
 	revisionsCache     []any
 	authConfigsLock    sync.Mutex
-	authConfigsFetched bool
+	authConfigsFetched atomic.Bool
 	authConfigsCache   []any
 }
 
@@ -38,10 +39,10 @@ type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentInternal struct {
 		name          string
 	}
 	componentsLock      sync.Mutex
-	componentsFetched   bool
+	componentsFetched   atomic.Bool
 	componentsCache     []any
 	certificatesLock    sync.Mutex
-	certificatesFetched bool
+	certificatesFetched atomic.Bool
 	certificatesCache   []any
 }
 
@@ -273,12 +274,12 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 }
 
 func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) daprComponents() ([]any, error) {
-	if a.componentsFetched {
+	if a.componentsFetched.Load() {
 		return a.componentsCache, nil
 	}
 	a.componentsLock.Lock()
 	defer a.componentsLock.Unlock()
-	if a.componentsFetched {
+	if a.componentsFetched.Load() {
 		return a.componentsCache, nil
 	}
 
@@ -349,17 +350,17 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) daprComponen
 	}
 
 	a.componentsCache = res
-	a.componentsFetched = true
+	a.componentsFetched.Store(true)
 	return res, nil
 }
 
 func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) certificates() ([]any, error) {
-	if a.certificatesFetched {
+	if a.certificatesFetched.Load() {
 		return a.certificatesCache, nil
 	}
 	a.certificatesLock.Lock()
 	defer a.certificatesLock.Unlock()
-	if a.certificatesFetched {
+	if a.certificatesFetched.Load() {
 		return a.certificatesCache, nil
 	}
 
@@ -429,7 +430,7 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) certificates
 	}
 
 	a.certificatesCache = res
-	a.certificatesFetched = true
+	a.certificatesFetched.Store(true)
 	return res, nil
 }
 
@@ -573,7 +574,9 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 				}
 			}
 			containerSpecs = tpl.Containers
-			// init containers are typed as InitContainer; they share the same shape we need
+			// apps.InitContainer has the same shape as apps.Container minus Probes
+			// (the SDK's InitContainer type does not expose probes — Container Apps
+			// does not run probes on init containers).
 			for _, ic := range tpl.InitContainers {
 				if ic == nil {
 					continue
@@ -752,12 +755,12 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) initContainers() (
 }
 
 func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) revisions() ([]any, error) {
-	if a.revisionsFetched {
+	if a.revisionsFetched.Load() {
 		return a.revisionsCache, nil
 	}
 	a.revisionsLock.Lock()
 	defer a.revisionsLock.Unlock()
-	if a.revisionsFetched {
+	if a.revisionsFetched.Load() {
 		return a.revisionsCache, nil
 	}
 
@@ -821,17 +824,17 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) revisions() ([]any
 	}
 
 	a.revisionsCache = res
-	a.revisionsFetched = true
+	a.revisionsFetched.Store(true)
 	return res, nil
 }
 
 func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) authConfigs() ([]any, error) {
-	if a.authConfigsFetched {
+	if a.authConfigsFetched.Load() {
 		return a.authConfigsCache, nil
 	}
 	a.authConfigsLock.Lock()
 	defer a.authConfigsLock.Unlock()
-	if a.authConfigsFetched {
+	if a.authConfigsFetched.Load() {
 		return a.authConfigsCache, nil
 	}
 
@@ -927,7 +930,7 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) authConfigs() ([]a
 	}
 
 	a.authConfigsCache = res
-	a.authConfigsFetched = true
+	a.authConfigsFetched.Store(true)
 	return res, nil
 }
 
