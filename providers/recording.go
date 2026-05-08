@@ -182,6 +182,12 @@ func (s *recordingProvider) GetData(req *plugin.DataReq) (*plugin.DataRes, error
 	resource := req.GetResource()
 	id := req.GetResourceId()
 	field := req.GetField()
+	// When the caller didn't supply an ID (resource init by name + args),
+	// fall back to the deterministic args hash so the recording lookup
+	// can differentiate e.g. file(path: "/a") from file(path: "/b").
+	if id == "" && len(req.GetArgs()) > 0 {
+		id = llx.ArgsLookupID(req.GetArgs())
+	}
 	lookup := llx.AssetRecordingLookup{}
 	if s.selectedAsset != nil {
 		if s.selectedAsset.GetMrn() != "" {
