@@ -1364,11 +1364,15 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) bgpSettings() 
 		a.BgpSettings.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	bgpSettingsId := a.Id.Data + "/bgpSettings"
+	return mqlBgpSettingsFromSdk(a.MqlRuntime, a.Id.Data, a.cacheProperties.BgpSettings)
+}
+
+func mqlBgpSettingsFromSdk(runtime *plugin.Runtime, parentId string, bgp *network.BgpSettings) (*mqlAzureSubscriptionNetworkServiceBgpSettings, error) {
+	bgpSettingsId := parentId + "/bgpSettings"
 	bgpPeeringAddresses := []any{}
-	for i, bpa := range a.cacheProperties.BgpSettings.BgpPeeringAddresses {
+	for i, bpa := range bgp.BgpPeeringAddresses {
 		bpaId := fmt.Sprintf("%s/%s/%d", bgpSettingsId, "bgpPeeringAddresses", i)
-		mqlBpa, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress",
+		mqlBpa, err := CreateResource(runtime, "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress",
 			map[string]*llx.RawData{
 				"id":                    llx.StringData(bpaId),
 				"customBgpIpAddresses":  llx.ArrayData(convert.SliceStrPtrToInterface(bpa.CustomBgpIPAddresses), types.String),
@@ -1381,12 +1385,12 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) bgpSettings() 
 		}
 		bgpPeeringAddresses = append(bgpPeeringAddresses, mqlBpa)
 	}
-	mqlBgp, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.bgpSettings",
+	mqlBgp, err := CreateResource(runtime, "azure.subscription.networkService.bgpSettings",
 		map[string]*llx.RawData{
 			"id":                        llx.StringData(bgpSettingsId),
-			"asn":                       llx.IntDataPtr(a.cacheProperties.BgpSettings.Asn),
-			"bgpPeeringAddress":         llx.StringDataPtr(a.cacheProperties.BgpSettings.BgpPeeringAddress),
-			"peerWeight":                llx.IntDataDefault(a.cacheProperties.BgpSettings.PeerWeight, 0),
+			"asn":                       llx.IntDataPtr(bgp.Asn),
+			"bgpPeeringAddress":         llx.StringDataPtr(bgp.BgpPeeringAddress),
+			"peerWeight":                llx.IntDataDefault(bgp.PeerWeight, 0),
 			"bgpPeeringAddressesConfig": llx.ArrayData(bgpPeeringAddresses, types.ResourceLike),
 		})
 	if err != nil {
@@ -2427,18 +2431,48 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 			if err != nil {
 				return nil, err
 			}
-			mqlConnection, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.connection",
-				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(c.ID),
-					"type":       llx.StringDataPtr(c.Type),
-					"name":       llx.StringDataPtr(c.Name),
-					"etag":       llx.StringDataPtr(c.Etag),
-					"properties": llx.DictData(props),
-				})
+			args := map[string]*llx.RawData{
+				"id":         llx.StringDataPtr(c.ID),
+				"type":       llx.StringDataPtr(c.Type),
+				"name":       llx.StringDataPtr(c.Name),
+				"etag":       llx.StringDataPtr(c.Etag),
+				"location":   llx.StringDataPtr(c.Location),
+				"properties": llx.DictData(props),
+			}
+			if c.Properties != nil {
+				args["connectionType"] = llx.StringDataPtr((*string)(c.Properties.ConnectionType))
+				args["connectionStatus"] = llx.StringDataPtr((*string)(c.Properties.ConnectionStatus))
+				args["connectionMode"] = llx.StringDataPtr((*string)(c.Properties.ConnectionMode))
+				args["connectionProtocol"] = llx.StringDataPtr((*string)(c.Properties.ConnectionProtocol))
+				args["provisioningState"] = llx.StringDataPtr((*string)(c.Properties.ProvisioningState))
+				args["enableBgp"] = llx.BoolDataPtr(c.Properties.EnableBgp)
+				args["usePolicyBasedTrafficSelectors"] = llx.BoolDataPtr(c.Properties.UsePolicyBasedTrafficSelectors)
+				args["useLocalAzureIpAddress"] = llx.BoolDataPtr(c.Properties.UseLocalAzureIPAddress)
+				args["dpdTimeoutSeconds"] = llx.IntDataDefault(c.Properties.DpdTimeoutSeconds, 0)
+				args["routingWeight"] = llx.IntDataDefault(c.Properties.RoutingWeight, 0)
+				args["ingressBytesTransferred"] = llx.IntDataDefault(c.Properties.IngressBytesTransferred, 0)
+				args["egressBytesTransferred"] = llx.IntDataDefault(c.Properties.EgressBytesTransferred, 0)
+			} else {
+				args["connectionType"] = llx.StringData("")
+				args["connectionStatus"] = llx.StringData("")
+				args["connectionMode"] = llx.StringData("")
+				args["connectionProtocol"] = llx.StringData("")
+				args["provisioningState"] = llx.StringData("")
+				args["enableBgp"] = llx.BoolData(false)
+				args["usePolicyBasedTrafficSelectors"] = llx.BoolData(false)
+				args["useLocalAzureIpAddress"] = llx.BoolData(false)
+				args["dpdTimeoutSeconds"] = llx.IntData(0)
+				args["routingWeight"] = llx.IntData(0)
+				args["ingressBytesTransferred"] = llx.IntData(0)
+				args["egressBytesTransferred"] = llx.IntData(0)
+			}
+			mqlConnection, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.connection", args)
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, mqlConnection)
+			mqlConn := mqlConnection.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection)
+			mqlConn.cacheProperties = c.Properties
+			res = append(res, mqlConn)
 
 		}
 	}
@@ -3898,4 +3932,190 @@ func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicy) intrusionDetectionByp
 
 func (a *mqlAzureSubscriptionNetworkServiceFirewallPolicyIdpsBypassRule) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+// --- Local Network Gateway / VNet Gateway Connection enhancements ---
+
+type mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnectionInternal struct {
+	cacheProperties *network.VirtualNetworkGatewayConnectionPropertiesFormat
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) localNetworkGateway2() (*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway, error) {
+	if a.cacheProperties == nil || a.cacheProperties.LocalNetworkGateway2 == nil || a.cacheProperties.LocalNetworkGateway2.ID == nil {
+		a.LocalNetworkGateway2.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.localNetworkGateway", map[string]*llx.RawData{
+		"id": llx.StringDataPtr(a.cacheProperties.LocalNetworkGateway2.ID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) virtualNetworkGateway2() (*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway, error) {
+	if a.cacheProperties == nil || a.cacheProperties.VirtualNetworkGateway2 == nil || a.cacheProperties.VirtualNetworkGateway2.ID == nil {
+		a.VirtualNetworkGateway2.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway", map[string]*llx.RawData{
+		"id": llx.StringDataPtr(a.cacheProperties.VirtualNetworkGateway2.ID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) gatewayDefaultSite() (*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway, error) {
+	if a.cacheProperties == nil || a.cacheProperties.GatewayDefaultSite == nil || a.cacheProperties.GatewayDefaultSite.ID == nil {
+		a.GatewayDefaultSite.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.localNetworkGateway", map[string]*llx.RawData{
+		"id": llx.StringDataPtr(a.cacheProperties.GatewayDefaultSite.ID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkService) localNetworkGateways() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	client, err := network.NewLocalNetworkGatewaysClient(subId, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// the local network gateways API works on resource-group level, so we fetch all RGs first
+	sub, err := CreateResource(a.MqlRuntime, "azure.subscription", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(subId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	azureSub := sub.(*mqlAzureSubscription)
+	rgs := azureSub.GetResourceGroups()
+	if rgs.Error != nil {
+		return nil, rgs.Error
+	}
+	res := []any{}
+	for _, rg := range rgs.Data {
+		mqlRg := rg.(*mqlAzureSubscriptionResourcegroup)
+		pager := client.NewListPager(mqlRg.Name.Data, &network.LocalNetworkGatewaysClientListOptions{})
+		for pager.More() {
+			page, err := pager.NextPage(ctx)
+			if err != nil {
+				return nil, err
+			}
+			for _, lng := range page.Value {
+				mqlLng, err := newMqlLocalNetworkGateway(a.MqlRuntime, lng)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlLng)
+			}
+		}
+	}
+	return res, nil
+}
+
+func newMqlLocalNetworkGateway(runtime *plugin.Runtime, lng *network.LocalNetworkGateway) (*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway, error) {
+	args := map[string]*llx.RawData{
+		"id":       llx.StringDataPtr(lng.ID),
+		"name":     llx.StringDataPtr(lng.Name),
+		"type":     llx.StringDataPtr(lng.Type),
+		"location": llx.StringDataPtr(lng.Location),
+		"tags":     llx.MapData(convert.PtrMapStrToInterface(lng.Tags), types.String),
+		"etag":     llx.StringDataPtr(lng.Etag),
+	}
+	var addressPrefixes []any
+	if lng.Properties != nil {
+		args["gatewayIpAddress"] = llx.StringDataPtr(lng.Properties.GatewayIPAddress)
+		args["fqdn"] = llx.StringDataPtr(lng.Properties.Fqdn)
+		args["provisioningState"] = llx.StringDataPtr((*string)(lng.Properties.ProvisioningState))
+		args["resourceGuid"] = llx.StringDataPtr(lng.Properties.ResourceGUID)
+		if lng.Properties.LocalNetworkAddressSpace != nil {
+			addressPrefixes = convert.SliceStrPtrToInterface(lng.Properties.LocalNetworkAddressSpace.AddressPrefixes)
+		}
+	} else {
+		args["gatewayIpAddress"] = llx.StringData("")
+		args["fqdn"] = llx.StringData("")
+		args["provisioningState"] = llx.StringData("")
+		args["resourceGuid"] = llx.StringData("")
+	}
+	if addressPrefixes == nil {
+		addressPrefixes = []any{}
+	}
+	args["localNetworkAddressSpacePrefixes"] = llx.ArrayData(addressPrefixes, types.String)
+	res, err := CreateResource(runtime, "azure.subscription.networkService.localNetworkGateway", args)
+	if err != nil {
+		return nil, err
+	}
+	mqlLng := res.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway)
+	if lng.Properties != nil {
+		mqlLng.cacheBgpSettings = lng.Properties.BgpSettings
+	}
+	return mqlLng, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceLocalNetworkGatewayInternal struct {
+	cacheBgpSettings *network.BgpSettings
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) bgpSettings() (*mqlAzureSubscriptionNetworkServiceBgpSettings, error) {
+	if a.cacheBgpSettings == nil {
+		a.BgpSettings.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return mqlBgpSettingsFromSdk(a.MqlRuntime, a.Id.Data, a.cacheBgpSettings)
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func initAzureSubscriptionNetworkServiceLocalNetworkGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	id := args["id"].Value.(string)
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	name, err := azureId.Component("localNetworkGateways")
+	if err != nil {
+		return nil, nil, err
+	}
+	client, err := network.NewLocalNetworkGatewaysClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), azureId.ResourceGroup, name, &network.LocalNetworkGatewaysClientGetOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlLng, err := newMqlLocalNetworkGateway(runtime, &resp.LocalNetworkGateway)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlLng, nil
 }

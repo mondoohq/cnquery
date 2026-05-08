@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.10.1",
-  "generated_at": "2026-05-08T09:10:40-07:00",
+  "generated_at": "2026-05-08T10:57:12-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.App/certificates/read",
@@ -93,6 +93,7 @@
     "Microsoft.Network/dnszones/recordsets/read",
     "Microsoft.Network/firewallPolicies/read",
     "Microsoft.Network/loadBalancers/read",
+    "Microsoft.Network/localNetworkGateways/read",
     "Microsoft.Network/natGateways/read",
     "Microsoft.Network/networkInterfaces/read",
     "Microsoft.Network/networkSecurityGroups/read",
@@ -334,7 +335,7 @@
     {
       "permission": "Microsoft.Compute/disks/read",
       "service": "Microsoft.Compute",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "compute.go"
     },
     {
@@ -430,7 +431,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/scopeMaps/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "containerregistry.go"
     },
     {
@@ -514,7 +515,7 @@
     {
       "permission": "Microsoft.DBforPostgreSQL/servers/read",
       "service": "Microsoft.DBforPostgreSQL",
-      "action": "NewListPager",
+      "action": "NewListBySubscriptionPager",
       "source_file": "postgresql.go"
     },
     {
@@ -568,13 +569,13 @@
     {
       "permission": "Microsoft.DocumentDB/sQLResources/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListSQLRoleAssignmentsPager",
+      "action": "NewListSQLRoleDefinitionsPager",
       "source_file": "cosmosdb.go"
     },
     {
       "permission": "Microsoft.DocumentDB/sQLResources/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListSQLDatabasesPager",
+      "action": "NewListSQLContainersPager",
       "source_file": "cosmosdb_extras.go"
     },
     {
@@ -676,7 +677,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -719,6 +720,12 @@
       "permission": "Microsoft.Network/loadBalancers/read",
       "service": "Microsoft.Network",
       "action": "NewListAllPager",
+      "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/localNetworkGateways/read",
+      "service": "Microsoft.Network",
+      "action": "NewListPager",
       "source_file": "network.go"
     },
     {

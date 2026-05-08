@@ -58,6 +58,7 @@ const (
 	ResourceAzureSubscriptionNetworkServiceServiceEndpointPolicyDefinition                       string = "azure.subscription.networkService.serviceEndpointPolicy.definition"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig                         string = "azure.subscription.networkService.virtualNetworkGateway.ipConfig"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection                       string = "azure.subscription.networkService.virtualNetworkGateway.connection"
+	ResourceAzureSubscriptionNetworkServiceLocalNetworkGateway                                   string = "azure.subscription.networkService.localNetworkGateway"
 	ResourceAzureSubscriptionNetworkServiceBgpSettings                                           string = "azure.subscription.networkService.bgpSettings"
 	ResourceAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress           string = "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress"
 	ResourceAzureSubscriptionNetworkServiceNatGateway                                            string = "azure.subscription.networkService.natGateway"
@@ -491,6 +492,10 @@ func init() {
 		"azure.subscription.networkService.virtualNetworkGateway.connection": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection,
+		},
+		"azure.subscription.networkService.localNetworkGateway": {
+			Init:   initAzureSubscriptionNetworkServiceLocalNetworkGateway,
+			Create: createAzureSubscriptionNetworkServiceLocalNetworkGateway,
 		},
 		"azure.subscription.networkService.bgpSettings": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceBgpSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2974,6 +2979,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.virtualNetworkGateways": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetVirtualNetworkGateways()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualNetworkGateway")))
 	},
+	"azure.subscription.networkService.localNetworkGateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkService).GetLocalNetworkGateways()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.localNetworkGateway")))
+	},
 	"azure.subscription.networkService.firewalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkService).GetFirewalls()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.firewall")))
 	},
@@ -3081,6 +3089,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.vpnClientConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetVpnClientConfiguration()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.gatewayDefaultSite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GetGatewayDefaultSite()).ToDataRes(types.Resource("azure.subscription.networkService.localNetworkGateway"))
 	},
 	"azure.subscription.networkService.appSecurityGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceAppSecurityGroup).GetId()).ToDataRes(types.String)
@@ -3397,8 +3408,89 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.virtualNetworkGateway.connection.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetEtag()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetLocation()).ToDataRes(types.String)
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.connection.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.connectionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetConnectionType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.connectionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetConnectionStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.connectionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetConnectionMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.connectionProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetConnectionProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.enableBgp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetEnableBgp()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.usePolicyBasedTrafficSelectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetUsePolicyBasedTrafficSelectors()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.useLocalAzureIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetUseLocalAzureIpAddress()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.dpdTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetDpdTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.routingWeight": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetRoutingWeight()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.ingressBytesTransferred": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetIngressBytesTransferred()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.egressBytesTransferred": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetEgressBytesTransferred()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.localNetworkGateway2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetLocalNetworkGateway2()).ToDataRes(types.Resource("azure.subscription.networkService.localNetworkGateway"))
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.virtualNetworkGateway2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).GetVirtualNetworkGateway2()).ToDataRes(types.Resource("azure.subscription.networkService.virtualNetworkGateway"))
+	},
+	"azure.subscription.networkService.localNetworkGateway.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.localNetworkGateway.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.localNetworkGateway.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.localNetworkGateway.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.localNetworkGateway.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.localNetworkGateway.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.localNetworkGateway.gatewayIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetGatewayIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.localNetworkGateway.fqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetFqdn()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.localNetworkGateway.localNetworkAddressSpacePrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetLocalNetworkAddressSpacePrefixes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.localNetworkGateway.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.localNetworkGateway.resourceGuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetResourceGuid()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.localNetworkGateway.bgpSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GetBgpSettings()).ToDataRes(types.Resource("azure.subscription.networkService.bgpSettings"))
 	},
 	"azure.subscription.networkService.bgpSettings.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceBgpSettings).GetId()).ToDataRes(types.String)
@@ -12726,6 +12818,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkService).VirtualNetworkGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.localNetworkGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkService).LocalNetworkGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.firewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkService).Firewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -12872,6 +12968,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.virtualNetworkGateway.vpnClientConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).VpnClientConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.gatewayDefaultSite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway).GatewayDefaultSite, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.appSecurityGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13346,8 +13446,120 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.virtualNetworkGateway.connection.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.connectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).ConnectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.connectionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).ConnectionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.connectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).ConnectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.connectionProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).ConnectionProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.enableBgp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).EnableBgp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.usePolicyBasedTrafficSelectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).UsePolicyBasedTrafficSelectors, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.useLocalAzureIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).UseLocalAzureIpAddress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.dpdTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).DpdTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.routingWeight": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).RoutingWeight, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.ingressBytesTransferred": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).IngressBytesTransferred, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.egressBytesTransferred": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).EgressBytesTransferred, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.localNetworkGateway2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).LocalNetworkGateway2, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.virtualNetworkGateway.connection.virtualNetworkGateway2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection).VirtualNetworkGateway2, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.gatewayIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).GatewayIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.fqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).Fqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.localNetworkAddressSpacePrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).LocalNetworkAddressSpacePrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.resourceGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).ResourceGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.localNetworkGateway.bgpSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway).BgpSettings, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceBgpSettings](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.bgpSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28419,6 +28631,7 @@ type mqlAzureSubscriptionNetworkService struct {
 	NatGateways                 plugin.TValue[[]any]
 	VirtualNetworks             plugin.TValue[[]any]
 	VirtualNetworkGateways      plugin.TValue[[]any]
+	LocalNetworkGateways        plugin.TValue[[]any]
 	Firewalls                   plugin.TValue[[]any]
 	FirewallPolicies            plugin.TValue[[]any]
 	ApplicationSecurityGroups   plugin.TValue[[]any]
@@ -28616,6 +28829,22 @@ func (c *mqlAzureSubscriptionNetworkService) GetVirtualNetworkGateways() *plugin
 	})
 }
 
+func (c *mqlAzureSubscriptionNetworkService) GetLocalNetworkGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LocalNetworkGateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService", c.__id, "localNetworkGateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.localNetworkGateways()
+	})
+}
+
 func (c *mqlAzureSubscriptionNetworkService) GetFirewalls() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Firewalls, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -28807,6 +29036,7 @@ type mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway struct {
 	NatRules                        plugin.TValue[[]any]
 	Connections                     plugin.TValue[[]any]
 	VpnClientConfiguration          plugin.TValue[any]
+	GatewayDefaultSite              plugin.TValue[*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway]
 }
 
 // createAzureSubscriptionNetworkServiceVirtualNetworkGateway creates a new instance of this resource
@@ -28996,6 +29226,22 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetConnections
 
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetVpnClientConfiguration() *plugin.TValue[any] {
 	return &c.VpnClientConfiguration
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) GetGatewayDefaultSite() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway](&c.GatewayDefaultSite, func() (*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualNetworkGateway", c.__id, "gatewayDefaultSite")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway), nil
+			}
+		}
+
+		return c.gatewayDefaultSite()
+	})
 }
 
 // mqlAzureSubscriptionNetworkServiceAppSecurityGroup for the azure.subscription.networkService.appSecurityGroup resource
@@ -30233,12 +30479,27 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayIpConfig) GetPub
 type mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnectionInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Etag       plugin.TValue[string]
-	Properties plugin.TValue[any]
+	mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnectionInternal
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Type                           plugin.TValue[string]
+	Etag                           plugin.TValue[string]
+	Location                       plugin.TValue[string]
+	Properties                     plugin.TValue[any]
+	ConnectionType                 plugin.TValue[string]
+	ConnectionStatus               plugin.TValue[string]
+	ConnectionMode                 plugin.TValue[string]
+	ConnectionProtocol             plugin.TValue[string]
+	ProvisioningState              plugin.TValue[string]
+	EnableBgp                      plugin.TValue[bool]
+	UsePolicyBasedTrafficSelectors plugin.TValue[bool]
+	UseLocalAzureIpAddress         plugin.TValue[bool]
+	DpdTimeoutSeconds              plugin.TValue[int64]
+	RoutingWeight                  plugin.TValue[int64]
+	IngressBytesTransferred        plugin.TValue[int64]
+	EgressBytesTransferred         plugin.TValue[int64]
+	LocalNetworkGateway2           plugin.TValue[*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway]
+	VirtualNetworkGateway2         plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway]
 }
 
 // createAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection creates a new instance of this resource
@@ -30294,8 +30555,208 @@ func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetE
 	return &c.Etag
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetConnectionType() *plugin.TValue[string] {
+	return &c.ConnectionType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetConnectionStatus() *plugin.TValue[string] {
+	return &c.ConnectionStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetConnectionMode() *plugin.TValue[string] {
+	return &c.ConnectionMode
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetConnectionProtocol() *plugin.TValue[string] {
+	return &c.ConnectionProtocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetEnableBgp() *plugin.TValue[bool] {
+	return &c.EnableBgp
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetUsePolicyBasedTrafficSelectors() *plugin.TValue[bool] {
+	return &c.UsePolicyBasedTrafficSelectors
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetUseLocalAzureIpAddress() *plugin.TValue[bool] {
+	return &c.UseLocalAzureIpAddress
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetDpdTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.DpdTimeoutSeconds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetRoutingWeight() *plugin.TValue[int64] {
+	return &c.RoutingWeight
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetIngressBytesTransferred() *plugin.TValue[int64] {
+	return &c.IngressBytesTransferred
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetEgressBytesTransferred() *plugin.TValue[int64] {
+	return &c.EgressBytesTransferred
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetLocalNetworkGateway2() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway](&c.LocalNetworkGateway2, func() (*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualNetworkGateway.connection", c.__id, "localNetworkGateway2")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway), nil
+			}
+		}
+
+		return c.localNetworkGateway2()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) GetVirtualNetworkGateway2() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway](&c.VirtualNetworkGateway2, func() (*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.virtualNetworkGateway.connection", c.__id, "virtualNetworkGateway2")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway), nil
+			}
+		}
+
+		return c.virtualNetworkGateway2()
+	})
+}
+
+// mqlAzureSubscriptionNetworkServiceLocalNetworkGateway for the azure.subscription.networkService.localNetworkGateway resource
+type mqlAzureSubscriptionNetworkServiceLocalNetworkGateway struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetworkServiceLocalNetworkGatewayInternal
+	Id                               plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Location                         plugin.TValue[string]
+	Tags                             plugin.TValue[map[string]any]
+	Type                             plugin.TValue[string]
+	Etag                             plugin.TValue[string]
+	GatewayIpAddress                 plugin.TValue[string]
+	Fqdn                             plugin.TValue[string]
+	LocalNetworkAddressSpacePrefixes plugin.TValue[[]any]
+	ProvisioningState                plugin.TValue[string]
+	ResourceGuid                     plugin.TValue[string]
+	BgpSettings                      plugin.TValue[*mqlAzureSubscriptionNetworkServiceBgpSettings]
+}
+
+// createAzureSubscriptionNetworkServiceLocalNetworkGateway creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceLocalNetworkGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceLocalNetworkGateway{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.localNetworkGateway", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) MqlName() string {
+	return "azure.subscription.networkService.localNetworkGateway"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetGatewayIpAddress() *plugin.TValue[string] {
+	return &c.GatewayIpAddress
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetFqdn() *plugin.TValue[string] {
+	return &c.Fqdn
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetLocalNetworkAddressSpacePrefixes() *plugin.TValue[[]any] {
+	return &c.LocalNetworkAddressSpacePrefixes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetResourceGuid() *plugin.TValue[string] {
+	return &c.ResourceGuid
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLocalNetworkGateway) GetBgpSettings() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceBgpSettings] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceBgpSettings](&c.BgpSettings, func() (*mqlAzureSubscriptionNetworkServiceBgpSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.localNetworkGateway", c.__id, "bgpSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceBgpSettings), nil
+			}
+		}
+
+		return c.bgpSettings()
+	})
 }
 
 // mqlAzureSubscriptionNetworkServiceBgpSettings for the azure.subscription.networkService.bgpSettings resource

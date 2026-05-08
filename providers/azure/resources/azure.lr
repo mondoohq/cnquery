@@ -1191,6 +1191,8 @@ private azure.subscription.networkService {
   virtualNetworks() []azure.subscription.networkService.virtualNetwork
   // List of virtual network gateways
   virtualNetworkGateways() []azure.subscription.networkService.virtualNetworkGateway
+  // List of local network gateways
+  localNetworkGateways() []azure.subscription.networkService.localNetworkGateway
   // List of network firewalls
   firewalls() []azure.subscription.networkService.firewall
   // List of firewall policies
@@ -1275,6 +1277,8 @@ azure.subscription.networkService.virtualNetworkGateway @defaults("id name locat
   connections() []azure.subscription.networkService.virtualNetworkGateway.connection
   // VPN client configuration (only set if P2S is configured for the gateway)
   vpnClientConfiguration dict
+  // The local network gateway used as the default site for forced tunneling, if configured
+  gatewayDefaultSite() azure.subscription.networkService.localNetworkGateway
 }
 
 // Azure application security group
@@ -1560,7 +1564,7 @@ private azure.subscription.networkService.virtualNetworkGateway.ipConfig @defaul
 }
 
 // Azure Virtual Network (VNet) gateway connection
-private azure.subscription.networkService.virtualNetworkGateway.connection @defaults("id name") {
+private azure.subscription.networkService.virtualNetworkGateway.connection @defaults("id name connectionType connectionStatus") {
   // VNet gateway connection ID
   id string
   // VNet gateway Connection name
@@ -1569,8 +1573,76 @@ private azure.subscription.networkService.virtualNetworkGateway.connection @defa
   type string
   // VNet gateway Connection etag
   etag string
+  // VNet gateway Connection location
+  location string
   // VNet gateway Connection properties
   properties dict
+  // Connection type (one of: "IPsec", "Vnet2Vnet", "ExpressRoute", "VPNClient")
+  connectionType string
+  // Current connection status (one of: "Unknown", "Connecting", "Connected", "NotConnected")
+  connectionStatus string
+  // Connection mode (one of: "Default", "InitiatorOnly", "ResponderOnly")
+  connectionMode string
+  // Connection protocol (one of: "IKEv1", "IKEv2")
+  connectionProtocol string
+  // Provisioning state of the connection
+  provisioningState string
+  // Whether BGP is enabled for this connection
+  enableBgp bool
+  // Whether policy-based traffic selectors are enabled
+  usePolicyBasedTrafficSelectors bool
+  // Whether the connection uses a private local Azure IP
+  useLocalAzureIpAddress bool
+  // Dead-peer-detection timeout, in seconds
+  dpdTimeoutSeconds int
+  // Routing weight applied to this connection
+  routingWeight int
+  // Total ingress bytes transferred over this connection
+  ingressBytesTransferred int
+  // Total egress bytes transferred over this connection
+  egressBytesTransferred int
+  // The local network gateway peered to the primary VNet gateway (only set for IPsec connections)
+  localNetworkGateway2() azure.subscription.networkService.localNetworkGateway
+  // The peer virtual network gateway (only set for Vnet2Vnet connections)
+  virtualNetworkGateway2() azure.subscription.networkService.virtualNetworkGateway
+}
+
+// Azure local network gateway
+//
+// Examine a local network gateway — the Azure resource that represents
+// an on-premises network endpoint paired with a virtual network gateway
+// to form a site-to-site VPN. Surfaces the on-premises device IP
+// (`gatewayIpAddress`) or `fqdn`, the address prefixes that describe
+// the on-premises network (`localNetworkAddressSpacePrefixes`), and any
+// configured BGP settings (`bgpSettings`) used to exchange routes with
+// Azure. Use alongside `azure.subscription.networkService.virtualNetworkGateway`
+// and `virtualNetworkGateway.connections` to audit the full site-to-site
+// VPN topology.
+azure.subscription.networkService.localNetworkGateway @defaults("id name location gatewayIpAddress") {
+  // Local network gateway ID
+  id string
+  // Local network gateway name
+  name string
+  // Local network gateway location
+  location string
+  // Local network gateway tags
+  tags map[string]string
+  // Local network gateway resource type
+  type string
+  // Local network gateway etag
+  etag string
+  // IP address of the on-premises VPN device
+  gatewayIpAddress string
+  // FQDN of the on-premises VPN device (alternative to `gatewayIpAddress`)
+  fqdn string
+  // Address prefixes (CIDR notation) describing the on-premises network reachable through this gateway
+  localNetworkAddressSpacePrefixes []string
+  // Provisioning state of the local network gateway
+  provisioningState string
+  // Resource GUID assigned to the local network gateway
+  resourceGuid string
+  // BGP settings advertised by the on-premises VPN device, if BGP is configured
+  bgpSettings() azure.subscription.networkService.bgpSettings
 }
 
 // Azure network BGP settings
