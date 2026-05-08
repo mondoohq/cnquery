@@ -31,7 +31,18 @@ alias gcp.memcache = gcp.project.memcacheService
 alias gcp.datastream = gcp.project.datastreamService
 alias gcp.memorystore = gcp.project.memorystoreService
 
-// Google Cloud (GCP) organization
+// Google Cloud organization
+//
+// Examine the Cloud Resource Manager organization that contains the
+// account's folders, projects, IAM policy, and Security Command Center
+// configuration. Surfaces the organization ID, name, lifecycle state,
+// the IAM `iamPolicy` and `auditConfig` bindings, the `orgPolicies`
+// applied across the org tree, the access-approval settings, and the
+// child `folders()` and `projects()`. The Security Command Center
+// accessors (`sccSources`, `sccFindings`, `sccNotificationConfigs`,
+// `sccMuteConfigs`, `sccBigQueryExports`, `sccOrganizationSettings`)
+// expose SCC posture across all sources, and `accessPolicies()` returns
+// the VPC Service Controls access policies bound to the org.
 gcp.organization @defaults("name") {
   // Organization ID
   id string
@@ -434,7 +445,25 @@ private gcp.projects {
   children() []gcp.project
 }
 
-// Google Cloud (GCP) project
+// Google Cloud project
+//
+// Examine a Google Cloud project — the resource container that owns
+// every Compute, Storage, IAM, GKE, BigQuery, Cloud SQL, and other
+// service-specific deployment in the account. Surfaces the project ID
+// and number, lifecycle state, labels, parent organization or folder,
+// the IAM policy and audit-log configuration (with the
+// `hasPublicIamBinding`, `primitiveRoleBindings`, and
+// `dataAccessLoggingEnabled` predicates that drive CIS controls 1.x and
+// 2.1), enabled `services()`, recommendations, the project's
+// `essentialContacts` and `apiKeys`, and the access-approval settings.
+// Service-specific entry points hang off the project as accessor
+// methods — `compute()`, `gke()`, `storage()`, `sql()`, `dns()`,
+// `bigquery()`, `iam()`, `kms()`, `pubsub()`, `cloudFunctions()`,
+// `cloudRun()`, `dataproc()`, `dataflow()`, `firestore()`,
+// `spanner()`, `bigtable()`, `alloydb()`, `redis()`,
+// `secretmanager()`, `binaryAuthorization()`, `monitoring()`,
+// `logging()`, and many others — letting you traverse from a single
+// project into every modeled service it uses.
 gcp.project @defaults("name number") {
   // Unique, user-assigned ID of the project
   id string
@@ -572,7 +601,15 @@ gcp.project @defaults("name number") {
   memorystore() gcp.project.memorystoreService
 }
 
-// Google Cloud (GCP) service
+// Google Cloud service API
+//
+// Examine a single Google Cloud service API (compute.googleapis.com,
+// iam.googleapis.com, etc.) and whether it is enabled for the parent
+// project. Surfaces the canonical service `name`, the `title` Google
+// uses for the service, the parent project, the service `state`, and
+// the `enabled` predicate that audits whether the API has been turned
+// on. The parent `gcp.project.services()` collection lists every
+// available and enabled service for a project.
 gcp.service @defaults("name") {
   // Project ID
   projectId string
@@ -588,7 +625,16 @@ gcp.service @defaults("name") {
   enabled() bool
 }
 
-// Google Cloud (GCP) recommendation and suggested action
+// Google Cloud recommendation
+//
+// Examine a single recommendation and the action Recommender suggests
+// taking. Surfaces the recommendation `id`, the `recommender` that
+// produced it (for example `google.compute.instance.IdleResourceRecommender`),
+// the recommendation `category` and `priority`, the proposed resource
+// changes in `content`, the `primaryImpact` and `additionalImpact`
+// projections (cost, security, performance, reliability, etc.), the
+// `lastRefreshTime`, and the lifecycle `state` reflecting whether the
+// recommendation is active, claimed, dismissed, or applied.
 gcp.recommendation {
   // ID of recommendation
   id string
@@ -886,7 +932,20 @@ private gcp.project.computeService.machineType @defaults("name") {
   zone gcp.project.computeService.zone
 }
 
-// Google Cloud (GCP) Compute instances
+// Google Cloud Compute Engine instance
+//
+// Examine a Compute Engine VM instance and the security-relevant
+// configuration around it. Surfaces the machine type and CPU platform,
+// the instance status and lifecycle, attached `disks` and
+// `networkInterfaces`, the boot image, applied `labels` and `metadata`,
+// the `serviceAccounts` bound to the instance, the
+// `shieldedInstanceConfig` (Secure Boot, vTPM, integrity monitoring),
+// the `confidentialInstanceConfig`, OS Config patch posture, and the
+// scheduling and reservation affinity settings. The CIS-aligned
+// predicates (`hasPublicIp`, `usesDefaultServiceAccount`,
+// `hasFullCloudPlatformScope`, `blockProjectSshKeysEnabled`,
+// `osLoginEnabled`, `serialPortEnabled`) collapse common posture
+// checks into a single boolean field per audit.
 gcp.project.computeService.instance @defaults("name id") {
   // Unique identifier for the instance
   id string
@@ -1266,7 +1325,14 @@ private gcp.project.computeService.firewall @defaults("name") {
   network() gcp.project.computeService.network
 }
 
-// Google Cloud (GCP) Compute VPC network resource
+// Google Cloud VPC network
+//
+// Examine a Compute Engine VPC network and the structural posture
+// around it. Surfaces the network `mode` (legacy, custom, or auto), the
+// `legacy` predicate, the `autoCreateSubnetworks` flag, the routing
+// mode, MTU, IPv6/ULA settings, the network-firewall enforcement order,
+// the attached firewall policy, peering configurations, and the
+// `subnetworks()` defined in the network.
 gcp.project.computeService.network @defaults("name") {
   // Whether the network is a legacy (single-region, non-subnetted) network — derived from mode == "legacy"
   legacy() bool
@@ -1308,7 +1374,17 @@ gcp.project.computeService.network @defaults("name") {
   firewallPolicy string
 }
 
-// Google Cloud (GCP) Compute VPC network partitioning
+// Google Cloud VPC subnetwork
+//
+// Examine a regional VPC subnetwork inside a Compute Engine network.
+// Surfaces the subnetwork's IPv4 and IPv6 CIDR ranges, the `purpose`
+// and `role` (private, regional-managed-proxy, internal-load-balancer,
+// global-managed-proxy, etc.), the `enableFlowLogs` flag and matching
+// `logConfig`, the `privateIpGoogleAccess` and
+// `privateIpv6GoogleAccess` settings that control reachability of
+// Google APIs from instances without external IPs, and typed
+// references to the parent `network()` and the `region()` the subnet
+// is bound to.
 gcp.project.computeService.subnetwork @defaults("name") {
   // Unique identifier
   id string
@@ -1636,8 +1712,7 @@ private gcp.project.storageService.bucket.lifecycleRule {
   condition gcp.project.storageService.bucket.lifecycleRuleCondition
 }
 
-// A lifecycle management rule, which is made of an action to take and
-// the condition(s) under which the action will be taken
+// Lifecycle management rule action and conditions
 private gcp.project.storageService.bucket.lifecycleRuleAction @defaults("type storageClass") {
   // Target storage class. Required iff the type of the action is SetStorageClass
   storageClass string
