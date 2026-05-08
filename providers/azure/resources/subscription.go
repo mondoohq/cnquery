@@ -355,3 +355,23 @@ func (a *mqlAzureSubscription) frontDoor() (*mqlAzureSubscriptionFrontDoorServic
 	}
 	return svc.(*mqlAzureSubscriptionFrontDoorService), nil
 }
+
+func (a *mqlAzureSubscription) containerApp() (*mqlAzureSubscriptionContainerAppService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionContainerAppService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionContainerAppService), nil
+}
+
+func (a *mqlAzureSubscription) containerInstance() (*mqlAzureSubscriptionContainerInstanceService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionContainerInstanceService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionContainerInstanceService), nil
+}

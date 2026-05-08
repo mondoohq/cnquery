@@ -88,6 +88,10 @@ azure.subscription @defaults ("name") {
   dns() azure.subscription.dnsService
   // Front Door and CDN resources in the subscription
   frontDoor() azure.subscription.frontDoorService
+  // Azure Container Apps resources in the subscription
+  containerApp() azure.subscription.containerAppService
+  // Azure Container Instances resources in the subscription
+  containerInstance() azure.subscription.containerInstanceService
 }
 
 // Azure function
@@ -6587,4 +6591,408 @@ private azure.subscription.frontDoorService.profile.originGroup.origin @defaults
   enabledState string
   // Provisioning state
   provisioningState string
+}
+
+// Azure Container Apps
+//
+// Examine Azure Container Apps managed environments, the Container Apps
+// running in them, and Container Apps jobs. Use this resource to audit
+// ingress posture, image pinning, identity-vs-secret registry auth,
+// Easy Auth configuration, and revision history.
+private azure.subscription.containerAppService {
+  // Subscription identifier
+  subscriptionId string
+  // Managed environments (network/log boundary for Container Apps)
+  managedEnvironments() []azure.subscription.containerAppService.managedEnvironment
+  // All Container Apps in the subscription
+  containerApps() []azure.subscription.containerAppService.containerApp
+  // Container Apps jobs (run-to-completion workloads)
+  jobs() []azure.subscription.containerAppService.job
+}
+
+// Azure Container Apps managed environment
+//
+// Examine the network, logging, and TLS boundary that hosts a set of
+// Container Apps. Selectable by ARM id; fields cover VNET delegation,
+// public-network access, peer-traffic mTLS, zone redundancy, and the
+// linked Log Analytics workspace.
+azure.subscription.containerAppService.managedEnvironment @defaults("name location provisioningState publicNetworkAccess") {
+  // ARM resource ID
+  id string
+  // Environment name
+  name string
+  // Azure region
+  location string
+  // Resource tags
+  tags map[string]string
+  // Provisioning state ("Succeeded", "Failed", "Canceled", "InProgress", "Waiting")
+  provisioningState string
+  // Kind (e.g., "serverless", null for standard)
+  kind string
+  // VNET configuration: infrastructureSubnetId, dockerBridgeCidr, platformReservedCidr, platformReservedDnsIP, internal
+  vnetConfiguration dict
+  // Workload profiles (Consumption + Dedicated D4/D8/E4/...)
+  workloadProfiles []dict
+  // Static outbound IP for the environment
+  staticIp string
+  // Default DNS suffix for apps in this environment
+  defaultDomain string
+  // Whether the env's load balancer is internal-only (no public DNS)
+  internalLoadBalancerEnabled bool
+  // Whether zone redundancy is enabled
+  zoneRedundant bool
+  // Public network access ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Peer authentication (mTLS) configuration
+  peerAuthentication dict
+  // Peer traffic configuration (cluster-internal encryption)
+  peerTrafficConfiguration dict
+  // Custom domain configuration (dnsSuffix + cert thumbprint)
+  customDomainConfiguration dict
+  // App-logs destination ("log-analytics", "azure-monitor", "none", or null)
+  logAnalyticsDestination string
+  // Log Analytics workspace customer ID, when destination is "log-analytics"
+  logAnalyticsCustomerId string
+  // Dapr AI instrumentation key (App Insights), if Dapr telemetry is wired
+  daprAIInstrumentationKey string
+  // Dapr components configured at the environment scope
+  daprComponents() []azure.subscription.containerAppService.managedEnvironment.daprComponent
+  // Certificates uploaded to the environment
+  certificates() []azure.subscription.containerAppService.managedEnvironment.certificate
+}
+
+// Dapr component configured at the managed environment scope
+private azure.subscription.containerAppService.managedEnvironment.daprComponent @defaults("name componentType version") {
+  // ARM resource ID
+  id string
+  // Component name
+  name string
+  // Component type (e.g., "state.azure.cosmosdb", "secretstores.azure.keyvault")
+  componentType string
+  // Component version (e.g., "v1")
+  version string
+  // Whether secret values are referenced (vs inline)
+  secretsConfigured bool
+  // Names of declared secrets (values are not returned by ARM on read)
+  secretNames []string
+  // Container Apps allowed to use this component
+  scopes []string
+  // Whether component init failure is silently ignored
+  ignoreErrors bool
+}
+
+// Certificate uploaded to a Container Apps managed environment
+private azure.subscription.containerAppService.managedEnvironment.certificate @defaults("name notAfter valid") {
+  // ARM resource ID
+  id string
+  // Certificate name within the environment
+  name string
+  // Subject name on the cert
+  subjectName string
+  // SHA-1 thumbprint
+  thumbprint string
+  // Issue time
+  issueDate time
+  // Expiration time
+  notAfter time
+  // Whether the cert is currently valid (according to ARM)
+  valid bool
+  // Provisioning state
+  provisioningState string
+}
+
+// Azure Container App
+//
+// Examine a single Container App workload. The resource exposes ingress
+// posture (external vs internal, transport, allowed origins, IP rules,
+// client-cert mode), revision strategy, scale bounds, secrets/registry
+// auth, and the per-container image and resource definitions.
+azure.subscription.containerAppService.containerApp @defaults("name location provisioningState ingressExternal httpsOnly") {
+  // ARM resource ID
+  id string
+  // Container App name
+  name string
+  // Azure region
+  location string
+  // Resource tags
+  tags map[string]string
+  // Provisioning state ("Succeeded", "Failed", "Canceled", "InProgress", "Deleting")
+  provisioningState string
+  // ARM resource ID of the parent managed environment
+  managedEnvironmentId string
+  // Active revision mode ("Single" or "Multiple")
+  revisionMode string
+  // Latest revision name
+  latestRevisionName string
+  // Latest revision FQDN (where ingress lands)
+  latestRevisionFqdn string
+  // Whether ingress is enabled at all
+  ingressEnabled bool
+  // External ingress (true) vs internal-only (false)
+  ingressExternal bool
+  // Target port for ingress
+  targetPort int
+  // Allowed transport ("auto", "http", "http2", "tcp")
+  transport string
+  // Whether HTTPS-only is enforced (insecureAllowed == false)
+  httpsOnly bool
+  // Sticky sessions affinity ("none" or "sticky")
+  stickySessions string
+  // Client-certificate mode ("ignore", "accept", "require")
+  clientCertificateMode string
+  // CORS allowed origins on ingress
+  corsAllowedOrigins []string
+  // IP security restrictions on ingress
+  ipSecurityRestrictions []dict
+  // Workload profile name in the parent environment ("Consumption" by default)
+  workloadProfileName string
+  // Min replica count
+  minReplicas int
+  // Max replica count
+  maxReplicas int
+  // Scale rules. Each entry has `name` plus exactly one of `http`, `tcp`,
+  // `azureQueue`, or `custom` (KEDA), and an optional `auth []` of
+  // `{triggerParameter, secretRef}` entries pointing at names in `secretNames`.
+  //   http:       {metadata: {concurrentRequests}}
+  //   tcp:        {metadata: {concurrentConnections}}
+  //   azureQueue: {queueName, queueLength}
+  //   custom:     {type, metadata, identity}
+  scaleRules []dict
+  // Identity block (system + user-assigned principal IDs)
+  identity dict
+  // Container registry references (server, identity, passwordSecretRef)
+  registries []dict
+  // Whether any registry credential uses managed identity
+  registryAuthUsesIdentity bool
+  // Names of declared secrets (values are not returned by ARM on read)
+  secretNames []string
+  // Containers running in each replica
+  containers() []azure.subscription.containerAppService.containerApp.container
+  // Init containers
+  initContainers() []azure.subscription.containerAppService.containerApp.container
+  // Volumes referenced by containers (azureFile / emptyDir / secret)
+  volumes []dict
+  // Easy Auth (authConfigs) children
+  authConfigs() []azure.subscription.containerAppService.containerApp.authConfig
+  // Revision history
+  revisions() []azure.subscription.containerAppService.containerApp.revision
+}
+
+// Container definition inside a Container App
+private azure.subscription.containerAppService.containerApp.container @defaults("name image imagePinned") {
+  // Composite id: <containerAppId>/containers/<name>
+  id string
+  // Container name (within the app)
+  name string
+  // Image reference (e.g., "myacr.azurecr.io/api:1.2.3" or "...@sha256:...")
+  image string
+  // Whether the image reference is digest-pinned (contains "@sha256:")
+  imagePinned bool
+  // Container start command
+  command []string
+  // Container start args
+  args []string
+  // Environment variables — each entry has {name, value, secretRef}
+  env []dict
+  // CPU cores (e.g., 0.25, 0.5, 1.0)
+  cpuCores float
+  // Memory string as returned by ARM (e.g., "0.5Gi", "1Gi", "2Gi")
+  memory string
+  // Liveness/readiness/startup probes
+  probes []dict
+  // Volume mounts (volumeName, mountPath, subPath)
+  volumeMounts []dict
+}
+
+// Container App revision
+private azure.subscription.containerAppService.containerApp.revision @defaults("name active trafficWeight provisioningState") {
+  // ARM resource ID
+  id string
+  // Revision name
+  name string
+  // Whether this is currently active
+  active bool
+  // Traffic weight (% routed in Multiple-revision mode)
+  trafficWeight int
+  // Replicas currently running
+  replicas int
+  // Provisioning state
+  provisioningState string
+  // Health state ("Healthy", "Unhealthy", "None")
+  healthState string
+  // Creation time
+  createdTime time
+  // Last active time
+  lastActiveTime time
+}
+
+// Container App Easy Auth (authConfig) configuration
+private azure.subscription.containerAppService.containerApp.authConfig @defaults("name unauthenticatedClientAction") {
+  // ARM resource ID
+  id string
+  // AuthConfig name (always "current" for the active config)
+  name string
+  // Whether Easy Auth is enabled at all (Platform.Enabled)
+  enabled bool
+  // Action when an unauthenticated request arrives ("RedirectToLoginPage", "AllowAnonymous", "Return401", "Return403")
+  unauthenticatedClientAction string
+  // Configured providers (e.g., "azureActiveDirectory", "github", "google", "facebook", "twitter", "apple", "customOpenIdConnect")
+  identityProviders []string
+  // Login config (token store enabled, token refresh extension hours, allowed external redirect URLs)
+  login dict
+  // HTTP settings (requireHttps, route configuration, forward proxy)
+  httpSettings dict
+}
+
+// Container Apps Job (run-to-completion)
+azure.subscription.containerAppService.job @defaults("name location triggerType provisioningState") {
+  // ARM resource ID
+  id string
+  // Job name
+  name string
+  // Azure region
+  location string
+  // Resource tags
+  tags map[string]string
+  // ARM resource ID of the parent managed environment
+  managedEnvironmentId string
+  // Provisioning state
+  provisioningState string
+  // Trigger type ("Manual", "Schedule", "Event")
+  triggerType string
+  // Cron expression (when triggerType == "Schedule")
+  cronExpression string
+  // Event-driven scaling rules (KEDA-based) when triggerType == "Event"
+  eventTriggerConfig dict
+  // Replica timeout (seconds)
+  replicaTimeoutSeconds int
+  // Replica retry limit
+  replicaRetryLimit int
+  // Identity (system + user-assigned)
+  identity dict
+  // Container definitions (image, env, resources, probes); flattened
+  containers []dict
+  // Workload profile name in the parent environment
+  workloadProfileName string
+  // Container registry references
+  registries []dict
+  // Whether any registry credential uses managed identity
+  registryAuthUsesIdentity bool
+  // Names of declared secrets (values are not returned by ARM on read)
+  secretNames []string
+}
+
+// Azure Container Instances
+//
+// Examine Azure Container Instances container groups and the containers
+// within them. Use this resource to audit OS type, restart policy, image
+// pinning, registry auth, VNET delegation, security context (privileged,
+// runAsUser), and confidential-ACI usage.
+private azure.subscription.containerInstanceService {
+  // Subscription identifier
+  subscriptionId string
+  // All container groups in the subscription
+  containerGroups() []azure.subscription.containerInstanceService.containerGroup
+}
+
+// Azure Container Instances container group
+//
+// Examine a container group — the unit of deployment in ACI, holding one
+// or more containers that share lifecycle, network, and storage. Selectable
+// by ARM id.
+azure.subscription.containerInstanceService.containerGroup @defaults("name location osType sku ipAddressType") {
+  // ARM resource ID
+  id string
+  // Container group name
+  name string
+  // Azure region
+  location string
+  // Resource tags
+  tags map[string]string
+  // Provisioning state ("Succeeded", "Pending", "Failed", "Canceled")
+  provisioningState string
+  // OS type ("Linux" or "Windows")
+  osType string
+  // Restart policy ("Always", "OnFailure", "Never")
+  restartPolicy string
+  // SKU ("Standard", "Dedicated", "Confidential")
+  sku string
+  // Convenience: sku == "Confidential"
+  confidential bool
+  // SHA-256 hash of the CCE policy (Confidential ACI only)
+  ccePolicyHash string
+  // Identity block (system + user-assigned principal IDs)
+  identity dict
+  // IP address type ("Public", "Private", or null)
+  ipAddressType string
+  // Public IP address, if any
+  publicIp string
+  // FQDN, if a DNS name label was set
+  fqdn string
+  // Auto-generated domain name label scope ("Unsecure", "TenantReuse", "SubscriptionReuse", "ResourceGroupReuse", "Noreuse")
+  dnsNameLabelReusePolicy string
+  // Exposed ports at the group level — each entry has {port, protocol}
+  exposedPorts []dict
+  // Subnet ARM resource IDs the group is delegated into (Private only)
+  subnetIds []string
+  // DNS configuration (nameServers, searchDomains, options)
+  dnsConfig dict
+  // Image registry credentials — each entry has {server, username?, identity?, identityUrl?}
+  imageRegistryCredentials []dict
+  // Whether any registry credential uses managed identity (vs username/password)
+  registryAuthUsesIdentity bool
+  // Volumes mounted into containers — entries are azureFile / emptyDir / secret / gitRepo
+  volumes []dict
+  // Convenience: any volume of type "secret"
+  hasSecretVolume bool
+  // Diagnostics: log analytics workspace ID linked to this group, if any
+  logAnalyticsWorkspaceId string
+  // CMK encryption properties (vaultBaseUrl, keyName, keyVersion, identity)
+  encryption dict
+  // Priority ("Regular" or "Spot")
+  priority string
+  // Availability zones the group is pinned to
+  zones []string
+  // Containers in the group
+  containers() []azure.subscription.containerInstanceService.containerGroup.container
+  // Init containers
+  initContainers() []azure.subscription.containerInstanceService.containerGroup.container
+}
+
+// Single container inside a container group
+private azure.subscription.containerInstanceService.containerGroup.container @defaults("name image imagePinned") {
+  // Composite id: <containerGroupId>/containers/<name>
+  id string
+  // Container name (within the group)
+  name string
+  // Image reference
+  image string
+  // Whether the image reference is digest-pinned (contains "@sha256:")
+  imagePinned bool
+  // Container start command
+  command []string
+  // Environment variables — each entry has {name, value, secureValue}
+  env []dict
+  // CPU cores requested
+  cpuCores float
+  // Memory in GB requested
+  memoryGB float
+  // GPU count (zero when no GPU)
+  gpuCount int
+  // GPU SKU ("K80", "P100", "V100"), or null
+  gpuSku string
+  // Ports exposed by this container — each entry has {port, protocol}
+  ports []dict
+  // Volume mounts (volumeName, mountPath, readOnly)
+  volumeMounts []dict
+  // Liveness probe
+  livenessProbe dict
+  // Readiness probe
+  readinessProbe dict
+  // Security context (privileged, runAsUser, runAsGroup, allowPrivilegeEscalation, capabilities, seccompProfile)
+  securityContext dict
+  // Current state (state, startTime, exitCode, finishTime, detailStatus)
+  currentState dict
+  // Restart count
+  restartCount int
 }

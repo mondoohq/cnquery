@@ -1393,6 +1393,8 @@ var azureServiceToARMMap = map[string]string{
 	"operationalinsights":   "Microsoft.OperationalInsights",
 	"recoveryservices":      "Microsoft.RecoveryServices",
 	"hybridcompute":         "Microsoft.HybridCompute",
+	"appcontainers":         "Microsoft.App",
+	"containerinstance":     "Microsoft.ContainerInstance",
 }
 
 func azureServiceToARM(service string) string {
