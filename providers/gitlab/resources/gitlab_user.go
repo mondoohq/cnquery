@@ -102,6 +102,108 @@ func (u *mqlGitlabUser) fetchUser() (*gitlab.User, error) {
 	return u.user, nil
 }
 
+// The accessors below all defer to fetchUser, which is gated by the user's
+// access scope. fetchUser() returns (nil, nil) on 403/404 so non-admin tokens
+// don't fail the whole resource graph — in that case the accessor returns the
+// type's zero value.
+
+func (u *mqlGitlabUser) isAdmin() (bool, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return false, err
+	}
+	return user.IsAdmin, nil
+}
+
+func (u *mqlGitlabUser) isAuditor() (bool, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return false, err
+	}
+	return user.IsAuditor, nil
+}
+
+func (u *mqlGitlabUser) external() (bool, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return false, err
+	}
+	return user.External, nil
+}
+
+func (u *mqlGitlabUser) privateProfile() (bool, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return false, err
+	}
+	return user.PrivateProfile, nil
+}
+
+func (u *mqlGitlabUser) usingLicenseSeat() (bool, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return false, err
+	}
+	return user.UsingLicenseSeat, nil
+}
+
+func (u *mqlGitlabUser) canCreateGroup() (bool, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return false, err
+	}
+	return user.CanCreateGroup, nil
+}
+
+func (u *mqlGitlabUser) canCreateProject() (bool, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return false, err
+	}
+	return user.CanCreateProject, nil
+}
+
+func (u *mqlGitlabUser) lastSignInAt() (*time.Time, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return nil, err
+	}
+	return user.LastSignInAt, nil
+}
+
+func (u *mqlGitlabUser) currentSignInAt() (*time.Time, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return nil, err
+	}
+	return user.CurrentSignInAt, nil
+}
+
+func (u *mqlGitlabUser) lastActivityOn() (*time.Time, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil || user.LastActivityOn == nil {
+		return nil, err
+	}
+	t := time.Time(*user.LastActivityOn)
+	return &t, nil
+}
+
+func (u *mqlGitlabUser) confirmedAt() (*time.Time, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return nil, err
+	}
+	return user.ConfirmedAt, nil
+}
+
+func (u *mqlGitlabUser) note() (string, error) {
+	user, err := u.fetchUser()
+	if err != nil || user == nil {
+		return "", err
+	}
+	return user.Note, nil
+}
+
 // id function for gitlab.user.externalIdentity
 func (i *mqlGitlabUserExternalIdentity) id() (string, error) {
 	return "gitlab.user.externalIdentity/" + i.Provider.Data + "/" + i.ExternUID.Data, nil

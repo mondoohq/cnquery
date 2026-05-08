@@ -61,6 +61,33 @@ gitlab.user @defaults("username name state") {
   bot bool
   // Whether two-factor authentication is enabled
   twoFactorEnabled bool
+  // Whether the user has the instance Administrator role
+  isAdmin() bool
+  // Whether the user has the Auditor role (read-only access across the instance)
+  isAuditor() bool
+  // Whether the user is marked as external (read-only access by default,
+  // with no permission to create groups, projects, or namespaces)
+  external() bool
+  // Whether the user's profile is private
+  privateProfile() bool
+  // Whether the user is currently consuming a paid license seat
+  usingLicenseSeat() bool
+  // Whether the user can create top-level groups
+  canCreateGroup() bool
+  // Whether the user can create personal projects
+  canCreateProject() bool
+  // Time of the user's most recent prior sign-in
+  lastSignInAt() time
+  // Time of the user's current sign-in
+  currentSignInAt() time
+  // Date of the user's most recent activity (commit, comment, etc.). The API
+  // returns this as a date (no time-of-day component).
+  lastActivityOn() time
+  // Time when the user's email was confirmed
+  confirmedAt() time
+  // Administrator note attached to the user account, often used to record
+  // the reason an account is restricted, banned, or kept under review
+  note() string
   // External SSO identities linked to this user (SAML, LDAP, OAuth providers, etc.)
   externalIdentities() []gitlab.user.externalIdentity
   // SSH keys registered for this user (requires admin or self-access)

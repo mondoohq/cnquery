@@ -333,6 +333,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.user.twoFactorEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabUser).GetTwoFactorEnabled()).ToDataRes(types.Bool)
 	},
+	"gitlab.user.isAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetIsAdmin()).ToDataRes(types.Bool)
+	},
+	"gitlab.user.isAuditor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetIsAuditor()).ToDataRes(types.Bool)
+	},
+	"gitlab.user.external": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetExternal()).ToDataRes(types.Bool)
+	},
+	"gitlab.user.privateProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetPrivateProfile()).ToDataRes(types.Bool)
+	},
+	"gitlab.user.usingLicenseSeat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetUsingLicenseSeat()).ToDataRes(types.Bool)
+	},
+	"gitlab.user.canCreateGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetCanCreateGroup()).ToDataRes(types.Bool)
+	},
+	"gitlab.user.canCreateProject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetCanCreateProject()).ToDataRes(types.Bool)
+	},
+	"gitlab.user.lastSignInAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetLastSignInAt()).ToDataRes(types.Time)
+	},
+	"gitlab.user.currentSignInAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetCurrentSignInAt()).ToDataRes(types.Time)
+	},
+	"gitlab.user.lastActivityOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetLastActivityOn()).ToDataRes(types.Time)
+	},
+	"gitlab.user.confirmedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetConfirmedAt()).ToDataRes(types.Time)
+	},
+	"gitlab.user.note": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGitlabUser).GetNote()).ToDataRes(types.String)
+	},
 	"gitlab.user.externalIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabUser).GetExternalIdentities()).ToDataRes(types.Array(types.Resource("gitlab.user.externalIdentity")))
 	},
@@ -1549,6 +1585,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.user.twoFactorEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabUser).TwoFactorEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.isAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).IsAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.isAuditor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).IsAuditor, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.external": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).External, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.privateProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).PrivateProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.usingLicenseSeat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).UsingLicenseSeat, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.canCreateGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).CanCreateGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.canCreateProject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).CanCreateProject, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.lastSignInAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).LastSignInAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.currentSignInAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).CurrentSignInAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.lastActivityOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).LastActivityOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.confirmedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).ConfirmedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gitlab.user.note": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGitlabUser).Note, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.user.externalIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3281,6 +3365,18 @@ type mqlGitlabUser struct {
 	Locked             plugin.TValue[bool]
 	Bot                plugin.TValue[bool]
 	TwoFactorEnabled   plugin.TValue[bool]
+	IsAdmin            plugin.TValue[bool]
+	IsAuditor          plugin.TValue[bool]
+	External           plugin.TValue[bool]
+	PrivateProfile     plugin.TValue[bool]
+	UsingLicenseSeat   plugin.TValue[bool]
+	CanCreateGroup     plugin.TValue[bool]
+	CanCreateProject   plugin.TValue[bool]
+	LastSignInAt       plugin.TValue[*time.Time]
+	CurrentSignInAt    plugin.TValue[*time.Time]
+	LastActivityOn     plugin.TValue[*time.Time]
+	ConfirmedAt        plugin.TValue[*time.Time]
+	Note               plugin.TValue[string]
 	ExternalIdentities plugin.TValue[[]any]
 	SshKeys            plugin.TValue[[]any]
 }
@@ -3376,6 +3472,78 @@ func (c *mqlGitlabUser) GetBot() *plugin.TValue[bool] {
 
 func (c *mqlGitlabUser) GetTwoFactorEnabled() *plugin.TValue[bool] {
 	return &c.TwoFactorEnabled
+}
+
+func (c *mqlGitlabUser) GetIsAdmin() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsAdmin, func() (bool, error) {
+		return c.isAdmin()
+	})
+}
+
+func (c *mqlGitlabUser) GetIsAuditor() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsAuditor, func() (bool, error) {
+		return c.isAuditor()
+	})
+}
+
+func (c *mqlGitlabUser) GetExternal() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.External, func() (bool, error) {
+		return c.external()
+	})
+}
+
+func (c *mqlGitlabUser) GetPrivateProfile() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PrivateProfile, func() (bool, error) {
+		return c.privateProfile()
+	})
+}
+
+func (c *mqlGitlabUser) GetUsingLicenseSeat() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsingLicenseSeat, func() (bool, error) {
+		return c.usingLicenseSeat()
+	})
+}
+
+func (c *mqlGitlabUser) GetCanCreateGroup() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CanCreateGroup, func() (bool, error) {
+		return c.canCreateGroup()
+	})
+}
+
+func (c *mqlGitlabUser) GetCanCreateProject() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CanCreateProject, func() (bool, error) {
+		return c.canCreateProject()
+	})
+}
+
+func (c *mqlGitlabUser) GetLastSignInAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastSignInAt, func() (*time.Time, error) {
+		return c.lastSignInAt()
+	})
+}
+
+func (c *mqlGitlabUser) GetCurrentSignInAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CurrentSignInAt, func() (*time.Time, error) {
+		return c.currentSignInAt()
+	})
+}
+
+func (c *mqlGitlabUser) GetLastActivityOn() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastActivityOn, func() (*time.Time, error) {
+		return c.lastActivityOn()
+	})
+}
+
+func (c *mqlGitlabUser) GetConfirmedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ConfirmedAt, func() (*time.Time, error) {
+		return c.confirmedAt()
+	})
+}
+
+func (c *mqlGitlabUser) GetNote() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Note, func() (string, error) {
+		return c.note()
+	})
 }
 
 func (c *mqlGitlabUser) GetExternalIdentities() *plugin.TValue[[]any] {
