@@ -182,6 +182,7 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) id() (string, erro
 // audits to flag the family, and the trust-store schema is left for a
 // follow-up if there's demand.
 func flattenWifProviderConfig(p *iam.WorkloadIdentityPoolProvider) (providerType, awsAccountId, oidcIssuer string, oidcAudiences []any, samlMetadata string) {
+	oidcAudiences = []any{}
 	switch {
 	case p.Aws != nil:
 		providerType = "aws"
@@ -189,7 +190,6 @@ func flattenWifProviderConfig(p *iam.WorkloadIdentityPoolProvider) (providerType
 	case p.Oidc != nil:
 		providerType = "oidc"
 		oidcIssuer = p.Oidc.IssuerUri
-		oidcAudiences = make([]any, 0, len(p.Oidc.AllowedAudiences))
 		for _, a := range p.Oidc.AllowedAudiences {
 			oidcAudiences = append(oidcAudiences, a)
 		}
