@@ -4,7 +4,16 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/oci"
 option go_package = "go.mondoo.com/mql/v13/providers/oci/resources"
 
-// Oracle Cloud Infrastructure (OCI) tenancy
+// Oracle Cloud Infrastructure (OCI)
+//
+// Use the Oracle Cloud Infrastructure namespace as the tenancy-scoped
+// entry point for the OCI provider. Iterate `regions()` for the
+// regions the tenancy is subscribed to (with the home-region flag and
+// subscription state) and `compartments()` for the OCI compartment
+// hierarchy. The active tenancy itself is exposed as `oci.tenancy`,
+// and service-specific entry points (`oci.identity`, `oci.compute`,
+// `oci.network`, `oci.objectStorage`, `oci.kms`, and so on) are
+// reached as siblings.
 oci {
   // Available regions
   regions() []oci.region
@@ -13,6 +22,11 @@ oci {
 }
 
 // Oracle Cloud Infrastructure (OCI) tenancy
+//
+// Examine the active OCI tenancy — the top-level identity and
+// resource container the provider is authenticated against. Surfaces
+// the tenancy OCID, display name and description, and the
+// `retentionPeriod` configured for audit-event retention.
 oci.tenancy @defaults("name") {
   // Tenancy OCID
   id string
@@ -50,7 +64,15 @@ private oci.compartment @defaults("id name") {
   state string
 }
 
-// Oracle Cloud Infrastructure (OCI) identity and access management
+// Oracle Cloud Infrastructure (OCI) Identity and Access Management
+//
+// Use the OCI Identity namespace to enumerate the tenancy's IAM
+// principals and access policies. Iterate `users()` for IAM users
+// (with their MFA state, login history, capabilities, API keys,
+// customer secret keys, auth tokens, MFA devices, and group
+// memberships), `groups()` for IAM groups and their members, and
+// `policies()` for the policy statements that grant groups access to
+// compartments and resources.
 oci.identity {
   // IAM users
   users() []oci.identity.user
@@ -204,7 +226,15 @@ private oci.identity.policy @defaults("name description") {
   definedTags map[string]map[string]string
 }
 
-// Oracle Cloud Infrastructure (OCI) Compute service
+// Oracle Cloud Infrastructure (OCI) Compute
+//
+// Use the OCI Compute namespace to enumerate compute and block-storage
+// primitives in the tenancy. Iterate `instances()` for compute VMs
+// and bare-metal instances (with their shape, image, networking,
+// metadata, and instance configuration), `images()` for OS and
+// custom images available for launch, `blockVolumes()` for managed
+// block storage volumes, and `bootVolumes()` for the boot-volume
+// counterparts attached to instances.
 oci.compute {
   // Compute instances
   instances() []oci.compute.instance
@@ -370,7 +400,15 @@ private oci.compute.bootVolume @defaults("name") {
   created time
 }
 
-// Oracle Cloud Infrastructure (OCI) Networking service
+// Oracle Cloud Infrastructure (OCI) Networking
+//
+// Use the OCI Networking namespace to enumerate the tenancy's network
+// topology. Iterate `vcns()` for Virtual Cloud Networks, `subnets()`
+// for the partitioned address ranges inside those VCNs,
+// `securityLists()` and `networkSecurityGroups()` for the L4 access
+// rules, `internetGateways()` for inbound/outbound IGW connectivity,
+// `natGateways()` for outbound-only NAT, and `routeTables()` for the
+// per-subnet routing decisions.
 oci.network {
   // Virtual Cloud Networks (VCNs)
   vcns() []oci.network.vcn
@@ -576,7 +614,13 @@ private oci.network.routeTable @defaults("name") {
   definedTags map[string]map[string]string
 }
 
-// Oracle Cloud Infrastructure (OCI) Logging service
+// Oracle Cloud Infrastructure (OCI) Logging
+//
+// Use the OCI Logging namespace to enumerate the tenancy's
+// service-emitted and custom logs. Iterate `logGroups()` for the log
+// groups across compartments — each group exposes its enabled
+// `logs()`, retention duration, source service and resource, and the
+// log category (read, write, or all) describing the events captured.
 oci.logging {
   // Log groups in the tenancy
   logGroups() []oci.logging.logGroup
@@ -630,7 +674,14 @@ private oci.logging.log @defaults("name") {
   timeLastModified time
 }
 
-// Oracle Cloud Infrastructure (OCI) Key Management service
+// Oracle Cloud Infrastructure (OCI) Key Management Service
+//
+// Use the OCI KMS namespace to enumerate the tenancy's encryption
+// vaults and customer-managed keys. Iterate `vaults()` for KMS vaults
+// (DEFAULT, VIRTUAL_PRIVATE, or EXTERNAL types) — each vault surfaces
+// its management endpoint and the `keys()` it holds, where each key
+// reports its algorithm, length, lifecycle state, rotation history,
+// and whether the key is software-protected or HSM-protected.
 oci.kms {
   // Key vaults in the tenancy
   vaults() []oci.kms.vault
@@ -702,7 +753,15 @@ private oci.kms.keyVersion @defaults("id") {
   timeOfDeletion time
 }
 
-// Oracle Cloud Infrastructure (OCI) Object Storage service
+// Oracle Cloud Infrastructure (OCI) Object Storage
+//
+// Use the OCI Object Storage namespace to enumerate the tenancy's
+// S3-compatible object stores. Read `namespace()` for the unique
+// per-tenancy Object Storage namespace, and iterate `buckets()` for
+// every bucket — each bucket surfaces its public access type, storage
+// tier, auto-tiering and versioning configuration, KMS encryption key,
+// retention rules for WORM/immutability, replication enablement, and
+// the approximate object count and total size.
 oci.objectStorage {
   // Object Storage namespace (unique per tenancy)
   namespace() string
@@ -774,7 +833,13 @@ private oci.objectStorage.retentionRule @defaults("name") {
   timeModified time
 }
 
-// Oracle Cloud Infrastructure (OCI) File Storage service
+// Oracle Cloud Infrastructure (OCI) File Storage
+//
+// Use the OCI File Storage namespace to enumerate the tenancy's
+// managed NFS file systems. Iterate `fileSystems()` for every file
+// system across availability domains — each entry surfaces the
+// metered byte usage, lifecycle state, KMS encryption key, and the
+// availability domain the file system is anchored to.
 oci.fileStorage {
   // File systems
   fileSystems() []oci.fileStorage.fileSystem
@@ -800,7 +865,13 @@ private oci.fileStorage.fileSystem @defaults("name") {
   created time
 }
 
-// Oracle Cloud Infrastructure (OCI) Events service
+// Oracle Cloud Infrastructure (OCI) Events
+//
+// Use the OCI Events namespace to enumerate the tenancy's
+// event-rule-based automation. Iterate `rules()` for every rule —
+// each rule surfaces the matching `condition` (JSON event filter), the
+// `actions` to perform (function, ONS topic, or stream targets), the
+// rule's enabled state, and the lifecycle state.
 oci.events {
   // Event rules
   rules() []oci.events.rule
@@ -828,7 +899,18 @@ private oci.events.rule @defaults("name") {
   created time
 }
 
-// Oracle Cloud Infrastructure (OCI) Cloud Guard threat detection and security monitoring
+// Oracle Cloud Infrastructure (OCI) Cloud Guard
+//
+// Use the OCI Cloud Guard namespace to enumerate the tenancy's
+// threat-detection and security-monitoring posture. Read `status()`
+// and `reportingRegion()` for whether Cloud Guard is enabled and
+// which region collects findings, and `selfManageResources()` for
+// whether Cloud Guard's resources are managed by the customer.
+// Iterate `targets()` for the compartments and resources Cloud Guard
+// monitors, `detectorRecipes()` for the curated detector rule sets,
+// `securityZones()` and `securityZoneRecipes()` for the
+// security-zone enforcement scopes, and `securityPolicies()` for the
+// individual policies that compose those recipes.
 oci.cloudGuard {
   // Whether Cloud Guard is enabled
   status() bool
@@ -950,7 +1032,13 @@ private oci.cloudGuard.securityPolicy @defaults("name category") {
   created time
 }
 
-// Oracle Cloud Infrastructure (OCI) Notifications (ONS) service
+// Oracle Cloud Infrastructure (OCI) Notifications
+//
+// Use the OCI Notifications (ONS) namespace to enumerate the
+// pub/sub messaging service used for alerts and event delivery.
+// Iterate `topics()` for every notification topic — each topic
+// surfaces its lifecycle state and the `subscriptions()` bound to
+// it (Email, HTTPS, Slack, PagerDuty, function, and so on).
 oci.ons {
   // Notification topics
   topics() []oci.ons.topic
@@ -990,13 +1078,24 @@ private oci.ons.subscription @defaults("id") {
   created time
 }
 
-// Oracle Cloud Infrastructure (OCI) Audit service
+// Oracle Cloud Infrastructure (OCI) Audit
+//
+// Use the OCI Audit namespace to inspect tenancy-wide audit log
+// configuration. Read `retentionPeriodDays()` for the number of days
+// audit events are retained before being purged.
 oci.audit {
   // Audit log retention period in days
   retentionPeriodDays() int
 }
 
-// Oracle Cloud Infrastructure (OCI) Bastion service
+// Oracle Cloud Infrastructure (OCI) Bastion
+//
+// Use the OCI Bastion namespace to enumerate the tenancy's bastion
+// instances — managed jump hosts that broker SSH access into private
+// subnets. Iterate `bastions()` for every bastion deployment — each
+// bastion surfaces the target VCN and subnet, allowed client CIDR
+// blocks, DNS proxy state, the maximum session TTL, and per-session
+// configuration.
 oci.bastion {
   // Bastion instances
   bastions() []oci.bastion.instance
@@ -1026,7 +1125,13 @@ private oci.bastion.instance @defaults("name") {
   timeUpdated time
 }
 
-// Oracle Cloud Infrastructure (OCI) Monitoring service
+// Oracle Cloud Infrastructure (OCI) Monitoring
+//
+// Use the OCI Monitoring namespace to enumerate the alarm definitions
+// emitting notifications to the tenancy. Iterate `alarms()` for every
+// alarm — each alarm surfaces the metric namespace, the Monitoring
+// Query Language (MQL) `query`, severity, the destination ONS topic
+// OCIDs, the enabled flag, and the alarm lifecycle state.
 oci.monitoring {
   // Monitoring alarm definitions
   alarms() []oci.monitoring.alarm
@@ -1056,7 +1161,13 @@ private oci.monitoring.alarm @defaults("name") {
   state string
 }
 
-// Oracle Cloud Infrastructure (OCI) Vault secrets service
+// Oracle Cloud Infrastructure (OCI) Vault
+//
+// Use the OCI Vault namespace to enumerate the tenancy's stored
+// secrets. Iterate `secrets()` for every secret — each entry surfaces
+// the parent KMS vault and key, lifecycle and rotation status,
+// scheduled and last rotation timestamps, the auto-generation flag,
+// the configured rotation interval, and the secret versions.
 oci.vault {
   // Secrets stored in vaults
   secrets() []oci.vault.secret
@@ -1120,7 +1231,14 @@ private oci.vault.secretVersion @defaults("versionNumber") {
   timeOfDeletion time
 }
 
-// Oracle Cloud Infrastructure (OCI) Load Balancer service
+// Oracle Cloud Infrastructure (OCI) Load Balancer
+//
+// Use the OCI Load Balancer namespace to enumerate the L7 (and L4)
+// load balancers in the tenancy. Iterate `loadBalancers()` for every
+// load balancer — each entry surfaces the shape (e.g., flexible,
+// 100Mbps, 400Mbps), private vs public flag, delete protection,
+// listeners (with their TLS protocols, cipher suites, and peer-cert
+// verification), backend sets and policies, and the lifecycle state.
 oci.loadBalancer {
   // Load balancers
   loadBalancers() []oci.loadBalancer.loadBalancer
@@ -1180,7 +1298,14 @@ private oci.loadBalancer.backendSet @defaults("name") {
   backendCount int
 }
 
-// Oracle Cloud Infrastructure (OCI) Network Firewall service
+// Oracle Cloud Infrastructure (OCI) Network Firewall
+//
+// Use the OCI Network Firewall namespace to enumerate the
+// next-generation firewall deployments in the tenancy. Iterate
+// `firewalls()` for the deployed firewall instances (with their
+// subnet placement, IPv4/IPv6 addresses, shape, and attached
+// `policy()`), and `policies()` for the reusable firewall policies
+// that drive the rule sets each firewall enforces.
 oci.networkFirewall {
   // Network firewalls
   firewalls() []oci.networkFirewall.firewall
@@ -1232,7 +1357,16 @@ private oci.networkFirewall.policy @defaults("name") {
   created time
 }
 
-// Oracle Cloud Infrastructure (OCI) Container Engine for Kubernetes (OKE)
+// Oracle Cloud Infrastructure (OCI) Container Engine for Kubernetes
+//
+// Use the OCI OKE namespace to enumerate the tenancy's managed
+// Kubernetes deployments. Iterate `clusters()` for every OKE cluster
+// — each cluster surfaces the Kubernetes version, cluster type
+// (BASIC_CLUSTER or ENHANCED_CLUSTER), the VCN it is deployed in, the
+// KMS key used for secret encryption, the public/private API endpoint
+// configuration, image-policy verification, the available upgrade
+// versions, the legacy Pod Security Policy admission setting, and the
+// `nodePools()` running workloads inside the cluster.
 oci.oke {
   // OKE clusters
   clusters() []oci.oke.cluster
@@ -1300,7 +1434,14 @@ private oci.oke.nodePool @defaults("name") {
   state string
 }
 
-// Oracle Cloud Infrastructure (OCI) Web Application Firewall service
+// Oracle Cloud Infrastructure (OCI) Web Application Firewall
+//
+// Use the OCI WAF namespace to enumerate the L7 web-application
+// firewall deployments in the tenancy. Iterate `firewalls()` for
+// every WAF instance (with the load balancer it fronts and the
+// attached `policy()`), and `policies()` for the reusable rule sets
+// that drive request-rate limiting, signature inspection, IP
+// allow/deny lists, and bot management.
 oci.waf {
   // Web Application Firewalls
   firewalls() []oci.waf.firewall
@@ -1352,7 +1493,15 @@ private oci.waf.policy @defaults("name") {
   definedTags map[string]map[string]string
 }
 
-// Oracle Cloud Infrastructure (OCI) Functions service
+// Oracle Cloud Infrastructure (OCI) Functions
+//
+// Use the OCI Functions namespace to enumerate the tenancy's
+// serverless functions. Iterate `applications()` for the function
+// applications (each scoping shape, subnet placement, NSGs,
+// environment configuration, syslog destination, and image-signature
+// verification), then traverse each application's `functions()` for
+// the per-function image, memory, timeout, invoke endpoint, and
+// tracing settings.
 oci.functions {
   // Function applications
   applications() []oci.functions.application
@@ -1432,7 +1581,14 @@ private oci.functions.function @defaults("name") {
   config() map[string]string
 }
 
-// Oracle Cloud Infrastructure (OCI) Container Instances service
+// Oracle Cloud Infrastructure (OCI) Container Instances
+//
+// Use the OCI Container Instances namespace to enumerate the
+// tenancy's serverless container deployments. Iterate `instances()`
+// for every container instance — each instance surfaces its shape,
+// CPU and memory allocation, fault domain, the containers running
+// inside the instance, restart policy, network placement (subnets
+// and NSGs), DNS configuration, and lifecycle state.
 oci.containerInstances {
   // Container instances
   instances() []oci.containerInstances.instance
@@ -1506,7 +1662,17 @@ private oci.containerInstances.container @defaults("name") {
   definedTags map[string]map[string]string
 }
 
-// Oracle Cloud Infrastructure (OCI) Database service
+// Oracle Cloud Infrastructure (OCI) Database
+//
+// Use the OCI Database namespace to enumerate the tenancy's database
+// deployments and their backups. Iterate `dbSystems()` for the
+// VM/BM-based DB systems (Oracle Database on virtual machines or
+// bare metal), `autonomousDatabases()` for serverless / dedicated
+// Autonomous Database instances, `backups()` for the manual and
+// automatic backups taken from VM/BM databases, and
+// `autonomousDatabaseBackups()` for backups belonging to autonomous
+// databases — each backup surfaces TDE/KMS encryption, retention,
+// destination type, and lifecycle state.
 oci.database {
   // Database systems (VM/BM)
   dbSystems() []oci.database.dbSystem
@@ -1716,7 +1882,16 @@ private oci.database.autonomousDatabase @defaults("name") {
   backups() []oci.database.autonomousDatabaseBackup
 }
 
-// Oracle Cloud Infrastructure (OCI) API Gateway service
+// Oracle Cloud Infrastructure (OCI) API Gateway
+//
+// Use the OCI API Gateway namespace to enumerate the tenancy's API
+// gateway deployments. Iterate `gateways()` for the regional gateway
+// appliances (with their endpoint type, IP-mode, hostname, response-
+// cache, attached subnet, and certificate bindings),
+// `deployments()` for the route configurations bound to those
+// gateways, and `certificates()` for the API-gateway-managed TLS
+// certs (distinct from the tenancy-wide
+// `oci.certificates.certificate` service).
 oci.apigateway {
   // API gateways in the tenancy
   gateways() []oci.apigateway.gateway
@@ -1836,7 +2011,16 @@ private oci.apigateway.certificate @defaults("name") {
   definedTags map[string]map[string]string
 }
 
-// Oracle Cloud Infrastructure (OCI) Certificates Management service
+// Oracle Cloud Infrastructure (OCI) Certificates Management
+//
+// Use the OCI Certificates namespace to enumerate the tenancy's
+// managed PKI material. Iterate `certificates()` for the managed
+// TLS certificates (each surfacing the issuer authority, subject and
+// SAN list, validity window, KMS-backed key spec, and configuration
+// origin — issued by an internal CA, externally managed, or
+// imported), `certificateAuthorities()` for the root and subordinate
+// CAs, and `caBundles()` for the trust bundles applications import
+// to validate peer certificates.
 oci.certificates {
   // Managed TLS certificates
   certificates() []oci.certificates.certificate
@@ -1946,7 +2130,14 @@ private oci.certificates.caBundle @defaults("name") {
   definedTags map[string]map[string]string
 }
 
-// Oracle Cloud Infrastructure (OCI) Cache (Redis/Valkey) service
+// Oracle Cloud Infrastructure (OCI) Cache
+//
+// Use the OCI Cache namespace to enumerate the tenancy's managed
+// in-memory cache deployments. Iterate `clusters()` for every cache
+// cluster — each cluster surfaces the engine (Redis or Valkey) and
+// version, node count and shape, the primary and replicas FQDNs and
+// endpoints, attached subnet, NSG bindings, lifecycle state, and
+// cluster mode.
 oci.redis {
   // OCI Cache clusters
   clusters() []oci.redis.cluster

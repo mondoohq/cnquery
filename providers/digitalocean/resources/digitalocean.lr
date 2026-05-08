@@ -4,7 +4,19 @@
 option provider = "go.mondoo.com/mql/providers/digitalocean"
 option go_package = "go.mondoo.com/mql/v13/providers/digitalocean/resources"
 
-// DigitalOcean cloud provider
+// DigitalOcean account
+//
+// Use the DigitalOcean namespace as the account-wide entry point for
+// the DigitalOcean provider. Iterate `droplets()` for VMs,
+// `firewalls()` for cloud-firewall rule sets, `databases()` for
+// managed databases, `volumes()` for block storage, `domains()` for
+// DigitalOcean-managed DNS, `loadBalancers()` for L4/L7 LBs,
+// `vpcs()` and `vpcPeerings()` for the network plane,
+// `kubernetesClusters()` for DOKS, `apps()` for App Platform
+// deployments, `cdnEndpoints()` for the CDN, `registryRepositories()`
+// for the container registry, `projects()` for the project grouping,
+// `sshKeys()`, `certificates()`, `reservedIPs()`, `tags()`,
+// `spacesKeys()`, `alertPolicies()`, and `uptimeChecks()`.
 digitalocean {
   // Droplets (virtual machines)
   droplets() []digitalocean.droplet
@@ -48,7 +60,13 @@ digitalocean {
   spacesKeys() []digitalocean.spacesKey
 }
 
-// DigitalOcean account information
+// DigitalOcean account
+//
+// Examine the DigitalOcean account the provider is authenticated
+// against. Surfaces the account UUID, primary email and email
+// verification status, account `status` (active, warning, locked) and
+// status message, and the per-resource limits the account is
+// permitted (`dropletLimit`, `floatingIpLimit`, `volumeLimit`).
 digitalocean.account @defaults("email status") {
   // Account email
   email string
@@ -68,7 +86,16 @@ digitalocean.account @defaults("email status") {
   statusMessage string
 }
 
-// DigitalOcean Droplet (virtual machine)
+// DigitalOcean Droplet
+//
+// Examine a DigitalOcean Droplet — the provider's cloud VM offering.
+// Surfaces the droplet `id`, region and size slug, allocated memory,
+// vCPUs and disk, the public/private IPv4 addresses, image details,
+// applied tags, attached `vpc()`, the enabled features list (e.g.,
+// monitoring, backups), backup and monitoring flags, the firewalls
+// covering the droplet (resolved by id or tag), and the
+// `missingFirewall()` predicate that flags droplets with no attached
+// firewall.
 digitalocean.droplet @defaults("id name status") {
   // Droplet ID
   id int
@@ -113,6 +140,13 @@ digitalocean.droplet @defaults("id name status") {
 }
 
 // DigitalOcean firewall
+//
+// Examine a DigitalOcean cloud-firewall rule set. Surfaces the firewall
+// status (waiting, succeeded, failed), the `inboundRules` and
+// `outboundRules` (each a dict describing protocol, ports, sources,
+// and destinations), the tags used to target droplets, and the
+// resolved `droplets()` covered by the firewall (by direct ID or
+// matching tag).
 digitalocean.firewall @defaults("id name status") {
   // Firewall ID
   id string
@@ -135,6 +169,14 @@ digitalocean.firewall @defaults("id name status") {
 }
 
 // DigitalOcean managed database cluster
+//
+// Examine a DigitalOcean managed database. Surfaces the engine (pg,
+// mysql, redis, mongodb, kafka, opensearch) and version, the cluster
+// size and node count, region, status, the
+// `privateNetworkUuid` and resolved `vpc()`, the public connection
+// host and port, the `firewallRules()` controlling trusted sources,
+// the maintenance window, and the typed children `users()`,
+// `replicas()`, and `pools()`.
 digitalocean.database @defaults("id name engine") {
   // Database cluster ID
   id string
@@ -220,7 +262,12 @@ private digitalocean.database.pool @defaults("name mode") {
   mode string
 }
 
-// DigitalOcean domain
+// DigitalOcean DNS domain
+//
+// Examine a DigitalOcean-managed DNS domain. Surfaces the zone TTL,
+// the raw `zoneFile` contents as DigitalOcean serves them, and the
+// `records()` defined under the domain (A, AAAA, CNAME, MX, TXT, NS,
+// SRV, CAA).
 digitalocean.domain @defaults("name") {
   // Domain name
   name string
@@ -255,6 +302,11 @@ private digitalocean.domain.record @defaults("type name data") {
 }
 
 // DigitalOcean block storage volume
+//
+// Examine a DigitalOcean block-storage volume. Surfaces the volume
+// size in GB, region, description, filesystem type and label, applied
+// tags, and the resolved `droplets()` the volume is currently attached
+// to.
 digitalocean.volume @defaults("id name sizeGigabytes") {
   // Volume ID
   id string
@@ -281,6 +333,15 @@ digitalocean.volume @defaults("id name sizeGigabytes") {
 }
 
 // DigitalOcean load balancer
+//
+// Examine a DigitalOcean load balancer. Surfaces the public IP, region
+// and lifecycle status, the routing algorithm
+// (round_robin or least_connections), the
+// `forwardingRules` list, the `healthCheck` configuration, sticky
+// session settings, the `redirectHttpToHttps`,
+// `enableProxyProtocol`, `enableBackendKeepalive`, and
+// `disableLetsEncryptDnsRecords` flags, the resolved `vpc()`, and the
+// `droplets()` currently attached as backends.
 digitalocean.loadBalancer @defaults("id name status") {
   // Load balancer ID
   id string
@@ -323,6 +384,13 @@ digitalocean.loadBalancer @defaults("id name status") {
 }
 
 // DigitalOcean VPC
+//
+// Examine a DigitalOcean Virtual Private Cloud. Surfaces the VPC's
+// description, IP range (CIDR), region slug, the `default` flag
+// (whether it is the region's default VPC), and the creation
+// timestamp. Droplets, databases, load balancers, and Kubernetes
+// clusters can be filtered or correlated by the VPC they are attached
+// to.
 digitalocean.vpc @defaults("id name region") {
   // VPC ID
   id string
@@ -341,6 +409,12 @@ digitalocean.vpc @defaults("id name region") {
 }
 
 // DigitalOcean VPC peering
+//
+// Examine a peering between two DigitalOcean VPCs. Surfaces the
+// `vpcIds` participating in the peering, the peering status, and the
+// creation timestamp. The peering allows resources in distinct VPCs
+// to reach each other over the private network without traversing the
+// public internet.
 digitalocean.vpcPeering @defaults("id name status") {
   // Peering ID
   id string
@@ -355,6 +429,13 @@ digitalocean.vpcPeering @defaults("id name status") {
 }
 
 // DigitalOcean Kubernetes cluster
+//
+// Examine a DOKS (DigitalOcean Kubernetes Service) cluster. Surfaces
+// the Kubernetes version, region, lifecycle status, the cluster and
+// service subnet CIDRs, the resolved `vpc()`, the auto-upgrade,
+// surge-upgrade, and HA control plane flags, the SSO posture
+// (`ssoEnabled`, `ssoRequired`, `ssoIssuerUrl`, `ssoClientId`), the
+// maintenance policy, and applied tags.
 digitalocean.kubernetes.cluster @defaults("id name version") {
   // Cluster ID
   id string
@@ -427,6 +508,12 @@ private digitalocean.kubernetes.nodePool @defaults("id name size") {
 }
 
 // DigitalOcean project
+//
+// Examine a DigitalOcean project — the resource grouping used to
+// organize droplets, databases, load balancers, and other resources.
+// Surfaces the project description, declared `purpose` and
+// `environment` (Development, Staging, Production), the `isDefault`
+// flag, and creation/update timestamps.
 digitalocean.project @defaults("id name environment") {
   // Project ID
   id string
@@ -447,6 +534,10 @@ digitalocean.project @defaults("id name environment") {
 }
 
 // DigitalOcean SSH key
+//
+// Examine an SSH key registered to the DigitalOcean account. Surfaces
+// the key name, fingerprint, and the full `publicKey` content as
+// stored by DigitalOcean.
 digitalocean.sshKey @defaults("id name") {
   // SSH key ID
   id int
@@ -459,6 +550,12 @@ digitalocean.sshKey @defaults("id name") {
 }
 
 // DigitalOcean TLS certificate
+//
+// Examine a TLS certificate held by DigitalOcean for use with load
+// balancers, CDN endpoints, or App Platform. Surfaces the certificate
+// type (custom or lets_encrypt), the issuance state (pending,
+// verified, error), the SHA-1 fingerprint, the DNS names covered, and
+// the `notAfter` expiration timestamp.
 digitalocean.certificate @defaults("id name state") {
   // Certificate ID
   id string
@@ -479,6 +576,12 @@ digitalocean.certificate @defaults("id name state") {
 }
 
 // DigitalOcean container registry
+//
+// Examine the DigitalOcean Container Registry attached to the
+// account. Surfaces the registry name, region slug, subscription
+// tier, current storage usage in bytes, and creation timestamp. The
+// `digitalocean.registryRepositories()` collection enumerates the
+// repositories hosted in the registry.
 digitalocean.registry @defaults("name region") {
   // Registry name
   name string
@@ -505,6 +608,12 @@ private digitalocean.registry.repository @defaults("name tagCount") {
 }
 
 // DigitalOcean reserved IP
+//
+// Examine a reserved IP — DigitalOcean's static public IPv4 that can
+// be reassigned between droplets. Surfaces the IP address, region
+// slug, owning project, the `locked` flag (in-flight assignment
+// state), and the `dropletId` the IP is currently routed to (zero
+// when unassigned).
 digitalocean.reservedIp @defaults("ip region") {
   // IP address
   ip string
@@ -519,6 +628,12 @@ digitalocean.reservedIp @defaults("ip region") {
 }
 
 // DigitalOcean App Platform application
+//
+// Examine an App Platform application — DigitalOcean's managed PaaS
+// for containers and static sites. Surfaces the app's live URL, the
+// `activeDeploymentStatus`, the full `spec` describing services,
+// jobs, workers, static sites, ingresses, environment variables, and
+// linked databases, and creation/update timestamps.
 digitalocean.app @defaults("id name") {
   // App ID
   id string
@@ -536,7 +651,13 @@ digitalocean.app @defaults("id name") {
   spec dict
 }
 
-// DigitalOcean monitoring alert policy
+// DigitalOcean alert policy
+//
+// Examine a DigitalOcean monitoring alert policy. Surfaces the alert
+// `type` (e.g., `v1/insights/droplet/cpu`), the
+// `compare` operator and `value` threshold, the evaluation `window`,
+// the `enabled` flag, the entities and tags the alert applies to, and
+// the email and Slack notification targets.
 digitalocean.alertPolicy @defaults("uuid type enabled") {
   // Alert policy UUID
   uuid string
@@ -563,6 +684,10 @@ digitalocean.alertPolicy @defaults("uuid type enabled") {
 }
 
 // DigitalOcean uptime check
+//
+// Examine a DigitalOcean uptime check. Surfaces the check `type`
+// (ping, http, https), the `target` URL or IP being probed, the list
+// of monitoring `regions` running the check, and the `enabled` flag.
 digitalocean.uptimeCheck @defaults("id name type") {
   // Check ID
   id string
@@ -579,6 +704,11 @@ digitalocean.uptimeCheck @defaults("id name type") {
 }
 
 // DigitalOcean CDN endpoint
+//
+// Examine a DigitalOcean CDN endpoint fronting a Spaces bucket.
+// Surfaces the origin Spaces endpoint, the public CDN endpoint URL,
+// the cache TTL, the bound TLS certificate ID, the custom domain when
+// configured, and the creation timestamp.
 digitalocean.cdn @defaults("id origin") {
   // CDN ID
   id string
@@ -597,6 +727,11 @@ digitalocean.cdn @defaults("id origin") {
 }
 
 // DigitalOcean tag
+//
+// Examine a DigitalOcean tag — the cross-resource label used to group
+// droplets, volumes, load balancers, databases, and reserved IPs.
+// Surfaces the tag name and the total count of resources currently
+// labelled with the tag.
 digitalocean.tag @defaults("name") {
   // Tag name
   name string
@@ -605,6 +740,12 @@ digitalocean.tag @defaults("name") {
 }
 
 // DigitalOcean Spaces access key
+//
+// Examine an access key for DigitalOcean Spaces — the S3-compatible
+// object storage. Surfaces the key name, access key ID, the
+// `grants` list (per-bucket permission bindings), and the creation
+// timestamp. The matching secret is only returned at creation time
+// and is not exposed here.
 digitalocean.spacesKey @defaults("name accessKey") {
   // Key name
   name string

@@ -5,6 +5,18 @@ option provider = "go.mondoo.com/mql/providers/hetzner"
 option go_package = "go.mondoo.com/mql/v13/providers/hetzner/resources"
 
 // Hetzner Cloud project
+//
+// Use the Hetzner Cloud namespace as the project-scoped entry point
+// for the Hetzner provider. Iterate `servers()` for cloud VMs (with
+// the matching `serverTypes()` and `images()`), `volumes()` for block
+// storage, `networks()` for project networks (Hetzner's VPC),
+// `floatingIps()` and `primaryIps()` for routable IPv4/IPv6,
+// `loadBalancers()` plus `loadBalancerTypes()` for the managed L4/L7
+// load balancers, `firewalls()` for stateful firewall rule sets,
+// `sshKeys()` for project SSH keys, `certificates()` for managed TLS
+// certs, `placementGroups()` for spread/anti-affinity placement,
+// `isos()` for boot ISOs, and `locations()`/`datacenters()` for the
+// regional and AZ-style topology.
 hetzner {
   // Cloud servers (virtual machines)
   servers() []hetzner.server
