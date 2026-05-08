@@ -4874,6 +4874,64 @@ private aws.macie.customDataIdentifier @defaults("id name") {
   tags() map[string]string
 }
 
+// Amazon Detective
+//
+// Use the Detective namespace to enumerate Detective behavior graphs in
+// the account. Iterate `graphs()` for the per-region behavior graphs,
+// each of which exposes member accounts and the data-source packages
+// (Detective core, EKS audit logs, Security Hub findings) feeding the
+// graph.
+aws.detective {
+  // List of Detective behavior graphs across regions
+  graphs() []aws.detective.graph
+}
+
+// Amazon Detective behavior graph
+//
+// Examine a single Detective behavior graph, the data plane created when
+// Detective is enabled in a region. The `members()` field iterates the
+// account memberships participating in the graph and `datasourcePackages()`
+// reports the ingestion state of each supported data-source package keyed
+// by package name.
+private aws.detective.graph @defaults("arn region createdAt") {
+  // ARN of the behavior graph
+  arn string
+  // Region of the behavior graph
+  region string
+  // Date and time when the graph was created
+  createdAt time
+  // Member accounts associated with the graph
+  members() []aws.detective.graph.member
+  // Ingestion state of each data-source package, keyed by package name (DETECTIVE_CORE, EKS_AUDIT, ASFF_SECURITYHUB_FINDING). Values: STARTED, STOPPED, DISABLED
+  datasourcePackages() map[string]string
+  // Tags for the graph
+  tags() map[string]string
+}
+
+// Amazon Detective behavior graph member account
+private aws.detective.graph.member @defaults("accountId status invitationType") {
+  // ARN of the parent behavior graph
+  graphArn string
+  // Region of the graph
+  region string
+  // AWS account ID of the member
+  accountId string
+  // Email address of the member account
+  email string
+  // AWS account ID of the administrator that owns the graph
+  administratorId string
+  // Membership status: INVITED, VERIFICATION_IN_PROGRESS, VERIFICATION_FAILED, ENABLED, ACCEPTED_BUT_DISABLED
+  status string
+  // Reason a member is disabled: VOLUME_TOO_HIGH, VOLUME_UNKNOWN
+  disabledReason string
+  // Date and time when the member was invited
+  invitedAt time
+  // Date and time when the member was last updated
+  updatedAt time
+  // Source of the membership: INVITATION, ORGANIZATION
+  invitationType string
+}
+
 // AWS Security Hub
 //
 // Use the Security Hub namespace to enumerate per-region Security Hub

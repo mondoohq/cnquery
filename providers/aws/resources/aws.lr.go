@@ -224,6 +224,9 @@ const (
 	ResourceAwsMacieClassificationJob                                           string = "aws.macie.classificationJob"
 	ResourceAwsMacieFinding                                                     string = "aws.macie.finding"
 	ResourceAwsMacieCustomDataIdentifier                                        string = "aws.macie.customDataIdentifier"
+	ResourceAwsDetective                                                        string = "aws.detective"
+	ResourceAwsDetectiveGraph                                                   string = "aws.detective.graph"
+	ResourceAwsDetectiveGraphMember                                             string = "aws.detective.graph.member"
 	ResourceAwsSecurityhub                                                      string = "aws.securityhub"
 	ResourceAwsSecurityhubHub                                                   string = "aws.securityhub.hub"
 	ResourceAwsSecurityhubStandardSubscription                                  string = "aws.securityhub.standardSubscription"
@@ -1588,6 +1591,18 @@ func init() {
 		"aws.macie.customDataIdentifier": {
 			// to override args, implement: initAwsMacieCustomDataIdentifier(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsMacieCustomDataIdentifier,
+		},
+		"aws.detective": {
+			// to override args, implement: initAwsDetective(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDetective,
+		},
+		"aws.detective.graph": {
+			// to override args, implement: initAwsDetectiveGraph(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDetectiveGraph,
+		},
+		"aws.detective.graph.member": {
+			// to override args, implement: initAwsDetectiveGraphMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDetectiveGraphMember,
 		},
 		"aws.securityhub": {
 			// to override args, implement: initAwsSecurityhub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9512,6 +9527,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.macie.customDataIdentifier.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieCustomDataIdentifier).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.detective.graphs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetective).GetGraphs()).ToDataRes(types.Array(types.Resource("aws.detective.graph")))
+	},
+	"aws.detective.graph.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraph).GetArn()).ToDataRes(types.String)
+	},
+	"aws.detective.graph.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraph).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.detective.graph.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraph).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.detective.graph.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraph).GetMembers()).ToDataRes(types.Array(types.Resource("aws.detective.graph.member")))
+	},
+	"aws.detective.graph.datasourcePackages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraph).GetDatasourcePackages()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.detective.graph.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraph).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.detective.graph.member.graphArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetGraphArn()).ToDataRes(types.String)
+	},
+	"aws.detective.graph.member.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.detective.graph.member.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.detective.graph.member.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetEmail()).ToDataRes(types.String)
+	},
+	"aws.detective.graph.member.administratorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetAdministratorId()).ToDataRes(types.String)
+	},
+	"aws.detective.graph.member.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.detective.graph.member.disabledReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetDisabledReason()).ToDataRes(types.String)
+	},
+	"aws.detective.graph.member.invitedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetInvitedAt()).ToDataRes(types.Time)
+	},
+	"aws.detective.graph.member.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.detective.graph.member.invitationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetInvitationType()).ToDataRes(types.String)
 	},
 	"aws.securityhub.hubs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhub).GetHubs()).ToDataRes(types.Array(types.Resource("aws.securityhub.hub")))
@@ -33168,6 +33234,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.macie.customDataIdentifier.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieCustomDataIdentifier).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.detective.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetective).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.detective.graphs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetective).Graphs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraph).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.detective.graph.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraph).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraph).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraph).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraph).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.datasourcePackages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraph).DatasourcePackages, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraph).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.detective.graph.member.graphArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).GraphArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.administratorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).AdministratorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.disabledReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).DisabledReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.invitedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).InvitedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.invitationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).InvitationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.securityhub.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -78682,6 +78828,251 @@ func (c *mqlAwsMacieCustomDataIdentifier) GetTags() *plugin.TValue[map[string]an
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+// mqlAwsDetective for the aws.detective resource
+type mqlAwsDetective struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDetectiveInternal it will be used here
+	Graphs plugin.TValue[[]any]
+}
+
+// createAwsDetective creates a new instance of this resource
+func createAwsDetective(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDetective{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.detective", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDetective) MqlName() string {
+	return "aws.detective"
+}
+
+func (c *mqlAwsDetective) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDetective) GetGraphs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Graphs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.detective", c.__id, "graphs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.graphs()
+	})
+}
+
+// mqlAwsDetectiveGraph for the aws.detective.graph resource
+type mqlAwsDetectiveGraph struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDetectiveGraphInternal it will be used here
+	Arn                plugin.TValue[string]
+	Region             plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	Members            plugin.TValue[[]any]
+	DatasourcePackages plugin.TValue[map[string]any]
+	Tags               plugin.TValue[map[string]any]
+}
+
+// createAwsDetectiveGraph creates a new instance of this resource
+func createAwsDetectiveGraph(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDetectiveGraph{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.detective.graph", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDetectiveGraph) MqlName() string {
+	return "aws.detective.graph"
+}
+
+func (c *mqlAwsDetectiveGraph) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDetectiveGraph) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDetectiveGraph) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDetectiveGraph) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsDetectiveGraph) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.detective.graph", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+func (c *mqlAwsDetectiveGraph) GetDatasourcePackages() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.DatasourcePackages, func() (map[string]any, error) {
+		return c.datasourcePackages()
+	})
+}
+
+func (c *mqlAwsDetectiveGraph) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsDetectiveGraphMember for the aws.detective.graph.member resource
+type mqlAwsDetectiveGraphMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDetectiveGraphMemberInternal it will be used here
+	GraphArn        plugin.TValue[string]
+	Region          plugin.TValue[string]
+	AccountId       plugin.TValue[string]
+	Email           plugin.TValue[string]
+	AdministratorId plugin.TValue[string]
+	Status          plugin.TValue[string]
+	DisabledReason  plugin.TValue[string]
+	InvitedAt       plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
+	InvitationType  plugin.TValue[string]
+}
+
+// createAwsDetectiveGraphMember creates a new instance of this resource
+func createAwsDetectiveGraphMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDetectiveGraphMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.detective.graph.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDetectiveGraphMember) MqlName() string {
+	return "aws.detective.graph.member"
+}
+
+func (c *mqlAwsDetectiveGraphMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetGraphArn() *plugin.TValue[string] {
+	return &c.GraphArn
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetAdministratorId() *plugin.TValue[string] {
+	return &c.AdministratorId
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetDisabledReason() *plugin.TValue[string] {
+	return &c.DisabledReason
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetInvitedAt() *plugin.TValue[*time.Time] {
+	return &c.InvitedAt
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetInvitationType() *plugin.TValue[string] {
+	return &c.InvitationType
 }
 
 // mqlAwsSecurityhub for the aws.securityhub resource

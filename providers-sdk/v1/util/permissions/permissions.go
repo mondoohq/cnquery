@@ -519,6 +519,7 @@ func awsConnectionMethodToService(method string) string {
 		"sagemaker":                "sagemaker",
 		"cognitoidentity":          "cognitoidentity",
 		"cognitoidentityprovider":  "cognitoidentityprovider",
+		"detective":                "detective",
 		"directoryservice":         "directoryservice",
 		"pipes":                    "pipes",
 		"scheduler":                "scheduler",

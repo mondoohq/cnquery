@@ -36,6 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.11
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.62.2
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.18
+	github.com/aws/aws-sdk-go-v2/service/detective v1.38.15
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.18
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.48.15
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.20.15

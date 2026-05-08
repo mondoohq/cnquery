@@ -217,6 +217,8 @@ github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.62.2 h1:+vWChWb
 github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.62.2/go.mod h1:Qa7SOwwtaE9VticcY52FgDIXJZLS1jz+Y6fiCdLUdRU=
 github.com/aws/aws-sdk-go-v2/service/dax v1.29.18 h1:sZwTAlW7WiDiLBjDk6OvmbOBjXQPooArNkUbTzCupOU=
 github.com/aws/aws-sdk-go-v2/service/dax v1.29.18/go.mod h1:zAdYaGSQXmr+LwBX8pp5vHvcToXC5SEOKPlDUhZMMRc=
+github.com/aws/aws-sdk-go-v2/service/detective v1.38.15 h1:H5v+Sro9ZL5OQGOoxuZz8RTzvO23VkOJ1LjKqXbank8=
+github.com/aws/aws-sdk-go-v2/service/detective v1.38.15/go.mod h1:/DN1zJ/OloIC8JwOVgOjbSDpl0S56cnu5Qnf9D/sXc8=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.18 h1:jj7CHRntkLMhurirvfbf1jUhQznjn28U2cTVzXhsFlc=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.18/go.mod h1:7CWZoIlHKM1nPFm2nqSeoYJIjY+oyBnkQLrLiEIkctY=
 github.com/aws/aws-sdk-go-v2/service/docdb v1.48.15 h1:jvP746CYJno9fSBqvPMShLPVu+P9wetNsSb+xYk52ag=

@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.21.3",
-  "generated_at": "2026-05-07T22:38:41-07:00",
+  "generated_at": "2026-05-08T10:57:12-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -125,6 +125,10 @@
     "controltower:ListLandingZones",
     "dax:DescribeClusters",
     "dax:ListTags",
+    "detective:ListDatasourcePackages",
+    "detective:ListGraphs",
+    "detective:ListMembers",
+    "detective:ListTagsForResource",
     "dms:DescribeReplicationInstances",
     "docdbelastic:ListClusterSnapshots",
     "docdbelastic:ListClusters",
@@ -1436,6 +1440,30 @@
       "service": "dax",
       "action": "ListTags",
       "source_file": "aws_dax.go"
+    },
+    {
+      "permission": "detective:ListDatasourcePackages",
+      "service": "detective",
+      "action": "ListDatasourcePackages",
+      "source_file": "aws_detective.go"
+    },
+    {
+      "permission": "detective:ListGraphs",
+      "service": "detective",
+      "action": "ListGraphs",
+      "source_file": "aws_detective.go"
+    },
+    {
+      "permission": "detective:ListMembers",
+      "service": "detective",
+      "action": "ListMembers",
+      "source_file": "aws_detective.go"
+    },
+    {
+      "permission": "detective:ListTagsForResource",
+      "service": "detective",
+      "action": "ListTagsForResource",
+      "source_file": "aws_detective.go"
     },
     {
       "permission": "dms:DescribeReplicationInstances",
