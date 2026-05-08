@@ -878,6 +878,7 @@ aws.cloudfront.function.name 11.15.2
 aws.cloudfront.function.runtime 11.15.2
 aws.cloudfront.function.stage 11.15.2
 aws.cloudfront.function.status 11.15.2
+aws.cloudfront.function.tags 13.21.4
 aws.cloudfront.functions 11.15.2
 aws.cloudfront.trustStore 13.20.1
 aws.cloudfront.trustStore.arn 13.20.1
@@ -4780,6 +4781,7 @@ aws.opensearch.domain.tags 11.15.2
 aws.opensearch.domain.tlsSecurityPolicy 11.15.2
 aws.opensearch.domain.upgradeProcessing 11.15.2
 aws.opensearch.domain.vpc 11.16.1
+aws.opensearch.domain.vpcEgressEnabled 13.21.4
 aws.opensearch.domain.vpcId 11.15.2
 aws.opensearch.domain.warmCount 11.15.2
 aws.opensearch.domain.warmEnabled 11.15.2
@@ -5533,6 +5535,7 @@ aws.sagemaker.cluster.vpc 13.12.0
 aws.sagemaker.clusterInstanceGroup 13.12.0
 aws.sagemaker.clusterInstanceGroup.currentCount 13.12.0
 aws.sagemaker.clusterInstanceGroup.iamRole 13.12.0
+aws.sagemaker.clusterInstanceGroup.imageVersionStatus 13.21.4
 aws.sagemaker.clusterInstanceGroup.instanceGroupName 13.12.0
 aws.sagemaker.clusterInstanceGroup.instanceRequirements 13.12.2
 aws.sagemaker.clusterInstanceGroup.instanceType 13.12.0
@@ -5548,6 +5551,7 @@ aws.sagemaker.clusterInstanceGroup.status 13.12.0
 aws.sagemaker.clusterInstanceGroup.targetCount 13.12.0
 aws.sagemaker.clusterInstanceGroup.threadsPerCore 13.12.0
 aws.sagemaker.clusterNode 13.12.0
+aws.sagemaker.clusterNode.imageVersionStatus 13.21.4
 aws.sagemaker.clusterNode.instanceGroupName 13.12.0
 aws.sagemaker.clusterNode.instanceId 13.12.0
 aws.sagemaker.clusterNode.instanceType 13.12.0

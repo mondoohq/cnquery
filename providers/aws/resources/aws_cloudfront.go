@@ -192,6 +192,35 @@ func (a *mqlAwsCloudfrontFunction) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+func (a *mqlAwsCloudfrontFunction) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudfront("")
+	ctx := context.Background()
+
+	resp, err := svc.ListTagsForResource(ctx, &cloudfront.ListTagsForResourceInput{
+		Resource: &a.Arn.Data,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return map[string]any{}, nil
+		}
+		return nil, err
+	}
+	tags := make(map[string]any)
+	if resp.Tags != nil {
+		for _, tag := range resp.Tags.Items {
+			if tag.Key != nil {
+				val := ""
+				if tag.Value != nil {
+					val = *tag.Value
+				}
+				tags[*tag.Key] = val
+			}
+		}
+	}
+	return tags, nil
+}
+
 func (a *mqlAwsCloudfront) functions() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 

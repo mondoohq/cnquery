@@ -6482,6 +6482,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.clusterInstanceGroup.networkInterfaceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetNetworkInterfaceType()).ToDataRes(types.String)
 	},
+	"aws.sagemaker.clusterInstanceGroup.imageVersionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterInstanceGroup).GetImageVersionStatus()).ToDataRes(types.String)
+	},
 	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.instanceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).GetInstanceType()).ToDataRes(types.String)
 	},
@@ -6517,6 +6520,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.clusterNode.networkInterfaceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerClusterNode).GetNetworkInterfaceType()).ToDataRes(types.String)
+	},
+	"aws.sagemaker.clusterNode.imageVersionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerClusterNode).GetImageVersionStatus()).ToDataRes(types.String)
 	},
 	"aws.sagemaker.featureGroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerFeatureGroup).GetArn()).ToDataRes(types.String)
@@ -8527,6 +8533,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.opensearch.domain.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.opensearch.domain.vpcEgressEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetVpcEgressEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.opensearch.domain.enforceHTTPS": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetEnforceHTTPS()).ToDataRes(types.Bool)
@@ -11749,6 +11758,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudfront.function.runtime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontFunction).GetRuntime()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.function.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontFunction).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.cloudtrail.trails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudtrail).GetTrails()).ToDataRes(types.Array(types.Resource("aws.cloudtrail.trail")))
@@ -28268,6 +28280,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerClusterInstanceGroup).NetworkInterfaceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.clusterInstanceGroup.imageVersionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterInstanceGroup).ImageVersionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.clusterInstanceGroup.instanceTypeDetail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail).__id, ok = v.Value.(string)
 		return
@@ -28322,6 +28338,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.clusterNode.networkInterfaceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerClusterNode).NetworkInterfaceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.clusterNode.imageVersionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerClusterNode).ImageVersionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.featureGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31302,6 +31322,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.opensearch.domain.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.vpcEgressEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).VpcEgressEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.opensearch.domain.enforceHTTPS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36170,6 +36194,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudfront.function.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontFunction).Runtime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.function.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontFunction).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.cloudtrail.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -65719,6 +65747,7 @@ type mqlAwsSagemakerClusterInstanceGroup struct {
 	InstanceRequirements plugin.TValue[any]
 	InstanceTypeDetails  plugin.TValue[[]any]
 	NetworkInterfaceType plugin.TValue[string]
+	ImageVersionStatus   plugin.TValue[string]
 }
 
 // createAwsSagemakerClusterInstanceGroup creates a new instance of this resource
@@ -65820,6 +65849,10 @@ func (c *mqlAwsSagemakerClusterInstanceGroup) GetNetworkInterfaceType() *plugin.
 	return &c.NetworkInterfaceType
 }
 
+func (c *mqlAwsSagemakerClusterInstanceGroup) GetImageVersionStatus() *plugin.TValue[string] {
+	return &c.ImageVersionStatus
+}
+
 // mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail for the aws.sagemaker.clusterInstanceGroup.instanceTypeDetail resource
 type mqlAwsSagemakerClusterInstanceGroupInstanceTypeDetail struct {
 	MqlRuntime *plugin.Runtime
@@ -65893,6 +65926,7 @@ type mqlAwsSagemakerClusterNode struct {
 	PrivateDnsHostname   plugin.TValue[string]
 	Region               plugin.TValue[string]
 	NetworkInterfaceType plugin.TValue[string]
+	ImageVersionStatus   plugin.TValue[string]
 }
 
 // createAwsSagemakerClusterNode creates a new instance of this resource
@@ -65968,6 +66002,10 @@ func (c *mqlAwsSagemakerClusterNode) GetNetworkInterfaceType() *plugin.TValue[st
 	return plugin.GetOrCompute[string](&c.NetworkInterfaceType, func() (string, error) {
 		return c.networkInterfaceType()
 	})
+}
+
+func (c *mqlAwsSagemakerClusterNode) GetImageVersionStatus() *plugin.TValue[string] {
+	return &c.ImageVersionStatus
 }
 
 // mqlAwsSagemakerFeatureGroup for the aws.sagemaker.featureGroup resource
@@ -74015,6 +74053,7 @@ type mqlAwsOpensearchDomain struct {
 	EbsThroughput               plugin.TValue[int64]
 	VpcId                       plugin.TValue[string]
 	Vpc                         plugin.TValue[*mqlAwsVpc]
+	VpcEgressEnabled            plugin.TValue[bool]
 	EnforceHTTPS                plugin.TValue[bool]
 	TlsSecurityPolicy           plugin.TValue[string]
 	CustomEndpointEnabled       plugin.TValue[bool]
@@ -74211,6 +74250,10 @@ func (c *mqlAwsOpensearchDomain) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 
 		return c.vpc()
 	})
+}
+
+func (c *mqlAwsOpensearchDomain) GetVpcEgressEnabled() *plugin.TValue[bool] {
+	return &c.VpcEgressEnabled
 }
 
 func (c *mqlAwsOpensearchDomain) GetEnforceHTTPS() *plugin.TValue[bool] {
@@ -87999,6 +88042,7 @@ type mqlAwsCloudfrontFunction struct {
 	Stage            plugin.TValue[string]
 	Comment          plugin.TValue[string]
 	Runtime          plugin.TValue[string]
+	Tags             plugin.TValue[map[string]any]
 }
 
 // createAwsCloudfrontFunction creates a new instance of this resource
@@ -88068,6 +88112,12 @@ func (c *mqlAwsCloudfrontFunction) GetComment() *plugin.TValue[string] {
 
 func (c *mqlAwsCloudfrontFunction) GetRuntime() *plugin.TValue[string] {
 	return &c.Runtime
+}
+
+func (c *mqlAwsCloudfrontFunction) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
 }
 
 // mqlAwsCloudtrail for the aws.cloudtrail resource

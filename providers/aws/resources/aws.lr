@@ -2310,6 +2310,8 @@ private aws.sagemaker.clusterInstanceGroup @defaults("instanceGroupName instance
   instanceTypeDetails []aws.sagemaker.clusterInstanceGroup.instanceTypeDetail
   // Network interface type for the instance group (e.g., efa, efa-only)
   networkInterfaceType string
+  // Image-version status for the group: LatestVersion or NewVersionAvailable
+  imageVersionStatus string
 }
 
 // Instance type detail within a flexible SageMaker HyperPod instance group
@@ -2342,6 +2344,8 @@ private aws.sagemaker.clusterNode @defaults("instanceId instanceGroupName instan
   region string
   // Network interface type for the node (e.g., efa, efa-only)
   networkInterfaceType() string
+  // Image-version status for the node: LatestVersion or NewVersionAvailable
+  imageVersionStatus string
 }
 
 // AWS SageMaker feature group
@@ -3984,6 +3988,10 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   vpcId @maturity("deprecated") string
   // VPC associated with the domain
   vpc() aws.vpc
+  // Whether outbound traffic from the domain is routed through the customer
+  // VPC. When true, outbound traffic flows through the VPC; when false, it
+  // goes through the public internet. Always false for non-VPC domains.
+  vpcEgressEnabled bool
   // Whether HTTPS is required
   enforceHTTPS bool
   // TLS security policy
@@ -6719,6 +6727,8 @@ private aws.cloudfront.function @defaults("name status") {
   comment string
   // Runtime environment for the function
   runtime string
+  // Tags applied to the function
+  tags() map[string]string
 }
 
 // AWS CloudTrail

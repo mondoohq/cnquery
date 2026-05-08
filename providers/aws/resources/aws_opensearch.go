@@ -185,12 +185,14 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 	sgArns := []string{}
 	subnetIds := []string{}
 	var vpcId string
+	var vpcEgressEnabled bool
 	if domain.VPCOptions != nil {
 		for _, sgId := range domain.VPCOptions.SecurityGroupIds {
 			sgArns = append(sgArns, NewSecurityGroupArn(region, accountID, sgId))
 		}
 		subnetIds = domain.VPCOptions.SubnetIds
 		vpcId = convert.ToValue(domain.VPCOptions.VPCId)
+		vpcEgressEnabled = convert.ToValue(domain.VPCOptions.EgressEnabled)
 	}
 
 	// Get endpoint
@@ -367,6 +369,7 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 			"ebsIops":                     llx.IntData(ebsIops),
 			"ebsThroughput":               llx.IntData(ebsThroughput),
 			"vpcId":                       llx.StringData(vpcId),
+			"vpcEgressEnabled":            llx.BoolData(vpcEgressEnabled),
 			"enforceHTTPS":                llx.BoolData(enforceHTTPS),
 			"tlsSecurityPolicy":           llx.StringData(tlsSecurityPolicy),
 			"customEndpointEnabled":       llx.BoolData(customEndpointEnabled),

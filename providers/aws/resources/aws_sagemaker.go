@@ -2464,6 +2464,7 @@ func (a *mqlAwsSagemakerCluster) instanceGroups() ([]any, error) {
 				"instanceRequirements": llx.DictData(instanceRequirements),
 				"instanceTypeDetails":  llx.ArrayData(instanceTypeDetails, types.Resource("aws.sagemaker.clusterInstanceGroup.instanceTypeDetail")),
 				"networkInterfaceType": llx.StringData(networkInterfaceType),
+				"imageVersionStatus":   llx.StringData(string(ig.ImageVersionStatus)),
 			})
 		if err != nil {
 			return nil, err
@@ -2557,6 +2558,7 @@ func (a *mqlAwsSagemakerCluster) nodes() ([]any, error) {
 					"launchedAt":         llx.TimeDataPtr(node.LaunchTime),
 					"privateDnsHostname": llx.StringDataPtr(node.PrivateDnsHostname),
 					"region":             llx.StringData(a.Region.Data),
+					"imageVersionStatus": llx.StringData(string(node.ImageVersionStatus)),
 				})
 			if err != nil {
 				return nil, err
