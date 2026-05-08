@@ -9829,11 +9829,11 @@ private aws.apigatewayv2.stage @defaults("stageName apiId") {
 
 // Route in an API Gateway v2 API
 //
-// A route maps an incoming request (HTTP method+path, or WebSocket
-// route-selection value) to an integration target. Selection key is the
-// composite of api id and route id. The `authorizationType` and
-// `authorizerId` fields are the audit-relevant entry points for who is
-// allowed to reach the route.
+// Examine the mapping from an incoming request (HTTP method+path, or
+// WebSocket route-selection value) to its integration target. Selection
+// key is the composite of api id and route id. The `authorizationType`
+// and `authorizerId` fields are the audit-relevant entry points for who
+// is allowed to reach the route.
 private aws.apigatewayv2.route @defaults("routeKey apiId authorizationType") {
   // Route ID
   routeId string
@@ -9866,11 +9866,11 @@ private aws.apigatewayv2.route @defaults("routeKey apiId authorizationType") {
 
 // Authorizer in an API Gateway v2 API
 //
-// An authorizer validates requests before they reach a route. Selection
-// key is the composite of api id and authorizer id. The
-// `authorizerType` field determines how the rest of the configuration
-// is interpreted — JWT uses `jwtConfiguration`, REQUEST uses
-// `authorizerUri` and `identitySource`.
+// Examine an authorizer that validates requests before they reach a
+// route. Selection key is the composite of api id and authorizer id.
+// The `authorizerType` field determines how the rest of the
+// configuration is interpreted — JWT uses `jwtConfiguration`, REQUEST
+// uses `authorizerUri` and `identitySource`.
 private aws.apigatewayv2.authorizer @defaults("name authorizerType apiId") {
   // Authorizer ID
   authorizerId string
