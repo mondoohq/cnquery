@@ -9815,9 +9815,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.containerAppService.managedEnvironment.zoneRedundant": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).GetZoneRedundant()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.containerAppService.managedEnvironment.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).GetPublicNetworkAccess()).ToDataRes(types.String)
-	},
 	"azure.subscription.containerAppService.managedEnvironment.peerAuthentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).GetPeerAuthentication()).ToDataRes(types.Dict)
 	},
@@ -9832,9 +9829,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.containerAppService.managedEnvironment.logAnalyticsCustomerId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).GetLogAnalyticsCustomerId()).ToDataRes(types.String)
-	},
-	"azure.subscription.containerAppService.managedEnvironment.daprAIInstrumentationKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).GetDaprAIInstrumentationKey()).ToDataRes(types.String)
 	},
 	"azure.subscription.containerAppService.managedEnvironment.daprComponents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).GetDaprComponents()).ToDataRes(types.Array(types.Resource("azure.subscription.containerAppService.managedEnvironment.daprComponent")))
@@ -22420,10 +22414,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).ZoneRedundant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.containerAppService.managedEnvironment.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"azure.subscription.containerAppService.managedEnvironment.peerAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).PeerAuthentication, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -22442,10 +22432,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.containerAppService.managedEnvironment.logAnalyticsCustomerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).LogAnalyticsCustomerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.containerAppService.managedEnvironment.daprAIInstrumentationKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionContainerAppServiceManagedEnvironment).DaprAIInstrumentationKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.containerAppService.managedEnvironment.daprComponents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53206,13 +53192,11 @@ type mqlAzureSubscriptionContainerAppServiceManagedEnvironment struct {
 	DefaultDomain               plugin.TValue[string]
 	InternalLoadBalancerEnabled plugin.TValue[bool]
 	ZoneRedundant               plugin.TValue[bool]
-	PublicNetworkAccess         plugin.TValue[string]
 	PeerAuthentication          plugin.TValue[any]
 	PeerTrafficConfiguration    plugin.TValue[any]
 	CustomDomainConfiguration   plugin.TValue[any]
 	LogAnalyticsDestination     plugin.TValue[string]
 	LogAnalyticsCustomerId      plugin.TValue[string]
-	DaprAIInstrumentationKey    plugin.TValue[string]
 	DaprComponents              plugin.TValue[[]any]
 	Certificates                plugin.TValue[[]any]
 }
@@ -53302,10 +53286,6 @@ func (c *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) GetZoneRedun
 	return &c.ZoneRedundant
 }
 
-func (c *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) GetPublicNetworkAccess() *plugin.TValue[string] {
-	return &c.PublicNetworkAccess
-}
-
 func (c *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) GetPeerAuthentication() *plugin.TValue[any] {
 	return &c.PeerAuthentication
 }
@@ -53324,10 +53304,6 @@ func (c *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) GetLogAnalyt
 
 func (c *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) GetLogAnalyticsCustomerId() *plugin.TValue[string] {
 	return &c.LogAnalyticsCustomerId
-}
-
-func (c *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) GetDaprAIInstrumentationKey() *plugin.TValue[string] {
-	return &c.DaprAIInstrumentationKey
 }
 
 func (c *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) GetDaprComponents() *plugin.TValue[[]any] {

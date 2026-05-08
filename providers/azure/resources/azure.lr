@@ -6616,7 +6616,7 @@ private azure.subscription.containerAppService {
 // Container Apps. Selectable by ARM id; fields cover VNET delegation,
 // public-network access, peer-traffic mTLS, zone redundancy, and the
 // linked Log Analytics workspace.
-azure.subscription.containerAppService.managedEnvironment @defaults("name location provisioningState publicNetworkAccess") {
+azure.subscription.containerAppService.managedEnvironment @defaults("name location provisioningState internalLoadBalancerEnabled") {
   // ARM resource ID
   id string
   // Environment name
@@ -6641,8 +6641,6 @@ azure.subscription.containerAppService.managedEnvironment @defaults("name locati
   internalLoadBalancerEnabled bool
   // Whether zone redundancy is enabled
   zoneRedundant bool
-  // Public network access ("Enabled" or "Disabled")
-  publicNetworkAccess string
   // Peer authentication (mTLS) configuration
   peerAuthentication dict
   // Peer traffic configuration (cluster-internal encryption)
@@ -6653,8 +6651,6 @@ azure.subscription.containerAppService.managedEnvironment @defaults("name locati
   logAnalyticsDestination string
   // Log Analytics workspace customer ID, when destination is "log-analytics"
   logAnalyticsCustomerId string
-  // Dapr AI instrumentation key (App Insights), if Dapr telemetry is wired
-  daprAIInstrumentationKey string
   // Dapr components configured at the environment scope
   daprComponents() []azure.subscription.containerAppService.managedEnvironment.daprComponent
   // Certificates uploaded to the environment

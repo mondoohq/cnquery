@@ -159,7 +159,7 @@ func (a *mqlAzureSubscriptionContainerAppService) managedEnvironments() ([]any, 
 func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvironment) (plugin.Resource, error) {
 	props := entry.Properties
 
-	var staticIp, defaultDomain, daprAIKey, provisioningState, kind string
+	var staticIp, defaultDomain, provisioningState, kind string
 	var zoneRedundant *bool
 	var internalLB *bool
 	vnet := map[string]any{}
@@ -179,9 +179,6 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 		}
 		if props.DefaultDomain != nil {
 			defaultDomain = *props.DefaultDomain
-		}
-		if props.DaprAIInstrumentationKey != nil {
-			daprAIKey = *props.DaprAIInstrumentationKey
 		}
 		if props.ProvisioningState != nil {
 			provisioningState = string(*props.ProvisioningState)
@@ -235,11 +232,6 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 		}
 	}
 
-	publicNetworkAccess := "Enabled"
-	if internalLB != nil && *internalLB {
-		publicNetworkAccess = "Disabled"
-	}
-
 	mqlEnv, err := CreateResource(runtime, "azure.subscription.containerAppService.managedEnvironment",
 		map[string]*llx.RawData{
 			"id":                          llx.StringDataPtr(entry.ID),
@@ -254,13 +246,11 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 			"defaultDomain":               llx.StringData(defaultDomain),
 			"internalLoadBalancerEnabled": llx.BoolDataPtr(internalLB),
 			"zoneRedundant":               llx.BoolDataPtr(zoneRedundant),
-			"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
 			"peerAuthentication":          llx.DictData(peerAuth),
 			"peerTrafficConfiguration":    llx.DictData(peerTraffic),
 			"customDomainConfiguration":   llx.DictData(customDomain),
 			"logAnalyticsDestination":     llx.StringData(logDest),
 			"logAnalyticsCustomerId":      llx.StringData(logCustomerId),
-			"daprAIInstrumentationKey":    llx.StringData(daprAIKey),
 		})
 	if err != nil {
 		return nil, err
