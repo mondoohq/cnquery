@@ -268,6 +268,21 @@ providers/permissions:
 	@go run providers-sdk/v1/util/permissions/permissions.go providers/gcp
 	@go run providers-sdk/v1/util/permissions/permissions.go providers/azure
 
+# Test a single provider — the entry point CI matrix jobs invoke per-provider.
+# Explicit rules for the providers that share the root go.mod; the pattern
+# rule below covers everything that has its own go.mod.
+providers/test/core:
+	@$(call testProvider, providers/core)
+
+providers/test/network:
+	@$(call testProvider, providers/network)
+
+providers/test/os:
+	@$(call testProvider, providers/os)
+
+providers/test/%:
+	@$(call testGoModProvider, providers/$*)
+
 providers/test:
 	@$(call testProvider, providers/core)
 	@$(call testProvider, providers/network)
