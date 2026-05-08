@@ -1532,6 +1532,12 @@ var azurePermissionOverrides = map[string]string{
 	"Microsoft.Storage/localUsers/read":         "Microsoft.Storage/storageAccounts/localUsers/read",
 	"Microsoft.Storage/managementPolicies/read": "Microsoft.Storage/storageAccounts/managementPolicies/read",
 
+	// Data Factory: child resources are nested under factories/
+	"Microsoft.DataFactory/linkedServices/read":          "Microsoft.DataFactory/factories/linkedservices/read",
+	"Microsoft.DataFactory/integrationRuntimes/read":     "Microsoft.DataFactory/factories/integrationruntimes/read",
+	"Microsoft.DataFactory/managedVirtualNetworks/read":  "Microsoft.DataFactory/factories/managedvirtualnetworks/read",
+	"Microsoft.DataFactory/managedPrivateEndpoints/read": "Microsoft.DataFactory/factories/managedvirtualnetworks/managedprivateendpoints/read",
+
 	// CDN: AFD routes are nested under profiles/afdendpoints/
 	"Microsoft.Cdn/routes/read": "Microsoft.Cdn/profiles/afdendpoints/routes/read",
 

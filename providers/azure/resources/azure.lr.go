@@ -234,6 +234,10 @@ const (
 	ResourceAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection                  string = "azure.subscription.cacheService.redisInstance.privateEndpointConnection"
 	ResourceAzureSubscriptionDataFactoryService                                                  string = "azure.subscription.dataFactoryService"
 	ResourceAzureSubscriptionDataFactoryServiceFactory                                           string = "azure.subscription.dataFactoryService.factory"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryLinkedService                              string = "azure.subscription.dataFactoryService.factory.linkedService"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime                         string = "azure.subscription.dataFactoryService.factory.integrationRuntime"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork                      string = "azure.subscription.dataFactoryService.factory.managedVirtualNetwork"
+	ResourceAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint                     string = "azure.subscription.dataFactoryService.factory.managedPrivateEndpoint"
 	ResourceAzureSubscriptionSynapseService                                                      string = "azure.subscription.synapseService"
 	ResourceAzureSubscriptionSynapseServiceWorkspace                                             string = "azure.subscription.synapseService.workspace"
 	ResourceAzureSubscriptionContainerRegistryService                                            string = "azure.subscription.containerRegistryService"
@@ -1182,6 +1186,22 @@ func init() {
 		"azure.subscription.dataFactoryService.factory": {
 			Init:   initAzureSubscriptionDataFactoryServiceFactory,
 			Create: createAzureSubscriptionDataFactoryServiceFactory,
+		},
+		"azure.subscription.dataFactoryService.factory.linkedService": {
+			// to override args, implement: initAzureSubscriptionDataFactoryServiceFactoryLinkedService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionDataFactoryServiceFactoryLinkedService,
+		},
+		"azure.subscription.dataFactoryService.factory.integrationRuntime": {
+			// to override args, implement: initAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime,
+		},
+		"azure.subscription.dataFactoryService.factory.managedVirtualNetwork": {
+			// to override args, implement: initAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork,
+		},
+		"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint": {
+			// to override args, implement: initAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint,
 		},
 		"azure.subscription.synapseService": {
 			Init:   initAzureSubscriptionSynapseService,
@@ -8284,6 +8304,117 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.dataFactoryService.factory.created": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactory).GetCreated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.dataFactoryService.factory.linkedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactory).GetLinkedServices()).ToDataRes(types.Array(types.Resource("azure.subscription.dataFactoryService.factory.linkedService")))
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntimes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactory).GetIntegrationRuntimes()).ToDataRes(types.Array(types.Resource("azure.subscription.dataFactoryService.factory.integrationRuntime")))
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactory).GetManagedVirtualNetwork()).ToDataRes(types.Resource("azure.subscription.dataFactoryService.factory.managedVirtualNetwork"))
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.serviceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetServiceType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.integrationRuntimeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetIntegrationRuntimeName()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.parameterNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetParameterNames()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.usesKeyVaultReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetUsesKeyVaultReference()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetAnnotations()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.typeProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).GetTypeProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.runtimeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).GetRuntimeType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.typeProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).GetTypeProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).GetAlias()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.vnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).GetVnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.privateEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).GetPrivateEndpoints()).ToDataRes(types.Array(types.Resource("azure.subscription.dataFactoryService.factory.managedPrivateEndpoint")))
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.groupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetGroupId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.privateLinkResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetPrivateLinkResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.connectionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetConnectionStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.actionsRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetActionsRequired()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.fqdns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetFqdns()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.reserved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetReserved()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GetProvisioningState()).ToDataRes(types.String)
 	},
 	"azure.subscription.synapseService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSynapseService).GetSubscriptionId()).ToDataRes(types.String)
@@ -20128,6 +20259,170 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.dataFactoryService.factory.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDataFactoryServiceFactory).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactory).LinkedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactory).IntegrationRuntimes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactory).ManagedVirtualNetwork, ok = plugin.RawToTValue[*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.serviceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).ServiceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.integrationRuntimeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).IntegrationRuntimeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.parameterNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).ParameterNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.usesKeyVaultReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).UsesKeyVaultReference, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).Annotations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.linkedService.typeProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService).TypeProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.runtimeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).RuntimeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.integrationRuntime.typeProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime).TypeProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.vnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).VnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedVirtualNetwork.privateEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork).PrivateEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.privateLinkResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).PrivateLinkResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.connectionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).ConnectionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.actionsRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).ActionsRequired, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.fqdns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).Fqdns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.reserved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).Reserved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataFactoryService.factory.managedPrivateEndpoint.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.synapseService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47239,19 +47534,22 @@ type mqlAzureSubscriptionDataFactoryServiceFactory struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionDataFactoryServiceFactoryInternal it will be used here
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Location            plugin.TValue[string]
-	Tags                plugin.TValue[map[string]any]
-	Type                plugin.TValue[string]
-	Properties          plugin.TValue[any]
-	PublicNetworkAccess plugin.TValue[string]
-	Identity            plugin.TValue[any]
-	ProvisioningState   plugin.TValue[string]
-	Version             plugin.TValue[string]
-	RepoConfiguration   plugin.TValue[any]
-	Encryption          plugin.TValue[any]
-	Created             plugin.TValue[*time.Time]
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Location              plugin.TValue[string]
+	Tags                  plugin.TValue[map[string]any]
+	Type                  plugin.TValue[string]
+	Properties            plugin.TValue[any]
+	PublicNetworkAccess   plugin.TValue[string]
+	Identity              plugin.TValue[any]
+	ProvisioningState     plugin.TValue[string]
+	Version               plugin.TValue[string]
+	RepoConfiguration     plugin.TValue[any]
+	Encryption            plugin.TValue[any]
+	Created               plugin.TValue[*time.Time]
+	LinkedServices        plugin.TValue[[]any]
+	IntegrationRuntimes   plugin.TValue[[]any]
+	ManagedVirtualNetwork plugin.TValue[*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork]
 }
 
 // createAzureSubscriptionDataFactoryServiceFactory creates a new instance of this resource
@@ -47341,6 +47639,412 @@ func (c *mqlAzureSubscriptionDataFactoryServiceFactory) GetEncryption() *plugin.
 
 func (c *mqlAzureSubscriptionDataFactoryServiceFactory) GetCreated() *plugin.TValue[*time.Time] {
 	return &c.Created
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactory) GetLinkedServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LinkedServices, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataFactoryService.factory", c.__id, "linkedServices")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.linkedServices()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactory) GetIntegrationRuntimes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntegrationRuntimes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataFactoryService.factory", c.__id, "integrationRuntimes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.integrationRuntimes()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactory) GetManagedVirtualNetwork() *plugin.TValue[*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork](&c.ManagedVirtualNetwork, func() (*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataFactoryService.factory", c.__id, "managedVirtualNetwork")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork), nil
+			}
+		}
+
+		return c.managedVirtualNetwork()
+	})
+}
+
+// mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService for the azure.subscription.dataFactoryService.factory.linkedService resource
+type mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionDataFactoryServiceFactoryLinkedServiceInternal it will be used here
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	ServiceType            plugin.TValue[string]
+	Description            plugin.TValue[string]
+	Version                plugin.TValue[string]
+	IntegrationRuntimeName plugin.TValue[string]
+	ParameterNames         plugin.TValue[[]any]
+	UsesKeyVaultReference  plugin.TValue[bool]
+	Annotations            plugin.TValue[[]any]
+	TypeProperties         plugin.TValue[any]
+}
+
+// createAzureSubscriptionDataFactoryServiceFactoryLinkedService creates a new instance of this resource
+func createAzureSubscriptionDataFactoryServiceFactoryLinkedService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.dataFactoryService.factory.linkedService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) MqlName() string {
+	return "azure.subscription.dataFactoryService.factory.linkedService"
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetServiceType() *plugin.TValue[string] {
+	return &c.ServiceType
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetIntegrationRuntimeName() *plugin.TValue[string] {
+	return &c.IntegrationRuntimeName
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetParameterNames() *plugin.TValue[[]any] {
+	return &c.ParameterNames
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetUsesKeyVaultReference() *plugin.TValue[bool] {
+	return &c.UsesKeyVaultReference
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetAnnotations() *plugin.TValue[[]any] {
+	return &c.Annotations
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryLinkedService) GetTypeProperties() *plugin.TValue[any] {
+	return &c.TypeProperties
+}
+
+// mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime for the azure.subscription.dataFactoryService.factory.integrationRuntime resource
+type mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntimeInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Type           plugin.TValue[string]
+	RuntimeType    plugin.TValue[string]
+	Description    plugin.TValue[string]
+	TypeProperties plugin.TValue[any]
+}
+
+// createAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime creates a new instance of this resource
+func createAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.dataFactoryService.factory.integrationRuntime", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime) MqlName() string {
+	return "azure.subscription.dataFactoryService.factory.integrationRuntime"
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime) GetRuntimeType() *plugin.TValue[string] {
+	return &c.RuntimeType
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryIntegrationRuntime) GetTypeProperties() *plugin.TValue[any] {
+	return &c.TypeProperties
+}
+
+// mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork for the azure.subscription.dataFactoryService.factory.managedVirtualNetwork resource
+type mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetworkInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Alias            plugin.TValue[string]
+	VnetId           plugin.TValue[string]
+	PrivateEndpoints plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork creates a new instance of this resource
+func createAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.dataFactoryService.factory.managedVirtualNetwork", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) MqlName() string {
+	return "azure.subscription.dataFactoryService.factory.managedVirtualNetwork"
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) GetVnetId() *plugin.TValue[string] {
+	return &c.VnetId
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedVirtualNetwork) GetPrivateEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataFactoryService.factory.managedVirtualNetwork", c.__id, "privateEndpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpoints()
+	})
+}
+
+// mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint for the azure.subscription.dataFactoryService.factory.managedPrivateEndpoint resource
+type mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpointInternal it will be used here
+	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Type                  plugin.TValue[string]
+	GroupId               plugin.TValue[string]
+	PrivateLinkResourceId plugin.TValue[string]
+	ConnectionStatus      plugin.TValue[string]
+	Description           plugin.TValue[string]
+	ActionsRequired       plugin.TValue[string]
+	Fqdns                 plugin.TValue[[]any]
+	Reserved              plugin.TValue[bool]
+	ProvisioningState     plugin.TValue[string]
+}
+
+// createAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint creates a new instance of this resource
+func createAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.dataFactoryService.factory.managedPrivateEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) MqlName() string {
+	return "azure.subscription.dataFactoryService.factory.managedPrivateEndpoint"
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetGroupId() *plugin.TValue[string] {
+	return &c.GroupId
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetPrivateLinkResourceId() *plugin.TValue[string] {
+	return &c.PrivateLinkResourceId
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetConnectionStatus() *plugin.TValue[string] {
+	return &c.ConnectionStatus
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetActionsRequired() *plugin.TValue[string] {
+	return &c.ActionsRequired
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetFqdns() *plugin.TValue[[]any] {
+	return &c.Fqdns
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetReserved() *plugin.TValue[bool] {
+	return &c.Reserved
+}
+
+func (c *mqlAzureSubscriptionDataFactoryServiceFactoryManagedPrivateEndpoint) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
 }
 
 // mqlAzureSubscriptionSynapseService for the azure.subscription.synapseService resource

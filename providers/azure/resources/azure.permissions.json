@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.10.1",
-  "generated_at": "2026-05-07T22:51:52Z",
+  "generated_at": "2026-05-07T22:38:41-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.App/certificates/read",
@@ -60,6 +60,10 @@
     "Microsoft.DBforPostgreSQL/servers/databases/read",
     "Microsoft.DBforPostgreSQL/servers/firewallRules/read",
     "Microsoft.DBforPostgreSQL/servers/read",
+    "Microsoft.DataFactory/factories/integrationruntimes/read",
+    "Microsoft.DataFactory/factories/linkedservices/read",
+    "Microsoft.DataFactory/factories/managedvirtualnetworks/managedprivateendpoints/read",
+    "Microsoft.DataFactory/factories/managedvirtualnetworks/read",
     "Microsoft.DataFactory/factories/read",
     "Microsoft.Databricks/workspaces/read",
     "Microsoft.DocumentDB/databaseAccounts/read",
@@ -325,7 +329,7 @@
     {
       "permission": "Microsoft.Compute/disks/read",
       "service": "Microsoft.Compute",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "compute.go"
     },
     {
@@ -409,7 +413,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/credentialSets/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "containerregistry.go"
     },
     {
@@ -505,8 +509,32 @@
     {
       "permission": "Microsoft.DBforPostgreSQL/servers/read",
       "service": "Microsoft.DBforPostgreSQL",
-      "action": "NewListBySubscriptionPager",
+      "action": "NewListPager",
       "source_file": "postgresql.go"
+    },
+    {
+      "permission": "Microsoft.DataFactory/factories/integrationruntimes/read",
+      "service": "Microsoft.DataFactory",
+      "action": "NewListByFactoryPager",
+      "source_file": "datafactory_extras.go"
+    },
+    {
+      "permission": "Microsoft.DataFactory/factories/linkedservices/read",
+      "service": "Microsoft.DataFactory",
+      "action": "NewListByFactoryPager",
+      "source_file": "datafactory_extras.go"
+    },
+    {
+      "permission": "Microsoft.DataFactory/factories/managedvirtualnetworks/managedprivateendpoints/read",
+      "service": "Microsoft.DataFactory",
+      "action": "NewListByFactoryPager",
+      "source_file": "datafactory_extras.go"
+    },
+    {
+      "permission": "Microsoft.DataFactory/factories/managedvirtualnetworks/read",
+      "service": "Microsoft.DataFactory",
+      "action": "NewListByFactoryPager",
+      "source_file": "datafactory_extras.go"
     },
     {
       "permission": "Microsoft.DataFactory/factories/read",
@@ -613,7 +641,7 @@
     {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -739,7 +767,7 @@
     {
       "permission": "Microsoft.Network/privateLinkServices/read",
       "service": "Microsoft.Network",
-      "action": "NewListPrivateEndpointConnectionsPager",
+      "action": "NewListBySubscriptionPager",
       "source_file": "network.go"
     },
     {
@@ -775,7 +803,7 @@
     {
       "permission": "Microsoft.Network/virtualNetworks/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -811,7 +839,7 @@
     {
       "permission": "Microsoft.OperationalInsights/workspaces/read",
       "service": "Microsoft.OperationalInsights",
-      "action": "Get",
+      "action": "NewListNSPPager",
       "source_file": "loganalytics.go"
     },
     {
@@ -1099,7 +1127,7 @@
     {
       "permission": "Microsoft.Storage/storageAccounts/blobServices/containers/read",
       "service": "Microsoft.Storage",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "storage.go"
     },
     {
@@ -1153,7 +1181,7 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListFunctionsPager",
+      "action": "NewListPager",
       "source_file": "functions.go"
     },
     {

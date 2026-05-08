@@ -5357,6 +5357,121 @@ azure.subscription.dataFactoryService.factory @defaults("name location") {
   encryption dict
   // Time the factory was created
   created time
+  // Linked services configured on the factory (connection info for external systems)
+  linkedServices() []azure.subscription.dataFactoryService.factory.linkedService
+  // Integration runtimes that execute pipeline activities
+  integrationRuntimes() []azure.subscription.dataFactoryService.factory.integrationRuntime
+  // Managed virtual network for the factory, if one exists
+  managedVirtualNetwork() azure.subscription.dataFactoryService.factory.managedVirtualNetwork
+}
+
+// Azure Data Factory linked service
+//
+// Examine a single linked service — the configured connection from the
+// factory to an external system (Azure SQL, Storage, REST API, ...).
+// Selectable by ARM id; fields cover the linked-service type, the
+// integration runtime executing it, declared parameter names, and a
+// `usesKeyVaultReference` rollup that flags whether any credential
+// field in `typeProperties` resolves through Azure Key Vault.
+private azure.subscription.dataFactoryService.factory.linkedService @defaults("name serviceType integrationRuntimeName usesKeyVaultReference") {
+  // ARM resource ID
+  id string
+  // Linked service name
+  name string
+  // Resource type (always "Microsoft.DataFactory/factories/linkedservices")
+  type string
+  // Linked-service type (e.g., "AzureBlobStorage", "AzureSqlDatabase", "RestService")
+  serviceType string
+  // Linked-service description
+  description string
+  // Linked-service version
+  version string
+  // Name of the referenced integration runtime; empty when the factory's default is used
+  integrationRuntimeName string
+  // Names of declared parameters
+  parameterNames []string
+  // Whether any credential or secret field resolves via Azure Key Vault (i.e., a nested
+  // `{type: "AzureKeyVaultSecret", store: {...}, secretName: ...}` reference exists in typeProperties)
+  usesKeyVaultReference bool
+  // Annotations declared on the linked service (free-form list of any)
+  annotations []dict
+  // Raw type-specific properties returned by the SDK (shape varies by serviceType)
+  typeProperties dict
+}
+
+// Azure Data Factory integration runtime
+//
+// Examine a compute resource attached to the factory — either a
+// fully-managed Azure runtime (Azure Integration Runtime / Azure-SSIS)
+// or a Self-hosted runtime that runs on customer infrastructure.
+// Selectable by ARM id; fields cover the runtime type and the raw
+// type-specific properties (Managed exposes computeProperties /
+// ssisProperties; SelfHosted exposes nodes and version info).
+private azure.subscription.dataFactoryService.factory.integrationRuntime @defaults("name runtimeType") {
+  // ARM resource ID
+  id string
+  // Integration runtime name
+  name string
+  // Resource type
+  type string
+  // Runtime type ("Managed", "SelfHosted")
+  runtimeType string
+  // Description
+  description string
+  // Type-specific properties returned by the SDK (shape varies by runtimeType)
+  typeProperties dict
+}
+
+// Azure Data Factory managed virtual network
+//
+// Examine the (singleton) managed virtual network on a factory. Selectable
+// by ARM id; fields expose the alias and the underlying virtual-network
+// id, plus the managed private endpoints that route factory-side traffic
+// privately to other Azure resources.
+private azure.subscription.dataFactoryService.factory.managedVirtualNetwork @defaults("name alias") {
+  // ARM resource ID
+  id string
+  // Managed virtual network name (always "default")
+  name string
+  // Resource type
+  type string
+  // Managed Virtual Network alias
+  alias string
+  // Underlying virtual network ID
+  vnetId string
+  // Managed private endpoints attached to this managed virtual network
+  privateEndpoints() []azure.subscription.dataFactoryService.factory.managedPrivateEndpoint
+}
+
+// Azure Data Factory managed private endpoint
+//
+// Examine a managed private endpoint inside a factory's managed virtual
+// network — used to route factory traffic to a target Azure resource via
+// Private Link. Selectable by ARM id; fields expose the target resource,
+// the connection-approval state, and FQDNs assigned to the endpoint.
+private azure.subscription.dataFactoryService.factory.managedPrivateEndpoint @defaults("name groupId connectionStatus") {
+  // ARM resource ID
+  id string
+  // Endpoint name
+  name string
+  // Resource type
+  type string
+  // Sub-resource group ID on the target (e.g., "blob", "sqlServer", "vault")
+  groupId string
+  // ARM resource ID of the target Private Link resource
+  privateLinkResourceId string
+  // Connection status ("Approved", "Pending", "Rejected", "Disconnected")
+  connectionStatus string
+  // Description / reason text on the connection state
+  description string
+  // Action required by the consumer ("None" or a description string)
+  actionsRequired string
+  // Fully qualified domain names assigned to the endpoint
+  fqdns []string
+  // Whether the endpoint is reserved
+  reserved bool
+  // Provisioning state
+  provisioningState string
 }
 
 // Azure Synapse Analytics service
