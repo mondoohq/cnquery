@@ -111675,7 +111675,7 @@ func (c *mqlAwsCognitoUserPool) GetUpdatedAt() *plugin.TValue[*time.Time] {
 type mqlAwsCognitoUserPoolClient struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsCognitoUserPoolClientInternal
+	// optional: if you define mqlAwsCognitoUserPoolClientInternal it will be used here
 	ClientId                        plugin.TValue[string]
 	ClientName                      plugin.TValue[string]
 	UserPoolId                      plugin.TValue[string]
@@ -111846,7 +111846,7 @@ func (c *mqlAwsCognitoUserPoolClient) GetUpdatedAt() *plugin.TValue[*time.Time] 
 type mqlAwsCognitoUserPoolDomain struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsCognitoUserPoolDomainInternal
+	// optional: if you define mqlAwsCognitoUserPoolDomainInternal it will be used here
 	Domain                 plugin.TValue[string]
 	UserPoolId             plugin.TValue[string]
 	Region                 plugin.TValue[string]
@@ -111947,7 +111947,7 @@ func (c *mqlAwsCognitoUserPoolDomain) GetVersion() *plugin.TValue[string] {
 type mqlAwsCognitoUserPoolIdentityProvider struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsCognitoUserPoolIdentityProviderInternal
+	// optional: if you define mqlAwsCognitoUserPoolIdentityProviderInternal it will be used here
 	ProviderName     plugin.TValue[string]
 	ProviderType     plugin.TValue[string]
 	UserPoolId       plugin.TValue[string]

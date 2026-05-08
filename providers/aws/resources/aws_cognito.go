@@ -384,10 +384,6 @@ func (a *mqlAwsCognitoIdentityPool) tags() (map[string]any, error) {
 
 // User pool app clients
 
-type mqlAwsCognitoUserPoolClientInternal struct {
-	cacheRegion string
-}
-
 func (a *mqlAwsCognitoUserPool) clients() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	region := a.Region.Data
@@ -446,12 +442,16 @@ func newMqlAwsCognitoUserPoolClient(runtime *plugin.Runtime, region string, c *c
 		oauthFlows = append(oauthFlows, string(f))
 	}
 
+	// DescribeUserPoolClient does not surface the GenerateSecret config flag
+	// directly — infer it from whether a secret value was returned.
+	hasSecret := c.ClientSecret != nil && *c.ClientSecret != ""
+
 	res, err := CreateResource(runtime, "aws.cognito.userPoolClient", map[string]*llx.RawData{
 		"clientId":                        llx.StringDataPtr(c.ClientId),
 		"clientName":                      llx.StringDataPtr(c.ClientName),
 		"userPoolId":                      llx.StringDataPtr(c.UserPoolId),
 		"region":                          llx.StringData(region),
-		"generateSecret":                  llx.BoolData(c.ClientSecret != nil && *c.ClientSecret != ""),
+		"generateSecret":                  llx.BoolData(hasSecret),
 		"refreshTokenValidity":            llx.IntData(int64(c.RefreshTokenValidity)),
 		"accessTokenValidity":             llx.IntData(int64(aws.ToInt32(c.AccessTokenValidity))),
 		"idTokenValidity":                 llx.IntData(int64(aws.ToInt32(c.IdTokenValidity))),
@@ -473,9 +473,7 @@ func newMqlAwsCognitoUserPoolClient(runtime *plugin.Runtime, region string, c *c
 	if err != nil {
 		return nil, err
 	}
-	mqlClient := res.(*mqlAwsCognitoUserPoolClient)
-	mqlClient.cacheRegion = region
-	return mqlClient, nil
+	return res.(*mqlAwsCognitoUserPoolClient), nil
 }
 
 func stringsToAnyArray(ss []string) []any {
@@ -500,10 +498,6 @@ func (a *mqlAwsCognitoUserPoolClient) userPool() (*mqlAwsCognitoUserPool, error)
 }
 
 // User pool hosted UI domain
-
-type mqlAwsCognitoUserPoolDomainInternal struct {
-	cacheRegion string
-}
 
 func (a *mqlAwsCognitoUserPool) domain() (*mqlAwsCognitoUserPoolDomain, error) {
 	resp, err := a.fetchDescribeUserPool()
@@ -558,9 +552,7 @@ func (a *mqlAwsCognitoUserPool) domain() (*mqlAwsCognitoUserPoolDomain, error) {
 	if err != nil {
 		return nil, err
 	}
-	mqlDomain := res.(*mqlAwsCognitoUserPoolDomain)
-	mqlDomain.cacheRegion = region
-	return mqlDomain, nil
+	return res.(*mqlAwsCognitoUserPoolDomain), nil
 }
 
 func (a *mqlAwsCognitoUserPoolDomain) id() (string, error) {
@@ -577,10 +569,6 @@ func (a *mqlAwsCognitoUserPoolDomain) userPool() (*mqlAwsCognitoUserPool, error)
 }
 
 // User pool federated identity providers
-
-type mqlAwsCognitoUserPoolIdentityProviderInternal struct {
-	cacheRegion string
-}
 
 func (a *mqlAwsCognitoUserPool) identityProviders() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
@@ -638,9 +626,7 @@ func newMqlAwsCognitoUserPoolIdentityProvider(runtime *plugin.Runtime, region st
 	if err != nil {
 		return nil, err
 	}
-	mqlIdp := res.(*mqlAwsCognitoUserPoolIdentityProvider)
-	mqlIdp.cacheRegion = region
-	return mqlIdp, nil
+	return res.(*mqlAwsCognitoUserPoolIdentityProvider), nil
 }
 
 func (a *mqlAwsCognitoUserPoolIdentityProvider) id() (string, error) {

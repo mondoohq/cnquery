@@ -520,6 +520,7 @@ serviceprincipals
 Sflags
 sfn
 signin
+Signout
 singlequeryargument
 sizeconstraintstatement
 skaffold
