@@ -4014,6 +4014,11 @@ func (a *mqlAzureSubscriptionNetworkService) localNetworkGateways() ([]any, erro
 		for pager.More() {
 			page, err := pager.NextPage(ctx)
 			if err != nil {
+				var respErr *azcore.ResponseError
+				if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+					log.Warn().Err(err).Str("resourceGroup", mqlRg.Name.Data).Msg("could not list local network gateways due to access denied")
+					break
+				}
 				return nil, err
 			}
 			for _, lng := range page.Value {

@@ -143,6 +143,7 @@ dlq
 dlv
 dnskey
 documentdb
+dpd
 dport
 draid
 DRdf
@@ -242,6 +243,7 @@ iccid
 identitycenter
 identitysource
 idps
+IKEv
 ilb
 imds
 imei
