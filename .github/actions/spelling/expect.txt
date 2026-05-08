@@ -415,6 +415,7 @@ openhands
 opensearch
 openssl
 openvpn
+OCSF
 openzfs
 operationalinsights
 ORDS
@@ -631,6 +632,7 @@ VMX
 vmxnet
 vnet
 vnic
+VPS
 vpus
 vrf
 vtpm

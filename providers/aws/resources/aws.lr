@@ -15726,7 +15726,7 @@ private aws.msk.replicator.kafkaCluster @defaults("kafkaClusterAlias amazonMskCl
   rootCaCertificate string
 }
 
-// A source-to-target replication flow
+// Source-to-target replication flow
 private aws.msk.replicator.replicationInfo @defaults("sourceKafkaClusterAlias targetKafkaClusterAlias") {
   // Alias of the source Kafka cluster
   sourceKafkaClusterAlias string
