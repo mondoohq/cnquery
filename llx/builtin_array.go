@@ -558,8 +558,8 @@ func arrayJoin(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	}
 
 	typHint := types.Any
-	if chunk.Type().IsArray() {
-		typHint = chunk.Type().Child()
+	if bind.Type.IsArray() {
+		typHint = bind.Type.Child()
 	}
 
 	var res strings.Builder

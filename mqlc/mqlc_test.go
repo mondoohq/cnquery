@@ -903,6 +903,25 @@ func TestCompiler_Switch(t *testing.T) {
 // //   👋   ARRAYS and MAPS   🍹
 // //    =======================
 
+func TestCompiler_ArrayJoin(t *testing.T) {
+	// Regression: the join chunk's recorded output type must be string, not the
+	// input array type. Otherwise cnspec's policy executor (which reads the
+	// chunk type as the datapoint's expected type) tries to cast the runtime
+	// string result back into a []string and fails with "could not convert
+	// string to []string".
+	compileT(t, "[1,2,3].join('-')", func(res *llx.CodeBundle) {
+		joinChunk := res.CodeV2.Blocks[0].Chunks[1]
+		assert.Equal(t, "join", joinChunk.Id)
+		assert.Equal(t, string(types.String), joinChunk.Function.Type)
+	})
+
+	compileT(t, "['a','b'].join(',')", func(res *llx.CodeBundle) {
+		joinChunk := res.CodeV2.Blocks[0].Chunks[1]
+		assert.Equal(t, "join", joinChunk.Id)
+		assert.Equal(t, string(types.String), joinChunk.Function.Type)
+	})
+}
+
 func TestCompiler_ArrayEmptyWhere(t *testing.T) {
 	compileT(t, "[1,2,3].where()", func(res *llx.CodeBundle) {
 		assertPrimitive(t, &llx.Primitive{

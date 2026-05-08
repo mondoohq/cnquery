@@ -582,7 +582,7 @@ func compileArrayJoin(c *compiler, typ types.Type, ref uint64, id string, call *
 		Call: llx.Chunk_FUNCTION,
 		Id:   id,
 		Function: &llx.Function{
-			Type:    string(typ),
+			Type:    string(types.String),
 			Binding: ref,
 			Args:    args,
 		},
