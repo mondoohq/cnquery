@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.10.1",
-  "generated_at": "2026-05-07T22:51:52Z",
+  "generated_at": "2026-05-07T22:38:41-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.App/certificates/read",
@@ -76,6 +76,7 @@
     "Microsoft.Insights/logProfiles/read",
     "Microsoft.KeyVault/managedHsms/read",
     "Microsoft.KeyVault/vaults/read",
+    "Microsoft.Logic/workflows/read",
     "Microsoft.ManagedIdentity/userAssignedIdentities/read",
     "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
     "Microsoft.Network/applicationGateways/read",
@@ -603,6 +604,12 @@
       "service": "Microsoft.KeyVault",
       "action": "Get",
       "source_file": "keyvault.go"
+    },
+    {
+      "permission": "Microsoft.Logic/workflows/read",
+      "service": "Microsoft.Logic",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "logic.go"
     },
     {
       "permission": "Microsoft.ManagedIdentity/userAssignedIdentities/read",

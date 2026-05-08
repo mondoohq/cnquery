@@ -92,6 +92,8 @@ azure.subscription @defaults ("name") {
   containerApp() azure.subscription.containerAppService
   // Azure Container Instances resources in the subscription
   containerInstance() azure.subscription.containerInstanceService
+  // Logic Apps resources in the subscription
+  logic() azure.subscription.logicService
 }
 
 // Azure function
@@ -6992,4 +6994,81 @@ private azure.subscription.containerInstanceService.containerGroup.container @de
   currentState dict
   // Restart count
   restartCount int
+}
+
+// Azure Logic Apps
+//
+// Examine Azure Logic Apps Consumption-tier workflows in the subscription.
+// Use this resource to audit workflow state, access-control policies,
+// secret-typed parameters, and the trigger and action set defined in
+// each workflow's JSON definition.
+private azure.subscription.logicService {
+  // Subscription identifier
+  subscriptionId string
+  // Consumption-tier workflows
+  workflows() []azure.subscription.logicService.workflow
+}
+
+// Azure Logic Apps Consumption workflow
+//
+// Examine a single Consumption-tier Logic App. Selectable by ARM id;
+// fields cover lifecycle state, SKU, integration-account binding,
+// access-control policies (per-policy IP allow lists and OAuth
+// authentication policies), parameters (with secure-string detection),
+// and the trigger and action lists parsed from the workflow definition.
+azure.subscription.logicService.workflow @defaults("name location state provisioningState") {
+  // ARM resource ID
+  id string
+  // Workflow name
+  name string
+  // Azure region
+  location string
+  // Resource tags
+  tags map[string]string
+  // Workflow state ("Enabled", "Disabled", "Suspended", "Completed", "Deleted", "NotSpecified")
+  state string
+  // Provisioning state ("Succeeded", "Failed", "Canceled", ...)
+  provisioningState string
+  // SKU name ("Free", "Shared", "Basic", "Standard", "Premium")
+  skuName string
+  // Workflow version (changes when the definition changes)
+  version string
+  // Public access endpoint, when ingress is exposed
+  accessEndpoint string
+  // Identity (system + user-assigned)
+  identity dict
+  // ARM id of the linked integration account, if any
+  integrationAccountId string
+  // ARM id of the linked integration service environment (ISE), if any
+  integrationServiceEnvironmentId string
+  // Created time
+  createdTime time
+  // Last changed time
+  changedTime time
+  // Outgoing connector / workflow / access-endpoint IPs reported for the workflow
+  endpointsConfiguration dict
+  // Access-control policy for inbound triggers — `allowedCallerIpAddresses []` and `openAuthenticationPolicies {}`.
+  // Empty IP list means no IP restriction.
+  accessControlTriggers dict
+  // Access-control policy for reading workflow run contents
+  accessControlContents dict
+  // Access-control policy for invoking workflow actions
+  accessControlActions dict
+  // Access-control policy for workflow management operations
+  accessControlWorkflowManagement dict
+  // Whether at least one access-control policy has an IP allow list configured
+  hasIpRestrictions bool
+  // Workflow parameters. Each entry has {name, type, hasDefaultValue, isSecure}.
+  // `isSecure` is true when type is `SecureString` or `SecureObject`.
+  parameters []dict
+  // Names of parameters whose type is `SecureString` or `SecureObject`
+  secureParameterNames []string
+  // Triggers parsed from the workflow definition. Each entry has {name, type, kind?}.
+  // `type` examples: "Request" (HTTP), "Recurrence", "ApiConnection", "ApiConnectionWebhook".
+  triggers []dict
+  // Actions parsed from the workflow definition. Each entry has {name, type}.
+  // `type` examples: "Http", "ApiConnection", "Compose", "Workflow", "If", "Foreach", "Until".
+  actions []dict
+  // Names of API connections referenced by triggers and actions (i.e., `parameters.$connections` keys)
+  connectionNames []string
 }

@@ -375,3 +375,13 @@ func (a *mqlAzureSubscription) containerInstance() (*mqlAzureSubscriptionContain
 	}
 	return svc.(*mqlAzureSubscriptionContainerInstanceService), nil
 }
+
+func (a *mqlAzureSubscription) logic() (*mqlAzureSubscriptionLogicService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionLogicService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionLogicService), nil
+}

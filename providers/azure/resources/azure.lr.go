@@ -305,6 +305,8 @@ const (
 	ResourceAzureSubscriptionContainerInstanceService                                            string = "azure.subscription.containerInstanceService"
 	ResourceAzureSubscriptionContainerInstanceServiceContainerGroup                              string = "azure.subscription.containerInstanceService.containerGroup"
 	ResourceAzureSubscriptionContainerInstanceServiceContainerGroupContainer                     string = "azure.subscription.containerInstanceService.containerGroup.container"
+	ResourceAzureSubscriptionLogicService                                                        string = "azure.subscription.logicService"
+	ResourceAzureSubscriptionLogicServiceWorkflow                                                string = "azure.subscription.logicService.workflow"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1467,6 +1469,14 @@ func init() {
 			// to override args, implement: initAzureSubscriptionContainerInstanceServiceContainerGroupContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionContainerInstanceServiceContainerGroupContainer,
 		},
+		"azure.subscription.logicService": {
+			Init:   initAzureSubscriptionLogicService,
+			Create: createAzureSubscriptionLogicService,
+		},
+		"azure.subscription.logicService.workflow": {
+			// to override args, implement: initAzureSubscriptionLogicServiceWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionLogicServiceWorkflow,
+		},
 	}
 }
 
@@ -1660,6 +1670,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.containerInstance": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetContainerInstance()).ToDataRes(types.Resource("azure.subscription.containerInstanceService"))
+	},
+	"azure.subscription.logic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetLogic()).ToDataRes(types.Resource("azure.subscription.logicService"))
 	},
 	"azure.subscription.webService.function.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceFunction).GetId()).ToDataRes(types.String)
@@ -10250,6 +10263,87 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.containerInstanceService.containerGroup.container.restartCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroupContainer).GetRestartCount()).ToDataRes(types.Int)
 	},
+	"azure.subscription.logicService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicService).GetWorkflows()).ToDataRes(types.Array(types.Resource("azure.subscription.logicService.workflow")))
+	},
+	"azure.subscription.logicService.workflow.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflow.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflow.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflow.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.logicService.workflow.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflow.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflow.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflow.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflow.accessEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetAccessEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflow.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.logicService.workflow.integrationAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetIntegrationAccountId()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflow.integrationServiceEnvironmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetIntegrationServiceEnvironmentId()).ToDataRes(types.String)
+	},
+	"azure.subscription.logicService.workflow.createdTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetCreatedTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.logicService.workflow.changedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetChangedTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.logicService.workflow.endpointsConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetEndpointsConfiguration()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.logicService.workflow.accessControlTriggers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetAccessControlTriggers()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.logicService.workflow.accessControlContents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetAccessControlContents()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.logicService.workflow.accessControlActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetAccessControlActions()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.logicService.workflow.accessControlWorkflowManagement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetAccessControlWorkflowManagement()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.logicService.workflow.hasIpRestrictions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetHasIpRestrictions()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.logicService.workflow.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetParameters()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.logicService.workflow.secureParameterNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetSecureParameterNames()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.logicService.workflow.triggers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetTriggers()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.logicService.workflow.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetActions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.logicService.workflow.connectionNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetConnectionNames()).ToDataRes(types.Array(types.String))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -10432,6 +10526,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.containerInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).ContainerInstance, ok = plugin.RawToTValue[*mqlAzureSubscriptionContainerInstanceService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).Logic, ok = plugin.RawToTValue[*mqlAzureSubscriptionLogicService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23034,6 +23132,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroupContainer).RestartCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.logicService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.logicService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicService).Workflows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.logicService.workflow.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.accessEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).AccessEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.integrationAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).IntegrationAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.integrationServiceEnvironmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).IntegrationServiceEnvironmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.createdTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).CreatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.changedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).ChangedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.endpointsConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).EndpointsConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.accessControlTriggers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).AccessControlTriggers, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.accessControlContents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).AccessControlContents, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.accessControlActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).AccessControlActions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.accessControlWorkflowManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).AccessControlWorkflowManagement, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.hasIpRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).HasIpRestrictions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.secureParameterNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).SecureParameterNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.triggers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).Triggers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.logicService.workflow.connectionNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).ConnectionNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -23143,6 +23357,7 @@ type mqlAzureSubscription struct {
 	FrontDoor             plugin.TValue[*mqlAzureSubscriptionFrontDoorService]
 	ContainerApp          plugin.TValue[*mqlAzureSubscriptionContainerAppService]
 	ContainerInstance     plugin.TValue[*mqlAzureSubscriptionContainerInstanceService]
+	Logic                 plugin.TValue[*mqlAzureSubscriptionLogicService]
 }
 
 // createAzureSubscription creates a new instance of this resource
@@ -23715,6 +23930,22 @@ func (c *mqlAzureSubscription) GetContainerInstance() *plugin.TValue[*mqlAzureSu
 		}
 
 		return c.containerInstance()
+	})
+}
+
+func (c *mqlAzureSubscription) GetLogic() *plugin.TValue[*mqlAzureSubscriptionLogicService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionLogicService](&c.Logic, func() (*mqlAzureSubscriptionLogicService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "logic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionLogicService), nil
+			}
+		}
+
+		return c.logic()
 	})
 }
 
@@ -54550,4 +54781,239 @@ func (c *mqlAzureSubscriptionContainerInstanceServiceContainerGroupContainer) Ge
 
 func (c *mqlAzureSubscriptionContainerInstanceServiceContainerGroupContainer) GetRestartCount() *plugin.TValue[int64] {
 	return &c.RestartCount
+}
+
+// mqlAzureSubscriptionLogicService for the azure.subscription.logicService resource
+type mqlAzureSubscriptionLogicService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionLogicServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Workflows      plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionLogicService creates a new instance of this resource
+func createAzureSubscriptionLogicService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionLogicService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.logicService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionLogicService) MqlName() string {
+	return "azure.subscription.logicService"
+}
+
+func (c *mqlAzureSubscriptionLogicService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionLogicService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionLogicService) GetWorkflows() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workflows, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.logicService", c.__id, "workflows")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workflows()
+	})
+}
+
+// mqlAzureSubscriptionLogicServiceWorkflow for the azure.subscription.logicService.workflow resource
+type mqlAzureSubscriptionLogicServiceWorkflow struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionLogicServiceWorkflowInternal it will be used here
+	Id                              plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Location                        plugin.TValue[string]
+	Tags                            plugin.TValue[map[string]any]
+	State                           plugin.TValue[string]
+	ProvisioningState               plugin.TValue[string]
+	SkuName                         plugin.TValue[string]
+	Version                         plugin.TValue[string]
+	AccessEndpoint                  plugin.TValue[string]
+	Identity                        plugin.TValue[any]
+	IntegrationAccountId            plugin.TValue[string]
+	IntegrationServiceEnvironmentId plugin.TValue[string]
+	CreatedTime                     plugin.TValue[*time.Time]
+	ChangedTime                     plugin.TValue[*time.Time]
+	EndpointsConfiguration          plugin.TValue[any]
+	AccessControlTriggers           plugin.TValue[any]
+	AccessControlContents           plugin.TValue[any]
+	AccessControlActions            plugin.TValue[any]
+	AccessControlWorkflowManagement plugin.TValue[any]
+	HasIpRestrictions               plugin.TValue[bool]
+	Parameters                      plugin.TValue[[]any]
+	SecureParameterNames            plugin.TValue[[]any]
+	Triggers                        plugin.TValue[[]any]
+	Actions                         plugin.TValue[[]any]
+	ConnectionNames                 plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionLogicServiceWorkflow creates a new instance of this resource
+func createAzureSubscriptionLogicServiceWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionLogicServiceWorkflow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.logicService.workflow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) MqlName() string {
+	return "azure.subscription.logicService.workflow"
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetAccessEndpoint() *plugin.TValue[string] {
+	return &c.AccessEndpoint
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetIntegrationAccountId() *plugin.TValue[string] {
+	return &c.IntegrationAccountId
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetIntegrationServiceEnvironmentId() *plugin.TValue[string] {
+	return &c.IntegrationServiceEnvironmentId
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetCreatedTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedTime
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetChangedTime() *plugin.TValue[*time.Time] {
+	return &c.ChangedTime
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetEndpointsConfiguration() *plugin.TValue[any] {
+	return &c.EndpointsConfiguration
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetAccessControlTriggers() *plugin.TValue[any] {
+	return &c.AccessControlTriggers
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetAccessControlContents() *plugin.TValue[any] {
+	return &c.AccessControlContents
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetAccessControlActions() *plugin.TValue[any] {
+	return &c.AccessControlActions
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetAccessControlWorkflowManagement() *plugin.TValue[any] {
+	return &c.AccessControlWorkflowManagement
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetHasIpRestrictions() *plugin.TValue[bool] {
+	return &c.HasIpRestrictions
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetParameters() *plugin.TValue[[]any] {
+	return &c.Parameters
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetSecureParameterNames() *plugin.TValue[[]any] {
+	return &c.SecureParameterNames
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetTriggers() *plugin.TValue[[]any] {
+	return &c.Triggers
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
+}
+
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetConnectionNames() *plugin.TValue[[]any] {
+	return &c.ConnectionNames
 }
