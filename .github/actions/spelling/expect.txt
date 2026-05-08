@@ -395,7 +395,6 @@ openhands
 opensearch
 openssl
 openvpn
-OCSF
 openzfs
 operationalinsights
 ORDS
