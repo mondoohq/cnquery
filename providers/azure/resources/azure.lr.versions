@@ -1409,8 +1409,17 @@ azure.subscription.frontDoorService.subscriptionId 13.3.3
 azure.subscription.functions 13.3.3
 azure.subscription.functionsService 13.3.3
 azure.subscription.functionsService.functionApp 13.3.3
+azure.subscription.functionsService.functionApp.appSetting 13.10.2
+azure.subscription.functionsService.functionApp.appSetting.hasKeyVaultReference 13.10.2
+azure.subscription.functionsService.functionApp.appSetting.hasValue 13.10.2
+azure.subscription.functionsService.functionApp.appSetting.id 13.10.2
+azure.subscription.functionsService.functionApp.appSetting.isLikelySecret 13.10.2
+azure.subscription.functionsService.functionApp.appSetting.name 13.10.2
+azure.subscription.functionsService.functionApp.appSetting.slotSetting 13.10.2
+azure.subscription.functionsService.functionApp.appSettings 13.10.2
 azure.subscription.functionsService.functionApp.clientCertEnabled 13.3.3
 azure.subscription.functionsService.functionApp.clientCertMode 13.3.3
+azure.subscription.functionsService.functionApp.connectionStrings 13.10.2
 azure.subscription.functionsService.functionApp.defaultHostName 13.3.3
 azure.subscription.functionsService.functionApp.function 13.3.3
 azure.subscription.functionsService.functionApp.function.config 13.3.3

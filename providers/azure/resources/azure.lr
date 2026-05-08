@@ -6412,6 +6412,40 @@ azure.subscription.functionsService.functionApp @defaults("id name location") {
   properties dict
   // Functions in this function app
   functions() []azure.subscription.functionsService.functionApp.function
+  // Application settings configured on the function app. Values are not
+  // returned — each entry exposes name, slot-stickiness, Key-Vault-reference
+  // detection, and a heuristic flag for secret-bearing names.
+  appSettings() []azure.subscription.functionsService.functionApp.appSetting
+  // Connection strings configured on the function app. Each entry has shape
+  // {name, type, hasKeyVaultReference, slotSetting}. Connection-string values
+  // are not returned.
+  connectionStrings() []dict
+}
+
+// Azure Function App application setting
+//
+// Examine a single application setting on a function app. Selectable by
+// composite id; surfaces whether the value resolves through Azure Key
+// Vault, whether the setting is sticky on slot swaps, and a heuristic
+// flag (`isLikelySecret`) for setting names that suggest secret content
+// — useful for "any plaintext secret-like setting that is not a Key
+// Vault reference" audits.
+private azure.subscription.functionsService.functionApp.appSetting @defaults("name hasKeyVaultReference isLikelySecret slotSetting") {
+  // Composite ID: <functionAppId>/config/appsettings/<name>
+  id string
+  // Setting name
+  name string
+  // Whether the setting's value is a Key Vault reference
+  // (i.e., starts with `@Microsoft.KeyVault(...)`)
+  hasKeyVaultReference bool
+  // Whether the setting name suggests it carries a secret —
+  // matches /key|password|secret|token|connection/i
+  isLikelySecret bool
+  // Whether the setting is "sticky" on slot swaps (configured via the
+  // app's slot-config-names list)
+  slotSetting bool
+  // Whether the setting has a non-empty value (the value itself is not exposed)
+  hasValue bool
 }
 
 // Azure Function within a Function App

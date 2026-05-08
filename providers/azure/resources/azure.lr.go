@@ -279,6 +279,7 @@ const (
 	ResourceAzureSubscriptionRecoveryServicesServiceVaultProtectedItem                           string = "azure.subscription.recoveryServicesService.vault.protectedItem"
 	ResourceAzureSubscriptionFunctionsService                                                    string = "azure.subscription.functionsService"
 	ResourceAzureSubscriptionFunctionsServiceFunctionApp                                         string = "azure.subscription.functionsService.functionApp"
+	ResourceAzureSubscriptionFunctionsServiceFunctionAppAppSetting                               string = "azure.subscription.functionsService.functionApp.appSetting"
 	ResourceAzureSubscriptionFunctionsServiceFunctionAppFunction                                 string = "azure.subscription.functionsService.functionApp.function"
 	ResourceAzureSubscriptionServiceBusService                                                   string = "azure.subscription.serviceBusService"
 	ResourceAzureSubscriptionServiceBusServiceNamespace                                          string = "azure.subscription.serviceBusService.namespace"
@@ -1372,6 +1373,10 @@ func init() {
 		"azure.subscription.functionsService.functionApp": {
 			// to override args, implement: initAzureSubscriptionFunctionsServiceFunctionApp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionFunctionsServiceFunctionApp,
+		},
+		"azure.subscription.functionsService.functionApp.appSetting": {
+			// to override args, implement: initAzureSubscriptionFunctionsServiceFunctionAppAppSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionFunctionsServiceFunctionAppAppSetting,
 		},
 		"azure.subscription.functionsService.functionApp.function": {
 			// to override args, implement: initAzureSubscriptionFunctionsServiceFunctionAppFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9576,6 +9581,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.functionsService.functionApp.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).GetFunctions()).ToDataRes(types.Array(types.Resource("azure.subscription.functionsService.functionApp.function")))
+	},
+	"azure.subscription.functionsService.functionApp.appSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).GetAppSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.functionsService.functionApp.appSetting")))
+	},
+	"azure.subscription.functionsService.functionApp.connectionStrings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).GetConnectionStrings()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.hasKeyVaultReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).GetHasKeyVaultReference()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.isLikelySecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).GetIsLikelySecret()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.slotSetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).GetSlotSetting()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.hasValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).GetHasValue()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.functionsService.functionApp.function.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppFunction).GetId()).ToDataRes(types.String)
@@ -22368,6 +22397,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.functionsService.functionApp.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.functionsService.functionApp.appSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).AppSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.functionsService.functionApp.connectionStrings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFunctionsServiceFunctionApp).ConnectionStrings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.hasKeyVaultReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).HasKeyVaultReference, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.isLikelySecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).IsLikelySecret, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.slotSetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).SlotSetting, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.functionsService.functionApp.appSetting.hasValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting).HasValue, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.functionsService.functionApp.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52772,6 +52837,8 @@ type mqlAzureSubscriptionFunctionsServiceFunctionApp struct {
 	ManagedServiceIdentityId plugin.TValue[string]
 	Properties               plugin.TValue[any]
 	Functions                plugin.TValue[[]any]
+	AppSettings              plugin.TValue[[]any]
+	ConnectionStrings        plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionFunctionsServiceFunctionApp creates a new instance of this resource
@@ -52873,6 +52940,102 @@ func (c *mqlAzureSubscriptionFunctionsServiceFunctionApp) GetFunctions() *plugin
 
 		return c.functions()
 	})
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionApp) GetAppSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AppSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.functionsService.functionApp", c.__id, "appSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.appSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionApp) GetConnectionStrings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConnectionStrings, func() ([]any, error) {
+		return c.connectionStrings()
+	})
+}
+
+// mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting for the azure.subscription.functionsService.functionApp.appSetting resource
+type mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionFunctionsServiceFunctionAppAppSettingInternal it will be used here
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	HasKeyVaultReference plugin.TValue[bool]
+	IsLikelySecret       plugin.TValue[bool]
+	SlotSetting          plugin.TValue[bool]
+	HasValue             plugin.TValue[bool]
+}
+
+// createAzureSubscriptionFunctionsServiceFunctionAppAppSetting creates a new instance of this resource
+func createAzureSubscriptionFunctionsServiceFunctionAppAppSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.functionsService.functionApp.appSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting) MqlName() string {
+	return "azure.subscription.functionsService.functionApp.appSetting"
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting) GetHasKeyVaultReference() *plugin.TValue[bool] {
+	return &c.HasKeyVaultReference
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting) GetIsLikelySecret() *plugin.TValue[bool] {
+	return &c.IsLikelySecret
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting) GetSlotSetting() *plugin.TValue[bool] {
+	return &c.SlotSetting
+}
+
+func (c *mqlAzureSubscriptionFunctionsServiceFunctionAppAppSetting) GetHasValue() *plugin.TValue[bool] {
+	return &c.HasValue
 }
 
 // mqlAzureSubscriptionFunctionsServiceFunctionAppFunction for the azure.subscription.functionsService.functionApp.function resource
