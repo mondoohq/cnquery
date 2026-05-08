@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.13.3",
-  "generated_at": "2026-05-08T09:10:40-07:00",
+  "generated_at": "2026-05-08T10:57:12-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -128,6 +128,8 @@
     "iam.roles.list",
     "iam.serviceAccountKeys.list",
     "iam.serviceAccounts.list",
+    "iam.workloadIdentityPoolProviders.list",
+    "iam.workloadIdentityPools.list",
     "iap.projects.getSettings",
     "iap.tunnelDestGroups.list",
     "ids.endpoints.list",
@@ -963,6 +965,18 @@
       "source_file": "iam.go"
     },
     {
+      "permission": "iam.workloadIdentityPoolProviders.list",
+      "service": "iam",
+      "action": "Providers.List",
+      "source_file": "iam_workload_identity.go"
+    },
+    {
+      "permission": "iam.workloadIdentityPools.list",
+      "service": "iam",
+      "action": "WorkloadIdentityPools.List",
+      "source_file": "iam_workload_identity.go"
+    },
+    {
       "permission": "iap.projects.getSettings",
       "service": "iap",
       "action": "ListBrands",
@@ -1164,7 +1178,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.Search",
+      "action": "Folders.List",
       "source_file": "folder.go",
       "scope": "org"
     },

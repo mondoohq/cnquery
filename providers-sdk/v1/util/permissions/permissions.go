@@ -1027,6 +1027,11 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// permission is plural.
 		"GetSchema": "pubsub.schemas.get",
 	},
+	"iam": {
+		// WorkloadIdentityPools.Providers.List → the resource segment is "Providers",
+		// but the real IAM permission is "iam.workloadIdentityPoolProviders.list".
+		"Providers.List": "iam.workloadIdentityPoolProviders.list",
+	},
 }
 
 // gcpOrgLevelPermissions are permissions that only apply at the organization

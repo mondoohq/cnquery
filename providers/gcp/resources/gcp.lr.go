@@ -146,6 +146,8 @@ const (
 	ResourceGcpProjectIamServiceRole                                                   string = "gcp.project.iamService.role"
 	ResourceGcpProjectIamServiceServiceAccount                                         string = "gcp.project.iamService.serviceAccount"
 	ResourceGcpProjectIamServiceServiceAccountKey                                      string = "gcp.project.iamService.serviceAccount.key"
+	ResourceGcpProjectIamServiceWorkloadIdentityPool                                   string = "gcp.project.iamService.workloadIdentityPool"
+	ResourceGcpProjectIamServiceWorkloadIdentityPoolProvider                           string = "gcp.project.iamService.workloadIdentityPool.provider"
 	ResourceGcpProjectCloudFunction                                                    string = "gcp.project.cloudFunction"
 	ResourceGcpProjectCloudFunctionV2                                                  string = "gcp.project.cloudFunctionV2"
 	ResourceGcpProjectCloudFunctionV2BuildConfig                                       string = "gcp.project.cloudFunctionV2.buildConfig"
@@ -884,6 +886,14 @@ func init() {
 		"gcp.project.iamService.serviceAccount.key": {
 			// to override args, implement: initGcpProjectIamServiceServiceAccountKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectIamServiceServiceAccountKey,
+		},
+		"gcp.project.iamService.workloadIdentityPool": {
+			// to override args, implement: initGcpProjectIamServiceWorkloadIdentityPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectIamServiceWorkloadIdentityPool,
+		},
+		"gcp.project.iamService.workloadIdentityPool.provider": {
+			// to override args, implement: initGcpProjectIamServiceWorkloadIdentityPoolProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectIamServiceWorkloadIdentityPoolProvider,
 		},
 		"gcp.project.cloudFunction": {
 			Init:   initGcpProjectCloudFunction,
@@ -6146,6 +6156,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.iamService.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamService).GetRoles()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.role")))
 	},
+	"gcp.project.iamService.workloadIdentityPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamService).GetWorkloadIdentityPools()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.workloadIdentityPool")))
+	},
 	"gcp.project.iamService.role.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceRole).GetProjectId()).ToDataRes(types.String)
 	},
@@ -6226,6 +6239,84 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.serviceAccount.key.disabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.iamService.workloadIdentityPool.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.poolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetPoolId()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.iamService.workloadIdentityPool.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.iamService.workloadIdentityPool.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetMode()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.providers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetProviders()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.workloadIdentityPool.provider")))
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.providerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetProviderId()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.poolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetPoolId()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.attributeMapping": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetAttributeMapping()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.attributeCondition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetAttributeCondition()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.providerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetProviderType()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.awsAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetAwsAccountId()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.oidcIssuerUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetOidcIssuerUri()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.oidcAllowedAudiences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetOidcAllowedAudiences()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.samlIdpMetadataXml": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).GetSamlIdpMetadataXml()).ToDataRes(types.String)
 	},
 	"gcp.project.cloudFunction.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetProjectId()).ToDataRes(types.String)
@@ -18645,6 +18736,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectIamService).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.iamService.workloadIdentityPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamService).WorkloadIdentityPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.iamService.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceRole).__id, ok = v.Value.(string)
 		return
@@ -18763,6 +18858,118 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.serviceAccount.key.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.poolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).PoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.providers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).Providers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.providerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).ProviderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.poolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).PoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.attributeMapping": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).AttributeMapping, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.attributeCondition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).AttributeCondition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.providerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).ProviderType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.awsAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).AwsAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.oidcIssuerUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).OidcIssuerUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.oidcAllowedAudiences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).OidcAllowedAudiences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.provider.samlIdpMetadataXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPoolProvider).SamlIdpMetadataXml, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudFunction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43070,9 +43277,10 @@ type mqlGcpProjectIamService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectIamServiceInternal
-	ProjectId       plugin.TValue[string]
-	ServiceAccounts plugin.TValue[[]any]
-	Roles           plugin.TValue[[]any]
+	ProjectId             plugin.TValue[string]
+	ServiceAccounts       plugin.TValue[[]any]
+	Roles                 plugin.TValue[[]any]
+	WorkloadIdentityPools plugin.TValue[[]any]
 }
 
 // createGcpProjectIamService creates a new instance of this resource
@@ -43145,6 +43353,22 @@ func (c *mqlGcpProjectIamService) GetRoles() *plugin.TValue[[]any] {
 		}
 
 		return c.roles()
+	})
+}
+
+func (c *mqlGcpProjectIamService) GetWorkloadIdentityPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WorkloadIdentityPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iamService", c.__id, "workloadIdentityPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workloadIdentityPools()
 	})
 }
 
@@ -43441,6 +43665,236 @@ func (c *mqlGcpProjectIamServiceServiceAccountKey) GetUserManaged() *plugin.TVal
 
 func (c *mqlGcpProjectIamServiceServiceAccountKey) GetDisabled() *plugin.TValue[bool] {
 	return &c.Disabled
+}
+
+// mqlGcpProjectIamServiceWorkloadIdentityPool for the gcp.project.iamService.workloadIdentityPool resource
+type mqlGcpProjectIamServiceWorkloadIdentityPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectIamServiceWorkloadIdentityPoolInternal it will be used here
+	ProjectId   plugin.TValue[string]
+	Name        plugin.TValue[string]
+	PoolId      plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	State       plugin.TValue[string]
+	Disabled    plugin.TValue[bool]
+	ExpireTime  plugin.TValue[*time.Time]
+	Mode        plugin.TValue[string]
+	Providers   plugin.TValue[[]any]
+}
+
+// createGcpProjectIamServiceWorkloadIdentityPool creates a new instance of this resource
+func createGcpProjectIamServiceWorkloadIdentityPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIamServiceWorkloadIdentityPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.iamService.workloadIdentityPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) MqlName() string {
+	return "gcp.project.iamService.workloadIdentityPool"
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetPoolId() *plugin.TValue[string] {
+	return &c.PoolId
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Providers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iamService.workloadIdentityPool", c.__id, "providers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.providers()
+	})
+}
+
+// mqlGcpProjectIamServiceWorkloadIdentityPoolProvider for the gcp.project.iamService.workloadIdentityPool.provider resource
+type mqlGcpProjectIamServiceWorkloadIdentityPoolProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectIamServiceWorkloadIdentityPoolProviderInternal it will be used here
+	ProjectId            plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	ProviderId           plugin.TValue[string]
+	PoolId               plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	Description          plugin.TValue[string]
+	State                plugin.TValue[string]
+	Disabled             plugin.TValue[bool]
+	ExpireTime           plugin.TValue[*time.Time]
+	AttributeMapping     plugin.TValue[map[string]any]
+	AttributeCondition   plugin.TValue[string]
+	ProviderType         plugin.TValue[string]
+	AwsAccountId         plugin.TValue[string]
+	OidcIssuerUri        plugin.TValue[string]
+	OidcAllowedAudiences plugin.TValue[[]any]
+	SamlIdpMetadataXml   plugin.TValue[string]
+}
+
+// createGcpProjectIamServiceWorkloadIdentityPoolProvider creates a new instance of this resource
+func createGcpProjectIamServiceWorkloadIdentityPoolProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIamServiceWorkloadIdentityPoolProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.iamService.workloadIdentityPool.provider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) MqlName() string {
+	return "gcp.project.iamService.workloadIdentityPool.provider"
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetProviderId() *plugin.TValue[string] {
+	return &c.ProviderId
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetPoolId() *plugin.TValue[string] {
+	return &c.PoolId
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetAttributeMapping() *plugin.TValue[map[string]any] {
+	return &c.AttributeMapping
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetAttributeCondition() *plugin.TValue[string] {
+	return &c.AttributeCondition
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetProviderType() *plugin.TValue[string] {
+	return &c.ProviderType
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetAwsAccountId() *plugin.TValue[string] {
+	return &c.AwsAccountId
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetOidcIssuerUri() *plugin.TValue[string] {
+	return &c.OidcIssuerUri
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetOidcAllowedAudiences() *plugin.TValue[[]any] {
+	return &c.OidcAllowedAudiences
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) GetSamlIdpMetadataXml() *plugin.TValue[string] {
+	return &c.SamlIdpMetadataXml
 }
 
 // mqlGcpProjectCloudFunction for the gcp.project.cloudFunction resource

@@ -3541,6 +3541,8 @@ private gcp.project.iamService {
   serviceAccounts() []gcp.project.iamService.serviceAccount
   // Custom IAM roles defined in the project
   roles() []gcp.project.iamService.role
+  // Workload Identity Federation pools defined in the project
+  workloadIdentityPools() []gcp.project.iamService.workloadIdentityPool
 }
 
 // Google Cloud (GCP) IAM custom role
@@ -3608,6 +3610,85 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   // Whether the key is disabled
   disabled bool
 }
+
+// GCP Workload Identity Federation pool
+//
+// Examine pool lifecycle (`state`, `disabled`, `expireTime`) and the external
+// identity providers attached to it via `providers`. A pool is the namespace
+// that external workloads (AWS roles, OIDC issuers, SAML IdPs, X.509 trust
+// stores) federate into before they can impersonate Google service accounts.
+// Pools are the top-level audit unit for federation: a `disabled=false`,
+// non-expired pool with a permissive provider is the path that lets external
+// callers obtain GCP credentials.
+private gcp.project.iamService.workloadIdentityPool @defaults("displayName name state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/global/workloadIdentityPools/{poolId})
+  name string
+  // Short pool ID (the last segment of `name`)
+  poolId string
+  // User-specified display name
+  displayName string
+  // Human-readable description of the pool
+  description string
+  // Pool lifecycle state (STATE_UNSPECIFIED, ACTIVE, DELETED)
+  state string
+  // Whether the pool is disabled. Disabled pools cannot mint tokens.
+  disabled bool
+  // Time the pool is scheduled to be permanently deleted (set when `state` is DELETED)
+  expireTime time
+  // Pool operating mode (FEDERATION_ONLY, TRUST_DOMAIN, SYSTEM_TRUST_DOMAIN, or empty/MODE_UNSPECIFIED — both unspecified values operate as FEDERATION_ONLY). FEDERATION_ONLY pools accept external workload identities (the audit hot spot); TRUST_DOMAIN and SYSTEM_TRUST_DOMAIN pools (e.g. GKE's `*.svc.id.goog` pools) do not host user-defined providers.
+  mode string
+  // Identity providers attached to this pool. Null for TRUST_DOMAIN and SYSTEM_TRUST_DOMAIN pools, which cannot host user-defined providers.
+  providers() []gcp.project.iamService.workloadIdentityPool.provider
+}
+
+// GCP Workload Identity Federation pool provider
+//
+// Examine which external identity provider (AWS account, OIDC issuer, or SAML
+// IdP) is allowed to mint tokens that federate into the parent pool, plus the
+// `attributeMapping` and `attributeCondition` that gate which Google
+// identities those external tokens may impersonate. Providers are the
+// trust-anchor audit unit: a permissive `attributeMapping` (mapping
+// `google.subject` to an unfiltered external claim) or a missing
+// `attributeCondition` is the typical misconfiguration that turns federation
+// into anyone-can-impersonate-anyone. The `providerType` field discriminates
+// which `aws*` / `oidc*` / `saml*` fields are populated.
+private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayName providerType state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/global/workloadIdentityPools/{poolId}/providers/{providerId})
+  name string
+  // Short provider ID (the last segment of `name`)
+  providerId string
+  // Short pool ID this provider belongs to
+  poolId string
+  // User-specified display name
+  displayName string
+  // Human-readable description of the provider
+  description string
+  // Provider lifecycle state (STATE_UNSPECIFIED, ACTIVE, DELETED)
+  state string
+  // Whether the provider is disabled. Disabled providers cannot mint tokens.
+  disabled bool
+  // Time the provider is scheduled to be permanently deleted (set when `state` is DELETED)
+  expireTime time
+  // Maps Google claims (`google.subject`, `google.groups`, `attribute.*`) to expressions over the external token. A mapping of `google.subject` to an unfiltered external claim is the audit hot spot.
+  attributeMapping map[string]string
+  // CEL expression evaluated against the external token. When empty, every external token that satisfies the mapping is accepted.
+  attributeCondition string
+  // Discriminator for which credential family this provider trusts: `aws`, `oidc`, `saml`, or `x509`.
+  providerType string
+  // For AWS providers: the AWS account ID whose IAM roles/users may federate
+  awsAccountId string
+  // For OIDC providers: the issuer URL of the trusted IdP
+  oidcIssuerUri string
+  // For OIDC providers: audience claims the IdP must include in tokens. Empty defaults to the workload identity pool's full resource name.
+  oidcAllowedAudiences []string
+  // For SAML providers: the SAML 2.0 IdP metadata XML document defining the trust
+  samlIdpMetadataXml string
+}
+
 // GCP cloud function
 private gcp.project.cloudFunction @defaults("name") {
   // Project ID
