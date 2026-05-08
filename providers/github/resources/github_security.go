@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/v85/github"
+	"github.com/google/go-github/v86/github"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -47,11 +47,11 @@ func isAccessDeniedOrNotFound(err error) bool {
 // given relative URL and decodes the JSON body into v. Useful for endpoints not
 // yet covered by go-github helpers.
 func doRawJSON(ctx context.Context, client *github.Client, urlStr string, v any) (*github.Response, error) {
-	req, err := client.NewRequest(http.MethodGet, urlStr, nil)
+	req, err := client.NewRequest(ctx, http.MethodGet, urlStr, nil)
 	if err != nil {
 		return nil, err
 	}
-	return client.Do(ctx, req, v)
+	return client.Do(req, v)
 }
 
 // doRawGraphQL performs a POST against the GraphQL endpoint with the given
@@ -61,11 +61,11 @@ func doRawGraphQL(ctx context.Context, client *github.Client, query string, vars
 	if vars != nil {
 		body["variables"] = vars
 	}
-	req, err := client.NewRequest(http.MethodPost, "graphql", body)
+	req, err := client.NewRequest(ctx, http.MethodPost, "graphql", body)
 	if err != nil {
 		return nil, err
 	}
-	return client.Do(ctx, req, v)
+	return client.Do(req, v)
 }
 
 // ---------- SAML config (GraphQL) ----------
