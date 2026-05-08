@@ -2152,6 +2152,20 @@ private azure.subscription.storageService.account @defaults("id name location") 
   sasExpirationAction string
   // Account access-key expiration period (days)
   keyExpirationPeriodInDays int
+  // Whether account-level immutability with versioning is enabled
+  immutableStorageEnabled bool
+  // Default account-level immutability period (days). Zero when no default policy is set.
+  immutableStoragePolicyPeriodDays int
+  // Whether protected append-blob writes are permitted under the default account policy
+  immutableStoragePolicyAllowProtectedAppendWrites bool
+  // Default account-level immutability policy state ("Locked" / "Unlocked"); empty when unset
+  immutableStoragePolicyState string
+  // Routing choice for outbound traffic ("MicrosoftRouting" or "InternetRouting")
+  routingChoice string
+  // Whether internet-routing storage endpoints are published
+  publishInternetEndpoints bool
+  // Whether Microsoft-routing storage endpoints are published
+  publishMicrosoftEndpoints bool
   // Storage account containers
   containers() []azure.subscription.storageService.account.container
   // Storage account queue properties
@@ -2170,6 +2184,14 @@ private azure.subscription.storageService.account @defaults("id name location") 
   managementPolicy() azure.subscription.storageService.account.managementPolicy
   // Local users (SFTP/SSH) configured on the storage account
   localUsers() []azure.subscription.storageService.account.localUser
+  // File shares hosted on the account (Azure Files)
+  fileShares() []azure.subscription.storageService.account.fileShare
+  // Private endpoint connections to the storage account
+  privateEndpointConnections() []azure.subscription.storageService.account.privateEndpointConnection
+  // Object replication policies configured on the storage account
+  objectReplicationPolicies() []azure.subscription.storageService.account.objectReplicationPolicy
+  // Blob inventory policy configured on the storage account, if any
+  blobInventoryPolicy() azure.subscription.storageService.account.blobInventoryPolicy
 }
 
 // Local user configured on a storage account for SFTP/SSH access
@@ -2424,6 +2446,126 @@ private azure.subscription.storageService.account.container @defaults("id name")
   deletedTime time
   // Number of remaining days in the soft delete retention period
   remainingRetentionDays int
+}
+
+// Azure Storage file share
+//
+// Examine a single Azure Files share hosted on a storage account.
+// Selectable by ARM id; fields cover the share protocol (SMB or NFS),
+// access tier, provisioned quota, and the presence of stored access
+// policies (signed identifiers).
+private azure.subscription.storageService.account.fileShare @defaults("name enabledProtocols accessTier shareQuotaGiB") {
+  // ARM resource ID
+  id string
+  // Share name
+  name string
+  // Resource type
+  type string
+  // Protocols enabled on the share ("SMB" or "NFS")
+  enabledProtocols string
+  // Access tier ("TransactionOptimized", "Hot", "Cool", "Premium")
+  accessTier string
+  // Status of any pending access-tier transition; empty when none
+  accessTierStatus string
+  // Time the access tier was last changed
+  accessTierChangeTime time
+  // Provisioned share quota in GiB
+  shareQuotaGiB int
+  // Provisioned IOPS (Files Provisioned v2 only); zero otherwise
+  provisionedIops int
+  // Provisioned bandwidth in MiB/s (Files Provisioned v2 only); zero otherwise
+  provisionedBandwidthMibps int
+  // NFS root squash policy ("NoRootSquash", "RootSquash", "AllSquash"); empty for SMB
+  rootSquash string
+  // Number of stored access policies (signed identifiers) on the share
+  signedIdentifierCount int
+  // Whether the share is in the soft-deleted state
+  deleted bool
+  // When the share was soft-deleted, if applicable
+  deletedTime time
+  // Snapshot timestamp; empty when this is the live share
+  snapshotTime time
+  // Last modification time
+  lastModifiedTime time
+  // Lease state ("available", "leased", "expired", "breaking", "broken")
+  leaseState string
+  // Lease status ("locked", "unlocked")
+  leaseStatus string
+  // Lease duration ("Infinite", "Fixed"); empty when unleased
+  leaseDuration string
+  // User-defined metadata
+  metadata map[string]string
+}
+
+// Azure Storage private endpoint connection
+//
+// Examine a private endpoint connection on a storage account. Selectable
+// by ARM id; fields expose the consumer-side endpoint reference and the
+// approval status governing traffic between consumer and storage.
+private azure.subscription.storageService.account.privateEndpointConnection @defaults("name status provisioningState") {
+  // ARM resource ID
+  id string
+  // Connection name
+  name string
+  // Resource type
+  type string
+  // ARM resource ID of the consumer-side private endpoint, when present
+  privateEndpointId string
+  // Connection status ("Approved", "Pending", "Rejected", "Disconnected")
+  status string
+  // Reason for the current status
+  description string
+  // Action required by the consumer to maintain the connection ("None" / a description string)
+  actionsRequired string
+  // Provisioning state of the connection
+  provisioningState string
+}
+
+// Azure Storage object replication policy
+//
+// Examine an object replication policy linking a source storage account
+// to a destination account. Selectable by ARM id; fields expose the
+// source/destination pair, when replication was enabled, and the
+// container-to-container rules with optional prefix and creation-time
+// filters.
+private azure.subscription.storageService.account.objectReplicationPolicy @defaults("name sourceAccount destinationAccount enabledTime") {
+  // ARM resource ID
+  id string
+  // Policy name
+  name string
+  // Resource type
+  type string
+  // Auto-generated unique policy id
+  policyId string
+  // Source account name or full resource id
+  sourceAccount string
+  // Destination account name or full resource id
+  destinationAccount string
+  // When the policy was enabled on the source account
+  enabledTime time
+  // Replication rules. Each entry has {ruleId, sourceContainer, destinationContainer, prefixMatch, minCreationTime}.
+  rules []dict
+}
+
+// Azure Storage blob inventory policy
+//
+// Examine the (singleton) blob inventory policy on a storage account.
+// Used to audit whether the account has cataloging enabled and what
+// inventory rules are defined (destination container, schema, schedule,
+// per-rule filters).
+private azure.subscription.storageService.account.blobInventoryPolicy @defaults("enabled lastModifiedTime") {
+  // ARM resource ID
+  id string
+  // Policy name (always "default")
+  name string
+  // Resource type
+  type string
+  // Whether the inventory policy is enabled
+  enabled bool
+  // Last modification time
+  lastModifiedTime time
+  // Inventory rules. Each entry has {name, enabled, destination, definition: {format, schedule, objectType, schemaFields, filters}}.
+  rules []dict
 }
 
 // Azure Web

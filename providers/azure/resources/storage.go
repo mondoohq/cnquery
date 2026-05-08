@@ -808,6 +808,42 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		}
 	}
 
+	var immutableEnabled, immutableAllowAppend bool
+	var immutablePeriodDays int64
+	var immutableState string
+	if account.Properties != nil && account.Properties.ImmutableStorageWithVersioning != nil {
+		isav := account.Properties.ImmutableStorageWithVersioning
+		if isav.Enabled != nil {
+			immutableEnabled = *isav.Enabled
+		}
+		if pol := isav.ImmutabilityPolicy; pol != nil {
+			if pol.ImmutabilityPeriodSinceCreationInDays != nil {
+				immutablePeriodDays = int64(*pol.ImmutabilityPeriodSinceCreationInDays)
+			}
+			if pol.AllowProtectedAppendWrites != nil {
+				immutableAllowAppend = *pol.AllowProtectedAppendWrites
+			}
+			if pol.State != nil {
+				immutableState = string(*pol.State)
+			}
+		}
+	}
+
+	var routingChoice string
+	var publishInternetEndpoints, publishMicrosoftEndpoints bool
+	if account.Properties != nil && account.Properties.RoutingPreference != nil {
+		rp := account.Properties.RoutingPreference
+		if rp.RoutingChoice != nil {
+			routingChoice = string(*rp.RoutingChoice)
+		}
+		if rp.PublishInternetEndpoints != nil {
+			publishInternetEndpoints = *rp.PublishInternetEndpoints
+		}
+		if rp.PublishMicrosoftEndpoints != nil {
+			publishMicrosoftEndpoints = *rp.PublishMicrosoftEndpoints
+		}
+	}
+
 	var networkRuleDefaultAction string
 	var networkRuleBypass string
 	networkRuleIpRanges := []any{}
@@ -887,6 +923,13 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 			"sasExpirationPeriod":                llx.StringData(sasExpirationPeriod),
 			"sasExpirationAction":                llx.StringData(sasExpirationAction),
 			"keyExpirationPeriodInDays":          llx.IntData(keyExpirationPeriodInDays),
+			"immutableStorageEnabled":            llx.BoolData(immutableEnabled),
+			"immutableStoragePolicyPeriodDays":   llx.IntData(immutablePeriodDays),
+			"immutableStoragePolicyAllowProtectedAppendWrites": llx.BoolData(immutableAllowAppend),
+			"immutableStoragePolicyState":                      llx.StringData(immutableState),
+			"routingChoice":                                    llx.StringData(routingChoice),
+			"publishInternetEndpoints":                         llx.BoolData(publishInternetEndpoints),
+			"publishMicrosoftEndpoints":                        llx.BoolData(publishMicrosoftEndpoints),
 		})
 	if err != nil {
 		return nil, err

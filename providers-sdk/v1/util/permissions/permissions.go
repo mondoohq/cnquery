@@ -1530,9 +1530,14 @@ var azurePermissionOverrides = map[string]string{
 
 	// Storage: encryption/management policy and local user sub-resources need
 	// storageAccounts/ parent path
-	"Microsoft.Storage/encryptionScopes/read":   "Microsoft.Storage/storageAccounts/encryptionScopes/read",
-	"Microsoft.Storage/localUsers/read":         "Microsoft.Storage/storageAccounts/localUsers/read",
-	"Microsoft.Storage/managementPolicies/read": "Microsoft.Storage/storageAccounts/managementPolicies/read",
+	"Microsoft.Storage/encryptionScopes/read":             "Microsoft.Storage/storageAccounts/encryptionScopes/read",
+	"Microsoft.Storage/localUsers/read":                   "Microsoft.Storage/storageAccounts/localUsers/read",
+	"Microsoft.Storage/managementPolicies/read":           "Microsoft.Storage/storageAccounts/managementPolicies/read",
+	"Microsoft.Storage/fileShares/read":                   "Microsoft.Storage/storageAccounts/fileServices/shares/read",
+	"Microsoft.Storage/privateEndpointConnections/read":   "Microsoft.Storage/storageAccounts/privateEndpointConnections/read",
+	"Microsoft.Storage/objectReplicationPolicies/read":    "Microsoft.Storage/storageAccounts/objectReplicationPolicies/read",
+	"Microsoft.Storage/inventoryPolicies/read":            "Microsoft.Storage/storageAccounts/inventoryPolicies/read",
+	"Microsoft.Storage/blobInventoryPolicies/read":        "Microsoft.Storage/storageAccounts/inventoryPolicies/read",
 
 	// Data Factory: child resources are nested under factories/
 	"Microsoft.DataFactory/linkedServices/read":          "Microsoft.DataFactory/factories/linkedservices/read",

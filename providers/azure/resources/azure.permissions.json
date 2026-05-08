@@ -160,8 +160,12 @@
     "Microsoft.Sql/servers/vulnerabilityAssessments/read",
     "Microsoft.Storage/storageAccounts/blobServices/containers/read",
     "Microsoft.Storage/storageAccounts/encryptionScopes/read",
+    "Microsoft.Storage/storageAccounts/fileServices/shares/read",
+    "Microsoft.Storage/storageAccounts/inventoryPolicies/read",
     "Microsoft.Storage/storageAccounts/localUsers/read",
     "Microsoft.Storage/storageAccounts/managementPolicies/read",
+    "Microsoft.Storage/storageAccounts/objectReplicationPolicies/read",
+    "Microsoft.Storage/storageAccounts/privateEndpointConnections/read",
     "Microsoft.Storage/storageAccounts/read",
     "Microsoft.Synapse/workspaces/read",
     "Microsoft.Web/certificates/read",
@@ -449,7 +453,7 @@
     {
       "permission": "Microsoft.DBforMySQL/servers/configurations/read",
       "service": "Microsoft.DBforMySQL",
-      "action": "NewListByServerPager",
+      "action": "Get",
       "source_file": "mysql.go"
     },
     {
@@ -659,7 +663,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -1137,6 +1141,18 @@
       "source_file": "storage.go"
     },
     {
+      "permission": "Microsoft.Storage/storageAccounts/fileServices/shares/read",
+      "service": "Microsoft.Storage",
+      "action": "NewListPager",
+      "source_file": "storage_extras.go"
+    },
+    {
+      "permission": "Microsoft.Storage/storageAccounts/inventoryPolicies/read",
+      "service": "Microsoft.Storage",
+      "action": "Get",
+      "source_file": "storage_extras.go"
+    },
+    {
       "permission": "Microsoft.Storage/storageAccounts/localUsers/read",
       "service": "Microsoft.Storage",
       "action": "NewListPager",
@@ -1147,6 +1163,18 @@
       "service": "Microsoft.Storage",
       "action": "Get",
       "source_file": "storage.go"
+    },
+    {
+      "permission": "Microsoft.Storage/storageAccounts/objectReplicationPolicies/read",
+      "service": "Microsoft.Storage",
+      "action": "NewListPager",
+      "source_file": "storage_extras.go"
+    },
+    {
+      "permission": "Microsoft.Storage/storageAccounts/privateEndpointConnections/read",
+      "service": "Microsoft.Storage",
+      "action": "NewListPager",
+      "source_file": "storage_extras.go"
     },
     {
       "permission": "Microsoft.Storage/storageAccounts/read",
@@ -1187,7 +1215,7 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListFunctionsPager",
+      "action": "NewListSlotsPager",
       "source_file": "web.go"
     }
   ]
