@@ -3993,11 +3993,12 @@ private azure.subscription.cosmosDbService.account.sqlRoleAssignment @defaults("
 //
 // Examine a SQL-API (Core) database hosted on a Cosmos DB account.
 // Selectable by ARM id; surfaces the database-level throughput posture
-// (manual provisioned vs autoscale ceiling, with `throughputShared`
+// (manual provisioned vs autoscale ceiling, with `throughputPerContainer`
 // distinguishing the case where throughput is configured per-container
 // rather than at the database level) and exposes the contained
-// containers as a typed sub-resource.
-private azure.subscription.cosmosDbService.account.sqlDatabase @defaults("name throughputShared autoscaleEnabled manualThroughput") {
+// containers as a typed sub-resource. Throughput fields are lazy and
+// share a single GetSQLDatabaseThroughput call.
+private azure.subscription.cosmosDbService.account.sqlDatabase @defaults("name throughputPerContainer autoscaleEnabled manualThroughput") {
   // ARM resource ID
   id string
   // Database name (Cosmos DB resource id; same as ARM child segment)
@@ -4006,15 +4007,18 @@ private azure.subscription.cosmosDbService.account.sqlDatabase @defaults("name t
   type string
   // Etag
   etag string
-  // Whether throughput is shared across containers (i.e., the database has no
-  // explicit throughput offer of its own; throughput lives on each container)
-  throughputShared bool
-  // Manual provisioned throughput in RU/s; zero when shared or autoscale
-  manualThroughput int
-  // Autoscale max throughput in RU/s; zero when not autoscale or shared
-  autoscaleMaxThroughput int
+  // Whether throughput is configured per-container instead of at the database
+  // level (true = each container manages its own throughput; equivalent to
+  // there being no database-scope throughput offer)
+  throughputPerContainer() bool
+  // Manual provisioned throughput in RU/s at the database level; zero when
+  // per-container or autoscale
+  manualThroughput() int
+  // Autoscale max throughput in RU/s at the database level; zero when not
+  // autoscale or per-container
+  autoscaleMaxThroughput() int
   // Whether autoscale is enabled at the database level
-  autoscaleEnabled bool
+  autoscaleEnabled() bool
   // Containers within the database
   containers() []azure.subscription.cosmosDbService.account.sqlDatabase.container
 }
@@ -4024,7 +4028,9 @@ private azure.subscription.cosmosDbService.account.sqlDatabase @defaults("name t
 // Examine a SQL-API container within a Cosmos DB database. Selectable
 // by ARM id; surfaces the partition key, default TTL, indexing policy
 // mode, conflict resolution policy, unique-key constraints, and the
-// throughput posture (manual / autoscale / shared with parent database).
+// throughput posture (manual / autoscale / inherited from the parent
+// database). Throughput fields are lazy and share a single
+// GetSQLContainerThroughput call.
 private azure.subscription.cosmosDbService.account.sqlDatabase.container @defaults("name partitionKeyPaths defaultTtl") {
   // ARM resource ID
   id string
@@ -4055,14 +4061,18 @@ private azure.subscription.cosmosDbService.account.sqlDatabase.container @defaul
   conflictResolutionMode string
   // Conflict resolution path (when mode == "LastWriterWins")
   conflictResolutionPath string
-  // Whether throughput is shared with the parent database (no per-container throughput offer)
-  throughputShared bool
-  // Manual provisioned throughput in RU/s; zero when shared or autoscale
-  manualThroughput int
-  // Autoscale max throughput in RU/s; zero when not autoscale or shared
-  autoscaleMaxThroughput int
+  // Whether throughput is inherited from the parent database (true = no
+  // container-level offer; the database scope provides the offer for this
+  // container)
+  throughputInherited() bool
+  // Manual provisioned throughput in RU/s at the container level; zero when
+  // inherited or autoscale
+  manualThroughput() int
+  // Autoscale max throughput in RU/s at the container level; zero when not
+  // autoscale or inherited
+  autoscaleMaxThroughput() int
   // Whether autoscale is enabled at the container level
-  autoscaleEnabled bool
+  autoscaleEnabled() bool
 }
 
 // Azure Key Vault

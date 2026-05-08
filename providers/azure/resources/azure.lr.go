@@ -6641,8 +6641,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.sqlDatabase.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetEtag()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.sqlDatabase.throughputShared": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetThroughputShared()).ToDataRes(types.Bool)
+	"azure.subscription.cosmosDbService.account.sqlDatabase.throughputPerContainer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetThroughputPerContainer()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.manualThroughput": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).GetManualThroughput()).ToDataRes(types.Int)
@@ -6695,8 +6695,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.sqlDatabase.container.conflictResolutionPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetConflictResolutionPath()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.sqlDatabase.container.throughputShared": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetThroughputShared()).ToDataRes(types.Bool)
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.throughputInherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetThroughputInherited()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.container.manualThroughput": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).GetManualThroughput()).ToDataRes(types.Int)
@@ -18097,8 +18097,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.sqlDatabase.throughputShared": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).ThroughputShared, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.account.sqlDatabase.throughputPerContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase).ThroughputPerContainer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.manualThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18173,8 +18173,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).ConflictResolutionPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.sqlDatabase.container.throughputShared": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).ThroughputShared, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.account.sqlDatabase.container.throughputInherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer).ThroughputInherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.sqlDatabase.container.manualThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41911,12 +41911,12 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment) GetScope()
 type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseInternal it will be used here
+	mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseInternal
 	Id                     plugin.TValue[string]
 	Name                   plugin.TValue[string]
 	Type                   plugin.TValue[string]
 	Etag                   plugin.TValue[string]
-	ThroughputShared       plugin.TValue[bool]
+	ThroughputPerContainer plugin.TValue[bool]
 	ManualThroughput       plugin.TValue[int64]
 	AutoscaleMaxThroughput plugin.TValue[int64]
 	AutoscaleEnabled       plugin.TValue[bool]
@@ -41976,20 +41976,28 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetEtag() *plugi
 	return &c.Etag
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetThroughputShared() *plugin.TValue[bool] {
-	return &c.ThroughputShared
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetThroughputPerContainer() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ThroughputPerContainer, func() (bool, error) {
+		return c.throughputPerContainer()
+	})
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetManualThroughput() *plugin.TValue[int64] {
-	return &c.ManualThroughput
+	return plugin.GetOrCompute[int64](&c.ManualThroughput, func() (int64, error) {
+		return c.manualThroughput()
+	})
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetAutoscaleMaxThroughput() *plugin.TValue[int64] {
-	return &c.AutoscaleMaxThroughput
+	return plugin.GetOrCompute[int64](&c.AutoscaleMaxThroughput, func() (int64, error) {
+		return c.autoscaleMaxThroughput()
+	})
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetAutoscaleEnabled() *plugin.TValue[bool] {
-	return &c.AutoscaleEnabled
+	return plugin.GetOrCompute[bool](&c.AutoscaleEnabled, func() (bool, error) {
+		return c.autoscaleEnabled()
+	})
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetContainers() *plugin.TValue[[]any] {
@@ -42012,7 +42020,7 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) GetContainers() 
 type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainerInternal it will be used here
+	mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainerInternal
 	Id                     plugin.TValue[string]
 	Name                   plugin.TValue[string]
 	Type                   plugin.TValue[string]
@@ -42026,7 +42034,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer struct {
 	UniqueKeys             plugin.TValue[[]any]
 	ConflictResolutionMode plugin.TValue[string]
 	ConflictResolutionPath plugin.TValue[string]
-	ThroughputShared       plugin.TValue[bool]
+	ThroughputInherited    plugin.TValue[bool]
 	ManualThroughput       plugin.TValue[int64]
 	AutoscaleMaxThroughput plugin.TValue[int64]
 	AutoscaleEnabled       plugin.TValue[bool]
@@ -42121,20 +42129,28 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetConf
 	return &c.ConflictResolutionPath
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetThroughputShared() *plugin.TValue[bool] {
-	return &c.ThroughputShared
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetThroughputInherited() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ThroughputInherited, func() (bool, error) {
+		return c.throughputInherited()
+	})
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetManualThroughput() *plugin.TValue[int64] {
-	return &c.ManualThroughput
+	return plugin.GetOrCompute[int64](&c.ManualThroughput, func() (int64, error) {
+		return c.manualThroughput()
+	})
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetAutoscaleMaxThroughput() *plugin.TValue[int64] {
-	return &c.AutoscaleMaxThroughput
+	return plugin.GetOrCompute[int64](&c.AutoscaleMaxThroughput, func() (int64, error) {
+		return c.autoscaleMaxThroughput()
+	})
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) GetAutoscaleEnabled() *plugin.TValue[bool] {
-	return &c.AutoscaleEnabled
+	return plugin.GetOrCompute[bool](&c.AutoscaleEnabled, func() (bool, error) {
+		return c.autoscaleEnabled()
+	})
 }
 
 // mqlAzureSubscriptionKeyVaultService for the azure.subscription.keyVaultService resource

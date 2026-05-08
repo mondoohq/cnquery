@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -40,6 +41,24 @@ func cosmosAccountResourceGroup(accountId string) (string, string, string, error
 	return parsed.SubscriptionID, parsed.ResourceGroup, name, nil
 }
 
+// cosmosSqlDatabaseScope parses {subscriptionID, resourceGroup, accountName,
+// databaseName} from a SQL database (or container) ARM id.
+func cosmosSqlDatabaseScope(id string) (string, string, string, string, error) {
+	parsed, err := ParseResourceID(id)
+	if err != nil {
+		return "", "", "", "", err
+	}
+	account, err := parsed.Component("databaseAccounts")
+	if err != nil {
+		return "", "", "", "", err
+	}
+	db, err := parsed.Component("sqlDatabases")
+	if err != nil {
+		return "", "", "", "", err
+	}
+	return parsed.SubscriptionID, parsed.ResourceGroup, account, db, nil
+}
+
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlDatabases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -65,7 +84,7 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlDatabases() ([]any, erro
 			return nil, err
 		}
 		for _, db := range page.Value {
-			mqlDb, err := sqlDatabaseToMQL(ctx, a.MqlRuntime, dbClient, rg, accountName, db)
+			mqlDb, err := sqlDatabaseToMQL(a.MqlRuntime, db)
 			if err != nil {
 				return nil, err
 			}
@@ -75,7 +94,7 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlDatabases() ([]any, erro
 	return res, nil
 }
 
-func sqlDatabaseToMQL(ctx context.Context, runtime *plugin.Runtime, dbClient *cosmos.SQLResourcesClient, rg, accountName string, db *cosmos.SQLDatabaseGetResults) (plugin.Resource, error) {
+func sqlDatabaseToMQL(runtime *plugin.Runtime, db *cosmos.SQLDatabaseGetResults) (plugin.Resource, error) {
 	var dbName, etag string
 	if db.Properties != nil && db.Properties.Resource != nil {
 		if db.Properties.Resource.ID != nil {
@@ -89,19 +108,90 @@ func sqlDatabaseToMQL(ctx context.Context, runtime *plugin.Runtime, dbClient *co
 		dbName = *db.Name
 	}
 
-	manualTP, autoscaleMax, autoscaleEnabled, shared := fetchSqlDatabaseThroughput(ctx, dbClient, rg, accountName, dbName)
-
 	return CreateResource(runtime, "azure.subscription.cosmosDbService.account.sqlDatabase",
 		map[string]*llx.RawData{
-			"id":                     llx.StringDataPtr(db.ID),
-			"name":                   llx.StringData(dbName),
-			"type":                   llx.StringDataPtr(db.Type),
-			"etag":                   llx.StringData(etag),
-			"throughputShared":       llx.BoolData(shared),
-			"manualThroughput":       llx.IntData(int64(manualTP)),
-			"autoscaleMaxThroughput": llx.IntData(int64(autoscaleMax)),
-			"autoscaleEnabled":       llx.BoolData(autoscaleEnabled),
+			"id":   llx.StringDataPtr(db.ID),
+			"name": llx.StringData(dbName),
+			"type": llx.StringDataPtr(db.Type),
+			"etag": llx.StringData(etag),
 		})
+}
+
+// throughputCache is a one-shot fetch result used by both the database and
+// container resources to share a single GetSQL{Database,Container}Throughput
+// call across the four lazy throughput methods.
+type throughputCache struct {
+	manual     int32
+	autoMax    int32
+	autoEn     bool
+	sharedAway bool
+
+	fetched bool
+	lock    sync.Mutex
+}
+
+type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseInternal struct {
+	throughput throughputCache
+}
+
+type mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainerInternal struct {
+	throughput throughputCache
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) loadThroughput() error {
+	if a.throughput.fetched {
+		return nil
+	}
+	a.throughput.lock.Lock()
+	defer a.throughput.lock.Unlock()
+	if a.throughput.fetched {
+		return nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	subId, rg, account, err := cosmosAccountResourceGroup(a.Id.Data)
+	if err != nil {
+		return err
+	}
+	client, err := cosmos.NewSQLResourcesClient(subId, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return err
+	}
+	a.throughput.manual, a.throughput.autoMax, a.throughput.autoEn, a.throughput.sharedAway =
+		fetchSqlDatabaseThroughput(ctx, client, rg, account, a.Name.Data)
+	a.throughput.fetched = true
+	return nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) throughputPerContainer() (bool, error) {
+	if err := a.loadThroughput(); err != nil {
+		return false, err
+	}
+	return a.throughput.sharedAway, nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) manualThroughput() (int64, error) {
+	if err := a.loadThroughput(); err != nil {
+		return 0, err
+	}
+	return int64(a.throughput.manual), nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) autoscaleMaxThroughput() (int64, error) {
+	if err := a.loadThroughput(); err != nil {
+		return 0, err
+	}
+	return int64(a.throughput.autoMax), nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) autoscaleEnabled() (bool, error) {
+	if err := a.loadThroughput(); err != nil {
+		return false, err
+	}
+	return a.throughput.autoEn, nil
 }
 
 // fetchSqlDatabaseThroughput resolves the database-level throughput offer.
@@ -162,18 +252,12 @@ func throughputFromResource(props *cosmos.ThroughputSettingsGetProperties) (int3
 func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) containers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
-	parsed, err := ParseResourceID(a.Id.Data)
+	subId, rg, accountName, dbName, err := cosmosSqlDatabaseScope(a.Id.Data)
 	if err != nil {
 		return nil, err
 	}
-	accountName, err := parsed.Component("databaseAccounts")
-	if err != nil {
-		return nil, err
-	}
-	rg := parsed.ResourceGroup
-	dbName := a.Name.Data
 
-	dbClient, err := cosmos.NewSQLResourcesClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+	dbClient, err := cosmos.NewSQLResourcesClient(subId, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
@@ -191,7 +275,7 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) containers() ([]
 			return nil, err
 		}
 		for _, c := range page.Value {
-			mqlC, err := sqlContainerToMQL(ctx, a.MqlRuntime, dbClient, rg, accountName, dbName, c)
+			mqlC, err := sqlContainerToMQL(a.MqlRuntime, c)
 			if err != nil {
 				return nil, err
 			}
@@ -201,8 +285,10 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabase) containers() ([]
 	return res, nil
 }
 
-func sqlContainerToMQL(ctx context.Context, runtime *plugin.Runtime, dbClient *cosmos.SQLResourcesClient, rg, accountName, dbName string, c *cosmos.SQLContainerGetResults) (plugin.Resource, error) {
+func sqlContainerToMQL(runtime *plugin.Runtime, c *cosmos.SQLContainerGetResults) (plugin.Resource, error) {
 	var name, etag, partitionKeyKind, indexingMode, conflictMode, conflictPath string
+	// SDK type difference: DefaultTTL is *int32, AnalyticalStorageTTL is *int64.
+	// Both surface as int64 on the resource, so widen DefaultTTL with int64(...).
 	var defaultTtl, analyticalTtl int64
 	autoIndex := false
 	partitionKeyPaths := []any{}
@@ -267,8 +353,6 @@ func sqlContainerToMQL(ctx context.Context, runtime *plugin.Runtime, dbClient *c
 		name = *c.Name
 	}
 
-	manualTP, autoscaleMax, autoscaleEnabled, shared := fetchSqlContainerThroughput(ctx, dbClient, rg, accountName, dbName, name)
-
 	return CreateResource(runtime, "azure.subscription.cosmosDbService.account.sqlDatabase.container",
 		map[string]*llx.RawData{
 			"id":                     llx.StringDataPtr(c.ID),
@@ -284,11 +368,63 @@ func sqlContainerToMQL(ctx context.Context, runtime *plugin.Runtime, dbClient *c
 			"uniqueKeys":             llx.ArrayData(uniqueKeys, types.Dict),
 			"conflictResolutionMode": llx.StringData(conflictMode),
 			"conflictResolutionPath": llx.StringData(conflictPath),
-			"throughputShared":       llx.BoolData(shared),
-			"manualThroughput":       llx.IntData(int64(manualTP)),
-			"autoscaleMaxThroughput": llx.IntData(int64(autoscaleMax)),
-			"autoscaleEnabled":       llx.BoolData(autoscaleEnabled),
 		})
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) loadThroughput() error {
+	if a.throughput.fetched {
+		return nil
+	}
+	a.throughput.lock.Lock()
+	defer a.throughput.lock.Unlock()
+	if a.throughput.fetched {
+		return nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	subId, rg, account, dbName, err := cosmosSqlDatabaseScope(a.Id.Data)
+	if err != nil {
+		return err
+	}
+	client, err := cosmos.NewSQLResourcesClient(subId, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return err
+	}
+	a.throughput.manual, a.throughput.autoMax, a.throughput.autoEn, a.throughput.sharedAway =
+		fetchSqlContainerThroughput(ctx, client, rg, account, dbName, a.Name.Data)
+	a.throughput.fetched = true
+	return nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) throughputInherited() (bool, error) {
+	if err := a.loadThroughput(); err != nil {
+		return false, err
+	}
+	return a.throughput.sharedAway, nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) manualThroughput() (int64, error) {
+	if err := a.loadThroughput(); err != nil {
+		return 0, err
+	}
+	return int64(a.throughput.manual), nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) autoscaleMaxThroughput() (int64, error) {
+	if err := a.loadThroughput(); err != nil {
+		return 0, err
+	}
+	return int64(a.throughput.autoMax), nil
+}
+
+func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) autoscaleEnabled() (bool, error) {
+	if err := a.loadThroughput(); err != nil {
+		return false, err
+	}
+	return a.throughput.autoEn, nil
 }
 
 // isCosmosNotFoundError reports whether err is a Cosmos throughput 404. Used
