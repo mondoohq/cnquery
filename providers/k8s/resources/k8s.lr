@@ -8,6 +8,23 @@ option provider = "go.mondoo.com/cnquery/v9/providers/k8s"
 option go_package = "go.mondoo.com/mql/v13/providers/k8s/resources"
 
 // Kubernetes cluster
+//
+// Use the Kubernetes namespace as the cluster-wide handle for every
+// modeled API object. Read `serverVersion` for the control-plane
+// version and `apiResources()` for the list of resource types the
+// API server advertises. Iterate the workload accessors —
+// `namespaces()`, `nodes()`, `pods()`, `deployments()`, `daemonsets()`,
+// `statefulsets()`, `replicasets()`, `jobs()`, `cronjobs()`, and
+// `apps()` — for the running workload, and `services()`, `ingresses()`,
+// `endpointSlices()`, and `networkPolicies()` for the network plane.
+// `secrets()`, `configmaps()`, and `serviceaccounts()` cover identity
+// and configuration data; `clusterroles()`, `clusterrolebindings()`,
+// `roles()`, and `rolebindings()` cover the RBAC graph; `persistentVolumes()`,
+// `persistentVolumeClaims()`, and `storageClasses()` cover storage;
+// `priorityClasses()`, `horizontalPodAutoscalers()`, `resourceQuotas()`,
+// and `limitRanges()` cover scheduling and quota policy. Use
+// `validatingWebhookConfigurations()` for admission control and
+// `customresources()` for custom-resource instances.
 k8s {
   // Cluster version
   serverVersion() dict
@@ -1114,8 +1131,16 @@ private k8s.endpointslice @defaults("namespace name addressType") {
 }
 
 // Kubernetes AdmissionReview
+//
+// Examine an AdmissionReview that an admission controller is being
+// asked to evaluate. Use `request()` to read the embedded
+// `k8s.admissionrequest` — the operation, requesting user, target
+// namespace, the incoming object, and (for UPDATE/DELETE) the prior
+// object. This resource is populated when MQL is invoked from inside a
+// dynamic admission webhook so policies can decide whether to admit
+// the request.
 k8s.admissionreview {
-  // The requested admission
+  // Requested admission
   request() k8s.admissionrequest
 }
 

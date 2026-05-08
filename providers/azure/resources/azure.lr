@@ -4,11 +4,34 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/azure"
 option go_package = "go.mondoo.com/mql/v13/providers/azure/resources"
 
-// Azure resource
+// Microsoft Azure
+//
+// Use the Azure root namespace as the entry point for the Azure
+// provider. The active subscription is exposed as `azure.subscription`,
+// and every Azure service-specific accessor (Compute, Storage,
+// Network, Key Vault, Cosmos DB, Monitor, Defender for Cloud, AKS,
+// and so on) is reached through that subscription.
 azure {
 }
 
 // Azure subscription
+//
+// Examine an Azure subscription — the billing, identity, and policy
+// container that owns every Azure resource accessible to the provider.
+// Surfaces the subscription ID, tenant ID, display name, state,
+// authorization source, applied tags, the managing tenants, and the
+// `subscriptionsPolicies` block. Iterate `resourceGroups()` for the
+// resource-group containers and `resources()` for every resource in
+// the subscription. Service-specific entry points hang off the
+// subscription as accessor methods — `compute()`, `network()`,
+// `storage()`, `web()`, `sql()`, `mySql()`, `postgreSql()`,
+// `cosmosDb()`, `keyVault()`, `iam()` (Authorization), `monitor()`,
+// `cloudDefender()`, `aks()`, `advisor()`, `policy`, `iot()`,
+// `cache()`, `dataFactory()`, `synapse()`, `containerRegistry()`,
+// `recoveryServices()`, `functions()`, `serviceBus()`, `eventHub()`,
+// `dns()`, `frontDoor()`, `containerApp()`, `containerInstance()`,
+// `logic()`, `batch()`, and `databricks()` — letting you traverse from
+// a subscription into every modeled Azure service.
 azure.subscription @defaults ("name") {
   // Full resource identifier of the subscription
   id string
@@ -186,7 +209,17 @@ private azure.subscription.computeService {
   hybridMachines() []azure.subscription.computeService.hybridMachine
 }
 
-// Azure Compute virtual machine
+// Azure virtual machine
+//
+// Examine an Azure Compute Engine VM and the security-relevant
+// configuration around it. Surfaces the VM size, OS profile, storage
+// profile (OS and data disks), network profile and attached
+// `interfaces()`, identity assignments, applied tags, the
+// availability/zone/proximity-placement-group placement, the boot
+// diagnostics and security profile (TrustedLaunch / ConfidentialVM,
+// SecureBoot, vTPM), the `extensions()` installed on the VM, OS
+// patching state, and the deployed extensions for ASC, Defender, and
+// guest configuration.
 azure.subscription.computeService.vm @defaults("name location properties.hardwareProfile.vmSize properties.storageProfile.osDisk.osType") {
   // VM ID
   id string
@@ -266,7 +299,15 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   vmScaleSet() azure.subscription.computeService.vmScaleSet
 }
 
-// Azure Arc-enabled server (Microsoft.HybridCompute/machines)
+// Azure Arc-enabled server
+//
+// Examine an Azure Arc-enabled server (Microsoft.HybridCompute/machines)
+// — an on-premises or other-cloud machine projected into Azure for
+// management. Surfaces the agent status (Connected, Disconnected,
+// Expired), agent version, OS name and version, last status check,
+// machine identity, attached extensions, private link scope, and the
+// `cloudMetadata` describing the underlying environment when the
+// machine is hosted on AWS, GCP, VMware, or another cloud.
 azure.subscription.computeService.hybridMachine @defaults("name location osName osVersion status") {
   // ARM resource ID
   id string
@@ -362,7 +403,15 @@ private azure.subscription.computeService.hybridMachine.extension @defaults("nam
   instanceView dict
 }
 
-// Azure compute disk resource
+// Azure managed disk
+//
+// Examine an Azure managed disk attached to a VM, scale set, or
+// available for attachment. Surfaces the disk SKU and tier, OS type,
+// disk size and IOPS, the disk state (Unattached, Attached, Reserved,
+// ActiveSAS, ReadyToUpload, ActiveUpload), encryption settings
+// (platform-managed, customer-managed via diskEncryptionSet, or
+// double-encryption), network access policy, public network access,
+// the source from which the disk was created, and any attached VM.
 azure.subscription.computeService.disk @defaults("name location properties.osType properties.diskSizeGB properties.diskState") {
   // Disk resource ID
   id string
@@ -433,6 +482,15 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
 }
 
 // Azure disk encryption set
+//
+// Examine a customer-managed key configuration that managed disks and
+// snapshots reference for envelope encryption. Surfaces the
+// `encryptionType` (EncryptionAtRestWithCustomerKey,
+// EncryptionAtRestWithPlatformAndCustomerKeys, or
+// ConfidentialVmEncryptedWithCustomerKey), the active and rotation-to
+// Key Vault key URLs, the system or user-assigned identity used to
+// access the vault, the auto-key-rotation flag, and the federated
+// client ID when one is configured.
 azure.subscription.computeService.diskEncryptionSet @defaults("name location encryptionType") {
   // Disk encryption set ID
   id string
@@ -460,7 +518,15 @@ azure.subscription.computeService.diskEncryptionSet @defaults("name location enc
   identity dict
 }
 
-// Azure disk access resource (private endpoint for managed disks)
+// Azure disk access resource
+//
+// Examine a private-endpoint configuration that managed disks and
+// snapshots can be exported and imported through. Surfaces the
+// `provisioningState`, the `extendedLocation` if the resource lives in
+// an Azure Edge Zone, and the time the access was created and last
+// modified. Disks reference a disk-access by ARM ID through their
+// `networkAccessPolicy` to keep export/import traffic off the public
+// internet.
 azure.subscription.computeService.diskAccess @defaults("name location") {
   // Disk access ID
   id string
@@ -481,6 +547,15 @@ azure.subscription.computeService.diskAccess @defaults("name location") {
 }
 
 // Azure managed disk snapshot
+//
+// Examine a point-in-time snapshot of an Azure managed disk. Surfaces
+// the snapshot SKU and tier, OS type, allocated and used size, the
+// `diskState`, the source resource the snapshot was created from, the
+// `incremental` flag (incremental vs full), encryption settings
+// (platform-managed, customer-managed via diskEncryptionSet, or
+// confidential-VM encryption), the network access policy, public
+// network access, and any active SAS export for downloading the
+// underlying VHD.
 azure.subscription.computeService.snapshot @defaults("name location diskSizeBytes diskState incremental") {
   // Snapshot ID
   id string
@@ -541,6 +616,15 @@ azure.subscription.computeService.snapshot @defaults("name location diskSizeByte
 }
 
 // Azure Virtual Machine Scale Set
+//
+// Examine a Virtual Machine Scale Set — the abstraction Azure uses to
+// deploy and manage a group of identical VMs. Surfaces the
+// `orchestrationMode` (Uniform or Flexible), the SKU and capacity, the
+// network and OS profiles applied to instances, upgrade policy
+// (Manual, Automatic, Rolling), automatic-OS-upgrade and rolling
+// upgrade policy, the spot priority and eviction settings, identity
+// assignments, the VM-extension profile, the platform-fault-domain
+// count, and the per-instance `instances()` currently provisioned.
 azure.subscription.computeService.vmScaleSet @defaults("name location orchestrationMode sku") {
   // VMSS ARM resource ID
   id string
@@ -598,7 +682,16 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   extensions() []dict
 }
 
-// Azure Virtual Machine Scale Set virtual machine instance
+// Azure scale set VM instance
+//
+// Examine a single VM instance inside a Virtual Machine Scale Set.
+// Surfaces the per-instance ARM resource ID, the scale-set
+// `instanceId`, applied availability zones, the
+// `latestModelApplied` flag (whether the instance is on the current
+// scale-set model), the `modelDefinitionApplied` (whether the model is
+// the scale set's or customized), the Azure VM unique ID, instance
+// SKU, and the raw instance properties for fields not yet promoted to
+// typed accessors.
 azure.subscription.computeService.vmScaleSet.instance @defaults("name instanceId provisioningState") {
   // Instance ARM resource ID
   id string
@@ -628,7 +721,13 @@ azure.subscription.computeService.vmScaleSet.instance @defaults("name instanceId
   sku dict
 }
 
-// Azure Dedicated Host Group — single-tenant placement scope for dedicated hosts
+// Azure Dedicated Host Group
+//
+// Examine a single-tenant placement scope for Azure Dedicated Hosts.
+// Surfaces the platform-fault-domain count, the supported
+// availability zones, the `supportAutomaticPlacement` flag, and any
+// ultraSSD support exposed by the group. Use the `hosts()` collection
+// for the individual physical servers reserved through this group.
 azure.subscription.computeService.dedicatedHostGroup @defaults("name location platformFaultDomainCount") {
   // Dedicated host group ARM resource ID
   id string
@@ -656,7 +755,13 @@ azure.subscription.computeService.dedicatedHostGroup @defaults("name location pl
   hosts() []azure.subscription.computeService.dedicatedHost
 }
 
-// Azure Dedicated Host — physical server reserved for a single tenant
+// Azure Dedicated Host
+//
+// Examine a physical server reserved for a single tenant inside an
+// Azure Dedicated Host Group. Surfaces the SKU, fault domain, license
+// type, host's auto-replace-on-failure setting, the VMs currently
+// placed on the host, the `instanceView` reporting allocation status
+// and capacity, and the platform-fault-domain assignment.
 azure.subscription.computeService.dedicatedHost @defaults("name sku.name provisioningState") {
   // Dedicated host ARM resource ID
   id string
@@ -690,7 +795,13 @@ azure.subscription.computeService.dedicatedHost @defaults("name sku.name provisi
   instanceView dict
 }
 
-// Azure Proximity Placement Group — co-location scope for compute resources
+// Azure Proximity Placement Group
+//
+// Examine a co-location scope for Azure compute resources. Surfaces
+// the placement-group type (Standard or Ultra), the supported
+// availability zones, the colocation status, and the lists of VMs,
+// virtual-machine scale sets, and availability sets currently bound to
+// the group so they share low-latency network locality.
 azure.subscription.computeService.proximityPlacementGroup @defaults("name location proximityPlacementGroupType") {
   // Proximity placement group ARM resource ID
   id string
@@ -718,7 +829,15 @@ azure.subscription.computeService.proximityPlacementGroup @defaults("name locati
   availabilitySetIds []string
 }
 
-// Azure managed image — custom VM image stored as a single resource
+// Azure managed image
+//
+// Examine a custom VM image stored as a single Azure resource.
+// Surfaces the storage profile (OS disk and data disks), the
+// `hyperVGeneration` (V1 or V2), the source virtual machine the image
+// was generalized from, and the provisioning state. Compute Galleries
+// (`gallery()`) are the preferred mechanism for versioned image
+// distribution; managed images remain useful for single-resource
+// captures.
 azure.subscription.computeService.image @defaults("name location hyperVGeneration provisioningState") {
   // Image ARM resource ID
   id string
@@ -742,7 +861,14 @@ azure.subscription.computeService.image @defaults("name location hyperVGeneratio
   hyperVGeneration string
 }
 
-// Azure Compute Gallery (Shared Image Gallery) — versioned image distribution
+// Azure Compute Gallery
+//
+// Examine a Compute Gallery (formerly Shared Image Gallery) — the
+// versioned image-distribution scope inside a subscription. Surfaces
+// the gallery description, identifier, the
+// `sharingProfile` (private, community, or groups), the soft-delete
+// state, and the `images()` defined in the gallery so audits can
+// traverse from gallery to image definition to image version.
 azure.subscription.computeService.gallery @defaults("name location description") {
   // Gallery ARM resource ID
   id string
@@ -772,7 +898,14 @@ azure.subscription.computeService.gallery @defaults("name location description")
   images() []azure.subscription.computeService.gallery.image
 }
 
-// Azure Compute Gallery image definition — versioned VM image template
+// Azure Compute Gallery image definition
+//
+// Examine a versioned VM image definition inside a Compute Gallery.
+// Surfaces the OS type (Linux or Windows), OS state (Generalized vs
+// Specialized), `hyperVGeneration` (V1 or V2), architecture, supported
+// VM features, the publisher/offer/SKU identifiers, end-of-life date,
+// recommended VM configuration, and the `versions()` published under
+// the definition.
 azure.subscription.computeService.gallery.image @defaults("name osType osState hyperVGeneration") {
   // Image definition ARM resource ID
   id string
@@ -820,7 +953,14 @@ azure.subscription.computeService.gallery.image @defaults("name osType osState h
   versions() []azure.subscription.computeService.gallery.image.version
 }
 
-// Azure Compute Gallery image version — concrete versioned image
+// Azure Compute Gallery image version
+//
+// Examine a concrete versioned image inside a Compute Gallery image
+// definition. Surfaces the storage profile (OS disk image, data disk
+// images, and the source the version was created from), the
+// publishing-profile target regions and replication options, the
+// safety profile, end-of-life date, and the version's replication
+// status.
 azure.subscription.computeService.gallery.image.version @defaults("name location provisioningState") {
   // Image version ARM resource ID
   id string
@@ -857,6 +997,14 @@ private azure.subscription.batchService {
 }
 
 // Azure Batch account
+//
+// Examine an Azure Batch account — the resource-pool and job-scheduling
+// container for HPC and parallel workloads. Surfaces the account's
+// public network access state, the linked auto-storage account, the
+// poolAllocationMode (BatchService or UserSubscription), key vault
+// reference, encryption settings, network profile, the configured
+// node-communication mode, and the batch `pools()` deployed in the
+// account.
 azure.subscription.batchService.account @defaults("id name location") {
   // Batch account ID
   id string
@@ -913,6 +1061,13 @@ azure.subscription.batchService.account @defaults("id name location") {
 }
 
 // Azure Batch pool
+//
+// Examine a compute pool inside an Azure Batch account. Surfaces the
+// VM size and image, the deployment configuration (cloud-services or
+// VM-based), scale settings (fixed or auto), per-node start tasks,
+// network configuration, allocation state, target dedicated and
+// low-priority node counts, and the certificates and applications
+// installed on pool nodes.
 azure.subscription.batchService.account.pool @defaults("id name") {
   // Pool resource ID
   id string
@@ -955,6 +1110,14 @@ private azure.subscription.databricksService {
 }
 
 // Azure Databricks workspace
+//
+// Examine an Azure Databricks workspace — the analytics platform's
+// per-environment control plane. Surfaces the workspace SKU
+// (Standard, Premium, Trial), public network access state, the
+// managed resource group ID, the linked virtual network when VNet
+// injection is configured, the encryption settings (managed services
+// key and managed disks key), authorization settings, and the
+// `requiredNsgRules` posture used by the data plane.
 azure.subscription.databricksService.workspace @defaults("id name location publicNetworkAccess") {
   // Workspace ID
   id string
@@ -1050,7 +1213,15 @@ private azure.subscription.networkService {
   serviceEndpointPolicies() []azure.subscription.networkService.serviceEndpointPolicy
 }
 
-// Azure Virtual Network (VNet) gateway
+// Azure VPN/ExpressRoute gateway
+//
+// Examine a virtual network gateway used for VPN, ExpressRoute, or
+// LocalGateway connectivity. Surfaces the gateway type, VPN type
+// (RouteBased or PolicyBased), generation, SKU, IP configuration,
+// BGP settings (ASN, peering address), VPN client configuration
+// (address pool, root and revoked certificates, RADIUS server), the
+// active-active flag, and any associated VPN connections and
+// disaster-recovery settings.
 azure.subscription.networkService.virtualNetworkGateway @defaults("id name location") {
   // VNet gateway ID
   id string
@@ -1106,7 +1277,12 @@ azure.subscription.networkService.virtualNetworkGateway @defaults("id name locat
   vpnClientConfiguration dict
 }
 
-// Azure network application security group
+// Azure application security group
+//
+// Examine an application security group (ASG) — the logical grouping
+// used inside Network Security Group rules so traffic can be allowed
+// or denied based on application identity rather than IP. Surfaces
+// the resource GUID and the provisioning state of the group.
 azure.subscription.networkService.appSecurityGroup @defaults("id name location") {
   // Application security group ID
   id string
@@ -1124,7 +1300,15 @@ azure.subscription.networkService.appSecurityGroup @defaults("id name location")
   properties dict
 }
 
-// Azure network firewall
+// Azure Firewall
+//
+// Examine an Azure Firewall instance — the L4/L7 stateful service
+// firewall deployed at the network edge. Surfaces the firewall SKU
+// (Standard, Premium, or Basic), threat-intel mode, attached firewall
+// policy, IP configurations and management IP, application/network/NAT
+// rule collections, hub IP addresses for Secure Virtual Hub
+// deployments, the public IP and virtual hub linkage, and the
+// `additionalProperties` exposing autoscale and DNS settings.
 azure.subscription.networkService.firewall @defaults("id name location") {
   // Firewall ID
   id string
@@ -1216,7 +1400,14 @@ private azure.subscription.networkService.firewall.natRule @defaults("id name") 
   properties dict
 }
 
-// Azure network firewall policy
+// Azure Firewall policy
+//
+// Examine a reusable Azure Firewall policy — the rule-set parent that
+// firewall instances reference. Surfaces the policy SKU, threat-intel
+// mode and allow-list, DNS settings, intrusion detection settings,
+// TLS inspection certificate, the explicit-proxy configuration, the
+// child policy chain (`basePolicy`), and the rule collection groups
+// that hold the actual application/network/NAT rules.
 azure.subscription.networkService.firewallPolicy @defaults("id name location") {
   // Firewall policy ID
   id string
@@ -1273,6 +1464,12 @@ private azure.subscription.networkService.firewallPolicy.idpsBypassRule @default
 }
 
 // Azure DDoS protection plan
+//
+// Examine a DDoS Network Protection plan that virtual networks bind to
+// for enhanced volumetric and protocol DDoS mitigation. Surfaces the
+// plan resource GUID, the public IP addresses currently protected by
+// the plan, and the linked virtual networks subscribing to its
+// mitigation policies.
 azure.subscription.networkService.ddosProtectionPlan @defaults("name location") {
   // DDoS protection plan ID
   id string
@@ -1295,6 +1492,12 @@ azure.subscription.networkService.ddosProtectionPlan @defaults("name location") 
 }
 
 // Azure service endpoint policy
+//
+// Examine a service-endpoint policy that restricts which Azure service
+// resources can be reached from a subnet using service endpoints.
+// Surfaces the policy's service-endpoint-policy definitions (the
+// allowed Azure resource IDs), the contextual service alias, the
+// subnets the policy is applied to, and the resource GUID.
 azure.subscription.networkService.serviceEndpointPolicy @defaults("name location") {
   // Service endpoint policy ID
   id string
@@ -1399,6 +1602,12 @@ private azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringA
 }
 
 // Azure NAT gateway
+//
+// Examine a NAT gateway that provides outbound SNAT for resources in
+// one or more subnets. Surfaces the SKU and zone placement, the
+// configured idle-timeout, the public IP addresses and prefixes
+// allocated for outbound translation, the subnets currently consuming
+// the gateway, and the resource GUID.
 azure.subscription.networkService.natGateway @defaults("id name location") {
   // NAT Gateway ID
   id string
@@ -1422,7 +1631,14 @@ azure.subscription.networkService.natGateway @defaults("id name location") {
   subnets() []azure.subscription.networkService.subnet
 }
 
-// Azure Virtual Network (VNet) subnet
+// Azure VNet subnet
+//
+// Examine a subnet inside an Azure Virtual Network. Surfaces the IPv4
+// and IPv6 address prefixes, the attached network security group and
+// route table, NAT gateway, service endpoints and service-endpoint
+// policies, delegations to PaaS services, the
+// `privateEndpointNetworkPolicies` and `privateLinkServiceNetworkPolicies`
+// flags, and the IP allocation method.
 azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   // Subnet ID
   id string
@@ -1448,7 +1664,14 @@ azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   ipConfigurations() []azure.subscription.networkService.virtualNetworkGateway.ipConfig
 }
 
-// Azure Virtual network (VNet)
+// Azure Virtual Network (VNet)
+//
+// Examine an Azure Virtual Network and its connectivity surface.
+// Surfaces the IPv4 and IPv6 address spaces, configured DNS servers,
+// the linked DDoS protection plan, encryption settings, BGP
+// communities, the `enableVmProtection` and `enableDdosProtection`
+// flags, the `subnets()` defined inside the VNet, and the
+// `peerings()` to other virtual networks.
 azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   // Virtual Network ID
   id string
@@ -1486,7 +1709,15 @@ azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   peerings() []azure.subscription.networkService.virtualNetwork.peering
 }
 
-// Azure Virtual Network (VNet) peering
+// Azure VNet peering
+//
+// Examine a peering between two Azure Virtual Networks. Surfaces the
+// peering state (Initiated, Connected, Disconnected), the remote
+// virtual network reference, allow-virtual-network-access /
+// allow-forwarded-traffic / allow-gateway-transit / use-remote-gateways
+// flags, the remote address space, the peering sync level (FullyInSync
+// vs LocalAndRemoteNotInSync), the `peeringSyncLevel`, and the
+// `doNotVerifyRemoteGateways` setting.
 azure.subscription.networkService.virtualNetwork.peering @defaults("id name peeringState") {
   // Peering resource ID
   id string
@@ -1523,6 +1754,15 @@ private azure.subscription.networkService.virtualNetwork.dhcpOptions {
 }
 
 // Azure Load Balancer
+//
+// Examine an Azure Load Balancer and the front-end / back-end
+// configuration that determines how traffic is distributed. Surfaces
+// the SKU (Basic, Standard, Gateway), tier (Regional or Global), the
+// `frontendIPConfigurations`, `backendAddressPools`,
+// `loadBalancingRules`, `inboundNatRules`, `inboundNatPools`,
+// `outboundRules`, and `probes`. The `extendedLocation`, attached
+// `virtualNetwork` for Standard private LBs, and the resource GUID
+// help correlate the LB to its surrounding network.
 azure.subscription.networkService.loadBalancer @defaults("id name location") {
   // Load Balancer ID
   id string
@@ -1665,6 +1905,14 @@ private azure.subscription.networkService.outboundRule @defaults("id name") {
 }
 
 // Azure network interface
+//
+// Examine an Azure network interface (NIC) attached to a VM, scale
+// set, or private endpoint. Surfaces the IP configurations (private
+// IP allocation, public IP, subnet binding), MAC address, the
+// associated network security group, accelerated-networking and
+// IP-forwarding flags, DNS settings, the NIC type (Standard,
+// Elastic), the migration phase, and the auxiliary mode/SKU when the
+// NIC is in an accelerated-connection configuration.
 azure.subscription.networkService.interface @defaults("name location properties.macAddress properties.nicType") {
   // Network interface ID
   id string
@@ -1849,6 +2097,15 @@ private azure.subscription.networkService.watcher.flowlog @defaults("name locati
 }
 
 // Azure Application Gateway
+//
+// Examine an Azure Application Gateway — the regional L7 load
+// balancer that fronts web workloads. Surfaces the SKU and tier
+// (Standard_v2, WAF_v2), TLS settings (frontend/backend TLS,
+// certificates, root certs), HTTP listeners, request-routing rules,
+// URL path maps, redirect configurations, backend address pools and
+// HTTP settings, autoscale configuration, the WAF mode and rule set
+// when the gateway is WAF-enabled, and the linked
+// `firewallPolicy()`.
 azure.subscription.networkService.applicationGateway @defaults("id name location") {
   // Application Gateway ID
   id string
@@ -1876,7 +2133,14 @@ azure.subscription.networkService.applicationGateway @defaults("id name location
   sslCipherSuites []string
 }
 
-// Azure Application Firewall Config
+// Azure Application Gateway WAF config
+//
+// Examine the legacy WAF configuration attached directly to an
+// Application Gateway (used by older v1 SKUs). Surfaces the WAF
+// `mode` (Detection / Prevention), the rule set type and version,
+// firewall mode flags, the `enabled` state, request-body limits, and
+// disabled rule groups. Newer deployments use a typed
+// `applicationFirewallPolicy` resource instead.
 azure.subscription.networkService.wafConfig @defaults("id name type") {
   // ID of the WAF configuration
   id string
@@ -1890,7 +2154,14 @@ azure.subscription.networkService.wafConfig @defaults("id name type") {
   properties dict
 }
 
-// Azure Application Firewall Policy (WAF)
+// Azure Web Application Firewall (WAF) policy
+//
+// Examine a reusable WAF policy that Application Gateway, Front Door,
+// or other PaaS endpoints reference for L7 protection. Surfaces the
+// `policySettings` (mode, request body limits, file upload limits,
+// state, log scrubbing), the `customRules` list, the `managedRules`
+// configuration (rule sets and per-rule overrides), and the resources
+// the policy is currently bound to.
 azure.subscription.networkService.applicationFirewallPolicy @defaults("id name location") {
   // Application firewall policy ID
   id string
@@ -2608,7 +2879,17 @@ private azure.subscription.webService.appRuntimeStack @defaults("preferredOs run
   endOfLifeDate time
 }
 
-// Azure Web app site
+// Azure App Service site
+//
+// Examine an App Service / Function App / Web App site. Surfaces the
+// app's runtime stack, SKU and App Service Plan binding, the
+// `siteConfig` (always-on, HTTP/2, TLS minimum version,
+// FTPS/HTTP-only state, IP restrictions, CORS), HTTPS-only flag,
+// client-cert and client-affinity settings, the configured custom
+// hostnames and SSL bindings, identity assignments, the deployed
+// `slots()`, app settings and connection strings, the linked storage
+// accounts, and the `webDiagnostics` (Application Insights / log
+// streaming) configuration.
 azure.subscription.webService.appsite @defaults("id name location") {
   // App site ID
   id string
@@ -3888,6 +4169,17 @@ private azure.subscription.cosmosDbService {
 }
 
 // Azure Cosmos DB account
+//
+// Examine a Cosmos DB account — the multi-model NoSQL service's
+// top-level resource. Surfaces the account `kind` (GlobalDocumentDB,
+// MongoDB, Parse), the API offering, default consistency policy,
+// configured locations and failover priorities, public network access,
+// network ACL bypass for Azure services, IP rules, virtual-network
+// rules, the encryption settings (key URI, identity used to access
+// Key Vault), local authentication state, the
+// `disableLocalAuth` flag, the
+// `analyticalStorageConfiguration`, backup policy, capabilities, and
+// the `sqlDatabases()` exposed by the account.
 azure.subscription.cosmosDbService.account @defaults("name kind location") {
   // Cosmos DB account ID
   id string
@@ -4084,6 +4376,13 @@ private azure.subscription.keyVaultService {
 }
 
 // Azure Managed HSM pool
+//
+// Examine a Managed HSM pool — the FIPS 140-2 Level 3 hardware
+// security module offering separate from regular Key Vaults. Surfaces
+// the pool SKU, `tenantId`, the `initialAdminObjectIds` granted local
+// HSM admin, the deployment status and provisioning state, public
+// network access, network ACLs, soft-delete and purge-protection
+// settings, and the public/private endpoint connection list.
 azure.subscription.keyVaultService.managedHsm @defaults("name location") {
   // Managed HSM ID
   id string
@@ -5151,7 +5450,19 @@ private azure.subscription.aksService {
   clusters() []azure.subscription.aksService.cluster
 }
 
-// Azure Kubernetes Service cluster
+// Azure Kubernetes Service (AKS) cluster
+//
+// Examine an AKS cluster's control-plane and managed-platform
+// configuration. Surfaces the Kubernetes version, DNS prefix, FQDN,
+// API server access profile (private cluster, authorized IP ranges),
+// network profile (network plugin, service/pod CIDR, load-balancer
+// SKU), identity (system-assigned or user-assigned, kubeletIdentity),
+// RBAC and Azure AD integration, OIDC issuer URL for workload
+// identity, the agent pool profiles, addon profiles (monitoring,
+// policy, ingress-app-routing), Azure Policy and Defender for Cloud
+// integration, image cleaner, cluster auto-upgrade channel, and the
+// security profile (workload identity, image integrity, defender,
+// node restriction, KMS encryption).
 azure.subscription.aksService.cluster @defaults("name location kubernetesVersion") {
   // ID of the AKS cluster
   id string
@@ -5448,6 +5759,15 @@ private azure.subscription.cacheService @defaults("subscriptionId") {
 }
 
 // Azure Cache for Redis instance
+//
+// Examine an Azure Cache for Redis instance. Surfaces the SKU and
+// tier (Basic, Standard, Premium, Enterprise), the Redis version,
+// host name and ports (SSL and non-SSL), the
+// `enableNonSslPort` flag, public network access, the configured
+// `redisConfiguration` (maxmemory policy, eviction, AOF/RDB
+// persistence), TLS minimum version, identity assignments, replicas
+// per master, shard count for clustered Premium tiers, and the
+// virtual-network or private-endpoint placement.
 azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   // ID of the Redis cache
   id string
@@ -5559,7 +5879,15 @@ private azure.subscription.dataFactoryService {
   factories() []azure.subscription.dataFactoryService.factory
 }
 
-// Azure Data Factory instance
+// Azure Data Factory
+//
+// Examine an Azure Data Factory — the managed ETL/ELT and data
+// integration service. Surfaces the factory's identity assignments,
+// the linked Git repository configuration (Azure DevOps or GitHub
+// account, project, root folder, collaboration branch), public
+// network access, the `purviewConfiguration` for data-catalog
+// integration, encryption settings (customer-managed key reference),
+// global parameters, and the resource version.
 azure.subscription.dataFactoryService.factory @defaults("name location") {
   // Full resource ID
   id string
@@ -5713,6 +6041,14 @@ private azure.subscription.synapseService {
 }
 
 // Azure Synapse Analytics workspace
+//
+// Examine an Azure Synapse Analytics workspace. Surfaces the
+// workspace's default Data Lake Storage account, the SQL
+// administrator login, the managed virtual network configuration, the
+// public network access setting, customer-managed-key encryption
+// settings, identity assignments, the
+// `azureADOnlyAuthentication` flag, the workspace repository for Git
+// integration, and the configured trusted-service bypass list.
 azure.subscription.synapseService.workspace @defaults("name location") {
   // Full resource ID
   id string
@@ -5755,6 +6091,15 @@ private azure.subscription.containerRegistryService {
 }
 
 // Azure Container Registry
+//
+// Examine an Azure Container Registry — the managed Docker registry
+// service. Surfaces the SKU and tier (Basic, Standard, Premium), the
+// admin user state, public network access, the network rule set
+// (default action, IP rules, virtual-network rules), zone redundancy,
+// the encryption configuration and KMS reference, anonymous pull
+// access, data endpoint enabled state, the policies block (quarantine,
+// retention, trust, soft delete, export), and the configured
+// `webhooks()`, `replications()`, and `tasks()`.
 azure.subscription.containerRegistryService.registry @defaults("id name location skuName") {
   // Registry resource ID
   id string
@@ -6045,6 +6390,15 @@ private azure.subscription.containerRegistryService.registry.connectedRegistry @
 }
 
 // Azure Log Analytics workspace
+//
+// Examine a Log Analytics workspace — the underlying log/data store
+// for Azure Monitor, Microsoft Sentinel, and Defender for Cloud.
+// Surfaces the workspace SKU (PerGB2018, CapacityReservation, Free,
+// Standalone, etc.), retention period, daily-quota cap and reset
+// time, the public network access state for ingestion and query, the
+// linked Application Insights workspaces, the customer-managed-key
+// reference, identity assignments, and the `created`/`modified`
+// timestamps tying the workspace's lifecycle to its tenant.
 azure.subscription.monitorService.workspace @defaults("id name location skuName") {
   // Workspace resource ID
   id string
@@ -6263,6 +6617,12 @@ private azure.subscription.monitorService.workspace.nspConfiguration @defaults("
 }
 
 // Log Analytics QueryPack
+//
+// Examine a Log Analytics query pack — the share-and-version unit for
+// curated KQL queries. Surfaces the query-pack `queryPackId`, the
+// `provisioningState`, time created and modified, and the resource
+// tags applied. The queries inside the pack are accessed through the
+// per-pack collection accessor on the parent monitor service.
 azure.subscription.monitorService.queryPack @defaults("id name location queryPackId") {
   // QueryPack resource ID
   id string
@@ -6319,6 +6679,15 @@ private azure.subscription.recoveryServicesService {
 }
 
 // Azure Recovery Services vault
+//
+// Examine a Recovery Services vault — the storage container for Azure
+// Backup and Azure Site Recovery. Surfaces the vault SKU, the
+// soft-delete and immutability state, public network access, identity
+// assignments, the customer-managed-key encryption reference,
+// cross-region restore configuration, the `monitoringSettings` for
+// classic alerts and Azure Monitor alerts, the redundancy mode
+// (LRS, GRS, ZRS, GZRS), and the
+// `securitySettings` (multi-user authorization, soft delete).
 azure.subscription.recoveryServicesService.vault @defaults("id name location skuName") {
   // Vault resource ID
   id string
@@ -6471,6 +6840,16 @@ private azure.subscription.functionsService {
 }
 
 // Azure Function App
+//
+// Examine a Function App — the Azure-Functions-flavored App Service
+// site that runs serverless functions. Surfaces the runtime stack,
+// SKU, App Service Plan binding, the `siteConfig` (TLS minimum
+// version, FTPS state, IP restrictions, CORS, always-on,
+// HTTPS-only), HTTPS-only flag, identity assignments, public network
+// access, the configured custom hostnames and SSL bindings, the
+// `appSettings()` (with the runtime version, AzureWebJobsStorage,
+// FUNCTIONS_WORKER_RUNTIME, etc.), `connectionStrings()`, deployment
+// slots, and per-function metadata.
 azure.subscription.functionsService.functionApp @defaults("id name location") {
   // Function App resource ID
   id string
@@ -6560,6 +6939,15 @@ private azure.subscription.serviceBusService {
 }
 
 // Azure Service Bus namespace
+//
+// Examine a Service Bus namespace — the messaging entity scope that
+// owns queues, topics, and subscriptions. Surfaces the SKU and tier
+// (Basic, Standard, Premium), the messaging unit count (Premium
+// only), public network access, the `disableLocalAuth` flag,
+// minimum TLS version, identity assignments, the encryption settings
+// (customer-managed key reference), zone redundancy, and the
+// `queues()`, `topics()`, and `authorizationRules()` defined inside
+// the namespace.
 azure.subscription.serviceBusService.namespace @defaults("id name location") {
   // Namespace resource ID
   id string
@@ -6679,7 +7067,16 @@ private azure.subscription.eventHubService {
   namespaces() []azure.subscription.eventHubService.namespace
 }
 
-// Azure Event Hub namespace
+// Azure Event Hubs namespace
+//
+// Examine an Event Hubs namespace — the streaming-ingestion entity
+// scope that owns event hubs and consumer groups. Surfaces the SKU
+// and tier (Basic, Standard, Premium, Dedicated), the throughput
+// units configured, auto-inflate state, Kafka-enabled flag, the
+// `disableLocalAuth` toggle, minimum TLS version, public network
+// access, network rule sets, identity assignments, customer-managed-key
+// encryption settings, and the `eventhubs()` defined inside the
+// namespace.
 azure.subscription.eventHubService.namespace @defaults("id name location") {
   // Namespace resource ID
   id string
@@ -6760,6 +7157,13 @@ private azure.subscription.dnsService {
 }
 
 // Azure public DNS zone
+//
+// Examine an Azure DNS public zone. Surfaces the zone's
+// `numberOfRecordSets` and `maxNumberOfRecordSets` cap, the assigned
+// authoritative name servers, the registration virtual networks (when
+// the zone is private DNS in another product), and the `recordSets()`
+// hosted in the zone. Use `azure.subscription.dnsService.privateZone`
+// for Azure Private DNS zones.
 azure.subscription.dnsService.zone @defaults("id name") {
   // DNS zone resource ID
   id string
@@ -6795,7 +7199,14 @@ private azure.subscription.dnsService.zone.recordSet @defaults("id name type") {
   properties dict
 }
 
-// Azure private DNS zone
+// Azure Private DNS zone
+//
+// Examine an Azure Private DNS zone — a DNS zone resolved only from
+// linked virtual networks. Surfaces the `numberOfRecordSets` and the
+// `numberOfVirtualNetworkLinks` (with auto-registration counts), the
+// `provisioningState`, the maximum allowed record-set and
+// virtual-network-link counts, and the `recordSets()` hosted in the
+// zone.
 azure.subscription.dnsService.privateZone @defaults("id name") {
   // Private DNS zone resource ID
   id string
@@ -6842,6 +7253,16 @@ private azure.subscription.frontDoorService {
 }
 
 // Azure Front Door / CDN profile
+//
+// Examine an Azure Front Door (Standard / Premium) or classic CDN
+// profile. Surfaces the SKU and tier (Standard_AzureFrontDoor,
+// Premium_AzureFrontDoor, Standard_Microsoft, Standard_Verizon,
+// Premium_Verizon, Standard_Akamai, Standard_ChinaCdn), the resource
+// state, identity assignments, the `originResponseTimeoutSeconds`,
+// the `logScrubbing` configuration, and the `endpoints()`,
+// `originGroups()`, `customDomains()`, `secrets()`, `rulesets()`,
+// `routes()`, `securityPolicies()`, and `firewallPolicies()` defined
+// inside the profile.
 azure.subscription.frontDoorService.profile @defaults("id name location") {
   // Profile resource ID
   id string
@@ -7221,7 +7642,16 @@ private azure.subscription.containerAppService.containerApp.authConfig @defaults
   httpSettings dict
 }
 
-// Container Apps Job (run-to-completion)
+// Azure Container Apps Job
+//
+// Examine a Container Apps Job — the run-to-completion sibling of
+// Azure Container Apps. Surfaces the `triggerType` (Manual,
+// Schedule, or Event), the configuration block (replica timeout,
+// retry limit, parallelism, replica completion count, registries,
+// secrets, identity), the per-trigger schedule or event-trigger
+// configuration, the template (containers, init containers, volumes),
+// the linked managed environment, and the workload profile the job
+// runs on.
 azure.subscription.containerAppService.job @defaults("name location triggerType provisioningState") {
   // ARM resource ID
   id string
