@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"path"
 	"strconv"
 	"strings"
@@ -2667,6 +2668,18 @@ func (g *mqlGithubRepository) actionsSettings() (*mqlGithubRepositoryActionsSett
 	return res.(*mqlGithubRepositoryActionsSettings), nil
 }
 
+// githubResponseStatus returns the HTTP status code of a go-github error, or
+// 0 when err is not an *github.ErrorResponse. Used to classify 404 (feature
+// does not apply) versus 403 (no permission) without brittle substring
+// matching on err.Error().
+func githubResponseStatus(err error) int {
+	var ghErr *github.ErrorResponse
+	if errors.As(err, &ghErr) && ghErr.Response != nil {
+		return ghErr.Response.StatusCode
+	}
+	return 0
+}
+
 func (g *mqlGithubRepository) vulnerabilityAlertsEnabled() (bool, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	ownerLogin, repoName, err := repoOwnerAndName(g)
@@ -2675,16 +2688,17 @@ func (g *mqlGithubRepository) vulnerabilityAlertsEnabled() (bool, error) {
 	}
 	enabled, _, err := conn.Client().Repositories.GetVulnerabilityAlerts(conn.Context(), ownerLogin, repoName)
 	if err != nil {
-		// 404: feature does not apply to this repo (e.g., disabled at the
-		// org level on archived repos). Surface as `false` cleanly.
-		if strings.Contains(err.Error(), "404") {
+		switch githubResponseStatus(err) {
+		case http.StatusNotFound:
+			// Feature does not apply to this repo (e.g., archived repos
+			// where the setting is disabled at the org level). Surface
+			// as `false` cleanly.
 			return false, nil
-		}
-		// 403: caller lacks permission to read the setting. Returning
-		// `false` here would falsely report "alerts disabled", so we log a
-		// warning to surface the unreliable result and still return false
-		// so the rest of the audit row renders.
-		if strings.Contains(err.Error(), "403") {
+		case http.StatusForbidden:
+			// Caller lacks permission to read the setting. Returning
+			// `false` would falsely report "alerts disabled", so we log
+			// a warning to surface the unreliable result and still
+			// return false so the rest of the audit row renders.
 			log.Warn().Err(err).Str("owner", ownerLogin).Str("repo", repoName).
 				Msg("permission denied reading vulnerability-alerts setting; reporting as disabled")
 			return false, nil
@@ -2702,10 +2716,10 @@ func (g *mqlGithubRepository) privateVulnerabilityReportingEnabled() (bool, erro
 	}
 	enabled, _, err := conn.Client().Repositories.IsPrivateReportingEnabled(conn.Context(), ownerLogin, repoName)
 	if err != nil {
-		if strings.Contains(err.Error(), "404") {
+		switch githubResponseStatus(err) {
+		case http.StatusNotFound:
 			return false, nil
-		}
-		if strings.Contains(err.Error(), "403") {
+		case http.StatusForbidden:
 			log.Warn().Err(err).Str("owner", ownerLogin).Str("repo", repoName).
 				Msg("permission denied reading private-vulnerability-reporting setting; reporting as disabled")
 			return false, nil
