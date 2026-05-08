@@ -39,7 +39,7 @@ func (g *mqlGcpProjectIamService) workloadIdentityPools() ([]any, error) {
 	projectId := g.ProjectId.Data
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
 	if err != nil {
 		return nil, err
 	}
@@ -96,9 +96,17 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPool) providers() ([]any, error)
 	if g.Mode.Error != nil {
 		return nil, g.Mode.Error
 	}
-	// Only FEDERATION_ONLY (or unspecified-mode) pools host user-defined
-	// providers; the API rejects the list call with a 400 "RPC Method ... is
-	// not supported on resource" for TRUST_DOMAIN / SYSTEM_TRUST_DOMAIN pools.
+	if g.State.Error != nil {
+		return nil, g.State.Error
+	}
+	// Skip the list call for pools the API will reject anyway:
+	// - non-ACTIVE pools (DELETED pools 404 on the providers list);
+	// - TRUST_DOMAIN / SYSTEM_TRUST_DOMAIN pools (e.g. GKE's `*.svc.id.goog`
+	//   pool), which 400 with "RPC Method ... is not supported on resource".
+	if g.State.Data != "" && g.State.Data != "ACTIVE" {
+		g.Providers.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
 	if !wifPoolHostsProviders(g.Mode.Data) {
 		g.Providers.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -113,7 +121,7 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPool) providers() ([]any, error)
 	poolId := g.PoolId.Data
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +177,10 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPoolProvider) id() (string, erro
 
 // flattenWifProviderConfig extracts the credential-family discriminator and
 // the per-family fields from a WorkloadIdentityPoolProvider. Exactly one of
-// Aws, Oidc, or Saml should be set; the rest return zero values.
+// Aws, Oidc, Saml, or X509 should be set; the rest return zero values. X.509
+// trust-store details aren't surfaced — providerType=="x509" is enough for
+// audits to flag the family, and the trust-store schema is left for a
+// follow-up if there's demand.
 func flattenWifProviderConfig(p *iam.WorkloadIdentityPoolProvider) (providerType, awsAccountId, oidcIssuer string, oidcAudiences []any, samlMetadata string) {
 	switch {
 	case p.Aws != nil:
@@ -185,6 +196,8 @@ func flattenWifProviderConfig(p *iam.WorkloadIdentityPoolProvider) (providerType
 	case p.Saml != nil:
 		providerType = "saml"
 		samlMetadata = p.Saml.IdpMetadataXml
+	case p.X509 != nil:
+		providerType = "x509"
 	}
 	return
 }

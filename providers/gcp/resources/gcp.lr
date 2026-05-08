@@ -3533,7 +3533,15 @@ private gcp.project.loggingservice.exclusion @defaults("name disabled") {
   updated time
 }
 
-// Google Cloud (GCP) IAM resources
+// GCP Identity and Access Management (IAM)
+//
+// Use this resource to enumerate the project's IAM building blocks: the
+// `serviceAccounts` and their service-account keys, custom `roles` defined in
+// the project, and the Workload Identity Federation pools (and their external
+// providers) reachable through `workloadIdentityPools`. This is the entry
+// point for IAM audits — service-account-key sprawl, key rotation, custom
+// role permission scope, and external federation trust anchors all hang off
+// of here.
 private gcp.project.iamService {
   // Project ID
   projectId string
@@ -3645,15 +3653,18 @@ private gcp.project.iamService.workloadIdentityPool @defaults("displayName name 
 
 // GCP Workload Identity Federation pool provider
 //
-// Examine which external identity provider (AWS account, OIDC issuer, or SAML
-// IdP) is allowed to mint tokens that federate into the parent pool, plus the
-// `attributeMapping` and `attributeCondition` that gate which Google
-// identities those external tokens may impersonate. Providers are the
-// trust-anchor audit unit: a permissive `attributeMapping` (mapping
+// Examine which external identity provider (AWS account, OIDC issuer, SAML
+// IdP, or X.509 trust store) is allowed to mint tokens that federate into the
+// parent pool, plus the `attributeMapping` and `attributeCondition` that gate
+// which Google identities those external tokens may impersonate. Providers
+// are the trust-anchor audit unit: a permissive `attributeMapping` (mapping
 // `google.subject` to an unfiltered external claim) or a missing
 // `attributeCondition` is the typical misconfiguration that turns federation
-// into anyone-can-impersonate-anyone. The `providerType` field discriminates
-// which `aws*` / `oidc*` / `saml*` fields are populated.
+// into anyone-can-impersonate-anyone. The `providerType` field is the
+// discriminator (`aws`, `oidc`, `saml`, or `x509`); the matching `aws*` /
+// `oidc*` / `saml*` flat fields are populated for those types. X.509
+// trust-store config is not yet surfaced — `providerType=="x509"` flags the
+// family but no per-family detail is available.
 private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayName providerType state") {
   // Project ID
   projectId string
