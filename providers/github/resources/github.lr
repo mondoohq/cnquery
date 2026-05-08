@@ -141,6 +141,9 @@ github.organization @defaults("login name") {
   owners() []github.user
   // List of users that are part of the members group
   members() []github.user
+  // List of outside collaborators — users who have access to one or more
+  // repositories in the organization but are not members of the organization
+  outsideCollaborators() []github.user
   // List of users that are part of the teams group
   teams() []github.team
   // List of repositories

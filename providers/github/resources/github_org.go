@@ -215,6 +215,47 @@ func (g *mqlGithubOrganization) members() ([]any, error) {
 	return res, nil
 }
 
+func (g *mqlGithubOrganization) outsideCollaborators() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	if g.Login.Error != nil {
+		return nil, g.Login.Error
+	}
+	orgLogin := g.Login.Data
+
+	listOpts := &github.ListOutsideCollaboratorsOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+	}
+	var allUsers []*github.User
+	for {
+		users, resp, err := conn.Client().Organizations.ListOutsideCollaborators(conn.Context(), orgLogin, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "403") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allUsers = append(allUsers, users...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
+	}
+
+	res := []any{}
+	for i := range allUsers {
+		u := allUsers[i]
+		r, err := NewResource(g.MqlRuntime, "github.user", map[string]*llx.RawData{
+			"id":    llx.IntDataDefault(u.ID, 0),
+			"login": llx.StringDataPtr(u.Login),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
 func (g *mqlGithubOrganization) owners() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 

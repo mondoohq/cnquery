@@ -397,6 +397,7 @@ github.organization.oauthApp.scopes 13.0.8
 github.organization.oauthApp.tokenLastEight 13.0.8
 github.organization.oauthApp.user 13.0.8
 github.organization.oauthApps 13.0.8
+github.organization.outsideCollaborators 13.2.4
 github.organization.ownedPrivateRepos 9.0.0
 github.organization.owners 9.0.0
 github.organization.packages 9.0.0

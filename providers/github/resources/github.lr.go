@@ -568,6 +568,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.organization.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetMembers()).ToDataRes(types.Array(types.Resource("github.user")))
 	},
+	"github.organization.outsideCollaborators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubOrganization).GetOutsideCollaborators()).ToDataRes(types.Array(types.Resource("github.user")))
+	},
 	"github.organization.teams": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubOrganization).GetTeams()).ToDataRes(types.Array(types.Resource("github.team")))
 	},
@@ -2605,6 +2608,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.organization.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubOrganization).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.organization.outsideCollaborators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubOrganization).OutsideCollaborators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.organization.teams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5495,6 +5502,7 @@ type mqlGithubOrganization struct {
 	ReadersCanCreateDiscussions                    plugin.TValue[bool]
 	Owners                                         plugin.TValue[[]any]
 	Members                                        plugin.TValue[[]any]
+	OutsideCollaborators                           plugin.TValue[[]any]
 	Teams                                          plugin.TValue[[]any]
 	Repositories                                   plugin.TValue[[]any]
 	Installations                                  plugin.TValue[[]any]
@@ -5765,6 +5773,22 @@ func (c *mqlGithubOrganization) GetMembers() *plugin.TValue[[]any] {
 		}
 
 		return c.members()
+	})
+}
+
+func (c *mqlGithubOrganization) GetOutsideCollaborators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OutsideCollaborators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.organization", c.__id, "outsideCollaborators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.outsideCollaborators()
 	})
 }
 
