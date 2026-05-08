@@ -2441,7 +2441,7 @@ func init() {
 			Create: createAwsApigatewayv2,
 		},
 		"aws.apigatewayv2.api": {
-			// to override args, implement: initAwsApigatewayv2Api(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsApigatewayv2Api,
 			Create: createAwsApigatewayv2Api,
 		},
 		"aws.apigatewayv2.stage": {

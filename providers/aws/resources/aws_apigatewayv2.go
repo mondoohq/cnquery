@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
@@ -93,13 +94,13 @@ func newMqlAwsApigatewayv2Api(runtime *plugin.Runtime, region string, api apigwv
 		"region":                    llx.StringData(region),
 		"description":               llx.StringDataPtr(api.Description),
 		"apiEndpoint":               llx.StringDataPtr(api.ApiEndpoint),
-		"disableExecuteApiEndpoint": llx.BoolData(boolFromPtr(api.DisableExecuteApiEndpoint)),
-		"disableSchemaValidation":   llx.BoolData(boolFromPtr(api.DisableSchemaValidation)),
+		"disableExecuteApiEndpoint": llx.BoolDataPtr(api.DisableExecuteApiEndpoint),
+		"disableSchemaValidation":   llx.BoolDataPtr(api.DisableSchemaValidation),
 		"apiKeySelectionExpression": llx.StringDataPtr(api.ApiKeySelectionExpression),
 		"routeSelectionExpression":  llx.StringDataPtr(api.RouteSelectionExpression),
 		"corsConfiguration":         llx.DictData(corsDict),
 		"ipAddressType":             llx.StringData(string(api.IpAddressType)),
-		"apiGatewayManaged":         llx.BoolData(boolFromPtr(api.ApiGatewayManaged)),
+		"apiGatewayManaged":         llx.BoolDataPtr(api.ApiGatewayManaged),
 		"version":                   llx.StringDataPtr(api.Version),
 		"tags":                      llx.MapData(stringMapToAny(api.Tags), types.String),
 		"createdAt":                 llx.TimeDataPtr(api.CreatedDate),
@@ -115,13 +116,6 @@ func apigatewayv2ApiArn(region string, apiId *string) string {
 		return ""
 	}
 	return fmt.Sprintf("arn:aws:apigateway:%s::/apis/%s", region, *apiId)
-}
-
-func boolFromPtr(p *bool) bool {
-	if p == nil {
-		return false
-	}
-	return *p
 }
 
 func stringMapToAny(m map[string]string) map[string]any {
@@ -145,6 +139,37 @@ func stringSliceToAny(s []string) []any {
 
 func (a *mqlAwsApigatewayv2Api) id() (string, error) {
 	return apigatewayv2ApiArn(a.Region.Data, &a.ApiId.Data), nil
+}
+
+// initAwsApigatewayv2Api lets typed back-references like
+// aws.apigatewayv2.stage.api() resolve a previously-fetched api by apiId.
+// Without this init, NewResource would create an empty resource keyed on a
+// stub ARN and return blank fields.
+func initAwsApigatewayv2Api(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["apiId"] == nil {
+		return args, nil, errors.New("apiId required to fetch aws.apigatewayv2.api")
+	}
+
+	obj, err := CreateResource(runtime, "aws.apigatewayv2", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	apis := obj.(*mqlAwsApigatewayv2).GetApis()
+	if apis.Error != nil {
+		return nil, nil, apis.Error
+	}
+
+	want := args["apiId"].Value.(string)
+	for _, r := range apis.Data {
+		api := r.(*mqlAwsApigatewayv2Api)
+		if api.ApiId.Data == want {
+			return args, api, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("aws.apigatewayv2.api with apiId %q not found", want)
 }
 
 // ---------- aws.apigatewayv2.stage ----------
@@ -205,14 +230,14 @@ func newMqlAwsApigatewayv2Stage(runtime *plugin.Runtime, region, apiId string, s
 		"apiId":                       llx.StringData(apiId),
 		"region":                      llx.StringData(region),
 		"description":                 llx.StringDataPtr(s.Description),
-		"autoDeploy":                  llx.BoolData(boolFromPtr(s.AutoDeploy)),
+		"autoDeploy":                  llx.BoolDataPtr(s.AutoDeploy),
 		"deploymentId":                llx.StringDataPtr(s.DeploymentId),
 		"clientCertificateId":         llx.StringDataPtr(s.ClientCertificateId),
 		"stageVariables":              llx.MapData(stringMapToAny(s.StageVariables), types.String),
 		"defaultRouteSettings":        llx.DictData(defaultRouteSettings),
 		"routeSettings":               llx.DictData(routeSettings),
 		"accessLogSettings":           llx.DictData(accessLog),
-		"apiGatewayManaged":           llx.BoolData(boolFromPtr(s.ApiGatewayManaged)),
+		"apiGatewayManaged":           llx.BoolDataPtr(s.ApiGatewayManaged),
 		"lastDeploymentStatusMessage": llx.StringDataPtr(s.LastDeploymentStatusMessage),
 		"tags":                        llx.MapData(stringMapToAny(s.Tags), types.String),
 		"createdAt":                   llx.TimeDataPtr(s.CreatedDate),
@@ -290,10 +315,10 @@ func newMqlAwsApigatewayv2Route(runtime *plugin.Runtime, region, apiId string, r
 		"authorizationType":   llx.StringData(string(r.AuthorizationType)),
 		"authorizerId":        llx.StringDataPtr(r.AuthorizerId),
 		"authorizationScopes": llx.ArrayData(stringSliceToAny(r.AuthorizationScopes), types.String),
-		"apiKeyRequired":      llx.BoolData(boolFromPtr(r.ApiKeyRequired)),
+		"apiKeyRequired":      llx.BoolDataPtr(r.ApiKeyRequired),
 		"operationName":       llx.StringDataPtr(r.OperationName),
 		"requestModels":       llx.MapData(stringMapToAny(r.RequestModels), types.String),
-		"apiGatewayManaged":   llx.BoolData(boolFromPtr(r.ApiGatewayManaged)),
+		"apiGatewayManaged":   llx.BoolDataPtr(r.ApiGatewayManaged),
 	})
 	if err != nil {
 		return nil, err
@@ -376,7 +401,7 @@ func newMqlAwsApigatewayv2Authorizer(runtime *plugin.Runtime, region, apiId stri
 		"authorizerUri":                  llx.StringDataPtr(az.AuthorizerUri),
 		"authorizerPayloadFormatVersion": llx.StringDataPtr(az.AuthorizerPayloadFormatVersion),
 		"authorizerResultTtlInSeconds":   llx.IntData(ttl),
-		"enableSimpleResponses":          llx.BoolData(boolFromPtr(az.EnableSimpleResponses)),
+		"enableSimpleResponses":          llx.BoolDataPtr(az.EnableSimpleResponses),
 		"identitySource":                 llx.ArrayData(stringSliceToAny(az.IdentitySource), types.String),
 		"identityValidationExpression":   llx.StringDataPtr(az.IdentityValidationExpression),
 		"jwtConfiguration":               llx.DictData(jwtConfig),
