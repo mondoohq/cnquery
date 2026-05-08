@@ -305,6 +305,7 @@ launchtemplate
 ldapmain
 lfs
 limitrange
+linkedservices
 linklayer
 linuxbrew
 linuxefi
@@ -486,6 +487,7 @@ resourcepolicy
 resourcequota
 richrule
 roku
+rollup
 rootdir
 rpo
 RRULE
@@ -538,6 +540,7 @@ sqlimatchstatement
 sqlserver
 sriov
 srp
+ssis
 sslv
 Sspr
 stan
