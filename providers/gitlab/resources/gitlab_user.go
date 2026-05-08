@@ -72,7 +72,17 @@ func initGitlabUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	args["bot"] = llx.BoolData(user.Bot)
 	args["twoFactorEnabled"] = llx.BoolData(user.TwoFactorEnabled)
 
-	return args, nil, nil
+	// Seed the Internal cache from the GetUser response we already have so
+	// the lazy accessors (isAdmin, isAuditor, lastSignInAt, ...) reuse it
+	// instead of issuing another GetUser per access.
+	res, err := CreateResource(runtime, "gitlab.user", args)
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlUser := res.(*mqlGitlabUser)
+	mqlUser.user = user
+	mqlUser.fetched = true
+	return args, mqlUser, nil
 }
 
 // fetchUser loads the full user record by ID (with double-checked locking).
