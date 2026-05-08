@@ -11,6 +11,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	cosmos "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
@@ -25,32 +26,28 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccountSqlDatabaseContainer) id() (s
 	return a.Id.Data, nil
 }
 
-// cosmosAccountResourceGroup parses {resourceGroup, accountName} from a Cosmos
-// account ARM id.
-func cosmosAccountResourceGroup(accountId string) (string, string, error) {
+// cosmosAccountResourceGroup parses {subscriptionID, resourceGroup, accountName}
+// from a Cosmos account ARM id in a single ParseResourceID call.
+func cosmosAccountResourceGroup(accountId string) (string, string, string, error) {
 	parsed, err := ParseResourceID(accountId)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 	name, err := parsed.Component("databaseAccounts")
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
-	return parsed.ResourceGroup, name, nil
+	return parsed.SubscriptionID, parsed.ResourceGroup, name, nil
 }
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlDatabases() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
-	parsed, err := ParseResourceID(a.Id.Data)
+	subId, rg, accountName, err := cosmosAccountResourceGroup(a.Id.Data)
 	if err != nil {
 		return nil, err
 	}
-	rg, accountName, err := cosmosAccountResourceGroup(a.Id.Data)
-	if err != nil {
-		return nil, err
-	}
-	dbClient, err := cosmos.NewSQLResourcesClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+	dbClient, err := cosmos.NewSQLResourcesClient(subId, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
@@ -117,6 +114,12 @@ func fetchSqlDatabaseThroughput(ctx context.Context, dbClient *cosmos.SQLResourc
 		if isCosmosNotFoundError(err) {
 			return 0, 0, false, true
 		}
+		// Real failures (rate limits, network timeouts, 5xx) shouldn't read as
+		// "no offer" — log so operators can correlate empty-throughput rows
+		// with API errors. The default zero-value return is preserved so the
+		// rest of the database row still renders.
+		log.Warn().Err(err).Str("account", accountName).Str("database", dbName).
+			Msg("failed to fetch Cosmos DB SQL database throughput")
 		return 0, 0, false, false
 	}
 	return throughputFromResource(resp.Properties)
@@ -128,6 +131,8 @@ func fetchSqlContainerThroughput(ctx context.Context, dbClient *cosmos.SQLResour
 		if isCosmosNotFoundError(err) {
 			return 0, 0, false, true
 		}
+		log.Warn().Err(err).Str("account", accountName).Str("database", dbName).Str("container", containerName).
+			Msg("failed to fetch Cosmos DB SQL container throughput")
 		return 0, 0, false, false
 	}
 	return throughputFromResource(resp.Properties)

@@ -17,6 +17,7 @@ func TestCosmosAccountResourceGroup(t *testing.T) {
 	tests := []struct {
 		name        string
 		id          string
+		wantSub     string
 		wantRG      string
 		wantAccount string
 		wantErr     bool
@@ -24,6 +25,7 @@ func TestCosmosAccountResourceGroup(t *testing.T) {
 		{
 			name:        "well-formed account id",
 			id:          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.DocumentDB/databaseAccounts/myacct",
+			wantSub:     "00000000-0000-0000-0000-000000000000",
 			wantRG:      "my-rg",
 			wantAccount: "myacct",
 		},
@@ -40,12 +42,13 @@ func TestCosmosAccountResourceGroup(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			rg, acct, err := cosmosAccountResourceGroup(tc.id)
+			sub, rg, acct, err := cosmosAccountResourceGroup(tc.id)
 			if tc.wantErr {
 				assert.Error(t, err)
 				return
 			}
 			assert.NoError(t, err)
+			assert.Equal(t, tc.wantSub, sub)
 			assert.Equal(t, tc.wantRG, rg)
 			assert.Equal(t, tc.wantAccount, acct)
 		})

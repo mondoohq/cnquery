@@ -4038,7 +4038,10 @@ private azure.subscription.cosmosDbService.account.sqlDatabase.container @defaul
   partitionKeyPaths []string
   // Partition key kind ("Hash", "Range", "MultiHash")
   partitionKeyKind string
-  // Default time-to-live for items in seconds; -1 = no TTL, 0 or positive = TTL value
+  // Default time-to-live for items in seconds.
+  //   0  — TTL is disabled on the container (the API returned nil; we surface that as 0).
+  //   -1 — TTL is enabled on the container but items have no default expiration; per-item TTLs still apply.
+  //   >0 — default TTL value in seconds applied to items in the container.
   defaultTtl int
   // Analytical store TTL in seconds; zero when analytical store is disabled
   analyticalStorageTtl int
