@@ -1,8 +1,6 @@
 aad
 accesscontextmanager
 ACCOUNTADMIN
-ACI
-ACR
 actioncable
 actionpack
 activedirectory
@@ -12,7 +10,6 @@ advancedthreatprotection
 aeson
 afero
 AJD
-Akismet
 alamofire
 alloydb
 alpm
@@ -30,7 +27,6 @@ armoperationalinsights
 arp
 artifactregistry
 asdk
-ASGs
 aspnet
 atapi
 atlassian
@@ -65,7 +61,6 @@ bigtable
 BINPACK
 bitmask
 blackhole
-BMC
 breakglass
 broadwell
 bumpable
@@ -80,11 +75,9 @@ ccf
 CCN
 cdn
 cdroms
-Centrify
 ceph
 certificatechains
 certificatesmanagement
-CGNAT
 chabc
 chatgpt
 chokepoint
@@ -101,7 +94,6 @@ cmek
 cmk
 cmnd
 cname
-CNs
 cocoapods
 Codeium
 codeowners
@@ -110,7 +102,6 @@ colo
 compressratio
 computeagent
 continuedev
-cooldown
 corosync
 cosmosdb
 cowlib
@@ -127,7 +118,6 @@ dapr
 dast
 databricks
 datadog
-datadoghq
 datapath
 datasource
 datastream
@@ -160,7 +150,6 @@ Duf
 eas
 ecc
 Ecmp
-EDNS
 efa
 efi
 eip
@@ -226,7 +215,6 @@ groupname
 gvnic
 hadoop
 HBFNV
-HCI
 HCMCLOUD
 headerorder
 hec
@@ -239,7 +227,6 @@ hostedzone
 hostkeyalgorithms
 hostkeys
 hotlink
-HPE
 hpi
 hsts
 hvm
@@ -280,12 +267,9 @@ julia
 junie
 junos
 jupyter
-JVM
 jwks
 KEDA
 kerberoastable
-keymap
-keyspace
 kilocode
 kiro
 kmip
@@ -316,12 +300,10 @@ loggingservice
 logon
 logpull
 logpush
-logstream
 lon
 LONGTERM
 longtermretentionpolicy
 lsp
-lstrip
 lvm
 lvmthin
 MACSEC
@@ -334,7 +316,6 @@ maxmem
 maxmemory
 mcp
 mcr
-meid
 memorydb
 memorystore
 messagestoragepolicy
@@ -375,7 +356,6 @@ networkinterface
 newpath
 Newtonsoft
 nexthop
-NFSv
 nft
 NINEl
 nio
@@ -422,15 +402,12 @@ ORDS
 orstatement
 OSGi
 ospf
-OTP
 ovmf
-OVS
 owpjy
 pacman
 pagerduty
 panos
 parallelquery
-passthrough
 PAYG
 pcnet
 pdp
@@ -459,8 +436,6 @@ pubspec
 pushconfig
 pve
 PVEAPI
-PVLAN
-PVR
 pyspark
 pzi
 pzs
@@ -643,7 +618,6 @@ VVOL
 vxlan
 vztmpl
 webauthn
-webcam
 webide
 WEBSERVERS
 Webstore
