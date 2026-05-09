@@ -148,7 +148,7 @@ func logicWorkflowToMQL(runtime *plugin.Runtime, entry *logic.Workflow) (plugin.
 				policyHasIpAllowList(ac.WorkflowManagement)
 		}
 
-		parameters, secureNames = workflowParametersToMQL(props.Parameters)
+		parameters, secureNames = workflowParametersToMQL(props.Definition, props.Parameters)
 		triggers, actions, connectionNames = workflowDefinitionToMQL(props.Definition)
 	}
 
@@ -248,42 +248,91 @@ var secureParameterTypes = map[string]bool{
 	string(logic.ParameterTypeSecureObject): true,
 }
 
-// workflowParametersToMQL flattens the SDK's WorkflowParameter map into a
-// stable-ordered slice of {name, type, hasDefaultValue, isSecure} entries
-// plus the names of secure-typed parameters. Stable order keeps query
-// output deterministic across runs.
-func workflowParametersToMQL(params map[string]*logic.WorkflowParameter) ([]any, []any) {
+// workflowParametersToMQL flattens parameter declarations from the workflow
+// definition into a stable-ordered slice of {name, type, hasDefaultValue,
+// isSecure} entries plus the names of secure-typed parameters. Stable order
+// keeps query output deterministic across runs.
+//
+// Parameter declarations live under `properties.definition.parameters` and
+// carry the type. The sibling `properties.parameters` map (passed as
+// runtimeValues) only holds the resolved runtime value for each declared
+// parameter — there is no type info there, and undeclared parameters never
+// appear. So the definition is the source of truth, with runtime values
+// folded in to populate `hasDefaultValue` when the declaration omits it.
+func workflowParametersToMQL(definition any, runtimeValues map[string]*logic.WorkflowParameter) ([]any, []any) {
 	out := []any{}
 	secure := []any{}
-	if len(params) == 0 {
+
+	// Parse declarations out of the definition map.
+	type decl struct {
+		paramType  string
+		hasDefault bool
+		isSecure   bool
+	}
+	decls := map[string]decl{}
+	if defMap, ok := definition.(map[string]any); ok {
+		if dp, ok := defMap["parameters"].(map[string]any); ok {
+			for name, raw := range dp {
+				d := decl{}
+				if entry, ok := raw.(map[string]any); ok {
+					if t, ok := entry["type"].(string); ok {
+						d.paramType = t
+						if secureParameterTypes[t] {
+							d.isSecure = true
+						}
+					}
+					if _, ok := entry["defaultValue"]; ok {
+						d.hasDefault = true
+					}
+				}
+				decls[name] = d
+			}
+		}
+	}
+
+	// Names: union of declarations and runtime values, sorted for determinism.
+	names := map[string]struct{}{}
+	for k := range decls {
+		names[k] = struct{}{}
+	}
+	for k := range runtimeValues {
+		names[k] = struct{}{}
+	}
+	if len(names) == 0 {
 		return out, secure
 	}
-	keys := make([]string, 0, len(params))
-	for k := range params {
+	keys := make([]string, 0, len(names))
+	for k := range names {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
+
 	for _, k := range keys {
-		p := params[k]
+		d, hasDecl := decls[k]
 		entry := map[string]any{
 			"name":            k,
-			"type":            "",
-			"hasDefaultValue": false,
-			"isSecure":        false,
+			"type":            d.paramType,
+			"hasDefaultValue": d.hasDefault,
+			"isSecure":        d.isSecure,
 		}
-		if p == nil {
-			out = append(out, entry)
-			continue
-		}
-		if p.Type != nil {
-			entry["type"] = string(*p.Type)
-			if secureParameterTypes[string(*p.Type)] {
-				entry["isSecure"] = true
-				secure = append(secure, k)
+		// Runtime overlay: if the runtime supplied a Value, mark the
+		// parameter as having one even if the declaration didn't.
+		if rv, ok := runtimeValues[k]; ok && rv != nil {
+			if rv.Value != nil {
+				entry["hasDefaultValue"] = true
+			}
+			// Runtime occasionally carries the type (older API shapes); fall
+			// back to it only when the declaration did not provide one.
+			if !hasDecl && rv.Type != nil {
+				t := string(*rv.Type)
+				entry["type"] = t
+				if secureParameterTypes[t] {
+					entry["isSecure"] = true
+				}
 			}
 		}
-		if p.Value != nil {
-			entry["hasDefaultValue"] = true
+		if entry["isSecure"].(bool) {
+			secure = append(secure, k)
 		}
 		out = append(out, entry)
 	}

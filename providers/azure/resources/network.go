@@ -2427,38 +2427,48 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 			if !stringx.Contains(filter, id) {
 				continue
 			}
-			props, err := convert.JsonToDict(c.Properties)
+			// LIST omits runtime fields like connectionStatus, ingressBytesTransferred,
+			// and egressBytesTransferred — they only land in GET responses. Fetch
+			// the full record so audits like `connections.where(connectionStatus == "NotConnected")`
+			// see real values rather than nulls. Connections-per-gateway is typically
+			// small (1–5) so the extra N+1 GETs are bounded.
+			full, err := client.Get(ctx, azureId.ResourceGroup, *c.Name, &network.VirtualNetworkGatewayConnectionsClientGetOptions{})
+			if err != nil {
+				return nil, err
+			}
+			cn := full.VirtualNetworkGatewayConnection
+			props, err := convert.JsonToDict(cn.Properties)
 			if err != nil {
 				return nil, err
 			}
 			args := map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(c.ID),
-				"type":       llx.StringDataPtr(c.Type),
-				"name":       llx.StringDataPtr(c.Name),
-				"etag":       llx.StringDataPtr(c.Etag),
-				"location":   llx.StringDataPtr(c.Location),
+				"id":         llx.StringDataPtr(cn.ID),
+				"type":       llx.StringDataPtr(cn.Type),
+				"name":       llx.StringDataPtr(cn.Name),
+				"etag":       llx.StringDataPtr(cn.Etag),
+				"location":   llx.StringDataPtr(cn.Location),
 				"properties": llx.DictData(props),
 			}
-			if c.Properties != nil {
-				args["connectionType"] = llx.StringDataPtr((*string)(c.Properties.ConnectionType))
-				args["connectionStatus"] = llx.StringDataPtr((*string)(c.Properties.ConnectionStatus))
-				args["connectionMode"] = llx.StringDataPtr((*string)(c.Properties.ConnectionMode))
-				args["connectionProtocol"] = llx.StringDataPtr((*string)(c.Properties.ConnectionProtocol))
-				args["provisioningState"] = llx.StringDataPtr((*string)(c.Properties.ProvisioningState))
-				args["enableBgp"] = llx.BoolDataPtr(c.Properties.EnableBgp)
-				args["usePolicyBasedTrafficSelectors"] = llx.BoolDataPtr(c.Properties.UsePolicyBasedTrafficSelectors)
-				args["useLocalAzureIpAddress"] = llx.BoolDataPtr(c.Properties.UseLocalAzureIPAddress)
-				args["dpdTimeoutSeconds"] = llx.IntDataDefault(c.Properties.DpdTimeoutSeconds, 0)
-				args["routingWeight"] = llx.IntDataDefault(c.Properties.RoutingWeight, 0)
-				args["ingressBytesTransferred"] = llx.IntDataDefault(c.Properties.IngressBytesTransferred, 0)
-				args["egressBytesTransferred"] = llx.IntDataDefault(c.Properties.EgressBytesTransferred, 0)
+			if cn.Properties != nil {
+				args["connectionType"] = llx.StringDataPtr((*string)(cn.Properties.ConnectionType))
+				args["connectionStatus"] = llx.StringDataPtr((*string)(cn.Properties.ConnectionStatus))
+				args["connectionMode"] = llx.StringDataPtr((*string)(cn.Properties.ConnectionMode))
+				args["connectionProtocol"] = llx.StringDataPtr((*string)(cn.Properties.ConnectionProtocol))
+				args["provisioningState"] = llx.StringDataPtr((*string)(cn.Properties.ProvisioningState))
+				args["enableBgp"] = llx.BoolDataPtr(cn.Properties.EnableBgp)
+				args["usePolicyBasedTrafficSelectors"] = llx.BoolDataPtr(cn.Properties.UsePolicyBasedTrafficSelectors)
+				args["useLocalAzureIpAddress"] = llx.BoolDataPtr(cn.Properties.UseLocalAzureIPAddress)
+				args["dpdTimeoutSeconds"] = llx.IntDataDefault(cn.Properties.DpdTimeoutSeconds, 0)
+				args["routingWeight"] = llx.IntDataDefault(cn.Properties.RoutingWeight, 0)
+				args["ingressBytesTransferred"] = llx.IntDataDefault(cn.Properties.IngressBytesTransferred, 0)
+				args["egressBytesTransferred"] = llx.IntDataDefault(cn.Properties.EgressBytesTransferred, 0)
 			}
 			mqlConnection, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.connection", args)
 			if err != nil {
 				return nil, err
 			}
 			mqlConn := mqlConnection.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection)
-			mqlConn.cacheProperties = c.Properties
+			mqlConn.cacheProperties = cn.Properties
 			res = append(res, mqlConn)
 
 		}

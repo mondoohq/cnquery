@@ -157,7 +157,10 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 
 	var staticIp, defaultDomain, provisioningState, kind string
 	var zoneRedundant *bool
-	var internalLB *bool
+	// Default to false rather than leaving the pointer nil. An env without
+	// a VnetConfiguration has no internal LB by definition; returning null
+	// would break audits that check `internalLoadBalancerEnabled == false`.
+	internalLB := false
 	vnet := map[string]any{}
 	workloadProfiles := []any{}
 	peerAuth := map[string]any{}
@@ -187,7 +190,9 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 				return nil, err
 			}
 			vnet = d
-			internalLB = props.VnetConfiguration.Internal
+			if props.VnetConfiguration.Internal != nil {
+				internalLB = *props.VnetConfiguration.Internal
+			}
 		}
 		if len(props.WorkloadProfiles) > 0 {
 			d, err := convert.JsonToDictSlice(props.WorkloadProfiles)
@@ -240,7 +245,7 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 			"workloadProfiles":            llx.ArrayData(workloadProfiles, types.Dict),
 			"staticIp":                    llx.StringData(staticIp),
 			"defaultDomain":               llx.StringData(defaultDomain),
-			"internalLoadBalancerEnabled": llx.BoolDataPtr(internalLB),
+			"internalLoadBalancerEnabled": llx.BoolData(internalLB),
 			"zoneRedundant":               llx.BoolDataPtr(zoneRedundant),
 			"peerAuthentication":          llx.DictData(peerAuth),
 			"peerTrafficConfiguration":    llx.DictData(peerTraffic),

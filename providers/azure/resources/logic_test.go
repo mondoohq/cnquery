@@ -52,18 +52,19 @@ func TestPolicyHasIpAllowList(t *testing.T) {
 }
 
 func TestWorkflowParametersToMQL(t *testing.T) {
-	t.Run("empty map returns empty slices", func(t *testing.T) {
-		params, secure := workflowParametersToMQL(nil)
+	t.Run("nil definition returns empty slices", func(t *testing.T) {
+		params, secure := workflowParametersToMQL(nil, nil)
 		assert.Empty(t, params)
 		assert.Empty(t, secure)
 	})
 
 	t.Run("plain string parameter without default", func(t *testing.T) {
-		typ := logic.ParameterTypeString
-		input := map[string]*logic.WorkflowParameter{
-			"region": {Type: &typ},
+		def := map[string]any{
+			"parameters": map[string]any{
+				"region": map[string]any{"type": "String"},
+			},
 		}
-		params, secure := workflowParametersToMQL(input)
+		params, secure := workflowParametersToMQL(def, nil)
 		assert.Len(t, params, 1)
 		entry := params[0].(map[string]any)
 		assert.Equal(t, "region", entry["name"])
@@ -74,11 +75,12 @@ func TestWorkflowParametersToMQL(t *testing.T) {
 	})
 
 	t.Run("secure-string parameter with default value", func(t *testing.T) {
-		typ := logic.ParameterTypeSecureString
-		input := map[string]*logic.WorkflowParameter{
-			"apiKey": {Type: &typ, Value: "redacted"},
+		def := map[string]any{
+			"parameters": map[string]any{
+				"apiKey": map[string]any{"type": "SecureString", "defaultValue": "redacted"},
+			},
 		}
-		params, secure := workflowParametersToMQL(input)
+		params, secure := workflowParametersToMQL(def, nil)
 		assert.Len(t, params, 1)
 		entry := params[0].(map[string]any)
 		assert.Equal(t, "apiKey", entry["name"])
@@ -89,20 +91,23 @@ func TestWorkflowParametersToMQL(t *testing.T) {
 	})
 
 	t.Run("secure-object also flagged as secure", func(t *testing.T) {
-		typ := logic.ParameterTypeSecureObject
-		input := map[string]*logic.WorkflowParameter{
-			"creds": {Type: &typ},
+		def := map[string]any{
+			"parameters": map[string]any{
+				"creds": map[string]any{"type": "SecureObject"},
+			},
 		}
-		params, secure := workflowParametersToMQL(input)
+		params, secure := workflowParametersToMQL(def, nil)
 		assert.Equal(t, true, params[0].(map[string]any)["isSecure"])
 		assert.Equal(t, []any{"creds"}, secure)
 	})
 
-	t.Run("nil parameter value yields default entry", func(t *testing.T) {
-		input := map[string]*logic.WorkflowParameter{
-			"empty": nil,
+	t.Run("declaration without type yields blank type", func(t *testing.T) {
+		def := map[string]any{
+			"parameters": map[string]any{
+				"empty": map[string]any{},
+			},
 		}
-		params, _ := workflowParametersToMQL(input)
+		params, _ := workflowParametersToMQL(def, nil)
 		entry := params[0].(map[string]any)
 		assert.Equal(t, "empty", entry["name"])
 		assert.Equal(t, "", entry["type"])
@@ -110,19 +115,51 @@ func TestWorkflowParametersToMQL(t *testing.T) {
 	})
 
 	t.Run("output is sorted by name", func(t *testing.T) {
-		typ := logic.ParameterTypeString
-		input := map[string]*logic.WorkflowParameter{
-			"zeta":  {Type: &typ},
-			"alpha": {Type: &typ},
-			"mu":    {Type: &typ},
+		def := map[string]any{
+			"parameters": map[string]any{
+				"zeta":  map[string]any{"type": "String"},
+				"alpha": map[string]any{"type": "String"},
+				"mu":    map[string]any{"type": "String"},
+			},
 		}
-		params, _ := workflowParametersToMQL(input)
+		params, _ := workflowParametersToMQL(def, nil)
 		got := []string{
 			params[0].(map[string]any)["name"].(string),
 			params[1].(map[string]any)["name"].(string),
 			params[2].(map[string]any)["name"].(string),
 		}
 		assert.Equal(t, []string{"alpha", "mu", "zeta"}, got)
+	})
+
+	t.Run("runtime values supply default flag when declaration lacks it", func(t *testing.T) {
+		def := map[string]any{
+			"parameters": map[string]any{
+				"$connections": map[string]any{"type": "Object"},
+			},
+		}
+		runtime := map[string]*logic.WorkflowParameter{
+			"$connections": {Value: map[string]any{"some": "value"}},
+		}
+		params, _ := workflowParametersToMQL(def, runtime)
+		entry := params[0].(map[string]any)
+		assert.Equal(t, "$connections", entry["name"])
+		assert.Equal(t, "Object", entry["type"])
+		assert.Equal(t, true, entry["hasDefaultValue"])
+	})
+
+	t.Run("runtime-only entry (no declaration) still appears", func(t *testing.T) {
+		typ := logic.ParameterTypeSecureString
+		runtime := map[string]*logic.WorkflowParameter{
+			"legacyKey": {Type: &typ, Value: "x"},
+		}
+		params, secure := workflowParametersToMQL(nil, runtime)
+		assert.Len(t, params, 1)
+		entry := params[0].(map[string]any)
+		assert.Equal(t, "legacyKey", entry["name"])
+		assert.Equal(t, "SecureString", entry["type"])
+		assert.Equal(t, true, entry["hasDefaultValue"])
+		assert.Equal(t, true, entry["isSecure"])
+		assert.Equal(t, []any{"legacyKey"}, secure)
 	})
 }
 

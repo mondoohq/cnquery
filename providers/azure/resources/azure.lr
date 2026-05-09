@@ -7602,7 +7602,7 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   ingressExternal bool
   // Target port for ingress
   targetPort int
-  // Allowed transport ("auto", "http", "http2", "tcp")
+  // Allowed transport ("Auto", "Http", "Http2", "Tcp" — Azure SDK casing)
   transport string
   // Whether HTTPS-only is enforced (insecureAllowed == false)
   httpsOnly bool
