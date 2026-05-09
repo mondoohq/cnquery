@@ -244,10 +244,12 @@ func (a *mqlAwsCloudfront) functions() ([]any, error) {
 			funct := functions.FunctionList.Items[i]
 			var stage, comment, runtime string
 			var lmTime, crTime *time.Time
+			var arn *string
 			if metadata := funct.FunctionMetadata; metadata != nil {
 				lmTime = metadata.LastModifiedTime
 				crTime = metadata.CreatedTime
 				stage = string(metadata.Stage)
+				arn = metadata.FunctionARN
 			}
 			if config := funct.FunctionConfig; config != nil {
 				comment = convert.ToValue(config.Comment)
@@ -262,7 +264,7 @@ func (a *mqlAwsCloudfront) functions() ([]any, error) {
 				"stage":            llx.StringData(stage),
 				"comment":          llx.StringData(comment),
 				"runtime":          llx.StringData(runtime),
-				"arn":              llx.StringData(fmt.Sprintf(cloudfrontFunctionPattern, "global", conn.AccountId(), convert.ToValue(funct.Name))),
+				"arn":              llx.StringDataPtr(arn),
 			}
 
 			mqlAwsCloudfrontDist, err := CreateResource(a.MqlRuntime, "aws.cloudfront.function", args)
@@ -382,8 +384,6 @@ func (a *mqlAwsCloudfrontAnycastIpList) tags() (map[string]any, error) {
 	}
 	return tags, nil
 }
-
-const cloudfrontFunctionPattern = "arn:aws:cloudfront:%s:%s::/functions/%s"
 
 func initAwsCloudfrontDistribution(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
