@@ -251,6 +251,10 @@ func (a *mqlAwsCloudfront) functions() ([]any, error) {
 				stage = string(metadata.Stage)
 				arn = metadata.FunctionARN
 			}
+			if arn == nil {
+				constructed := fmt.Sprintf("arn:aws:cloudfront::%s:function/%s", conn.AccountId(), convert.ToValue(funct.Name))
+				arn = &constructed
+			}
 			if config := funct.FunctionConfig; config != nil {
 				comment = convert.ToValue(config.Comment)
 				runtime = string(config.Runtime)
