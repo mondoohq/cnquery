@@ -2427,12 +2427,25 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) connections() 
 			if !stringx.Contains(filter, id) {
 				continue
 			}
+			if c.ID == nil || c.Name == nil {
+				continue
+			}
 			// LIST omits runtime fields like connectionStatus, ingressBytesTransferred,
 			// and egressBytesTransferred — they only land in GET responses. Fetch
 			// the full record so audits like `connections.where(connectionStatus == "NotConnected")`
 			// see real values rather than nulls. Connections-per-gateway is typically
 			// small (1–5) so the extra N+1 GETs are bounded.
-			full, err := client.Get(ctx, azureId.ResourceGroup, *c.Name, &network.VirtualNetworkGatewayConnectionsClientGetOptions{})
+			//
+			// Resolve the connection's own resource group from its ARM id rather
+			// than reusing the gateway's. While the ListPager is scoped to the
+			// gateway's RG, a Vnet2Vnet connection can reference a peer gateway
+			// that lives elsewhere, and parsing the connection's id keeps the
+			// GET correct regardless of any future cross-RG list semantics.
+			connId, err := ParseResourceID(*c.ID)
+			if err != nil {
+				return nil, err
+			}
+			full, err := client.Get(ctx, connId.ResourceGroup, *c.Name, &network.VirtualNetworkGatewayConnectionsClientGetOptions{})
 			if err != nil {
 				return nil, err
 			}
