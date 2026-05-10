@@ -8484,6 +8484,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.encryptionAtRestEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetEncryptionAtRestEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.es.domain.encryptionAtRestKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetEncryptionAtRestKmsKeyId()).ToDataRes(types.String)
+	},
 	"aws.es.domain.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
@@ -31881,6 +31884,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.es.domain.encryptionAtRestEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).EncryptionAtRestEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.encryptionAtRestKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).EncryptionAtRestKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.es.domain.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -75516,6 +75523,7 @@ type mqlAwsEsDomain struct {
 	mqlAwsEsDomainInternal
 	Arn                                plugin.TValue[string]
 	EncryptionAtRestEnabled            plugin.TValue[bool]
+	EncryptionAtRestKmsKeyId           plugin.TValue[string]
 	KmsKey                             plugin.TValue[*mqlAwsKmsKey]
 	NodeToNodeEncryptionEnabled        plugin.TValue[bool]
 	Name                               plugin.TValue[string]
@@ -75625,6 +75633,10 @@ func (c *mqlAwsEsDomain) GetArn() *plugin.TValue[string] {
 
 func (c *mqlAwsEsDomain) GetEncryptionAtRestEnabled() *plugin.TValue[bool] {
 	return &c.EncryptionAtRestEnabled
+}
+
+func (c *mqlAwsEsDomain) GetEncryptionAtRestKmsKeyId() *plugin.TValue[string] {
+	return &c.EncryptionAtRestKmsKeyId
 }
 
 func (c *mqlAwsEsDomain) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
