@@ -19600,9 +19600,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workdocs.folder.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkdocsFolder).GetName()).ToDataRes(types.String)
 	},
-	"aws.workdocs.folder.parentFolderId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWorkdocsFolder).GetParentFolderId()).ToDataRes(types.String)
-	},
 	"aws.workdocs.folder.parentFolder": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkdocsFolder).GetParentFolder()).ToDataRes(types.Resource("aws.workdocs.folder"))
 	},
@@ -19641,9 +19638,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.workdocs.document.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkdocsDocument).GetId()).ToDataRes(types.String)
-	},
-	"aws.workdocs.document.parentFolderId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWorkdocsDocument).GetParentFolderId()).ToDataRes(types.String)
 	},
 	"aws.workdocs.document.parentFolder": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkdocsDocument).GetParentFolder()).ToDataRes(types.Resource("aws.workdocs.folder"))
@@ -48151,10 +48145,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkdocsFolder).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.workdocs.folder.parentFolderId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWorkdocsFolder).ParentFolderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"aws.workdocs.folder.parentFolder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkdocsFolder).ParentFolder, ok = plugin.RawToTValue[*mqlAwsWorkdocsFolder](v.Value, v.Error)
 		return
@@ -48209,10 +48199,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.workdocs.document.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkdocsDocument).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.workdocs.document.parentFolderId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWorkdocsDocument).ParentFolderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.workdocs.document.parentFolder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -117558,7 +117544,6 @@ type mqlAwsWorkdocsFolder struct {
 	mqlAwsWorkdocsFolderInternal
 	Id                plugin.TValue[string]
 	Name              plugin.TValue[string]
-	ParentFolderId    plugin.TValue[string]
 	ParentFolder      plugin.TValue[*mqlAwsWorkdocsFolder]
 	CreatorId         plugin.TValue[string]
 	Creator           plugin.TValue[*mqlAwsWorkdocsUser]
@@ -117616,10 +117601,6 @@ func (c *mqlAwsWorkdocsFolder) GetId() *plugin.TValue[string] {
 
 func (c *mqlAwsWorkdocsFolder) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlAwsWorkdocsFolder) GetParentFolderId() *plugin.TValue[string] {
-	return &c.ParentFolderId
 }
 
 func (c *mqlAwsWorkdocsFolder) GetParentFolder() *plugin.TValue[*mqlAwsWorkdocsFolder] {
@@ -117700,7 +117681,6 @@ type mqlAwsWorkdocsDocument struct {
 	__id       string
 	mqlAwsWorkdocsDocumentInternal
 	Id                    plugin.TValue[string]
-	ParentFolderId        plugin.TValue[string]
 	ParentFolder          plugin.TValue[*mqlAwsWorkdocsFolder]
 	CreatorId             plugin.TValue[string]
 	Creator               plugin.TValue[*mqlAwsWorkdocsUser]
@@ -117752,10 +117732,6 @@ func (c *mqlAwsWorkdocsDocument) MqlID() string {
 
 func (c *mqlAwsWorkdocsDocument) GetId() *plugin.TValue[string] {
 	return &c.Id
-}
-
-func (c *mqlAwsWorkdocsDocument) GetParentFolderId() *plugin.TValue[string] {
-	return &c.ParentFolderId
 }
 
 func (c *mqlAwsWorkdocsDocument) GetParentFolder() *plugin.TValue[*mqlAwsWorkdocsFolder] {

@@ -13470,8 +13470,6 @@ private aws.workdocs.folder @defaults("name id resourceState") {
   id string
   // Name of the folder
   name string
-  // ID of the parent folder
-  parentFolderId string
   // Parent folder
   parentFolder() aws.workdocs.folder
   // ID of the user who created the folder
@@ -13509,8 +13507,6 @@ private aws.workdocs.folder @defaults("name id resourceState") {
 private aws.workdocs.document @defaults("id resourceState") {
   // ID of the document
   id string
-  // ID of the parent folder
-  parentFolderId string
   // Parent folder
   parentFolder() aws.workdocs.folder
   // ID of the user who created the document

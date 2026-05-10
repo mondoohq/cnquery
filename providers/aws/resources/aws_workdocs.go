@@ -197,7 +197,6 @@ func newWorkdocsFolderShell(runtime *plugin.Runtime, region, organizationId, fol
 	resource, err := CreateResource(runtime, "aws.workdocs.folder", map[string]*llx.RawData{
 		"id":                llx.StringData(folderId),
 		"name":              llx.StringData(""),
-		"parentFolderId":    llx.StringData(""),
 		"creatorId":         llx.StringData(""),
 		"createdTimestamp":  llx.NilData,
 		"modifiedTimestamp": llx.NilData,
@@ -237,7 +236,6 @@ func newMqlAwsWorkdocsFolder(runtime *plugin.Runtime, region, organizationId str
 	args := map[string]*llx.RawData{
 		"id":                llx.StringDataPtr(fm.Id),
 		"name":              llx.StringDataPtr(fm.Name),
-		"parentFolderId":    llx.StringDataPtr(fm.ParentFolderId),
 		"creatorId":         llx.StringDataPtr(fm.CreatorId),
 		"createdTimestamp":  llx.TimeDataPtr(fm.CreatedTimestamp),
 		"modifiedTimestamp": llx.TimeDataPtr(fm.ModifiedTimestamp),
@@ -279,7 +277,6 @@ func newMqlAwsWorkdocsDocument(runtime *plugin.Runtime, region, organizationId s
 	}
 	args := map[string]*llx.RawData{
 		"id":                    llx.StringDataPtr(dm.Id),
-		"parentFolderId":        llx.StringDataPtr(dm.ParentFolderId),
 		"creatorId":             llx.StringDataPtr(dm.CreatorId),
 		"createdTimestamp":      llx.TimeDataPtr(dm.CreatedTimestamp),
 		"modifiedTimestamp":     llx.TimeDataPtr(dm.ModifiedTimestamp),
@@ -474,9 +471,6 @@ func (a *mqlAwsWorkdocs) fetchRootFolderContents() ([]any, []any, error) {
 // listed in the bounded discovery walk, so we fetch it on demand via GetFolder.
 func (a *mqlAwsWorkdocsFolder) parentFolder() (*mqlAwsWorkdocsFolder, error) {
 	parentId := a.cacheParentFolderId
-	if parentId == "" && a.ParentFolderId.IsSet() {
-		parentId = a.ParentFolderId.Data
-	}
 	if parentId == "" {
 		a.ParentFolder.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -510,9 +504,6 @@ func (a *mqlAwsWorkdocsFolder) creator() (*mqlAwsWorkdocsUser, error) {
 // parentFolder returns the typed parent folder reference for a document.
 func (a *mqlAwsWorkdocsDocument) parentFolder() (*mqlAwsWorkdocsFolder, error) {
 	parentId := a.cacheParentFolderId
-	if parentId == "" && a.ParentFolderId.IsSet() {
-		parentId = a.ParentFolderId.Data
-	}
 	if parentId == "" {
 		a.ParentFolder.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil

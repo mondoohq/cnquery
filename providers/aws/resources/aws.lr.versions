@@ -7464,7 +7464,6 @@ aws.workdocs.document.latestVersionMetadata 13.21.4
 aws.workdocs.document.modifiedTimestamp 13.21.4
 aws.workdocs.document.organizationId 13.21.4
 aws.workdocs.document.parentFolder 13.21.4
-aws.workdocs.document.parentFolderId 13.21.4
 aws.workdocs.document.region 13.21.4
 aws.workdocs.document.resourceState 13.21.4
 aws.workdocs.documents 13.21.4
@@ -7479,7 +7478,6 @@ aws.workdocs.folder.modifiedTimestamp 13.21.4
 aws.workdocs.folder.name 13.21.4
 aws.workdocs.folder.organizationId 13.21.4
 aws.workdocs.folder.parentFolder 13.21.4
-aws.workdocs.folder.parentFolderId 13.21.4
 aws.workdocs.folder.region 13.21.4
 aws.workdocs.folder.resourceState 13.21.4
 aws.workdocs.folder.signature 13.21.4
