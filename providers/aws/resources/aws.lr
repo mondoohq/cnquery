@@ -4049,16 +4049,10 @@ private aws.es.domain @defaults("arn name") {
   customEndpoint string
   // ACM certificate ARN for the custom endpoint
   customEndpointCertificateArn string
-  // VPC ID the domain is deployed into
-  vpcId string
   // VPC the domain is deployed into
   vpc() aws.vpc
-  // Subnet IDs the domain is deployed into
-  subnetIds []string
   // Subnets the domain is deployed into
   subnets() []aws.vpc.subnet
-  // Security group IDs attached to the domain VPC endpoint
-  securityGroupIds []string
   // Security groups attached to the domain VPC endpoint
   securityGroups() []aws.ec2.securitygroup
   // Availability zones the domain is deployed into

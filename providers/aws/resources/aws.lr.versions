@@ -3162,7 +3162,6 @@ aws.es.domain.processing 13.21.4
 aws.es.domain.region 11.15.2
 aws.es.domain.searchSlowLogEnabled 13.21.4
 aws.es.domain.searchSlowLogGroup 13.21.4
-aws.es.domain.securityGroupIds 13.21.4
 aws.es.domain.securityGroups 13.21.4
 aws.es.domain.serviceSoftwareAutomatedUpdateDate 13.21.4
 aws.es.domain.serviceSoftwareCancellable 13.21.4
@@ -3170,13 +3169,11 @@ aws.es.domain.serviceSoftwareCurrentVersion 13.21.4
 aws.es.domain.serviceSoftwareNewVersion 13.21.4
 aws.es.domain.serviceSoftwareUpdateAvailable 13.21.4
 aws.es.domain.serviceSoftwareUpdateStatus 13.21.4
-aws.es.domain.subnetIds 13.21.4
 aws.es.domain.subnets 13.21.4
 aws.es.domain.tags 11.15.2
 aws.es.domain.tlsSecurityPolicy 13.3.0
 aws.es.domain.upgradeProcessing 13.21.4
 aws.es.domain.vpc 13.21.4
-aws.es.domain.vpcId 13.21.4
 aws.es.domain.warmCount 13.21.4
 aws.es.domain.warmEnabled 13.21.4
 aws.es.domain.warmType 13.21.4

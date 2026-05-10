@@ -8550,20 +8550,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.customEndpointCertificateArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetCustomEndpointCertificateArn()).ToDataRes(types.String)
 	},
-	"aws.es.domain.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEsDomain).GetVpcId()).ToDataRes(types.String)
-	},
 	"aws.es.domain.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
-	"aws.es.domain.subnetIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEsDomain).GetSubnetIds()).ToDataRes(types.Array(types.String))
-	},
 	"aws.es.domain.subnets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
-	},
-	"aws.es.domain.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEsDomain).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
 	},
 	"aws.es.domain.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
@@ -31983,24 +31974,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEsDomain).CustomEndpointCertificateArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.es.domain.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEsDomain).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"aws.es.domain.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
-	"aws.es.domain.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEsDomain).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
 	"aws.es.domain.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"aws.es.domain.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEsDomain).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.es.domain.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -75566,11 +75545,8 @@ type mqlAwsEsDomain struct {
 	CustomEndpointEnabled              plugin.TValue[bool]
 	CustomEndpoint                     plugin.TValue[string]
 	CustomEndpointCertificateArn       plugin.TValue[string]
-	VpcId                              plugin.TValue[string]
 	Vpc                                plugin.TValue[*mqlAwsVpc]
-	SubnetIds                          plugin.TValue[[]any]
 	Subnets                            plugin.TValue[[]any]
-	SecurityGroupIds                   plugin.TValue[[]any]
 	SecurityGroups                     plugin.TValue[[]any]
 	AvailabilityZones                  plugin.TValue[[]any]
 	InstanceType                       plugin.TValue[string]
@@ -75759,10 +75735,6 @@ func (c *mqlAwsEsDomain) GetCustomEndpointCertificateArn() *plugin.TValue[string
 	return &c.CustomEndpointCertificateArn
 }
 
-func (c *mqlAwsEsDomain) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
-}
-
 func (c *mqlAwsEsDomain) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
 		if c.MqlRuntime.HasRecording {
@@ -75779,10 +75751,6 @@ func (c *mqlAwsEsDomain) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	})
 }
 
-func (c *mqlAwsEsDomain) GetSubnetIds() *plugin.TValue[[]any] {
-	return &c.SubnetIds
-}
-
 func (c *mqlAwsEsDomain) GetSubnets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -75797,10 +75765,6 @@ func (c *mqlAwsEsDomain) GetSubnets() *plugin.TValue[[]any] {
 
 		return c.subnets()
 	})
-}
-
-func (c *mqlAwsEsDomain) GetSecurityGroupIds() *plugin.TValue[[]any] {
-	return &c.SecurityGroupIds
 }
 
 func (c *mqlAwsEsDomain) GetSecurityGroups() *plugin.TValue[[]any] {
