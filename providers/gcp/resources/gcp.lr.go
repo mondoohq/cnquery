@@ -1227,7 +1227,7 @@ func init() {
 			Create: createGcpProjectCertificateManagerService,
 		},
 		"gcp.project.certificateManagerService.certificate": {
-			// to override args, implement: initGcpProjectCertificateManagerServiceCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectCertificateManagerServiceCertificate,
 			Create: createGcpProjectCertificateManagerServiceCertificate,
 		},
 		"gcp.project.certificateManagerService.certificateMap": {
@@ -1239,11 +1239,11 @@ func init() {
 			Create: createGcpProjectCertificateManagerServiceCertificateMapEntry,
 		},
 		"gcp.project.certificateManagerService.dnsAuthorization": {
-			// to override args, implement: initGcpProjectCertificateManagerServiceDnsAuthorization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectCertificateManagerServiceDnsAuthorization,
 			Create: createGcpProjectCertificateManagerServiceDnsAuthorization,
 		},
 		"gcp.project.certificateManagerService.certificateIssuanceConfig": {
-			// to override args, implement: initGcpProjectCertificateManagerServiceCertificateIssuanceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectCertificateManagerServiceCertificateIssuanceConfig,
 			Create: createGcpProjectCertificateManagerServiceCertificateIssuanceConfig,
 		},
 		"gcp.project.certificateManagerService.trustConfig": {
@@ -9009,10 +9009,10 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectCertificateManagerServiceCertificate).GetManagedDomains()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.certificateManagerService.certificate.managedDnsAuthorizations": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectCertificateManagerServiceCertificate).GetManagedDnsAuthorizations()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlGcpProjectCertificateManagerServiceCertificate).GetManagedDnsAuthorizations()).ToDataRes(types.Array(types.Resource("gcp.project.certificateManagerService.dnsAuthorization")))
 	},
 	"gcp.project.certificateManagerService.certificate.managedIssuanceConfig": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectCertificateManagerServiceCertificate).GetManagedIssuanceConfig()).ToDataRes(types.String)
+		return (r.(*mqlGcpProjectCertificateManagerServiceCertificate).GetManagedIssuanceConfig()).ToDataRes(types.Resource("gcp.project.certificateManagerService.certificateIssuanceConfig"))
 	},
 	"gcp.project.certificateManagerService.certificate.managedState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateManagerServiceCertificate).GetManagedState()).ToDataRes(types.String)
@@ -9087,7 +9087,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlGcpProjectCertificateManagerServiceCertificateMapEntry).GetMatcher()).ToDataRes(types.String)
 	},
 	"gcp.project.certificateManagerService.certificateMapEntry.certificates": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectCertificateManagerServiceCertificateMapEntry).GetCertificates()).ToDataRes(types.Array(types.String))
+		return (r.(*mqlGcpProjectCertificateManagerServiceCertificateMapEntry).GetCertificates()).ToDataRes(types.Array(types.Resource("gcp.project.certificateManagerService.certificate")))
 	},
 	"gcp.project.certificateManagerService.certificateMapEntry.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCertificateManagerServiceCertificateMapEntry).GetState()).ToDataRes(types.String)
@@ -23126,7 +23126,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"gcp.project.certificateManagerService.certificate.managedIssuanceConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectCertificateManagerServiceCertificate).ManagedIssuanceConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlGcpProjectCertificateManagerServiceCertificate).ManagedIssuanceConfig, ok = plugin.RawToTValue[*mqlGcpProjectCertificateManagerServiceCertificateIssuanceConfig](v.Value, v.Error)
 		return
 	},
 	"gcp.project.certificateManagerService.certificate.managedState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53272,7 +53272,7 @@ func (c *mqlGcpProjectCertificateManagerService) GetTrustConfigs() *plugin.TValu
 type mqlGcpProjectCertificateManagerServiceCertificate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectCertificateManagerServiceCertificateInternal it will be used here
+	mqlGcpProjectCertificateManagerServiceCertificateInternal
 	ProjectId                       plugin.TValue[string]
 	ResourcePath                    plugin.TValue[string]
 	Name                            plugin.TValue[string]
@@ -53288,7 +53288,7 @@ type mqlGcpProjectCertificateManagerServiceCertificate struct {
 	Type                            plugin.TValue[string]
 	ManagedDomains                  plugin.TValue[[]any]
 	ManagedDnsAuthorizations        plugin.TValue[[]any]
-	ManagedIssuanceConfig           plugin.TValue[string]
+	ManagedIssuanceConfig           plugin.TValue[*mqlGcpProjectCertificateManagerServiceCertificateIssuanceConfig]
 	ManagedState                    plugin.TValue[string]
 	ManagedProvisioningIssue        plugin.TValue[any]
 	ManagedAuthorizationAttemptInfo plugin.TValue[[]any]
@@ -53388,11 +53388,35 @@ func (c *mqlGcpProjectCertificateManagerServiceCertificate) GetManagedDomains() 
 }
 
 func (c *mqlGcpProjectCertificateManagerServiceCertificate) GetManagedDnsAuthorizations() *plugin.TValue[[]any] {
-	return &c.ManagedDnsAuthorizations
+	return plugin.GetOrCompute[[]any](&c.ManagedDnsAuthorizations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.certificateManagerService.certificate", c.__id, "managedDnsAuthorizations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedDnsAuthorizations()
+	})
 }
 
-func (c *mqlGcpProjectCertificateManagerServiceCertificate) GetManagedIssuanceConfig() *plugin.TValue[string] {
-	return &c.ManagedIssuanceConfig
+func (c *mqlGcpProjectCertificateManagerServiceCertificate) GetManagedIssuanceConfig() *plugin.TValue[*mqlGcpProjectCertificateManagerServiceCertificateIssuanceConfig] {
+	return plugin.GetOrCompute[*mqlGcpProjectCertificateManagerServiceCertificateIssuanceConfig](&c.ManagedIssuanceConfig, func() (*mqlGcpProjectCertificateManagerServiceCertificateIssuanceConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.certificateManagerService.certificate", c.__id, "managedIssuanceConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectCertificateManagerServiceCertificateIssuanceConfig), nil
+			}
+		}
+
+		return c.managedIssuanceConfig()
+	})
 }
 
 func (c *mqlGcpProjectCertificateManagerServiceCertificate) GetManagedState() *plugin.TValue[string] {
@@ -53517,7 +53541,7 @@ func (c *mqlGcpProjectCertificateManagerServiceCertificateMap) GetEntries() *plu
 type mqlGcpProjectCertificateManagerServiceCertificateMapEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectCertificateManagerServiceCertificateMapEntryInternal it will be used here
+	mqlGcpProjectCertificateManagerServiceCertificateMapEntryInternal
 	ProjectId      plugin.TValue[string]
 	ResourcePath   plugin.TValue[string]
 	Name           plugin.TValue[string]
@@ -53615,7 +53639,19 @@ func (c *mqlGcpProjectCertificateManagerServiceCertificateMapEntry) GetMatcher()
 }
 
 func (c *mqlGcpProjectCertificateManagerServiceCertificateMapEntry) GetCertificates() *plugin.TValue[[]any] {
-	return &c.Certificates
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.certificateManagerService.certificateMapEntry", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
+	})
 }
 
 func (c *mqlGcpProjectCertificateManagerServiceCertificateMapEntry) GetState() *plugin.TValue[string] {

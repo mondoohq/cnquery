@@ -5822,10 +5822,10 @@ private gcp.project.certificateManagerService.certificate @defaults("name type m
   type string
   // For managed certs: domains for which the cert is/was issued
   managedDomains []string
-  // For managed certs: full resource names of DNS authorizations used to validate domain ownership
-  managedDnsAuthorizations []string
-  // For managed certs: full resource name of the certificateIssuanceConfig (empty for publicly signed Google-managed certs)
-  managedIssuanceConfig string
+  // For managed certs: DNS authorizations used to validate domain ownership
+  managedDnsAuthorizations() []gcp.project.certificateManagerService.dnsAuthorization
+  // For managed certs: certificateIssuanceConfig that mints this cert (null for publicly signed Google-managed certs)
+  managedIssuanceConfig() gcp.project.certificateManagerService.certificateIssuanceConfig
   // For managed certs: provisioning state (STATE_UNSPECIFIED, PROVISIONING, FAILED, ACTIVE)
   managedState string
   // For managed certs: details about issues that prevented provisioning. Shape: {reason, details}
@@ -5897,8 +5897,8 @@ private gcp.project.certificateManagerService.certificateMapEntry @defaults("nam
   hostname string
   // Match-mode discriminator (currently only `PRIMARY` for the default fallback entry; empty when `hostname` is set)
   matcher string
-  // Resource names of the certificates assigned to this entry (up to four; load balancer picks the best match by signature algorithm)
-  certificates []string
+  // Certificates assigned to this entry (up to four; load balancer picks the best match by signature algorithm)
+  certificates() []gcp.project.certificateManagerService.certificate
   // Serving state (SERVING_STATE_UNSPECIFIED, ACTIVE, PENDING)
   state string
 }

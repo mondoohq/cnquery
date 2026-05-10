@@ -50,6 +50,15 @@ type mqlGcpProjectCertificateManagerServiceInternal struct {
 	serviceEnabled bool
 }
 
+type mqlGcpProjectCertificateManagerServiceCertificateInternal struct {
+	cacheManagedDnsAuthorizationNames []string
+	cacheManagedIssuanceConfigName    string
+}
+
+type mqlGcpProjectCertificateManagerServiceCertificateMapEntryInternal struct {
+	cacheCertificateNames []string
+}
+
 func initGcpProjectCertificateManagerService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 0 {
 		return args, nil, nil
@@ -104,38 +113,62 @@ func (g *mqlGcpProjectCertificateManagerService) certificates() ([]any, error) {
 			return nil, err
 		}
 
-		certType, managedDomains, managedAuths, managedIssuance, managedState, managedIssue, managedAttempts, err := flattenCertificate(c)
+		certType, managedDomains, managedAuthNames, managedIssuanceName, managedState, managedIssue, managedAttempts, err := flattenCertificate(c)
 		if err != nil {
 			return nil, err
 		}
 
-		mqlCert, err := CreateResource(g.MqlRuntime, "gcp.project.certificateManagerService.certificate", map[string]*llx.RawData{
-			"projectId":                       llx.StringData(projectId),
-			"resourcePath":                    llx.StringData(c.Name),
-			"name":                            llx.StringData(parseResourceName(c.Name)),
-			"location":                        llx.StringData(parseLocationFromPath(c.Name)),
-			"description":                     llx.StringData(c.Description),
-			"labels":                          llx.MapData(convert.MapToInterfaceMap(c.Labels), types.String),
-			"createTime":                      llx.TimeDataPtr(timestampAsTimePtr(c.CreateTime)),
-			"updateTime":                      llx.TimeDataPtr(timestampAsTimePtr(c.UpdateTime)),
-			"expireTime":                      llx.TimeDataPtr(timestampAsTimePtr(c.ExpireTime)),
-			"sanDnsnames":                     llx.ArrayData(convert.SliceAnyToInterface(c.SanDnsnames), types.String),
-			"pemCertificate":                  llx.StringData(c.PemCertificate),
-			"scope":                           llx.StringData(c.Scope.String()),
-			"type":                            llx.StringData(certType),
-			"managedDomains":                  llx.ArrayData(managedDomains, types.String),
-			"managedDnsAuthorizations":        llx.ArrayData(managedAuths, types.String),
-			"managedIssuanceConfig":           llx.StringData(managedIssuance),
-			"managedState":                    llx.StringData(managedState),
-			"managedProvisioningIssue":        llx.DictData(managedIssue),
-			"managedAuthorizationAttemptInfo": llx.ArrayData(managedAttempts, types.Dict),
-		})
+		mqlCert, err := newCertificateResource(g.MqlRuntime, projectId, c, certType, managedDomains, managedState, managedIssue, managedAttempts, managedAuthNames, managedIssuanceName)
 		if err != nil {
 			return nil, err
 		}
 		res = append(res, mqlCert)
 	}
 	return res, nil
+}
+
+// newCertificateResource builds the typed cert resource and stashes the raw
+// dns-authorization names and issuance-config name in the internal cache so
+// that the typed managedDnsAuthorizations() / managedIssuanceConfig()
+// accessors can resolve them later via NewResource.
+func newCertificateResource(
+	runtime *plugin.Runtime,
+	projectId string,
+	c *certificatemanagerpb.Certificate,
+	certType string,
+	managedDomains []any,
+	managedState string,
+	managedIssue map[string]any,
+	managedAttempts []any,
+	managedAuthNames []string,
+	managedIssuanceName string,
+) (plugin.Resource, error) {
+	mqlCert, err := CreateResource(runtime, "gcp.project.certificateManagerService.certificate", map[string]*llx.RawData{
+		"projectId":                       llx.StringData(projectId),
+		"resourcePath":                    llx.StringData(c.Name),
+		"name":                            llx.StringData(parseResourceName(c.Name)),
+		"location":                        llx.StringData(parseLocationFromPath(c.Name)),
+		"description":                     llx.StringData(c.Description),
+		"labels":                          llx.MapData(convert.MapToInterfaceMap(c.Labels), types.String),
+		"createTime":                      llx.TimeDataPtr(timestampAsTimePtr(c.CreateTime)),
+		"updateTime":                      llx.TimeDataPtr(timestampAsTimePtr(c.UpdateTime)),
+		"expireTime":                      llx.TimeDataPtr(timestampAsTimePtr(c.ExpireTime)),
+		"sanDnsnames":                     llx.ArrayData(convert.SliceAnyToInterface(c.SanDnsnames), types.String),
+		"pemCertificate":                  llx.StringData(c.PemCertificate),
+		"scope":                           llx.StringData(c.Scope.String()),
+		"type":                            llx.StringData(certType),
+		"managedDomains":                  llx.ArrayData(managedDomains, types.String),
+		"managedState":                    llx.StringData(managedState),
+		"managedProvisioningIssue":        llx.DictData(managedIssue),
+		"managedAuthorizationAttemptInfo": llx.ArrayData(managedAttempts, types.Dict),
+	})
+	if err != nil {
+		return nil, err
+	}
+	cert := mqlCert.(*mqlGcpProjectCertificateManagerServiceCertificate)
+	cert.cacheManagedDnsAuthorizationNames = managedAuthNames
+	cert.cacheManagedIssuanceConfigName = managedIssuanceName
+	return mqlCert, nil
 }
 
 func (g *mqlGcpProjectCertificateManagerServiceCertificate) id() (string, error) {
@@ -254,12 +287,13 @@ func (g *mqlGcpProjectCertificateManagerServiceCertificateMap) entries() ([]any,
 			"updateTime":     llx.TimeDataPtr(timestampAsTimePtr(e.UpdateTime)),
 			"hostname":       llx.StringData(hostname),
 			"matcher":        llx.StringData(matcher),
-			"certificates":   llx.ArrayData(convert.SliceAnyToInterface(e.Certificates), types.String),
 			"state":          llx.StringData(e.State.String()),
 		})
 		if err != nil {
 			return nil, err
 		}
+		entry := mqlEntry.(*mqlGcpProjectCertificateManagerServiceCertificateMapEntry)
+		entry.cacheCertificateNames = append([]string(nil), e.Certificates...)
 		res = append(res, mqlEntry)
 	}
 	return res, nil
@@ -470,17 +504,20 @@ func (g *mqlGcpProjectCertificateManagerServiceTrustConfig) id() (string, error)
 // flattenCertificate extracts the type discriminator and per-type fields from
 // a Certificate. SelfManaged certs only ever have output-only fields visible
 // at the top level (PemCertificate, ExpireTime), so all the populated
-// per-type fields belong to the managed branch.
+// per-type fields belong to the managed branch. The dnsAuthorization names
+// and issuance-config name come back as raw strings so they can be cached
+// for typed-accessor resolution.
 func flattenCertificate(c *certificatemanagerpb.Certificate) (
 	certType string,
-	managedDomains, managedAuths []any,
-	managedIssuance, managedState string,
+	managedDomains []any,
+	managedAuthNames []string,
+	managedIssuanceName, managedState string,
 	managedIssue map[string]any,
 	managedAttempts []any,
 	err error,
 ) {
 	managedDomains = []any{}
-	managedAuths = []any{}
+	managedAuthNames = []string{}
 	managedAttempts = []any{}
 
 	switch t := c.Type.(type) {
@@ -492,10 +529,8 @@ func flattenCertificate(c *certificatemanagerpb.Certificate) (
 			for _, d := range t.Managed.Domains {
 				managedDomains = append(managedDomains, d)
 			}
-			for _, a := range t.Managed.DnsAuthorizations {
-				managedAuths = append(managedAuths, a)
-			}
-			managedIssuance = t.Managed.IssuanceConfig
+			managedAuthNames = append(managedAuthNames, t.Managed.DnsAuthorizations...)
+			managedIssuanceName = t.Managed.IssuanceConfig
 			managedState = t.Managed.State.String()
 			if t.Managed.ProvisioningIssue != nil {
 				managedIssue, err = protoToDict(t.Managed.ProvisioningIssue)
@@ -573,4 +608,218 @@ func flattenTrustStores(stores []*certificatemanagerpb.TrustConfig_TrustStore) [
 		})
 	}
 	return res
+}
+
+func (g *mqlGcpProjectCertificateManagerServiceCertificate) managedDnsAuthorizations() ([]any, error) {
+	res := make([]any, 0, len(g.cacheManagedDnsAuthorizationNames))
+	for _, name := range g.cacheManagedDnsAuthorizationNames {
+		if name == "" {
+			continue
+		}
+		ref, err := NewResource(g.MqlRuntime, "gcp.project.certificateManagerService.dnsAuthorization",
+			map[string]*llx.RawData{"resourcePath": llx.StringData(name)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, ref)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpProjectCertificateManagerServiceCertificate) managedIssuanceConfig() (*mqlGcpProjectCertificateManagerServiceCertificateIssuanceConfig, error) {
+	if g.cacheManagedIssuanceConfigName == "" {
+		g.ManagedIssuanceConfig.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ref, err := NewResource(g.MqlRuntime, "gcp.project.certificateManagerService.certificateIssuanceConfig",
+		map[string]*llx.RawData{"resourcePath": llx.StringData(g.cacheManagedIssuanceConfigName)})
+	if err != nil {
+		return nil, err
+	}
+	return ref.(*mqlGcpProjectCertificateManagerServiceCertificateIssuanceConfig), nil
+}
+
+func (g *mqlGcpProjectCertificateManagerServiceCertificateMapEntry) certificates() ([]any, error) {
+	res := make([]any, 0, len(g.cacheCertificateNames))
+	for _, name := range g.cacheCertificateNames {
+		if name == "" {
+			continue
+		}
+		ref, err := NewResource(g.MqlRuntime, "gcp.project.certificateManagerService.certificate",
+			map[string]*llx.RawData{"resourcePath": llx.StringData(name)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, ref)
+	}
+	return res, nil
+}
+
+// initGcpProjectCertificateManagerServiceCertificate resolves a Certificate
+// from its full resourcePath (projects/*/locations/*/certificates/*). When
+// invoked from a typed cross-reference, only `resourcePath` is set on args
+// and the cert hasn't been listed yet, so we fetch it directly via
+// GetCertificate and populate the cache fields used by the typed accessors.
+func initGcpProjectCertificateManagerServiceCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	resourcePathRaw, ok := args["resourcePath"]
+	if !ok || resourcePathRaw == nil || resourcePathRaw.Value == nil || resourcePathRaw.Value.(string) == "" {
+		return args, nil, nil
+	}
+	resourcePath := resourcePathRaw.Value.(string)
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(certificatemanager.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	c, err := client.GetCertificate(ctx, &certificatemanagerpb.GetCertificateRequest{Name: resourcePath})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	certType, managedDomains, managedAuthNames, managedIssuanceName, managedState, managedIssue, managedAttempts, err := flattenCertificate(c)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := newCertificateResource(runtime, conn.ResourceID(), c, certType, managedDomains, managedState, managedIssue, managedAttempts, managedAuthNames, managedIssuanceName)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
+// initGcpProjectCertificateManagerServiceDnsAuthorization resolves a
+// DnsAuthorization from its full resourcePath via GetDnsAuthorization.
+func initGcpProjectCertificateManagerServiceDnsAuthorization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	resourcePathRaw, ok := args["resourcePath"]
+	if !ok || resourcePathRaw == nil || resourcePathRaw.Value == nil || resourcePathRaw.Value.(string) == "" {
+		return args, nil, nil
+	}
+	resourcePath := resourcePathRaw.Value.(string)
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(certificatemanager.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	a, err := client.GetDnsAuthorization(ctx, &certificatemanagerpb.GetDnsAuthorizationRequest{Name: resourcePath})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var record map[string]any
+	if a.DnsResourceRecord != nil {
+		record = map[string]any{
+			"name": a.DnsResourceRecord.Name,
+			"type": a.DnsResourceRecord.Type,
+			"data": a.DnsResourceRecord.Data,
+		}
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.certificateManagerService.dnsAuthorization", map[string]*llx.RawData{
+		"projectId":         llx.StringData(conn.ResourceID()),
+		"resourcePath":      llx.StringData(a.Name),
+		"name":              llx.StringData(parseResourceName(a.Name)),
+		"location":          llx.StringData(parseLocationFromPath(a.Name)),
+		"description":       llx.StringData(a.Description),
+		"labels":            llx.MapData(convert.MapToInterfaceMap(a.Labels), types.String),
+		"createTime":        llx.TimeDataPtr(timestampAsTimePtr(a.CreateTime)),
+		"updateTime":        llx.TimeDataPtr(timestampAsTimePtr(a.UpdateTime)),
+		"domain":            llx.StringData(a.Domain),
+		"type":              llx.StringData(a.Type.String()),
+		"dnsResourceRecord": llx.DictData(record),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
+}
+
+// initGcpProjectCertificateManagerServiceCertificateIssuanceConfig resolves
+// a CertificateIssuanceConfig from its full resourcePath via
+// GetCertificateIssuanceConfig.
+func initGcpProjectCertificateManagerServiceCertificateIssuanceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	resourcePathRaw, ok := args["resourcePath"]
+	if !ok || resourcePathRaw == nil || resourcePathRaw.Value == nil || resourcePathRaw.Value.(string) == "" {
+		return args, nil, nil
+	}
+	resourcePath := resourcePathRaw.Value.(string)
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+	creds, err := conn.Credentials(certificatemanager.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	client, err := certificatemanager.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
+
+	c, err := client.GetCertificateIssuanceConfig(ctx, &certificatemanagerpb.GetCertificateIssuanceConfigRequest{Name: resourcePath})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	caConfig, err := protoToDict(c.CertificateAuthorityConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+	lifetime := ""
+	if c.Lifetime != nil {
+		lifetime = fmt.Sprintf("%ds", c.Lifetime.Seconds)
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.certificateManagerService.certificateIssuanceConfig", map[string]*llx.RawData{
+		"projectId":                  llx.StringData(conn.ResourceID()),
+		"resourcePath":               llx.StringData(c.Name),
+		"name":                       llx.StringData(parseResourceName(c.Name)),
+		"location":                   llx.StringData(parseLocationFromPath(c.Name)),
+		"description":                llx.StringData(c.Description),
+		"labels":                     llx.MapData(convert.MapToInterfaceMap(c.Labels), types.String),
+		"createTime":                 llx.TimeDataPtr(timestampAsTimePtr(c.CreateTime)),
+		"updateTime":                 llx.TimeDataPtr(timestampAsTimePtr(c.UpdateTime)),
+		"certificateAuthorityConfig": llx.DictData(caConfig),
+		"lifetime":                   llx.StringData(lifetime),
+		"rotationWindowPercentage":   llx.IntData(int64(c.RotationWindowPercentage)),
+		"keyAlgorithm":               llx.StringData(c.KeyAlgorithm.String()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
 }

@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.13.3",
-  "generated_at": "2026-05-08T15:08:18-07:00",
+  "generated_at": "2026-05-09T21:46:56-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -30,10 +30,13 @@
     "bigtable.appProfiles.list",
     "binaryauthorization.attestors.list",
     "binaryauthorization.policy.get",
+    "certificatemanager.certificate.get",
+    "certificatemanager.certificateIssuanceConfig.get",
     "certificatemanager.certificateIssuanceConfigs.list",
     "certificatemanager.certificateMapEntries.list",
     "certificatemanager.certificateMaps.list",
     "certificatemanager.certificates.list",
+    "certificatemanager.dnsAuthorization.get",
     "certificatemanager.dnsAuthorizations.list",
     "certificatemanager.trustConfigs.list",
     "cloudbuild.builds.list",
@@ -359,6 +362,18 @@
       "source_file": "binary_authorization.go"
     },
     {
+      "permission": "certificatemanager.certificate.get",
+      "service": "certificatemanager",
+      "action": "GetCertificate",
+      "source_file": "certificatemanager.go"
+    },
+    {
+      "permission": "certificatemanager.certificateIssuanceConfig.get",
+      "service": "certificatemanager",
+      "action": "GetCertificateIssuanceConfig",
+      "source_file": "certificatemanager.go"
+    },
+    {
       "permission": "certificatemanager.certificateIssuanceConfigs.list",
       "service": "certificatemanager",
       "action": "ListCertificateIssuanceConfigs",
@@ -380,6 +395,12 @@
       "permission": "certificatemanager.certificates.list",
       "service": "certificatemanager",
       "action": "ListCertificates",
+      "source_file": "certificatemanager.go"
+    },
+    {
+      "permission": "certificatemanager.dnsAuthorization.get",
+      "service": "certificatemanager",
+      "action": "GetDnsAuthorization",
       "source_file": "certificatemanager.go"
     },
     {
@@ -1220,7 +1241,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.Search",
+      "action": "Folders.List",
       "source_file": "folder.go",
       "scope": "org"
     },
