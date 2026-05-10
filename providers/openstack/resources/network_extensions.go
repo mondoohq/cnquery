@@ -22,6 +22,24 @@ func (r *mqlOpenstackSubnetPool) id() (string, error) {
 }
 
 func initOpenstackSubnetPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetSubnetPools()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			sp := raw.(*mqlOpenstackSubnetPool)
+			if sp.Id.Data == id {
+				return args, sp, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.subnetPool", "id", args)
 	return args, nil, nil
 }
 
@@ -89,6 +107,24 @@ func (r *mqlOpenstackQosPolicy) id() (string, error) {
 }
 
 func initOpenstackQosPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetQosPolicies()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			q := raw.(*mqlOpenstackQosPolicy)
+			if q.Id.Data == id {
+				return args, q, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.qosPolicy", "id", args)
 	return args, nil, nil
 }
 
@@ -160,6 +196,24 @@ func (r *mqlOpenstackTrunk) id() (string, error) {
 }
 
 func initOpenstackTrunk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetTrunks()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			t := raw.(*mqlOpenstackTrunk)
+			if t.Id.Data == id {
+				return args, t, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.trunk", "id", args)
 	return args, nil, nil
 }
 

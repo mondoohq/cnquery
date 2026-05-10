@@ -25,6 +25,24 @@ func (r *mqlOpenstackFirewallGroup) id() (string, error) {
 }
 
 func initOpenstackFirewallGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetFirewallGroups()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			g := raw.(*mqlOpenstackFirewallGroup)
+			if g.Id.Data == id {
+				return args, g, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.firewall.group", "id", args)
 	return args, nil, nil
 }
 
@@ -122,6 +140,24 @@ func (r *mqlOpenstackFirewallPolicy) id() (string, error) {
 }
 
 func initOpenstackFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetFirewallPolicies()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			p := raw.(*mqlOpenstackFirewallPolicy)
+			if p.Id.Data == id {
+				return args, p, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.firewall.policy", "id", args)
 	return args, nil, nil
 }
 
@@ -196,6 +232,24 @@ func (r *mqlOpenstackFirewallRule) id() (string, error) {
 }
 
 func initOpenstackFirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetFirewallRules()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			r := raw.(*mqlOpenstackFirewallRule)
+			if r.Id.Data == id {
+				return args, r, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.firewall.rule", "id", args)
 	return args, nil, nil
 }
 

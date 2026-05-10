@@ -24,6 +24,24 @@ func (r *mqlOpenstackProject) id() (string, error) {
 }
 
 func initOpenstackProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetProjects()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			p := raw.(*mqlOpenstackProject)
+			if p.Id.Data == id {
+				return args, p, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.project", "id", args)
 	return args, nil, nil
 }
 
@@ -115,6 +133,24 @@ func (r *mqlOpenstackUser) id() (string, error) {
 }
 
 func initOpenstackUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetUsers()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			u := raw.(*mqlOpenstackUser)
+			if u.Id.Data == id {
+				return args, u, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.user", "id", args)
 	return args, nil, nil
 }
 
@@ -242,6 +278,24 @@ func (r *mqlOpenstackRole) id() (string, error) {
 }
 
 func initOpenstackRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetRoles()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			r := raw.(*mqlOpenstackRole)
+			if r.Id.Data == id {
+				return args, r, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.role", "id", args)
 	return args, nil, nil
 }
 
@@ -303,6 +357,24 @@ func (r *mqlOpenstackDomain) id() (string, error) {
 }
 
 func initOpenstackDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetDomains()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			d := raw.(*mqlOpenstackDomain)
+			if d.Id.Data == id {
+				return args, d, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.domain", "id", args)
 	return args, nil, nil
 }
 

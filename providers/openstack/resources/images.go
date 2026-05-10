@@ -20,6 +20,24 @@ func (r *mqlOpenstackImage) id() (string, error) {
 }
 
 func initOpenstackImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetImages()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			img := raw.(*mqlOpenstackImage)
+			if img.Id.Data == id {
+				return args, img, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.image", "id", args)
 	return args, nil, nil
 }
 

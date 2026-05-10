@@ -36,6 +36,24 @@ func (r *mqlOpenstackKeymanagerSecret) id() (string, error) {
 }
 
 func initOpenstackKeymanagerSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetSecrets()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			s := raw.(*mqlOpenstackKeymanagerSecret)
+			if s.Id.Data == id {
+				return args, s, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.keymanager.secret", "id", args)
 	return args, nil, nil
 }
 
@@ -123,6 +141,24 @@ func (r *mqlOpenstackKeymanagerContainer) id() (string, error) {
 }
 
 func initOpenstackKeymanagerContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetSecretContainers()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			c := raw.(*mqlOpenstackKeymanagerContainer)
+			if c.Id.Data == id {
+				return args, c, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.keymanager.container", "id", args)
 	return args, nil, nil
 }
 
@@ -280,6 +316,24 @@ func (r *mqlOpenstackKeymanagerOrder) id() (string, error) {
 }
 
 func initOpenstackKeymanagerOrder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetSecretOrders()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			o := raw.(*mqlOpenstackKeymanagerOrder)
+			if o.Id.Data == id {
+				return args, o, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.keymanager.order", "id", args)
 	return args, nil, nil
 }
 

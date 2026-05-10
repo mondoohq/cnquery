@@ -49,6 +49,25 @@ func (r *mqlOpenstackNetwork) id() (string, error) {
 }
 
 func initOpenstackNetwork(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetNetworks()
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+	for _, raw := range list.Data {
+		n := raw.(*mqlOpenstackNetwork)
+		if n.Id.Data == id {
+			return args, n, nil
+		}
+	}
+	initSyntheticID("openstack.network", "id", args)
 	return args, nil, nil
 }
 
@@ -148,6 +167,24 @@ func (r *mqlOpenstackSubnet) id() (string, error) {
 }
 
 func initOpenstackSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetSubnets()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			s := raw.(*mqlOpenstackSubnet)
+			if s.Id.Data == id {
+				return args, s, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.subnet", "id", args)
 	return args, nil, nil
 }
 
@@ -264,6 +301,24 @@ func (r *mqlOpenstackRouter) id() (string, error) {
 }
 
 func initOpenstackRouter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetRouters()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			r := raw.(*mqlOpenstackRouter)
+			if r.Id.Data == id {
+				return args, r, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.router", "id", args)
 	return args, nil, nil
 }
 
@@ -373,6 +428,24 @@ func (r *mqlOpenstackPort) id() (string, error) {
 }
 
 func initOpenstackPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetPorts()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			p := raw.(*mqlOpenstackPort)
+			if p.Id.Data == id {
+				return args, p, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.port", "id", args)
 	return args, nil, nil
 }
 
@@ -485,6 +558,24 @@ func (r *mqlOpenstackFloatingIp) id() (string, error) {
 }
 
 func initOpenstackFloatingIp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetFloatingIps()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			f := raw.(*mqlOpenstackFloatingIp)
+			if f.Id.Data == id {
+				return args, f, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.floatingIp", "id", args)
 	return args, nil, nil
 }
 
@@ -582,6 +673,24 @@ func (r *mqlOpenstackSecurityGroup) id() (string, error) {
 }
 
 func initOpenstackSecurityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetSecurityGroups()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			sg := raw.(*mqlOpenstackSecurityGroup)
+			if sg.Id.Data == id {
+				return args, sg, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.securityGroup", "id", args)
 	return args, nil, nil
 }
 

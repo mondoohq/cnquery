@@ -33,6 +33,24 @@ func (r *mqlOpenstackComputeServer) id() (string, error) {
 }
 
 func initOpenstackComputeServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetServers()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			s := raw.(*mqlOpenstackComputeServer)
+			if s.Id.Data == id {
+				return args, s, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.compute.server", "id", args)
 	return args, nil, nil
 }
 
@@ -458,6 +476,24 @@ func (r *mqlOpenstackComputeKeypair) id() (string, error) {
 }
 
 func initOpenstackComputeKeypair(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	name, ok := stringArg(args, "name")
+	if !ok || name == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetKeypairs()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			k := raw.(*mqlOpenstackComputeKeypair)
+			if k.Name.Data == name {
+				return args, k, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.compute.keypair", "name", args)
 	return args, nil, nil
 }
 
@@ -504,6 +540,24 @@ func (r *mqlOpenstackComputeServerGroup) id() (string, error) {
 }
 
 func initOpenstackComputeServerGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetServerGroups()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			g := raw.(*mqlOpenstackComputeServerGroup)
+			if g.Id.Data == id {
+				return args, g, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.compute.serverGroup", "id", args)
 	return args, nil, nil
 }
 

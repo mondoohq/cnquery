@@ -27,6 +27,24 @@ func (r *mqlOpenstackBlockstorageVolume) id() (string, error) {
 }
 
 func initOpenstackBlockstorageVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetVolumes()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			v := raw.(*mqlOpenstackBlockstorageVolume)
+			if v.Id.Data == id {
+				return args, v, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.blockstorage.volume", "id", args)
 	return args, nil, nil
 }
 
@@ -220,6 +238,24 @@ func (r *mqlOpenstackBlockstorageSnapshot) id() (string, error) {
 }
 
 func initOpenstackBlockstorageSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetSnapshots()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			s := raw.(*mqlOpenstackBlockstorageSnapshot)
+			if s.Id.Data == id {
+				return args, s, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.blockstorage.snapshot", "id", args)
 	return args, nil, nil
 }
 

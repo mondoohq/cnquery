@@ -110,3 +110,20 @@ func stringArg(args map[string]*llx.RawData, key string) (string, bool) {
 	}
 	return s, true
 }
+
+// initSyntheticID synthesizes an `__id` of `<resource>/<idValue>` from
+// args[idField] when an init function is invoked without a pre-set `__id`
+// (e.g., from a cross-resource accessor that only knows the natural key).
+// Without this, NewResource produces a resource with no cache key, which
+// breaks runtime serialization with "cannot convert primitive with NO type
+// information".
+func initSyntheticID(resourceName, idField string, args map[string]*llx.RawData) {
+	if v, ok := args["__id"]; ok && v != nil && v.Value != nil {
+		return
+	}
+	id, ok := stringArg(args, idField)
+	if !ok || id == "" {
+		return
+	}
+	args["__id"] = llx.StringData(resourceName + "/" + id)
+}

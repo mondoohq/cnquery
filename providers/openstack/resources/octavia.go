@@ -263,6 +263,24 @@ func (r *mqlOpenstackOctaviaListener) id() (string, error) {
 }
 
 func initOpenstackOctaviaListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetListeners()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			l := raw.(*mqlOpenstackOctaviaListener)
+			if l.Id.Data == id {
+				return args, l, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.octavia.listener", "id", args)
 	return args, nil, nil
 }
 
@@ -447,6 +465,24 @@ func (r *mqlOpenstackOctaviaPool) id() (string, error) {
 }
 
 func initOpenstackOctaviaPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetPools()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			p := raw.(*mqlOpenstackOctaviaPool)
+			if p.Id.Data == id {
+				return args, p, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.octavia.pool", "id", args)
 	return args, nil, nil
 }
 
@@ -707,6 +743,24 @@ func (r *mqlOpenstackOctaviaHealthMonitor) id() (string, error) {
 }
 
 func initOpenstackOctaviaHealthMonitor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetHealthMonitors()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			h := raw.(*mqlOpenstackOctaviaHealthMonitor)
+			if h.Id.Data == id {
+				return args, h, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.octavia.healthMonitor", "id", args)
 	return args, nil, nil
 }
 
@@ -804,6 +858,24 @@ func (r *mqlOpenstackOctaviaL7Policy) id() (string, error) {
 }
 
 func initOpenstackOctaviaL7Policy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetL7Policies()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			p := raw.(*mqlOpenstackOctaviaL7Policy)
+			if p.Id.Data == id {
+				return args, p, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.octavia.l7Policy", "id", args)
 	return args, nil, nil
 }
 

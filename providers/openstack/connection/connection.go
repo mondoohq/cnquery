@@ -14,6 +14,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack"
+	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/tokens"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -25,9 +26,10 @@ type OpenstackConnection struct {
 	Conf  *inventory.Config
 	asset *inventory.Asset
 
-	provider *gophercloud.ProviderClient
-	region   string
-	authOpts gophercloud.AuthOptions
+	provider  *gophercloud.ProviderClient
+	region    string
+	authOpts  gophercloud.AuthOptions
+	projectID string
 
 	clientLock   sync.Mutex
 	identity     *gophercloud.ServiceClient
@@ -72,6 +74,22 @@ func NewOpenstackConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		return nil, fmt.Errorf("failed to authenticate with OpenStack: %w", err)
 	}
 
+	// Resolve the actual scoped project ID from the auth response. The
+	// caller may have authenticated by project_name (rather than project_id),
+	// in which case authOpts only carries the name and we need Keystone's
+	// answer for the platform ID.
+	projectID := auth.authOpts.TenantID
+	if projectID == "" && auth.authOpts.Scope != nil {
+		projectID = auth.authOpts.Scope.ProjectID
+	}
+	if projectID == "" {
+		if v3Result, ok := provider.GetAuthResult().(tokens.CreateResult); ok {
+			if project, err := v3Result.ExtractProject(); err == nil && project != nil {
+				projectID = project.ID
+			}
+		}
+	}
+
 	return &OpenstackConnection{
 		Connection: plugin.NewConnection(id, asset),
 		Conf:       conf,
@@ -79,6 +97,7 @@ func NewOpenstackConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		provider:   provider,
 		region:     auth.region,
 		authOpts:   auth.authOpts,
+		projectID:  projectID,
 	}, nil
 }
 
@@ -94,15 +113,11 @@ func (c *OpenstackConnection) AuthURL() string {
 }
 
 // ProjectID returns the scoped project ID. Empty when the token is not
-// project-scoped.
+// project-scoped. When the caller authenticated by project_name, this
+// value is resolved from Keystone's auth response rather than the input
+// scope.
 func (c *OpenstackConnection) ProjectID() string {
-	if c.authOpts.TenantID != "" {
-		return c.authOpts.TenantID
-	}
-	if c.authOpts.Scope != nil {
-		return c.authOpts.Scope.ProjectID
-	}
-	return ""
+	return c.projectID
 }
 
 func (c *OpenstackConnection) endpointOpts() gophercloud.EndpointOpts {
