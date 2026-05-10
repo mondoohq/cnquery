@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.10.1",
-  "generated_at": "2026-05-09T16:54:12-07:00",
+  "generated_at": "2026-05-10T22:35:25+01:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.App/certificates/read",
@@ -426,7 +426,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/credentialSets/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "containerregistry.go"
     },
     {
@@ -852,7 +852,7 @@
     {
       "permission": "Microsoft.Network/virtualNetworks/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -924,7 +924,7 @@
     {
       "permission": "Microsoft.RecoveryServices/vaults/read",
       "service": "Microsoft.RecoveryServices",
-      "action": "Get",
+      "action": "NewListBySubscriptionIDPager",
       "source_file": "recoveryservices.go"
     },
     {
@@ -1284,7 +1284,7 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListFunctionsPager",
+      "action": "NewListSlotsPager",
       "source_file": "web.go"
     }
   ]
