@@ -549,7 +549,7 @@ func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
 
 	// Query is complete (or has error) - execute it
 	cleanCommand := m.query
-	if code != nil {
+	if code != nil && code.Source != "" {
 		cleanCommand = code.Source
 	}
 
