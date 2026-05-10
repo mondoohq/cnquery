@@ -372,7 +372,9 @@ const (
 	ResourceAwsApplicationAutoscalingScheduledAction                            string = "aws.applicationAutoscaling.scheduledAction"
 	ResourceAwsDrs                                                              string = "aws.drs"
 	ResourceAwsDrsSourceServer                                                  string = "aws.drs.sourceServer"
+	ResourceAwsDrsRecoveryInstance                                              string = "aws.drs.recoveryInstance"
 	ResourceAwsDrsJob                                                           string = "aws.drs.job"
+	ResourceAwsDrsReplicationConfigurationTemplate                              string = "aws.drs.replicationConfigurationTemplate"
 	ResourceAwsDrsReplicationConfiguration                                      string = "aws.drs.replicationConfiguration"
 	ResourceAwsDrsLaunchConfiguration                                           string = "aws.drs.launchConfiguration"
 	ResourceAwsBackup                                                           string = "aws.backup"
@@ -2184,9 +2186,17 @@ func init() {
 			// to override args, implement: initAwsDrsSourceServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDrsSourceServer,
 		},
+		"aws.drs.recoveryInstance": {
+			// to override args, implement: initAwsDrsRecoveryInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDrsRecoveryInstance,
+		},
 		"aws.drs.job": {
 			// to override args, implement: initAwsDrsJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDrsJob,
+		},
+		"aws.drs.replicationConfigurationTemplate": {
+			// to override args, implement: initAwsDrsReplicationConfigurationTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDrsReplicationConfigurationTemplate,
 		},
 		"aws.drs.replicationConfiguration": {
 			// to override args, implement: initAwsDrsReplicationConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12483,8 +12493,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.drs.sourceServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrs).GetSourceServers()).ToDataRes(types.Array(types.Resource("aws.drs.sourceServer")))
 	},
+	"aws.drs.recoveryInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrs).GetRecoveryInstances()).ToDataRes(types.Array(types.Resource("aws.drs.recoveryInstance")))
+	},
 	"aws.drs.jobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrs).GetJobs()).ToDataRes(types.Array(types.Resource("aws.drs.job")))
+	},
+	"aws.drs.replicationConfigurationTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrs).GetReplicationConfigurationTemplates()).ToDataRes(types.Array(types.Resource("aws.drs.replicationConfigurationTemplate")))
 	},
 	"aws.drs.sourceServer.sourceServerID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetSourceServerID()).ToDataRes(types.String)
@@ -12492,8 +12508,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.drs.sourceServer.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetArn()).ToDataRes(types.String)
 	},
+	"aws.drs.sourceServer.agentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetAgentVersion()).ToDataRes(types.String)
+	},
 	"aws.drs.sourceServer.dataReplicationInfo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetDataReplicationInfo()).ToDataRes(types.Dict)
+	},
+	"aws.drs.sourceServer.dataReplicationState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetDataReplicationState()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.dataReplicationLagDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetDataReplicationLagDuration()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.dataReplicationEtaAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetDataReplicationEtaAt()).ToDataRes(types.Time)
+	},
+	"aws.drs.sourceServer.dataReplicationStagingAvailabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetDataReplicationStagingAvailabilityZone()).ToDataRes(types.String)
 	},
 	"aws.drs.sourceServer.lastLaunchResult": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetLastLaunchResult()).ToDataRes(types.String)
@@ -12501,8 +12532,62 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.drs.sourceServer.lifeCycle": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetLifeCycle()).ToDataRes(types.Dict)
 	},
+	"aws.drs.sourceServer.lifeCycleAddedToServiceAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetLifeCycleAddedToServiceAt()).ToDataRes(types.Time)
+	},
+	"aws.drs.sourceServer.lifeCycleFirstByteAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetLifeCycleFirstByteAt()).ToDataRes(types.Time)
+	},
+	"aws.drs.sourceServer.lifeCycleLastSeenAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetLifeCycleLastSeenAt()).ToDataRes(types.Time)
+	},
+	"aws.drs.sourceServer.lifeCycleElapsedReplicationDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetLifeCycleElapsedReplicationDuration()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.lifeCycleLastLaunchStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetLifeCycleLastLaunchStatus()).ToDataRes(types.String)
+	},
 	"aws.drs.sourceServer.sourceProperties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetSourceProperties()).ToDataRes(types.Dict)
+	},
+	"aws.drs.sourceServer.sourceCpuCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceCpuCount()).ToDataRes(types.Int)
+	},
+	"aws.drs.sourceServer.sourceDiskCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceDiskCount()).ToDataRes(types.Int)
+	},
+	"aws.drs.sourceServer.sourceRamBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceRamBytes()).ToDataRes(types.Int)
+	},
+	"aws.drs.sourceServer.sourceRecommendedInstanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceRecommendedInstanceType()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.sourceSupportsNitroInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceSupportsNitroInstances()).ToDataRes(types.Bool)
+	},
+	"aws.drs.sourceServer.sourceIdentificationFqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceIdentificationFqdn()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.sourceIdentificationHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceIdentificationHostname()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.sourceIdentificationAwsInstanceID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceIdentificationAwsInstanceID()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.sourceCloudOriginAccountID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceCloudOriginAccountID()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.sourceCloudOriginRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceCloudOriginRegion()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.sourceCloudOriginAvailabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceCloudOriginAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.sourceNetworkID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceNetworkID()).ToDataRes(types.String)
+	},
+	"aws.drs.sourceServer.reversedDirectionSourceServerArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetReversedDirectionSourceServerArn()).ToDataRes(types.String)
 	},
 	"aws.drs.sourceServer.stagingArea": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetStagingArea()).ToDataRes(types.Dict)
@@ -12513,6 +12598,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.drs.sourceServer.recoveryInstanceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetRecoveryInstanceId()).ToDataRes(types.String)
 	},
+	"aws.drs.sourceServer.recoveryInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetRecoveryInstance()).ToDataRes(types.Resource("aws.drs.recoveryInstance"))
+	},
 	"aws.drs.sourceServer.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -12521,6 +12609,69 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.drs.sourceServer.launchConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetLaunchConfiguration()).ToDataRes(types.Resource("aws.drs.launchConfiguration"))
+	},
+	"aws.drs.recoveryInstance.recoveryInstanceID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetRecoveryInstanceID()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetArn()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.agentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetAgentVersion()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.ec2InstanceID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetEc2InstanceID()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.ec2InstanceState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetEc2InstanceState()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.ec2Instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetEc2Instance()).ToDataRes(types.Resource("aws.ec2.instance"))
+	},
+	"aws.drs.recoveryInstance.sourceServerID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetSourceServerID()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.sourceServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetSourceServer()).ToDataRes(types.Resource("aws.drs.sourceServer"))
+	},
+	"aws.drs.recoveryInstance.jobID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetJobID()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.job": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetJob()).ToDataRes(types.Resource("aws.drs.job"))
+	},
+	"aws.drs.recoveryInstance.isDrill": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetIsDrill()).ToDataRes(types.Bool)
+	},
+	"aws.drs.recoveryInstance.originAvailabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetOriginAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.originEnvironment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetOriginEnvironment()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.pointInTimeSnapshotAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetPointInTimeSnapshotAt()).ToDataRes(types.Time)
+	},
+	"aws.drs.recoveryInstance.dataReplicationInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetDataReplicationInfo()).ToDataRes(types.Dict)
+	},
+	"aws.drs.recoveryInstance.dataReplicationState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetDataReplicationState()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.dataReplicationLagDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetDataReplicationLagDuration()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.failback": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetFailback()).ToDataRes(types.Dict)
+	},
+	"aws.drs.recoveryInstance.recoveryInstanceProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetRecoveryInstanceProperties()).ToDataRes(types.Dict)
+	},
+	"aws.drs.recoveryInstance.sourceOutpostArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetSourceOutpostArn()).ToDataRes(types.String)
+	},
+	"aws.drs.recoveryInstance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsRecoveryInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.drs.job.jobID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsJob).GetJobID()).ToDataRes(types.String)
@@ -12545,6 +12696,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.drs.job.participatingServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsJob).GetParticipatingServers()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.drs.job.participatingResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsJob).GetParticipatingResources()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.drs.job.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsJob).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.drs.replicationConfigurationTemplate.replicationConfigurationTemplateID": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetReplicationConfigurationTemplateID()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfigurationTemplate.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetArn()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfigurationTemplate.associateDefaultSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetAssociateDefaultSecurityGroup()).ToDataRes(types.Bool)
+	},
+	"aws.drs.replicationConfigurationTemplate.autoReplicateNewDisks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetAutoReplicateNewDisks()).ToDataRes(types.Bool)
+	},
+	"aws.drs.replicationConfigurationTemplate.bandwidthThrottling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetBandwidthThrottling()).ToDataRes(types.Int)
+	},
+	"aws.drs.replicationConfigurationTemplate.createPublicIP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetCreatePublicIP()).ToDataRes(types.Bool)
+	},
+	"aws.drs.replicationConfigurationTemplate.dataPlaneRouting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetDataPlaneRouting()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfigurationTemplate.defaultLargeStagingDiskType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetDefaultLargeStagingDiskType()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfigurationTemplate.ebsEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetEbsEncryption()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfigurationTemplate.ebsEncryptionKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetEbsEncryptionKeyArn()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfigurationTemplate.ebsEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetEbsEncryptionKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.drs.replicationConfigurationTemplate.internetProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetInternetProtocol()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfigurationTemplate.pitPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetPitPolicy()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.drs.replicationConfigurationTemplate.replicationServerInstanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetReplicationServerInstanceType()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfigurationTemplate.replicationServersSecurityGroupsIDs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetReplicationServersSecurityGroupsIDs()).ToDataRes(types.Array(types.String))
+	},
+	"aws.drs.replicationConfigurationTemplate.replicationServersSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetReplicationServersSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.drs.replicationConfigurationTemplate.stagingAreaSubnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetStagingAreaSubnetId()).ToDataRes(types.String)
+	},
+	"aws.drs.replicationConfigurationTemplate.stagingAreaSubnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetStagingAreaSubnet()).ToDataRes(types.Resource("aws.vpc.subnet"))
+	},
+	"aws.drs.replicationConfigurationTemplate.stagingAreaTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetStagingAreaTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.drs.replicationConfigurationTemplate.useDedicatedReplicationServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetUseDedicatedReplicationServer()).ToDataRes(types.Bool)
+	},
+	"aws.drs.replicationConfigurationTemplate.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsReplicationConfigurationTemplate).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.drs.replicationConfiguration.sourceServerID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsReplicationConfiguration).GetSourceServerID()).ToDataRes(types.String)
@@ -37764,8 +37984,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDrs).SourceServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.drs.recoveryInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrs).RecoveryInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.drs.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDrs).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrs).ReplicationConfigurationTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.drs.sourceServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37780,8 +38008,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDrsSourceServer).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.drs.sourceServer.agentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).AgentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.drs.sourceServer.dataReplicationInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDrsSourceServer).DataReplicationInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.dataReplicationState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).DataReplicationState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.dataReplicationLagDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).DataReplicationLagDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.dataReplicationEtaAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).DataReplicationEtaAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.dataReplicationStagingAvailabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).DataReplicationStagingAvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.drs.sourceServer.lastLaunchResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37792,8 +38040,80 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDrsSourceServer).LifeCycle, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.drs.sourceServer.lifeCycleAddedToServiceAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).LifeCycleAddedToServiceAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.lifeCycleFirstByteAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).LifeCycleFirstByteAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.lifeCycleLastSeenAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).LifeCycleLastSeenAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.lifeCycleElapsedReplicationDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).LifeCycleElapsedReplicationDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.lifeCycleLastLaunchStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).LifeCycleLastLaunchStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.drs.sourceServer.sourceProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDrsSourceServer).SourceProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceCpuCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceCpuCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceDiskCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceDiskCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceRamBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceRamBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceRecommendedInstanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceRecommendedInstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceSupportsNitroInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceSupportsNitroInstances, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceIdentificationFqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceIdentificationFqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceIdentificationHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceIdentificationHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceIdentificationAwsInstanceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceIdentificationAwsInstanceID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceCloudOriginAccountID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceCloudOriginAccountID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceCloudOriginRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceCloudOriginRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceCloudOriginAvailabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceCloudOriginAvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.sourceNetworkID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceNetworkID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.sourceServer.reversedDirectionSourceServerArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).ReversedDirectionSourceServerArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.drs.sourceServer.stagingArea": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37808,6 +38128,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDrsSourceServer).RecoveryInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.drs.sourceServer.recoveryInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).RecoveryInstance, ok = plugin.RawToTValue[*mqlAwsDrsRecoveryInstance](v.Value, v.Error)
+		return
+	},
 	"aws.drs.sourceServer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDrsSourceServer).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -37818,6 +38142,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.drs.sourceServer.launchConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDrsSourceServer).LaunchConfiguration, ok = plugin.RawToTValue[*mqlAwsDrsLaunchConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.drs.recoveryInstance.recoveryInstanceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).RecoveryInstanceID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.agentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).AgentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.ec2InstanceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).Ec2InstanceID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.ec2InstanceState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).Ec2InstanceState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.ec2Instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).Ec2Instance, ok = plugin.RawToTValue[*mqlAwsEc2Instance](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.sourceServerID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).SourceServerID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.sourceServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).SourceServer, ok = plugin.RawToTValue[*mqlAwsDrsSourceServer](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.jobID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).JobID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.job": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).Job, ok = plugin.RawToTValue[*mqlAwsDrsJob](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.isDrill": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).IsDrill, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.originAvailabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).OriginAvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.originEnvironment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).OriginEnvironment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.pointInTimeSnapshotAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).PointInTimeSnapshotAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.dataReplicationInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).DataReplicationInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.dataReplicationState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).DataReplicationState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.dataReplicationLagDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).DataReplicationLagDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.failback": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).Failback, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.recoveryInstanceProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).RecoveryInstanceProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.sourceOutpostArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).SourceOutpostArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.recoveryInstance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsRecoveryInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.drs.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37854,6 +38266,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.drs.job.participatingServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDrsJob).ParticipatingServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.job.participatingResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsJob).ParticipatingResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.job.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsJob).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.replicationConfigurationTemplateID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).ReplicationConfigurationTemplateID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.associateDefaultSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).AssociateDefaultSecurityGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.autoReplicateNewDisks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).AutoReplicateNewDisks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.bandwidthThrottling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).BandwidthThrottling, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.createPublicIP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).CreatePublicIP, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.dataPlaneRouting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).DataPlaneRouting, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.defaultLargeStagingDiskType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).DefaultLargeStagingDiskType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.ebsEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).EbsEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.ebsEncryptionKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).EbsEncryptionKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.ebsEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).EbsEncryptionKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.internetProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).InternetProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.pitPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).PitPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.replicationServerInstanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).ReplicationServerInstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.replicationServersSecurityGroupsIDs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).ReplicationServersSecurityGroupsIDs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.replicationServersSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).ReplicationServersSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.stagingAreaSubnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).StagingAreaSubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.stagingAreaSubnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).StagingAreaSubnet, ok = plugin.RawToTValue[*mqlAwsVpcSubnet](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.stagingAreaTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).StagingAreaTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.useDedicatedReplicationServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).UseDedicatedReplicationServer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.drs.replicationConfigurationTemplate.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsReplicationConfigurationTemplate).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.drs.replicationConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -92270,8 +92778,10 @@ type mqlAwsDrs struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsDrsInternal it will be used here
-	SourceServers plugin.TValue[[]any]
-	Jobs          plugin.TValue[[]any]
+	SourceServers                     plugin.TValue[[]any]
+	RecoveryInstances                 plugin.TValue[[]any]
+	Jobs                              plugin.TValue[[]any]
+	ReplicationConfigurationTemplates plugin.TValue[[]any]
 }
 
 // createAwsDrs creates a new instance of this resource
@@ -92327,6 +92837,22 @@ func (c *mqlAwsDrs) GetSourceServers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsDrs) GetRecoveryInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RecoveryInstances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs", c.__id, "recoveryInstances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.recoveryInstances()
+	})
+}
+
 func (c *mqlAwsDrs) GetJobs() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -92343,23 +92869,63 @@ func (c *mqlAwsDrs) GetJobs() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsDrs) GetReplicationConfigurationTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicationConfigurationTemplates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs", c.__id, "replicationConfigurationTemplates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replicationConfigurationTemplates()
+	})
+}
+
 // mqlAwsDrsSourceServer for the aws.drs.sourceServer resource
 type mqlAwsDrsSourceServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsDrsSourceServerInternal it will be used here
-	SourceServerID           plugin.TValue[string]
-	Arn                      plugin.TValue[string]
-	DataReplicationInfo      plugin.TValue[any]
-	LastLaunchResult         plugin.TValue[string]
-	LifeCycle                plugin.TValue[any]
-	SourceProperties         plugin.TValue[any]
-	StagingArea              plugin.TValue[any]
-	ReplicationDirection     plugin.TValue[string]
-	RecoveryInstanceId       plugin.TValue[string]
-	Tags                     plugin.TValue[map[string]any]
-	ReplicationConfiguration plugin.TValue[*mqlAwsDrsReplicationConfiguration]
-	LaunchConfiguration      plugin.TValue[*mqlAwsDrsLaunchConfiguration]
+	mqlAwsDrsSourceServerInternal
+	SourceServerID                         plugin.TValue[string]
+	Arn                                    plugin.TValue[string]
+	AgentVersion                           plugin.TValue[string]
+	DataReplicationInfo                    plugin.TValue[any]
+	DataReplicationState                   plugin.TValue[string]
+	DataReplicationLagDuration             plugin.TValue[string]
+	DataReplicationEtaAt                   plugin.TValue[*time.Time]
+	DataReplicationStagingAvailabilityZone plugin.TValue[string]
+	LastLaunchResult                       plugin.TValue[string]
+	LifeCycle                              plugin.TValue[any]
+	LifeCycleAddedToServiceAt              plugin.TValue[*time.Time]
+	LifeCycleFirstByteAt                   plugin.TValue[*time.Time]
+	LifeCycleLastSeenAt                    plugin.TValue[*time.Time]
+	LifeCycleElapsedReplicationDuration    plugin.TValue[string]
+	LifeCycleLastLaunchStatus              plugin.TValue[string]
+	SourceProperties                       plugin.TValue[any]
+	SourceCpuCount                         plugin.TValue[int64]
+	SourceDiskCount                        plugin.TValue[int64]
+	SourceRamBytes                         plugin.TValue[int64]
+	SourceRecommendedInstanceType          plugin.TValue[string]
+	SourceSupportsNitroInstances           plugin.TValue[bool]
+	SourceIdentificationFqdn               plugin.TValue[string]
+	SourceIdentificationHostname           plugin.TValue[string]
+	SourceIdentificationAwsInstanceID      plugin.TValue[string]
+	SourceCloudOriginAccountID             plugin.TValue[string]
+	SourceCloudOriginRegion                plugin.TValue[string]
+	SourceCloudOriginAvailabilityZone      plugin.TValue[string]
+	SourceNetworkID                        plugin.TValue[string]
+	ReversedDirectionSourceServerArn       plugin.TValue[string]
+	StagingArea                            plugin.TValue[any]
+	ReplicationDirection                   plugin.TValue[string]
+	RecoveryInstanceId                     plugin.TValue[string]
+	RecoveryInstance                       plugin.TValue[*mqlAwsDrsRecoveryInstance]
+	Tags                                   plugin.TValue[map[string]any]
+	ReplicationConfiguration               plugin.TValue[*mqlAwsDrsReplicationConfiguration]
+	LaunchConfiguration                    plugin.TValue[*mqlAwsDrsLaunchConfiguration]
 }
 
 // createAwsDrsSourceServer creates a new instance of this resource
@@ -92407,8 +92973,28 @@ func (c *mqlAwsDrsSourceServer) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
+func (c *mqlAwsDrsSourceServer) GetAgentVersion() *plugin.TValue[string] {
+	return &c.AgentVersion
+}
+
 func (c *mqlAwsDrsSourceServer) GetDataReplicationInfo() *plugin.TValue[any] {
 	return &c.DataReplicationInfo
+}
+
+func (c *mqlAwsDrsSourceServer) GetDataReplicationState() *plugin.TValue[string] {
+	return &c.DataReplicationState
+}
+
+func (c *mqlAwsDrsSourceServer) GetDataReplicationLagDuration() *plugin.TValue[string] {
+	return &c.DataReplicationLagDuration
+}
+
+func (c *mqlAwsDrsSourceServer) GetDataReplicationEtaAt() *plugin.TValue[*time.Time] {
+	return &c.DataReplicationEtaAt
+}
+
+func (c *mqlAwsDrsSourceServer) GetDataReplicationStagingAvailabilityZone() *plugin.TValue[string] {
+	return &c.DataReplicationStagingAvailabilityZone
 }
 
 func (c *mqlAwsDrsSourceServer) GetLastLaunchResult() *plugin.TValue[string] {
@@ -92419,8 +93005,80 @@ func (c *mqlAwsDrsSourceServer) GetLifeCycle() *plugin.TValue[any] {
 	return &c.LifeCycle
 }
 
+func (c *mqlAwsDrsSourceServer) GetLifeCycleAddedToServiceAt() *plugin.TValue[*time.Time] {
+	return &c.LifeCycleAddedToServiceAt
+}
+
+func (c *mqlAwsDrsSourceServer) GetLifeCycleFirstByteAt() *plugin.TValue[*time.Time] {
+	return &c.LifeCycleFirstByteAt
+}
+
+func (c *mqlAwsDrsSourceServer) GetLifeCycleLastSeenAt() *plugin.TValue[*time.Time] {
+	return &c.LifeCycleLastSeenAt
+}
+
+func (c *mqlAwsDrsSourceServer) GetLifeCycleElapsedReplicationDuration() *plugin.TValue[string] {
+	return &c.LifeCycleElapsedReplicationDuration
+}
+
+func (c *mqlAwsDrsSourceServer) GetLifeCycleLastLaunchStatus() *plugin.TValue[string] {
+	return &c.LifeCycleLastLaunchStatus
+}
+
 func (c *mqlAwsDrsSourceServer) GetSourceProperties() *plugin.TValue[any] {
 	return &c.SourceProperties
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceCpuCount() *plugin.TValue[int64] {
+	return &c.SourceCpuCount
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceDiskCount() *plugin.TValue[int64] {
+	return &c.SourceDiskCount
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceRamBytes() *plugin.TValue[int64] {
+	return &c.SourceRamBytes
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceRecommendedInstanceType() *plugin.TValue[string] {
+	return &c.SourceRecommendedInstanceType
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceSupportsNitroInstances() *plugin.TValue[bool] {
+	return &c.SourceSupportsNitroInstances
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceIdentificationFqdn() *plugin.TValue[string] {
+	return &c.SourceIdentificationFqdn
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceIdentificationHostname() *plugin.TValue[string] {
+	return &c.SourceIdentificationHostname
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceIdentificationAwsInstanceID() *plugin.TValue[string] {
+	return &c.SourceIdentificationAwsInstanceID
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceCloudOriginAccountID() *plugin.TValue[string] {
+	return &c.SourceCloudOriginAccountID
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceCloudOriginRegion() *plugin.TValue[string] {
+	return &c.SourceCloudOriginRegion
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceCloudOriginAvailabilityZone() *plugin.TValue[string] {
+	return &c.SourceCloudOriginAvailabilityZone
+}
+
+func (c *mqlAwsDrsSourceServer) GetSourceNetworkID() *plugin.TValue[string] {
+	return &c.SourceNetworkID
+}
+
+func (c *mqlAwsDrsSourceServer) GetReversedDirectionSourceServerArn() *plugin.TValue[string] {
+	return &c.ReversedDirectionSourceServerArn
 }
 
 func (c *mqlAwsDrsSourceServer) GetStagingArea() *plugin.TValue[any] {
@@ -92433,6 +93091,22 @@ func (c *mqlAwsDrsSourceServer) GetReplicationDirection() *plugin.TValue[string]
 
 func (c *mqlAwsDrsSourceServer) GetRecoveryInstanceId() *plugin.TValue[string] {
 	return &c.RecoveryInstanceId
+}
+
+func (c *mqlAwsDrsSourceServer) GetRecoveryInstance() *plugin.TValue[*mqlAwsDrsRecoveryInstance] {
+	return plugin.GetOrCompute[*mqlAwsDrsRecoveryInstance](&c.RecoveryInstance, func() (*mqlAwsDrsRecoveryInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs.sourceServer", c.__id, "recoveryInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDrsRecoveryInstance), nil
+			}
+		}
+
+		return c.recoveryInstance()
+	})
 }
 
 func (c *mqlAwsDrsSourceServer) GetTags() *plugin.TValue[map[string]any] {
@@ -92471,19 +93145,206 @@ func (c *mqlAwsDrsSourceServer) GetLaunchConfiguration() *plugin.TValue[*mqlAwsD
 	})
 }
 
+// mqlAwsDrsRecoveryInstance for the aws.drs.recoveryInstance resource
+type mqlAwsDrsRecoveryInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDrsRecoveryInstanceInternal
+	RecoveryInstanceID         plugin.TValue[string]
+	Arn                        plugin.TValue[string]
+	AgentVersion               plugin.TValue[string]
+	Ec2InstanceID              plugin.TValue[string]
+	Ec2InstanceState           plugin.TValue[string]
+	Ec2Instance                plugin.TValue[*mqlAwsEc2Instance]
+	SourceServerID             plugin.TValue[string]
+	SourceServer               plugin.TValue[*mqlAwsDrsSourceServer]
+	JobID                      plugin.TValue[string]
+	Job                        plugin.TValue[*mqlAwsDrsJob]
+	IsDrill                    plugin.TValue[bool]
+	OriginAvailabilityZone     plugin.TValue[string]
+	OriginEnvironment          plugin.TValue[string]
+	PointInTimeSnapshotAt      plugin.TValue[*time.Time]
+	DataReplicationInfo        plugin.TValue[any]
+	DataReplicationState       plugin.TValue[string]
+	DataReplicationLagDuration plugin.TValue[string]
+	Failback                   plugin.TValue[any]
+	RecoveryInstanceProperties plugin.TValue[any]
+	SourceOutpostArn           plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+}
+
+// createAwsDrsRecoveryInstance creates a new instance of this resource
+func createAwsDrsRecoveryInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDrsRecoveryInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.drs.recoveryInstance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDrsRecoveryInstance) MqlName() string {
+	return "aws.drs.recoveryInstance"
+}
+
+func (c *mqlAwsDrsRecoveryInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetRecoveryInstanceID() *plugin.TValue[string] {
+	return &c.RecoveryInstanceID
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetAgentVersion() *plugin.TValue[string] {
+	return &c.AgentVersion
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetEc2InstanceID() *plugin.TValue[string] {
+	return &c.Ec2InstanceID
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetEc2InstanceState() *plugin.TValue[string] {
+	return &c.Ec2InstanceState
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetEc2Instance() *plugin.TValue[*mqlAwsEc2Instance] {
+	return plugin.GetOrCompute[*mqlAwsEc2Instance](&c.Ec2Instance, func() (*mqlAwsEc2Instance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs.recoveryInstance", c.__id, "ec2Instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Instance), nil
+			}
+		}
+
+		return c.ec2Instance()
+	})
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetSourceServerID() *plugin.TValue[string] {
+	return &c.SourceServerID
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetSourceServer() *plugin.TValue[*mqlAwsDrsSourceServer] {
+	return plugin.GetOrCompute[*mqlAwsDrsSourceServer](&c.SourceServer, func() (*mqlAwsDrsSourceServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs.recoveryInstance", c.__id, "sourceServer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDrsSourceServer), nil
+			}
+		}
+
+		return c.sourceServer()
+	})
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetJobID() *plugin.TValue[string] {
+	return &c.JobID
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetJob() *plugin.TValue[*mqlAwsDrsJob] {
+	return plugin.GetOrCompute[*mqlAwsDrsJob](&c.Job, func() (*mqlAwsDrsJob, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs.recoveryInstance", c.__id, "job")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDrsJob), nil
+			}
+		}
+
+		return c.job()
+	})
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetIsDrill() *plugin.TValue[bool] {
+	return &c.IsDrill
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetOriginAvailabilityZone() *plugin.TValue[string] {
+	return &c.OriginAvailabilityZone
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetOriginEnvironment() *plugin.TValue[string] {
+	return &c.OriginEnvironment
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetPointInTimeSnapshotAt() *plugin.TValue[*time.Time] {
+	return &c.PointInTimeSnapshotAt
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetDataReplicationInfo() *plugin.TValue[any] {
+	return &c.DataReplicationInfo
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetDataReplicationState() *plugin.TValue[string] {
+	return &c.DataReplicationState
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetDataReplicationLagDuration() *plugin.TValue[string] {
+	return &c.DataReplicationLagDuration
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetFailback() *plugin.TValue[any] {
+	return &c.Failback
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetRecoveryInstanceProperties() *plugin.TValue[any] {
+	return &c.RecoveryInstanceProperties
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetSourceOutpostArn() *plugin.TValue[string] {
+	return &c.SourceOutpostArn
+}
+
+func (c *mqlAwsDrsRecoveryInstance) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
 // mqlAwsDrsJob for the aws.drs.job resource
 type mqlAwsDrsJob struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsDrsJobInternal it will be used here
-	JobID                plugin.TValue[string]
-	Arn                  plugin.TValue[string]
-	Type                 plugin.TValue[string]
-	Status               plugin.TValue[string]
-	InitiatedBy          plugin.TValue[string]
-	CreatedAt            plugin.TValue[*time.Time]
-	EndedAt              plugin.TValue[*time.Time]
-	ParticipatingServers plugin.TValue[[]any]
+	mqlAwsDrsJobInternal
+	JobID                  plugin.TValue[string]
+	Arn                    plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Status                 plugin.TValue[string]
+	InitiatedBy            plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	EndedAt                plugin.TValue[*time.Time]
+	ParticipatingServers   plugin.TValue[[]any]
+	ParticipatingResources plugin.TValue[[]any]
+	Tags                   plugin.TValue[map[string]any]
 }
 
 // createAwsDrsJob creates a new instance of this resource
@@ -92553,6 +93414,199 @@ func (c *mqlAwsDrsJob) GetEndedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsDrsJob) GetParticipatingServers() *plugin.TValue[[]any] {
 	return &c.ParticipatingServers
+}
+
+func (c *mqlAwsDrsJob) GetParticipatingResources() *plugin.TValue[[]any] {
+	return &c.ParticipatingResources
+}
+
+func (c *mqlAwsDrsJob) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsDrsReplicationConfigurationTemplate for the aws.drs.replicationConfigurationTemplate resource
+type mqlAwsDrsReplicationConfigurationTemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDrsReplicationConfigurationTemplateInternal it will be used here
+	ReplicationConfigurationTemplateID  plugin.TValue[string]
+	Arn                                 plugin.TValue[string]
+	AssociateDefaultSecurityGroup       plugin.TValue[bool]
+	AutoReplicateNewDisks               plugin.TValue[bool]
+	BandwidthThrottling                 plugin.TValue[int64]
+	CreatePublicIP                      plugin.TValue[bool]
+	DataPlaneRouting                    plugin.TValue[string]
+	DefaultLargeStagingDiskType         plugin.TValue[string]
+	EbsEncryption                       plugin.TValue[string]
+	EbsEncryptionKeyArn                 plugin.TValue[string]
+	EbsEncryptionKey                    plugin.TValue[*mqlAwsKmsKey]
+	InternetProtocol                    plugin.TValue[string]
+	PitPolicy                           plugin.TValue[[]any]
+	ReplicationServerInstanceType       plugin.TValue[string]
+	ReplicationServersSecurityGroupsIDs plugin.TValue[[]any]
+	ReplicationServersSecurityGroups    plugin.TValue[[]any]
+	StagingAreaSubnetId                 plugin.TValue[string]
+	StagingAreaSubnet                   plugin.TValue[*mqlAwsVpcSubnet]
+	StagingAreaTags                     plugin.TValue[map[string]any]
+	UseDedicatedReplicationServer       plugin.TValue[bool]
+	Tags                                plugin.TValue[map[string]any]
+}
+
+// createAwsDrsReplicationConfigurationTemplate creates a new instance of this resource
+func createAwsDrsReplicationConfigurationTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDrsReplicationConfigurationTemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.drs.replicationConfigurationTemplate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) MqlName() string {
+	return "aws.drs.replicationConfigurationTemplate"
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetReplicationConfigurationTemplateID() *plugin.TValue[string] {
+	return &c.ReplicationConfigurationTemplateID
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetAssociateDefaultSecurityGroup() *plugin.TValue[bool] {
+	return &c.AssociateDefaultSecurityGroup
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetAutoReplicateNewDisks() *plugin.TValue[bool] {
+	return &c.AutoReplicateNewDisks
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetBandwidthThrottling() *plugin.TValue[int64] {
+	return &c.BandwidthThrottling
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetCreatePublicIP() *plugin.TValue[bool] {
+	return &c.CreatePublicIP
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetDataPlaneRouting() *plugin.TValue[string] {
+	return &c.DataPlaneRouting
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetDefaultLargeStagingDiskType() *plugin.TValue[string] {
+	return &c.DefaultLargeStagingDiskType
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetEbsEncryption() *plugin.TValue[string] {
+	return &c.EbsEncryption
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetEbsEncryptionKeyArn() *plugin.TValue[string] {
+	return &c.EbsEncryptionKeyArn
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetEbsEncryptionKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.EbsEncryptionKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs.replicationConfigurationTemplate", c.__id, "ebsEncryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.ebsEncryptionKey()
+	})
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetInternetProtocol() *plugin.TValue[string] {
+	return &c.InternetProtocol
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetPitPolicy() *plugin.TValue[[]any] {
+	return &c.PitPolicy
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetReplicationServerInstanceType() *plugin.TValue[string] {
+	return &c.ReplicationServerInstanceType
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetReplicationServersSecurityGroupsIDs() *plugin.TValue[[]any] {
+	return &c.ReplicationServersSecurityGroupsIDs
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetReplicationServersSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicationServersSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs.replicationConfigurationTemplate", c.__id, "replicationServersSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replicationServersSecurityGroups()
+	})
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetStagingAreaSubnetId() *plugin.TValue[string] {
+	return &c.StagingAreaSubnetId
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetStagingAreaSubnet() *plugin.TValue[*mqlAwsVpcSubnet] {
+	return plugin.GetOrCompute[*mqlAwsVpcSubnet](&c.StagingAreaSubnet, func() (*mqlAwsVpcSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs.replicationConfigurationTemplate", c.__id, "stagingAreaSubnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpcSubnet), nil
+			}
+		}
+
+		return c.stagingAreaSubnet()
+	})
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetStagingAreaTags() *plugin.TValue[map[string]any] {
+	return &c.StagingAreaTags
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetUseDedicatedReplicationServer() *plugin.TValue[bool] {
+	return &c.UseDedicatedReplicationServer
+}
+
+func (c *mqlAwsDrsReplicationConfigurationTemplate) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 // mqlAwsDrsReplicationConfiguration for the aws.drs.replicationConfiguration resource

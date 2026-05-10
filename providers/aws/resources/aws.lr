@@ -7573,8 +7573,12 @@ private aws.applicationAutoscaling.scheduledAction @defaults("arn name schedule"
 aws.drs @defaults("sourceServers") {
   // List of source servers being replicated
   sourceServers() []aws.drs.sourceServer
+  // List of recovery instances launched from source servers
+  recoveryInstances() []aws.drs.recoveryInstance
   // List of DRS jobs (recovery, drill, failback)
   jobs() []aws.drs.job
+  // List of replication configuration templates that define replication defaults
+  replicationConfigurationTemplates() []aws.drs.replicationConfigurationTemplate
 }
 
 // AWS DRS source server
@@ -7583,26 +7587,127 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   sourceServerID string
   // Source server ARN
   arn string
+  // Version of the DRS agent installed on the source server
+  agentVersion string
   // Data replication status and progress
   dataReplicationInfo dict
+  // State of the data replication (e.g. INITIATING, INITIAL_SYNC, BACKLOG, CONTINUOUS, STALLED, DISCONNECTED)
+  dataReplicationState string
+  // Data replication lag duration (ISO 8601 duration)
+  dataReplicationLagDuration string
+  // Estimated time when data replication will be complete
+  dataReplicationEtaAt time
+  // Availability zone into which data is being replicated
+  dataReplicationStagingAvailabilityZone string
   // Result of last launch (NOT_STARTED, PENDING, SUCCEEDED, FAILED)
   lastLaunchResult string
   // Lifecycle state information
   lifeCycle dict
+  // Date the source server was added to the service
+  lifeCycleAddedToServiceAt time
+  // Date of the first byte that was replicated from the source server
+  lifeCycleFirstByteAt time
+  // Date the source server was last seen by the service
+  lifeCycleLastSeenAt time
+  // Total elapsed replication duration (ISO 8601 duration)
+  lifeCycleElapsedReplicationDuration string
+  // Status of the source server's last launch (PENDING, IN_PROGRESS, LAUNCHED, FAILED, TERMINATED)
+  lifeCycleLastLaunchStatus string
   // Source server properties (OS, disks, network)
   sourceProperties dict
+  // Number of CPUs reported by the source server
+  sourceCpuCount int
+  // Number of disks reported by the source server
+  sourceDiskCount int
+  // Amount of RAM in bytes reported by the source server
+  sourceRamBytes int
+  // Recommended EC2 instance type when recovering this source server
+  sourceRecommendedInstanceType string
+  // Whether EC2 nitro instance types are supported when recovering the source server
+  sourceSupportsNitroInstances bool
+  // Fully qualified domain name identification hint for the source server
+  sourceIdentificationFqdn string
+  // Hostname identification hint for the source server
+  sourceIdentificationHostname string
+  // AWS instance ID identification hint for an EC2-originated source server
+  sourceIdentificationAwsInstanceID string
+  // For EC2-originated source servers: the origin AWS account ID
+  sourceCloudOriginAccountID string
+  // For EC2-originated source servers: the origin AWS region
+  sourceCloudOriginRegion string
+  // For EC2-originated source servers: the origin AWS availability zone
+  sourceCloudOriginAvailabilityZone string
+  // ID of the source network protecting this source server's network
+  sourceNetworkID string
+  // For failed-over and failed-back EC2 source servers, the ARN on the opposite replication direction
+  reversedDirectionSourceServerArn string
   // Staging area configuration
   stagingArea dict
   // Replication direction: FAILOVER_AND_FAILBACK or ONE_WAY
   replicationDirection string
   // ID of last recovery instance
   recoveryInstanceId string
+  // Recovery instance launched from this source server
+  recoveryInstance() aws.drs.recoveryInstance
   // Resource tags
   tags map[string]string
   // Replication settings for this server
   replicationConfiguration() aws.drs.replicationConfiguration
   // Launch settings for this server
   launchConfiguration() aws.drs.launchConfiguration
+}
+
+// AWS DRS recovery instance
+//
+// Examine recovery instances launched in EC2 from replicated source servers.
+// Each recovery instance is selected by `arn` — for example
+// `aws.drs.recoveryInstance(arn: "arn:aws:drs:us-east-1:123456789012:recovery-instance/i-...")`
+// — and exposes the underlying EC2 instance, the source server it was
+// recovered from, the launching DRS job, the EC2 instance state, data
+// replication progress for failback, and whether the launch was a drill.
+private aws.drs.recoveryInstance @defaults("recoveryInstanceID arn ec2InstanceState") {
+  // Recovery instance ID
+  recoveryInstanceID string
+  // Recovery instance ARN
+  arn string
+  // Version of the DRS agent installed on the recovery instance
+  agentVersion string
+  // EC2 instance ID for this recovery instance
+  ec2InstanceID string
+  // EC2 instance state (PENDING, RUNNING, STOPPING, STOPPED, SHUTTING_DOWN, TERMINATED, NOT_FOUND)
+  ec2InstanceState string
+  // EC2 instance launched as the recovery instance
+  ec2Instance() aws.ec2.instance
+  // ID of the source server this recovery instance is associated with
+  sourceServerID string
+  // Source server this recovery instance is associated with
+  sourceServer() aws.drs.sourceServer
+  // ID of the DRS job that created this recovery instance
+  jobID string
+  // DRS job that created this recovery instance
+  job() aws.drs.job
+  // Whether this recovery instance was created for a drill rather than an actual recovery event
+  isDrill bool
+  // Origin availability zone of the source server
+  originAvailabilityZone string
+  // Origin environment (ON_PREMISES or AWS) of the source server
+  originEnvironment string
+  // Date and time of the Point in Time (PIT) snapshot this recovery instance was launched from
+  pointInTimeSnapshotAt time
+  // Data replication info for failback (state, lag, replicated disks)
+  dataReplicationInfo dict
+  // State of failback data replication (e.g. STOPPED, INITIATING, INITIAL_SYNC, REPLICATION, RESCAN, STALLED, DISCONNECTED, NOT_STARTED)
+  dataReplicationState string
+  // Failback data replication lag duration (ISO 8601 duration)
+  dataReplicationLagDuration string
+  // Failback related information for this recovery instance
+  failback dict
+  // Properties of the recovery instance machine (CPUs, disks, RAM, OS)
+  recoveryInstanceProperties dict
+  // ARN of the source Outpost
+  sourceOutpostArn string
+  // Resource tags
+  tags map[string]string
 }
 
 // AWS DRS job
@@ -7623,6 +7728,64 @@ private aws.drs.job @defaults("jobID type status") {
   endedAt time
   // Servers participating in job
   participatingServers []dict
+  // Resources participating in the job (e.g. source networks)
+  participatingResources []dict
+  // Resource tags
+  tags map[string]string
+}
+
+// AWS DRS replication configuration template
+//
+// Examine the templates that define default replication settings for new
+// source servers — the staging-area subnet, the EBS volume type and
+// encryption mode, bandwidth throttling, the data plane routing mechanism,
+// the security groups attached to the replication server, and the
+// point-in-time snapshot retention policy. Each template is selected by
+// `replicationConfigurationTemplateID` — for example
+// `aws.drs.replicationConfigurationTemplate(replicationConfigurationTemplateID: "rct-...")`.
+private aws.drs.replicationConfigurationTemplate @defaults("replicationConfigurationTemplateID arn") {
+  // Replication configuration template ID
+  replicationConfigurationTemplateID string
+  // Replication configuration template ARN
+  arn string
+  // Whether to associate the default DRS security group with this template
+  associateDefaultSecurityGroup bool
+  // Whether to automatically replicate newly added disks
+  autoReplicateNewDisks bool
+  // Bandwidth throttling for outbound data transfer in Mbps (0 = unlimited)
+  bandwidthThrottling int
+  // Whether to create a public IP for the recovery instance by default
+  createPublicIP bool
+  // Data plane routing mechanism (PRIVATE_IP, PUBLIC_IP)
+  dataPlaneRouting string
+  // Default staging disk EBS volume type (AUTO, GP2, GP3, ST1)
+  defaultLargeStagingDiskType string
+  // EBS encryption mode for replication (DEFAULT, CUSTOM, NONE)
+  ebsEncryption string
+  // ARN of the custom KMS key used for EBS encryption
+  ebsEncryptionKeyArn string
+  // Custom KMS key used for EBS encryption
+  ebsEncryptionKey() aws.kms.key
+  // Internet protocol used for replication (IPV4, IPV6)
+  internetProtocol string
+  // Point in time (PIT) snapshot retention rules
+  pitPolicy []dict
+  // EC2 instance type used for the replication server
+  replicationServerInstanceType string
+  // Security group IDs attached to the replication server
+  replicationServersSecurityGroupsIDs []string
+  // Security groups attached to the replication server
+  replicationServersSecurityGroups() []aws.ec2.securitygroup
+  // Subnet ID used for the replication staging area
+  stagingAreaSubnetId string
+  // Subnet used for the replication staging area
+  stagingAreaSubnet() aws.vpc.subnet
+  // Tags applied to all resources created in the replication staging area
+  stagingAreaTags map[string]string
+  // Whether to use a dedicated replication server in the staging area
+  useDedicatedReplicationServer bool
+  // Resource tags applied to the template itself
+  tags map[string]string
 }
 
 // AWS DRS replication configuration
