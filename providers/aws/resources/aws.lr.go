@@ -572,6 +572,8 @@ const (
 	ResourceAwsCodedeployDeployment                                             string = "aws.codedeploy.deployment"
 	ResourceAwsWorkdocs                                                         string = "aws.workdocs"
 	ResourceAwsWorkdocsUser                                                     string = "aws.workdocs.user"
+	ResourceAwsWorkdocsFolder                                                   string = "aws.workdocs.folder"
+	ResourceAwsWorkdocsDocument                                                 string = "aws.workdocs.document"
 	ResourceAwsAppstream                                                        string = "aws.appstream"
 	ResourceAwsAppstreamFleet                                                   string = "aws.appstream.fleet"
 	ResourceAwsAppstreamFleetComputeCapacityStatus                              string = "aws.appstream.fleet.computeCapacityStatus"
@@ -2983,6 +2985,14 @@ func init() {
 		"aws.workdocs.user": {
 			// to override args, implement: initAwsWorkdocsUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWorkdocsUser,
+		},
+		"aws.workdocs.folder": {
+			// to override args, implement: initAwsWorkdocsFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkdocsFolder,
+		},
+		"aws.workdocs.document": {
+			// to override args, implement: initAwsWorkdocsDocument(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWorkdocsDocument,
 		},
 		"aws.appstream": {
 			// to override args, implement: initAwsAppstream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -19518,6 +19528,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workdocs.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkdocs).GetUsers()).ToDataRes(types.Array(types.Resource("aws.workdocs.user")))
 	},
+	"aws.workdocs.folders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocs).GetFolders()).ToDataRes(types.Array(types.Resource("aws.workdocs.folder")))
+	},
+	"aws.workdocs.documents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocs).GetDocuments()).ToDataRes(types.Array(types.Resource("aws.workdocs.document")))
+	},
 	"aws.workdocs.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkdocsUser).GetId()).ToDataRes(types.String)
 	},
@@ -19566,11 +19582,98 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.workdocs.user.recycleBinFolderId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkdocsUser).GetRecycleBinFolderId()).ToDataRes(types.String)
 	},
+	"aws.workdocs.user.recycleBinFolder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetRecycleBinFolder()).ToDataRes(types.Resource("aws.workdocs.folder"))
+	},
 	"aws.workdocs.user.rootFolderId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkdocsUser).GetRootFolderId()).ToDataRes(types.String)
 	},
+	"aws.workdocs.user.rootFolder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsUser).GetRootFolder()).ToDataRes(types.Resource("aws.workdocs.folder"))
+	},
 	"aws.workdocs.user.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWorkdocsUser).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.workdocs.folder.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.folder.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetName()).ToDataRes(types.String)
+	},
+	"aws.workdocs.folder.parentFolderId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetParentFolderId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.folder.parentFolder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetParentFolder()).ToDataRes(types.Resource("aws.workdocs.folder"))
+	},
+	"aws.workdocs.folder.creatorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetCreatorId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.folder.creator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetCreator()).ToDataRes(types.Resource("aws.workdocs.user"))
+	},
+	"aws.workdocs.folder.createdTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetCreatedTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.workdocs.folder.modifiedTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetModifiedTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.workdocs.folder.resourceState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetResourceState()).ToDataRes(types.String)
+	},
+	"aws.workdocs.folder.latestVersionSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetLatestVersionSize()).ToDataRes(types.Int)
+	},
+	"aws.workdocs.folder.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetSize()).ToDataRes(types.Int)
+	},
+	"aws.workdocs.folder.signature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetSignature()).ToDataRes(types.String)
+	},
+	"aws.workdocs.folder.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"aws.workdocs.folder.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.workdocs.folder.organizationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsFolder).GetOrganizationId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.document.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.document.parentFolderId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetParentFolderId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.document.parentFolder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetParentFolder()).ToDataRes(types.Resource("aws.workdocs.folder"))
+	},
+	"aws.workdocs.document.creatorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetCreatorId()).ToDataRes(types.String)
+	},
+	"aws.workdocs.document.creator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetCreator()).ToDataRes(types.Resource("aws.workdocs.user"))
+	},
+	"aws.workdocs.document.createdTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetCreatedTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.workdocs.document.modifiedTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetModifiedTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.workdocs.document.resourceState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetResourceState()).ToDataRes(types.String)
+	},
+	"aws.workdocs.document.latestVersionMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetLatestVersionMetadata()).ToDataRes(types.Dict)
+	},
+	"aws.workdocs.document.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"aws.workdocs.document.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.workdocs.document.organizationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWorkdocsDocument).GetOrganizationId()).ToDataRes(types.String)
 	},
 	"aws.appstream.fleets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstream).GetFleets()).ToDataRes(types.Array(types.Resource("aws.appstream.fleet")))
@@ -47944,6 +48047,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkdocs).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.workdocs.folders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocs).Folders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.documents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocs).Documents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.workdocs.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkdocsUser).__id, ok = v.Value.(string)
 		return
@@ -48012,12 +48123,136 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWorkdocsUser).RecycleBinFolderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.workdocs.user.recycleBinFolder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).RecycleBinFolder, ok = plugin.RawToTValue[*mqlAwsWorkdocsFolder](v.Value, v.Error)
+		return
+	},
 	"aws.workdocs.user.rootFolderId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkdocsUser).RootFolderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.workdocs.user.rootFolder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsUser).RootFolder, ok = plugin.RawToTValue[*mqlAwsWorkdocsFolder](v.Value, v.Error)
+		return
+	},
 	"aws.workdocs.user.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWorkdocsUser).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workdocs.folder.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.parentFolderId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).ParentFolderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.parentFolder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).ParentFolder, ok = plugin.RawToTValue[*mqlAwsWorkdocsFolder](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.creatorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).CreatorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).Creator, ok = plugin.RawToTValue[*mqlAwsWorkdocsUser](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.createdTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).CreatedTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.modifiedTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).ModifiedTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.resourceState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).ResourceState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.latestVersionSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).LatestVersionSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.signature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).Signature, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.folder.organizationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsFolder).OrganizationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.workdocs.document.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.parentFolderId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).ParentFolderId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.parentFolder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).ParentFolder, ok = plugin.RawToTValue[*mqlAwsWorkdocsFolder](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.creatorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).CreatorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).Creator, ok = plugin.RawToTValue[*mqlAwsWorkdocsUser](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.createdTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).CreatedTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.modifiedTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).ModifiedTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.resourceState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).ResourceState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.latestVersionMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).LatestVersionMetadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.workdocs.document.organizationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWorkdocsDocument).OrganizationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.appstream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -117058,7 +117293,9 @@ type mqlAwsWorkdocs struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsWorkdocsInternal it will be used here
-	Users plugin.TValue[[]any]
+	Users     plugin.TValue[[]any]
+	Folders   plugin.TValue[[]any]
+	Documents plugin.TValue[[]any]
 }
 
 // createAwsWorkdocs creates a new instance of this resource
@@ -117114,6 +117351,38 @@ func (c *mqlAwsWorkdocs) GetUsers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsWorkdocs) GetFolders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Folders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workdocs", c.__id, "folders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.folders()
+	})
+}
+
+func (c *mqlAwsWorkdocs) GetDocuments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Documents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workdocs", c.__id, "documents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.documents()
+	})
+}
+
 // mqlAwsWorkdocsUser for the aws.workdocs.user resource
 type mqlAwsWorkdocsUser struct {
 	MqlRuntime *plugin.Runtime
@@ -117135,7 +117404,9 @@ type mqlAwsWorkdocsUser struct {
 	StorageUtilizedInBytes  plugin.TValue[int64]
 	StorageType             plugin.TValue[string]
 	RecycleBinFolderId      plugin.TValue[string]
+	RecycleBinFolder        plugin.TValue[*mqlAwsWorkdocsFolder]
 	RootFolderId            plugin.TValue[string]
+	RootFolder              plugin.TValue[*mqlAwsWorkdocsFolder]
 	Region                  plugin.TValue[string]
 }
 
@@ -117240,12 +117511,315 @@ func (c *mqlAwsWorkdocsUser) GetRecycleBinFolderId() *plugin.TValue[string] {
 	return &c.RecycleBinFolderId
 }
 
+func (c *mqlAwsWorkdocsUser) GetRecycleBinFolder() *plugin.TValue[*mqlAwsWorkdocsFolder] {
+	return plugin.GetOrCompute[*mqlAwsWorkdocsFolder](&c.RecycleBinFolder, func() (*mqlAwsWorkdocsFolder, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workdocs.user", c.__id, "recycleBinFolder")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWorkdocsFolder), nil
+			}
+		}
+
+		return c.recycleBinFolder()
+	})
+}
+
 func (c *mqlAwsWorkdocsUser) GetRootFolderId() *plugin.TValue[string] {
 	return &c.RootFolderId
 }
 
+func (c *mqlAwsWorkdocsUser) GetRootFolder() *plugin.TValue[*mqlAwsWorkdocsFolder] {
+	return plugin.GetOrCompute[*mqlAwsWorkdocsFolder](&c.RootFolder, func() (*mqlAwsWorkdocsFolder, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workdocs.user", c.__id, "rootFolder")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWorkdocsFolder), nil
+			}
+		}
+
+		return c.rootFolder()
+	})
+}
+
 func (c *mqlAwsWorkdocsUser) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsWorkdocsFolder for the aws.workdocs.folder resource
+type mqlAwsWorkdocsFolder struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsWorkdocsFolderInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	ParentFolderId    plugin.TValue[string]
+	ParentFolder      plugin.TValue[*mqlAwsWorkdocsFolder]
+	CreatorId         plugin.TValue[string]
+	Creator           plugin.TValue[*mqlAwsWorkdocsUser]
+	CreatedTimestamp  plugin.TValue[*time.Time]
+	ModifiedTimestamp plugin.TValue[*time.Time]
+	ResourceState     plugin.TValue[string]
+	LatestVersionSize plugin.TValue[int64]
+	Size              plugin.TValue[int64]
+	Signature         plugin.TValue[string]
+	Labels            plugin.TValue[[]any]
+	Region            plugin.TValue[string]
+	OrganizationId    plugin.TValue[string]
+}
+
+// createAwsWorkdocsFolder creates a new instance of this resource
+func createAwsWorkdocsFolder(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkdocsFolder{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workdocs.folder", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkdocsFolder) MqlName() string {
+	return "aws.workdocs.folder"
+}
+
+func (c *mqlAwsWorkdocsFolder) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkdocsFolder) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWorkdocsFolder) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsWorkdocsFolder) GetParentFolderId() *plugin.TValue[string] {
+	return &c.ParentFolderId
+}
+
+func (c *mqlAwsWorkdocsFolder) GetParentFolder() *plugin.TValue[*mqlAwsWorkdocsFolder] {
+	return plugin.GetOrCompute[*mqlAwsWorkdocsFolder](&c.ParentFolder, func() (*mqlAwsWorkdocsFolder, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workdocs.folder", c.__id, "parentFolder")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWorkdocsFolder), nil
+			}
+		}
+
+		return c.parentFolder()
+	})
+}
+
+func (c *mqlAwsWorkdocsFolder) GetCreatorId() *plugin.TValue[string] {
+	return &c.CreatorId
+}
+
+func (c *mqlAwsWorkdocsFolder) GetCreator() *plugin.TValue[*mqlAwsWorkdocsUser] {
+	return plugin.GetOrCompute[*mqlAwsWorkdocsUser](&c.Creator, func() (*mqlAwsWorkdocsUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workdocs.folder", c.__id, "creator")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWorkdocsUser), nil
+			}
+		}
+
+		return c.creator()
+	})
+}
+
+func (c *mqlAwsWorkdocsFolder) GetCreatedTimestamp() *plugin.TValue[*time.Time] {
+	return &c.CreatedTimestamp
+}
+
+func (c *mqlAwsWorkdocsFolder) GetModifiedTimestamp() *plugin.TValue[*time.Time] {
+	return &c.ModifiedTimestamp
+}
+
+func (c *mqlAwsWorkdocsFolder) GetResourceState() *plugin.TValue[string] {
+	return &c.ResourceState
+}
+
+func (c *mqlAwsWorkdocsFolder) GetLatestVersionSize() *plugin.TValue[int64] {
+	return &c.LatestVersionSize
+}
+
+func (c *mqlAwsWorkdocsFolder) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlAwsWorkdocsFolder) GetSignature() *plugin.TValue[string] {
+	return &c.Signature
+}
+
+func (c *mqlAwsWorkdocsFolder) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
+func (c *mqlAwsWorkdocsFolder) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsWorkdocsFolder) GetOrganizationId() *plugin.TValue[string] {
+	return &c.OrganizationId
+}
+
+// mqlAwsWorkdocsDocument for the aws.workdocs.document resource
+type mqlAwsWorkdocsDocument struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsWorkdocsDocumentInternal
+	Id                    plugin.TValue[string]
+	ParentFolderId        plugin.TValue[string]
+	ParentFolder          plugin.TValue[*mqlAwsWorkdocsFolder]
+	CreatorId             plugin.TValue[string]
+	Creator               plugin.TValue[*mqlAwsWorkdocsUser]
+	CreatedTimestamp      plugin.TValue[*time.Time]
+	ModifiedTimestamp     plugin.TValue[*time.Time]
+	ResourceState         plugin.TValue[string]
+	LatestVersionMetadata plugin.TValue[any]
+	Labels                plugin.TValue[[]any]
+	Region                plugin.TValue[string]
+	OrganizationId        plugin.TValue[string]
+}
+
+// createAwsWorkdocsDocument creates a new instance of this resource
+func createAwsWorkdocsDocument(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWorkdocsDocument{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.workdocs.document", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWorkdocsDocument) MqlName() string {
+	return "aws.workdocs.document"
+}
+
+func (c *mqlAwsWorkdocsDocument) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWorkdocsDocument) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsWorkdocsDocument) GetParentFolderId() *plugin.TValue[string] {
+	return &c.ParentFolderId
+}
+
+func (c *mqlAwsWorkdocsDocument) GetParentFolder() *plugin.TValue[*mqlAwsWorkdocsFolder] {
+	return plugin.GetOrCompute[*mqlAwsWorkdocsFolder](&c.ParentFolder, func() (*mqlAwsWorkdocsFolder, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workdocs.document", c.__id, "parentFolder")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWorkdocsFolder), nil
+			}
+		}
+
+		return c.parentFolder()
+	})
+}
+
+func (c *mqlAwsWorkdocsDocument) GetCreatorId() *plugin.TValue[string] {
+	return &c.CreatorId
+}
+
+func (c *mqlAwsWorkdocsDocument) GetCreator() *plugin.TValue[*mqlAwsWorkdocsUser] {
+	return plugin.GetOrCompute[*mqlAwsWorkdocsUser](&c.Creator, func() (*mqlAwsWorkdocsUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.workdocs.document", c.__id, "creator")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWorkdocsUser), nil
+			}
+		}
+
+		return c.creator()
+	})
+}
+
+func (c *mqlAwsWorkdocsDocument) GetCreatedTimestamp() *plugin.TValue[*time.Time] {
+	return &c.CreatedTimestamp
+}
+
+func (c *mqlAwsWorkdocsDocument) GetModifiedTimestamp() *plugin.TValue[*time.Time] {
+	return &c.ModifiedTimestamp
+}
+
+func (c *mqlAwsWorkdocsDocument) GetResourceState() *plugin.TValue[string] {
+	return &c.ResourceState
+}
+
+func (c *mqlAwsWorkdocsDocument) GetLatestVersionMetadata() *plugin.TValue[any] {
+	return &c.LatestVersionMetadata
+}
+
+func (c *mqlAwsWorkdocsDocument) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
+func (c *mqlAwsWorkdocsDocument) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsWorkdocsDocument) GetOrganizationId() *plugin.TValue[string] {
+	return &c.OrganizationId
 }
 
 // mqlAwsAppstream for the aws.appstream resource

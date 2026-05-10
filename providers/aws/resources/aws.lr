@@ -13389,17 +13389,32 @@ private aws.codedeploy.deployment @defaults("deploymentId status applicationName
 
 // Amazon WorkDocs
 //
-// Use the WorkDocs namespace to enumerate users provisioned in the
-// account's WorkDocs sites. Iterate `users()` for every WorkDocs user
-// across enabled regions — each entry reports the user's status, role,
-// time zone, organization assignment, storage allocation, and last
-// login.
+// Use the WorkDocs namespace to enumerate users, folders, and documents
+// provisioned in the account's WorkDocs sites. Iterate `users()` for every
+// WorkDocs user across enabled regions — each entry reports the user's
+// status, role, time zone, organization assignment, storage allocation,
+// recycle bin and root folder. Iterate `folders()` and `documents()` for
+// the immediate children of every user's root folder, including creator
+// references, resource state, labels, and (for documents) latest version
+// metadata. Folder and document discovery is bounded to one level below
+// each user's root folder; deeper subtrees are not traversed.
 aws.workdocs {
   // List of WorkDocs users across all enabled regions
   users() []aws.workdocs.user
+  // List of WorkDocs folders reachable from each user's root folder (one level deep)
+  folders() []aws.workdocs.folder
+  // List of WorkDocs documents reachable from each user's root folder (one level deep)
+  documents() []aws.workdocs.document
 }
 
 // Amazon WorkDocs user
+//
+// Examine a user provisioned in a WorkDocs site — the username, email,
+// status (ACTIVE, INACTIVE, PENDING), role (USER, ADMIN, POWERUSER,
+// MINIMALUSER, WORKSPACESUSER), locale, time zone, organization assignment,
+// storage rule (allocated bytes, type) and current utilization. The user
+// also exposes typed references to its `rootFolder` and `recycleBinFolder`
+// so audits can traverse into the WorkDocs hierarchy without copying ids.
 private aws.workdocs.user @defaults("username emailAddress status") {
   // Internal user ID
   id string
@@ -13433,10 +13448,89 @@ private aws.workdocs.user @defaults("username emailAddress status") {
   storageType string
   // ID of the user's recycle bin folder
   recycleBinFolderId string
+  // Recycle bin folder for this user
+  recycleBinFolder() aws.workdocs.folder
   // ID of the user's root folder
   rootFolderId string
+  // Root folder for this user
+  rootFolder() aws.workdocs.folder
   // Region where this user exists
   region string
+}
+
+// Amazon WorkDocs folder
+//
+// Examine a folder stored in WorkDocs — its name, creator, parent folder,
+// resource state (ACTIVE, RESTORING, RECYCLING, RECYCLED), latest version
+// size, signature, and labels. Folders are discovered by walking one level
+// below each WorkDocs user's root folder; deeper subtrees are not yet
+// traversed.
+private aws.workdocs.folder @defaults("name id resourceState") {
+  // ID of the folder
+  id string
+  // Name of the folder
+  name string
+  // ID of the parent folder
+  parentFolderId string
+  // Parent folder
+  parentFolder() aws.workdocs.folder
+  // ID of the user who created the folder
+  creatorId string
+  // User who created the folder
+  creator() aws.workdocs.user
+  // Time when the folder was created
+  createdTimestamp time
+  // Time when the folder was last modified
+  modifiedTimestamp time
+  // Resource state of the folder: ACTIVE, RESTORING, RECYCLING, or RECYCLED
+  resourceState string
+  // Size of the latest version of the folder metadata, in bytes
+  latestVersionSize int
+  // Size of the folder metadata, in bytes
+  size int
+  // Unique identifier created from the subfolders and documents of the folder
+  signature string
+  // Labels applied to the folder
+  labels []string
+  // Region where this folder exists
+  region string
+  // Organization (directory) ID the folder belongs to
+  organizationId string
+}
+
+// Amazon WorkDocs document
+//
+// Examine a document stored in WorkDocs — its parent folder, creator,
+// resource state (ACTIVE, RESTORING, RECYCLING, RECYCLED), labels, and
+// the metadata of the document's latest version (content type, size,
+// signature, status, source, and timestamps). Documents are discovered by
+// walking one level below each WorkDocs user's root folder; documents
+// nested deeper than one level are not yet traversed.
+private aws.workdocs.document @defaults("id resourceState") {
+  // ID of the document
+  id string
+  // ID of the parent folder
+  parentFolderId string
+  // Parent folder
+  parentFolder() aws.workdocs.folder
+  // ID of the user who created the document
+  creatorId string
+  // User who created the document
+  creator() aws.workdocs.user
+  // Time when the document was created
+  createdTimestamp time
+  // Time when the document was last modified
+  modifiedTimestamp time
+  // Resource state of the document: ACTIVE, RESTORING, RECYCLING, or RECYCLED
+  resourceState string
+  // Metadata of the latest version of the document (id, name, contentType, size, signature, status, source, and content/version timestamps)
+  latestVersionMetadata dict
+  // Labels applied to the document
+  labels []string
+  // Region where this document exists
+  region string
+  // Organization (directory) ID the document belongs to
+  organizationId string
 }
 
 // Amazon AppStream 2.0

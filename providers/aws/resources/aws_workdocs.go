@@ -11,9 +11,21 @@ import (
 	workdocstypes "github.com/aws/aws-sdk-go-v2/service/workdocs/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
+
+type mqlAwsWorkdocsFolderInternal struct {
+	cacheParentFolderId string
+	cacheCreatorId      string
+}
+
+type mqlAwsWorkdocsDocumentInternal struct {
+	cacheParentFolderId string
+	cacheCreatorId      string
+}
 
 func (a *mqlAwsWorkdocs) id() (string, error) {
 	return "aws.workdocs", nil
@@ -21,6 +33,14 @@ func (a *mqlAwsWorkdocs) id() (string, error) {
 
 func (a *mqlAwsWorkdocsUser) id() (string, error) {
 	return a.Region.Data + "/" + a.Id.Data, nil
+}
+
+func (a *mqlAwsWorkdocsFolder) id() (string, error) {
+	return "aws.workdocs.folder/" + a.Region.Data + "/" + a.Id.Data, nil
+}
+
+func (a *mqlAwsWorkdocsDocument) id() (string, error) {
+	return "aws.workdocs.document/" + a.Region.Data + "/" + a.Id.Data, nil
 }
 
 func (a *mqlAwsWorkdocs) users() ([]any, error) {
@@ -119,4 +139,410 @@ func (a *mqlAwsWorkdocs) getUsers(conn *connection.AwsConnection) []*jobpool.Job
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+// rootFolder fetches the user's root folder via GetFolder. The folder id alone
+// isn't enough to locate the resource (the WorkDocs API is regional), so the
+// region is taken from the parent user.
+func (a *mqlAwsWorkdocsUser) rootFolder() (*mqlAwsWorkdocsFolder, error) {
+	if !a.RootFolderId.IsSet() || a.RootFolderId.Data == "" {
+		a.RootFolder.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return fetchWorkdocsFolder(a.MqlRuntime, a.Region.Data, a.OrganizationId.Data, a.RootFolderId.Data)
+}
+
+// recycleBinFolder fetches the user's recycle bin folder via GetFolder.
+func (a *mqlAwsWorkdocsUser) recycleBinFolder() (*mqlAwsWorkdocsFolder, error) {
+	if !a.RecycleBinFolderId.IsSet() || a.RecycleBinFolderId.Data == "" {
+		a.RecycleBinFolder.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return fetchWorkdocsFolder(a.MqlRuntime, a.Region.Data, a.OrganizationId.Data, a.RecycleBinFolderId.Data)
+}
+
+// fetchWorkdocsFolder calls GetFolder and converts the result to an mql folder.
+// On access denied it returns a shell with only id/region/organizationId set so
+// callers can still see the reference.
+func fetchWorkdocsFolder(runtime *plugin.Runtime, region, organizationId, folderId string) (*mqlAwsWorkdocsFolder, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.WorkDocs(region)
+	out, err := svc.GetFolder(context.Background(), &workdocs.GetFolderInput{
+		FolderId: aws.String(folderId),
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return newWorkdocsFolderShell(runtime, region, organizationId, folderId)
+		}
+		return nil, err
+	}
+	if out == nil || out.Metadata == nil {
+		return newWorkdocsFolderShell(runtime, region, organizationId, folderId)
+	}
+	return newMqlAwsWorkdocsFolder(runtime, region, organizationId, out.Metadata)
+}
+
+// newWorkdocsFolderShell creates a folder resource with only the id/region/
+// organizationId populated. It's used as a fallback when GetFolder is denied,
+// so the caller still sees something queryable instead of a hard error.
+func newWorkdocsFolderShell(runtime *plugin.Runtime, region, organizationId, folderId string) (*mqlAwsWorkdocsFolder, error) {
+	resource, err := CreateResource(runtime, "aws.workdocs.folder", map[string]*llx.RawData{
+		"id":                llx.StringData(folderId),
+		"name":              llx.StringData(""),
+		"parentFolderId":    llx.StringData(""),
+		"creatorId":         llx.StringData(""),
+		"createdTimestamp":  llx.NilData,
+		"modifiedTimestamp": llx.NilData,
+		"resourceState":     llx.StringData(""),
+		"latestVersionSize": llx.IntData(0),
+		"size":              llx.IntData(0),
+		"signature":         llx.StringData(""),
+		"labels":            llx.ArrayData([]any{}, "string"),
+		"region":            llx.StringData(region),
+		"organizationId":    llx.StringData(organizationId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsWorkdocsFolder), nil
+}
+
+// newMqlAwsWorkdocsFolder converts a workdocs FolderMetadata into a populated
+// mqlAwsWorkdocsFolder, including the cached parentFolderId/creatorId used by
+// the typed parentFolder()/creator() accessors.
+func newMqlAwsWorkdocsFolder(runtime *plugin.Runtime, region, organizationId string, fm *workdocstypes.FolderMetadata) (*mqlAwsWorkdocsFolder, error) {
+	if fm == nil {
+		return nil, nil
+	}
+	labels := make([]any, 0, len(fm.Labels))
+	for _, l := range fm.Labels {
+		labels = append(labels, l)
+	}
+	var latestVersionSize int64
+	if fm.LatestVersionSize != nil {
+		latestVersionSize = *fm.LatestVersionSize
+	}
+	var size int64
+	if fm.Size != nil {
+		size = *fm.Size
+	}
+	args := map[string]*llx.RawData{
+		"id":                llx.StringDataPtr(fm.Id),
+		"name":              llx.StringDataPtr(fm.Name),
+		"parentFolderId":    llx.StringDataPtr(fm.ParentFolderId),
+		"creatorId":         llx.StringDataPtr(fm.CreatorId),
+		"createdTimestamp":  llx.TimeDataPtr(fm.CreatedTimestamp),
+		"modifiedTimestamp": llx.TimeDataPtr(fm.ModifiedTimestamp),
+		"resourceState":     llx.StringData(string(fm.ResourceState)),
+		"latestVersionSize": llx.IntData(latestVersionSize),
+		"size":              llx.IntData(size),
+		"signature":         llx.StringDataPtr(fm.Signature),
+		"labels":            llx.ArrayData(labels, "string"),
+		"region":            llx.StringData(region),
+		"organizationId":    llx.StringData(organizationId),
+	}
+	resource, err := CreateResource(runtime, "aws.workdocs.folder", args)
+	if err != nil {
+		return nil, err
+	}
+	mqlFolder := resource.(*mqlAwsWorkdocsFolder)
+	if fm.ParentFolderId != nil {
+		mqlFolder.cacheParentFolderId = *fm.ParentFolderId
+	}
+	if fm.CreatorId != nil {
+		mqlFolder.cacheCreatorId = *fm.CreatorId
+	}
+	return mqlFolder, nil
+}
+
+// newMqlAwsWorkdocsDocument converts a workdocs DocumentMetadata into a
+// populated mqlAwsWorkdocsDocument.
+func newMqlAwsWorkdocsDocument(runtime *plugin.Runtime, region, organizationId string, dm *workdocstypes.DocumentMetadata) (*mqlAwsWorkdocsDocument, error) {
+	if dm == nil {
+		return nil, nil
+	}
+	labels := make([]any, 0, len(dm.Labels))
+	for _, l := range dm.Labels {
+		labels = append(labels, l)
+	}
+	latestVersion, err := documentVersionToDict(dm.LatestVersionMetadata)
+	if err != nil {
+		return nil, err
+	}
+	args := map[string]*llx.RawData{
+		"id":                    llx.StringDataPtr(dm.Id),
+		"parentFolderId":        llx.StringDataPtr(dm.ParentFolderId),
+		"creatorId":             llx.StringDataPtr(dm.CreatorId),
+		"createdTimestamp":      llx.TimeDataPtr(dm.CreatedTimestamp),
+		"modifiedTimestamp":     llx.TimeDataPtr(dm.ModifiedTimestamp),
+		"resourceState":         llx.StringData(string(dm.ResourceState)),
+		"latestVersionMetadata": llx.DictData(latestVersion),
+		"labels":                llx.ArrayData(labels, "string"),
+		"region":                llx.StringData(region),
+		"organizationId":        llx.StringData(organizationId),
+	}
+	resource, err := CreateResource(runtime, "aws.workdocs.document", args)
+	if err != nil {
+		return nil, err
+	}
+	mqlDoc := resource.(*mqlAwsWorkdocsDocument)
+	if dm.ParentFolderId != nil {
+		mqlDoc.cacheParentFolderId = *dm.ParentFolderId
+	}
+	if dm.CreatorId != nil {
+		mqlDoc.cacheCreatorId = *dm.CreatorId
+	}
+	return mqlDoc, nil
+}
+
+// documentVersionToDict turns a DocumentVersionMetadata into a dict so it can
+// be stored as a single-field []dict — the latest-version metadata is small,
+// heterogeneous, and not worth promoting to a typed sub-resource (no clear ID,
+// no nested typed refs).
+func documentVersionToDict(dvm *workdocstypes.DocumentVersionMetadata) (any, error) {
+	if dvm == nil {
+		return nil, nil
+	}
+	out := map[string]any{}
+	if dvm.Id != nil {
+		out["id"] = *dvm.Id
+	}
+	if dvm.Name != nil {
+		out["name"] = *dvm.Name
+	}
+	if dvm.ContentType != nil {
+		out["contentType"] = *dvm.ContentType
+	}
+	if dvm.Size != nil {
+		out["size"] = *dvm.Size
+	}
+	if dvm.Signature != nil {
+		out["signature"] = *dvm.Signature
+	}
+	out["status"] = string(dvm.Status)
+	if dvm.CreatedTimestamp != nil {
+		out["createdTimestamp"] = dvm.CreatedTimestamp.UTC().Format("2006-01-02T15:04:05Z07:00")
+	}
+	if dvm.ModifiedTimestamp != nil {
+		out["modifiedTimestamp"] = dvm.ModifiedTimestamp.UTC().Format("2006-01-02T15:04:05Z07:00")
+	}
+	if dvm.ContentCreatedTimestamp != nil {
+		out["contentCreatedTimestamp"] = dvm.ContentCreatedTimestamp.UTC().Format("2006-01-02T15:04:05Z07:00")
+	}
+	if dvm.ContentModifiedTimestamp != nil {
+		out["contentModifiedTimestamp"] = dvm.ContentModifiedTimestamp.UTC().Format("2006-01-02T15:04:05Z07:00")
+	}
+	if dvm.CreatorId != nil {
+		out["creatorId"] = *dvm.CreatorId
+	}
+	if len(dvm.Source) > 0 {
+		source, err := convert.JsonToDict(dvm.Source)
+		if err != nil {
+			return nil, err
+		}
+		out["source"] = source
+	}
+	return out, nil
+}
+
+// folders walks one level below each user's root folder and returns the
+// subfolders found there. The traversal is intentionally bounded — recursing
+// into the full WorkDocs tree would be unbounded and isn't worth modeling here.
+func (a *mqlAwsWorkdocs) folders() ([]any, error) {
+	folders, _, err := a.collectRootFolderContents()
+	if err != nil {
+		return nil, err
+	}
+	return folders, nil
+}
+
+// documents walks one level below each user's root folder and returns the
+// documents found there. Same bounded-traversal rationale as folders().
+func (a *mqlAwsWorkdocs) documents() ([]any, error) {
+	_, documents, err := a.collectRootFolderContents()
+	if err != nil {
+		return nil, err
+	}
+	return documents, nil
+}
+
+// collectRootFolderContents walks every WorkDocs user's root folder and
+// returns the immediate folder and document children. Discovery stops at one
+// level — deeper subtrees are out of scope for this iteration.
+func (a *mqlAwsWorkdocs) collectRootFolderContents() ([]any, []any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	users := a.GetUsers()
+	if users.Error != nil {
+		return nil, nil, users.Error
+	}
+	usersAny := users.Data
+
+	type rootKey struct {
+		region         string
+		organizationId string
+		rootFolderId   string
+	}
+	seen := map[rootKey]bool{}
+	roots := []rootKey{}
+	for _, u := range usersAny {
+		mqlUser, ok := u.(*mqlAwsWorkdocsUser)
+		if !ok {
+			continue
+		}
+		if !mqlUser.RootFolderId.IsSet() || mqlUser.RootFolderId.Data == "" {
+			continue
+		}
+		key := rootKey{
+			region:         mqlUser.Region.Data,
+			organizationId: mqlUser.OrganizationId.Data,
+			rootFolderId:   mqlUser.RootFolderId.Data,
+		}
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		roots = append(roots, key)
+	}
+
+	folders := []any{}
+	documents := []any{}
+	ctx := context.Background()
+	for _, r := range roots {
+		svc := conn.WorkDocs(r.region)
+		paginator := workdocs.NewDescribeFolderContentsPaginator(svc, &workdocs.DescribeFolderContentsInput{
+			FolderId: aws.String(r.rootFolderId),
+		})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", r.region).Str("folderId", r.rootFolderId).Msg("access denied listing WorkDocs root folder contents")
+					break
+				}
+				if isBadRequestError(err) {
+					log.Warn().Str("region", r.region).Msg("AWS WorkDocs not enabled in region")
+					break
+				}
+				return nil, nil, err
+			}
+			for i := range page.Folders {
+				fm := page.Folders[i]
+				mqlFolder, err := newMqlAwsWorkdocsFolder(a.MqlRuntime, r.region, r.organizationId, &fm)
+				if err != nil {
+					return nil, nil, err
+				}
+				if mqlFolder != nil {
+					folders = append(folders, mqlFolder)
+				}
+			}
+			for i := range page.Documents {
+				dm := page.Documents[i]
+				mqlDoc, err := newMqlAwsWorkdocsDocument(a.MqlRuntime, r.region, r.organizationId, &dm)
+				if err != nil {
+					return nil, nil, err
+				}
+				if mqlDoc != nil {
+					documents = append(documents, mqlDoc)
+				}
+			}
+		}
+	}
+	return folders, documents, nil
+}
+
+// parentFolder returns the typed parent folder reference. The folder isn't
+// listed in the bounded discovery walk, so we fetch it on demand via GetFolder.
+func (a *mqlAwsWorkdocsFolder) parentFolder() (*mqlAwsWorkdocsFolder, error) {
+	parentId := a.cacheParentFolderId
+	if parentId == "" && a.ParentFolderId.IsSet() {
+		parentId = a.ParentFolderId.Data
+	}
+	if parentId == "" {
+		a.ParentFolder.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return fetchWorkdocsFolder(a.MqlRuntime, a.Region.Data, a.OrganizationId.Data, parentId)
+}
+
+// creator returns the typed creator user reference. We look it up by id from
+// the already-fetched users() listing instead of issuing per-folder GetUser
+// calls — there's no list of users keyed by id available cheaply otherwise.
+func (a *mqlAwsWorkdocsFolder) creator() (*mqlAwsWorkdocsUser, error) {
+	creatorId := a.cacheCreatorId
+	if creatorId == "" && a.CreatorId.IsSet() {
+		creatorId = a.CreatorId.Data
+	}
+	if creatorId == "" {
+		a.Creator.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	user, err := findWorkdocsUserById(a.MqlRuntime, creatorId)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		a.Creator.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return user, nil
+}
+
+// parentFolder returns the typed parent folder reference for a document.
+func (a *mqlAwsWorkdocsDocument) parentFolder() (*mqlAwsWorkdocsFolder, error) {
+	parentId := a.cacheParentFolderId
+	if parentId == "" && a.ParentFolderId.IsSet() {
+		parentId = a.ParentFolderId.Data
+	}
+	if parentId == "" {
+		a.ParentFolder.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return fetchWorkdocsFolder(a.MqlRuntime, a.Region.Data, a.OrganizationId.Data, parentId)
+}
+
+// creator returns the typed creator user reference for a document.
+func (a *mqlAwsWorkdocsDocument) creator() (*mqlAwsWorkdocsUser, error) {
+	creatorId := a.cacheCreatorId
+	if creatorId == "" && a.CreatorId.IsSet() {
+		creatorId = a.CreatorId.Data
+	}
+	if creatorId == "" {
+		a.Creator.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	user, err := findWorkdocsUserById(a.MqlRuntime, creatorId)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		a.Creator.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return user, nil
+}
+
+// findWorkdocsUserById looks the user up by id from the already-listed
+// aws.workdocs.users() collection. If no match is found the returned user is
+// marked as null on the caller's side.
+func findWorkdocsUserById(runtime *plugin.Runtime, userId string) (*mqlAwsWorkdocsUser, error) {
+	wdResource, err := CreateResource(runtime, "aws.workdocs", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	wd := wdResource.(*mqlAwsWorkdocs)
+	users := wd.GetUsers()
+	if users.Error != nil {
+		return nil, users.Error
+	}
+	for _, u := range users.Data {
+		mqlUser, ok := u.(*mqlAwsWorkdocsUser)
+		if !ok {
+			continue
+		}
+		if mqlUser.Id.Data == userId {
+			return mqlUser, nil
+		}
+	}
+	return nil, nil
 }
