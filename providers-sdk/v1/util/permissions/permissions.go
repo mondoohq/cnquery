@@ -1544,6 +1544,8 @@ var azurePermissionOverrides = map[string]string{
 	"Microsoft.Storage/objectReplicationPolicies/read":  "Microsoft.Storage/storageAccounts/objectReplicationPolicies/read",
 	"Microsoft.Storage/inventoryPolicies/read":          "Microsoft.Storage/storageAccounts/inventoryPolicies/read",
 	"Microsoft.Storage/blobInventoryPolicies/read":      "Microsoft.Storage/storageAccounts/inventoryPolicies/read",
+	"Microsoft.Storage/queue/read":                      "Microsoft.Storage/storageAccounts/queueServices/queues/read",
+	"Microsoft.Storage/table/read":                      "Microsoft.Storage/storageAccounts/tableServices/tables/read",
 
 	// Data Factory: child resources are nested under factories/
 	"Microsoft.DataFactory/linkedServices/read":          "Microsoft.DataFactory/factories/linkedservices/read",

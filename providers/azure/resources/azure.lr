@@ -2513,6 +2513,10 @@ private azure.subscription.storageService.account @defaults("id name location") 
   publishMicrosoftEndpoints bool
   // Storage account containers
   containers() []azure.subscription.storageService.account.container
+  // Storage account queues
+  queues() []azure.subscription.storageService.account.queue
+  // Storage account tables
+  tables() []azure.subscription.storageService.account.table
   // Storage account queue properties
   queueProperties() azure.subscription.storageService.account.service.properties
   // Storage account table properties
@@ -2537,6 +2541,28 @@ private azure.subscription.storageService.account @defaults("id name location") 
   objectReplicationPolicies() []azure.subscription.storageService.account.objectReplicationPolicy
   // Blob inventory policy configured on the storage account, if any
   blobInventoryPolicy() azure.subscription.storageService.account.blobInventoryPolicy
+}
+
+// Azure Storage account queue
+private azure.subscription.storageService.account.queue @defaults("id name approximateMessageCount") {
+  // Queue resource ID
+  id string
+  // Queue name
+  name string
+  // Application-defined name/value pairs stored on the queue
+  metadata map[string]string
+  // Approximate number of messages in the queue (fetched on demand via Get)
+  approximateMessageCount() int
+}
+
+// Azure Storage account table
+private azure.subscription.storageService.account.table @defaults("id name") {
+  // Table resource ID
+  id string
+  // Table name
+  name string
+  // Stored access policies (SAS) on the table; each entry has id, permission, startTime, expiryTime
+  signedIdentifiers []dict
 }
 
 // Local user configured on a storage account for SFTP/SSH access

@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -444,4 +445,184 @@ func isInventoryPolicyNotFoundError(err error) bool {
 		return rerr.StatusCode == 404
 	}
 	return false
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountQueue) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountTable) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+type mqlAzureSubscriptionStorageServiceAccountQueueInternal struct {
+	cacheAccountId string
+	countFetched   bool
+	count          int64
+	countLock      sync.Mutex
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) queues() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	rg, accountName, err := storageAccountResourceGroup(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	client, err := storage.NewQueueClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	pager := client.NewListPager(rg, accountName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			if isFeatureNotSupportedForAccountError(err) {
+				a.Queues.State = plugin.StateIsNull | plugin.StateIsSet
+				return nil, nil
+			}
+			return nil, err
+		}
+		for _, q := range page.Value {
+			if q == nil {
+				continue
+			}
+			metadata := map[string]any{}
+			if q.QueueProperties != nil {
+				for k, v := range q.QueueProperties.Metadata {
+					if v != nil {
+						metadata[k] = *v
+					}
+				}
+			}
+			mqlQueue, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.queue",
+				map[string]*llx.RawData{
+					"id":       llx.StringDataPtr(q.ID),
+					"name":     llx.StringDataPtr(q.Name),
+					"metadata": llx.MapData(metadata, types.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			mqlQ := mqlQueue.(*mqlAzureSubscriptionStorageServiceAccountQueue)
+			mqlQ.cacheAccountId = a.Id.Data
+			res = append(res, mqlQ)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountQueue) approximateMessageCount() (int64, error) {
+	if a.countFetched {
+		return a.count, nil
+	}
+	a.countLock.Lock()
+	defer a.countLock.Unlock()
+	if a.countFetched {
+		return a.count, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	parsed, err := ParseResourceID(a.cacheAccountId)
+	if err != nil {
+		return 0, err
+	}
+	rg, accountName, err := storageAccountResourceGroup(a.cacheAccountId)
+	if err != nil {
+		return 0, err
+	}
+	client, err := storage.NewQueueClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return 0, err
+	}
+	resp, err := client.Get(ctx, rg, accountName, a.Name.Data, nil)
+	if err != nil {
+		return 0, err
+	}
+	if resp.QueueProperties != nil && resp.QueueProperties.ApproximateMessageCount != nil {
+		a.count = int64(*resp.QueueProperties.ApproximateMessageCount)
+	}
+	a.countFetched = true
+	return a.count, nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) tables() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	rg, accountName, err := storageAccountResourceGroup(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	client, err := storage.NewTableClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	pager := client.NewListPager(rg, accountName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			if isFeatureNotSupportedForAccountError(err) {
+				a.Tables.State = plugin.StateIsNull | plugin.StateIsSet
+				return nil, nil
+			}
+			return nil, err
+		}
+		for _, t := range page.Value {
+			if t == nil {
+				continue
+			}
+			signedIdentifiers := []any{}
+			if t.TableProperties != nil {
+				for _, si := range t.TableProperties.SignedIdentifiers {
+					if si == nil {
+						continue
+					}
+					entry := map[string]any{}
+					if si.ID != nil {
+						entry["id"] = *si.ID
+					}
+					if si.AccessPolicy != nil {
+						if si.AccessPolicy.Permission != nil {
+							entry["permission"] = *si.AccessPolicy.Permission
+						}
+						if si.AccessPolicy.StartTime != nil {
+							entry["startTime"] = si.AccessPolicy.StartTime.Format(time.RFC3339)
+						}
+						if si.AccessPolicy.ExpiryTime != nil {
+							entry["expiryTime"] = si.AccessPolicy.ExpiryTime.Format(time.RFC3339)
+						}
+					}
+					signedIdentifiers = append(signedIdentifiers, entry)
+				}
+			}
+			mqlTable, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.table",
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(t.ID),
+					"name":              llx.StringDataPtr(t.Name),
+					"signedIdentifiers": llx.ArrayData(signedIdentifiers, types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlTable)
+		}
+	}
+	return res, nil
 }

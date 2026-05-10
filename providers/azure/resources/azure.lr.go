@@ -92,6 +92,8 @@ const (
 	ResourceAzureSubscriptionNetworkServiceRoute                                                 string = "azure.subscription.networkService.route"
 	ResourceAzureSubscriptionStorageService                                                      string = "azure.subscription.storageService"
 	ResourceAzureSubscriptionStorageServiceAccount                                               string = "azure.subscription.storageService.account"
+	ResourceAzureSubscriptionStorageServiceAccountQueue                                          string = "azure.subscription.storageService.account.queue"
+	ResourceAzureSubscriptionStorageServiceAccountTable                                          string = "azure.subscription.storageService.account.table"
 	ResourceAzureSubscriptionStorageServiceAccountLocalUser                                      string = "azure.subscription.storageService.account.localUser"
 	ResourceAzureSubscriptionStorageServiceAccountDataProtection                                 string = "azure.subscription.storageService.account.dataProtection"
 	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesConfig                           string = "azure.subscription.storageService.account.filePropertiesConfig"
@@ -628,6 +630,14 @@ func init() {
 		"azure.subscription.storageService.account": {
 			Init:   initAzureSubscriptionStorageServiceAccount,
 			Create: createAzureSubscriptionStorageServiceAccount,
+		},
+		"azure.subscription.storageService.account.queue": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountQueue,
+		},
+		"azure.subscription.storageService.account.table": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountTable,
 		},
 		"azure.subscription.storageService.account.localUser": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountLocalUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4497,6 +4507,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetContainers()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.container")))
 	},
+	"azure.subscription.storageService.account.queues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetQueues()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.queue")))
+	},
+	"azure.subscription.storageService.account.tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetTables()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.table")))
+	},
 	"azure.subscription.storageService.account.queueProperties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetQueueProperties()).ToDataRes(types.Resource("azure.subscription.storageService.account.service.properties"))
 	},
@@ -4532,6 +4548,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.blobInventoryPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetBlobInventoryPolicy()).ToDataRes(types.Resource("azure.subscription.storageService.account.blobInventoryPolicy"))
+	},
+	"azure.subscription.storageService.account.queue.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.queue.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.queue.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.storageService.account.queue.approximateMessageCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetApproximateMessageCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.storageService.account.table.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountTable).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.table.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountTable).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.table.signedIdentifiers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountTable).GetSignedIdentifiers()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.storageService.account.localUser.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).GetId()).ToDataRes(types.String)
@@ -15034,6 +15071,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccount).Containers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.queues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).Queues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.queueProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccount).QueueProperties, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties](v.Value, v.Error)
 		return
@@ -15080,6 +15125,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.blobInventoryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccount).BlobInventoryPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.queue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.queue.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.queue.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.queue.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.queue.approximateMessageCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).ApproximateMessageCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.table.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountTable).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.table.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountTable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.table.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountTable).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.table.signedIdentifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountTable).SignedIdentifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.localUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33913,6 +33994,8 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	PublishInternetEndpoints                         plugin.TValue[bool]
 	PublishMicrosoftEndpoints                        plugin.TValue[bool]
 	Containers                                       plugin.TValue[[]any]
+	Queues                                           plugin.TValue[[]any]
+	Tables                                           plugin.TValue[[]any]
 	QueueProperties                                  plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties]
 	TableProperties                                  plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties]
 	BlobProperties                                   plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties]
@@ -34186,6 +34269,38 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetContainers() *plugin.TVal
 	})
 }
 
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetQueues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Queues, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "queues")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.queues()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetTables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tables()
+	})
+}
+
 func (c *mqlAzureSubscriptionStorageServiceAccount) GetQueueProperties() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServiceProperties] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccountServiceProperties](&c.QueueProperties, func() (*mqlAzureSubscriptionStorageServiceAccountServiceProperties, error) {
 		if c.MqlRuntime.HasRecording {
@@ -34376,6 +34491,131 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetBlobInventoryPolicy() *pl
 
 		return c.blobInventoryPolicy()
 	})
+}
+
+// mqlAzureSubscriptionStorageServiceAccountQueue for the azure.subscription.storageService.account.queue resource
+type mqlAzureSubscriptionStorageServiceAccountQueue struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionStorageServiceAccountQueueInternal
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Metadata                plugin.TValue[map[string]any]
+	ApproximateMessageCount plugin.TValue[int64]
+}
+
+// createAzureSubscriptionStorageServiceAccountQueue creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountQueue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.queue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountQueue) MqlName() string {
+	return "azure.subscription.storageService.account.queue"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountQueue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountQueue) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountQueue) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountQueue) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountQueue) GetApproximateMessageCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ApproximateMessageCount, func() (int64, error) {
+		return c.approximateMessageCount()
+	})
+}
+
+// mqlAzureSubscriptionStorageServiceAccountTable for the azure.subscription.storageService.account.table resource
+type mqlAzureSubscriptionStorageServiceAccountTable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountTableInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	SignedIdentifiers plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionStorageServiceAccountTable creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountTable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.table", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountTable) MqlName() string {
+	return "azure.subscription.storageService.account.table"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountTable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountTable) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountTable) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountTable) GetSignedIdentifiers() *plugin.TValue[[]any] {
+	return &c.SignedIdentifiers
 }
 
 // mqlAzureSubscriptionStorageServiceAccountLocalUser for the azure.subscription.storageService.account.localUser resource

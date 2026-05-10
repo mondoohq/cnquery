@@ -3075,7 +3075,13 @@ azure.subscription.storageService.account.provisioningState 11.6.2
 azure.subscription.storageService.account.publicNetworkAccess 11.4.28
 azure.subscription.storageService.account.publishInternetEndpoints 13.10.2
 azure.subscription.storageService.account.publishMicrosoftEndpoints 13.10.2
+azure.subscription.storageService.account.queue 13.10.2
+azure.subscription.storageService.account.queue.approximateMessageCount 13.10.2
+azure.subscription.storageService.account.queue.id 13.10.2
+azure.subscription.storageService.account.queue.metadata 13.10.2
+azure.subscription.storageService.account.queue.name 13.10.2
 azure.subscription.storageService.account.queueProperties 9.0.1
+azure.subscription.storageService.account.queues 13.10.2
 azure.subscription.storageService.account.requireInfrastructureEncryption 13.5.1
 azure.subscription.storageService.account.routingChoice 13.10.2
 azure.subscription.storageService.account.sasExpirationAction 13.5.1
@@ -3112,7 +3118,12 @@ azure.subscription.storageService.account.serviceKeyTypes 13.5.1
 azure.subscription.storageService.account.sku 9.0.1
 azure.subscription.storageService.account.statusOfPrimary 11.6.2
 azure.subscription.storageService.account.statusOfSecondary 11.6.2
+azure.subscription.storageService.account.table 13.10.2
+azure.subscription.storageService.account.table.id 13.10.2
+azure.subscription.storageService.account.table.name 13.10.2
+azure.subscription.storageService.account.table.signedIdentifiers 13.10.2
 azure.subscription.storageService.account.tableProperties 9.0.1
+azure.subscription.storageService.account.tables 13.10.2
 azure.subscription.storageService.account.tags 9.0.1
 azure.subscription.storageService.account.type 9.0.1
 azure.subscription.storageService.accounts 9.0.1
