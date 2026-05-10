@@ -283,7 +283,6 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		"upgradeProcessing":                  llx.BoolData(convert.ToValue(status.UpgradeProcessing)),
 		"domainProcessingStatus":             llx.StringData(string(status.DomainProcessingStatus)),
 		"encryptionAtRestEnabled":            llx.BoolData(encAtRestEnabled),
-		"encryptionAtRestKmsKeyId":           llx.StringDataPtr(encAtRestKmsKeyId),
 		"nodeToNodeEncryptionEnabled":        llx.BoolData(nodeToNodeEncryptionEnabled),
 		"enforceHTTPS":                       llx.BoolData(enforceHTTPS),
 		"tlsSecurityPolicy":                  llx.StringData(tlsSecurityPolicy),

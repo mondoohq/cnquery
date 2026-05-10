@@ -4005,8 +4005,6 @@ private aws.es.domain @defaults("arn name") {
   arn string
   // Whether encryption at rest is enabled
   encryptionAtRestEnabled bool
-  // DEPRECATED: use kmsKey() instead. ARN of the KMS key protecting data at rest
-  encryptionAtRestKmsKeyId @maturity("deprecated") string
   // KMS key protecting data at rest
   kmsKey() aws.kms.key
   // Whether node-to-node encryption is enabled

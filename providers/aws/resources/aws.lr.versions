@@ -3146,7 +3146,6 @@ aws.es.domain.ebsVolumeSize 13.21.4
 aws.es.domain.ebsVolumeType 13.21.4
 aws.es.domain.elasticsearchVersion 11.15.2
 aws.es.domain.encryptionAtRestEnabled 11.15.2
-aws.es.domain.encryptionAtRestKmsKeyId 13.21.4
 aws.es.domain.endpoint 11.15.2
 aws.es.domain.endpoints 13.21.4
 aws.es.domain.enforceHTTPS 13.3.0
