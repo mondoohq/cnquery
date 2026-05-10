@@ -30,10 +30,11 @@ type mqlAwsDmsReplicationInstanceInternal struct {
 }
 
 type mqlAwsDmsEndpointInternal struct {
-	region           string
-	accountID        string
-	cacheKmsKeyId    *string
-	cacheCertificate *string
+	region                    string
+	accountID                 string
+	cacheKmsKeyId             *string
+	cacheCertificate          *string
+	cacheServiceAccessRoleArn *string
 }
 
 type mqlAwsDmsReplicationTaskInternal struct {
@@ -126,14 +127,14 @@ func (a *mqlAwsDms) getReplicationInstances(conn *connection.AwsConnection) []*j
 }
 
 func newMqlAwsDmsReplicationInstance(runtime *plugin.Runtime, region, accountID string, inst dmstypes.ReplicationInstance) (*mqlAwsDmsReplicationInstance, error) {
-	pendingDicts := []any{}
+	var pendingDict any
 	if inst.PendingModifiedValues != nil {
 		dict, err := convert.JsonToDict(inst.PendingModifiedValues)
 		if err != nil {
 			return nil, err
 		}
 		if len(dict) > 0 {
-			pendingDicts = append(pendingDicts, dict)
+			pendingDict = dict
 		}
 	}
 
@@ -157,7 +158,7 @@ func newMqlAwsDmsReplicationInstance(runtime *plugin.Runtime, region, accountID 
 		"replicationInstanceIpv6Addresses":      llx.ArrayData(convert.SliceAnyToInterface(inst.ReplicationInstanceIpv6Addresses), types.String),
 		"dnsNameServers":                        llx.StringDataPtr(inst.DnsNameServers),
 		"region":                                llx.StringData(region),
-		"pendingModifiedValues":                 llx.ArrayData(pendingDicts, types.Dict),
+		"pendingModifiedValues":                 llx.DictData(pendingDict),
 	}
 
 	resource, err := CreateResource(runtime, "aws.dms.replicationInstance", args)
@@ -208,6 +209,7 @@ func (a *mqlAwsDmsReplicationInstance) subnetGroup() (*mqlAwsDmsReplicationSubne
 	}
 	mqlSg, err := NewResource(a.MqlRuntime, "aws.dms.replicationSubnetGroup", map[string]*llx.RawData{
 		"replicationSubnetGroupIdentifier": llx.StringDataPtr(a.cacheReplicationSubnetGroupId),
+		"region":                           llx.StringData(a.region),
 	})
 	if err != nil {
 		return nil, err
@@ -340,6 +342,7 @@ func newMqlAwsDmsEndpoint(runtime *plugin.Runtime, region, accountID string, ep 
 	mqlEp.accountID = accountID
 	mqlEp.cacheKmsKeyId = ep.KmsKeyId
 	mqlEp.cacheCertificate = ep.CertificateArn
+	mqlEp.cacheServiceAccessRoleArn = ep.ServiceAccessRoleArn
 	return mqlEp, nil
 }
 
@@ -369,6 +372,20 @@ func (a *mqlAwsDmsEndpoint) certificate() (*mqlAwsAcmCertificate, error) {
 		return nil, err
 	}
 	return mqlCert.(*mqlAwsAcmCertificate), nil
+}
+
+func (a *mqlAwsDmsEndpoint) serviceAccessIamRole() (*mqlAwsIamRole, error) {
+	if a.cacheServiceAccessRoleArn == nil || *a.cacheServiceAccessRoleArn == "" {
+		a.ServiceAccessIamRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlRole, err := NewResource(a.MqlRuntime, "aws.iam.role", map[string]*llx.RawData{
+		"arn": llx.StringDataPtr(a.cacheServiceAccessRoleArn),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
 }
 
 func initAwsDmsEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -694,6 +711,12 @@ func initAwsDmsReplicationSubnetGroup(runtime *plugin.Runtime, args map[string]*
 	if !ok || idVal == "" {
 		return nil, nil, errors.New("replicationSubnetGroupIdentifier required to fetch DMS replication subnet group")
 	}
+	regionVal := ""
+	if args["region"] != nil {
+		if v, ok := args["region"].Value.(string); ok {
+			regionVal = v
+		}
+	}
 
 	dms, err := dmsGetParent(runtime)
 	if err != nil {
@@ -705,9 +728,13 @@ func initAwsDmsReplicationSubnetGroup(runtime *plugin.Runtime, args map[string]*
 	}
 	for _, raw := range all.Data {
 		sg := raw.(*mqlAwsDmsReplicationSubnetGroup)
-		if sg.ReplicationSubnetGroupIdentifier.Data == idVal {
-			return args, sg, nil
+		if sg.ReplicationSubnetGroupIdentifier.Data != idVal {
+			continue
 		}
+		if regionVal != "" && sg.Region.Data != regionVal {
+			continue
+		}
+		return args, sg, nil
 	}
 	return args, nil, nil
 }

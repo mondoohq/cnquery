@@ -14925,7 +14925,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsDmsReplicationInstance).GetSubnetGroup()).ToDataRes(types.Resource("aws.dms.replicationSubnetGroup"))
 	},
 	"aws.dms.replicationInstance.pendingModifiedValues": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDmsReplicationInstance).GetPendingModifiedValues()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAwsDmsReplicationInstance).GetPendingModifiedValues()).ToDataRes(types.Dict)
 	},
 	"aws.dms.endpoint.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDmsEndpoint).GetArn()).ToDataRes(types.String)
@@ -14974,6 +14974,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.dms.endpoint.certificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDmsEndpoint).GetCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
+	},
+	"aws.dms.endpoint.serviceAccessIamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetServiceAccessIamRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
 	"aws.dms.replicationTask.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDmsReplicationTask).GetArn()).ToDataRes(types.String)
@@ -41482,7 +41485,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.dms.replicationInstance.pendingModifiedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDmsReplicationInstance).PendingModifiedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*mqlAwsDmsReplicationInstance).PendingModifiedValues, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.dms.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41551,6 +41554,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.dms.endpoint.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDmsEndpoint).Certificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.serviceAccessIamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).ServiceAccessIamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
 	"aws.dms.replicationTask.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -100992,7 +100999,7 @@ type mqlAwsDmsReplicationInstance struct {
 	KmsKey                                plugin.TValue[*mqlAwsKmsKey]
 	SecurityGroups                        plugin.TValue[[]any]
 	SubnetGroup                           plugin.TValue[*mqlAwsDmsReplicationSubnetGroup]
-	PendingModifiedValues                 plugin.TValue[[]any]
+	PendingModifiedValues                 plugin.TValue[any]
 }
 
 // createAwsDmsReplicationInstance creates a new instance of this resource
@@ -101156,7 +101163,7 @@ func (c *mqlAwsDmsReplicationInstance) GetSubnetGroup() *plugin.TValue[*mqlAwsDm
 	})
 }
 
-func (c *mqlAwsDmsReplicationInstance) GetPendingModifiedValues() *plugin.TValue[[]any] {
+func (c *mqlAwsDmsReplicationInstance) GetPendingModifiedValues() *plugin.TValue[any] {
 	return &c.PendingModifiedValues
 }
 
@@ -101181,6 +101188,7 @@ type mqlAwsDmsEndpoint struct {
 	Region                    plugin.TValue[string]
 	KmsKey                    plugin.TValue[*mqlAwsKmsKey]
 	Certificate               plugin.TValue[*mqlAwsAcmCertificate]
+	ServiceAccessIamRole      plugin.TValue[*mqlAwsIamRole]
 }
 
 // createAwsDmsEndpoint creates a new instance of this resource
@@ -101305,6 +101313,22 @@ func (c *mqlAwsDmsEndpoint) GetCertificate() *plugin.TValue[*mqlAwsAcmCertificat
 		}
 
 		return c.certificate()
+	})
+}
+
+func (c *mqlAwsDmsEndpoint) GetServiceAccessIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ServiceAccessIamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.endpoint", c.__id, "serviceAccessIamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.serviceAccessIamRole()
 	})
 }
 

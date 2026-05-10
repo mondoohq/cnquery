@@ -1499,6 +1499,7 @@ aws.dms.endpoint.kmsKey 13.21.4
 aws.dms.endpoint.port 13.21.4
 aws.dms.endpoint.region 13.21.4
 aws.dms.endpoint.serverName 13.21.4
+aws.dms.endpoint.serviceAccessIamRole 13.21.4
 aws.dms.endpoint.sslMode 13.21.4
 aws.dms.endpoint.status 13.21.4
 aws.dms.endpoint.username 13.21.4

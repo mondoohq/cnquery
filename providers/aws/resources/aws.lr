@@ -9588,7 +9588,7 @@ private aws.dms.replicationInstance @defaults("arn replicationInstanceIdentifier
   // Subnet group that scopes the replication instance to a VPC
   subnetGroup() aws.dms.replicationSubnetGroup
   // Pending modifications scheduled for the next maintenance window
-  pendingModifiedValues []dict
+  pendingModifiedValues dict
 }
 
 // AWS DMS endpoint
@@ -9625,6 +9625,8 @@ private aws.dms.endpoint @defaults("arn endpointIdentifier endpointType engineNa
   kmsKey() aws.kms.key
   // ACM certificate used for SSL connections to the endpoint
   certificate() aws.acm.certificate
+  // IAM role DMS assumes to access the endpoint (used by S3, Kinesis, OpenSearch, and other AWS-service endpoints)
+  serviceAccessIamRole() aws.iam.role
 }
 
 // AWS DMS replication task

@@ -309,6 +309,7 @@ logpush
 lon
 LONGTERM
 longtermretentionpolicy
+LSN
 lsp
 lvm
 lvmthin
