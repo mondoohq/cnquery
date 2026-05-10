@@ -385,3 +385,13 @@ func (a *mqlAzureSubscription) logic() (*mqlAzureSubscriptionLogicService, error
 	}
 	return svc.(*mqlAzureSubscriptionLogicService), nil
 }
+
+func (a *mqlAzureSubscription) eventGrid() (*mqlAzureSubscriptionEventGridService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.eventGridService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionEventGridService), nil
+}

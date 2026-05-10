@@ -117,6 +117,8 @@ azure.subscription @defaults ("name") {
   containerInstance() azure.subscription.containerInstanceService
   // Logic Apps resources in the subscription
   logic() azure.subscription.logicService
+  // Event Grid resources in the subscription
+  eventGrid() azure.subscription.eventGridService
 }
 
 // Azure function
@@ -7214,6 +7216,138 @@ private azure.subscription.eventHubService.namespace.eventHub.consumerGroup @def
   name string
   // User-defined metadata
   userMetadata string
+}
+
+// ===== Azure Event Grid Service =====
+
+// Azure Event Grid service
+private azure.subscription.eventGridService {
+  // Subscription identifier
+  subscriptionId string
+  // Event Grid custom topics in the subscription
+  topics() []azure.subscription.eventGridService.topic
+  // Event Grid system topics in the subscription
+  systemTopics() []azure.subscription.eventGridService.systemTopic
+  // Event Grid domains in the subscription
+  domains() []azure.subscription.eventGridService.domain
+}
+
+// Azure Event Grid custom topic
+//
+// Examine an Event Grid custom topic — a user-created event ingestion
+// endpoint clients publish to. Surfaces the input schema, the
+// `disableLocalAuth` toggle, public network access state, inbound IP
+// rules, the minimum TLS version enforced on publishers, the data
+// residency boundary, the publishing endpoint, identity assignments,
+// the metric resource ID, and the count of private endpoint
+// connections.
+azure.subscription.eventGridService.topic @defaults("name location publicNetworkAccess provisioningState") {
+  // Topic resource ID
+  id string
+  // Topic name
+  name string
+  // Topic location
+  location string
+  // Topic tags
+  tags map[string]string
+  // Provisioning state ("Succeeded", "Canceled", "Creating", "Deleting", "Failed", "Updating")
+  provisioningState string
+  // Endpoint URL clients publish events to
+  endpoint string
+  // Metric resource ID for the topic
+  metricResourceId string
+  // Whether local (key) authentication is disabled
+  disableLocalAuth bool
+  // Public network access setting ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Input schema for events ("EventGridSchema", "CustomEventSchema", "CloudEventSchemaV1_0")
+  inputSchema string
+  // Minimum TLS version enforced on publishers ("1.0", "1.1", "1.2")
+  minimumTlsVersionAllowed string
+  // Data residency boundary ("WithinGeopair" or "WithinRegion")
+  dataResidencyBoundary string
+  // Inbound IP rules; each entry has ipMask and action ("Allow")
+  inboundIpRules []dict
+  // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
+  identityType string
+  // Number of private endpoint connections to the topic
+  privateEndpointConnectionCount int
+}
+
+// Azure Event Grid system topic
+//
+// Examine an Event Grid system topic — auto-generated topics used by
+// Azure resources (storage accounts, key vaults, container registries,
+// etc.) to publish events. Surfaces the source resource, the topic
+// type, provisioning state, identity assignments, and the metric
+// resource ID. Use the `source` field as the typed pointer back to the
+// originating Azure resource.
+azure.subscription.eventGridService.systemTopic @defaults("name location topicType source provisioningState") {
+  // System topic resource ID
+  id string
+  // System topic name
+  name string
+  // System topic location
+  location string
+  // System topic tags
+  tags map[string]string
+  // Provisioning state
+  provisioningState string
+  // Source resource ID (the Azure resource that publishes events through this system topic)
+  source string
+  // Topic type (e.g. "Microsoft.Storage.StorageAccounts", "Microsoft.KeyVault.vaults")
+  topicType string
+  // Metric resource ID for the system topic
+  metricResourceId string
+  // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
+  identityType string
+}
+
+// Azure Event Grid domain
+//
+// Examine an Event Grid domain — a multi-tenant topic container that
+// scopes thousands of topics under a single endpoint. Surfaces the
+// input schema, the `disableLocalAuth` toggle, public network access
+// state, inbound IP rules, the minimum TLS version enforced on
+// publishers, the auto-create / auto-delete domain-topic toggles, the
+// data residency boundary, the publishing endpoint, identity
+// assignments, the metric resource ID, and the count of private
+// endpoint connections.
+azure.subscription.eventGridService.domain @defaults("name location publicNetworkAccess provisioningState") {
+  // Domain resource ID
+  id string
+  // Domain name
+  name string
+  // Domain location
+  location string
+  // Domain tags
+  tags map[string]string
+  // Provisioning state
+  provisioningState string
+  // Endpoint URL clients publish events to
+  endpoint string
+  // Metric resource ID for the domain
+  metricResourceId string
+  // Whether local (key) authentication is disabled
+  disableLocalAuth bool
+  // Public network access setting ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // Input schema for events ("EventGridSchema", "CustomEventSchema", "CloudEventSchemaV1_0")
+  inputSchema string
+  // Minimum TLS version enforced on publishers ("1.0", "1.1", "1.2")
+  minimumTlsVersionAllowed string
+  // Data residency boundary ("WithinGeopair" or "WithinRegion")
+  dataResidencyBoundary string
+  // Whether domain topics are auto-created when the first subscription is created
+  autoCreateTopicWithFirstSubscription bool
+  // Whether domain topics are auto-deleted when the last subscription is deleted
+  autoDeleteTopicWithLastSubscription bool
+  // Inbound IP rules; each entry has ipMask and action ("Allow")
+  inboundIpRules []dict
+  // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
+  identityType string
+  // Number of private endpoint connections to the domain
+  privateEndpointConnectionCount int
 }
 
 // ===== Azure DNS Service =====

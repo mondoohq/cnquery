@@ -293,6 +293,10 @@ const (
 	ResourceAzureSubscriptionEventHubServiceNamespace                                            string = "azure.subscription.eventHubService.namespace"
 	ResourceAzureSubscriptionEventHubServiceNamespaceEventHub                                    string = "azure.subscription.eventHubService.namespace.eventHub"
 	ResourceAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup                       string = "azure.subscription.eventHubService.namespace.eventHub.consumerGroup"
+	ResourceAzureSubscriptionEventGridService                                                    string = "azure.subscription.eventGridService"
+	ResourceAzureSubscriptionEventGridServiceTopic                                               string = "azure.subscription.eventGridService.topic"
+	ResourceAzureSubscriptionEventGridServiceSystemTopic                                         string = "azure.subscription.eventGridService.systemTopic"
+	ResourceAzureSubscriptionEventGridServiceDomain                                              string = "azure.subscription.eventGridService.domain"
 	ResourceAzureSubscriptionDnsService                                                          string = "azure.subscription.dnsService"
 	ResourceAzureSubscriptionDnsServiceZone                                                      string = "azure.subscription.dnsService.zone"
 	ResourceAzureSubscriptionDnsServiceZoneRecordSet                                             string = "azure.subscription.dnsService.zone.recordSet"
@@ -1433,6 +1437,22 @@ func init() {
 			// to override args, implement: initAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup,
 		},
+		"azure.subscription.eventGridService": {
+			Init:   initAzureSubscriptionEventGridService,
+			Create: createAzureSubscriptionEventGridService,
+		},
+		"azure.subscription.eventGridService.topic": {
+			// to override args, implement: initAzureSubscriptionEventGridServiceTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionEventGridServiceTopic,
+		},
+		"azure.subscription.eventGridService.systemTopic": {
+			// to override args, implement: initAzureSubscriptionEventGridServiceSystemTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionEventGridServiceSystemTopic,
+		},
+		"azure.subscription.eventGridService.domain": {
+			// to override args, implement: initAzureSubscriptionEventGridServiceDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionEventGridServiceDomain,
+		},
 		"azure.subscription.dnsService": {
 			Init:   initAzureSubscriptionDnsService,
 			Create: createAzureSubscriptionDnsService,
@@ -1733,6 +1753,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.logic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetLogic()).ToDataRes(types.Resource("azure.subscription.logicService"))
+	},
+	"azure.subscription.eventGrid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetEventGrid()).ToDataRes(types.Resource("azure.subscription.eventGridService"))
 	},
 	"azure.subscription.webService.function.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceFunction).GetId()).ToDataRes(types.String)
@@ -10041,6 +10064,141 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventHubService.namespace.eventHub.consumerGroup.userMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).GetUserMetadata()).ToDataRes(types.String)
 	},
+	"azure.subscription.eventGridService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridService).GetTopics()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.topic")))
+	},
+	"azure.subscription.eventGridService.systemTopics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridService).GetSystemTopics()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.systemTopic")))
+	},
+	"azure.subscription.eventGridService.domains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridService).GetDomains()).ToDataRes(types.Array(types.Resource("azure.subscription.eventGridService.domain")))
+	},
+	"azure.subscription.eventGridService.topic.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.eventGridService.topic.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.metricResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetMetricResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.disableLocalAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetDisableLocalAuth()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.eventGridService.topic.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.inputSchema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetInputSchema()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.minimumTlsVersionAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetMinimumTlsVersionAllowed()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.dataResidencyBoundary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetDataResidencyBoundary()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.inboundIpRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetInboundIpRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.eventGridService.topic.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.topic.privateEndpointConnectionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetPrivateEndpointConnectionCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.eventGridService.systemTopic.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.systemTopic.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.systemTopic.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.systemTopic.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.eventGridService.systemTopic.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.systemTopic.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetSource()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.systemTopic.topicType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetTopicType()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.systemTopic.metricResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetMetricResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.systemTopic.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.eventGridService.domain.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.metricResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetMetricResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.disableLocalAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetDisableLocalAuth()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.eventGridService.domain.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.inputSchema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetInputSchema()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.minimumTlsVersionAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetMinimumTlsVersionAllowed()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.dataResidencyBoundary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetDataResidencyBoundary()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.autoCreateTopicWithFirstSubscription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetAutoCreateTopicWithFirstSubscription()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.eventGridService.domain.autoDeleteTopicWithLastSubscription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetAutoDeleteTopicWithLastSubscription()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.eventGridService.domain.inboundIpRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetInboundIpRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.eventGridService.domain.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventGridService.domain.privateEndpointConnectionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetPrivateEndpointConnectionCount()).ToDataRes(types.Int)
+	},
 	"azure.subscription.dnsService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDnsService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -11052,6 +11210,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.logic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).Logic, ok = plugin.RawToTValue[*mqlAzureSubscriptionLogicService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGrid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).EventGrid, ok = plugin.RawToTValue[*mqlAzureSubscriptionEventGridService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23230,6 +23392,202 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).UserMetadata, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventGridService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.eventGridService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridService).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridService).SystemTopics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridService).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.eventGridService.topic.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.metricResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).MetricResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.disableLocalAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).DisableLocalAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.inputSchema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).InputSchema, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.minimumTlsVersionAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).MinimumTlsVersionAllowed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.dataResidencyBoundary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).DataResidencyBoundary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.inboundIpRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).InboundIpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.topic.privateEndpointConnectionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).PrivateEndpointConnectionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.topicType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).TopicType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.metricResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).MetricResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.systemTopic.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceSystemTopic).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.eventGridService.domain.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.metricResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).MetricResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.disableLocalAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).DisableLocalAuth, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.inputSchema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).InputSchema, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.minimumTlsVersionAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).MinimumTlsVersionAllowed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.dataResidencyBoundary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).DataResidencyBoundary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.autoCreateTopicWithFirstSubscription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).AutoCreateTopicWithFirstSubscription, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.autoDeleteTopicWithLastSubscription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).AutoDeleteTopicWithLastSubscription, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.inboundIpRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).InboundIpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.domain.privateEndpointConnectionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).PrivateEndpointConnectionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.dnsService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDnsService).__id, ok = v.Value.(string)
 		return
@@ -24544,6 +24902,7 @@ type mqlAzureSubscription struct {
 	ContainerApp          plugin.TValue[*mqlAzureSubscriptionContainerAppService]
 	ContainerInstance     plugin.TValue[*mqlAzureSubscriptionContainerInstanceService]
 	Logic                 plugin.TValue[*mqlAzureSubscriptionLogicService]
+	EventGrid             plugin.TValue[*mqlAzureSubscriptionEventGridService]
 }
 
 // createAzureSubscription creates a new instance of this resource
@@ -25132,6 +25491,22 @@ func (c *mqlAzureSubscription) GetLogic() *plugin.TValue[*mqlAzureSubscriptionLo
 		}
 
 		return c.logic()
+	})
+}
+
+func (c *mqlAzureSubscription) GetEventGrid() *plugin.TValue[*mqlAzureSubscriptionEventGridService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionEventGridService](&c.EventGrid, func() (*mqlAzureSubscriptionEventGridService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "eventGrid")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionEventGridService), nil
+			}
+		}
+
+		return c.eventGrid()
 	})
 }
 
@@ -54915,6 +55290,443 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) GetN
 
 func (c *mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup) GetUserMetadata() *plugin.TValue[string] {
 	return &c.UserMetadata
+}
+
+// mqlAzureSubscriptionEventGridService for the azure.subscription.eventGridService resource
+type mqlAzureSubscriptionEventGridService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionEventGridServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Topics         plugin.TValue[[]any]
+	SystemTopics   plugin.TValue[[]any]
+	Domains        plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionEventGridService creates a new instance of this resource
+func createAzureSubscriptionEventGridService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEventGridService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.eventGridService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEventGridService) MqlName() string {
+	return "azure.subscription.eventGridService"
+}
+
+func (c *mqlAzureSubscriptionEventGridService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEventGridService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionEventGridService) GetTopics() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Topics, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventGridService", c.__id, "topics")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.topics()
+	})
+}
+
+func (c *mqlAzureSubscriptionEventGridService) GetSystemTopics() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SystemTopics, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventGridService", c.__id, "systemTopics")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.systemTopics()
+	})
+}
+
+func (c *mqlAzureSubscriptionEventGridService) GetDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Domains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventGridService", c.__id, "domains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.domains()
+	})
+}
+
+// mqlAzureSubscriptionEventGridServiceTopic for the azure.subscription.eventGridService.topic resource
+type mqlAzureSubscriptionEventGridServiceTopic struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionEventGridServiceTopicInternal it will be used here
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Location                       plugin.TValue[string]
+	Tags                           plugin.TValue[map[string]any]
+	ProvisioningState              plugin.TValue[string]
+	Endpoint                       plugin.TValue[string]
+	MetricResourceId               plugin.TValue[string]
+	DisableLocalAuth               plugin.TValue[bool]
+	PublicNetworkAccess            plugin.TValue[string]
+	InputSchema                    plugin.TValue[string]
+	MinimumTlsVersionAllowed       plugin.TValue[string]
+	DataResidencyBoundary          plugin.TValue[string]
+	InboundIpRules                 plugin.TValue[[]any]
+	IdentityType                   plugin.TValue[string]
+	PrivateEndpointConnectionCount plugin.TValue[int64]
+}
+
+// createAzureSubscriptionEventGridServiceTopic creates a new instance of this resource
+func createAzureSubscriptionEventGridServiceTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEventGridServiceTopic{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.eventGridService.topic", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) MqlName() string {
+	return "azure.subscription.eventGridService.topic"
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetMetricResourceId() *plugin.TValue[string] {
+	return &c.MetricResourceId
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetDisableLocalAuth() *plugin.TValue[bool] {
+	return &c.DisableLocalAuth
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetInputSchema() *plugin.TValue[string] {
+	return &c.InputSchema
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetMinimumTlsVersionAllowed() *plugin.TValue[string] {
+	return &c.MinimumTlsVersionAllowed
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetDataResidencyBoundary() *plugin.TValue[string] {
+	return &c.DataResidencyBoundary
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetInboundIpRules() *plugin.TValue[[]any] {
+	return &c.InboundIpRules
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetPrivateEndpointConnectionCount() *plugin.TValue[int64] {
+	return &c.PrivateEndpointConnectionCount
+}
+
+// mqlAzureSubscriptionEventGridServiceSystemTopic for the azure.subscription.eventGridService.systemTopic resource
+type mqlAzureSubscriptionEventGridServiceSystemTopic struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionEventGridServiceSystemTopicInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+	ProvisioningState plugin.TValue[string]
+	Source            plugin.TValue[string]
+	TopicType         plugin.TValue[string]
+	MetricResourceId  plugin.TValue[string]
+	IdentityType      plugin.TValue[string]
+}
+
+// createAzureSubscriptionEventGridServiceSystemTopic creates a new instance of this resource
+func createAzureSubscriptionEventGridServiceSystemTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEventGridServiceSystemTopic{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.eventGridService.systemTopic", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) MqlName() string {
+	return "azure.subscription.eventGridService.systemTopic"
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetTopicType() *plugin.TValue[string] {
+	return &c.TopicType
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetMetricResourceId() *plugin.TValue[string] {
+	return &c.MetricResourceId
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceSystemTopic) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+// mqlAzureSubscriptionEventGridServiceDomain for the azure.subscription.eventGridService.domain resource
+type mqlAzureSubscriptionEventGridServiceDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionEventGridServiceDomainInternal it will be used here
+	Id                                   plugin.TValue[string]
+	Name                                 plugin.TValue[string]
+	Location                             plugin.TValue[string]
+	Tags                                 plugin.TValue[map[string]any]
+	ProvisioningState                    plugin.TValue[string]
+	Endpoint                             plugin.TValue[string]
+	MetricResourceId                     plugin.TValue[string]
+	DisableLocalAuth                     plugin.TValue[bool]
+	PublicNetworkAccess                  plugin.TValue[string]
+	InputSchema                          plugin.TValue[string]
+	MinimumTlsVersionAllowed             plugin.TValue[string]
+	DataResidencyBoundary                plugin.TValue[string]
+	AutoCreateTopicWithFirstSubscription plugin.TValue[bool]
+	AutoDeleteTopicWithLastSubscription  plugin.TValue[bool]
+	InboundIpRules                       plugin.TValue[[]any]
+	IdentityType                         plugin.TValue[string]
+	PrivateEndpointConnectionCount       plugin.TValue[int64]
+}
+
+// createAzureSubscriptionEventGridServiceDomain creates a new instance of this resource
+func createAzureSubscriptionEventGridServiceDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEventGridServiceDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.eventGridService.domain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) MqlName() string {
+	return "azure.subscription.eventGridService.domain"
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetEndpoint() *plugin.TValue[string] {
+	return &c.Endpoint
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetMetricResourceId() *plugin.TValue[string] {
+	return &c.MetricResourceId
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetDisableLocalAuth() *plugin.TValue[bool] {
+	return &c.DisableLocalAuth
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetInputSchema() *plugin.TValue[string] {
+	return &c.InputSchema
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetMinimumTlsVersionAllowed() *plugin.TValue[string] {
+	return &c.MinimumTlsVersionAllowed
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetDataResidencyBoundary() *plugin.TValue[string] {
+	return &c.DataResidencyBoundary
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetAutoCreateTopicWithFirstSubscription() *plugin.TValue[bool] {
+	return &c.AutoCreateTopicWithFirstSubscription
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetAutoDeleteTopicWithLastSubscription() *plugin.TValue[bool] {
+	return &c.AutoDeleteTopicWithLastSubscription
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetInboundIpRules() *plugin.TValue[[]any] {
+	return &c.InboundIpRules
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetPrivateEndpointConnectionCount() *plugin.TValue[int64] {
+	return &c.PrivateEndpointConnectionCount
 }
 
 // mqlAzureSubscriptionDnsService for the azure.subscription.dnsService resource
