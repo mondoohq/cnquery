@@ -3065,7 +3065,7 @@ aws.emr.blockPublicAccessConfiguration 13.12.1
 aws.emr.cluster 11.15.2
 aws.emr.cluster.applications 13.21.4
 aws.emr.cluster.arn 11.15.2
-aws.emr.cluster.autoScalingRoleArn 13.21.4
+aws.emr.cluster.autoScalingRole 13.21.4
 aws.emr.cluster.autoTerminate 13.21.4
 aws.emr.cluster.autoTerminationIdleTimeout 13.21.4
 aws.emr.cluster.bootstrapAction 13.12.1

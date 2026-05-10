@@ -5904,8 +5904,8 @@ private aws.emr.cluster @defaults("arn") {
   scaleDownBehavior() string
   // Whether the cluster is visible to all IAM principals in the account
   visibleToAllUsers() bool
-  // ARN of the auto-scaling IAM role
-  autoScalingRoleArn() string
+  // IAM role used to scale the cluster
+  autoScalingRole() aws.iam.role
   // IAM service role assumed by EMR to access AWS resources
   serviceRole() aws.iam.role
 }

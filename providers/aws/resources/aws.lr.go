@@ -10673,8 +10673,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.cluster.visibleToAllUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetVisibleToAllUsers()).ToDataRes(types.Bool)
 	},
-	"aws.emr.cluster.autoScalingRoleArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEmrCluster).GetAutoScalingRoleArn()).ToDataRes(types.String)
+	"aws.emr.cluster.autoScalingRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetAutoScalingRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
 	"aws.emr.cluster.serviceRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetServiceRole()).ToDataRes(types.Resource("aws.iam.role"))
@@ -35062,8 +35062,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmrCluster).VisibleToAllUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"aws.emr.cluster.autoScalingRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEmrCluster).AutoScalingRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.emr.cluster.autoScalingRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).AutoScalingRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
 	"aws.emr.cluster.serviceRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83771,7 +83771,7 @@ type mqlAwsEmrCluster struct {
 	InstanceCollectionType     plugin.TValue[string]
 	ScaleDownBehavior          plugin.TValue[string]
 	VisibleToAllUsers          plugin.TValue[bool]
-	AutoScalingRoleArn         plugin.TValue[string]
+	AutoScalingRole            plugin.TValue[*mqlAwsIamRole]
 	ServiceRole                plugin.TValue[*mqlAwsIamRole]
 }
 
@@ -84058,9 +84058,19 @@ func (c *mqlAwsEmrCluster) GetVisibleToAllUsers() *plugin.TValue[bool] {
 	})
 }
 
-func (c *mqlAwsEmrCluster) GetAutoScalingRoleArn() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.AutoScalingRoleArn, func() (string, error) {
-		return c.autoScalingRoleArn()
+func (c *mqlAwsEmrCluster) GetAutoScalingRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.AutoScalingRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.cluster", c.__id, "autoScalingRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.autoScalingRole()
 	})
 }
 

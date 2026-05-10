@@ -140,33 +140,33 @@ func initAwsEmrCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 type mqlAwsEmrClusterInternal struct {
-	clusterDetailsFetched          bool
-	clusterDetailsLock             sync.Mutex
-	cacheSecurityConfig            string
-	cacheLogUri                    string
-	cacheTags                      map[string]any
-	cacheTerminationProtected      bool
-	cacheMasterPublicDnsName       string
-	cacheLogEncryptionKmsKeyId     *string
-	cacheReleaseLabel              string
-	cacheApplications              []any
-	cacheConfigurations            []any
-	cacheEbsRootVolumeSize         int64
-	cacheEbsRootVolumeIops         int64
-	cacheEbsRootVolumeThroughput   int64
-	cacheRepoUpgradeOnBoot         string
-	cacheKerberosAttributes        any
-	cacheStepConcurrencyLevel      int64
-	cachePlacementGroups           []any
-	cacheAutoTerminate             bool
-	cacheInstanceCollectionType    string
-	cacheScaleDownBehavior         string
-	cacheVisibleToAllUsers         bool
-	cacheAutoScalingRoleArn        string
-	cacheServiceRoleArn            string
-	autoTerminationFetched         bool
-	autoTerminationLock            sync.Mutex
-	cacheAutoTerminationIdleTimout int64
+	clusterDetailsFetched           bool
+	clusterDetailsLock              sync.Mutex
+	cacheSecurityConfig             string
+	cacheLogUri                     string
+	cacheTags                       map[string]any
+	cacheTerminationProtected       bool
+	cacheMasterPublicDnsName        string
+	cacheLogEncryptionKmsKeyId      *string
+	cacheReleaseLabel               string
+	cacheApplications               []any
+	cacheConfigurations             []any
+	cacheEbsRootVolumeSize          int64
+	cacheEbsRootVolumeIops          int64
+	cacheEbsRootVolumeThroughput    int64
+	cacheRepoUpgradeOnBoot          string
+	cacheKerberosAttributes         any
+	cacheStepConcurrencyLevel       int64
+	cachePlacementGroups            []any
+	cacheAutoTerminate              bool
+	cacheInstanceCollectionType     string
+	cacheScaleDownBehavior          string
+	cacheVisibleToAllUsers          bool
+	cacheAutoScalingRoleArn         string
+	cacheServiceRoleArn             string
+	autoTerminationFetched          bool
+	autoTerminationLock             sync.Mutex
+	cacheAutoTerminationIdleTimeout int64
 }
 
 func (a *mqlAwsEmrCluster) fetchClusterDetails() error {
@@ -409,11 +409,19 @@ func (a *mqlAwsEmrCluster) visibleToAllUsers() (bool, error) {
 	return a.cacheVisibleToAllUsers, nil
 }
 
-func (a *mqlAwsEmrCluster) autoScalingRoleArn() (string, error) {
+func (a *mqlAwsEmrCluster) autoScalingRole() (*mqlAwsIamRole, error) {
 	if err := a.fetchClusterDetails(); err != nil {
-		return "", err
+		return nil, err
 	}
-	return a.cacheAutoScalingRoleArn, nil
+	if a.cacheAutoScalingRoleArn == "" {
+		a.AutoScalingRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := iamRoleByArnOrName(a.MqlRuntime, a.cacheAutoScalingRoleArn)
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole, nil
 }
 
 func (a *mqlAwsEmrCluster) serviceRole() (*mqlAwsIamRole, error) {
@@ -453,12 +461,12 @@ func iamRoleByArnOrName(runtime *plugin.Runtime, arnOrName string) (*mqlAwsIamRo
 
 func (a *mqlAwsEmrCluster) autoTerminationIdleTimeout() (int64, error) {
 	if a.autoTerminationFetched {
-		return a.cacheAutoTerminationIdleTimout, nil
+		return a.cacheAutoTerminationIdleTimeout, nil
 	}
 	a.autoTerminationLock.Lock()
 	defer a.autoTerminationLock.Unlock()
 	if a.autoTerminationFetched {
-		return a.cacheAutoTerminationIdleTimout, nil
+		return a.cacheAutoTerminationIdleTimeout, nil
 	}
 
 	region, err := GetRegionFromArn(a.Arn.Data)
@@ -479,14 +487,16 @@ func (a *mqlAwsEmrCluster) autoTerminationIdleTimeout() (int64, error) {
 		return 0, err
 	}
 	if resp.AutoTerminationPolicy != nil && resp.AutoTerminationPolicy.IdleTimeout != nil {
-		a.cacheAutoTerminationIdleTimout = *resp.AutoTerminationPolicy.IdleTimeout
+		a.cacheAutoTerminationIdleTimeout = *resp.AutoTerminationPolicy.IdleTimeout
 	}
 	a.autoTerminationFetched = true
-	return a.cacheAutoTerminationIdleTimout, nil
+	return a.cacheAutoTerminationIdleTimeout, nil
 }
 
 // securityConfig returns the typed security configuration linked by name
-// to the cluster.
+// to the cluster. Security configurations are regional, so we resolve via
+// the region-qualified __id used by securityConfigurations() to avoid
+// matching a same-named config in a different region.
 func (a *mqlAwsEmrCluster) securityConfig() (*mqlAwsEmrSecurityConfiguration, error) {
 	if err := a.fetchClusterDetails(); err != nil {
 		return nil, err
@@ -495,14 +505,24 @@ func (a *mqlAwsEmrCluster) securityConfig() (*mqlAwsEmrSecurityConfiguration, er
 		a.SecurityConfig.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
+	region, err := GetRegionFromArn(a.Arn.Data)
+	if err != nil {
+		return nil, err
+	}
+	id := emrSecurityConfigurationID(region, a.cacheSecurityConfig)
 	res, err := NewResource(a.MqlRuntime, "aws.emr.securityConfiguration",
 		map[string]*llx.RawData{
+			"__id": llx.StringData(id),
 			"name": llx.StringData(a.cacheSecurityConfig),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsEmrSecurityConfiguration), nil
+	sc := res.(*mqlAwsEmrSecurityConfiguration)
+	if sc.cacheRegion == "" {
+		sc.cacheRegion = region
+	}
+	return sc, nil
 }
 
 func (a *mqlAwsEmrCluster) logEncryptionKmsKey() (*mqlAwsKmsKey, error) {
@@ -944,8 +964,15 @@ type mqlAwsEmrSecurityConfigurationInternal struct {
 	cacheConfiguration  string
 }
 
+// emrSecurityConfigurationID returns the canonical __id for an EMR
+// security configuration. Security configurations are regional, so the
+// cache key includes the region to keep regional namespaces distinct.
+func emrSecurityConfigurationID(region, name string) string {
+	return fmt.Sprintf("aws.emr.securityConfiguration/%s/%s", region, name)
+}
+
 func (a *mqlAwsEmrSecurityConfiguration) id() (string, error) {
-	return a.Name.Data, nil
+	return emrSecurityConfigurationID(a.cacheRegion, a.Name.Data), nil
 }
 
 func (a *mqlAwsEmr) securityConfigurations() ([]any, error) {
@@ -990,7 +1017,7 @@ func (a *mqlAwsEmr) getSecurityConfigurations(conn *connection.AwsConnection) []
 				for _, sc := range resp.SecurityConfigurations {
 					mqlSc, err := CreateResource(a.MqlRuntime, "aws.emr.securityConfiguration",
 						map[string]*llx.RawData{
-							"__id":             llx.StringData(fmt.Sprintf("aws.emr.securityConfiguration/%s/%s", region, convert.ToValue(sc.Name))),
+							"__id":             llx.StringData(emrSecurityConfigurationID(region, convert.ToValue(sc.Name))),
 							"name":             llx.StringDataPtr(sc.Name),
 							"creationDateTime": llx.TimeDataPtr(sc.CreationDateTime),
 						})
@@ -1060,6 +1087,10 @@ func initAwsEmrSecurityConfiguration(runtime *plugin.Runtime, args map[string]*l
 	if args["name"] == nil {
 		return nil, nil, errors.New("name required to fetch emr security configuration")
 	}
+	nameVal, ok := args["name"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("name must be a string")
+	}
 
 	obj, err := CreateResource(runtime, "aws.emr", map[string]*llx.RawData{})
 	if err != nil {
@@ -1072,15 +1103,29 @@ func initAwsEmrSecurityConfiguration(runtime *plugin.Runtime, args map[string]*l
 		return nil, nil, rawResources.Error
 	}
 
-	nameVal, ok := args["name"].Value.(string)
-	if !ok {
-		return nil, nil, errors.New("name must be a string")
+	// If __id was provided (e.g., from securityConfig() on a cluster),
+	// match by the region-qualified __id to disambiguate same-named
+	// configurations across regions.
+	var wantID string
+	if args["__id"] != nil {
+		if s, ok := args["__id"].Value.(string); ok {
+			wantID = s
+		}
 	}
+
+	var nameMatch *mqlAwsEmrSecurityConfiguration
 	for _, rawResource := range rawResources.Data {
 		sc := rawResource.(*mqlAwsEmrSecurityConfiguration)
-		if sc.Name.Data == nameVal {
+		scID := emrSecurityConfigurationID(sc.cacheRegion, sc.Name.Data)
+		if wantID != "" && scID == wantID {
 			return args, sc, nil
 		}
+		if sc.Name.Data == nameVal && nameMatch == nil {
+			nameMatch = sc
+		}
+	}
+	if wantID == "" && nameMatch != nil {
+		return args, nameMatch, nil
 	}
 	return nil, nil, errors.New("emr security configuration does not exist")
 }
