@@ -8,13 +8,14 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/detective"
-	"github.com/aws/aws-sdk-go-v2/service/detective/types"
+	detectivetypes "github.com/aws/aws-sdk-go-v2/service/detective/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsDetective) id() (string, error) {
@@ -135,22 +136,42 @@ func (a *mqlAwsDetectiveGraph) members() ([]any, error) {
 	return res, nil
 }
 
-func newMqlAwsDetectiveGraphMember(runtime *plugin.Runtime, region string, m types.MemberDetail) (plugin.Resource, error) {
+func newMqlAwsDetectiveGraphMember(runtime *plugin.Runtime, region string, m detectivetypes.MemberDetail) (plugin.Resource, error) {
 	graphArn := convert.ToValue(m.GraphArn)
 	accountId := convert.ToValue(m.AccountId)
+
+	ingestStates := make(map[string]any, len(m.DatasourcePackageIngestStates))
+	for pkg, state := range m.DatasourcePackageIngestStates {
+		ingestStates[string(pkg)] = string(state)
+	}
+
+	volumeUsage := make(map[string]any, len(m.VolumeUsageByDatasourcePackage))
+	for pkg, info := range m.VolumeUsageByDatasourcePackage {
+		entry := map[string]any{}
+		if info.VolumeUsageInBytes != nil {
+			entry["volumeUsageInBytes"] = *info.VolumeUsageInBytes
+		}
+		if info.VolumeUsageUpdateTime != nil {
+			entry["volumeUsageUpdateTime"] = *info.VolumeUsageUpdateTime
+		}
+		volumeUsage[string(pkg)] = entry
+	}
+
 	return CreateResource(runtime, "aws.detective.graph.member",
 		map[string]*llx.RawData{
-			"__id":            llx.StringData(fmt.Sprintf("%s/member/%s", graphArn, accountId)),
-			"graphArn":        llx.StringDataPtr(m.GraphArn),
-			"region":          llx.StringData(region),
-			"accountId":       llx.StringDataPtr(m.AccountId),
-			"email":           llx.StringDataPtr(m.EmailAddress),
-			"administratorId": llx.StringDataPtr(m.AdministratorId),
-			"status":          llx.StringData(string(m.Status)),
-			"disabledReason":  llx.StringData(string(m.DisabledReason)),
-			"invitedAt":       llx.TimeDataPtr(m.InvitedTime),
-			"updatedAt":       llx.TimeDataPtr(m.UpdatedTime),
-			"invitationType":  llx.StringData(string(m.InvitationType)),
+			"__id":                           llx.StringData(fmt.Sprintf("%s/member/%s", graphArn, accountId)),
+			"graphArn":                       llx.StringDataPtr(m.GraphArn),
+			"region":                         llx.StringData(region),
+			"accountId":                      llx.StringDataPtr(m.AccountId),
+			"email":                          llx.StringDataPtr(m.EmailAddress),
+			"administratorId":                llx.StringDataPtr(m.AdministratorId),
+			"status":                         llx.StringData(string(m.Status)),
+			"disabledReason":                 llx.StringData(string(m.DisabledReason)),
+			"invitedAt":                      llx.TimeDataPtr(m.InvitedTime),
+			"updatedAt":                      llx.TimeDataPtr(m.UpdatedTime),
+			"invitationType":                 llx.StringData(string(m.InvitationType)),
+			"datasourcePackageIngestStates":  llx.MapData(ingestStates, types.String),
+			"volumeUsageByDatasourcePackage": llx.MapData(volumeUsage, types.Dict),
 		})
 }
 
@@ -206,4 +227,97 @@ func (a *mqlAwsDetectiveGraph) tags() (map[string]any, error) {
 		return nil, err
 	}
 	return convert.MapToInterfaceMap(resp.Tags), nil
+}
+
+func (a *mqlAwsDetective) organizationAdminAccounts() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getOrganizationAdminAccounts(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsDetective) getOrganizationAdminAccounts(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Detective(region)
+			ctx := context.Background()
+			res := []any{}
+
+			var nextToken *string
+			for {
+				resp, err := svc.ListOrganizationAdminAccounts(ctx, &detective.ListOrganizationAdminAccountsInput{NextToken: nextToken})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS Detective administrators")
+						return res, nil
+					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("AWS Detective is not available in region")
+						return res, nil
+					}
+					return nil, err
+				}
+
+				for _, admin := range resp.Administrators {
+					accountId := convert.ToValue(admin.AccountId)
+					graphArn := convert.ToValue(admin.GraphArn)
+					mqlAdmin, err := CreateResource(a.MqlRuntime, "aws.detective.organizationAdminAccount",
+						map[string]*llx.RawData{
+							"__id":           llx.StringData(fmt.Sprintf("%s/%s/%s", region, graphArn, accountId)),
+							"accountId":      llx.StringDataPtr(admin.AccountId),
+							"graphArn":       llx.StringDataPtr(admin.GraphArn),
+							"region":         llx.StringData(region),
+							"delegationTime": llx.TimeDataPtr(admin.DelegationTime),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlAdmin)
+				}
+
+				if resp.NextToken == nil || *resp.NextToken == "" {
+					break
+				}
+				nextToken = resp.NextToken
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsDetectiveOrganizationAdminAccount) graph() (*mqlAwsDetectiveGraph, error) {
+	graphArn := a.GraphArn.Data
+	if graphArn == "" {
+		a.Graph.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlGraph, err := NewResource(a.MqlRuntime, "aws.detective.graph",
+		map[string]*llx.RawData{
+			"__id":   llx.StringData(graphArn),
+			"arn":    llx.StringData(graphArn),
+			"region": llx.StringData(a.Region.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlGraph.(*mqlAwsDetectiveGraph), nil
 }

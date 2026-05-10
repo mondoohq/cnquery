@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.21.3",
-  "generated_at": "2026-05-08T10:57:12-07:00",
+  "generated_at": "2026-05-09T16:54:12-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -128,6 +128,7 @@
     "detective:ListDatasourcePackages",
     "detective:ListGraphs",
     "detective:ListMembers",
+    "detective:ListOrganizationAdminAccounts",
     "detective:ListTagsForResource",
     "dms:DescribeReplicationInstances",
     "docdbelastic:ListClusterSnapshots",
@@ -1457,6 +1458,12 @@
       "permission": "detective:ListMembers",
       "service": "detective",
       "action": "ListMembers",
+      "source_file": "aws_detective.go"
+    },
+    {
+      "permission": "detective:ListOrganizationAdminAccounts",
+      "service": "detective",
+      "action": "ListOrganizationAdminAccounts",
       "source_file": "aws_detective.go"
     },
     {

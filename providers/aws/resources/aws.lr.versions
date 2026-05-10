@@ -1416,6 +1416,7 @@ aws.detective.graph.datasourcePackages 13.21.4
 aws.detective.graph.member 13.21.4
 aws.detective.graph.member.accountId 13.21.4
 aws.detective.graph.member.administratorId 13.21.4
+aws.detective.graph.member.datasourcePackageIngestStates 13.21.4
 aws.detective.graph.member.disabledReason 13.21.4
 aws.detective.graph.member.email 13.21.4
 aws.detective.graph.member.graphArn 13.21.4
@@ -1424,10 +1425,18 @@ aws.detective.graph.member.invitedAt 13.21.4
 aws.detective.graph.member.region 13.21.4
 aws.detective.graph.member.status 13.21.4
 aws.detective.graph.member.updatedAt 13.21.4
+aws.detective.graph.member.volumeUsageByDatasourcePackage 13.21.4
 aws.detective.graph.members 13.21.4
 aws.detective.graph.region 13.21.4
 aws.detective.graph.tags 13.21.4
 aws.detective.graphs 13.21.4
+aws.detective.organizationAdminAccount 13.21.4
+aws.detective.organizationAdminAccount.accountId 13.21.4
+aws.detective.organizationAdminAccount.delegationTime 13.21.4
+aws.detective.organizationAdminAccount.graph 13.21.4
+aws.detective.organizationAdminAccount.graphArn 13.21.4
+aws.detective.organizationAdminAccount.region 13.21.4
+aws.detective.organizationAdminAccounts 13.21.4
 aws.directoryservice 11.15.6
 aws.directoryservice.connectSettings 11.15.6
 aws.directoryservice.connectSettings.availabilityZones 11.15.6

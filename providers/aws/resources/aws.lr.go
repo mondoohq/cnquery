@@ -227,6 +227,7 @@ const (
 	ResourceAwsDetective                                                        string = "aws.detective"
 	ResourceAwsDetectiveGraph                                                   string = "aws.detective.graph"
 	ResourceAwsDetectiveGraphMember                                             string = "aws.detective.graph.member"
+	ResourceAwsDetectiveOrganizationAdminAccount                                string = "aws.detective.organizationAdminAccount"
 	ResourceAwsSecurityhub                                                      string = "aws.securityhub"
 	ResourceAwsSecurityhubHub                                                   string = "aws.securityhub.hub"
 	ResourceAwsSecurityhubStandardSubscription                                  string = "aws.securityhub.standardSubscription"
@@ -1603,6 +1604,10 @@ func init() {
 		"aws.detective.graph.member": {
 			// to override args, implement: initAwsDetectiveGraphMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDetectiveGraphMember,
+		},
+		"aws.detective.organizationAdminAccount": {
+			// to override args, implement: initAwsDetectiveOrganizationAdminAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDetectiveOrganizationAdminAccount,
 		},
 		"aws.securityhub": {
 			// to override args, implement: initAwsSecurityhub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9531,6 +9536,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.detective.graphs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDetective).GetGraphs()).ToDataRes(types.Array(types.Resource("aws.detective.graph")))
 	},
+	"aws.detective.organizationAdminAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetective).GetOrganizationAdminAccounts()).ToDataRes(types.Array(types.Resource("aws.detective.organizationAdminAccount")))
+	},
 	"aws.detective.graph.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDetectiveGraph).GetArn()).ToDataRes(types.String)
 	},
@@ -9578,6 +9586,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.detective.graph.member.invitationType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDetectiveGraphMember).GetInvitationType()).ToDataRes(types.String)
+	},
+	"aws.detective.graph.member.datasourcePackageIngestStates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetDatasourcePackageIngestStates()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.detective.graph.member.volumeUsageByDatasourcePackage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveGraphMember).GetVolumeUsageByDatasourcePackage()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"aws.detective.organizationAdminAccount.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveOrganizationAdminAccount).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.detective.organizationAdminAccount.graphArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveOrganizationAdminAccount).GetGraphArn()).ToDataRes(types.String)
+	},
+	"aws.detective.organizationAdminAccount.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveOrganizationAdminAccount).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.detective.organizationAdminAccount.delegationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveOrganizationAdminAccount).GetDelegationTime()).ToDataRes(types.Time)
+	},
+	"aws.detective.organizationAdminAccount.graph": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDetectiveOrganizationAdminAccount).GetGraph()).ToDataRes(types.Resource("aws.detective.graph"))
 	},
 	"aws.securityhub.hubs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhub).GetHubs()).ToDataRes(types.Array(types.Resource("aws.securityhub.hub")))
@@ -33244,6 +33273,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDetective).Graphs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.detective.organizationAdminAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetective).OrganizationAdminAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.detective.graph.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDetectiveGraph).__id, ok = v.Value.(string)
 		return
@@ -33314,6 +33347,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.detective.graph.member.invitationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDetectiveGraphMember).InvitationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.datasourcePackageIngestStates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).DatasourcePackageIngestStates, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.detective.graph.member.volumeUsageByDatasourcePackage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveGraphMember).VolumeUsageByDatasourcePackage, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.detective.organizationAdminAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveOrganizationAdminAccount).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.detective.organizationAdminAccount.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveOrganizationAdminAccount).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.organizationAdminAccount.graphArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveOrganizationAdminAccount).GraphArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.organizationAdminAccount.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveOrganizationAdminAccount).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.detective.organizationAdminAccount.delegationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveOrganizationAdminAccount).DelegationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.detective.organizationAdminAccount.graph": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDetectiveOrganizationAdminAccount).Graph, ok = plugin.RawToTValue[*mqlAwsDetectiveGraph](v.Value, v.Error)
 		return
 	},
 	"aws.securityhub.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -78835,7 +78900,8 @@ type mqlAwsDetective struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsDetectiveInternal it will be used here
-	Graphs plugin.TValue[[]any]
+	Graphs                    plugin.TValue[[]any]
+	OrganizationAdminAccounts plugin.TValue[[]any]
 }
 
 // createAwsDetective creates a new instance of this resource
@@ -78888,6 +78954,22 @@ func (c *mqlAwsDetective) GetGraphs() *plugin.TValue[[]any] {
 		}
 
 		return c.graphs()
+	})
+}
+
+func (c *mqlAwsDetective) GetOrganizationAdminAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OrganizationAdminAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.detective", c.__id, "organizationAdminAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.organizationAdminAccounts()
 	})
 }
 
@@ -78986,16 +79068,18 @@ type mqlAwsDetectiveGraphMember struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsDetectiveGraphMemberInternal it will be used here
-	GraphArn        plugin.TValue[string]
-	Region          plugin.TValue[string]
-	AccountId       plugin.TValue[string]
-	Email           plugin.TValue[string]
-	AdministratorId plugin.TValue[string]
-	Status          plugin.TValue[string]
-	DisabledReason  plugin.TValue[string]
-	InvitedAt       plugin.TValue[*time.Time]
-	UpdatedAt       plugin.TValue[*time.Time]
-	InvitationType  plugin.TValue[string]
+	GraphArn                       plugin.TValue[string]
+	Region                         plugin.TValue[string]
+	AccountId                      plugin.TValue[string]
+	Email                          plugin.TValue[string]
+	AdministratorId                plugin.TValue[string]
+	Status                         plugin.TValue[string]
+	DisabledReason                 plugin.TValue[string]
+	InvitedAt                      plugin.TValue[*time.Time]
+	UpdatedAt                      plugin.TValue[*time.Time]
+	InvitationType                 plugin.TValue[string]
+	DatasourcePackageIngestStates  plugin.TValue[map[string]any]
+	VolumeUsageByDatasourcePackage plugin.TValue[map[string]any]
 }
 
 // createAwsDetectiveGraphMember creates a new instance of this resource
@@ -79073,6 +79157,90 @@ func (c *mqlAwsDetectiveGraphMember) GetUpdatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsDetectiveGraphMember) GetInvitationType() *plugin.TValue[string] {
 	return &c.InvitationType
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetDatasourcePackageIngestStates() *plugin.TValue[map[string]any] {
+	return &c.DatasourcePackageIngestStates
+}
+
+func (c *mqlAwsDetectiveGraphMember) GetVolumeUsageByDatasourcePackage() *plugin.TValue[map[string]any] {
+	return &c.VolumeUsageByDatasourcePackage
+}
+
+// mqlAwsDetectiveOrganizationAdminAccount for the aws.detective.organizationAdminAccount resource
+type mqlAwsDetectiveOrganizationAdminAccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsDetectiveOrganizationAdminAccountInternal it will be used here
+	AccountId      plugin.TValue[string]
+	GraphArn       plugin.TValue[string]
+	Region         plugin.TValue[string]
+	DelegationTime plugin.TValue[*time.Time]
+	Graph          plugin.TValue[*mqlAwsDetectiveGraph]
+}
+
+// createAwsDetectiveOrganizationAdminAccount creates a new instance of this resource
+func createAwsDetectiveOrganizationAdminAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDetectiveOrganizationAdminAccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.detective.organizationAdminAccount", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDetectiveOrganizationAdminAccount) MqlName() string {
+	return "aws.detective.organizationAdminAccount"
+}
+
+func (c *mqlAwsDetectiveOrganizationAdminAccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDetectiveOrganizationAdminAccount) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsDetectiveOrganizationAdminAccount) GetGraphArn() *plugin.TValue[string] {
+	return &c.GraphArn
+}
+
+func (c *mqlAwsDetectiveOrganizationAdminAccount) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDetectiveOrganizationAdminAccount) GetDelegationTime() *plugin.TValue[*time.Time] {
+	return &c.DelegationTime
+}
+
+func (c *mqlAwsDetectiveOrganizationAdminAccount) GetGraph() *plugin.TValue[*mqlAwsDetectiveGraph] {
+	return plugin.GetOrCompute[*mqlAwsDetectiveGraph](&c.Graph, func() (*mqlAwsDetectiveGraph, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.detective.organizationAdminAccount", c.__id, "graph")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDetectiveGraph), nil
+			}
+		}
+
+		return c.graph()
+	})
 }
 
 // mqlAwsSecurityhub for the aws.securityhub resource

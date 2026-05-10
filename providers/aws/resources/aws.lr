@@ -4880,10 +4880,13 @@ private aws.macie.customDataIdentifier @defaults("id name") {
 // the account. Iterate `graphs()` for the per-region behavior graphs,
 // each of which exposes member accounts and the data-source packages
 // (Detective core, EKS audit logs, Security Hub findings) feeding the
-// graph.
+// graph. Iterate `organizationAdminAccounts()` to enumerate the accounts
+// designated as Detective administrators across the AWS organization.
 aws.detective {
   // List of Detective behavior graphs across regions
   graphs() []aws.detective.graph
+  // Detective administrator accounts delegated for the AWS organization
+  organizationAdminAccounts() []aws.detective.organizationAdminAccount
 }
 
 // Amazon Detective behavior graph
@@ -4930,6 +4933,24 @@ private aws.detective.graph.member @defaults("accountId status invitationType") 
   updatedAt time
   // Source of the membership: INVITATION, ORGANIZATION
   invitationType string
+  // Ingestion state for each data-source package, keyed by package name (DETECTIVE_CORE, EKS_AUDIT, ASFF_SECURITYHUB_FINDING). Values: STARTED, STOPPED, DISABLED
+  datasourcePackageIngestStates map[string]string
+  // Per-package data volume usage for the member, keyed by package name. Each entry contains volumeUsageInBytes and volumeUsageUpdateTime
+  volumeUsageByDatasourcePackage map[string]dict
+}
+
+// Amazon Detective organization administrator account
+private aws.detective.organizationAdminAccount @defaults("accountId region delegationTime") {
+  // AWS account ID of the Detective administrator account
+  accountId string
+  // ARN of the organization behavior graph the account administers
+  graphArn string
+  // Region the administrator delegation is registered in
+  region string
+  // Date and time when the administrator account was enabled
+  delegationTime time
+  // Behavior graph the administrator account owns
+  graph() aws.detective.graph
 }
 
 // AWS Security Hub
