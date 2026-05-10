@@ -553,6 +553,8 @@ gcp.project @defaults("name number") {
   alloydb() gcp.project.alloydbService
   // GCP Certificate Authority Service resources
   certificateAuthority() gcp.project.certificateAuthorityService
+  // GCP Certificate Manager resources
+  certificateManager() gcp.project.certificateManagerService
   // GCP Cloud Filestore resources
   filestore() gcp.project.filestoreService
   // GCP Cloud Tasks resources
@@ -5747,6 +5749,261 @@ private gcp.project.certificateAuthorityService.certificate @defaults("name") {
   createdAt time
   // Time last updated
   updatedAt time
+}
+
+// GCP Certificate Manager
+//
+// Use this resource as the entry point for the Certificate Manager service in
+// the project. It hosts the load-balancer-facing TLS certificate surface:
+// `certificates` (Google-managed and self-managed leaf certs),
+// `certificateMaps` and their `certificateMapEntries` (the host→cert routing
+// attached to GCLB target proxies), `dnsAuthorizations` (the DNS challenge
+// records used to issue managed certs), `certificateIssuanceConfigs`
+// (private-CA-backed issuance settings), and `trustConfigs` (mTLS trust
+// anchors). Certificate Manager is distinct from `certificateAuthority` —
+// that resource models the Private CA Service, while this one models the
+// front-door certs Google's load balancers serve.
+private gcp.project.certificateManagerService {
+  // Project ID
+  projectId string
+  // Certificates (Google-managed and self-managed) defined in the project
+  certificates() []gcp.project.certificateManagerService.certificate
+  // Certificate maps defined in the project
+  certificateMaps() []gcp.project.certificateManagerService.certificateMap
+  // DNS authorizations used to issue Google-managed certificates
+  dnsAuthorizations() []gcp.project.certificateManagerService.dnsAuthorization
+  // Issuance configurations backing private-CA-issued managed certificates
+  certificateIssuanceConfigs() []gcp.project.certificateManagerService.certificateIssuanceConfig
+  // Trust configurations (mTLS trust anchors) defined in the project
+  trustConfigs() []gcp.project.certificateManagerService.trustConfig
+}
+
+// GCP Certificate Manager certificate
+//
+// Examine a single TLS certificate served by Google Cloud Load Balancing.
+// `type` is the discriminator: `managed` certificates are issued by Google
+// (or by the private CA referenced by `managedIssuanceConfig`) and surface
+// `managedDomains`, `managedDnsAuthorizations`, `managedState`,
+// `managedProvisioningIssue`, and `managedAuthorizationAttemptInfo`;
+// `selfManaged` certificates are uploaded by the user and only the
+// output-only `pemCertificate` is visible. `sanDnsnames` lists the SAN
+// dnsName entries on the issued certificate (or the requested domains for a
+// not-yet-provisioned managed cert), `expireTime` is the certificate's
+// expiry, and `scope` controls where the cert can be served (`DEFAULT`,
+// `EDGE_CACHE`, `ALL_REGIONS`). The audit hot spots are managed certs stuck
+// in `PROVISIONING`/`FAILED`, near-expiry leaf certs, and certs with broad
+// SAN coverage.
+private gcp.project.certificateManagerService.certificate @defaults("name type managedState expireTime") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/certificates/{cert})
+  resourcePath string
+  // Short certificate name (the last segment of `resourcePath`)
+  name string
+  // GCP location the certificate is hosted in (e.g., `global`)
+  location string
+  // Human-readable description of the certificate
+  description string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Time the certificate was created
+  createTime time
+  // Time the certificate was last updated
+  updateTime time
+  // Time the certificate expires
+  expireTime time
+  // Subject Alternative Name dnsName entries on the issued cert (or requested domains for a not-yet-provisioned managed cert)
+  sanDnsnames []string
+  // Output-only PEM-encoded certificate chain
+  pemCertificate string
+  // Where the certificate can be served (DEFAULT, EDGE_CACHE, ALL_REGIONS)
+  scope string
+  // Discriminator for the certificate kind: `managed` (Google-managed or private-CA-issued) or `selfManaged` (user-uploaded)
+  type string
+  // For managed certs: domains for which the cert is/was issued
+  managedDomains []string
+  // For managed certs: full resource names of DNS authorizations used to validate domain ownership
+  managedDnsAuthorizations []string
+  // For managed certs: full resource name of the certificateIssuanceConfig (empty for publicly signed Google-managed certs)
+  managedIssuanceConfig string
+  // For managed certs: provisioning state (STATE_UNSPECIFIED, PROVISIONING, FAILED, ACTIVE)
+  managedState string
+  // For managed certs: details about issues that prevented provisioning. Shape: {reason, details}
+  managedProvisioningIssue dict
+  // For managed certs: per-domain authorization attempt info. Each entry is shaped {domain, state, failureReason, details}
+  managedAuthorizationAttemptInfo []dict
+}
+
+// GCP Certificate Manager certificate map
+//
+// Examine a certificate map — the host-to-certificate routing table attached
+// to one or more Google Cloud Load Balancing target proxies. `gclbTargets`
+// lists the target proxies (and per-IP/port serving configs) the map is
+// bound to; an empty list means the map is provisioned but not yet routing
+// traffic. Drill into `entries` for the per-hostname certificate
+// assignments.
+private gcp.project.certificateManagerService.certificateMap @defaults("name") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/certificateMaps/{map})
+  resourcePath string
+  // Short certificate map name
+  name string
+  // GCP location the map is hosted in (typically `global`)
+  location string
+  // Human-readable description of the map
+  description string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Time the map was created
+  createTime time
+  // Time the map was last updated
+  updateTime time
+  // Output-only list of GCLB target proxies this map is attached to. Each entry is shaped {targetHttpsProxy|targetSslProxy, ipConfigs:[{ipv4Address|ipv6Address, ports:[]}]}
+  gclbTargets []dict
+  // Map entries (per-hostname certificate assignments)
+  entries() []gcp.project.certificateManagerService.certificateMapEntry
+}
+
+// GCP Certificate Manager certificate map entry
+//
+// Examine a single host-to-certificate binding within a certificate map.
+// Exactly one of `hostname` (a literal SNI hostname) or `matcher` (currently
+// only `PRIMARY`, used as the default fallback) is set. `certificates` lists
+// the resource names of up to four certificates assigned to this entry; load
+// balancers pick the best match by signature algorithm. `state` is the
+// serving state — `ACTIVE` once the entry is live, `PENDING` while
+// propagating.
+private gcp.project.certificateManagerService.certificateMapEntry @defaults("name hostname matcher state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/certificateMaps/{map}/certificateMapEntries/{entry})
+  resourcePath string
+  // Short entry name
+  name string
+  // GCP location the entry is hosted in
+  location string
+  // Short name of the parent certificate map
+  certificateMap string
+  // Human-readable description of the entry
+  description string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Time the entry was created
+  createTime time
+  // Time the entry was last updated
+  updateTime time
+  // SNI hostname this entry matches (empty if `matcher` is set instead)
+  hostname string
+  // Match-mode discriminator (currently only `PRIMARY` for the default fallback entry; empty when `hostname` is set)
+  matcher string
+  // Resource names of the certificates assigned to this entry (up to four; load balancer picks the best match by signature algorithm)
+  certificates []string
+  // Serving state (SERVING_STATE_UNSPECIFIED, ACTIVE, PENDING)
+  state string
+}
+
+// GCP Certificate Manager DNS authorization
+//
+// Examine a DNS authorization used to prove domain ownership when issuing
+// Google-managed certificates. Each authorization covers a single `domain`
+// and its wildcard. `dnsResourceRecord` is the CNAME the operator must
+// publish under the domain's DNS zone — once that record resolves, Google
+// can mint managed certs for the domain. `type` distinguishes
+// `FIXED_RECORD` (a stable per-authorization CNAME target) from
+// `PER_PROJECT_RECORD` (a shared per-project CNAME target, available only
+// in regional locations).
+private gcp.project.certificateManagerService.dnsAuthorization @defaults("name domain type") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/dnsAuthorizations/{auth})
+  resourcePath string
+  // Short DNS authorization name
+  name string
+  // GCP location the authorization is hosted in
+  location string
+  // Human-readable description of the authorization
+  description string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Time the authorization was created
+  createTime time
+  // Time the authorization was last updated
+  updateTime time
+  // Domain being authorized (covers `<domain>` and `*.<domain>`)
+  domain string
+  // Authorization type (TYPE_UNSPECIFIED, FIXED_RECORD, PER_PROJECT_RECORD)
+  type string
+  // CNAME record the operator must publish to satisfy this authorization. Shape: {name, type, data}
+  dnsResourceRecord dict
+}
+
+// GCP Certificate Manager certificate issuance config
+//
+// Examine an issuance config — the binding between Certificate Manager and
+// a private CA pool that mints managed certificates. `certificateAuthorityConfig`
+// names the CA pool and (if applicable) the workload service account used to
+// authenticate to it. `lifetime` is the requested workload-cert validity,
+// `rotationWindowPercentage` is the percentage of `lifetime` after which
+// Certificate Manager begins renewing, and `keyAlgorithm` constrains the
+// generated private key (`RSA_2048` or `ECDSA_P256`).
+private gcp.project.certificateManagerService.certificateIssuanceConfig @defaults("name keyAlgorithm") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/certificateIssuanceConfigs/{config})
+  resourcePath string
+  // Short issuance config name
+  name string
+  // GCP location the issuance config is hosted in
+  location string
+  // Human-readable description of the issuance config
+  description string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Time the config was created
+  createTime time
+  // Time the config was last updated
+  updateTime time
+  // CA backing this issuance config. Shape: {certificateAuthorityServiceConfig:{caPool}}
+  certificateAuthorityConfig dict
+  // Requested lifetime of certificates issued through this config (e.g., `2592000s`)
+  lifetime string
+  // Percentage of `lifetime` elapsed before renewal begins (1–99)
+  rotationWindowPercentage int
+  // Key algorithm for issued certificates (KEY_ALGORITHM_UNSPECIFIED, RSA_2048, ECDSA_P256)
+  keyAlgorithm string
+}
+
+// GCP Certificate Manager trust config
+//
+// Examine a trust config — the mTLS trust anchor set used by Google Cloud
+// Load Balancing to authenticate client certificates. `trustStores` lists
+// the trust stores attached to the config; each store carries
+// `trustAnchors` (root CAs) and `intermediateCas` (intermediate CAs) as
+// PEM-encoded certificate bundles. Currently only one trust store per
+// trust config is allowed, and trust configs are only consumed by load
+// balancers (not by SPIFFE workload validation).
+private gcp.project.certificateManagerService.trustConfig @defaults("name") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/trustConfigs/{config})
+  resourcePath string
+  // Short trust config name
+  name string
+  // GCP location the trust config is hosted in
+  location string
+  // Human-readable description of the trust config
+  description string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Time the config was created
+  createTime time
+  // Time the config was last updated
+  updateTime time
+  // Optimistic-concurrency etag
+  etag string
+  // Attached trust stores. Each entry is shaped {trustAnchors:[{pemCertificate}], intermediateCas:[{pemCertificate}]}
+  trustStores []dict
 }
 
 // Google Cloud (GCP) audit logging configuration for a service

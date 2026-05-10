@@ -14,6 +14,7 @@ require (
 	cloud.google.com/go/batch v1.18.0
 	cloud.google.com/go/bigquery v1.77.0
 	cloud.google.com/go/bigtable v1.47.0
+	cloud.google.com/go/certificatemanager v1.14.0
 	cloud.google.com/go/cloudbuild v1.29.0
 	cloud.google.com/go/cloudtasks v1.17.0
 	cloud.google.com/go/compute v1.61.0

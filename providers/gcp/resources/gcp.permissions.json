@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.13.3",
-  "generated_at": "2026-05-08T10:57:12-07:00",
+  "generated_at": "2026-05-08T15:08:18-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -30,6 +30,12 @@
     "bigtable.appProfiles.list",
     "binaryauthorization.attestors.list",
     "binaryauthorization.policy.get",
+    "certificatemanager.certificateIssuanceConfigs.list",
+    "certificatemanager.certificateMapEntries.list",
+    "certificatemanager.certificateMaps.list",
+    "certificatemanager.certificates.list",
+    "certificatemanager.dnsAuthorizations.list",
+    "certificatemanager.trustConfigs.list",
     "cloudbuild.builds.list",
     "cloudbuild.workerpools.list",
     "clouddeploy.deliveryPipelines.list",
@@ -351,6 +357,42 @@
       "service": "binaryauthorization",
       "action": "GetSystemPolicy",
       "source_file": "binary_authorization.go"
+    },
+    {
+      "permission": "certificatemanager.certificateIssuanceConfigs.list",
+      "service": "certificatemanager",
+      "action": "ListCertificateIssuanceConfigs",
+      "source_file": "certificatemanager.go"
+    },
+    {
+      "permission": "certificatemanager.certificateMapEntries.list",
+      "service": "certificatemanager",
+      "action": "ListCertificateMapEntries",
+      "source_file": "certificatemanager.go"
+    },
+    {
+      "permission": "certificatemanager.certificateMaps.list",
+      "service": "certificatemanager",
+      "action": "ListCertificateMaps",
+      "source_file": "certificatemanager.go"
+    },
+    {
+      "permission": "certificatemanager.certificates.list",
+      "service": "certificatemanager",
+      "action": "ListCertificates",
+      "source_file": "certificatemanager.go"
+    },
+    {
+      "permission": "certificatemanager.dnsAuthorizations.list",
+      "service": "certificatemanager",
+      "action": "ListDnsAuthorizations",
+      "source_file": "certificatemanager.go"
+    },
+    {
+      "permission": "certificatemanager.trustConfigs.list",
+      "service": "certificatemanager",
+      "action": "ListTrustConfigs",
+      "source_file": "certificatemanager.go"
     },
     {
       "permission": "cloudbuild.builds.list",
@@ -1178,7 +1220,7 @@
     {
       "permission": "resourcemanager.folders.list",
       "service": "resourcemanager",
-      "action": "Folders.List",
+      "action": "Folders.Search",
       "source_file": "folder.go",
       "scope": "org"
     },
@@ -1218,7 +1260,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.List",
+      "action": "Projects.Search",
       "source_file": "project.go",
       "scope": "org"
     },

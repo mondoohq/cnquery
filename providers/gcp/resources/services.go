@@ -29,6 +29,7 @@ const (
 	service_dataproc            = "dataproc.googleapis.com"
 	service_binaryauthorization = "binaryauthorization.googleapis.com"
 	service_privateca           = "privateca.googleapis.com"
+	service_certificatemanager  = "certificatemanager.googleapis.com"
 	service_orgpolicy           = "orgpolicy.googleapis.com"
 	service_securitycenter      = "securitycenter.googleapis.com"
 	service_redis               = "redis.googleapis.com"
