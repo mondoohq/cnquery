@@ -3373,6 +3373,8 @@ private azure.subscription.sqlService {
   subscriptionId string
   // List of servers
   servers() []azure.subscription.sqlService.server
+  // List of SQL managed instances
+  managedInstances() []azure.subscription.sqlService.managedInstance
 }
 
 // Azure SQL Database server
@@ -4128,6 +4130,112 @@ private azure.subscription.sqlService.virtualNetworkRule @defaults("id name") {
   properties dict
   // Virtual network rule Subnet ID
   virtualNetworkSubnetId string
+}
+
+// Azure SQL Managed Instance
+//
+// Examine an Azure SQL Managed Instance — a fully-managed SQL Server
+// deployed inside a virtual network. Surfaces the SKU and tier
+// (GeneralPurpose, BusinessCritical), vCore count, storage size, license
+// type, the subnet the instance is joined to, FQDN, the administrator
+// login name, the minimum TLS version enforced, the proxy/connection
+// override, whether the public data endpoint is enabled, zone
+// redundancy, current vs requested backup storage redundancy, the
+// identity and customer-managed-key configuration, the maintenance
+// configuration, and the `databases()` hosted on the instance.
+azure.subscription.sqlService.managedInstance @defaults("name location state vCores skuName") {
+  // Resource ID of the managed instance
+  id string
+  // Managed instance name
+  name string
+  // Resource location
+  location string
+  // Resource tags
+  tags map[string]string
+  // SKU name (e.g. "GP_Gen5", "BC_Gen5")
+  skuName string
+  // SKU tier ("GeneralPurpose" or "BusinessCritical")
+  skuTier string
+  // SKU family ("Gen4" or "Gen5")
+  skuFamily string
+  // Number of vCores allocated to the instance
+  vCores int
+  // Storage size in GB
+  storageSizeInGB int
+  // Provisioning state of the instance
+  provisioningState string
+  // Runtime state of the instance ("Ready", "Stopped", etc.)
+  state string
+  // Fully qualified domain name used to connect to the instance
+  fullyQualifiedDomainName string
+  // DNS zone (paired managed instances share the same DNS zone)
+  dnsZone string
+  // Resource ID of the subnet the instance is joined to
+  subnetId string
+  // SQL administrator login name (the admin user, never the password)
+  administratorLogin string
+  // License type ("LicenseIncluded" or "BasePrice" for AHB)
+  licenseType string
+  // Minimum TLS version enforced on the instance ("None", "1.0", "1.1", "1.2")
+  minimalTlsVersion string
+  // Connection type to the instance ("Proxy", "Redirect", or "Default")
+  proxyOverride string
+  // Whether the public data endpoint is enabled
+  publicDataEndpointEnabled bool
+  // Whether multi-AZ (zone redundancy) is enabled for the instance
+  zoneRedundant bool
+  // Backup storage redundancy currently in use ("Local", "Zone", "Geo", "GeoZone")
+  currentBackupStorageRedundancy string
+  // Backup storage redundancy requested in the latest configuration
+  requestedBackupStorageRedundancy string
+  // Identity type ("None", "SystemAssigned", "UserAssigned", or "SystemAssigned,UserAssigned")
+  identityType string
+  // Resource ID of the primary user-assigned identity (empty when not configured)
+  primaryUserAssignedIdentityId string
+  // Customer-managed key URI used for transparent data encryption (empty when service-managed)
+  keyId string
+  // Resource ID of the maintenance configuration applied to this instance
+  maintenanceConfigurationId string
+  // Time zone ID for the instance (Windows time zone identifier)
+  timezoneId string
+  // Database collation (default for managed databases on this instance)
+  collation string
+  // Resource ID of the parent instance pool (empty for standalone instances)
+  instancePoolId string
+  // Number of private endpoint connections to the instance
+  privateEndpointConnectionCount int
+  // Subnet the managed instance is joined to
+  subnet() azure.subscription.networkService.subnet
+  // Managed databases hosted on this instance
+  databases() []azure.subscription.sqlService.managedInstance.database
+}
+
+// Azure SQL Managed Instance database
+private azure.subscription.sqlService.managedInstance.database @defaults("name status collation") {
+  // Resource ID of the managed database
+  id string
+  // Database name
+  name string
+  // Resource location
+  location string
+  // Resource tags
+  tags map[string]string
+  // Database status
+  status string
+  // Database collation
+  collation string
+  // Catalog (metadata) collation
+  catalogCollation string
+  // Database creation date
+  creationDate time
+  // Earliest restore point in time available for point-in-time restore
+  earliestRestorePoint time
+  // Default secondary location for geo-paired backups
+  defaultSecondaryLocation string
+  // Resource ID of the failover group the database belongs to (empty when not in a group)
+  failoverGroupId string
+  // Database create mode ("Default", "PointInTimeRestore", "RestoreExternalBackup", "Recovery", "RestoreLongTermRetentionBackup")
+  createMode string
 }
 
 // Azure Database for MySQL

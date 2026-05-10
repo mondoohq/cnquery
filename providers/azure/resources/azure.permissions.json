@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.10.1",
-  "generated_at": "2026-05-08T15:08:18-07:00",
+  "generated_at": "2026-05-09T16:54:12-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.App/certificates/read",
@@ -136,6 +136,8 @@
     "Microsoft.Sql/failoverGroups/read",
     "Microsoft.Sql/geoBackupPolicies/read",
     "Microsoft.Sql/ledgerDigestUploads/read",
+    "Microsoft.Sql/managedDatabases/read",
+    "Microsoft.Sql/managedInstances/read",
     "Microsoft.Sql/outboundFirewallRules/read",
     "Microsoft.Sql/privateEndpointConnections/read",
     "Microsoft.Sql/replicationLinks/read",
@@ -419,7 +421,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/credentialSets/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "containerregistry.go"
     },
     {
@@ -569,7 +571,7 @@
     {
       "permission": "Microsoft.DocumentDB/sQLResources/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListSQLRoleDefinitionsPager",
+      "action": "NewListSQLRoleAssignmentsPager",
       "source_file": "cosmosdb.go"
     },
     {
@@ -665,7 +667,7 @@
     {
       "permission": "Microsoft.Network/applicationGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -677,7 +679,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -731,7 +733,7 @@
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -785,13 +787,13 @@
     {
       "permission": "Microsoft.Network/privateEndpoints/read",
       "service": "Microsoft.Network",
-      "action": "NewListBySubscriptionPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
       "permission": "Microsoft.Network/privateLinkServices/read",
       "service": "Microsoft.Network",
-      "action": "NewListBySubscriptionPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -827,7 +829,7 @@
     {
       "permission": "Microsoft.Network/virtualNetworks/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -863,7 +865,7 @@
     {
       "permission": "Microsoft.OperationalInsights/workspaces/read",
       "service": "Microsoft.OperationalInsights",
-      "action": "NewListNSPPager",
+      "action": "Get",
       "source_file": "loganalytics.go"
     },
     {
@@ -899,7 +901,7 @@
     {
       "permission": "Microsoft.RecoveryServices/vaults/read",
       "service": "Microsoft.RecoveryServices",
-      "action": "NewListBySubscriptionIDPager",
+      "action": "Get",
       "source_file": "recoveryservices.go"
     },
     {
@@ -1003,6 +1005,18 @@
       "service": "Microsoft.Sql",
       "action": "Get",
       "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/managedDatabases/read",
+      "service": "Microsoft.Sql",
+      "action": "NewListByInstancePager",
+      "source_file": "sql_managedinstance.go"
+    },
+    {
+      "permission": "Microsoft.Sql/managedInstances/read",
+      "service": "Microsoft.Sql",
+      "action": "NewListPager",
+      "source_file": "sql_managedinstance.go"
     },
     {
       "permission": "Microsoft.Sql/outboundFirewallRules/read",
@@ -1151,7 +1165,7 @@
     {
       "permission": "Microsoft.Storage/storageAccounts/blobServices/containers/read",
       "service": "Microsoft.Storage",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "storage.go"
     },
     {
@@ -1229,13 +1243,13 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListPager",
+      "action": "NewListFunctionsPager",
       "source_file": "functions.go"
     },
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListSlotsPager",
+      "action": "NewListFunctionsPager",
       "source_file": "web.go"
     }
   ]

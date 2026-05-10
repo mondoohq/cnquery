@@ -161,6 +161,8 @@ const (
 	ResourceAzureSubscriptionSqlServiceConfiguration                                             string = "azure.subscription.sqlService.configuration"
 	ResourceAzureSubscriptionSqlServiceFirewallrule                                              string = "azure.subscription.sqlService.firewallrule"
 	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                                        string = "azure.subscription.sqlService.virtualNetworkRule"
+	ResourceAzureSubscriptionSqlServiceManagedInstance                                           string = "azure.subscription.sqlService.managedInstance"
+	ResourceAzureSubscriptionSqlServiceManagedInstanceDatabase                                   string = "azure.subscription.sqlService.managedInstance.database"
 	ResourceAzureSubscriptionMySqlService                                                        string = "azure.subscription.mySqlService"
 	ResourceAzureSubscriptionMySqlServiceServer                                                  string = "azure.subscription.mySqlService.server"
 	ResourceAzureSubscriptionMySqlServiceDatabase                                                string = "azure.subscription.mySqlService.database"
@@ -904,6 +906,14 @@ func init() {
 		"azure.subscription.sqlService.virtualNetworkRule": {
 			// to override args, implement: initAzureSubscriptionSqlServiceVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionSqlServiceVirtualNetworkRule,
+		},
+		"azure.subscription.sqlService.managedInstance": {
+			// to override args, implement: initAzureSubscriptionSqlServiceManagedInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSqlServiceManagedInstance,
+		},
+		"azure.subscription.sqlService.managedInstance.database": {
+			// to override args, implement: initAzureSubscriptionSqlServiceManagedInstanceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSqlServiceManagedInstanceDatabase,
 		},
 		"azure.subscription.mySqlService": {
 			Init:   initAzureSubscriptionMySqlService,
@@ -5520,6 +5530,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.servers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlService).GetServers()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.server")))
 	},
+	"azure.subscription.sqlService.managedInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlService).GetManagedInstances()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.managedInstance")))
+	},
 	"azure.subscription.sqlService.server.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetId()).ToDataRes(types.String)
 	},
@@ -6461,6 +6474,138 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.sqlService.virtualNetworkRule.virtualNetworkSubnetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).GetVirtualNetworkSubnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.sqlService.managedInstance.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.skuTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetSkuTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.skuFamily": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetSkuFamily()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.vCores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetVCores()).ToDataRes(types.Int)
+	},
+	"azure.subscription.sqlService.managedInstance.storageSizeInGB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetStorageSizeInGB()).ToDataRes(types.Int)
+	},
+	"azure.subscription.sqlService.managedInstance.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.fullyQualifiedDomainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetFullyQualifiedDomainName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.dnsZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetDnsZone()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.subnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetSubnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.administratorLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetAdministratorLogin()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.licenseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetLicenseType()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.minimalTlsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetMinimalTlsVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.proxyOverride": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetProxyOverride()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.publicDataEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetPublicDataEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.sqlService.managedInstance.zoneRedundant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetZoneRedundant()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.sqlService.managedInstance.currentBackupStorageRedundancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetCurrentBackupStorageRedundancy()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.requestedBackupStorageRedundancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetRequestedBackupStorageRedundancy()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.primaryUserAssignedIdentityId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetPrimaryUserAssignedIdentityId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.keyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetKeyId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.maintenanceConfigurationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetMaintenanceConfigurationId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.timezoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetTimezoneId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.collation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetCollation()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.instancePoolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetInstancePoolId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.privateEndpointConnectionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetPrivateEndpointConnectionCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.sqlService.managedInstance.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
+	"azure.subscription.sqlService.managedInstance.databases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetDatabases()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.managedInstance.database")))
+	},
+	"azure.subscription.sqlService.managedInstance.database.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.database.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.database.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.database.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.sqlService.managedInstance.database.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.database.collation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetCollation()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.database.catalogCollation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetCatalogCollation()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.database.creationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetCreationDate()).ToDataRes(types.Time)
+	},
+	"azure.subscription.sqlService.managedInstance.database.earliestRestorePoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetEarliestRestorePoint()).ToDataRes(types.Time)
+	},
+	"azure.subscription.sqlService.managedInstance.database.defaultSecondaryLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetDefaultSecondaryLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.database.failoverGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetFailoverGroupId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.managedInstance.database.createMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).GetCreateMode()).ToDataRes(types.String)
 	},
 	"azure.subscription.mySqlService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlService).GetSubscriptionId()).ToDataRes(types.String)
@@ -16546,6 +16691,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSqlService).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sqlService.managedInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlService).ManagedInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.sqlService.server.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceServer).__id, ok = v.Value.(string)
 		return
@@ -17928,6 +18077,190 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.sqlService.virtualNetworkRule.virtualNetworkSubnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).VirtualNetworkSubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.skuTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).SkuTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.skuFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).SkuFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.vCores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).VCores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.storageSizeInGB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).StorageSizeInGB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.fullyQualifiedDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).FullyQualifiedDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.dnsZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).DnsZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.administratorLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).AdministratorLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.licenseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).LicenseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.minimalTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).MinimalTlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.proxyOverride": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).ProxyOverride, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.publicDataEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).PublicDataEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.zoneRedundant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).ZoneRedundant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.currentBackupStorageRedundancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).CurrentBackupStorageRedundancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.requestedBackupStorageRedundancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).RequestedBackupStorageRedundancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.primaryUserAssignedIdentityId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).PrimaryUserAssignedIdentityId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.maintenanceConfigurationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).MaintenanceConfigurationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.timezoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).TimezoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.collation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).Collation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.instancePoolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).InstancePoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.privateEndpointConnectionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).PrivateEndpointConnectionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.collation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).Collation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.catalogCollation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).CatalogCollation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.earliestRestorePoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).EarliestRestorePoint, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.defaultSecondaryLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).DefaultSecondaryLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.failoverGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).FailoverGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.managedInstance.database.createMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstanceDatabase).CreateMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.mySqlService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37870,8 +38203,9 @@ type mqlAzureSubscriptionSqlService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionSqlServiceInternal it will be used here
-	SubscriptionId plugin.TValue[string]
-	Servers        plugin.TValue[[]any]
+	SubscriptionId   plugin.TValue[string]
+	Servers          plugin.TValue[[]any]
+	ManagedInstances plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionSqlService creates a new instance of this resource
@@ -37928,6 +38262,22 @@ func (c *mqlAzureSubscriptionSqlService) GetServers() *plugin.TValue[[]any] {
 		}
 
 		return c.servers()
+	})
+}
+
+func (c *mqlAzureSubscriptionSqlService) GetManagedInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedInstances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService", c.__id, "managedInstances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedInstances()
 	})
 }
 
@@ -41409,6 +41759,338 @@ func (c *mqlAzureSubscriptionSqlServiceVirtualNetworkRule) GetProperties() *plug
 
 func (c *mqlAzureSubscriptionSqlServiceVirtualNetworkRule) GetVirtualNetworkSubnetId() *plugin.TValue[string] {
 	return &c.VirtualNetworkSubnetId
+}
+
+// mqlAzureSubscriptionSqlServiceManagedInstance for the azure.subscription.sqlService.managedInstance resource
+type mqlAzureSubscriptionSqlServiceManagedInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionSqlServiceManagedInstanceInternal
+	Id                               plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Location                         plugin.TValue[string]
+	Tags                             plugin.TValue[map[string]any]
+	SkuName                          plugin.TValue[string]
+	SkuTier                          plugin.TValue[string]
+	SkuFamily                        plugin.TValue[string]
+	VCores                           plugin.TValue[int64]
+	StorageSizeInGB                  plugin.TValue[int64]
+	ProvisioningState                plugin.TValue[string]
+	State                            plugin.TValue[string]
+	FullyQualifiedDomainName         plugin.TValue[string]
+	DnsZone                          plugin.TValue[string]
+	SubnetId                         plugin.TValue[string]
+	AdministratorLogin               plugin.TValue[string]
+	LicenseType                      plugin.TValue[string]
+	MinimalTlsVersion                plugin.TValue[string]
+	ProxyOverride                    plugin.TValue[string]
+	PublicDataEndpointEnabled        plugin.TValue[bool]
+	ZoneRedundant                    plugin.TValue[bool]
+	CurrentBackupStorageRedundancy   plugin.TValue[string]
+	RequestedBackupStorageRedundancy plugin.TValue[string]
+	IdentityType                     plugin.TValue[string]
+	PrimaryUserAssignedIdentityId    plugin.TValue[string]
+	KeyId                            plugin.TValue[string]
+	MaintenanceConfigurationId       plugin.TValue[string]
+	TimezoneId                       plugin.TValue[string]
+	Collation                        plugin.TValue[string]
+	InstancePoolId                   plugin.TValue[string]
+	PrivateEndpointConnectionCount   plugin.TValue[int64]
+	Subnet                           plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+	Databases                        plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionSqlServiceManagedInstance creates a new instance of this resource
+func createAzureSubscriptionSqlServiceManagedInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSqlServiceManagedInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.sqlService.managedInstance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) MqlName() string {
+	return "azure.subscription.sqlService.managedInstance"
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetSkuTier() *plugin.TValue[string] {
+	return &c.SkuTier
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetSkuFamily() *plugin.TValue[string] {
+	return &c.SkuFamily
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetVCores() *plugin.TValue[int64] {
+	return &c.VCores
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetStorageSizeInGB() *plugin.TValue[int64] {
+	return &c.StorageSizeInGB
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetFullyQualifiedDomainName() *plugin.TValue[string] {
+	return &c.FullyQualifiedDomainName
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetDnsZone() *plugin.TValue[string] {
+	return &c.DnsZone
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetSubnetId() *plugin.TValue[string] {
+	return &c.SubnetId
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetAdministratorLogin() *plugin.TValue[string] {
+	return &c.AdministratorLogin
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetLicenseType() *plugin.TValue[string] {
+	return &c.LicenseType
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetMinimalTlsVersion() *plugin.TValue[string] {
+	return &c.MinimalTlsVersion
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetProxyOverride() *plugin.TValue[string] {
+	return &c.ProxyOverride
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetPublicDataEndpointEnabled() *plugin.TValue[bool] {
+	return &c.PublicDataEndpointEnabled
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetZoneRedundant() *plugin.TValue[bool] {
+	return &c.ZoneRedundant
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetCurrentBackupStorageRedundancy() *plugin.TValue[string] {
+	return &c.CurrentBackupStorageRedundancy
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetRequestedBackupStorageRedundancy() *plugin.TValue[string] {
+	return &c.RequestedBackupStorageRedundancy
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetPrimaryUserAssignedIdentityId() *plugin.TValue[string] {
+	return &c.PrimaryUserAssignedIdentityId
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetKeyId() *plugin.TValue[string] {
+	return &c.KeyId
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetMaintenanceConfigurationId() *plugin.TValue[string] {
+	return &c.MaintenanceConfigurationId
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetTimezoneId() *plugin.TValue[string] {
+	return &c.TimezoneId
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetCollation() *plugin.TValue[string] {
+	return &c.Collation
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetInstancePoolId() *plugin.TValue[string] {
+	return &c.InstancePoolId
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetPrivateEndpointConnectionCount() *plugin.TValue[int64] {
+	return &c.PrivateEndpointConnectionCount
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService.managedInstance", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Databases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService.managedInstance", c.__id, "databases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.databases()
+	})
+}
+
+// mqlAzureSubscriptionSqlServiceManagedInstanceDatabase for the azure.subscription.sqlService.managedInstance.database resource
+type mqlAzureSubscriptionSqlServiceManagedInstanceDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionSqlServiceManagedInstanceDatabaseInternal it will be used here
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Location                 plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
+	Status                   plugin.TValue[string]
+	Collation                plugin.TValue[string]
+	CatalogCollation         plugin.TValue[string]
+	CreationDate             plugin.TValue[*time.Time]
+	EarliestRestorePoint     plugin.TValue[*time.Time]
+	DefaultSecondaryLocation plugin.TValue[string]
+	FailoverGroupId          plugin.TValue[string]
+	CreateMode               plugin.TValue[string]
+}
+
+// createAzureSubscriptionSqlServiceManagedInstanceDatabase creates a new instance of this resource
+func createAzureSubscriptionSqlServiceManagedInstanceDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSqlServiceManagedInstanceDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.sqlService.managedInstance.database", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) MqlName() string {
+	return "azure.subscription.sqlService.managedInstance.database"
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetCollation() *plugin.TValue[string] {
+	return &c.Collation
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetCatalogCollation() *plugin.TValue[string] {
+	return &c.CatalogCollation
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetCreationDate() *plugin.TValue[*time.Time] {
+	return &c.CreationDate
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetEarliestRestorePoint() *plugin.TValue[*time.Time] {
+	return &c.EarliestRestorePoint
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetDefaultSecondaryLocation() *plugin.TValue[string] {
+	return &c.DefaultSecondaryLocation
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetFailoverGroupId() *plugin.TValue[string] {
+	return &c.FailoverGroupId
+}
+
+func (c *mqlAzureSubscriptionSqlServiceManagedInstanceDatabase) GetCreateMode() *plugin.TValue[string] {
+	return &c.CreateMode
 }
 
 // mqlAzureSubscriptionMySqlService for the azure.subscription.mySqlService resource
