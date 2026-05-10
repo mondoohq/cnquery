@@ -2544,7 +2544,7 @@ private azure.subscription.storageService.account @defaults("id name location") 
 }
 
 // Azure Storage account queue
-private azure.subscription.storageService.account.queue @defaults("id name approximateMessageCount") {
+private azure.subscription.storageService.account.queue @defaults("id name") {
   // Queue resource ID
   id string
   // Queue name
