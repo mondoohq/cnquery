@@ -434,6 +434,10 @@ const (
 	ResourceAwsEcrScanningConfiguration                                         string = "aws.ecr.scanningConfiguration"
 	ResourceAwsEcrScanningConfigurationRule                                     string = "aws.ecr.scanningConfiguration.rule"
 	ResourceAwsDms                                                              string = "aws.dms"
+	ResourceAwsDmsReplicationInstance                                           string = "aws.dms.replicationInstance"
+	ResourceAwsDmsEndpoint                                                      string = "aws.dms.endpoint"
+	ResourceAwsDmsReplicationTask                                               string = "aws.dms.replicationTask"
+	ResourceAwsDmsReplicationSubnetGroup                                        string = "aws.dms.replicationSubnetGroup"
 	ResourceAwsApigateway                                                       string = "aws.apigateway"
 	ResourceAwsApigatewayRestapi                                                string = "aws.apigateway.restapi"
 	ResourceAwsApigatewayStage                                                  string = "aws.apigateway.stage"
@@ -2431,6 +2435,22 @@ func init() {
 		"aws.dms": {
 			// to override args, implement: initAwsDms(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDms,
+		},
+		"aws.dms.replicationInstance": {
+			Init:   initAwsDmsReplicationInstance,
+			Create: createAwsDmsReplicationInstance,
+		},
+		"aws.dms.endpoint": {
+			Init:   initAwsDmsEndpoint,
+			Create: createAwsDmsEndpoint,
+		},
+		"aws.dms.replicationTask": {
+			// to override args, implement: initAwsDmsReplicationTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDmsReplicationTask,
+		},
+		"aws.dms.replicationSubnetGroup": {
+			Init:   initAwsDmsReplicationSubnetGroup,
+			Create: createAwsDmsReplicationSubnetGroup,
 		},
 		"aws.apigateway": {
 			// to override args, implement: initAwsApigateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -14827,7 +14847,220 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsEcrScanningConfigurationRule).GetRepositoryFilters()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.dms.replicationInstances": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDms).GetReplicationInstances()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAwsDms).GetReplicationInstances()).ToDataRes(types.Array(types.Resource("aws.dms.replicationInstance")))
+	},
+	"aws.dms.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDms).GetEndpoints()).ToDataRes(types.Array(types.Resource("aws.dms.endpoint")))
+	},
+	"aws.dms.replicationTasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDms).GetReplicationTasks()).ToDataRes(types.Array(types.Resource("aws.dms.replicationTask")))
+	},
+	"aws.dms.replicationSubnetGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDms).GetReplicationSubnetGroups()).ToDataRes(types.Array(types.Resource("aws.dms.replicationSubnetGroup")))
+	},
+	"aws.dms.replicationInstance.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetArn()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.replicationInstanceIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetReplicationInstanceIdentifier()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.replicationInstanceClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetReplicationInstanceClass()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.replicationInstanceStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetReplicationInstanceStatus()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
+	},
+	"aws.dms.replicationInstance.multiAZ": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetMultiAZ()).ToDataRes(types.Bool)
+	},
+	"aws.dms.replicationInstance.publiclyAccessible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetPubliclyAccessible()).ToDataRes(types.Bool)
+	},
+	"aws.dms.replicationInstance.allocatedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetAllocatedStorage()).ToDataRes(types.Int)
+	},
+	"aws.dms.replicationInstance.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.secondaryAvailabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetSecondaryAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.instanceCreateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetInstanceCreateTime()).ToDataRes(types.Time)
+	},
+	"aws.dms.replicationInstance.preferredMaintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetPreferredMaintenanceWindow()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetNetworkType()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.replicationInstancePrivateIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetReplicationInstancePrivateIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"aws.dms.replicationInstance.replicationInstancePublicIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetReplicationInstancePublicIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"aws.dms.replicationInstance.replicationInstanceIpv6Addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetReplicationInstanceIpv6Addresses()).ToDataRes(types.Array(types.String))
+	},
+	"aws.dms.replicationInstance.dnsNameServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetDnsNameServers()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationInstance.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.dms.replicationInstance.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.dms.replicationInstance.subnetGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetSubnetGroup()).ToDataRes(types.Resource("aws.dms.replicationSubnetGroup"))
+	},
+	"aws.dms.replicationInstance.pendingModifiedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationInstance).GetPendingModifiedValues()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.dms.endpoint.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetArn()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.endpointIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetEndpointIdentifier()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.endpointType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetEndpointType()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.engineName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetEngineName()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.engineDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetEngineDisplayName()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetUsername()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.serverName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetServerName()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetPort()).ToDataRes(types.Int)
+	},
+	"aws.dms.endpoint.databaseName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetDatabaseName()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.sslMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetSslMode()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.isReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetIsReadOnly()).ToDataRes(types.Bool)
+	},
+	"aws.dms.endpoint.extraConnectionAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetExtraConnectionAttributes()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.dms.endpoint.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.dms.endpoint.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsEndpoint).GetCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
+	},
+	"aws.dms.replicationTask.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetArn()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationTask.replicationTaskIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetReplicationTaskIdentifier()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationTask.migrationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetMigrationType()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationTask.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationTask.lastFailureMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetLastFailureMessage()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationTask.stopReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetStopReason()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationTask.replicationTaskCreationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetReplicationTaskCreationDate()).ToDataRes(types.Time)
+	},
+	"aws.dms.replicationTask.replicationTaskStartDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetReplicationTaskStartDate()).ToDataRes(types.Time)
+	},
+	"aws.dms.replicationTask.cdcStartPosition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetCdcStartPosition()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationTask.cdcStopPosition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetCdcStopPosition()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationTask.recoveryCheckpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetRecoveryCheckpoint()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationTask.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationTask.fullLoadProgressPercent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetFullLoadProgressPercent()).ToDataRes(types.Int)
+	},
+	"aws.dms.replicationTask.elapsedTimeMillis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetElapsedTimeMillis()).ToDataRes(types.Int)
+	},
+	"aws.dms.replicationTask.tablesLoaded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetTablesLoaded()).ToDataRes(types.Int)
+	},
+	"aws.dms.replicationTask.tablesLoading": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetTablesLoading()).ToDataRes(types.Int)
+	},
+	"aws.dms.replicationTask.tablesQueued": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetTablesQueued()).ToDataRes(types.Int)
+	},
+	"aws.dms.replicationTask.tablesErrored": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetTablesErrored()).ToDataRes(types.Int)
+	},
+	"aws.dms.replicationTask.sourceEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetSourceEndpoint()).ToDataRes(types.Resource("aws.dms.endpoint"))
+	},
+	"aws.dms.replicationTask.targetEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetTargetEndpoint()).ToDataRes(types.Resource("aws.dms.endpoint"))
+	},
+	"aws.dms.replicationTask.replicationInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationTask).GetReplicationInstance()).ToDataRes(types.Resource("aws.dms.replicationInstance"))
+	},
+	"aws.dms.replicationSubnetGroup.replicationSubnetGroupIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationSubnetGroup).GetReplicationSubnetGroupIdentifier()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationSubnetGroup.replicationSubnetGroupDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationSubnetGroup).GetReplicationSubnetGroupDescription()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationSubnetGroup.subnetGroupStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationSubnetGroup).GetSubnetGroupStatus()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationSubnetGroup.supportedNetworkTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationSubnetGroup).GetSupportedNetworkTypes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.dms.replicationSubnetGroup.isReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationSubnetGroup).GetIsReadOnly()).ToDataRes(types.Bool)
+	},
+	"aws.dms.replicationSubnetGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationSubnetGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.dms.replicationSubnetGroup.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationSubnetGroup).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.dms.replicationSubnetGroup.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDmsReplicationSubnetGroup).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
 	},
 	"aws.apigateway.restApis": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigateway).GetRestApis()).ToDataRes(types.Array(types.Resource("aws.apigateway.restapi")))
@@ -41142,6 +41375,306 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.dms.replicationInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDms).ReplicationInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDms).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDms).ReplicationTasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationSubnetGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDms).ReplicationSubnetGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.dms.replicationInstance.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.replicationInstanceIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).ReplicationInstanceIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.replicationInstanceClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).ReplicationInstanceClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.replicationInstanceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).ReplicationInstanceStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.multiAZ": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).MultiAZ, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.publiclyAccessible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).PubliclyAccessible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.allocatedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).AllocatedStorage, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.secondaryAvailabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).SecondaryAvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.instanceCreateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).InstanceCreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.preferredMaintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).PreferredMaintenanceWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.replicationInstancePrivateIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).ReplicationInstancePrivateIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.replicationInstancePublicIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).ReplicationInstancePublicIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.replicationInstanceIpv6Addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).ReplicationInstanceIpv6Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.dnsNameServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).DnsNameServers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.subnetGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).SubnetGroup, ok = plugin.RawToTValue[*mqlAwsDmsReplicationSubnetGroup](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationInstance.pendingModifiedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationInstance).PendingModifiedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.dms.endpoint.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.endpointIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).EndpointIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.endpointType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).EndpointType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.engineName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).EngineName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.engineDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).EngineDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.serverName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).ServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.databaseName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).DatabaseName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.sslMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).SslMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.isReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).IsReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.extraConnectionAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).ExtraConnectionAttributes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.dms.endpoint.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsEndpoint).Certificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.dms.replicationTask.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.replicationTaskIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).ReplicationTaskIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.migrationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).MigrationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.lastFailureMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).LastFailureMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.stopReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).StopReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.replicationTaskCreationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).ReplicationTaskCreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.replicationTaskStartDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).ReplicationTaskStartDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.cdcStartPosition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).CdcStartPosition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.cdcStopPosition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).CdcStopPosition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.recoveryCheckpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).RecoveryCheckpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.fullLoadProgressPercent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).FullLoadProgressPercent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.elapsedTimeMillis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).ElapsedTimeMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.tablesLoaded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).TablesLoaded, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.tablesLoading": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).TablesLoading, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.tablesQueued": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).TablesQueued, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.tablesErrored": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).TablesErrored, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.sourceEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).SourceEndpoint, ok = plugin.RawToTValue[*mqlAwsDmsEndpoint](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.targetEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).TargetEndpoint, ok = plugin.RawToTValue[*mqlAwsDmsEndpoint](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationTask.replicationInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationTask).ReplicationInstance, ok = plugin.RawToTValue[*mqlAwsDmsReplicationInstance](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationSubnetGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationSubnetGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.dms.replicationSubnetGroup.replicationSubnetGroupIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationSubnetGroup).ReplicationSubnetGroupIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationSubnetGroup.replicationSubnetGroupDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationSubnetGroup).ReplicationSubnetGroupDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationSubnetGroup.subnetGroupStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationSubnetGroup).SubnetGroupStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationSubnetGroup.supportedNetworkTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationSubnetGroup).SupportedNetworkTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationSubnetGroup.isReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationSubnetGroup).IsReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationSubnetGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationSubnetGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationSubnetGroup.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationSubnetGroup).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.dms.replicationSubnetGroup.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDmsReplicationSubnetGroup).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -100325,7 +100858,10 @@ type mqlAwsDms struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsDmsInternal it will be used here
-	ReplicationInstances plugin.TValue[[]any]
+	ReplicationInstances    plugin.TValue[[]any]
+	Endpoints               plugin.TValue[[]any]
+	ReplicationTasks        plugin.TValue[[]any]
+	ReplicationSubnetGroups plugin.TValue[[]any]
 }
 
 // createAwsDms creates a new instance of this resource
@@ -100367,7 +100903,701 @@ func (c *mqlAwsDms) MqlID() string {
 
 func (c *mqlAwsDms) GetReplicationInstances() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ReplicationInstances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms", c.__id, "replicationInstances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
 		return c.replicationInstances()
+	})
+}
+
+func (c *mqlAwsDms) GetEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms", c.__id, "endpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpoints()
+	})
+}
+
+func (c *mqlAwsDms) GetReplicationTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicationTasks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms", c.__id, "replicationTasks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replicationTasks()
+	})
+}
+
+func (c *mqlAwsDms) GetReplicationSubnetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicationSubnetGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms", c.__id, "replicationSubnetGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replicationSubnetGroups()
+	})
+}
+
+// mqlAwsDmsReplicationInstance for the aws.dms.replicationInstance resource
+type mqlAwsDmsReplicationInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDmsReplicationInstanceInternal
+	Arn                                   plugin.TValue[string]
+	ReplicationInstanceIdentifier         plugin.TValue[string]
+	ReplicationInstanceClass              plugin.TValue[string]
+	ReplicationInstanceStatus             plugin.TValue[string]
+	EngineVersion                         plugin.TValue[string]
+	AutoMinorVersionUpgrade               plugin.TValue[bool]
+	MultiAZ                               plugin.TValue[bool]
+	PubliclyAccessible                    plugin.TValue[bool]
+	AllocatedStorage                      plugin.TValue[int64]
+	AvailabilityZone                      plugin.TValue[string]
+	SecondaryAvailabilityZone             plugin.TValue[string]
+	InstanceCreateTime                    plugin.TValue[*time.Time]
+	PreferredMaintenanceWindow            plugin.TValue[string]
+	NetworkType                           plugin.TValue[string]
+	ReplicationInstancePrivateIpAddresses plugin.TValue[[]any]
+	ReplicationInstancePublicIpAddresses  plugin.TValue[[]any]
+	ReplicationInstanceIpv6Addresses      plugin.TValue[[]any]
+	DnsNameServers                        plugin.TValue[string]
+	Region                                plugin.TValue[string]
+	KmsKey                                plugin.TValue[*mqlAwsKmsKey]
+	SecurityGroups                        plugin.TValue[[]any]
+	SubnetGroup                           plugin.TValue[*mqlAwsDmsReplicationSubnetGroup]
+	PendingModifiedValues                 plugin.TValue[[]any]
+}
+
+// createAwsDmsReplicationInstance creates a new instance of this resource
+func createAwsDmsReplicationInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDmsReplicationInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dms.replicationInstance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDmsReplicationInstance) MqlName() string {
+	return "aws.dms.replicationInstance"
+}
+
+func (c *mqlAwsDmsReplicationInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetReplicationInstanceIdentifier() *plugin.TValue[string] {
+	return &c.ReplicationInstanceIdentifier
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetReplicationInstanceClass() *plugin.TValue[string] {
+	return &c.ReplicationInstanceClass
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetReplicationInstanceStatus() *plugin.TValue[string] {
+	return &c.ReplicationInstanceStatus
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
+	return &c.AutoMinorVersionUpgrade
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetMultiAZ() *plugin.TValue[bool] {
+	return &c.MultiAZ
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetPubliclyAccessible() *plugin.TValue[bool] {
+	return &c.PubliclyAccessible
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetAllocatedStorage() *plugin.TValue[int64] {
+	return &c.AllocatedStorage
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetSecondaryAvailabilityZone() *plugin.TValue[string] {
+	return &c.SecondaryAvailabilityZone
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetInstanceCreateTime() *plugin.TValue[*time.Time] {
+	return &c.InstanceCreateTime
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetPreferredMaintenanceWindow() *plugin.TValue[string] {
+	return &c.PreferredMaintenanceWindow
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetReplicationInstancePrivateIpAddresses() *plugin.TValue[[]any] {
+	return &c.ReplicationInstancePrivateIpAddresses
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetReplicationInstancePublicIpAddresses() *plugin.TValue[[]any] {
+	return &c.ReplicationInstancePublicIpAddresses
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetReplicationInstanceIpv6Addresses() *plugin.TValue[[]any] {
+	return &c.ReplicationInstanceIpv6Addresses
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetDnsNameServers() *plugin.TValue[string] {
+	return &c.DnsNameServers
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.replicationInstance", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.replicationInstance", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetSubnetGroup() *plugin.TValue[*mqlAwsDmsReplicationSubnetGroup] {
+	return plugin.GetOrCompute[*mqlAwsDmsReplicationSubnetGroup](&c.SubnetGroup, func() (*mqlAwsDmsReplicationSubnetGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.replicationInstance", c.__id, "subnetGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDmsReplicationSubnetGroup), nil
+			}
+		}
+
+		return c.subnetGroup()
+	})
+}
+
+func (c *mqlAwsDmsReplicationInstance) GetPendingModifiedValues() *plugin.TValue[[]any] {
+	return &c.PendingModifiedValues
+}
+
+// mqlAwsDmsEndpoint for the aws.dms.endpoint resource
+type mqlAwsDmsEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDmsEndpointInternal
+	Arn                       plugin.TValue[string]
+	EndpointIdentifier        plugin.TValue[string]
+	EndpointType              plugin.TValue[string]
+	EngineName                plugin.TValue[string]
+	EngineDisplayName         plugin.TValue[string]
+	Username                  plugin.TValue[string]
+	ServerName                plugin.TValue[string]
+	Port                      plugin.TValue[int64]
+	DatabaseName              plugin.TValue[string]
+	Status                    plugin.TValue[string]
+	SslMode                   plugin.TValue[string]
+	IsReadOnly                plugin.TValue[bool]
+	ExtraConnectionAttributes plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	KmsKey                    plugin.TValue[*mqlAwsKmsKey]
+	Certificate               plugin.TValue[*mqlAwsAcmCertificate]
+}
+
+// createAwsDmsEndpoint creates a new instance of this resource
+func createAwsDmsEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDmsEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dms.endpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDmsEndpoint) MqlName() string {
+	return "aws.dms.endpoint"
+}
+
+func (c *mqlAwsDmsEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDmsEndpoint) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDmsEndpoint) GetEndpointIdentifier() *plugin.TValue[string] {
+	return &c.EndpointIdentifier
+}
+
+func (c *mqlAwsDmsEndpoint) GetEndpointType() *plugin.TValue[string] {
+	return &c.EndpointType
+}
+
+func (c *mqlAwsDmsEndpoint) GetEngineName() *plugin.TValue[string] {
+	return &c.EngineName
+}
+
+func (c *mqlAwsDmsEndpoint) GetEngineDisplayName() *plugin.TValue[string] {
+	return &c.EngineDisplayName
+}
+
+func (c *mqlAwsDmsEndpoint) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlAwsDmsEndpoint) GetServerName() *plugin.TValue[string] {
+	return &c.ServerName
+}
+
+func (c *mqlAwsDmsEndpoint) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAwsDmsEndpoint) GetDatabaseName() *plugin.TValue[string] {
+	return &c.DatabaseName
+}
+
+func (c *mqlAwsDmsEndpoint) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDmsEndpoint) GetSslMode() *plugin.TValue[string] {
+	return &c.SslMode
+}
+
+func (c *mqlAwsDmsEndpoint) GetIsReadOnly() *plugin.TValue[bool] {
+	return &c.IsReadOnly
+}
+
+func (c *mqlAwsDmsEndpoint) GetExtraConnectionAttributes() *plugin.TValue[string] {
+	return &c.ExtraConnectionAttributes
+}
+
+func (c *mqlAwsDmsEndpoint) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDmsEndpoint) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.endpoint", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsDmsEndpoint) GetCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.Certificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.endpoint", c.__id, "certificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.certificate()
+	})
+}
+
+// mqlAwsDmsReplicationTask for the aws.dms.replicationTask resource
+type mqlAwsDmsReplicationTask struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDmsReplicationTaskInternal
+	Arn                         plugin.TValue[string]
+	ReplicationTaskIdentifier   plugin.TValue[string]
+	MigrationType               plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	LastFailureMessage          plugin.TValue[string]
+	StopReason                  plugin.TValue[string]
+	ReplicationTaskCreationDate plugin.TValue[*time.Time]
+	ReplicationTaskStartDate    plugin.TValue[*time.Time]
+	CdcStartPosition            plugin.TValue[string]
+	CdcStopPosition             plugin.TValue[string]
+	RecoveryCheckpoint          plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	FullLoadProgressPercent     plugin.TValue[int64]
+	ElapsedTimeMillis           plugin.TValue[int64]
+	TablesLoaded                plugin.TValue[int64]
+	TablesLoading               plugin.TValue[int64]
+	TablesQueued                plugin.TValue[int64]
+	TablesErrored               plugin.TValue[int64]
+	SourceEndpoint              plugin.TValue[*mqlAwsDmsEndpoint]
+	TargetEndpoint              plugin.TValue[*mqlAwsDmsEndpoint]
+	ReplicationInstance         plugin.TValue[*mqlAwsDmsReplicationInstance]
+}
+
+// createAwsDmsReplicationTask creates a new instance of this resource
+func createAwsDmsReplicationTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDmsReplicationTask{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dms.replicationTask", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDmsReplicationTask) MqlName() string {
+	return "aws.dms.replicationTask"
+}
+
+func (c *mqlAwsDmsReplicationTask) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDmsReplicationTask) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDmsReplicationTask) GetReplicationTaskIdentifier() *plugin.TValue[string] {
+	return &c.ReplicationTaskIdentifier
+}
+
+func (c *mqlAwsDmsReplicationTask) GetMigrationType() *plugin.TValue[string] {
+	return &c.MigrationType
+}
+
+func (c *mqlAwsDmsReplicationTask) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDmsReplicationTask) GetLastFailureMessage() *plugin.TValue[string] {
+	return &c.LastFailureMessage
+}
+
+func (c *mqlAwsDmsReplicationTask) GetStopReason() *plugin.TValue[string] {
+	return &c.StopReason
+}
+
+func (c *mqlAwsDmsReplicationTask) GetReplicationTaskCreationDate() *plugin.TValue[*time.Time] {
+	return &c.ReplicationTaskCreationDate
+}
+
+func (c *mqlAwsDmsReplicationTask) GetReplicationTaskStartDate() *plugin.TValue[*time.Time] {
+	return &c.ReplicationTaskStartDate
+}
+
+func (c *mqlAwsDmsReplicationTask) GetCdcStartPosition() *plugin.TValue[string] {
+	return &c.CdcStartPosition
+}
+
+func (c *mqlAwsDmsReplicationTask) GetCdcStopPosition() *plugin.TValue[string] {
+	return &c.CdcStopPosition
+}
+
+func (c *mqlAwsDmsReplicationTask) GetRecoveryCheckpoint() *plugin.TValue[string] {
+	return &c.RecoveryCheckpoint
+}
+
+func (c *mqlAwsDmsReplicationTask) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDmsReplicationTask) GetFullLoadProgressPercent() *plugin.TValue[int64] {
+	return &c.FullLoadProgressPercent
+}
+
+func (c *mqlAwsDmsReplicationTask) GetElapsedTimeMillis() *plugin.TValue[int64] {
+	return &c.ElapsedTimeMillis
+}
+
+func (c *mqlAwsDmsReplicationTask) GetTablesLoaded() *plugin.TValue[int64] {
+	return &c.TablesLoaded
+}
+
+func (c *mqlAwsDmsReplicationTask) GetTablesLoading() *plugin.TValue[int64] {
+	return &c.TablesLoading
+}
+
+func (c *mqlAwsDmsReplicationTask) GetTablesQueued() *plugin.TValue[int64] {
+	return &c.TablesQueued
+}
+
+func (c *mqlAwsDmsReplicationTask) GetTablesErrored() *plugin.TValue[int64] {
+	return &c.TablesErrored
+}
+
+func (c *mqlAwsDmsReplicationTask) GetSourceEndpoint() *plugin.TValue[*mqlAwsDmsEndpoint] {
+	return plugin.GetOrCompute[*mqlAwsDmsEndpoint](&c.SourceEndpoint, func() (*mqlAwsDmsEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.replicationTask", c.__id, "sourceEndpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDmsEndpoint), nil
+			}
+		}
+
+		return c.sourceEndpoint()
+	})
+}
+
+func (c *mqlAwsDmsReplicationTask) GetTargetEndpoint() *plugin.TValue[*mqlAwsDmsEndpoint] {
+	return plugin.GetOrCompute[*mqlAwsDmsEndpoint](&c.TargetEndpoint, func() (*mqlAwsDmsEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.replicationTask", c.__id, "targetEndpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDmsEndpoint), nil
+			}
+		}
+
+		return c.targetEndpoint()
+	})
+}
+
+func (c *mqlAwsDmsReplicationTask) GetReplicationInstance() *plugin.TValue[*mqlAwsDmsReplicationInstance] {
+	return plugin.GetOrCompute[*mqlAwsDmsReplicationInstance](&c.ReplicationInstance, func() (*mqlAwsDmsReplicationInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.replicationTask", c.__id, "replicationInstance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDmsReplicationInstance), nil
+			}
+		}
+
+		return c.replicationInstance()
+	})
+}
+
+// mqlAwsDmsReplicationSubnetGroup for the aws.dms.replicationSubnetGroup resource
+type mqlAwsDmsReplicationSubnetGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDmsReplicationSubnetGroupInternal
+	ReplicationSubnetGroupIdentifier  plugin.TValue[string]
+	ReplicationSubnetGroupDescription plugin.TValue[string]
+	SubnetGroupStatus                 plugin.TValue[string]
+	SupportedNetworkTypes             plugin.TValue[[]any]
+	IsReadOnly                        plugin.TValue[bool]
+	Region                            plugin.TValue[string]
+	Vpc                               plugin.TValue[*mqlAwsVpc]
+	Subnets                           plugin.TValue[[]any]
+}
+
+// createAwsDmsReplicationSubnetGroup creates a new instance of this resource
+func createAwsDmsReplicationSubnetGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDmsReplicationSubnetGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dms.replicationSubnetGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDmsReplicationSubnetGroup) MqlName() string {
+	return "aws.dms.replicationSubnetGroup"
+}
+
+func (c *mqlAwsDmsReplicationSubnetGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDmsReplicationSubnetGroup) GetReplicationSubnetGroupIdentifier() *plugin.TValue[string] {
+	return &c.ReplicationSubnetGroupIdentifier
+}
+
+func (c *mqlAwsDmsReplicationSubnetGroup) GetReplicationSubnetGroupDescription() *plugin.TValue[string] {
+	return &c.ReplicationSubnetGroupDescription
+}
+
+func (c *mqlAwsDmsReplicationSubnetGroup) GetSubnetGroupStatus() *plugin.TValue[string] {
+	return &c.SubnetGroupStatus
+}
+
+func (c *mqlAwsDmsReplicationSubnetGroup) GetSupportedNetworkTypes() *plugin.TValue[[]any] {
+	return &c.SupportedNetworkTypes
+}
+
+func (c *mqlAwsDmsReplicationSubnetGroup) GetIsReadOnly() *plugin.TValue[bool] {
+	return &c.IsReadOnly
+}
+
+func (c *mqlAwsDmsReplicationSubnetGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDmsReplicationSubnetGroup) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.replicationSubnetGroup", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsDmsReplicationSubnetGroup) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dms.replicationSubnetGroup", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
 	})
 }
 

@@ -9526,13 +9526,171 @@ private aws.ecr.scanningConfiguration.rule @defaults("scanFrequency") {
 // Use the DMS namespace to enumerate the replication infrastructure
 // configured for database migration in the account. Iterate
 // `replicationInstances()` for the replication instances DMS uses to copy
-// data between source and target endpoints; each entry is exposed as a
-// dict that surfaces the instance class, engine version, allocated storage,
-// VPC and subnet placement, public accessibility, KMS encryption, and
-// pending modifications.
+// data between source and target endpoints, `endpoints()` for the source
+// and target connection definitions, `replicationTasks()` for the
+// migration tasks bound to instances, and `replicationSubnetGroups()` for
+// the subnet groups that scope replication instances to a VPC.
 aws.dms @defaults("replicationInstances") {
   // List of DMS replication instances
-  replicationInstances() []dict
+  replicationInstances() []aws.dms.replicationInstance
+  // List of DMS endpoints (source and target databases)
+  endpoints() []aws.dms.endpoint
+  // List of DMS replication tasks
+  replicationTasks() []aws.dms.replicationTask
+  // List of DMS replication subnet groups
+  replicationSubnetGroups() []aws.dms.replicationSubnetGroup
+}
+
+// AWS DMS replication instance
+private aws.dms.replicationInstance @defaults("arn replicationInstanceIdentifier replicationInstanceClass replicationInstanceStatus") {
+  // ARN of the replication instance
+  arn string
+  // User-supplied replication instance identifier
+  replicationInstanceIdentifier string
+  // Compute and memory capacity class (for example, `dms.t3.medium`)
+  replicationInstanceClass string
+  // Status of the replication instance (for example, `available`, `creating`, `modifying`)
+  replicationInstanceStatus string
+  // Engine version number of the replication instance
+  engineVersion string
+  // Whether minor engine upgrades are applied automatically during the maintenance window
+  autoMinorVersionUpgrade bool
+  // Whether the replication instance is a Multi-AZ deployment
+  multiAZ bool
+  // Whether the replication instance has a public IP address
+  publiclyAccessible bool
+  // Storage allocated for the replication instance, in gigabytes
+  allocatedStorage int
+  // Availability Zone for a single-AZ replication instance
+  availabilityZone string
+  // Availability Zone of the standby replica in a Multi-AZ deployment
+  secondaryAvailabilityZone string
+  // Time the replication instance was created
+  instanceCreateTime time
+  // Weekly maintenance window for the replication instance
+  preferredMaintenanceWindow string
+  // IP addressing protocol (`IPV4` or `DUAL`)
+  networkType string
+  // Private IP addresses of the replication instance
+  replicationInstancePrivateIpAddresses []string
+  // Public IP addresses of the replication instance
+  replicationInstancePublicIpAddresses []string
+  // IPv6 addresses of the replication instance
+  replicationInstanceIpv6Addresses []string
+  // DNS name servers configured for the replication instance
+  dnsNameServers string
+  // Region the replication instance is deployed in
+  region string
+  // KMS key used to encrypt data on the replication instance
+  kmsKey() aws.kms.key
+  // VPC security groups attached to the replication instance
+  securityGroups() []aws.ec2.securitygroup
+  // Subnet group that scopes the replication instance to a VPC
+  subnetGroup() aws.dms.replicationSubnetGroup
+  // Pending modifications scheduled for the next maintenance window
+  pendingModifiedValues []dict
+}
+
+// AWS DMS endpoint
+private aws.dms.endpoint @defaults("arn endpointIdentifier endpointType engineName status") {
+  // ARN of the endpoint
+  arn string
+  // User-supplied endpoint identifier
+  endpointIdentifier string
+  // Endpoint role (`source` or `target`)
+  endpointType string
+  // Database engine name (for example, `mysql`, `postgres`, `s3`, `kinesis`)
+  engineName string
+  // Display name for the engine (for example, `Amazon Aurora MySQL`)
+  engineDisplayName string
+  // Username used to connect to the endpoint
+  username string
+  // Server name (hostname) for the endpoint
+  serverName string
+  // Port the endpoint listens on
+  port int
+  // Database name on the endpoint
+  databaseName string
+  // Status of the endpoint
+  status string
+  // SSL mode used to connect to the endpoint (one of `none`, `require`, `verify-ca`, `verify-full`)
+  sslMode string
+  // Whether the endpoint is read-only (managed by DMS as part of a zero-ETL integration)
+  isReadOnly bool
+  // Extra connection attribute string passed to the engine driver
+  extraConnectionAttributes string
+  // Region the endpoint was created in
+  region string
+  // KMS key used to encrypt the connection parameters for the endpoint
+  kmsKey() aws.kms.key
+  // ACM certificate used for SSL connections to the endpoint
+  certificate() aws.acm.certificate
+}
+
+// AWS DMS replication task
+private aws.dms.replicationTask @defaults("arn replicationTaskIdentifier migrationType status") {
+  // ARN of the replication task
+  arn string
+  // User-supplied replication task identifier
+  replicationTaskIdentifier string
+  // Migration type (one of `full-load`, `cdc`, `full-load-and-cdc`)
+  migrationType string
+  // Status of the replication task (for example, `creating`, `ready`, `running`, `stopped`, `failed`)
+  status string
+  // Last failure message recorded for the task
+  lastFailureMessage string
+  // Reason the task was stopped (for example, `Stop Reason NORMAL`, `Stop Reason FATAL_ERROR`)
+  stopReason string
+  // Time the replication task was created
+  replicationTaskCreationDate time
+  // Time the replication task was scheduled to start
+  replicationTaskStartDate time
+  // CDC start position (date, checkpoint, LSN, or SCN) the task resumes from
+  cdcStartPosition string
+  // CDC stop position (server time or commit time) the task halts at
+  cdcStopPosition string
+  // Last CDC checkpoint reached by the task; can be supplied as `cdcStartPosition` to resume
+  recoveryCheckpoint string
+  // Region the task was created in
+  region string
+  // Percent complete for the full-load phase of the task
+  fullLoadProgressPercent int
+  // Elapsed time of the task, in milliseconds
+  elapsedTimeMillis int
+  // Number of tables loaded by the task
+  tablesLoaded int
+  // Number of tables currently loading
+  tablesLoading int
+  // Number of tables queued for loading
+  tablesQueued int
+  // Number of tables that errored during loading
+  tablesErrored int
+  // Source endpoint the task reads from
+  sourceEndpoint() aws.dms.endpoint
+  // Target endpoint the task writes to
+  targetEndpoint() aws.dms.endpoint
+  // Replication instance the task runs on
+  replicationInstance() aws.dms.replicationInstance
+}
+
+// AWS DMS replication subnet group
+private aws.dms.replicationSubnetGroup @defaults("replicationSubnetGroupIdentifier subnetGroupStatus") {
+  // User-supplied identifier of the subnet group
+  replicationSubnetGroupIdentifier string
+  // Description of the subnet group
+  replicationSubnetGroupDescription string
+  // Status of the subnet group (for example, `Complete`, `Incomplete`)
+  subnetGroupStatus string
+  // IP addressing protocols supported by the subnet group (for example, `IPV4`, `DUAL`)
+  supportedNetworkTypes []string
+  // Whether the subnet group is read-only (managed by DMS as part of a zero-ETL integration)
+  isReadOnly bool
+  // Region the subnet group is in
+  region string
+  // VPC the subnet group is in
+  vpc() aws.vpc
+  // Subnets that make up the subnet group
+  subnets() []aws.vpc.subnet
 }
 
 // Amazon API Gateway (REST APIs)

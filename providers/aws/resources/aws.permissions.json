@@ -129,7 +129,10 @@
     "detective:ListGraphs",
     "detective:ListMembers",
     "detective:ListTagsForResource",
+    "dms:DescribeEndpoints",
     "dms:DescribeReplicationInstances",
+    "dms:DescribeReplicationSubnetGroups",
+    "dms:DescribeReplicationTasks",
     "docdbelastic:ListClusterSnapshots",
     "docdbelastic:ListClusters",
     "drs:DescribeJobs",
@@ -1466,9 +1469,27 @@
       "source_file": "aws_detective.go"
     },
     {
+      "permission": "dms:DescribeEndpoints",
+      "service": "dms",
+      "action": "DescribeEndpoints",
+      "source_file": "aws_dms.go"
+    },
+    {
       "permission": "dms:DescribeReplicationInstances",
       "service": "dms",
       "action": "DescribeReplicationInstances",
+      "source_file": "aws_dms.go"
+    },
+    {
+      "permission": "dms:DescribeReplicationSubnetGroups",
+      "service": "dms",
+      "action": "DescribeReplicationSubnetGroups",
+      "source_file": "aws_dms.go"
+    },
+    {
+      "permission": "dms:DescribeReplicationTasks",
+      "service": "dms",
+      "action": "DescribeReplicationTasks",
       "source_file": "aws_dms.go"
     },
     {
