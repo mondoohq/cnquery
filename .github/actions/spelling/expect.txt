@@ -73,6 +73,7 @@ cbf
 cce
 ccf
 CCN
+cdc
 cdn
 cdroms
 ceph
