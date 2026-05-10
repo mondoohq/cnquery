@@ -23364,6 +23364,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.keyspaces.keyspace.replicationRegions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKeyspacesKeyspace).GetReplicationRegions()).ToDataRes(types.Array(types.String))
 	},
+	"aws.keyspaces.keyspace.replicationGroupStatuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesKeyspace).GetReplicationGroupStatuses()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.keyspaces.keyspace.tables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKeyspacesKeyspace).GetTables()).ToDataRes(types.Array(types.Resource("aws.keyspaces.table")))
 	},
@@ -23409,6 +23412,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.keyspaces.table.writeCapacityUnits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKeyspacesTable).GetWriteCapacityUnits()).ToDataRes(types.Int)
 	},
+	"aws.keyspaces.table.lastUpdateToPayPerRequestTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetLastUpdateToPayPerRequestTimestamp()).ToDataRes(types.Time)
+	},
+	"aws.keyspaces.table.warmThroughputStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetWarmThroughputStatus()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.warmReadUnitsPerSecond": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetWarmReadUnitsPerSecond()).ToDataRes(types.Int)
+	},
+	"aws.keyspaces.table.warmWriteUnitsPerSecond": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetWarmWriteUnitsPerSecond()).ToDataRes(types.Int)
+	},
 	"aws.keyspaces.table.encryptionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKeyspacesTable).GetEncryptionType()).ToDataRes(types.String)
 	},
@@ -23429,6 +23444,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.keyspaces.table.clientSideTimestampsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKeyspacesTable).GetClientSideTimestampsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.keyspaces.table.cdcStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetCdcStatus()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.cdcViewType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetCdcViewType()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.latestStreamArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetLatestStreamArn()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetComment()).ToDataRes(types.String)
+	},
+	"aws.keyspaces.table.replicaSpecifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKeyspacesTable).GetReplicaSpecifications()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.keyspaces.table.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKeyspacesTable).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -53576,6 +53606,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKeyspacesKeyspace).ReplicationRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.keyspaces.keyspace.replicationGroupStatuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesKeyspace).ReplicationGroupStatuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.keyspaces.keyspace.tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKeyspacesKeyspace).Tables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -53640,6 +53674,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKeyspacesTable).WriteCapacityUnits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.keyspaces.table.lastUpdateToPayPerRequestTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).LastUpdateToPayPerRequestTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.warmThroughputStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).WarmThroughputStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.warmReadUnitsPerSecond": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).WarmReadUnitsPerSecond, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.warmWriteUnitsPerSecond": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).WarmWriteUnitsPerSecond, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.keyspaces.table.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKeyspacesTable).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -53666,6 +53716,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.keyspaces.table.clientSideTimestampsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKeyspacesTable).ClientSideTimestampsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.cdcStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).CdcStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.cdcViewType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).CdcViewType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.latestStreamArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).LatestStreamArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.keyspaces.table.replicaSpecifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKeyspacesTable).ReplicaSpecifications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.keyspaces.table.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -131524,13 +131594,14 @@ type mqlAwsKeyspacesKeyspace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsKeyspacesKeyspaceInternal it will be used here
-	Arn                 plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Region              plugin.TValue[string]
-	ReplicationStrategy plugin.TValue[string]
-	ReplicationRegions  plugin.TValue[[]any]
-	Tables              plugin.TValue[[]any]
-	Tags                plugin.TValue[map[string]any]
+	Arn                      plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	ReplicationStrategy      plugin.TValue[string]
+	ReplicationRegions       plugin.TValue[[]any]
+	ReplicationGroupStatuses plugin.TValue[[]any]
+	Tables                   plugin.TValue[[]any]
+	Tags                     plugin.TValue[map[string]any]
 }
 
 // createAwsKeyspacesKeyspace creates a new instance of this resource
@@ -131590,6 +131661,12 @@ func (c *mqlAwsKeyspacesKeyspace) GetReplicationRegions() *plugin.TValue[[]any] 
 	return &c.ReplicationRegions
 }
 
+func (c *mqlAwsKeyspacesKeyspace) GetReplicationGroupStatuses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicationGroupStatuses, func() ([]any, error) {
+		return c.replicationGroupStatuses()
+	})
+}
+
 func (c *mqlAwsKeyspacesKeyspace) GetTables() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Tables, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -131617,27 +131694,36 @@ type mqlAwsKeyspacesTable struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsKeyspacesTableInternal
-	Arn                         plugin.TValue[string]
-	KeyspaceName                plugin.TValue[string]
-	Name                        plugin.TValue[string]
-	Region                      plugin.TValue[string]
-	Status                      plugin.TValue[string]
-	CreatedAt                   plugin.TValue[*time.Time]
-	Columns                     plugin.TValue[[]any]
-	PartitionKeys               plugin.TValue[[]any]
-	ClusteringKeys              plugin.TValue[[]any]
-	StaticColumns               plugin.TValue[[]any]
-	ThroughputMode              plugin.TValue[string]
-	ReadCapacityUnits           plugin.TValue[int64]
-	WriteCapacityUnits          plugin.TValue[int64]
-	EncryptionType              plugin.TValue[string]
-	KmsKey                      plugin.TValue[*mqlAwsKmsKey]
-	PointInTimeRecoveryEnabled  plugin.TValue[bool]
-	EarliestRestorableTimestamp plugin.TValue[*time.Time]
-	TtlEnabled                  plugin.TValue[bool]
-	DefaultTimeToLive           plugin.TValue[int64]
-	ClientSideTimestampsEnabled plugin.TValue[bool]
-	Tags                        plugin.TValue[map[string]any]
+	Arn                                plugin.TValue[string]
+	KeyspaceName                       plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	Region                             plugin.TValue[string]
+	Status                             plugin.TValue[string]
+	CreatedAt                          plugin.TValue[*time.Time]
+	Columns                            plugin.TValue[[]any]
+	PartitionKeys                      plugin.TValue[[]any]
+	ClusteringKeys                     plugin.TValue[[]any]
+	StaticColumns                      plugin.TValue[[]any]
+	ThroughputMode                     plugin.TValue[string]
+	ReadCapacityUnits                  plugin.TValue[int64]
+	WriteCapacityUnits                 plugin.TValue[int64]
+	LastUpdateToPayPerRequestTimestamp plugin.TValue[*time.Time]
+	WarmThroughputStatus               plugin.TValue[string]
+	WarmReadUnitsPerSecond             plugin.TValue[int64]
+	WarmWriteUnitsPerSecond            plugin.TValue[int64]
+	EncryptionType                     plugin.TValue[string]
+	KmsKey                             plugin.TValue[*mqlAwsKmsKey]
+	PointInTimeRecoveryEnabled         plugin.TValue[bool]
+	EarliestRestorableTimestamp        plugin.TValue[*time.Time]
+	TtlEnabled                         plugin.TValue[bool]
+	DefaultTimeToLive                  plugin.TValue[int64]
+	ClientSideTimestampsEnabled        plugin.TValue[bool]
+	CdcStatus                          plugin.TValue[string]
+	CdcViewType                        plugin.TValue[string]
+	LatestStreamArn                    plugin.TValue[string]
+	Comment                            plugin.TValue[string]
+	ReplicaSpecifications              plugin.TValue[[]any]
+	Tags                               plugin.TValue[map[string]any]
 }
 
 // createAwsKeyspacesTable creates a new instance of this resource
@@ -131787,6 +131873,30 @@ func (c *mqlAwsKeyspacesTable) GetWriteCapacityUnits() *plugin.TValue[int64] {
 	})
 }
 
+func (c *mqlAwsKeyspacesTable) GetLastUpdateToPayPerRequestTimestamp() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastUpdateToPayPerRequestTimestamp, func() (*time.Time, error) {
+		return c.lastUpdateToPayPerRequestTimestamp()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetWarmThroughputStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.WarmThroughputStatus, func() (string, error) {
+		return c.warmThroughputStatus()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetWarmReadUnitsPerSecond() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.WarmReadUnitsPerSecond, func() (int64, error) {
+		return c.warmReadUnitsPerSecond()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetWarmWriteUnitsPerSecond() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.WarmWriteUnitsPerSecond, func() (int64, error) {
+		return c.warmWriteUnitsPerSecond()
+	})
+}
+
 func (c *mqlAwsKeyspacesTable) GetEncryptionType() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.EncryptionType, func() (string, error) {
 		return c.encryptionType()
@@ -131836,6 +131946,36 @@ func (c *mqlAwsKeyspacesTable) GetDefaultTimeToLive() *plugin.TValue[int64] {
 func (c *mqlAwsKeyspacesTable) GetClientSideTimestampsEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.ClientSideTimestampsEnabled, func() (bool, error) {
 		return c.clientSideTimestampsEnabled()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetCdcStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CdcStatus, func() (string, error) {
+		return c.cdcStatus()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetCdcViewType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CdcViewType, func() (string, error) {
+		return c.cdcViewType()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetLatestStreamArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LatestStreamArn, func() (string, error) {
+		return c.latestStreamArn()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetComment() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Comment, func() (string, error) {
+		return c.comment()
+	})
+}
+
+func (c *mqlAwsKeyspacesTable) GetReplicaSpecifications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicaSpecifications, func() ([]any, error) {
+		return c.replicaSpecifications()
 	})
 }
 

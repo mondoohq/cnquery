@@ -186,6 +186,37 @@ func (a *mqlAwsKeyspacesKeyspace) tags() (map[string]any, error) {
 	return tags, nil
 }
 
+func (a *mqlAwsKeyspacesKeyspace) replicationGroupStatuses() ([]any, error) {
+	// Only multi-region keyspaces have meaningful per-region replication status.
+	if a.ReplicationStrategy.Data != string(keyspaces_types.RsMultiRegion) {
+		return []any{}, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Keyspaces(a.Region.Data)
+	ctx := context.Background()
+	keyspaceName := a.Name.Data
+	resp, err := svc.GetKeyspace(ctx, &keyspaces.GetKeyspaceInput{
+		KeyspaceName: &keyspaceName,
+	})
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(resp.ReplicationGroupStatuses))
+	for _, status := range resp.ReplicationGroupStatuses {
+		row := map[string]any{
+			"keyspaceStatus": string(status.KeyspaceStatus),
+		}
+		if status.Region != nil {
+			row["region"] = *status.Region
+		}
+		if status.TablesReplicationProgress != nil {
+			row["tablesReplicationProgress"] = *status.TablesReplicationProgress
+		}
+		res = append(res, row)
+	}
+	return res, nil
+}
+
 // mqlAwsKeyspacesTableInternal caches data from GetTable for lazy-loaded fields.
 type mqlAwsKeyspacesTableInternal struct {
 	fetched  bool
@@ -193,19 +224,28 @@ type mqlAwsKeyspacesTableInternal struct {
 	lock     sync.Mutex
 
 	// Cached GetTable response fields
-	cachedStatus                 string
-	cachedCreatedAt              *time.Time
-	cachedSchemaDefinition       *keyspaces_types.SchemaDefinition
-	cachedThroughputMode         string
-	cachedReadCapacityUnits      int64
-	cachedWriteCapacityUnits     int64
-	cachedEncryptionType         string
-	cachedKmsKeyIdentifier       *string
-	cachedPitrEnabled            bool
-	cachedEarliestRestorableTime *time.Time
-	cachedTtlEnabled             bool
-	cachedDefaultTimeToLive      int64
-	cachedClientSideTimestamps   bool
+	cachedStatus                    string
+	cachedCreatedAt                 *time.Time
+	cachedSchemaDefinition          *keyspaces_types.SchemaDefinition
+	cachedThroughputMode            string
+	cachedReadCapacityUnits         int64
+	cachedWriteCapacityUnits        int64
+	cachedLastUpdateToPayPerRequest *time.Time
+	cachedWarmThroughputStatus      string
+	cachedWarmReadUnitsPerSecond    int64
+	cachedWarmWriteUnitsPerSecond   int64
+	cachedEncryptionType            string
+	cachedKmsKeyIdentifier          *string
+	cachedPitrEnabled               bool
+	cachedEarliestRestorableTime    *time.Time
+	cachedTtlEnabled                bool
+	cachedDefaultTimeToLive         int64
+	cachedClientSideTimestamps      bool
+	cachedCdcStatus                 string
+	cachedCdcViewType               string
+	cachedLatestStreamArn           string
+	cachedComment                   string
+	cachedReplicaSpecifications     []any
 }
 
 func (a *mqlAwsKeyspacesTable) fetchTable() error {
@@ -246,6 +286,17 @@ func (a *mqlAwsKeyspacesTable) fetchTable() error {
 		if resp.CapacitySpecification.WriteCapacityUnits != nil {
 			a.cachedWriteCapacityUnits = *resp.CapacitySpecification.WriteCapacityUnits
 		}
+		a.cachedLastUpdateToPayPerRequest = resp.CapacitySpecification.LastUpdateToPayPerRequestTimestamp
+	}
+
+	if resp.WarmThroughputSpecification != nil {
+		a.cachedWarmThroughputStatus = string(resp.WarmThroughputSpecification.Status)
+		if resp.WarmThroughputSpecification.ReadUnitsPerSecond != nil {
+			a.cachedWarmReadUnitsPerSecond = *resp.WarmThroughputSpecification.ReadUnitsPerSecond
+		}
+		if resp.WarmThroughputSpecification.WriteUnitsPerSecond != nil {
+			a.cachedWarmWriteUnitsPerSecond = *resp.WarmThroughputSpecification.WriteUnitsPerSecond
+		}
 	}
 
 	if resp.EncryptionSpecification != nil {
@@ -268,6 +319,51 @@ func (a *mqlAwsKeyspacesTable) fetchTable() error {
 
 	if resp.ClientSideTimestamps != nil {
 		a.cachedClientSideTimestamps = resp.ClientSideTimestamps.Status == keyspaces_types.ClientSideTimestampsStatusEnabled
+	}
+
+	if resp.CdcSpecification != nil {
+		a.cachedCdcStatus = string(resp.CdcSpecification.Status)
+		a.cachedCdcViewType = string(resp.CdcSpecification.ViewType)
+	}
+
+	if resp.LatestStreamArn != nil {
+		a.cachedLatestStreamArn = *resp.LatestStreamArn
+	}
+
+	if resp.Comment != nil && resp.Comment.Message != nil {
+		a.cachedComment = *resp.Comment.Message
+	}
+
+	if len(resp.ReplicaSpecifications) > 0 {
+		replicas := make([]any, 0, len(resp.ReplicaSpecifications))
+		for _, replica := range resp.ReplicaSpecifications {
+			row := map[string]any{
+				"status": string(replica.Status),
+			}
+			if replica.Region != nil {
+				row["region"] = *replica.Region
+			}
+			if replica.CapacitySpecification != nil {
+				row["throughputMode"] = string(replica.CapacitySpecification.ThroughputMode)
+				if replica.CapacitySpecification.ReadCapacityUnits != nil {
+					row["readCapacityUnits"] = *replica.CapacitySpecification.ReadCapacityUnits
+				}
+				if replica.CapacitySpecification.WriteCapacityUnits != nil {
+					row["writeCapacityUnits"] = *replica.CapacitySpecification.WriteCapacityUnits
+				}
+			}
+			if replica.WarmThroughputSpecification != nil {
+				row["warmThroughputStatus"] = string(replica.WarmThroughputSpecification.Status)
+				if replica.WarmThroughputSpecification.ReadUnitsPerSecond != nil {
+					row["warmReadUnitsPerSecond"] = *replica.WarmThroughputSpecification.ReadUnitsPerSecond
+				}
+				if replica.WarmThroughputSpecification.WriteUnitsPerSecond != nil {
+					row["warmWriteUnitsPerSecond"] = *replica.WarmThroughputSpecification.WriteUnitsPerSecond
+				}
+			}
+			replicas = append(replicas, row)
+		}
+		a.cachedReplicaSpecifications = replicas
 	}
 
 	a.fetched = true
@@ -488,6 +584,72 @@ func (a *mqlAwsKeyspacesTable) clientSideTimestampsEnabled() (bool, error) {
 		return false, err
 	}
 	return a.cachedClientSideTimestamps, nil
+}
+
+func (a *mqlAwsKeyspacesTable) lastUpdateToPayPerRequestTimestamp() (*time.Time, error) {
+	if err := a.fetchTable(); err != nil {
+		return nil, err
+	}
+	return a.cachedLastUpdateToPayPerRequest, nil
+}
+
+func (a *mqlAwsKeyspacesTable) warmThroughputStatus() (string, error) {
+	if err := a.fetchTable(); err != nil {
+		return "", err
+	}
+	return a.cachedWarmThroughputStatus, nil
+}
+
+func (a *mqlAwsKeyspacesTable) warmReadUnitsPerSecond() (int64, error) {
+	if err := a.fetchTable(); err != nil {
+		return 0, err
+	}
+	return a.cachedWarmReadUnitsPerSecond, nil
+}
+
+func (a *mqlAwsKeyspacesTable) warmWriteUnitsPerSecond() (int64, error) {
+	if err := a.fetchTable(); err != nil {
+		return 0, err
+	}
+	return a.cachedWarmWriteUnitsPerSecond, nil
+}
+
+func (a *mqlAwsKeyspacesTable) cdcStatus() (string, error) {
+	if err := a.fetchTable(); err != nil {
+		return "", err
+	}
+	return a.cachedCdcStatus, nil
+}
+
+func (a *mqlAwsKeyspacesTable) cdcViewType() (string, error) {
+	if err := a.fetchTable(); err != nil {
+		return "", err
+	}
+	return a.cachedCdcViewType, nil
+}
+
+func (a *mqlAwsKeyspacesTable) latestStreamArn() (string, error) {
+	if err := a.fetchTable(); err != nil {
+		return "", err
+	}
+	return a.cachedLatestStreamArn, nil
+}
+
+func (a *mqlAwsKeyspacesTable) comment() (string, error) {
+	if err := a.fetchTable(); err != nil {
+		return "", err
+	}
+	return a.cachedComment, nil
+}
+
+func (a *mqlAwsKeyspacesTable) replicaSpecifications() ([]any, error) {
+	if err := a.fetchTable(); err != nil {
+		return nil, err
+	}
+	if a.cachedReplicaSpecifications == nil {
+		return []any{}, nil
+	}
+	return a.cachedReplicaSpecifications, nil
 }
 
 func (a *mqlAwsKeyspacesTable) tags() (map[string]any, error) {

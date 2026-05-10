@@ -16644,6 +16644,8 @@ private aws.keyspaces.keyspace @defaults("arn name replicationStrategy") {
   replicationStrategy string
   // Regions where the keyspace is replicated (multi-region only)
   replicationRegions []string
+  // Per-region status of the multi-region keyspace (region, keyspaceStatus, tablesReplicationProgress)
+  replicationGroupStatuses() []dict
   // Tables in this keyspace
   tables() []aws.keyspaces.table
   // Tags for the keyspace
@@ -16678,6 +16680,14 @@ private aws.keyspaces.table @defaults("arn keyspaceName name status") {
   readCapacityUnits() int
   // Provisioned write capacity units (0 if PAY_PER_REQUEST)
   writeCapacityUnits() int
+  // Timestamp of the last switch to PAY_PER_REQUEST throughput mode
+  lastUpdateToPayPerRequestTimestamp() time
+  // Status of the warm throughput configuration: AVAILABLE or UPDATING
+  warmThroughputStatus() string
+  // Read capacity units per second currently configured for warm throughput
+  warmReadUnitsPerSecond() int
+  // Write capacity units per second currently configured for warm throughput
+  warmWriteUnitsPerSecond() int
   // Encryption type: AWS_OWNED_KMS_KEY or CUSTOMER_MANAGED_KMS_KEY
   encryptionType() string
   // KMS key used for encryption (null if AWS_OWNED_KMS_KEY)
@@ -16692,6 +16702,16 @@ private aws.keyspaces.table @defaults("arn keyspaceName name status") {
   defaultTimeToLive() int
   // Whether client-side timestamps are enabled
   clientSideTimestampsEnabled() bool
+  // Status of the change data capture (CDC) stream: ENABLED or DISABLED
+  cdcStatus() string
+  // CDC stream record contents: NEW_AND_OLD_IMAGES, NEW_IMAGE, OLD_IMAGE, or KEYS_ONLY
+  cdcViewType() string
+  // ARN of the latest CDC stream associated with the table
+  latestStreamArn() string
+  // Free-form description message attached to the table
+  comment() string
+  // Per-region settings for a multi-region table (region, status, throughputMode, readCapacityUnits, writeCapacityUnits, warmThroughputStatus)
+  replicaSpecifications() []dict
   // Tags for the table
   tags() map[string]string
 }
