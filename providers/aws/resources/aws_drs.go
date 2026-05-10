@@ -23,8 +23,10 @@ import (
 )
 
 type mqlAwsDrsSourceServerInternal struct {
-	region             string
-	cacheEc2InstanceID string
+	region                                string
+	cacheEc2InstanceID                    string
+	cacheRecoveryInstanceID               string
+	cacheReversedDirectionSourceServerArn string
 }
 
 type mqlAwsDrsRecoveryInstanceInternal struct {
@@ -146,10 +148,12 @@ func parseDrsTime(s *string) *time.Time {
 	if s == nil || *s == "" {
 		return nil
 	}
-	if t, err := time.Parse(time.RFC3339, *s); err == nil {
-		return &t
+	t, err := time.Parse(time.RFC3339, *s)
+	if err != nil {
+		log.Warn().Err(err).Str("input", *s).Msg("failed to parse DRS timestamp")
+		return nil
 	}
-	return nil
+	return &t
 }
 
 func (a *mqlAwsDrs) createSourceServerResource(server drstypes.SourceServer, region string) (*mqlAwsDrsSourceServer, error) {
@@ -278,10 +282,8 @@ func (a *mqlAwsDrs) createSourceServerResource(server drstypes.SourceServer, reg
 			"sourceCloudOriginRegion":                llx.StringData(sourceCloudOriginRegion),
 			"sourceCloudOriginAvailabilityZone":      llx.StringData(sourceCloudOriginAZ),
 			"sourceNetworkID":                        llx.StringDataPtr(server.SourceNetworkID),
-			"reversedDirectionSourceServerArn":       llx.StringDataPtr(server.ReversedDirectionSourceServerArn),
 			"stagingArea":                            llx.DictData(stagingArea),
 			"replicationDirection":                   llx.StringData(string(server.ReplicationDirection)),
-			"recoveryInstanceId":                     llx.StringDataPtr(server.RecoveryInstanceId),
 			"tags":                                   llx.MapData(tags, types.String),
 		})
 	if err != nil {
@@ -291,6 +293,12 @@ func (a *mqlAwsDrs) createSourceServerResource(server drstypes.SourceServer, reg
 	mqlSrv := mqlServer.(*mqlAwsDrsSourceServer)
 	mqlSrv.region = region
 	mqlSrv.cacheEc2InstanceID = awsInstanceID
+	if server.RecoveryInstanceId != nil {
+		mqlSrv.cacheRecoveryInstanceID = *server.RecoveryInstanceId
+	}
+	if server.ReversedDirectionSourceServerArn != nil {
+		mqlSrv.cacheReversedDirectionSourceServerArn = *server.ReversedDirectionSourceServerArn
+	}
 	return mqlSrv, nil
 }
 
@@ -416,7 +424,7 @@ func (a *mqlAwsDrsSourceServer) launchConfiguration() (*mqlAwsDrsLaunchConfigura
 }
 
 func (a *mqlAwsDrsSourceServer) recoveryInstance() (*mqlAwsDrsRecoveryInstance, error) {
-	recoveryID := a.RecoveryInstanceId.Data
+	recoveryID := a.cacheRecoveryInstanceID
 	if recoveryID == "" {
 		a.RecoveryInstance.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -435,12 +443,26 @@ func (a *mqlAwsDrsSourceServer) recoveryInstance() (*mqlAwsDrsRecoveryInstance, 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	arnVal := fmt.Sprintf("arn:aws:drs:%s:%s:recovery-instance/%s", region, conn.AccountId(), recoveryID)
 
-	res, err := NewResource(a.MqlRuntime, "aws.drs.recoveryInstance",
+	res, err := NewResource(a.MqlRuntime, ResourceAwsDrsRecoveryInstance,
 		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
 	if err != nil {
 		return nil, err
 	}
 	return res.(*mqlAwsDrsRecoveryInstance), nil
+}
+
+func (a *mqlAwsDrsSourceServer) reversedDirectionSourceServer() (*mqlAwsDrsSourceServer, error) {
+	arnVal := a.cacheReversedDirectionSourceServerArn
+	if arnVal == "" {
+		a.ReversedDirectionSourceServer.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsDrsSourceServer,
+		map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsDrsSourceServer), nil
 }
 
 // ---------------------------------------------------------------------------
@@ -549,7 +571,7 @@ func (a *mqlAwsDrs) createRecoveryInstanceResource(instance drstypes.RecoveryIns
 		return nil, errors.New("DRS recovery instance has neither ARN nor recoveryInstanceID")
 	}
 
-	mqlInstance, err := CreateResource(a.MqlRuntime, "aws.drs.recoveryInstance",
+	mqlInstance, err := CreateResource(a.MqlRuntime, ResourceAwsDrsRecoveryInstance,
 		map[string]*llx.RawData{
 			"recoveryInstanceID":         llx.StringDataPtr(instance.RecoveryInstanceID),
 			"arn":                        llx.StringData(arnVal),
@@ -625,7 +647,7 @@ func (a *mqlAwsDrsRecoveryInstance) sourceServer() (*mqlAwsDrsSourceServer, erro
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	srcArn := fmt.Sprintf("arn:aws:drs:%s:%s:source-server/%s", region, conn.AccountId(), srcID)
 
-	res, err := NewResource(a.MqlRuntime, "aws.drs.sourceServer",
+	res, err := NewResource(a.MqlRuntime, ResourceAwsDrsSourceServer,
 		map[string]*llx.RawData{"arn": llx.StringData(srcArn)})
 	if err != nil {
 		return nil, err
@@ -652,7 +674,7 @@ func (a *mqlAwsDrsRecoveryInstance) job() (*mqlAwsDrsJob, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	jobArn := fmt.Sprintf("arn:aws:drs:%s:%s:job/%s", region, conn.AccountId(), jobID)
 
-	res, err := NewResource(a.MqlRuntime, "aws.drs.job",
+	res, err := NewResource(a.MqlRuntime, ResourceAwsDrsJob,
 		map[string]*llx.RawData{"arn": llx.StringData(jobArn)})
 	if err != nil {
 		return nil, err
@@ -888,7 +910,7 @@ func (a *mqlAwsDrs) createReplicationConfigurationTemplateResource(tmpl drstypes
 		return nil, errors.New("DRS replication configuration template missing both ARN and ID")
 	}
 
-	mqlTmpl, err := CreateResource(a.MqlRuntime, "aws.drs.replicationConfigurationTemplate",
+	mqlTmpl, err := CreateResource(a.MqlRuntime, ResourceAwsDrsReplicationConfigurationTemplate,
 		map[string]*llx.RawData{
 			"replicationConfigurationTemplateID":  llx.StringDataPtr(tmpl.ReplicationConfigurationTemplateID),
 			"arn":                                 llx.StringData(arnVal),

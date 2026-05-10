@@ -7568,8 +7568,12 @@ private aws.applicationAutoscaling.scheduledAction @defaults("arn name schedule"
 // Use the DRS namespace to enumerate the source servers replicated to the
 // account and the recovery operations performed on them. Iterate
 // `sourceServers()` for each replicated server (with its replication
-// progress, lifecycle state, and last launch result), and `jobs()` for the
-// recovery, drill, and failback jobs that have been kicked off.
+// progress, lifecycle state, and last launch result), `recoveryInstances()`
+// for the EC2 instances launched from those source servers during recovery
+// or drill events, `jobs()` for the recovery, drill, and failback jobs that
+// have been kicked off, and `replicationConfigurationTemplates()` for the
+// account-wide templates that define default replication settings for new
+// source servers.
 aws.drs @defaults("sourceServers") {
   // List of source servers being replicated
   sourceServers() []aws.drs.sourceServer
@@ -7639,14 +7643,12 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   sourceCloudOriginAvailabilityZone string
   // ID of the source network protecting this source server's network
   sourceNetworkID string
-  // For failed-over and failed-back EC2 source servers, the ARN on the opposite replication direction
-  reversedDirectionSourceServerArn string
+  // For failed-over and failed-back EC2 source servers, the source server on the opposite replication direction
+  reversedDirectionSourceServer() aws.drs.sourceServer
   // Staging area configuration
   stagingArea dict
   // Replication direction: FAILOVER_AND_FAILBACK or ONE_WAY
   replicationDirection string
-  // ID of last recovery instance
-  recoveryInstanceId string
   // Recovery instance launched from this source server
   recoveryInstance() aws.drs.recoveryInstance
   // Resource tags

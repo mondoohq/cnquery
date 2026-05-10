@@ -12586,17 +12586,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.drs.sourceServer.sourceNetworkID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetSourceNetworkID()).ToDataRes(types.String)
 	},
-	"aws.drs.sourceServer.reversedDirectionSourceServerArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDrsSourceServer).GetReversedDirectionSourceServerArn()).ToDataRes(types.String)
+	"aws.drs.sourceServer.reversedDirectionSourceServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetReversedDirectionSourceServer()).ToDataRes(types.Resource("aws.drs.sourceServer"))
 	},
 	"aws.drs.sourceServer.stagingArea": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetStagingArea()).ToDataRes(types.Dict)
 	},
 	"aws.drs.sourceServer.replicationDirection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetReplicationDirection()).ToDataRes(types.String)
-	},
-	"aws.drs.sourceServer.recoveryInstanceId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDrsSourceServer).GetRecoveryInstanceId()).ToDataRes(types.String)
 	},
 	"aws.drs.sourceServer.recoveryInstance": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetRecoveryInstance()).ToDataRes(types.Resource("aws.drs.recoveryInstance"))
@@ -38112,8 +38109,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDrsSourceServer).SourceNetworkID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.drs.sourceServer.reversedDirectionSourceServerArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDrsSourceServer).ReversedDirectionSourceServerArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.drs.sourceServer.reversedDirectionSourceServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).ReversedDirectionSourceServer, ok = plugin.RawToTValue[*mqlAwsDrsSourceServer](v.Value, v.Error)
 		return
 	},
 	"aws.drs.sourceServer.stagingArea": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38122,10 +38119,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.drs.sourceServer.replicationDirection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDrsSourceServer).ReplicationDirection, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.drs.sourceServer.recoveryInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDrsSourceServer).RecoveryInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.drs.sourceServer.recoveryInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -92918,10 +92911,9 @@ type mqlAwsDrsSourceServer struct {
 	SourceCloudOriginRegion                plugin.TValue[string]
 	SourceCloudOriginAvailabilityZone      plugin.TValue[string]
 	SourceNetworkID                        plugin.TValue[string]
-	ReversedDirectionSourceServerArn       plugin.TValue[string]
+	ReversedDirectionSourceServer          plugin.TValue[*mqlAwsDrsSourceServer]
 	StagingArea                            plugin.TValue[any]
 	ReplicationDirection                   plugin.TValue[string]
-	RecoveryInstanceId                     plugin.TValue[string]
 	RecoveryInstance                       plugin.TValue[*mqlAwsDrsRecoveryInstance]
 	Tags                                   plugin.TValue[map[string]any]
 	ReplicationConfiguration               plugin.TValue[*mqlAwsDrsReplicationConfiguration]
@@ -93089,8 +93081,20 @@ func (c *mqlAwsDrsSourceServer) GetSourceNetworkID() *plugin.TValue[string] {
 	return &c.SourceNetworkID
 }
 
-func (c *mqlAwsDrsSourceServer) GetReversedDirectionSourceServerArn() *plugin.TValue[string] {
-	return &c.ReversedDirectionSourceServerArn
+func (c *mqlAwsDrsSourceServer) GetReversedDirectionSourceServer() *plugin.TValue[*mqlAwsDrsSourceServer] {
+	return plugin.GetOrCompute[*mqlAwsDrsSourceServer](&c.ReversedDirectionSourceServer, func() (*mqlAwsDrsSourceServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs.sourceServer", c.__id, "reversedDirectionSourceServer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsDrsSourceServer), nil
+			}
+		}
+
+		return c.reversedDirectionSourceServer()
+	})
 }
 
 func (c *mqlAwsDrsSourceServer) GetStagingArea() *plugin.TValue[any] {
@@ -93099,10 +93103,6 @@ func (c *mqlAwsDrsSourceServer) GetStagingArea() *plugin.TValue[any] {
 
 func (c *mqlAwsDrsSourceServer) GetReplicationDirection() *plugin.TValue[string] {
 	return &c.ReplicationDirection
-}
-
-func (c *mqlAwsDrsSourceServer) GetRecoveryInstanceId() *plugin.TValue[string] {
-	return &c.RecoveryInstanceId
 }
 
 func (c *mqlAwsDrsSourceServer) GetRecoveryInstance() *plugin.TValue[*mqlAwsDrsRecoveryInstance] {
