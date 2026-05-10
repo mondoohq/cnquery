@@ -7633,6 +7633,8 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   sourceIdentificationFqdn string
   // Hostname identification hint for the source server
   sourceIdentificationHostname string
+  // DEPRECATED: use sourceEc2Instance() instead. AWS instance ID identification hint for an EC2-originated source server
+  sourceIdentificationAwsInstanceID @maturity("deprecated") string
   // EC2 instance this source server was originally running on (for EC2-originated source servers)
   sourceEc2Instance() aws.ec2.instance
   // For EC2-originated source servers: the origin AWS account ID
@@ -7643,12 +7645,16 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   sourceCloudOriginAvailabilityZone string
   // ID of the source network protecting this source server's network
   sourceNetworkID string
+  // DEPRECATED: use reversedDirectionSourceServer() instead. ARN of the source server on the opposite replication direction for failed-over and failed-back EC2 source servers
+  reversedDirectionSourceServerArn @maturity("deprecated") string
   // For failed-over and failed-back EC2 source servers, the source server on the opposite replication direction
   reversedDirectionSourceServer() aws.drs.sourceServer
   // Staging area configuration
   stagingArea dict
   // Replication direction: FAILOVER_AND_FAILBACK or ONE_WAY
   replicationDirection string
+  // DEPRECATED: use recoveryInstance() instead. ID of the recovery instance launched from this source server
+  recoveryInstanceId @maturity("deprecated") string
   // Recovery instance launched from this source server
   recoveryInstance() aws.drs.recoveryInstance
   // Resource tags
