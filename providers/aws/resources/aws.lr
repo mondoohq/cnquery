@@ -5163,16 +5163,16 @@ private aws.shield.subscription @defaults("arn startTime") {
   startTime time
   // End time of the subscription
   endTime time
-  // Time period remaining in the subscription in days (truncated from seconds)
-  timeCommitmentInDays int
+  // DEPRECATED: use lengthInSeconds instead. Time period remaining in the subscription in days (truncated from seconds)
+  timeCommitmentInDays @maturity("deprecated") int
   // Length of the subscription period in seconds (raw value from TimeCommitmentInSeconds)
   lengthInSeconds int
-  // Whether auto-renew is enabled (ENABLED or DISABLED)
-  autoRenew string
+  // DEPRECATED: use autoRenewEnabled instead. Auto-renew status as a string enum (ENABLED or DISABLED)
+  autoRenew @maturity("deprecated") string
   // Whether auto-renew is enabled
   autoRenewEnabled bool
-  // Subscription limits (legacy per-type list of {Type, Max})
-  limits []dict
+  // DEPRECATED: use protectedResourceTypeLimits, maxProtectionGroups, and maxArbitraryPatternMembers instead. Legacy per-type list of {Type, Max} dicts
+  limits @maturity("deprecated") []dict
   // Per-protected-resource-type protection limits, keyed by resource type with the maximum protection count as the value
   protectedResourceTypeLimits map[string]int
   // Maximum number of protection groups allowed in the subscription
@@ -5195,8 +5195,8 @@ private aws.shield.protection @defaults("arn name resourceArn") {
   resourceArn string
   // Route 53 health check IDs associated with the protection
   healthCheckIds []string
-  // Application layer automatic response configuration (raw structure with status and action)
-  applicationLayerAutomaticResponseConfiguration dict
+  // DEPRECATED: use applicationLayerAutomaticResponseEnabled and applicationLayerAutomaticResponseAction instead. Raw structure with status and action
+  applicationLayerAutomaticResponseConfiguration @maturity("deprecated") dict
   // Whether automatic application-layer DDoS mitigation is enabled for the protection
   applicationLayerAutomaticResponseEnabled bool
   // WAF rule action used by automatic application-layer mitigation (BLOCK or COUNT; empty when not configured)
