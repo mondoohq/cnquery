@@ -5832,6 +5832,8 @@ aws.emr {
   clusters() []aws.emr.cluster
   // Block public access configuration (account-level)
   blockPublicAccessConfiguration() dict
+  // Security configurations defined in the account
+  securityConfigurations() []aws.emr.securityConfiguration
 }
 
 // Amazon EMR cluster
@@ -5854,6 +5856,8 @@ private aws.emr.cluster @defaults("arn") {
   tags() map[string]string
   // Name of the security configuration applied to the cluster
   securityConfiguration() string
+  // Security configuration applied to the cluster
+  securityConfig() aws.emr.securityConfiguration
   // Encryption configuration from the security configuration
   encryptionConfiguration() aws.emr.cluster.encryptionConfiguration
   // S3 log URI for the cluster
@@ -5870,6 +5874,58 @@ private aws.emr.cluster @defaults("arn") {
   instanceGroups() []aws.emr.cluster.instanceGroup
   // Bootstrap actions for the cluster
   bootstrapActions() []aws.emr.cluster.bootstrapAction
+  // Amazon EMR release label (for example, emr-6.10.0)
+  releaseLabel() string
+  // Open-source applications installed on the cluster
+  applications() []dict
+  // Configuration overlay supplied to the cluster
+  configurations() []dict
+  // Size, in GiB, of the EBS root volume of each EC2 instance
+  ebsRootVolumeSize() int
+  // IOPS of the EBS root volume of each EC2 instance
+  ebsRootVolumeIops() int
+  // Throughput, in MiB/s, of the EBS root volume of each EC2 instance
+  ebsRootVolumeThroughput() int
+  // Repository upgrade behavior on instance boot (SECURITY, NONE)
+  repoUpgradeOnBoot() string
+  // Kerberos authentication attributes (passwords are redacted)
+  kerberosAttributes() dict
+  // Number of steps that can run concurrently on the cluster
+  stepConcurrencyLevel() int
+  // EC2 placement group configuration applied to the cluster
+  placementGroups() []dict
+  // Whether the cluster terminates after completing all steps
+  autoTerminate() bool
+  // Idle timeout, in seconds, after which the cluster auto-terminates
+  autoTerminationIdleTimeout() int
+  // Instance collection type: INSTANCE_FLEET or INSTANCE_GROUP
+  instanceCollectionType() string
+  // Cluster scale-down behavior (TERMINATE_AT_INSTANCE_HOUR, TERMINATE_AT_TASK_COMPLETION)
+  scaleDownBehavior() string
+  // Whether the cluster is visible to all IAM principals in the account
+  visibleToAllUsers() bool
+  // ARN of the auto-scaling IAM role
+  autoScalingRoleArn() string
+  // IAM service role assumed by EMR to access AWS resources
+  serviceRole() aws.iam.role
+}
+
+// Amazon EMR security configuration
+//
+// Examine a named security configuration that EMR clusters can attach to
+// enable encryption at rest, encryption in transit, IAM-based authentication,
+// and Kerberos. The `name` field is the selection key — for example
+// `aws.emr.securityConfiguration(name: "my-sec-config")`. The `configuration`
+// field returns the raw JSON document so you can audit any setting; common
+// settings are also flattened in `aws.emr.cluster.encryptionConfiguration`
+// when a cluster references the configuration.
+private aws.emr.securityConfiguration @defaults("name creationDateTime") {
+  // Name of the security configuration
+  name string
+  // When the security configuration was created
+  creationDateTime time
+  // Raw JSON body of the security configuration
+  configuration() string
 }
 
 // EMR cluster encryption configuration from the security configuration
@@ -5896,6 +5952,10 @@ private aws.emr.cluster.step @defaults("name status") {
   status string
   // Path to the JAR file for the step
   jar string
+  // Name of the main class in the JAR file
+  mainClass string
+  // Java properties set when the step runs
+  properties map[string]string
   // Arguments passed to the step
   args []string
   // When the step was created
@@ -5904,6 +5964,14 @@ private aws.emr.cluster.step @defaults("name status") {
   startedAt time
   // When the step finished
   endedAt time
+  // Reason the step's execution status changed
+  stateChangeReason string
+  // Failure details (reason, message, log file)
+  failureDetails dict
+  // S3 destination URI for step logs
+  logUri string
+  // IAM runtime role assumed for the step
+  executionRole() aws.iam.role
 }
 
 // Amazon EMR cluster instance group
@@ -5928,6 +5996,12 @@ private aws.emr.cluster.instanceGroup @defaults("name instanceGroupType instance
   bidPrice string
   // Whether EBS optimization is enabled
   ebsOptimized bool
+  // Custom AMI ID used to provision the instance group
+  customAmiId string
+  // EBS block devices mapped to the instance group
+  ebsBlockDevices []dict
+  // Configuration overlay applied to the instance group
+  configurations []dict
 }
 
 // Amazon EMR cluster bootstrap action

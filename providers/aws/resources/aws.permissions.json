@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.21.3",
-  "generated_at": "2026-05-08T10:57:12-07:00",
+  "generated_at": "2026-05-09T16:54:12-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -272,11 +272,14 @@
     "elasticloadbalancing:DescribeTargetGroups",
     "emr:DescribeCluster",
     "emr:DescribeSecurityConfiguration",
+    "emr:DescribeStep",
+    "emr:GetAutoTerminationPolicy",
     "emr:GetBlockPublicAccessConfiguration",
     "emr:ListBootstrapActions",
     "emr:ListClusters",
     "emr:ListInstanceGroups",
     "emr:ListInstances",
+    "emr:ListSecurityConfigurations",
     "emr:ListSteps",
     "es:DescribeDomains",
     "es:DescribeElasticsearchDomain",
@@ -2366,6 +2369,18 @@
       "source_file": "aws_emr.go"
     },
     {
+      "permission": "emr:DescribeStep",
+      "service": "emr",
+      "action": "DescribeStep",
+      "source_file": "aws_emr.go"
+    },
+    {
+      "permission": "emr:GetAutoTerminationPolicy",
+      "service": "emr",
+      "action": "GetAutoTerminationPolicy",
+      "source_file": "aws_emr.go"
+    },
+    {
       "permission": "emr:GetBlockPublicAccessConfiguration",
       "service": "emr",
       "action": "GetBlockPublicAccessConfiguration",
@@ -2393,6 +2408,12 @@
       "permission": "emr:ListInstances",
       "service": "emr",
       "action": "ListInstances",
+      "source_file": "aws_emr.go"
+    },
+    {
+      "permission": "emr:ListSecurityConfigurations",
+      "service": "emr",
+      "action": "ListSecurityConfigurations",
       "source_file": "aws_emr.go"
     },
     {

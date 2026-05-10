@@ -276,6 +276,7 @@ const (
 	ResourceAwsEcsTaskDefinitionEphemeralStorage                                string = "aws.ecs.taskDefinition.ephemeralStorage"
 	ResourceAwsEmr                                                              string = "aws.emr"
 	ResourceAwsEmrCluster                                                       string = "aws.emr.cluster"
+	ResourceAwsEmrSecurityConfiguration                                         string = "aws.emr.securityConfiguration"
 	ResourceAwsEmrClusterEncryptionConfiguration                                string = "aws.emr.cluster.encryptionConfiguration"
 	ResourceAwsEmrClusterStep                                                   string = "aws.emr.cluster.step"
 	ResourceAwsEmrClusterInstanceGroup                                          string = "aws.emr.cluster.instanceGroup"
@@ -1799,6 +1800,10 @@ func init() {
 		"aws.emr.cluster": {
 			Init:   initAwsEmrCluster,
 			Create: createAwsEmrCluster,
+		},
+		"aws.emr.securityConfiguration": {
+			Init:   initAwsEmrSecurityConfiguration,
+			Create: createAwsEmrSecurityConfiguration,
 		},
 		"aws.emr.cluster.encryptionConfiguration": {
 			// to override args, implement: initAwsEmrClusterEncryptionConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -10566,6 +10571,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.blockPublicAccessConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmr).GetBlockPublicAccessConfiguration()).ToDataRes(types.Dict)
 	},
+	"aws.emr.securityConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmr).GetSecurityConfigurations()).ToDataRes(types.Array(types.Resource("aws.emr.securityConfiguration")))
+	},
 	"aws.emr.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetArn()).ToDataRes(types.String)
 	},
@@ -10593,6 +10601,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.cluster.securityConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetSecurityConfiguration()).ToDataRes(types.String)
 	},
+	"aws.emr.cluster.securityConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetSecurityConfig()).ToDataRes(types.Resource("aws.emr.securityConfiguration"))
+	},
 	"aws.emr.cluster.encryptionConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetEncryptionConfiguration()).ToDataRes(types.Resource("aws.emr.cluster.encryptionConfiguration"))
 	},
@@ -10616,6 +10627,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.emr.cluster.bootstrapActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetBootstrapActions()).ToDataRes(types.Array(types.Resource("aws.emr.cluster.bootstrapAction")))
+	},
+	"aws.emr.cluster.releaseLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetReleaseLabel()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetApplications()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.emr.cluster.configurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.emr.cluster.ebsRootVolumeSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetEbsRootVolumeSize()).ToDataRes(types.Int)
+	},
+	"aws.emr.cluster.ebsRootVolumeIops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetEbsRootVolumeIops()).ToDataRes(types.Int)
+	},
+	"aws.emr.cluster.ebsRootVolumeThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetEbsRootVolumeThroughput()).ToDataRes(types.Int)
+	},
+	"aws.emr.cluster.repoUpgradeOnBoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetRepoUpgradeOnBoot()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.kerberosAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetKerberosAttributes()).ToDataRes(types.Dict)
+	},
+	"aws.emr.cluster.stepConcurrencyLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetStepConcurrencyLevel()).ToDataRes(types.Int)
+	},
+	"aws.emr.cluster.placementGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetPlacementGroups()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.emr.cluster.autoTerminate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetAutoTerminate()).ToDataRes(types.Bool)
+	},
+	"aws.emr.cluster.autoTerminationIdleTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetAutoTerminationIdleTimeout()).ToDataRes(types.Int)
+	},
+	"aws.emr.cluster.instanceCollectionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetInstanceCollectionType()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.scaleDownBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetScaleDownBehavior()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.visibleToAllUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetVisibleToAllUsers()).ToDataRes(types.Bool)
+	},
+	"aws.emr.cluster.autoScalingRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetAutoScalingRoleArn()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.serviceRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrCluster).GetServiceRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.emr.securityConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrSecurityConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"aws.emr.securityConfiguration.creationDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrSecurityConfiguration).GetCreationDateTime()).ToDataRes(types.Time)
+	},
+	"aws.emr.securityConfiguration.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrSecurityConfiguration).GetConfiguration()).ToDataRes(types.String)
 	},
 	"aws.emr.cluster.encryptionConfiguration.atRestEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterEncryptionConfiguration).GetAtRestEnabled()).ToDataRes(types.Bool)
@@ -10644,6 +10715,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.cluster.step.jar": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterStep).GetJar()).ToDataRes(types.String)
 	},
+	"aws.emr.cluster.step.mainClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterStep).GetMainClass()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.step.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterStep).GetProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.emr.cluster.step.args": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterStep).GetArgs()).ToDataRes(types.Array(types.String))
 	},
@@ -10655,6 +10732,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.emr.cluster.step.endedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterStep).GetEndedAt()).ToDataRes(types.Time)
+	},
+	"aws.emr.cluster.step.stateChangeReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterStep).GetStateChangeReason()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.step.failureDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterStep).GetFailureDetails()).ToDataRes(types.Dict)
+	},
+	"aws.emr.cluster.step.logUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterStep).GetLogUri()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.step.executionRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterStep).GetExecutionRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
 	"aws.emr.cluster.instanceGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterInstanceGroup).GetId()).ToDataRes(types.String)
@@ -10685,6 +10774,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.emr.cluster.instanceGroup.ebsOptimized": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterInstanceGroup).GetEbsOptimized()).ToDataRes(types.Bool)
+	},
+	"aws.emr.cluster.instanceGroup.customAmiId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterInstanceGroup).GetCustomAmiId()).ToDataRes(types.String)
+	},
+	"aws.emr.cluster.instanceGroup.ebsBlockDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterInstanceGroup).GetEbsBlockDevices()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.emr.cluster.instanceGroup.configurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrClusterInstanceGroup).GetConfigurations()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.emr.cluster.bootstrapAction.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterBootstrapAction).GetName()).ToDataRes(types.String)
@@ -34824,6 +34922,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmr).BlockPublicAccessConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.emr.securityConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmr).SecurityConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.emr.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrCluster).__id, ok = v.Value.(string)
 		return
@@ -34864,6 +34966,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmrCluster).SecurityConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.emr.cluster.securityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).SecurityConfig, ok = plugin.RawToTValue[*mqlAwsEmrSecurityConfiguration](v.Value, v.Error)
+		return
+	},
 	"aws.emr.cluster.encryptionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrCluster).EncryptionConfiguration, ok = plugin.RawToTValue[*mqlAwsEmrClusterEncryptionConfiguration](v.Value, v.Error)
 		return
@@ -34894,6 +35000,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.emr.cluster.bootstrapActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrCluster).BootstrapActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.releaseLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).ReleaseLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.configurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).Configurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.ebsRootVolumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).EbsRootVolumeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.ebsRootVolumeIops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).EbsRootVolumeIops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.ebsRootVolumeThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).EbsRootVolumeThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.repoUpgradeOnBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).RepoUpgradeOnBoot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.kerberosAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).KerberosAttributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.stepConcurrencyLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).StepConcurrencyLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.placementGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).PlacementGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.autoTerminate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).AutoTerminate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.autoTerminationIdleTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).AutoTerminationIdleTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.instanceCollectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).InstanceCollectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.scaleDownBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).ScaleDownBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.visibleToAllUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).VisibleToAllUsers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.autoScalingRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).AutoScalingRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.serviceRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrCluster).ServiceRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.emr.securityConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrSecurityConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.emr.securityConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrSecurityConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.securityConfiguration.creationDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrSecurityConfiguration).CreationDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.emr.securityConfiguration.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrSecurityConfiguration).Configuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.emr.cluster.encryptionConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34940,6 +35130,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmrClusterStep).Jar, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.emr.cluster.step.mainClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterStep).MainClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.step.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterStep).Properties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.emr.cluster.step.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrClusterStep).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -34954,6 +35152,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.emr.cluster.step.endedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrClusterStep).EndedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.step.stateChangeReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterStep).StateChangeReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.step.failureDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterStep).FailureDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.step.logUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterStep).LogUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.step.executionRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterStep).ExecutionRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
 	"aws.emr.cluster.instanceGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34998,6 +35212,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.emr.cluster.instanceGroup.ebsOptimized": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrClusterInstanceGroup).EbsOptimized, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.instanceGroup.customAmiId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterInstanceGroup).CustomAmiId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.instanceGroup.ebsBlockDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterInstanceGroup).EbsBlockDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.emr.cluster.instanceGroup.configurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrClusterInstanceGroup).Configurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.emr.cluster.bootstrapAction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83429,6 +83655,7 @@ type mqlAwsEmr struct {
 	// optional: if you define mqlAwsEmrInternal it will be used here
 	Clusters                       plugin.TValue[[]any]
 	BlockPublicAccessConfiguration plugin.TValue[any]
+	SecurityConfigurations         plugin.TValue[[]any]
 }
 
 // createAwsEmr creates a new instance of this resource
@@ -83490,28 +83717,62 @@ func (c *mqlAwsEmr) GetBlockPublicAccessConfiguration() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsEmr) GetSecurityConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr", c.__id, "securityConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityConfigurations()
+	})
+}
+
 // mqlAwsEmrCluster for the aws.emr.cluster resource
 type mqlAwsEmrCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEmrClusterInternal
-	Arn                     plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	NormalizedInstanceHours plugin.TValue[int64]
-	OutpostArn              plugin.TValue[string]
-	Status                  plugin.TValue[any]
-	MasterInstances         plugin.TValue[[]any]
-	Id                      plugin.TValue[string]
-	Tags                    plugin.TValue[map[string]any]
-	SecurityConfiguration   plugin.TValue[string]
-	EncryptionConfiguration plugin.TValue[*mqlAwsEmrClusterEncryptionConfiguration]
-	LogUri                  plugin.TValue[string]
-	TerminationProtected    plugin.TValue[bool]
-	MasterPublicDnsName     plugin.TValue[string]
-	LogEncryptionKmsKey     plugin.TValue[*mqlAwsKmsKey]
-	Steps                   plugin.TValue[[]any]
-	InstanceGroups          plugin.TValue[[]any]
-	BootstrapActions        plugin.TValue[[]any]
+	Arn                        plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	NormalizedInstanceHours    plugin.TValue[int64]
+	OutpostArn                 plugin.TValue[string]
+	Status                     plugin.TValue[any]
+	MasterInstances            plugin.TValue[[]any]
+	Id                         plugin.TValue[string]
+	Tags                       plugin.TValue[map[string]any]
+	SecurityConfiguration      plugin.TValue[string]
+	SecurityConfig             plugin.TValue[*mqlAwsEmrSecurityConfiguration]
+	EncryptionConfiguration    plugin.TValue[*mqlAwsEmrClusterEncryptionConfiguration]
+	LogUri                     plugin.TValue[string]
+	TerminationProtected       plugin.TValue[bool]
+	MasterPublicDnsName        plugin.TValue[string]
+	LogEncryptionKmsKey        plugin.TValue[*mqlAwsKmsKey]
+	Steps                      plugin.TValue[[]any]
+	InstanceGroups             plugin.TValue[[]any]
+	BootstrapActions           plugin.TValue[[]any]
+	ReleaseLabel               plugin.TValue[string]
+	Applications               plugin.TValue[[]any]
+	Configurations             plugin.TValue[[]any]
+	EbsRootVolumeSize          plugin.TValue[int64]
+	EbsRootVolumeIops          plugin.TValue[int64]
+	EbsRootVolumeThroughput    plugin.TValue[int64]
+	RepoUpgradeOnBoot          plugin.TValue[string]
+	KerberosAttributes         plugin.TValue[any]
+	StepConcurrencyLevel       plugin.TValue[int64]
+	PlacementGroups            plugin.TValue[[]any]
+	AutoTerminate              plugin.TValue[bool]
+	AutoTerminationIdleTimeout plugin.TValue[int64]
+	InstanceCollectionType     plugin.TValue[string]
+	ScaleDownBehavior          plugin.TValue[string]
+	VisibleToAllUsers          plugin.TValue[bool]
+	AutoScalingRoleArn         plugin.TValue[string]
+	ServiceRole                plugin.TValue[*mqlAwsIamRole]
 }
 
 // createAwsEmrCluster creates a new instance of this resource
@@ -83590,6 +83851,22 @@ func (c *mqlAwsEmrCluster) GetTags() *plugin.TValue[map[string]any] {
 func (c *mqlAwsEmrCluster) GetSecurityConfiguration() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.SecurityConfiguration, func() (string, error) {
 		return c.securityConfiguration()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetSecurityConfig() *plugin.TValue[*mqlAwsEmrSecurityConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEmrSecurityConfiguration](&c.SecurityConfig, func() (*mqlAwsEmrSecurityConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.cluster", c.__id, "securityConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEmrSecurityConfiguration), nil
+			}
+		}
+
+		return c.securityConfig()
 	})
 }
 
@@ -83691,6 +83968,179 @@ func (c *mqlAwsEmrCluster) GetBootstrapActions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsEmrCluster) GetReleaseLabel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReleaseLabel, func() (string, error) {
+		return c.releaseLabel()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
+		return c.applications()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Configurations, func() ([]any, error) {
+		return c.configurations()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetEbsRootVolumeSize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EbsRootVolumeSize, func() (int64, error) {
+		return c.ebsRootVolumeSize()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetEbsRootVolumeIops() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EbsRootVolumeIops, func() (int64, error) {
+		return c.ebsRootVolumeIops()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetEbsRootVolumeThroughput() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EbsRootVolumeThroughput, func() (int64, error) {
+		return c.ebsRootVolumeThroughput()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetRepoUpgradeOnBoot() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RepoUpgradeOnBoot, func() (string, error) {
+		return c.repoUpgradeOnBoot()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetKerberosAttributes() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.KerberosAttributes, func() (any, error) {
+		return c.kerberosAttributes()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetStepConcurrencyLevel() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.StepConcurrencyLevel, func() (int64, error) {
+		return c.stepConcurrencyLevel()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetPlacementGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PlacementGroups, func() ([]any, error) {
+		return c.placementGroups()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetAutoTerminate() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutoTerminate, func() (bool, error) {
+		return c.autoTerminate()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetAutoTerminationIdleTimeout() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AutoTerminationIdleTimeout, func() (int64, error) {
+		return c.autoTerminationIdleTimeout()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetInstanceCollectionType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InstanceCollectionType, func() (string, error) {
+		return c.instanceCollectionType()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetScaleDownBehavior() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ScaleDownBehavior, func() (string, error) {
+		return c.scaleDownBehavior()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetVisibleToAllUsers() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.VisibleToAllUsers, func() (bool, error) {
+		return c.visibleToAllUsers()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetAutoScalingRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AutoScalingRoleArn, func() (string, error) {
+		return c.autoScalingRoleArn()
+	})
+}
+
+func (c *mqlAwsEmrCluster) GetServiceRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ServiceRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.cluster", c.__id, "serviceRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.serviceRole()
+	})
+}
+
+// mqlAwsEmrSecurityConfiguration for the aws.emr.securityConfiguration resource
+type mqlAwsEmrSecurityConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEmrSecurityConfigurationInternal
+	Name             plugin.TValue[string]
+	CreationDateTime plugin.TValue[*time.Time]
+	Configuration    plugin.TValue[string]
+}
+
+// createAwsEmrSecurityConfiguration creates a new instance of this resource
+func createAwsEmrSecurityConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEmrSecurityConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.emr.securityConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEmrSecurityConfiguration) MqlName() string {
+	return "aws.emr.securityConfiguration"
+}
+
+func (c *mqlAwsEmrSecurityConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEmrSecurityConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEmrSecurityConfiguration) GetCreationDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreationDateTime
+}
+
+func (c *mqlAwsEmrSecurityConfiguration) GetConfiguration() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Configuration, func() (string, error) {
+		return c.configuration()
+	})
+}
+
 // mqlAwsEmrClusterEncryptionConfiguration for the aws.emr.cluster.encryptionConfiguration resource
 type mqlAwsEmrClusterEncryptionConfiguration struct {
 	MqlRuntime *plugin.Runtime
@@ -83754,16 +84204,22 @@ func (c *mqlAwsEmrClusterEncryptionConfiguration) GetInTransitConfiguration() *p
 type mqlAwsEmrClusterStep struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEmrClusterStepInternal it will be used here
-	Id              plugin.TValue[string]
-	Name            plugin.TValue[string]
-	ActionOnFailure plugin.TValue[string]
-	Status          plugin.TValue[string]
-	Jar             plugin.TValue[string]
-	Args            plugin.TValue[[]any]
-	CreatedAt       plugin.TValue[*time.Time]
-	StartedAt       plugin.TValue[*time.Time]
-	EndedAt         plugin.TValue[*time.Time]
+	mqlAwsEmrClusterStepInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	ActionOnFailure   plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Jar               plugin.TValue[string]
+	MainClass         plugin.TValue[string]
+	Properties        plugin.TValue[map[string]any]
+	Args              plugin.TValue[[]any]
+	CreatedAt         plugin.TValue[*time.Time]
+	StartedAt         plugin.TValue[*time.Time]
+	EndedAt           plugin.TValue[*time.Time]
+	StateChangeReason plugin.TValue[string]
+	FailureDetails    plugin.TValue[any]
+	LogUri            plugin.TValue[string]
+	ExecutionRole     plugin.TValue[*mqlAwsIamRole]
 }
 
 // createAwsEmrClusterStep creates a new instance of this resource
@@ -83823,6 +84279,14 @@ func (c *mqlAwsEmrClusterStep) GetJar() *plugin.TValue[string] {
 	return &c.Jar
 }
 
+func (c *mqlAwsEmrClusterStep) GetMainClass() *plugin.TValue[string] {
+	return &c.MainClass
+}
+
+func (c *mqlAwsEmrClusterStep) GetProperties() *plugin.TValue[map[string]any] {
+	return &c.Properties
+}
+
 func (c *mqlAwsEmrClusterStep) GetArgs() *plugin.TValue[[]any] {
 	return &c.Args
 }
@@ -83837,6 +84301,34 @@ func (c *mqlAwsEmrClusterStep) GetStartedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsEmrClusterStep) GetEndedAt() *plugin.TValue[*time.Time] {
 	return &c.EndedAt
+}
+
+func (c *mqlAwsEmrClusterStep) GetStateChangeReason() *plugin.TValue[string] {
+	return &c.StateChangeReason
+}
+
+func (c *mqlAwsEmrClusterStep) GetFailureDetails() *plugin.TValue[any] {
+	return &c.FailureDetails
+}
+
+func (c *mqlAwsEmrClusterStep) GetLogUri() *plugin.TValue[string] {
+	return &c.LogUri
+}
+
+func (c *mqlAwsEmrClusterStep) GetExecutionRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ExecutionRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.cluster.step", c.__id, "executionRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.executionRole()
+	})
 }
 
 // mqlAwsEmrClusterInstanceGroup for the aws.emr.cluster.instanceGroup resource
@@ -83854,6 +84346,9 @@ type mqlAwsEmrClusterInstanceGroup struct {
 	Status                 plugin.TValue[string]
 	BidPrice               plugin.TValue[string]
 	EbsOptimized           plugin.TValue[bool]
+	CustomAmiId            plugin.TValue[string]
+	EbsBlockDevices        plugin.TValue[[]any]
+	Configurations         plugin.TValue[[]any]
 }
 
 // createAwsEmrClusterInstanceGroup creates a new instance of this resource
@@ -83931,6 +84426,18 @@ func (c *mqlAwsEmrClusterInstanceGroup) GetBidPrice() *plugin.TValue[string] {
 
 func (c *mqlAwsEmrClusterInstanceGroup) GetEbsOptimized() *plugin.TValue[bool] {
 	return &c.EbsOptimized
+}
+
+func (c *mqlAwsEmrClusterInstanceGroup) GetCustomAmiId() *plugin.TValue[string] {
+	return &c.CustomAmiId
+}
+
+func (c *mqlAwsEmrClusterInstanceGroup) GetEbsBlockDevices() *plugin.TValue[[]any] {
+	return &c.EbsBlockDevices
+}
+
+func (c *mqlAwsEmrClusterInstanceGroup) GetConfigurations() *plugin.TValue[[]any] {
+	return &c.Configurations
 }
 
 // mqlAwsEmrClusterBootstrapAction for the aws.emr.cluster.bootstrapAction resource

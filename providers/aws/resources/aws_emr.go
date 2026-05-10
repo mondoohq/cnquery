@@ -140,14 +140,33 @@ func initAwsEmrCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 }
 
 type mqlAwsEmrClusterInternal struct {
-	clusterDetailsFetched      bool
-	clusterDetailsLock         sync.Mutex
-	cacheSecurityConfig        string
-	cacheLogUri                string
-	cacheTags                  map[string]any
-	cacheTerminationProtected  bool
-	cacheMasterPublicDnsName   string
-	cacheLogEncryptionKmsKeyId *string
+	clusterDetailsFetched          bool
+	clusterDetailsLock             sync.Mutex
+	cacheSecurityConfig            string
+	cacheLogUri                    string
+	cacheTags                      map[string]any
+	cacheTerminationProtected      bool
+	cacheMasterPublicDnsName       string
+	cacheLogEncryptionKmsKeyId     *string
+	cacheReleaseLabel              string
+	cacheApplications              []any
+	cacheConfigurations            []any
+	cacheEbsRootVolumeSize         int64
+	cacheEbsRootVolumeIops         int64
+	cacheEbsRootVolumeThroughput   int64
+	cacheRepoUpgradeOnBoot         string
+	cacheKerberosAttributes        any
+	cacheStepConcurrencyLevel      int64
+	cachePlacementGroups           []any
+	cacheAutoTerminate             bool
+	cacheInstanceCollectionType    string
+	cacheScaleDownBehavior         string
+	cacheVisibleToAllUsers         bool
+	cacheAutoScalingRoleArn        string
+	cacheServiceRoleArn            string
+	autoTerminationFetched         bool
+	autoTerminationLock            sync.Mutex
+	cacheAutoTerminationIdleTimout int64
 }
 
 func (a *mqlAwsEmrCluster) fetchClusterDetails() error {
@@ -194,8 +213,67 @@ func (a *mqlAwsEmrCluster) fetchClusterDetails() error {
 		a.cacheMasterPublicDnsName = *resp.Cluster.MasterPublicDnsName
 	}
 	a.cacheLogEncryptionKmsKeyId = resp.Cluster.LogEncryptionKmsKeyId
+
+	if resp.Cluster.ReleaseLabel != nil {
+		a.cacheReleaseLabel = *resp.Cluster.ReleaseLabel
+	}
+	if apps, err := convert.JsonToDictSlice(resp.Cluster.Applications); err == nil {
+		a.cacheApplications = apps
+	}
+	if cfgs, err := convert.JsonToDictSlice(resp.Cluster.Configurations); err == nil {
+		a.cacheConfigurations = cfgs
+	}
+	if resp.Cluster.EbsRootVolumeSize != nil {
+		a.cacheEbsRootVolumeSize = int64(*resp.Cluster.EbsRootVolumeSize)
+	}
+	if resp.Cluster.EbsRootVolumeIops != nil {
+		a.cacheEbsRootVolumeIops = int64(*resp.Cluster.EbsRootVolumeIops)
+	}
+	if resp.Cluster.EbsRootVolumeThroughput != nil {
+		a.cacheEbsRootVolumeThroughput = int64(*resp.Cluster.EbsRootVolumeThroughput)
+	}
+	a.cacheRepoUpgradeOnBoot = string(resp.Cluster.RepoUpgradeOnBoot)
+	a.cacheKerberosAttributes = redactedKerberosAttributes(resp.Cluster.KerberosAttributes)
+	if resp.Cluster.StepConcurrencyLevel != nil {
+		a.cacheStepConcurrencyLevel = int64(*resp.Cluster.StepConcurrencyLevel)
+	}
+	if pgs, err := convert.JsonToDictSlice(resp.Cluster.PlacementGroups); err == nil {
+		a.cachePlacementGroups = pgs
+	}
+	if resp.Cluster.AutoTerminate != nil {
+		a.cacheAutoTerminate = *resp.Cluster.AutoTerminate
+	}
+	a.cacheInstanceCollectionType = string(resp.Cluster.InstanceCollectionType)
+	a.cacheScaleDownBehavior = string(resp.Cluster.ScaleDownBehavior)
+	if resp.Cluster.VisibleToAllUsers != nil {
+		a.cacheVisibleToAllUsers = *resp.Cluster.VisibleToAllUsers
+	}
+	if resp.Cluster.AutoScalingRole != nil {
+		a.cacheAutoScalingRoleArn = *resp.Cluster.AutoScalingRole
+	}
+	if resp.Cluster.ServiceRole != nil {
+		a.cacheServiceRoleArn = *resp.Cluster.ServiceRole
+	}
+
 	a.clusterDetailsFetched = true
 	return nil
+}
+
+// redactedKerberosAttributes returns a sanitized view of KerberosAttributes
+// with password fields removed; the realm and AD domain join user are
+// retained because they are not sensitive on their own.
+func redactedKerberosAttributes(k *emrtypes.KerberosAttributes) any {
+	if k == nil {
+		return nil
+	}
+	out := map[string]any{}
+	if k.Realm != nil {
+		out["realm"] = *k.Realm
+	}
+	if k.ADDomainJoinUser != nil {
+		out["adDomainJoinUser"] = *k.ADDomainJoinUser
+	}
+	return out
 }
 
 func (a *mqlAwsEmrCluster) tags() (map[string]any, error) {
@@ -231,6 +309,200 @@ func (a *mqlAwsEmrCluster) masterPublicDnsName() (string, error) {
 		return "", err
 	}
 	return a.cacheMasterPublicDnsName, nil
+}
+
+func (a *mqlAwsEmrCluster) releaseLabel() (string, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheReleaseLabel, nil
+}
+
+func (a *mqlAwsEmrCluster) applications() ([]any, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheApplications, nil
+}
+
+func (a *mqlAwsEmrCluster) configurations() ([]any, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheConfigurations, nil
+}
+
+func (a *mqlAwsEmrCluster) ebsRootVolumeSize() (int64, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return 0, err
+	}
+	return a.cacheEbsRootVolumeSize, nil
+}
+
+func (a *mqlAwsEmrCluster) ebsRootVolumeIops() (int64, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return 0, err
+	}
+	return a.cacheEbsRootVolumeIops, nil
+}
+
+func (a *mqlAwsEmrCluster) ebsRootVolumeThroughput() (int64, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return 0, err
+	}
+	return a.cacheEbsRootVolumeThroughput, nil
+}
+
+func (a *mqlAwsEmrCluster) repoUpgradeOnBoot() (string, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheRepoUpgradeOnBoot, nil
+}
+
+func (a *mqlAwsEmrCluster) kerberosAttributes() (any, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	return a.cacheKerberosAttributes, nil
+}
+
+func (a *mqlAwsEmrCluster) stepConcurrencyLevel() (int64, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return 0, err
+	}
+	return a.cacheStepConcurrencyLevel, nil
+}
+
+func (a *mqlAwsEmrCluster) placementGroups() ([]any, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	return a.cachePlacementGroups, nil
+}
+
+func (a *mqlAwsEmrCluster) autoTerminate() (bool, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return false, err
+	}
+	return a.cacheAutoTerminate, nil
+}
+
+func (a *mqlAwsEmrCluster) instanceCollectionType() (string, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheInstanceCollectionType, nil
+}
+
+func (a *mqlAwsEmrCluster) scaleDownBehavior() (string, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheScaleDownBehavior, nil
+}
+
+func (a *mqlAwsEmrCluster) visibleToAllUsers() (bool, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return false, err
+	}
+	return a.cacheVisibleToAllUsers, nil
+}
+
+func (a *mqlAwsEmrCluster) autoScalingRoleArn() (string, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheAutoScalingRoleArn, nil
+}
+
+func (a *mqlAwsEmrCluster) serviceRole() (*mqlAwsIamRole, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheServiceRoleArn == "" {
+		a.ServiceRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlRole, err := iamRoleByArnOrName(a.MqlRuntime, a.cacheServiceRoleArn)
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole, nil
+}
+
+// iamRoleByArnOrName resolves an iam.role reference where the input string may
+// be either an ARN (arn:aws:iam::...) or a bare role name. EMR (and a few
+// other services) return the role name in some places and the ARN in others.
+func iamRoleByArnOrName(runtime *plugin.Runtime, arnOrName string) (*mqlAwsIamRole, error) {
+	if arnOrName == "" {
+		return nil, nil
+	}
+	args := map[string]*llx.RawData{}
+	if len(arnOrName) >= 4 && arnOrName[:4] == "arn:" {
+		args["arn"] = llx.StringData(arnOrName)
+	} else {
+		args["name"] = llx.StringData(arnOrName)
+	}
+	res, err := NewResource(runtime, ResourceAwsIamRole, args)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsEmrCluster) autoTerminationIdleTimeout() (int64, error) {
+	if a.autoTerminationFetched {
+		return a.cacheAutoTerminationIdleTimout, nil
+	}
+	a.autoTerminationLock.Lock()
+	defer a.autoTerminationLock.Unlock()
+	if a.autoTerminationFetched {
+		return a.cacheAutoTerminationIdleTimout, nil
+	}
+
+	region, err := GetRegionFromArn(a.Arn.Data)
+	if err != nil {
+		return 0, err
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Emr(region)
+	ctx := context.Background()
+
+	id := a.Id.Data
+	resp, err := svc.GetAutoTerminationPolicy(ctx, &emr.GetAutoTerminationPolicyInput{ClusterId: &id})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.autoTerminationFetched = true
+			return 0, nil
+		}
+		return 0, err
+	}
+	if resp.AutoTerminationPolicy != nil && resp.AutoTerminationPolicy.IdleTimeout != nil {
+		a.cacheAutoTerminationIdleTimout = *resp.AutoTerminationPolicy.IdleTimeout
+	}
+	a.autoTerminationFetched = true
+	return a.cacheAutoTerminationIdleTimout, nil
+}
+
+// securityConfig returns the typed security configuration linked by name
+// to the cluster.
+func (a *mqlAwsEmrCluster) securityConfig() (*mqlAwsEmrSecurityConfiguration, error) {
+	if err := a.fetchClusterDetails(); err != nil {
+		return nil, err
+	}
+	if a.cacheSecurityConfig == "" {
+		a.SecurityConfig.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.emr.securityConfiguration",
+		map[string]*llx.RawData{
+			"name": llx.StringData(a.cacheSecurityConfig),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEmrSecurityConfiguration), nil
 }
 
 func (a *mqlAwsEmrCluster) logEncryptionKmsKey() (*mqlAwsKmsKey, error) {
@@ -391,6 +663,14 @@ func (a *mqlAwsEmr) blockPublicAccessConfiguration() (any, error) {
 
 // ── Steps ───────────────────────────────────────────────────────────────────
 
+type mqlAwsEmrClusterStepInternal struct {
+	cacheClusterId        string
+	cacheRegion           string
+	executionRoleFetched  bool
+	executionRoleLock     sync.Mutex
+	cacheExecutionRoleArn string
+}
+
 func (a *mqlAwsEmrCluster) steps() ([]any, error) {
 	arn := a.Arn.Data
 	clusterId := a.Id.Data
@@ -413,7 +693,8 @@ func (a *mqlAwsEmrCluster) steps() ([]any, error) {
 			return nil, err
 		}
 		for _, step := range page.Steps {
-			var status string
+			var status, stateChangeReason string
+			var failureDetails any
 			var createdAt, startedAt, endedAt *llx.RawData
 			if step.Status != nil {
 				status = string(step.Status.State)
@@ -421,6 +702,15 @@ func (a *mqlAwsEmrCluster) steps() ([]any, error) {
 					createdAt = llx.TimeDataPtr(step.Status.Timeline.CreationDateTime)
 					startedAt = llx.TimeDataPtr(step.Status.Timeline.StartDateTime)
 					endedAt = llx.TimeDataPtr(step.Status.Timeline.EndDateTime)
+				}
+				if step.Status.StateChangeReason != nil && step.Status.StateChangeReason.Message != nil {
+					stateChangeReason = *step.Status.StateChangeReason.Message
+				}
+				if step.Status.FailureDetails != nil {
+					fd, ferr := convert.JsonToDict(step.Status.FailureDetails)
+					if ferr == nil {
+						failureDetails = fd
+					}
 				}
 			}
 			if createdAt == nil {
@@ -433,32 +723,45 @@ func (a *mqlAwsEmrCluster) steps() ([]any, error) {
 				endedAt = llx.TimeDataPtr(nil)
 			}
 
-			var jar string
+			var jar, mainClass string
 			var args []any
+			properties := map[string]any{}
 			if step.Config != nil {
 				jar = convert.ToValue(step.Config.Jar)
+				mainClass = convert.ToValue(step.Config.MainClass)
 				args = make([]any, len(step.Config.Args))
 				for i, a := range step.Config.Args {
 					args[i] = a
+				}
+				for k, v := range step.Config.Properties {
+					properties[k] = v
 				}
 			}
 
 			mqlStep, err := CreateResource(a.MqlRuntime, "aws.emr.cluster.step",
 				map[string]*llx.RawData{
-					"__id":            llx.StringData(fmt.Sprintf("%s/step/%s", arn, convert.ToValue(step.Id))),
-					"id":              llx.StringDataPtr(step.Id),
-					"name":            llx.StringDataPtr(step.Name),
-					"actionOnFailure": llx.StringData(string(step.ActionOnFailure)),
-					"status":          llx.StringData(status),
-					"jar":             llx.StringData(jar),
-					"args":            llx.ArrayData(args, types.String),
-					"createdAt":       createdAt,
-					"startedAt":       startedAt,
-					"endedAt":         endedAt,
+					"__id":              llx.StringData(fmt.Sprintf("%s/step/%s", arn, convert.ToValue(step.Id))),
+					"id":                llx.StringDataPtr(step.Id),
+					"name":              llx.StringDataPtr(step.Name),
+					"actionOnFailure":   llx.StringData(string(step.ActionOnFailure)),
+					"status":            llx.StringData(status),
+					"jar":               llx.StringData(jar),
+					"mainClass":         llx.StringData(mainClass),
+					"properties":        llx.MapData(properties, types.String),
+					"args":              llx.ArrayData(args, types.String),
+					"createdAt":         createdAt,
+					"startedAt":         startedAt,
+					"endedAt":           endedAt,
+					"stateChangeReason": llx.StringData(stateChangeReason),
+					"failureDetails":    llx.DictData(failureDetails),
+					"logUri":            llx.StringDataPtr(step.LogUri),
 				})
 			if err != nil {
 				return nil, err
 			}
+			s := mqlStep.(*mqlAwsEmrClusterStep)
+			s.cacheClusterId = clusterId
+			s.cacheRegion = region
 			res = append(res, mqlStep)
 		}
 	}
@@ -467,6 +770,53 @@ func (a *mqlAwsEmrCluster) steps() ([]any, error) {
 
 func (a *mqlAwsEmrClusterStep) id() (string, error) {
 	return a.__id, nil
+}
+
+// executionRole returns the IAM runtime role used by the step. Resolved
+// lazily because StepSummary returned by ListSteps does not include the
+// ExecutionRoleArn — DescribeStep is required.
+func (a *mqlAwsEmrClusterStep) executionRole() (*mqlAwsIamRole, error) {
+	if !a.executionRoleFetched {
+		a.executionRoleLock.Lock()
+		if !a.executionRoleFetched {
+			if err := a.fetchExecutionRoleArn(); err != nil {
+				a.executionRoleLock.Unlock()
+				return nil, err
+			}
+		}
+		a.executionRoleLock.Unlock()
+	}
+	if a.cacheExecutionRoleArn == "" {
+		a.ExecutionRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return iamRoleByArnOrName(a.MqlRuntime, a.cacheExecutionRoleArn)
+}
+
+func (a *mqlAwsEmrClusterStep) fetchExecutionRoleArn() error {
+	if a.cacheClusterId == "" || a.cacheRegion == "" || a.Id.Data == "" {
+		a.executionRoleFetched = true
+		return nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Emr(a.cacheRegion)
+	ctx := context.Background()
+
+	stepId := a.Id.Data
+	clusterId := a.cacheClusterId
+	resp, err := svc.DescribeStep(ctx, &emr.DescribeStepInput{ClusterId: &clusterId, StepId: &stepId})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.executionRoleFetched = true
+			return nil
+		}
+		return err
+	}
+	if resp.Step != nil && resp.Step.ExecutionRoleArn != nil {
+		a.cacheExecutionRoleArn = *resp.Step.ExecutionRoleArn
+	}
+	a.executionRoleFetched = true
+	return nil
 }
 
 // ── Instance Groups ─────────────────────────────────────────────────────────
@@ -497,6 +847,14 @@ func (a *mqlAwsEmrCluster) instanceGroups() ([]any, error) {
 			if ig.Status != nil {
 				status = string(ig.Status.State)
 			}
+			var ebsBlockDevices []any
+			if devices, derr := convert.JsonToDictSlice(ig.EbsBlockDevices); derr == nil {
+				ebsBlockDevices = devices
+			}
+			var configurations []any
+			if cfgs, cerr := convert.JsonToDictSlice(ig.Configurations); cerr == nil {
+				configurations = cfgs
+			}
 			mqlIg, err := CreateResource(a.MqlRuntime, "aws.emr.cluster.instanceGroup",
 				map[string]*llx.RawData{
 					"__id":                   llx.StringData(fmt.Sprintf("%s/instanceGroup/%s", arn, convert.ToValue(ig.Id))),
@@ -510,6 +868,9 @@ func (a *mqlAwsEmrCluster) instanceGroups() ([]any, error) {
 					"status":                 llx.StringData(status),
 					"bidPrice":               llx.StringDataPtr(ig.BidPrice),
 					"ebsOptimized":           llx.BoolDataPtr(ig.EbsOptimized),
+					"customAmiId":            llx.StringDataPtr(ig.CustomAmiId),
+					"ebsBlockDevices":        llx.ArrayData(ebsBlockDevices, types.Dict),
+					"configurations":         llx.ArrayData(configurations, types.Dict),
 				})
 			if err != nil {
 				return nil, err
@@ -572,4 +933,154 @@ func (a *mqlAwsEmrCluster) bootstrapActions() ([]any, error) {
 
 func (a *mqlAwsEmrClusterBootstrapAction) id() (string, error) {
 	return a.__id, nil
+}
+
+// ── Security Configurations ─────────────────────────────────────────────────
+
+type mqlAwsEmrSecurityConfigurationInternal struct {
+	cacheRegion         string
+	configurationLock   sync.Mutex
+	configurationLoaded bool
+	cacheConfiguration  string
+}
+
+func (a *mqlAwsEmrSecurityConfiguration) id() (string, error) {
+	return a.Name.Data, nil
+}
+
+func (a *mqlAwsEmr) securityConfigurations() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getSecurityConfigurations(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEmr) getSecurityConfigurations(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		region := region
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Emr(region)
+			ctx := context.Background()
+			res := []any{}
+
+			var marker *string
+			for {
+				resp, err := svc.ListSecurityConfigurations(ctx, &emr.ListSecurityConfigurationsInput{Marker: marker})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, sc := range resp.SecurityConfigurations {
+					mqlSc, err := CreateResource(a.MqlRuntime, "aws.emr.securityConfiguration",
+						map[string]*llx.RawData{
+							"__id":             llx.StringData(fmt.Sprintf("aws.emr.securityConfiguration/%s/%s", region, convert.ToValue(sc.Name))),
+							"name":             llx.StringDataPtr(sc.Name),
+							"creationDateTime": llx.TimeDataPtr(sc.CreationDateTime),
+						})
+					if err != nil {
+						return nil, err
+					}
+					mqlSc.(*mqlAwsEmrSecurityConfiguration).cacheRegion = region
+					res = append(res, mqlSc)
+				}
+				if resp.Marker == nil {
+					break
+				}
+				marker = resp.Marker
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsEmrSecurityConfiguration) configuration() (string, error) {
+	if a.configurationLoaded {
+		return a.cacheConfiguration, nil
+	}
+	a.configurationLock.Lock()
+	defer a.configurationLock.Unlock()
+	if a.configurationLoaded {
+		return a.cacheConfiguration, nil
+	}
+
+	region := a.cacheRegion
+	if region == "" {
+		// fall back: try the first available region
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		regions, err := conn.Regions()
+		if err != nil || len(regions) == 0 {
+			a.configurationLoaded = true
+			return "", nil
+		}
+		region = regions[0]
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Emr(region)
+	ctx := context.Background()
+	name := a.Name.Data
+	resp, err := svc.DescribeSecurityConfiguration(ctx, &emr.DescribeSecurityConfigurationInput{Name: &name})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.configurationLoaded = true
+			return "", nil
+		}
+		return "", err
+	}
+	if resp.SecurityConfiguration != nil {
+		a.cacheConfiguration = *resp.SecurityConfiguration
+	}
+	a.configurationLoaded = true
+	return a.cacheConfiguration, nil
+}
+
+func initAwsEmrSecurityConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["name"] == nil {
+		return nil, nil, errors.New("name required to fetch emr security configuration")
+	}
+
+	obj, err := CreateResource(runtime, "aws.emr", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	e := obj.(*mqlAwsEmr)
+
+	rawResources := e.GetSecurityConfigurations()
+	if rawResources.Error != nil {
+		return nil, nil, rawResources.Error
+	}
+
+	nameVal, ok := args["name"].Value.(string)
+	if !ok {
+		return nil, nil, errors.New("name must be a string")
+	}
+	for _, rawResource := range rawResources.Data {
+		sc := rawResource.(*mqlAwsEmrSecurityConfiguration)
+		if sc.Name.Data == nameVal {
+			return args, sc, nil
+		}
+	}
+	return nil, nil, errors.New("emr security configuration does not exist")
 }
