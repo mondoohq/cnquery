@@ -278,15 +278,12 @@ func (a *mqlAwsDrs) createSourceServerResource(server drstypes.SourceServer, reg
 			"sourceSupportsNitroInstances":           llx.BoolDataPtr(sourceSupportsNitro),
 			"sourceIdentificationFqdn":               llx.StringData(fqdn),
 			"sourceIdentificationHostname":           llx.StringData(hostname),
-			"sourceIdentificationAwsInstanceID":      llx.StringData(awsInstanceID),
 			"sourceCloudOriginAccountID":             llx.StringData(sourceCloudOriginAccountID),
 			"sourceCloudOriginRegion":                llx.StringData(sourceCloudOriginRegion),
 			"sourceCloudOriginAvailabilityZone":      llx.StringData(sourceCloudOriginAZ),
 			"sourceNetworkID":                        llx.StringDataPtr(server.SourceNetworkID),
-			"reversedDirectionSourceServerArn":       llx.StringDataPtr(server.ReversedDirectionSourceServerArn),
 			"stagingArea":                            llx.DictData(stagingArea),
 			"replicationDirection":                   llx.StringData(string(server.ReplicationDirection)),
-			"recoveryInstanceId":                     llx.StringDataPtr(server.RecoveryInstanceId),
 			"tags":                                   llx.MapData(tags, types.String),
 		})
 	if err != nil {
