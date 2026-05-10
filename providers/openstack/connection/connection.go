@@ -19,7 +19,11 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
-var PlatformIdOpenstackProject = "//platformid.api.mondoo.app/runtime/openstack/project/"
+var (
+	PlatformIdOpenstackProject = "//platformid.api.mondoo.app/runtime/openstack/project/"
+	PlatformIdOpenstackDomain  = "//platformid.api.mondoo.app/runtime/openstack/domain/"
+	PlatformIdOpenstackSystem  = "//platformid.api.mondoo.app/runtime/openstack/system/"
+)
 
 type OpenstackConnection struct {
 	plugin.Connection
@@ -30,6 +34,7 @@ type OpenstackConnection struct {
 	region    string
 	authOpts  gophercloud.AuthOptions
 	projectID string
+	domainID  string
 
 	clientLock   sync.Mutex
 	identity     *gophercloud.ServiceClient
@@ -74,18 +79,31 @@ func NewOpenstackConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		return nil, fmt.Errorf("failed to authenticate with OpenStack: %w", err)
 	}
 
-	// Resolve the actual scoped project ID from the auth response. The
-	// caller may have authenticated by project_name (rather than project_id),
-	// in which case authOpts only carries the name and we need Keystone's
-	// answer for the platform ID.
+	// Resolve the actual scoped project (or domain) ID from the auth
+	// response. The caller may have authenticated by project_name (rather
+	// than project_id), or with a domain-scoped/system-scoped token, in
+	// which case authOpts only carries names and we need Keystone's answer
+	// for the platform ID.
 	projectID := auth.authOpts.TenantID
 	if projectID == "" && auth.authOpts.Scope != nil {
 		projectID = auth.authOpts.Scope.ProjectID
 	}
-	if projectID == "" {
-		if v3Result, ok := provider.GetAuthResult().(tokens.CreateResult); ok {
+	domainID := ""
+	if auth.authOpts.Scope != nil {
+		domainID = auth.authOpts.Scope.DomainID
+	}
+	if v3Result, ok := provider.GetAuthResult().(tokens.CreateResult); ok {
+		if projectID == "" {
 			if project, err := v3Result.ExtractProject(); err == nil && project != nil {
 				projectID = project.ID
+				if domainID == "" && project.Domain.ID != "" {
+					domainID = project.Domain.ID
+				}
+			}
+		}
+		if domainID == "" {
+			if domain, err := v3Result.ExtractDomain(); err == nil && domain != nil {
+				domainID = domain.ID
 			}
 		}
 	}
@@ -98,6 +116,7 @@ func NewOpenstackConnection(id uint32, asset *inventory.Asset, conf *inventory.C
 		region:     auth.region,
 		authOpts:   auth.authOpts,
 		projectID:  projectID,
+		domainID:   domainID,
 	}, nil
 }
 
@@ -113,11 +132,18 @@ func (c *OpenstackConnection) AuthURL() string {
 }
 
 // ProjectID returns the scoped project ID. Empty when the token is not
-// project-scoped. When the caller authenticated by project_name, this
-// value is resolved from Keystone's auth response rather than the input
-// scope.
+// project-scoped (e.g. domain-scoped or system-scoped). When the caller
+// authenticated by project_name, this value is resolved from Keystone's
+// auth response rather than the input scope.
 func (c *OpenstackConnection) ProjectID() string {
 	return c.projectID
+}
+
+// DomainID returns the scoped domain ID. Populated for both project-scoped
+// tokens (the project's owning domain) and domain-scoped tokens, and empty
+// for system-scoped or fully unscoped tokens.
+func (c *OpenstackConnection) DomainID() string {
+	return c.domainID
 }
 
 func (c *OpenstackConnection) endpointOpts() gophercloud.EndpointOpts {

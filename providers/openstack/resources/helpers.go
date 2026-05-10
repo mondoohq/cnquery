@@ -35,9 +35,11 @@ func ctx() context.Context {
 	return context.Background()
 }
 
-// translateOpenstackError maps 401/403/404 to "no data" so a missing capability
-// (e.g. non-admin token calling Keystone list APIs) doesn't fail the whole
-// query. Other errors propagate. Mirrors the AWS Is400AccessDenied pattern.
+// translateOpenstackError maps 401/403/404 to "no data" so a missing
+// capability (e.g. non-admin token calling Keystone list APIs) doesn't fail
+// the whole query. Use this for list endpoints — for single-item Get calls,
+// use translateGetError so a real "not found" surfaces. Mirrors the AWS
+// Is400AccessDenied pattern.
 func translateOpenstackError(err error) error {
 	if err == nil {
 		return nil
@@ -47,6 +49,25 @@ func translateOpenstackError(err error) error {
 		switch resp.Actual {
 		case 401, 403, 404:
 			log.Warn().Err(err).Int("status", resp.Actual).Msg("openstack> permission denied or not found; returning empty result")
+			return nil
+		}
+	}
+	return err
+}
+
+// translateGetError is the single-item-Get equivalent of
+// translateOpenstackError: 401/403 (no permission) become nil so a non-admin
+// token doesn't fail the query, but 404 (resource genuinely missing)
+// propagates so callers can surface it.
+func translateGetError(err error) error {
+	if err == nil {
+		return nil
+	}
+	var resp gophercloud.ErrUnexpectedResponseCode
+	if errors.As(err, &resp) {
+		switch resp.Actual {
+		case 401, 403:
+			log.Warn().Err(err).Int("status", resp.Actual).Msg("openstack> permission denied; returning empty result")
 			return nil
 		}
 	}

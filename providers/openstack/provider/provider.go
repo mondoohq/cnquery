@@ -5,6 +5,8 @@ package provider
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -141,24 +143,40 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 
 func (s *Service) detect(asset *inventory.Asset, conn *connection.OpenstackConnection) error {
 	asset.Platform = &inventory.Platform{
-		Name:    "openstack-project",
 		Family:  []string{"openstack"},
 		Kind:    "api",
 		Runtime: "openstack",
-		Title:   "OpenStack Project",
 	}
 
-	projectID := conn.ProjectID()
-	if projectID == "" {
-		return errors.New("OpenStack auth did not produce a scoped project ID")
+	switch {
+	case conn.ProjectID() != "":
+		asset.Platform.Name = "openstack-project"
+		asset.Platform.Title = "OpenStack Project"
+		asset.Id = connection.PlatformIdOpenstackProject + conn.ProjectID()
+		if asset.Name == "" {
+			asset.Name = "OpenStack project " + conn.ProjectID()
+		}
+	case conn.DomainID() != "":
+		asset.Platform.Name = "openstack-domain"
+		asset.Platform.Title = "OpenStack Domain"
+		asset.Id = connection.PlatformIdOpenstackDomain + conn.DomainID()
+		if asset.Name == "" {
+			asset.Name = "OpenStack domain " + conn.DomainID()
+		}
+	default:
+		// System-scoped or otherwise unscoped — derive a stable id from the
+		// auth URL so multiple system-scoped connections to the same Keystone
+		// share an identity.
+		sum := sha256.Sum256([]byte(conn.AuthURL()))
+		fp := hex.EncodeToString(sum[:])
+		asset.Platform.Name = "openstack-system"
+		asset.Platform.Title = "OpenStack System Scope"
+		asset.Id = connection.PlatformIdOpenstackSystem + fp
+		if asset.Name == "" {
+			asset.Name = "OpenStack at " + conn.AuthURL()
+		}
 	}
-
-	asset.Id = connection.PlatformIdOpenstackProject + projectID
 	asset.PlatformIds = []string{asset.Id}
-
-	if asset.Name == "" {
-		asset.Name = "OpenStack project " + projectID
-	}
 	return nil
 }
 

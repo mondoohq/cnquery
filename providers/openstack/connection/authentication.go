@@ -22,8 +22,14 @@ type authResult struct {
 // resolveAuth merges flag values, password credentials, and clientconfig's
 // clouds.yaml/env-var resolution into a single AuthOptions.
 //
+// Passwords are deliberately NOT read from conf.Options; they must arrive
+// either as a vault password credential (preferred — ParseCLI routes the
+// --password flag here) or through OS_PASSWORD / clouds.yaml, both of which
+// clientconfig resolves itself. Putting the password in conf.Options would
+// risk it persisting to the inventory file or leaking through debug logs.
+//
 // Precedence (highest to lowest):
-//  1. CLI flags (set via Options)
+//  1. CLI flags for non-secret fields (set via Options)
 //  2. password credential attached to the inventory config (--password, --ask-pass)
 //  3. clouds.yaml entry referenced by --cloud, then OS_* env vars
 func resolveAuth(conf *inventory.Config) (*authResult, error) {
@@ -35,7 +41,6 @@ func resolveAuth(conf *inventory.Config) (*authResult, error) {
 	authInfo := &clientconfig.AuthInfo{
 		AuthURL:                     opts[OPTION_AUTH_URL],
 		Username:                    opts[OPTION_USERNAME],
-		Password:                    opts[OPTION_PASSWORD],
 		ProjectName:                 opts[OPTION_PROJECT_NAME],
 		ProjectID:                   opts[OPTION_PROJECT_ID],
 		UserDomainName:              opts[OPTION_USER_DOMAIN_NAME],

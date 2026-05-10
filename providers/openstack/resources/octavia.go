@@ -23,6 +23,11 @@ func barbicanRefIsContainer(ref string) bool {
 	return strings.Contains(ref, "/containers/")
 }
 
+// newKeymanagerContainerByRef resolves a Barbican container ref URL to an
+// openstack.keymanager.container resource. Returns (nil, nil) when ref is
+// empty or points at a bare secret (not a container) — callers MUST set
+// `<field>.State = StateIsSet | StateIsNull` before returning, otherwise the
+// runtime keeps the field unresolved.
 func newKeymanagerContainerByRef(runtime *plugin.Runtime, ref string) (*mqlOpenstackKeymanagerContainer, error) {
 	if !barbicanRefIsContainer(ref) {
 		return nil, nil
@@ -72,7 +77,7 @@ func initOpenstackOctaviaLoadBalancer(runtime *plugin.Runtime, args map[string]*
 	}
 	lb, err := loadbalancers.Get(ctx(), client, id).Extract()
 	if err != nil {
-		if translateOpenstackError(err) == nil {
+		if translateGetError(err) == nil {
 			return args, nil, nil
 		}
 		return nil, nil, err

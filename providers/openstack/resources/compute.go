@@ -369,6 +369,7 @@ func (r *mqlOpenstackComputeFlavor) id() (string, error) {
 type mqlOpenstackComputeFlavorInternal struct {
 	specsLock sync.Mutex
 	specsDone bool
+	specsData map[string]any
 }
 
 func initOpenstackComputeFlavor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -391,7 +392,7 @@ func initOpenstackComputeFlavor(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 	f, err := flavors.Get(ctx(), client, id).Extract()
 	if err != nil {
-		if translateOpenstackError(err) == nil {
+		if translateGetError(err) == nil {
 			return args, nil, nil
 		}
 		return nil, nil, err
@@ -449,7 +450,7 @@ func (r *mqlOpenstackComputeFlavor) extraSpecs() (map[string]any, error) {
 	r.specsLock.Lock()
 	defer r.specsLock.Unlock()
 	if r.specsDone {
-		return r.ExtraSpecs.Data, nil
+		return r.specsData, nil
 	}
 
 	c := conn(r.MqlRuntime)
@@ -461,12 +462,14 @@ func (r *mqlOpenstackComputeFlavor) extraSpecs() (map[string]any, error) {
 	if err != nil {
 		if translateOpenstackError(err) == nil {
 			r.specsDone = true
-			return map[string]any{}, nil
+			r.specsData = map[string]any{}
+			return r.specsData, nil
 		}
 		return nil, err
 	}
 	r.specsDone = true
-	return stringMap(specs), nil
+	r.specsData = stringMap(specs)
+	return r.specsData, nil
 }
 
 // ---- openstack.compute.keypair ----

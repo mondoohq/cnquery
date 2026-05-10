@@ -4,9 +4,11 @@
 package resources
 
 import (
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/gophercloud/gophercloud/v2"
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/mql/v13/llx"
 )
@@ -64,5 +66,53 @@ func TestStringArg(t *testing.T) {
 	t.Run("non-string value returns false", func(t *testing.T) {
 		_, ok := stringArg(map[string]*llx.RawData{"id": llx.IntData(7)}, "id")
 		assert.False(t, ok)
+	})
+}
+
+func TestTranslateOpenstackError(t *testing.T) {
+	t.Run("nil passes through", func(t *testing.T) {
+		assert.NoError(t, translateOpenstackError(nil))
+	})
+	t.Run("401 swallowed", func(t *testing.T) {
+		err := gophercloud.ErrUnexpectedResponseCode{Actual: 401}
+		assert.NoError(t, translateOpenstackError(err))
+	})
+	t.Run("403 swallowed", func(t *testing.T) {
+		err := gophercloud.ErrUnexpectedResponseCode{Actual: 403}
+		assert.NoError(t, translateOpenstackError(err))
+	})
+	t.Run("404 swallowed (list endpoints treat absent service as empty)", func(t *testing.T) {
+		err := gophercloud.ErrUnexpectedResponseCode{Actual: 404}
+		assert.NoError(t, translateOpenstackError(err))
+	})
+	t.Run("500 propagates", func(t *testing.T) {
+		err := gophercloud.ErrUnexpectedResponseCode{Actual: 500}
+		assert.Error(t, translateOpenstackError(err))
+	})
+	t.Run("non-HTTP error propagates", func(t *testing.T) {
+		err := errors.New("dial tcp: connection refused")
+		assert.Error(t, translateOpenstackError(err))
+	})
+}
+
+func TestTranslateGetError(t *testing.T) {
+	t.Run("nil passes through", func(t *testing.T) {
+		assert.NoError(t, translateGetError(nil))
+	})
+	t.Run("401 swallowed", func(t *testing.T) {
+		err := gophercloud.ErrUnexpectedResponseCode{Actual: 401}
+		assert.NoError(t, translateGetError(err))
+	})
+	t.Run("403 swallowed", func(t *testing.T) {
+		err := gophercloud.ErrUnexpectedResponseCode{Actual: 403}
+		assert.NoError(t, translateGetError(err))
+	})
+	t.Run("404 propagates so genuine missing resource surfaces", func(t *testing.T) {
+		err := gophercloud.ErrUnexpectedResponseCode{Actual: 404}
+		assert.Error(t, translateGetError(err))
+	})
+	t.Run("500 propagates", func(t *testing.T) {
+		err := gophercloud.ErrUnexpectedResponseCode{Actual: 500}
+		assert.Error(t, translateGetError(err))
 	})
 }
