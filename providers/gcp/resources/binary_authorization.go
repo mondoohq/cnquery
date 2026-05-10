@@ -177,11 +177,20 @@ func (g *mqlGcpProjectBinaryAuthorizationControl) attestors() ([]any, error) {
 			return nil, err
 		}
 
+		note := attestor.GetUserOwnedGrafeasNote()
+		publicKeys, err := flattenAttestorPublicKeys(g.MqlRuntime, attestor.GetName(), note)
+		if err != nil {
+			return nil, err
+		}
+
 		mqlAttestor, err := CreateResource(g.MqlRuntime, "gcp.project.binaryAuthorizationControl.attestor", map[string]*llx.RawData{
-			"name":                 llx.StringData(attestor.GetName()),
-			"description":          llx.StringData(attestor.GetDescription()),
-			"userOwnedGrafeasNote": llx.DictData(userOwnedGrafeasNote),
-			"updated":              llx.TimeDataPtr(timestampAsTimePtr(attestor.GetUpdateTime())),
+			"name":                          llx.StringData(attestor.GetName()),
+			"description":                   llx.StringData(attestor.GetDescription()),
+			"userOwnedGrafeasNote":          llx.DictData(userOwnedGrafeasNote),
+			"noteReference":                 llx.StringData(note.GetNoteReference()),
+			"publicKeys":                    llx.ArrayData(publicKeys, types.Resource("gcp.project.binaryAuthorizationControl.attestor.publicKey")),
+			"delegationServiceAccountEmail": llx.StringData(note.GetDelegationServiceAccountEmail()),
+			"updated":                       llx.TimeDataPtr(timestampAsTimePtr(attestor.GetUpdateTime())),
 		})
 		if err != nil {
 			return nil, err
@@ -189,5 +198,42 @@ func (g *mqlGcpProjectBinaryAuthorizationControl) attestors() ([]any, error) {
 		res = append(res, mqlAttestor)
 	}
 
+	return res, nil
+}
+
+func flattenAttestorPublicKeys(runtime *plugin.Runtime, attestorName string, note *binaryauthorizationpb.UserOwnedGrafeasNote) ([]any, error) {
+	if note == nil {
+		return []any{}, nil
+	}
+	keys := note.GetPublicKeys()
+	res := make([]any, 0, len(keys))
+	for _, k := range keys {
+		var keyType, asciiPgp, pkixPem, pkixAlg string
+		switch pk := k.GetPublicKey().(type) {
+		case *binaryauthorizationpb.AttestorPublicKey_AsciiArmoredPgpPublicKey:
+			keyType = "pgp"
+			asciiPgp = pk.AsciiArmoredPgpPublicKey
+		case *binaryauthorizationpb.AttestorPublicKey_PkixPublicKey:
+			keyType = "pkix"
+			if pk.PkixPublicKey != nil {
+				pkixPem = pk.PkixPublicKey.PublicKeyPem
+				pkixAlg = pk.PkixPublicKey.SignatureAlgorithm.String()
+			}
+		}
+
+		mqlKey, err := CreateResource(runtime, "gcp.project.binaryAuthorizationControl.attestor.publicKey", map[string]*llx.RawData{
+			"__id":                     llx.StringData(fmt.Sprintf("%s/keys/%s", attestorName, k.GetId())),
+			"id":                       llx.StringData(k.GetId()),
+			"comment":                  llx.StringData(k.GetComment()),
+			"type":                     llx.StringData(keyType),
+			"asciiArmoredPgpPublicKey": llx.StringData(asciiPgp),
+			"pkixPublicKeyPem":         llx.StringData(pkixPem),
+			"pkixSignatureAlgorithm":   llx.StringData(pkixAlg),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlKey)
+	}
 	return res, nil
 }

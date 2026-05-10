@@ -4675,10 +4675,41 @@ private gcp.project.binaryAuthorizationControl.attestor @defaults("name") {
   name string
   // Human-readable description of the resource
   description string
-  // User-owned Grafeas note reference and properties
-  userOwnedGrafeasNote dict
+  // DEPRECATED: use noteReference, publicKeys, and delegationServiceAccountEmail instead
+  userOwnedGrafeasNote @maturity("deprecated") dict
+  // Resource name of the Grafeas Attestation.Authority Note backing this attestor (format: `projects/*/notes/*`)
+  noteReference string
+  // Public keys that verify attestations signed by this attestor. An empty list means the attestor rejects every attestation.
+  publicKeys []gcp.project.binaryAuthorizationControl.attestor.publicKey
+  // Output-only service account email this attestor uses to query Container Analysis. Administrators must grant it `containeranalysis.notes.occurrences.viewer` on the backing note.
+  delegationServiceAccountEmail string
   // Last update time
   updated time
+}
+
+// GCP Binary Authorization attestor public key
+//
+// Examine a public key trusted to verify signed attestations for the parent
+// attestor. The discriminator is `type`: `pgp` indicates an ASCII-armored
+// OpenPGP public key (`asciiArmoredPgpPublicKey`); `pkix` indicates a
+// PEM-encoded PKIX `SubjectPublicKeyInfo` (`pkixPublicKeyPem`) with a
+// `pkixSignatureAlgorithm` constraining the signature scheme. Audits look
+// for keys with weak algorithms (`RSA_SIGN_PKCS1_2048_SHA256` and friends),
+// missing signature algorithms (`SIGNATURE_ALGORITHM_UNSPECIFIED`), or PGP
+// keys where PKIX would be stronger.
+private gcp.project.binaryAuthorizationControl.attestor.publicKey @defaults("id pkixSignatureAlgorithm") {
+  // Public key ID. Signatures sent to BinAuthz must include this exact ID; for PGP keys it equals the OpenPGP V4 fingerprint, for PKIX keys it is user-specified.
+  id string
+  // Optional descriptive comment
+  comment string
+  // Discriminator: `pgp` (ASCII-armored OpenPGP) or `pkix` (PEM-encoded `SubjectPublicKeyInfo`). Empty when no key material is set.
+  type string
+  // For `pgp` keys: ASCII-armored PGP public key block
+  asciiArmoredPgpPublicKey string
+  // For `pkix` keys: PEM-encoded `SubjectPublicKeyInfo` (RFC 7468 §13)
+  pkixPublicKeyPem string
+  // For `pkix` keys: signature algorithm (e.g., `RSA_PSS_2048_SHA256`, `ECDSA_P256_SHA256`, `SIGNATURE_ALGORITHM_UNSPECIFIED`)
+  pkixSignatureAlgorithm string
 }
 
 // Google Cloud (GCP) Secret Manager

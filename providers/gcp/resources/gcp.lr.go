@@ -190,6 +190,7 @@ const (
 	ResourceGcpProjectBinaryAuthorizationControlPolicy                                 string = "gcp.project.binaryAuthorizationControl.policy"
 	ResourceGcpProjectBinaryAuthorizationControlAdmissionRule                          string = "gcp.project.binaryAuthorizationControl.admissionRule"
 	ResourceGcpProjectBinaryAuthorizationControlAttestor                               string = "gcp.project.binaryAuthorizationControl.attestor"
+	ResourceGcpProjectBinaryAuthorizationControlAttestorPublicKey                      string = "gcp.project.binaryAuthorizationControl.attestor.publicKey"
 	ResourceGcpProjectSecretmanagerService                                             string = "gcp.project.secretmanagerService"
 	ResourceGcpProjectSecretmanagerServiceSecret                                       string = "gcp.project.secretmanagerService.secret"
 	ResourceGcpProjectSecretmanagerServiceSecretVersion                                string = "gcp.project.secretmanagerService.secret.version"
@@ -1062,6 +1063,10 @@ func init() {
 		"gcp.project.binaryAuthorizationControl.attestor": {
 			// to override args, implement: initGcpProjectBinaryAuthorizationControlAttestor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectBinaryAuthorizationControlAttestor,
+		},
+		"gcp.project.binaryAuthorizationControl.attestor.publicKey": {
+			// to override args, implement: initGcpProjectBinaryAuthorizationControlAttestorPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectBinaryAuthorizationControlAttestorPublicKey,
 		},
 		"gcp.project.secretmanagerService": {
 			Init:   initGcpProjectSecretmanagerService,
@@ -7533,8 +7538,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.binaryAuthorizationControl.attestor.userOwnedGrafeasNote": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestor).GetUserOwnedGrafeasNote()).ToDataRes(types.Dict)
 	},
+	"gcp.project.binaryAuthorizationControl.attestor.noteReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestor).GetNoteReference()).ToDataRes(types.String)
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestor).GetPublicKeys()).ToDataRes(types.Array(types.Resource("gcp.project.binaryAuthorizationControl.attestor.publicKey")))
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.delegationServiceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestor).GetDelegationServiceAccountEmail()).ToDataRes(types.String)
+	},
 	"gcp.project.binaryAuthorizationControl.attestor.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestor).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).GetComment()).ToDataRes(types.String)
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.asciiArmoredPgpPublicKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).GetAsciiArmoredPgpPublicKey()).ToDataRes(types.String)
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.pkixPublicKeyPem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).GetPkixPublicKeyPem()).ToDataRes(types.String)
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.pkixSignatureAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).GetPkixSignatureAlgorithm()).ToDataRes(types.String)
 	},
 	"gcp.project.secretmanagerService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSecretmanagerService).GetProjectId()).ToDataRes(types.String)
@@ -20760,8 +20792,48 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectBinaryAuthorizationControlAttestor).UserOwnedGrafeasNote, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.binaryAuthorizationControl.attestor.noteReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAttestor).NoteReference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAttestor).PublicKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.delegationServiceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAttestor).DelegationServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.binaryAuthorizationControl.attestor.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBinaryAuthorizationControlAttestor).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.asciiArmoredPgpPublicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).AsciiArmoredPgpPublicKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.pkixPublicKeyPem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).PkixPublicKeyPem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.binaryAuthorizationControl.attestor.publicKey.pkixSignatureAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey).PkixSignatureAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.secretmanagerService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47983,10 +48055,13 @@ type mqlGcpProjectBinaryAuthorizationControlAttestor struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectBinaryAuthorizationControlAttestorInternal it will be used here
-	Name                 plugin.TValue[string]
-	Description          plugin.TValue[string]
-	UserOwnedGrafeasNote plugin.TValue[any]
-	Updated              plugin.TValue[*time.Time]
+	Name                          plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	UserOwnedGrafeasNote          plugin.TValue[any]
+	NoteReference                 plugin.TValue[string]
+	PublicKeys                    plugin.TValue[[]any]
+	DelegationServiceAccountEmail plugin.TValue[string]
+	Updated                       plugin.TValue[*time.Time]
 }
 
 // createGcpProjectBinaryAuthorizationControlAttestor creates a new instance of this resource
@@ -48038,8 +48113,89 @@ func (c *mqlGcpProjectBinaryAuthorizationControlAttestor) GetUserOwnedGrafeasNot
 	return &c.UserOwnedGrafeasNote
 }
 
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestor) GetNoteReference() *plugin.TValue[string] {
+	return &c.NoteReference
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestor) GetPublicKeys() *plugin.TValue[[]any] {
+	return &c.PublicKeys
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestor) GetDelegationServiceAccountEmail() *plugin.TValue[string] {
+	return &c.DelegationServiceAccountEmail
+}
+
 func (c *mqlGcpProjectBinaryAuthorizationControlAttestor) GetUpdated() *plugin.TValue[*time.Time] {
 	return &c.Updated
+}
+
+// mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey for the gcp.project.binaryAuthorizationControl.attestor.publicKey resource
+type mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectBinaryAuthorizationControlAttestorPublicKeyInternal it will be used here
+	Id                       plugin.TValue[string]
+	Comment                  plugin.TValue[string]
+	Type                     plugin.TValue[string]
+	AsciiArmoredPgpPublicKey plugin.TValue[string]
+	PkixPublicKeyPem         plugin.TValue[string]
+	PkixSignatureAlgorithm   plugin.TValue[string]
+}
+
+// createGcpProjectBinaryAuthorizationControlAttestorPublicKey creates a new instance of this resource
+func createGcpProjectBinaryAuthorizationControlAttestorPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.binaryAuthorizationControl.attestor.publicKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey) MqlName() string {
+	return "gcp.project.binaryAuthorizationControl.attestor.publicKey"
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey) GetAsciiArmoredPgpPublicKey() *plugin.TValue[string] {
+	return &c.AsciiArmoredPgpPublicKey
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey) GetPkixPublicKeyPem() *plugin.TValue[string] {
+	return &c.PkixPublicKeyPem
+}
+
+func (c *mqlGcpProjectBinaryAuthorizationControlAttestorPublicKey) GetPkixSignatureAlgorithm() *plugin.TValue[string] {
+	return &c.PkixSignatureAlgorithm
 }
 
 // mqlGcpProjectSecretmanagerService for the gcp.project.secretmanagerService resource
