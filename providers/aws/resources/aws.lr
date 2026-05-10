@@ -4005,12 +4005,18 @@ private aws.es.domain @defaults("arn name") {
   arn string
   // Whether encryption at rest is enabled
   encryptionAtRestEnabled bool
+  // KMS key ID protecting data at rest
+  encryptionAtRestKmsKeyId string
+  // KMS key protecting data at rest
+  kmsKey() aws.kms.key
   // Whether node-to-node encryption is enabled
   nodeToNodeEncryptionEnabled bool
   // Name of the Elasticsearch domain
   name string
   // Endpoint used to submit index and search requests
   endpoint string
+  // VPC and internal endpoints used to submit index and search requests
+  endpoints map[string]string
   // Region where the domain exists
   region string
   // Tags for the domain
@@ -4025,8 +4031,116 @@ private aws.es.domain @defaults("arn name") {
   enforceHTTPS bool
   // TLS security policy for the domain
   tlsSecurityPolicy string
+  // IAM access policy as a JSON-formatted string
+  accessPolicies string
+  // Whether the domain creation is complete
+  created bool
+  // Whether the domain is being deleted
+  deleted bool
+  // Whether configuration changes are being processed
+  processing bool
+  // Whether a version upgrade is in progress
+  upgradeProcessing bool
+  // Status of any in-progress changes for the domain
+  domainProcessingStatus string
+  // Whether a custom endpoint is enabled for the domain
+  customEndpointEnabled bool
+  // Custom endpoint hostname for the domain
+  customEndpoint string
+  // ACM certificate ARN for the custom endpoint
+  customEndpointCertificateArn string
+  // VPC ID the domain is deployed into
+  vpcId string
+  // VPC the domain is deployed into
+  vpc() aws.vpc
+  // Subnet IDs the domain is deployed into
+  subnetIds []string
+  // Subnets the domain is deployed into
+  subnets() []aws.vpc.subnet
+  // Security group IDs attached to the domain VPC endpoint
+  securityGroupIds []string
+  // Security groups attached to the domain VPC endpoint
+  securityGroups() []aws.ec2.securitygroup
+  // Availability zones the domain is deployed into
+  availabilityZones []string
+  // Instance type used for data nodes
+  instanceType string
+  // Number of instances in the domain cluster
+  instanceCount int
+  // Whether dedicated master nodes are enabled
+  dedicatedMasterEnabled bool
+  // Instance type for dedicated master nodes
+  dedicatedMasterType string
+  // Number of dedicated master nodes
+  dedicatedMasterCount int
+  // Whether zone awareness is enabled for the cluster
+  zoneAwarenessEnabled bool
+  // Number of availability zones the cluster is spread across when zone awareness is enabled
+  zoneAwarenessAvailabilityZoneCount int
+  // Whether UltraWarm storage is enabled
+  warmEnabled bool
+  // Instance type used for UltraWarm nodes
+  warmType string
+  // Number of UltraWarm nodes
+  warmCount int
+  // Whether cold storage is enabled
+  coldStorageEnabled bool
+  // Whether EBS-based storage is enabled
+  ebsEnabled bool
+  // EBS volume type for data nodes
+  ebsVolumeType string
+  // EBS volume size in GiB for data nodes
+  ebsVolumeSize int
+  // Provisioned IOPS for the EBS volume
+  ebsIops int
+  // Provisioned throughput in MiB/s for the GP3 EBS volume
+  ebsThroughput int
+  // Whether fine-grained access control is enabled
+  advancedSecurityEnabled bool
+  // Whether the internal user database is enabled
+  internalUserDatabaseEnabled bool
+  // Whether anonymous authentication is enabled
+  anonymousAuthEnabled bool
+  // Hour of the day in UTC when automated snapshots are taken
+  automatedSnapshotStartHour int
+  // Whether Amazon Cognito authentication for Kibana is enabled
+  cognitoEnabled bool
+  // Cognito user pool ID for Kibana authentication
+  cognitoUserPoolId string
+  // Cognito identity pool ID for Kibana authentication
+  cognitoIdentityPoolId string
+  // ARN of the IAM role granting Elasticsearch access to Cognito resources
+  cognitoRoleArn string
+  // State of Auto-Tune for the domain
+  autoTuneState string
+  // Current service software version present on the domain
+  serviceSoftwareCurrentVersion string
+  // New service software version available for the domain
+  serviceSoftwareNewVersion string
+  // Whether a service software update is available
+  serviceSoftwareUpdateAvailable bool
+  // Status of the service software update (ELIGIBLE, PENDING_UPDATE, IN_PROGRESS, COMPLETED, NOT_ELIGIBLE)
+  serviceSoftwareUpdateStatus string
+  // Whether an in-progress service software update can be cancelled
+  serviceSoftwareCancellable bool
+  // Date until which a service software update can be manually requested before it auto-updates
+  serviceSoftwareAutomatedUpdateDate time
   // Whether audit logging is enabled for the domain
   auditLogEnabled bool
+  // CloudWatch log group receiving audit logs
+  auditLogGroup() aws.cloudwatch.loggroup
+  // Whether index slow log publishing is enabled
+  indexSlowLogEnabled bool
+  // CloudWatch log group receiving index slow logs
+  indexSlowLogGroup() aws.cloudwatch.loggroup
+  // Whether search slow log publishing is enabled
+  searchSlowLogEnabled bool
+  // CloudWatch log group receiving search slow logs
+  searchSlowLogGroup() aws.cloudwatch.loggroup
+  // Whether Elasticsearch application log publishing is enabled
+  applicationLogEnabled bool
+  // CloudWatch log group receiving Elasticsearch application logs
+  applicationLogGroup() aws.cloudwatch.loggroup
 }
 
 // Amazon OpenSearch Service

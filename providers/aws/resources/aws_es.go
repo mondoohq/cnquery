@@ -6,10 +6,12 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	es_types "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/aws/smithy-go/transport/http"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -19,6 +21,20 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlAwsEsDomainInternal struct {
+	securityGroupIdHandler
+	region    string
+	accountID string
+
+	cacheVpcId                  *string
+	cacheSubnetIds              []string
+	cacheKmsKeyId               *string
+	cacheAuditLogGroupArn       *string
+	cacheIndexSlowLogGroupArn   *string
+	cacheSearchSlowLogGroupArn  *string
+	cacheApplicationLogGroupArn *string
+}
 
 func (a *mqlAwsEs) id() (string, error) {
 	return ResourceAwsEs, nil
@@ -66,13 +82,22 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 			}
 
 			for _, domain := range domains.DomainNames {
-				// note: the api returns name and region here, so we just use that.
-				// the arn is not returned until we get to the describe call
-				mqlDomain, err := NewResource(a.MqlRuntime, ResourceAwsEsDomain,
-					map[string]*llx.RawData{
-						"name":   llx.StringDataPtr(domain.DomainName),
-						"region": llx.StringData(region),
-					})
+				name := convert.ToValue(domain.DomainName)
+				if name == "" {
+					continue
+				}
+				details, err := svc.DescribeElasticsearchDomain(ctx, &elasticsearchservice.DescribeElasticsearchDomainInput{DomainName: &name})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Str("domain", name).Msg("access denied describing es domain")
+						continue
+					}
+					return nil, err
+				}
+				if details == nil || details.DomainStatus == nil {
+					continue
+				}
+				mqlDomain, err := newMqlAwsEsDomain(a.MqlRuntime, region, conn.AccountId(), svc, *details.DomainStatus)
 				if err != nil {
 					return nil, err
 				}
@@ -85,14 +110,258 @@ func (a *mqlAwsEs) getDomains(conn *connection.AwsConnection) []*jobpool.Job {
 	return tasks
 }
 
+// newMqlAwsEsDomain builds an aws.es.domain resource from a fully described DomainStatus.
+func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *elasticsearchservice.Client, status es_types.ElasticsearchDomainStatus) (*mqlAwsEsDomain, error) {
+	tags, err := getESTags(context.Background(), svc, status.ARN)
+	if err != nil {
+		return nil, err
+	}
+
+	// encryption at rest
+	var encAtRestEnabled bool
+	var encAtRestKmsKeyId *string
+	if status.EncryptionAtRestOptions != nil {
+		encAtRestEnabled = convert.ToValue(status.EncryptionAtRestOptions.Enabled)
+		encAtRestKmsKeyId = status.EncryptionAtRestOptions.KmsKeyId
+	}
+
+	// node-to-node encryption
+	var nodeToNodeEncryptionEnabled bool
+	if status.NodeToNodeEncryptionOptions != nil {
+		nodeToNodeEncryptionEnabled = convert.ToValue(status.NodeToNodeEncryptionOptions.Enabled)
+	}
+
+	// domain endpoint options
+	var enforceHTTPS bool
+	var tlsSecurityPolicy string
+	var customEndpointEnabled bool
+	var customEndpoint string
+	var customEndpointCertificateArn string
+	if status.DomainEndpointOptions != nil {
+		enforceHTTPS = convert.ToValue(status.DomainEndpointOptions.EnforceHTTPS)
+		tlsSecurityPolicy = string(status.DomainEndpointOptions.TLSSecurityPolicy)
+		customEndpointEnabled = convert.ToValue(status.DomainEndpointOptions.CustomEndpointEnabled)
+		customEndpoint = convert.ToValue(status.DomainEndpointOptions.CustomEndpoint)
+		customEndpointCertificateArn = convert.ToValue(status.DomainEndpointOptions.CustomEndpointCertificateArn)
+	}
+
+	// log publishing
+	var auditLogEnabled, indexSlowLogEnabled, searchSlowLogEnabled, applicationLogEnabled bool
+	var auditLogArn, indexSlowLogArn, searchSlowLogArn, applicationLogArn *string
+	if status.LogPublishingOptions != nil {
+		if opt, ok := status.LogPublishingOptions["AUDIT_LOGS"]; ok {
+			auditLogEnabled = convert.ToValue(opt.Enabled)
+			auditLogArn = opt.CloudWatchLogsLogGroupArn
+		}
+		if opt, ok := status.LogPublishingOptions["INDEX_SLOW_LOGS"]; ok {
+			indexSlowLogEnabled = convert.ToValue(opt.Enabled)
+			indexSlowLogArn = opt.CloudWatchLogsLogGroupArn
+		}
+		if opt, ok := status.LogPublishingOptions["SEARCH_SLOW_LOGS"]; ok {
+			searchSlowLogEnabled = convert.ToValue(opt.Enabled)
+			searchSlowLogArn = opt.CloudWatchLogsLogGroupArn
+		}
+		if opt, ok := status.LogPublishingOptions["ES_APPLICATION_LOGS"]; ok {
+			applicationLogEnabled = convert.ToValue(opt.Enabled)
+			applicationLogArn = opt.CloudWatchLogsLogGroupArn
+		}
+	}
+
+	// VPC options
+	var vpcId string
+	var subnetIds []string
+	var securityGroupIds []string
+	var availabilityZones []string
+	if status.VPCOptions != nil {
+		vpcId = convert.ToValue(status.VPCOptions.VPCId)
+		subnetIds = status.VPCOptions.SubnetIds
+		securityGroupIds = status.VPCOptions.SecurityGroupIds
+		availabilityZones = status.VPCOptions.AvailabilityZones
+	}
+
+	// cluster config
+	var instanceType, dedicatedMasterType, warmType string
+	var instanceCount, dedicatedMasterCount, warmCount, zoneAwarenessAZCount int64
+	var dedicatedMasterEnabled, zoneAwarenessEnabled, warmEnabled, coldStorageEnabled bool
+	if status.ElasticsearchClusterConfig != nil {
+		c := status.ElasticsearchClusterConfig
+		instanceType = string(c.InstanceType)
+		instanceCount = int64(convert.ToValue(c.InstanceCount))
+		dedicatedMasterEnabled = convert.ToValue(c.DedicatedMasterEnabled)
+		dedicatedMasterType = string(c.DedicatedMasterType)
+		dedicatedMasterCount = int64(convert.ToValue(c.DedicatedMasterCount))
+		zoneAwarenessEnabled = convert.ToValue(c.ZoneAwarenessEnabled)
+		if c.ZoneAwarenessConfig != nil {
+			zoneAwarenessAZCount = int64(convert.ToValue(c.ZoneAwarenessConfig.AvailabilityZoneCount))
+		}
+		warmEnabled = convert.ToValue(c.WarmEnabled)
+		warmType = string(c.WarmType)
+		warmCount = int64(convert.ToValue(c.WarmCount))
+		if c.ColdStorageOptions != nil {
+			coldStorageEnabled = convert.ToValue(c.ColdStorageOptions.Enabled)
+		}
+	}
+
+	// EBS
+	var ebsEnabled bool
+	var ebsVolumeType string
+	var ebsVolumeSize, ebsIops, ebsThroughput int64
+	if status.EBSOptions != nil {
+		ebsEnabled = convert.ToValue(status.EBSOptions.EBSEnabled)
+		ebsVolumeType = string(status.EBSOptions.VolumeType)
+		ebsVolumeSize = int64(convert.ToValue(status.EBSOptions.VolumeSize))
+		ebsIops = int64(convert.ToValue(status.EBSOptions.Iops))
+		ebsThroughput = int64(convert.ToValue(status.EBSOptions.Throughput))
+	}
+
+	// advanced security
+	var advancedSecurityEnabled, internalUserDatabaseEnabled, anonymousAuthEnabled bool
+	if status.AdvancedSecurityOptions != nil {
+		advancedSecurityEnabled = convert.ToValue(status.AdvancedSecurityOptions.Enabled)
+		internalUserDatabaseEnabled = convert.ToValue(status.AdvancedSecurityOptions.InternalUserDatabaseEnabled)
+		anonymousAuthEnabled = convert.ToValue(status.AdvancedSecurityOptions.AnonymousAuthEnabled)
+	}
+
+	// snapshot
+	var automatedSnapshotStartHour int64
+	if status.SnapshotOptions != nil {
+		automatedSnapshotStartHour = int64(convert.ToValue(status.SnapshotOptions.AutomatedSnapshotStartHour))
+	}
+
+	// Cognito
+	var cognitoEnabled bool
+	var cognitoUserPoolId, cognitoIdentityPoolId, cognitoRoleArn string
+	if status.CognitoOptions != nil {
+		cognitoEnabled = convert.ToValue(status.CognitoOptions.Enabled)
+		cognitoUserPoolId = convert.ToValue(status.CognitoOptions.UserPoolId)
+		cognitoIdentityPoolId = convert.ToValue(status.CognitoOptions.IdentityPoolId)
+		cognitoRoleArn = convert.ToValue(status.CognitoOptions.RoleArn)
+	}
+
+	// AutoTune
+	var autoTuneState string
+	if status.AutoTuneOptions != nil {
+		autoTuneState = string(status.AutoTuneOptions.State)
+	}
+
+	// service software options
+	var serviceSoftwareCurrentVersion, serviceSoftwareNewVersion, serviceSoftwareUpdateStatus string
+	var serviceSoftwareUpdateAvailable, serviceSoftwareCancellable bool
+	var serviceSoftwareAutomatedUpdateDate *llx.RawData
+	if status.ServiceSoftwareOptions != nil {
+		s := status.ServiceSoftwareOptions
+		serviceSoftwareCurrentVersion = convert.ToValue(s.CurrentVersion)
+		serviceSoftwareNewVersion = convert.ToValue(s.NewVersion)
+		serviceSoftwareUpdateAvailable = convert.ToValue(s.UpdateAvailable)
+		serviceSoftwareCancellable = convert.ToValue(s.Cancellable)
+		serviceSoftwareUpdateStatus = string(s.UpdateStatus)
+		serviceSoftwareAutomatedUpdateDate = llx.TimeDataPtr(s.AutomatedUpdateDate)
+	} else {
+		serviceSoftwareAutomatedUpdateDate = llx.NilData
+	}
+
+	// endpoints map
+	endpointsMap := make(map[string]any)
+	for k, v := range status.Endpoints {
+		endpointsMap[k] = v
+	}
+
+	args := map[string]*llx.RawData{
+		"arn":                                llx.StringDataPtr(status.ARN),
+		"name":                               llx.StringDataPtr(status.DomainName),
+		"region":                             llx.StringData(region),
+		"domainId":                           llx.StringDataPtr(status.DomainId),
+		"domainName":                         llx.StringDataPtr(status.DomainName),
+		"elasticsearchVersion":               llx.StringDataPtr(status.ElasticsearchVersion),
+		"endpoint":                           llx.StringDataPtr(status.Endpoint),
+		"endpoints":                          llx.MapData(endpointsMap, types.String),
+		"tags":                               llx.MapData(tags, types.String),
+		"accessPolicies":                     llx.StringDataPtr(status.AccessPolicies),
+		"created":                            llx.BoolData(convert.ToValue(status.Created)),
+		"deleted":                            llx.BoolData(convert.ToValue(status.Deleted)),
+		"processing":                         llx.BoolData(convert.ToValue(status.Processing)),
+		"upgradeProcessing":                  llx.BoolData(convert.ToValue(status.UpgradeProcessing)),
+		"domainProcessingStatus":             llx.StringData(string(status.DomainProcessingStatus)),
+		"encryptionAtRestEnabled":            llx.BoolData(encAtRestEnabled),
+		"encryptionAtRestKmsKeyId":           llx.StringDataPtr(encAtRestKmsKeyId),
+		"nodeToNodeEncryptionEnabled":        llx.BoolData(nodeToNodeEncryptionEnabled),
+		"enforceHTTPS":                       llx.BoolData(enforceHTTPS),
+		"tlsSecurityPolicy":                  llx.StringData(tlsSecurityPolicy),
+		"customEndpointEnabled":              llx.BoolData(customEndpointEnabled),
+		"customEndpoint":                     llx.StringData(customEndpoint),
+		"customEndpointCertificateArn":       llx.StringData(customEndpointCertificateArn),
+		"vpcId":                              llx.StringData(vpcId),
+		"subnetIds":                          llx.ArrayData(toInterfaceArr(subnetIds), types.String),
+		"securityGroupIds":                   llx.ArrayData(toInterfaceArr(securityGroupIds), types.String),
+		"availabilityZones":                  llx.ArrayData(toInterfaceArr(availabilityZones), types.String),
+		"instanceType":                       llx.StringData(instanceType),
+		"instanceCount":                      llx.IntData(instanceCount),
+		"dedicatedMasterEnabled":             llx.BoolData(dedicatedMasterEnabled),
+		"dedicatedMasterType":                llx.StringData(dedicatedMasterType),
+		"dedicatedMasterCount":               llx.IntData(dedicatedMasterCount),
+		"zoneAwarenessEnabled":               llx.BoolData(zoneAwarenessEnabled),
+		"zoneAwarenessAvailabilityZoneCount": llx.IntData(zoneAwarenessAZCount),
+		"warmEnabled":                        llx.BoolData(warmEnabled),
+		"warmType":                           llx.StringData(warmType),
+		"warmCount":                          llx.IntData(warmCount),
+		"coldStorageEnabled":                 llx.BoolData(coldStorageEnabled),
+		"ebsEnabled":                         llx.BoolData(ebsEnabled),
+		"ebsVolumeType":                      llx.StringData(ebsVolumeType),
+		"ebsVolumeSize":                      llx.IntData(ebsVolumeSize),
+		"ebsIops":                            llx.IntData(ebsIops),
+		"ebsThroughput":                      llx.IntData(ebsThroughput),
+		"advancedSecurityEnabled":            llx.BoolData(advancedSecurityEnabled),
+		"internalUserDatabaseEnabled":        llx.BoolData(internalUserDatabaseEnabled),
+		"anonymousAuthEnabled":               llx.BoolData(anonymousAuthEnabled),
+		"automatedSnapshotStartHour":         llx.IntData(automatedSnapshotStartHour),
+		"cognitoEnabled":                     llx.BoolData(cognitoEnabled),
+		"cognitoUserPoolId":                  llx.StringData(cognitoUserPoolId),
+		"cognitoIdentityPoolId":              llx.StringData(cognitoIdentityPoolId),
+		"cognitoRoleArn":                     llx.StringData(cognitoRoleArn),
+		"autoTuneState":                      llx.StringData(autoTuneState),
+		"serviceSoftwareCurrentVersion":      llx.StringData(serviceSoftwareCurrentVersion),
+		"serviceSoftwareNewVersion":          llx.StringData(serviceSoftwareNewVersion),
+		"serviceSoftwareUpdateAvailable":     llx.BoolData(serviceSoftwareUpdateAvailable),
+		"serviceSoftwareCancellable":         llx.BoolData(serviceSoftwareCancellable),
+		"serviceSoftwareUpdateStatus":        llx.StringData(serviceSoftwareUpdateStatus),
+		"serviceSoftwareAutomatedUpdateDate": serviceSoftwareAutomatedUpdateDate,
+		"auditLogEnabled":                    llx.BoolData(auditLogEnabled),
+		"indexSlowLogEnabled":                llx.BoolData(indexSlowLogEnabled),
+		"searchSlowLogEnabled":               llx.BoolData(searchSlowLogEnabled),
+		"applicationLogEnabled":              llx.BoolData(applicationLogEnabled),
+	}
+
+	resource, err := CreateResource(runtime, ResourceAwsEsDomain, args)
+	if err != nil {
+		return nil, err
+	}
+	mqlDomain := resource.(*mqlAwsEsDomain)
+	mqlDomain.region = region
+	mqlDomain.accountID = accountID
+	if vpcId != "" {
+		v := vpcId
+		mqlDomain.cacheVpcId = &v
+	}
+	mqlDomain.cacheSubnetIds = subnetIds
+	if len(securityGroupIds) > 0 {
+		sgArns := make([]string, 0, len(securityGroupIds))
+		for _, sg := range securityGroupIds {
+			sgArns = append(sgArns, NewSecurityGroupArn(region, accountID, sg))
+		}
+		mqlDomain.setSecurityGroupArns(sgArns)
+	}
+	mqlDomain.cacheKmsKeyId = encAtRestKmsKeyId
+	mqlDomain.cacheAuditLogGroupArn = auditLogArn
+	mqlDomain.cacheIndexSlowLogGroupArn = indexSlowLogArn
+	mqlDomain.cacheSearchSlowLogGroupArn = searchSlowLogArn
+	mqlDomain.cacheApplicationLogGroupArn = applicationLogArn
+	return mqlDomain, nil
+}
+
 func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
 	}
-
-	// Todo rename from ES to OpenSearch
-
-	// Todo helper function for repetitive pattern
 
 	if len(args) == 0 {
 		if ids := getAssetIdentifier(runtime); ids != nil {
@@ -135,51 +404,95 @@ func initAwsEsDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	if err != nil {
 		return nil, nil, err
 	}
-	tags, err := getESTags(ctx, svc, domainDetails.DomainStatus.ARN)
+	if domainDetails == nil || domainDetails.DomainStatus == nil {
+		return args, nil, nil
+	}
+	mqlDomain, err := newMqlAwsEsDomain(runtime, region, conn.AccountId(), svc, *domainDetails.DomainStatus)
 	if err != nil {
 		return nil, nil, err
 	}
-	var encryptionAtRestEnabled bool
-	if domainDetails.DomainStatus.EncryptionAtRestOptions != nil {
-		encryptionAtRestEnabled = convert.ToValue(domainDetails.DomainStatus.EncryptionAtRestOptions.Enabled)
-	}
-	args["encryptionAtRestEnabled"] = llx.BoolData(encryptionAtRestEnabled)
-	var nodeToNodeEncryptionEnabled bool
-	if domainDetails.DomainStatus.NodeToNodeEncryptionOptions != nil {
-		nodeToNodeEncryptionEnabled = convert.ToValue(domainDetails.DomainStatus.NodeToNodeEncryptionOptions.Enabled)
-	}
-	args["nodeToNodeEncryptionEnabled"] = llx.BoolData(nodeToNodeEncryptionEnabled)
-
-	var enforceHTTPS bool
-	var tlsSecurityPolicy string
-	if domainDetails.DomainStatus.DomainEndpointOptions != nil {
-		enforceHTTPS = convert.ToValue(domainDetails.DomainStatus.DomainEndpointOptions.EnforceHTTPS)
-		tlsSecurityPolicy = string(domainDetails.DomainStatus.DomainEndpointOptions.TLSSecurityPolicy)
-	}
-	args["enforceHTTPS"] = llx.BoolData(enforceHTTPS)
-	args["tlsSecurityPolicy"] = llx.StringData(tlsSecurityPolicy)
-
-	var auditLogEnabled bool
-	if domainDetails.DomainStatus.LogPublishingOptions != nil {
-		if opt, ok := domainDetails.DomainStatus.LogPublishingOptions["AUDIT_LOGS"]; ok {
-			if opt.Enabled != nil {
-				auditLogEnabled = *opt.Enabled
-			}
-		}
-	}
-	args["auditLogEnabled"] = llx.BoolData(auditLogEnabled)
-
-	args["endpoint"] = llx.StringDataPtr(domainDetails.DomainStatus.Endpoint)
-	args["arn"] = llx.StringDataPtr(domainDetails.DomainStatus.ARN)
-	args["elasticsearchVersion"] = llx.StringDataPtr(domainDetails.DomainStatus.ElasticsearchVersion)
-	args["domainId"] = llx.StringDataPtr(domainDetails.DomainStatus.DomainId)
-	args["domainName"] = llx.StringDataPtr(domainDetails.DomainStatus.DomainName)
-	args["tags"] = llx.MapData(tags, types.String)
-	return args, nil, nil
+	return nil, mqlDomain, nil
 }
 
 func (a *mqlAwsEsDomain) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsEsDomain) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey, map[string]*llx.RawData{
+		"arn": llx.StringDataPtr(a.cacheKmsKeyId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsEsDomain) vpc() (*mqlAwsVpc, error) {
+	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	mqlVpc, err := NewResource(a.MqlRuntime, "aws.vpc",
+		map[string]*llx.RawData{
+			"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.region, a.accountID, *a.cacheVpcId)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlVpc.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsEsDomain) subnets() ([]any, error) {
+	res := []any{}
+	for _, subnetId := range a.cacheSubnetIds {
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{
+				"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.region, a.accountID, subnetId)),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEsDomain) securityGroups() ([]any, error) {
+	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+func (a *mqlAwsEsDomain) auditLogGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	return esResolveLogGroup(a.MqlRuntime, a.cacheAuditLogGroupArn, &a.AuditLogGroup)
+}
+
+func (a *mqlAwsEsDomain) indexSlowLogGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	return esResolveLogGroup(a.MqlRuntime, a.cacheIndexSlowLogGroupArn, &a.IndexSlowLogGroup)
+}
+
+func (a *mqlAwsEsDomain) searchSlowLogGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	return esResolveLogGroup(a.MqlRuntime, a.cacheSearchSlowLogGroupArn, &a.SearchSlowLogGroup)
+}
+
+func (a *mqlAwsEsDomain) applicationLogGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	return esResolveLogGroup(a.MqlRuntime, a.cacheApplicationLogGroupArn, &a.ApplicationLogGroup)
+}
+
+func esResolveLogGroup(runtime *plugin.Runtime, arnPtr *string, field *plugin.TValue[*mqlAwsCloudwatchLoggroup]) (*mqlAwsCloudwatchLoggroup, error) {
+	if arnPtr == nil || *arnPtr == "" {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "aws.cloudwatch.loggroup",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(arnPtr)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsCloudwatchLoggroup), nil
 }
 
 func getESTags(ctx context.Context, svc *elasticsearchservice.Client, arn *string) (map[string]any, error) {

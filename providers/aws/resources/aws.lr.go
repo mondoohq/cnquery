@@ -8484,6 +8484,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.encryptionAtRestEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetEncryptionAtRestEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.es.domain.encryptionAtRestKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetEncryptionAtRestKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.es.domain.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.es.domain.nodeToNodeEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetNodeToNodeEncryptionEnabled()).ToDataRes(types.Bool)
 	},
@@ -8492,6 +8498,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.es.domain.endpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetEndpoint()).ToDataRes(types.String)
+	},
+	"aws.es.domain.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetEndpoints()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.es.domain.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetRegion()).ToDataRes(types.String)
@@ -8514,8 +8523,170 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.tlsSecurityPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetTlsSecurityPolicy()).ToDataRes(types.String)
 	},
+	"aws.es.domain.accessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAccessPolicies()).ToDataRes(types.String)
+	},
+	"aws.es.domain.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetCreated()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.deleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetDeleted()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.processing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetProcessing()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.upgradeProcessing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetUpgradeProcessing()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.domainProcessingStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetDomainProcessingStatus()).ToDataRes(types.String)
+	},
+	"aws.es.domain.customEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetCustomEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.customEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetCustomEndpoint()).ToDataRes(types.String)
+	},
+	"aws.es.domain.customEndpointCertificateArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetCustomEndpointCertificateArn()).ToDataRes(types.String)
+	},
+	"aws.es.domain.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.es.domain.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.es.domain.subnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.es.domain.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.es.domain.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.es.domain.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.es.domain.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
+	"aws.es.domain.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetInstanceType()).ToDataRes(types.String)
+	},
+	"aws.es.domain.instanceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetInstanceCount()).ToDataRes(types.Int)
+	},
+	"aws.es.domain.dedicatedMasterEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetDedicatedMasterEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.dedicatedMasterType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetDedicatedMasterType()).ToDataRes(types.String)
+	},
+	"aws.es.domain.dedicatedMasterCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetDedicatedMasterCount()).ToDataRes(types.Int)
+	},
+	"aws.es.domain.zoneAwarenessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetZoneAwarenessEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.zoneAwarenessAvailabilityZoneCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetZoneAwarenessAvailabilityZoneCount()).ToDataRes(types.Int)
+	},
+	"aws.es.domain.warmEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetWarmEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.warmType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetWarmType()).ToDataRes(types.String)
+	},
+	"aws.es.domain.warmCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetWarmCount()).ToDataRes(types.Int)
+	},
+	"aws.es.domain.coldStorageEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetColdStorageEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.ebsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetEbsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.ebsVolumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetEbsVolumeType()).ToDataRes(types.String)
+	},
+	"aws.es.domain.ebsVolumeSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetEbsVolumeSize()).ToDataRes(types.Int)
+	},
+	"aws.es.domain.ebsIops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetEbsIops()).ToDataRes(types.Int)
+	},
+	"aws.es.domain.ebsThroughput": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetEbsThroughput()).ToDataRes(types.Int)
+	},
+	"aws.es.domain.advancedSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAdvancedSecurityEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.internalUserDatabaseEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetInternalUserDatabaseEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.anonymousAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAnonymousAuthEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.automatedSnapshotStartHour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAutomatedSnapshotStartHour()).ToDataRes(types.Int)
+	},
+	"aws.es.domain.cognitoEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetCognitoEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.cognitoUserPoolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetCognitoUserPoolId()).ToDataRes(types.String)
+	},
+	"aws.es.domain.cognitoIdentityPoolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetCognitoIdentityPoolId()).ToDataRes(types.String)
+	},
+	"aws.es.domain.cognitoRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetCognitoRoleArn()).ToDataRes(types.String)
+	},
+	"aws.es.domain.autoTuneState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAutoTuneState()).ToDataRes(types.String)
+	},
+	"aws.es.domain.serviceSoftwareCurrentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetServiceSoftwareCurrentVersion()).ToDataRes(types.String)
+	},
+	"aws.es.domain.serviceSoftwareNewVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetServiceSoftwareNewVersion()).ToDataRes(types.String)
+	},
+	"aws.es.domain.serviceSoftwareUpdateAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetServiceSoftwareUpdateAvailable()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.serviceSoftwareUpdateStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetServiceSoftwareUpdateStatus()).ToDataRes(types.String)
+	},
+	"aws.es.domain.serviceSoftwareCancellable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetServiceSoftwareCancellable()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.serviceSoftwareAutomatedUpdateDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetServiceSoftwareAutomatedUpdateDate()).ToDataRes(types.Time)
+	},
 	"aws.es.domain.auditLogEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetAuditLogEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.auditLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAuditLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.es.domain.indexSlowLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetIndexSlowLogEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.indexSlowLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetIndexSlowLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.es.domain.searchSlowLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetSearchSlowLogEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.searchSlowLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetSearchSlowLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.es.domain.applicationLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetApplicationLogEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.applicationLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetApplicationLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
 	},
 	"aws.opensearch.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearch).GetDomains()).ToDataRes(types.Array(types.Resource("aws.opensearch.domain")))
@@ -31724,6 +31895,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEsDomain).EncryptionAtRestEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.es.domain.encryptionAtRestKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).EncryptionAtRestKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.es.domain.nodeToNodeEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).NodeToNodeEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -31734,6 +31913,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.es.domain.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).Endpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).Endpoints, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.es.domain.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31764,8 +31947,224 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEsDomain).TlsSecurityPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.es.domain.accessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AccessPolicies, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).Created, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.deleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).Deleted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.processing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).Processing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.upgradeProcessing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).UpgradeProcessing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.domainProcessingStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).DomainProcessingStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.customEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).CustomEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.customEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).CustomEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.customEndpointCertificateArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).CustomEndpointCertificateArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.subnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).SubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.instanceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).InstanceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.dedicatedMasterEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).DedicatedMasterEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.dedicatedMasterType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).DedicatedMasterType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.dedicatedMasterCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).DedicatedMasterCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.zoneAwarenessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ZoneAwarenessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.zoneAwarenessAvailabilityZoneCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ZoneAwarenessAvailabilityZoneCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.warmEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).WarmEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.warmType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).WarmType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.warmCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).WarmCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.coldStorageEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ColdStorageEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.ebsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).EbsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.ebsVolumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).EbsVolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.ebsVolumeSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).EbsVolumeSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.ebsIops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).EbsIops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.ebsThroughput": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).EbsThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.advancedSecurityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AdvancedSecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.internalUserDatabaseEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).InternalUserDatabaseEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.anonymousAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AnonymousAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.automatedSnapshotStartHour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AutomatedSnapshotStartHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.cognitoEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).CognitoEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.cognitoUserPoolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).CognitoUserPoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.cognitoIdentityPoolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).CognitoIdentityPoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.cognitoRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).CognitoRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.autoTuneState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AutoTuneState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.serviceSoftwareCurrentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ServiceSoftwareCurrentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.serviceSoftwareNewVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ServiceSoftwareNewVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.serviceSoftwareUpdateAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ServiceSoftwareUpdateAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.serviceSoftwareUpdateStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ServiceSoftwareUpdateStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.serviceSoftwareCancellable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ServiceSoftwareCancellable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.serviceSoftwareAutomatedUpdateDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ServiceSoftwareAutomatedUpdateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.es.domain.auditLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).AuditLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.auditLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AuditLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.indexSlowLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).IndexSlowLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.indexSlowLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).IndexSlowLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.searchSlowLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).SearchSlowLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.searchSlowLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).SearchSlowLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.applicationLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ApplicationLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.applicationLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).ApplicationLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
 		return
 	},
 	"aws.opensearch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -75142,20 +75541,77 @@ func (c *mqlAwsEs) GetDomains() *plugin.TValue[[]any] {
 type mqlAwsEsDomain struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsEsDomainInternal it will be used here
-	Arn                         plugin.TValue[string]
-	EncryptionAtRestEnabled     plugin.TValue[bool]
-	NodeToNodeEncryptionEnabled plugin.TValue[bool]
-	Name                        plugin.TValue[string]
-	Endpoint                    plugin.TValue[string]
-	Region                      plugin.TValue[string]
-	Tags                        plugin.TValue[map[string]any]
-	ElasticsearchVersion        plugin.TValue[string]
-	DomainId                    plugin.TValue[string]
-	DomainName                  plugin.TValue[string]
-	EnforceHTTPS                plugin.TValue[bool]
-	TlsSecurityPolicy           plugin.TValue[string]
-	AuditLogEnabled             plugin.TValue[bool]
+	mqlAwsEsDomainInternal
+	Arn                                plugin.TValue[string]
+	EncryptionAtRestEnabled            plugin.TValue[bool]
+	EncryptionAtRestKmsKeyId           plugin.TValue[string]
+	KmsKey                             plugin.TValue[*mqlAwsKmsKey]
+	NodeToNodeEncryptionEnabled        plugin.TValue[bool]
+	Name                               plugin.TValue[string]
+	Endpoint                           plugin.TValue[string]
+	Endpoints                          plugin.TValue[map[string]any]
+	Region                             plugin.TValue[string]
+	Tags                               plugin.TValue[map[string]any]
+	ElasticsearchVersion               plugin.TValue[string]
+	DomainId                           plugin.TValue[string]
+	DomainName                         plugin.TValue[string]
+	EnforceHTTPS                       plugin.TValue[bool]
+	TlsSecurityPolicy                  plugin.TValue[string]
+	AccessPolicies                     plugin.TValue[string]
+	Created                            plugin.TValue[bool]
+	Deleted                            plugin.TValue[bool]
+	Processing                         plugin.TValue[bool]
+	UpgradeProcessing                  plugin.TValue[bool]
+	DomainProcessingStatus             plugin.TValue[string]
+	CustomEndpointEnabled              plugin.TValue[bool]
+	CustomEndpoint                     plugin.TValue[string]
+	CustomEndpointCertificateArn       plugin.TValue[string]
+	VpcId                              plugin.TValue[string]
+	Vpc                                plugin.TValue[*mqlAwsVpc]
+	SubnetIds                          plugin.TValue[[]any]
+	Subnets                            plugin.TValue[[]any]
+	SecurityGroupIds                   plugin.TValue[[]any]
+	SecurityGroups                     plugin.TValue[[]any]
+	AvailabilityZones                  plugin.TValue[[]any]
+	InstanceType                       plugin.TValue[string]
+	InstanceCount                      plugin.TValue[int64]
+	DedicatedMasterEnabled             plugin.TValue[bool]
+	DedicatedMasterType                plugin.TValue[string]
+	DedicatedMasterCount               plugin.TValue[int64]
+	ZoneAwarenessEnabled               plugin.TValue[bool]
+	ZoneAwarenessAvailabilityZoneCount plugin.TValue[int64]
+	WarmEnabled                        plugin.TValue[bool]
+	WarmType                           plugin.TValue[string]
+	WarmCount                          plugin.TValue[int64]
+	ColdStorageEnabled                 plugin.TValue[bool]
+	EbsEnabled                         plugin.TValue[bool]
+	EbsVolumeType                      plugin.TValue[string]
+	EbsVolumeSize                      plugin.TValue[int64]
+	EbsIops                            plugin.TValue[int64]
+	EbsThroughput                      plugin.TValue[int64]
+	AdvancedSecurityEnabled            plugin.TValue[bool]
+	InternalUserDatabaseEnabled        plugin.TValue[bool]
+	AnonymousAuthEnabled               plugin.TValue[bool]
+	AutomatedSnapshotStartHour         plugin.TValue[int64]
+	CognitoEnabled                     plugin.TValue[bool]
+	CognitoUserPoolId                  plugin.TValue[string]
+	CognitoIdentityPoolId              plugin.TValue[string]
+	CognitoRoleArn                     plugin.TValue[string]
+	AutoTuneState                      plugin.TValue[string]
+	ServiceSoftwareCurrentVersion      plugin.TValue[string]
+	ServiceSoftwareNewVersion          plugin.TValue[string]
+	ServiceSoftwareUpdateAvailable     plugin.TValue[bool]
+	ServiceSoftwareUpdateStatus        plugin.TValue[string]
+	ServiceSoftwareCancellable         plugin.TValue[bool]
+	ServiceSoftwareAutomatedUpdateDate plugin.TValue[*time.Time]
+	AuditLogEnabled                    plugin.TValue[bool]
+	AuditLogGroup                      plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	IndexSlowLogEnabled                plugin.TValue[bool]
+	IndexSlowLogGroup                  plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	SearchSlowLogEnabled               plugin.TValue[bool]
+	SearchSlowLogGroup                 plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	ApplicationLogEnabled              plugin.TValue[bool]
+	ApplicationLogGroup                plugin.TValue[*mqlAwsCloudwatchLoggroup]
 }
 
 // createAwsEsDomain creates a new instance of this resource
@@ -75203,6 +75659,26 @@ func (c *mqlAwsEsDomain) GetEncryptionAtRestEnabled() *plugin.TValue[bool] {
 	return &c.EncryptionAtRestEnabled
 }
 
+func (c *mqlAwsEsDomain) GetEncryptionAtRestKmsKeyId() *plugin.TValue[string] {
+	return &c.EncryptionAtRestKmsKeyId
+}
+
+func (c *mqlAwsEsDomain) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 func (c *mqlAwsEsDomain) GetNodeToNodeEncryptionEnabled() *plugin.TValue[bool] {
 	return &c.NodeToNodeEncryptionEnabled
 }
@@ -75213,6 +75689,10 @@ func (c *mqlAwsEsDomain) GetName() *plugin.TValue[string] {
 
 func (c *mqlAwsEsDomain) GetEndpoint() *plugin.TValue[string] {
 	return &c.Endpoint
+}
+
+func (c *mqlAwsEsDomain) GetEndpoints() *plugin.TValue[map[string]any] {
+	return &c.Endpoints
 }
 
 func (c *mqlAwsEsDomain) GetRegion() *plugin.TValue[string] {
@@ -75243,8 +75723,308 @@ func (c *mqlAwsEsDomain) GetTlsSecurityPolicy() *plugin.TValue[string] {
 	return &c.TlsSecurityPolicy
 }
 
+func (c *mqlAwsEsDomain) GetAccessPolicies() *plugin.TValue[string] {
+	return &c.AccessPolicies
+}
+
+func (c *mqlAwsEsDomain) GetCreated() *plugin.TValue[bool] {
+	return &c.Created
+}
+
+func (c *mqlAwsEsDomain) GetDeleted() *plugin.TValue[bool] {
+	return &c.Deleted
+}
+
+func (c *mqlAwsEsDomain) GetProcessing() *plugin.TValue[bool] {
+	return &c.Processing
+}
+
+func (c *mqlAwsEsDomain) GetUpgradeProcessing() *plugin.TValue[bool] {
+	return &c.UpgradeProcessing
+}
+
+func (c *mqlAwsEsDomain) GetDomainProcessingStatus() *plugin.TValue[string] {
+	return &c.DomainProcessingStatus
+}
+
+func (c *mqlAwsEsDomain) GetCustomEndpointEnabled() *plugin.TValue[bool] {
+	return &c.CustomEndpointEnabled
+}
+
+func (c *mqlAwsEsDomain) GetCustomEndpoint() *plugin.TValue[string] {
+	return &c.CustomEndpoint
+}
+
+func (c *mqlAwsEsDomain) GetCustomEndpointCertificateArn() *plugin.TValue[string] {
+	return &c.CustomEndpointCertificateArn
+}
+
+func (c *mqlAwsEsDomain) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsEsDomain) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsEsDomain) GetSubnetIds() *plugin.TValue[[]any] {
+	return &c.SubnetIds
+}
+
+func (c *mqlAwsEsDomain) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsEsDomain) GetSecurityGroupIds() *plugin.TValue[[]any] {
+	return &c.SecurityGroupIds
+}
+
+func (c *mqlAwsEsDomain) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsEsDomain) GetAvailabilityZones() *plugin.TValue[[]any] {
+	return &c.AvailabilityZones
+}
+
+func (c *mqlAwsEsDomain) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAwsEsDomain) GetInstanceCount() *plugin.TValue[int64] {
+	return &c.InstanceCount
+}
+
+func (c *mqlAwsEsDomain) GetDedicatedMasterEnabled() *plugin.TValue[bool] {
+	return &c.DedicatedMasterEnabled
+}
+
+func (c *mqlAwsEsDomain) GetDedicatedMasterType() *plugin.TValue[string] {
+	return &c.DedicatedMasterType
+}
+
+func (c *mqlAwsEsDomain) GetDedicatedMasterCount() *plugin.TValue[int64] {
+	return &c.DedicatedMasterCount
+}
+
+func (c *mqlAwsEsDomain) GetZoneAwarenessEnabled() *plugin.TValue[bool] {
+	return &c.ZoneAwarenessEnabled
+}
+
+func (c *mqlAwsEsDomain) GetZoneAwarenessAvailabilityZoneCount() *plugin.TValue[int64] {
+	return &c.ZoneAwarenessAvailabilityZoneCount
+}
+
+func (c *mqlAwsEsDomain) GetWarmEnabled() *plugin.TValue[bool] {
+	return &c.WarmEnabled
+}
+
+func (c *mqlAwsEsDomain) GetWarmType() *plugin.TValue[string] {
+	return &c.WarmType
+}
+
+func (c *mqlAwsEsDomain) GetWarmCount() *plugin.TValue[int64] {
+	return &c.WarmCount
+}
+
+func (c *mqlAwsEsDomain) GetColdStorageEnabled() *plugin.TValue[bool] {
+	return &c.ColdStorageEnabled
+}
+
+func (c *mqlAwsEsDomain) GetEbsEnabled() *plugin.TValue[bool] {
+	return &c.EbsEnabled
+}
+
+func (c *mqlAwsEsDomain) GetEbsVolumeType() *plugin.TValue[string] {
+	return &c.EbsVolumeType
+}
+
+func (c *mqlAwsEsDomain) GetEbsVolumeSize() *plugin.TValue[int64] {
+	return &c.EbsVolumeSize
+}
+
+func (c *mqlAwsEsDomain) GetEbsIops() *plugin.TValue[int64] {
+	return &c.EbsIops
+}
+
+func (c *mqlAwsEsDomain) GetEbsThroughput() *plugin.TValue[int64] {
+	return &c.EbsThroughput
+}
+
+func (c *mqlAwsEsDomain) GetAdvancedSecurityEnabled() *plugin.TValue[bool] {
+	return &c.AdvancedSecurityEnabled
+}
+
+func (c *mqlAwsEsDomain) GetInternalUserDatabaseEnabled() *plugin.TValue[bool] {
+	return &c.InternalUserDatabaseEnabled
+}
+
+func (c *mqlAwsEsDomain) GetAnonymousAuthEnabled() *plugin.TValue[bool] {
+	return &c.AnonymousAuthEnabled
+}
+
+func (c *mqlAwsEsDomain) GetAutomatedSnapshotStartHour() *plugin.TValue[int64] {
+	return &c.AutomatedSnapshotStartHour
+}
+
+func (c *mqlAwsEsDomain) GetCognitoEnabled() *plugin.TValue[bool] {
+	return &c.CognitoEnabled
+}
+
+func (c *mqlAwsEsDomain) GetCognitoUserPoolId() *plugin.TValue[string] {
+	return &c.CognitoUserPoolId
+}
+
+func (c *mqlAwsEsDomain) GetCognitoIdentityPoolId() *plugin.TValue[string] {
+	return &c.CognitoIdentityPoolId
+}
+
+func (c *mqlAwsEsDomain) GetCognitoRoleArn() *plugin.TValue[string] {
+	return &c.CognitoRoleArn
+}
+
+func (c *mqlAwsEsDomain) GetAutoTuneState() *plugin.TValue[string] {
+	return &c.AutoTuneState
+}
+
+func (c *mqlAwsEsDomain) GetServiceSoftwareCurrentVersion() *plugin.TValue[string] {
+	return &c.ServiceSoftwareCurrentVersion
+}
+
+func (c *mqlAwsEsDomain) GetServiceSoftwareNewVersion() *plugin.TValue[string] {
+	return &c.ServiceSoftwareNewVersion
+}
+
+func (c *mqlAwsEsDomain) GetServiceSoftwareUpdateAvailable() *plugin.TValue[bool] {
+	return &c.ServiceSoftwareUpdateAvailable
+}
+
+func (c *mqlAwsEsDomain) GetServiceSoftwareUpdateStatus() *plugin.TValue[string] {
+	return &c.ServiceSoftwareUpdateStatus
+}
+
+func (c *mqlAwsEsDomain) GetServiceSoftwareCancellable() *plugin.TValue[bool] {
+	return &c.ServiceSoftwareCancellable
+}
+
+func (c *mqlAwsEsDomain) GetServiceSoftwareAutomatedUpdateDate() *plugin.TValue[*time.Time] {
+	return &c.ServiceSoftwareAutomatedUpdateDate
+}
+
 func (c *mqlAwsEsDomain) GetAuditLogEnabled() *plugin.TValue[bool] {
 	return &c.AuditLogEnabled
+}
+
+func (c *mqlAwsEsDomain) GetAuditLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.AuditLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "auditLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.auditLogGroup()
+	})
+}
+
+func (c *mqlAwsEsDomain) GetIndexSlowLogEnabled() *plugin.TValue[bool] {
+	return &c.IndexSlowLogEnabled
+}
+
+func (c *mqlAwsEsDomain) GetIndexSlowLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.IndexSlowLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "indexSlowLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.indexSlowLogGroup()
+	})
+}
+
+func (c *mqlAwsEsDomain) GetSearchSlowLogEnabled() *plugin.TValue[bool] {
+	return &c.SearchSlowLogEnabled
+}
+
+func (c *mqlAwsEsDomain) GetSearchSlowLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.SearchSlowLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "searchSlowLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.searchSlowLogGroup()
+	})
+}
+
+func (c *mqlAwsEsDomain) GetApplicationLogEnabled() *plugin.TValue[bool] {
+	return &c.ApplicationLogEnabled
+}
+
+func (c *mqlAwsEsDomain) GetApplicationLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.ApplicationLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.es.domain", c.__id, "applicationLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.applicationLogGroup()
+	})
 }
 
 // mqlAwsOpensearch for the aws.opensearch resource
