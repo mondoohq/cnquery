@@ -2765,17 +2765,17 @@ azure.subscription.sqlService.managedInstance.database.status 13.10.2
 azure.subscription.sqlService.managedInstance.database.tags 13.10.2
 azure.subscription.sqlService.managedInstance.databases 13.10.2
 azure.subscription.sqlService.managedInstance.dnsZone 13.10.2
+azure.subscription.sqlService.managedInstance.encryptionKey 13.10.2
 azure.subscription.sqlService.managedInstance.fullyQualifiedDomainName 13.10.2
 azure.subscription.sqlService.managedInstance.id 13.10.2
 azure.subscription.sqlService.managedInstance.identityType 13.10.2
 azure.subscription.sqlService.managedInstance.instancePoolId 13.10.2
-azure.subscription.sqlService.managedInstance.keyId 13.10.2
 azure.subscription.sqlService.managedInstance.licenseType 13.10.2
 azure.subscription.sqlService.managedInstance.location 13.10.2
 azure.subscription.sqlService.managedInstance.maintenanceConfigurationId 13.10.2
 azure.subscription.sqlService.managedInstance.minimalTlsVersion 13.10.2
 azure.subscription.sqlService.managedInstance.name 13.10.2
-azure.subscription.sqlService.managedInstance.primaryUserAssignedIdentityId 13.10.2
+azure.subscription.sqlService.managedInstance.primaryUserAssignedIdentity 13.10.2
 azure.subscription.sqlService.managedInstance.privateEndpointConnectionCount 13.10.2
 azure.subscription.sqlService.managedInstance.provisioningState 13.10.2
 azure.subscription.sqlService.managedInstance.proxyOverride 13.10.2
@@ -2787,7 +2787,6 @@ azure.subscription.sqlService.managedInstance.skuTier 13.10.2
 azure.subscription.sqlService.managedInstance.state 13.10.2
 azure.subscription.sqlService.managedInstance.storageSizeInGB 13.10.2
 azure.subscription.sqlService.managedInstance.subnet 13.10.2
-azure.subscription.sqlService.managedInstance.subnetId 13.10.2
 azure.subscription.sqlService.managedInstance.tags 13.10.2
 azure.subscription.sqlService.managedInstance.timezoneId 13.10.2
 azure.subscription.sqlService.managedInstance.vCores 13.10.2

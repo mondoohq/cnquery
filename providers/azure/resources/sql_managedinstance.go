@@ -17,7 +17,9 @@ import (
 )
 
 type mqlAzureSubscriptionSqlServiceManagedInstanceInternal struct {
-	cacheSubnetId string
+	cacheSubnetId                      string
+	cacheKeyId                         string
+	cachePrimaryUserAssignedIdentityId string
 }
 
 func (a *mqlAzureSubscriptionSqlServiceManagedInstance) id() (string, error) {
@@ -175,7 +177,6 @@ func (a *mqlAzureSubscriptionSqlService) managedInstances() ([]any, error) {
 					"state":                            llx.StringData(state),
 					"fullyQualifiedDomainName":         llx.StringData(fullyQualifiedDomainName),
 					"dnsZone":                          llx.StringData(dnsZone),
-					"subnetId":                         llx.StringData(subnetId),
 					"administratorLogin":               llx.StringData(administratorLogin),
 					"licenseType":                      llx.StringData(licenseType),
 					"minimalTlsVersion":                llx.StringData(minimalTlsVersion),
@@ -185,8 +186,6 @@ func (a *mqlAzureSubscriptionSqlService) managedInstances() ([]any, error) {
 					"currentBackupStorageRedundancy":   llx.StringData(currentBackupStorageRedundancy),
 					"requestedBackupStorageRedundancy": llx.StringData(requestedBackupStorageRedundancy),
 					"identityType":                     llx.StringData(identityType),
-					"primaryUserAssignedIdentityId":    llx.StringData(primaryUserAssignedIdentityId),
-					"keyId":                            llx.StringData(keyId),
 					"maintenanceConfigurationId":       llx.StringData(maintenanceConfigurationId),
 					"timezoneId":                       llx.StringData(timezoneId),
 					"collation":                        llx.StringData(collation),
@@ -198,6 +197,8 @@ func (a *mqlAzureSubscriptionSqlService) managedInstances() ([]any, error) {
 			}
 			mqlInstance := mqlMi.(*mqlAzureSubscriptionSqlServiceManagedInstance)
 			mqlInstance.cacheSubnetId = subnetId
+			mqlInstance.cacheKeyId = keyId
+			mqlInstance.cachePrimaryUserAssignedIdentityId = primaryUserAssignedIdentityId
 			res = append(res, mqlInstance)
 		}
 	}
@@ -215,6 +216,27 @@ func (a *mqlAzureSubscriptionSqlServiceManagedInstance) subnet() (*mqlAzureSubsc
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+}
+
+func (a *mqlAzureSubscriptionSqlServiceManagedInstance) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+	if a.cacheKeyId == "" {
+		a.EncryptionKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheKeyId)
+}
+
+func (a *mqlAzureSubscriptionSqlServiceManagedInstance) primaryUserAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	if a.cachePrimaryUserAssignedIdentityId == "" {
+		a.PrimaryUserAssignedIdentity.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{"__id": llx.StringData(a.cachePrimaryUserAssignedIdentityId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionManagedIdentity), nil
 }
 
 func (a *mqlAzureSubscriptionSqlServiceManagedInstance) databases() ([]any, error) {

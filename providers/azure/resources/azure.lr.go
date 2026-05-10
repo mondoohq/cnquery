@@ -6514,9 +6514,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.managedInstance.dnsZone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetDnsZone()).ToDataRes(types.String)
 	},
-	"azure.subscription.sqlService.managedInstance.subnetId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetSubnetId()).ToDataRes(types.String)
-	},
 	"azure.subscription.sqlService.managedInstance.administratorLogin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetAdministratorLogin()).ToDataRes(types.String)
 	},
@@ -6544,11 +6541,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.managedInstance.identityType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetIdentityType()).ToDataRes(types.String)
 	},
-	"azure.subscription.sqlService.managedInstance.primaryUserAssignedIdentityId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetPrimaryUserAssignedIdentityId()).ToDataRes(types.String)
+	"azure.subscription.sqlService.managedInstance.primaryUserAssignedIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetPrimaryUserAssignedIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
 	},
-	"azure.subscription.sqlService.managedInstance.keyId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetKeyId()).ToDataRes(types.String)
+	"azure.subscription.sqlService.managedInstance.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetEncryptionKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
 	},
 	"azure.subscription.sqlService.managedInstance.maintenanceConfigurationId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetMaintenanceConfigurationId()).ToDataRes(types.String)
@@ -18135,10 +18132,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).DnsZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.sqlService.managedInstance.subnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).SubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"azure.subscription.sqlService.managedInstance.administratorLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).AdministratorLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -18175,12 +18168,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.sqlService.managedInstance.primaryUserAssignedIdentityId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).PrimaryUserAssignedIdentityId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.sqlService.managedInstance.primaryUserAssignedIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).PrimaryUserAssignedIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.sqlService.managedInstance.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.sqlService.managedInstance.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).EncryptionKey, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sqlService.managedInstance.maintenanceConfigurationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41779,7 +41772,6 @@ type mqlAzureSubscriptionSqlServiceManagedInstance struct {
 	State                            plugin.TValue[string]
 	FullyQualifiedDomainName         plugin.TValue[string]
 	DnsZone                          plugin.TValue[string]
-	SubnetId                         plugin.TValue[string]
 	AdministratorLogin               plugin.TValue[string]
 	LicenseType                      plugin.TValue[string]
 	MinimalTlsVersion                plugin.TValue[string]
@@ -41789,8 +41781,8 @@ type mqlAzureSubscriptionSqlServiceManagedInstance struct {
 	CurrentBackupStorageRedundancy   plugin.TValue[string]
 	RequestedBackupStorageRedundancy plugin.TValue[string]
 	IdentityType                     plugin.TValue[string]
-	PrimaryUserAssignedIdentityId    plugin.TValue[string]
-	KeyId                            plugin.TValue[string]
+	PrimaryUserAssignedIdentity      plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
+	EncryptionKey                    plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
 	MaintenanceConfigurationId       plugin.TValue[string]
 	TimezoneId                       plugin.TValue[string]
 	Collation                        plugin.TValue[string]
@@ -41889,10 +41881,6 @@ func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetDnsZone() *plugin.TVa
 	return &c.DnsZone
 }
 
-func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetSubnetId() *plugin.TValue[string] {
-	return &c.SubnetId
-}
-
 func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetAdministratorLogin() *plugin.TValue[string] {
 	return &c.AdministratorLogin
 }
@@ -41929,12 +41917,36 @@ func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetIdentityType() *plugi
 	return &c.IdentityType
 }
 
-func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetPrimaryUserAssignedIdentityId() *plugin.TValue[string] {
-	return &c.PrimaryUserAssignedIdentityId
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetPrimaryUserAssignedIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.PrimaryUserAssignedIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService.managedInstance", c.__id, "primaryUserAssignedIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.primaryUserAssignedIdentity()
+	})
 }
 
-func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetKeyId() *plugin.TValue[string] {
-	return &c.KeyId
+func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetEncryptionKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKey](&c.EncryptionKey, func() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService.managedInstance", c.__id, "encryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceKey), nil
+			}
+		}
+
+		return c.encryptionKey()
+	})
 }
 
 func (c *mqlAzureSubscriptionSqlServiceManagedInstance) GetMaintenanceConfigurationId() *plugin.TValue[string] {

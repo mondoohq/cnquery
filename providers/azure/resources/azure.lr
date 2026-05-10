@@ -4170,8 +4170,6 @@ azure.subscription.sqlService.managedInstance @defaults("name location state vCo
   fullyQualifiedDomainName string
   // DNS zone (paired managed instances share the same DNS zone)
   dnsZone string
-  // Resource ID of the subnet the instance is joined to
-  subnetId string
   // SQL administrator login name (the admin user, never the password)
   administratorLogin string
   // License type ("LicenseIncluded" or "BasePrice" for AHB)
@@ -4190,10 +4188,10 @@ azure.subscription.sqlService.managedInstance @defaults("name location state vCo
   requestedBackupStorageRedundancy string
   // Identity type ("None", "SystemAssigned", "UserAssigned", or "SystemAssigned,UserAssigned")
   identityType string
-  // Resource ID of the primary user-assigned identity (empty when not configured)
-  primaryUserAssignedIdentityId string
-  // Customer-managed key URI used for transparent data encryption (empty when service-managed)
-  keyId string
+  // Primary user-assigned managed identity (null when not configured or only system-assigned)
+  primaryUserAssignedIdentity() azure.subscription.managedIdentity
+  // Key Vault key used for transparent data encryption (null when service-managed)
+  encryptionKey() azure.subscription.keyVaultService.key
   // Resource ID of the maintenance configuration applied to this instance
   maintenanceConfigurationId string
   // Time zone ID for the instance (Windows time zone identifier)
