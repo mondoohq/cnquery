@@ -9837,11 +9837,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.shield.subscription.timeCommitmentInDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsShieldSubscription).GetTimeCommitmentInDays()).ToDataRes(types.Int)
 	},
+	"aws.shield.subscription.lengthInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetLengthInSeconds()).ToDataRes(types.Int)
+	},
 	"aws.shield.subscription.autoRenew": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsShieldSubscription).GetAutoRenew()).ToDataRes(types.String)
 	},
+	"aws.shield.subscription.autoRenewEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetAutoRenewEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.shield.subscription.limits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsShieldSubscription).GetLimits()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.shield.subscription.protectedResourceTypeLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetProtectedResourceTypeLimits()).ToDataRes(types.Map(types.String, types.Int))
+	},
+	"aws.shield.subscription.maxProtectionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetMaxProtectionGroups()).ToDataRes(types.Int)
+	},
+	"aws.shield.subscription.maxArbitraryPatternMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldSubscription).GetMaxArbitraryPatternMembers()).ToDataRes(types.Int)
 	},
 	"aws.shield.subscription.proactiveEngagementStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsShieldSubscription).GetProactiveEngagementStatus()).ToDataRes(types.String)
@@ -9863,6 +9878,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.shield.protection.applicationLayerAutomaticResponseConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsShieldProtection).GetApplicationLayerAutomaticResponseConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.shield.protection.applicationLayerAutomaticResponseEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtection).GetApplicationLayerAutomaticResponseEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.shield.protection.applicationLayerAutomaticResponseAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsShieldProtection).GetApplicationLayerAutomaticResponseAction()).ToDataRes(types.String)
 	},
 	"aws.shield.protectionGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsShieldProtectionGroup).GetId()).ToDataRes(types.String)
@@ -33708,12 +33729,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsShieldSubscription).TimeCommitmentInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.shield.subscription.lengthInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).LengthInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.shield.subscription.autoRenew": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsShieldSubscription).AutoRenew, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.shield.subscription.autoRenewEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).AutoRenewEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.shield.subscription.limits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsShieldSubscription).Limits, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription.protectedResourceTypeLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).ProtectedResourceTypeLimits, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription.maxProtectionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).MaxProtectionGroups, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.shield.subscription.maxArbitraryPatternMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldSubscription).MaxArbitraryPatternMembers, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.shield.subscription.proactiveEngagementStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33746,6 +33787,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.shield.protection.applicationLayerAutomaticResponseConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsShieldProtection).ApplicationLayerAutomaticResponseConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protection.applicationLayerAutomaticResponseEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtection).ApplicationLayerAutomaticResponseEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.shield.protection.applicationLayerAutomaticResponseAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsShieldProtection).ApplicationLayerAutomaticResponseAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.shield.protectionGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80148,13 +80197,18 @@ type mqlAwsShieldSubscription struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsShieldSubscriptionInternal it will be used here
-	Arn                       plugin.TValue[string]
-	StartTime                 plugin.TValue[*time.Time]
-	EndTime                   plugin.TValue[*time.Time]
-	TimeCommitmentInDays      plugin.TValue[int64]
-	AutoRenew                 plugin.TValue[string]
-	Limits                    plugin.TValue[[]any]
-	ProactiveEngagementStatus plugin.TValue[string]
+	Arn                         plugin.TValue[string]
+	StartTime                   plugin.TValue[*time.Time]
+	EndTime                     plugin.TValue[*time.Time]
+	TimeCommitmentInDays        plugin.TValue[int64]
+	LengthInSeconds             plugin.TValue[int64]
+	AutoRenew                   plugin.TValue[string]
+	AutoRenewEnabled            plugin.TValue[bool]
+	Limits                      plugin.TValue[[]any]
+	ProtectedResourceTypeLimits plugin.TValue[map[string]any]
+	MaxProtectionGroups         plugin.TValue[int64]
+	MaxArbitraryPatternMembers  plugin.TValue[int64]
+	ProactiveEngagementStatus   plugin.TValue[string]
 }
 
 // createAwsShieldSubscription creates a new instance of this resource
@@ -80210,12 +80264,32 @@ func (c *mqlAwsShieldSubscription) GetTimeCommitmentInDays() *plugin.TValue[int6
 	return &c.TimeCommitmentInDays
 }
 
+func (c *mqlAwsShieldSubscription) GetLengthInSeconds() *plugin.TValue[int64] {
+	return &c.LengthInSeconds
+}
+
 func (c *mqlAwsShieldSubscription) GetAutoRenew() *plugin.TValue[string] {
 	return &c.AutoRenew
 }
 
+func (c *mqlAwsShieldSubscription) GetAutoRenewEnabled() *plugin.TValue[bool] {
+	return &c.AutoRenewEnabled
+}
+
 func (c *mqlAwsShieldSubscription) GetLimits() *plugin.TValue[[]any] {
 	return &c.Limits
+}
+
+func (c *mqlAwsShieldSubscription) GetProtectedResourceTypeLimits() *plugin.TValue[map[string]any] {
+	return &c.ProtectedResourceTypeLimits
+}
+
+func (c *mqlAwsShieldSubscription) GetMaxProtectionGroups() *plugin.TValue[int64] {
+	return &c.MaxProtectionGroups
+}
+
+func (c *mqlAwsShieldSubscription) GetMaxArbitraryPatternMembers() *plugin.TValue[int64] {
+	return &c.MaxArbitraryPatternMembers
 }
 
 func (c *mqlAwsShieldSubscription) GetProactiveEngagementStatus() *plugin.TValue[string] {
@@ -80233,6 +80307,8 @@ type mqlAwsShieldProtection struct {
 	ResourceArn                                    plugin.TValue[string]
 	HealthCheckIds                                 plugin.TValue[[]any]
 	ApplicationLayerAutomaticResponseConfiguration plugin.TValue[any]
+	ApplicationLayerAutomaticResponseEnabled       plugin.TValue[bool]
+	ApplicationLayerAutomaticResponseAction        plugin.TValue[string]
 }
 
 // createAwsShieldProtection creates a new instance of this resource
@@ -80294,6 +80370,14 @@ func (c *mqlAwsShieldProtection) GetHealthCheckIds() *plugin.TValue[[]any] {
 
 func (c *mqlAwsShieldProtection) GetApplicationLayerAutomaticResponseConfiguration() *plugin.TValue[any] {
 	return &c.ApplicationLayerAutomaticResponseConfiguration
+}
+
+func (c *mqlAwsShieldProtection) GetApplicationLayerAutomaticResponseEnabled() *plugin.TValue[bool] {
+	return &c.ApplicationLayerAutomaticResponseEnabled
+}
+
+func (c *mqlAwsShieldProtection) GetApplicationLayerAutomaticResponseAction() *plugin.TValue[string] {
+	return &c.ApplicationLayerAutomaticResponseAction
 }
 
 // mqlAwsShieldProtectionGroup for the aws.shield.protectionGroup resource

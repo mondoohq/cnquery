@@ -5165,10 +5165,20 @@ private aws.shield.subscription @defaults("arn startTime") {
   endTime time
   // Time period remaining in the subscription in days (truncated from seconds)
   timeCommitmentInDays int
+  // Length of the subscription period in seconds (raw value from TimeCommitmentInSeconds)
+  lengthInSeconds int
   // Whether auto-renew is enabled (ENABLED or DISABLED)
   autoRenew string
-  // Subscription limits
+  // Whether auto-renew is enabled
+  autoRenewEnabled bool
+  // Subscription limits (legacy per-type list of {Type, Max})
   limits []dict
+  // Per-protected-resource-type protection limits, keyed by resource type with the maximum protection count as the value
+  protectedResourceTypeLimits map[string]int
+  // Maximum number of protection groups allowed in the subscription
+  maxProtectionGroups int
+  // Maximum number of resource ARNs that can be specified for a single arbitrary-pattern protection group
+  maxArbitraryPatternMembers int
   // Proactive engagement status (ENABLED, DISABLED, or PENDING)
   proactiveEngagementStatus string
 }
@@ -5183,10 +5193,14 @@ private aws.shield.protection @defaults("arn name resourceArn") {
   name string
   // ARN of the protected resource
   resourceArn string
-  // Health check IDs associated with the protection
+  // Route 53 health check IDs associated with the protection
   healthCheckIds []string
-  // Application layer automatic response configuration
+  // Application layer automatic response configuration (raw structure with status and action)
   applicationLayerAutomaticResponseConfiguration dict
+  // Whether automatic application-layer DDoS mitigation is enabled for the protection
+  applicationLayerAutomaticResponseEnabled bool
+  // WAF rule action used by automatic application-layer mitigation (BLOCK or COUNT; empty when not configured)
+  applicationLayerAutomaticResponseAction string
 }
 
 // AWS Shield Advanced protection group

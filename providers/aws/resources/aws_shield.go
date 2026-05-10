@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/v13/types"
 )
 
 func (a *mqlAwsShield) id() (string, error) {
@@ -61,15 +62,43 @@ func (a *mqlAwsShield) subscription() (*mqlAwsShieldSubscription, error) {
 		log.Warn().Err(err).Msg("failed to convert shield subscription limits")
 	}
 
+	// Per-resource-type protection limits, keyed by resource type. The SDK
+	// returns these inside SubscriptionLimits.ProtectionLimits as a slice of
+	// {Type, Max} entries — flatten into a map for direct key-based queries.
+	protectedResourceTypeLimits := map[string]any{}
+	var maxProtectionGroups int64
+	var maxArbitraryPatternMembers int64
+	if sub.SubscriptionLimits != nil {
+		if pl := sub.SubscriptionLimits.ProtectionLimits; pl != nil {
+			for _, l := range pl.ProtectedResourceTypeLimits {
+				if l.Type == nil {
+					continue
+				}
+				protectedResourceTypeLimits[*l.Type] = l.Max
+			}
+		}
+		if pgl := sub.SubscriptionLimits.ProtectionGroupLimits; pgl != nil {
+			maxProtectionGroups = pgl.MaxProtectionGroups
+			if ptl := pgl.PatternTypeLimits; ptl != nil && ptl.ArbitraryPatternLimits != nil {
+				maxArbitraryPatternMembers = ptl.ArbitraryPatternLimits.MaxMembers
+			}
+		}
+	}
+
 	mqlSub, err := CreateResource(a.MqlRuntime, "aws.shield.subscription",
 		map[string]*llx.RawData{
-			"arn":                       llx.StringDataPtr(sub.SubscriptionArn),
-			"startTime":                 llx.TimeDataPtr(sub.StartTime),
-			"endTime":                   llx.TimeDataPtr(sub.EndTime),
-			"timeCommitmentInDays":      llx.IntData(sub.TimeCommitmentInSeconds / 86400),
-			"autoRenew":                 llx.StringData(string(sub.AutoRenew)),
-			"limits":                    llx.ArrayData(limits, "dict"),
-			"proactiveEngagementStatus": llx.StringData(string(sub.ProactiveEngagementStatus)),
+			"arn":                         llx.StringDataPtr(sub.SubscriptionArn),
+			"startTime":                   llx.TimeDataPtr(sub.StartTime),
+			"endTime":                     llx.TimeDataPtr(sub.EndTime),
+			"timeCommitmentInDays":        llx.IntData(sub.TimeCommitmentInSeconds / 86400),
+			"lengthInSeconds":             llx.IntData(sub.TimeCommitmentInSeconds),
+			"autoRenew":                   llx.StringData(string(sub.AutoRenew)),
+			"autoRenewEnabled":            llx.BoolData(sub.AutoRenew == shieldtypes.AutoRenewEnabled),
+			"limits":                      llx.ArrayData(limits, "dict"),
+			"protectedResourceTypeLimits": llx.MapData(protectedResourceTypeLimits, types.Int),
+			"maxProtectionGroups":         llx.IntData(maxProtectionGroups),
+			"maxArbitraryPatternMembers":  llx.IntData(maxArbitraryPatternMembers),
+			"proactiveEngagementStatus":   llx.StringData(string(sub.ProactiveEngagementStatus)),
 		})
 	if err != nil {
 		return nil, err
@@ -102,11 +131,22 @@ func (a *mqlAwsShield) protections() ([]any, error) {
 		}
 		for _, p := range page.Protections {
 			var appLayerConfig any
-			if p.ApplicationLayerAutomaticResponseConfiguration != nil {
+			appLayerEnabled := false
+			appLayerAction := ""
+			if cfg := p.ApplicationLayerAutomaticResponseConfiguration; cfg != nil {
 				var convErr error
-				appLayerConfig, convErr = convert.JsonToDict(p.ApplicationLayerAutomaticResponseConfiguration)
+				appLayerConfig, convErr = convert.JsonToDict(cfg)
 				if convErr != nil {
 					log.Warn().Err(convErr).Msg("failed to convert application layer automatic response configuration")
+				}
+				appLayerEnabled = cfg.Status == shieldtypes.ApplicationLayerAutomaticResponseStatusEnabled
+				if cfg.Action != nil {
+					switch {
+					case cfg.Action.Block != nil:
+						appLayerAction = "BLOCK"
+					case cfg.Action.Count != nil:
+						appLayerAction = "COUNT"
+					}
 				}
 			}
 			mqlProtection, err := CreateResource(a.MqlRuntime, "aws.shield.protection",
@@ -117,6 +157,8 @@ func (a *mqlAwsShield) protections() ([]any, error) {
 					"resourceArn":    llx.StringDataPtr(p.ResourceArn),
 					"healthCheckIds": llx.ArrayData(llx.TArr2Raw(p.HealthCheckIds), "string"),
 					"applicationLayerAutomaticResponseConfiguration": llx.DictData(appLayerConfig),
+					"applicationLayerAutomaticResponseEnabled":       llx.BoolData(appLayerEnabled),
+					"applicationLayerAutomaticResponseAction":        llx.StringData(appLayerAction),
 				})
 			if err != nil {
 				return nil, err

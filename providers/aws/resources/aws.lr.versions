@@ -6705,7 +6705,9 @@ aws.shield.emergencyContact.emailAddress 13.0.2
 aws.shield.emergencyContact.phoneNumber 13.0.2
 aws.shield.emergencyContacts 13.0.2
 aws.shield.protection 11.16.1
+aws.shield.protection.applicationLayerAutomaticResponseAction 13.21.4
 aws.shield.protection.applicationLayerAutomaticResponseConfiguration 11.16.1
+aws.shield.protection.applicationLayerAutomaticResponseEnabled 13.21.4
 aws.shield.protection.arn 11.16.1
 aws.shield.protection.healthCheckIds 11.16.1
 aws.shield.protection.id 11.16.1
@@ -6723,9 +6725,14 @@ aws.shield.protections 11.16.1
 aws.shield.subscription 11.16.1
 aws.shield.subscription.arn 11.16.1
 aws.shield.subscription.autoRenew 11.16.1
+aws.shield.subscription.autoRenewEnabled 13.21.4
 aws.shield.subscription.endTime 11.16.1
+aws.shield.subscription.lengthInSeconds 13.21.4
 aws.shield.subscription.limits 11.16.1
+aws.shield.subscription.maxArbitraryPatternMembers 13.21.4
+aws.shield.subscription.maxProtectionGroups 13.21.4
 aws.shield.subscription.proactiveEngagementStatus 11.16.1
+aws.shield.subscription.protectedResourceTypeLimits 13.21.4
 aws.shield.subscription.startTime 11.16.1
 aws.shield.subscription.timeCommitmentInDays 11.16.1
 aws.shield.subscriptionState 11.16.1
