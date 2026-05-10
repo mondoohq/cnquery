@@ -196,9 +196,9 @@ func (a *mqlAzureSubscriptionSqlService) managedInstances() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mi := mqlMi.(*mqlAzureSubscriptionSqlServiceManagedInstance)
-			mi.cacheSubnetId = subnetId
-			res = append(res, mi)
+			mqlInstance := mqlMi.(*mqlAzureSubscriptionSqlServiceManagedInstance)
+			mqlInstance.cacheSubnetId = subnetId
+			res = append(res, mqlInstance)
 		}
 	}
 	return res, nil
