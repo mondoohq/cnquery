@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workdocs"
@@ -16,6 +17,13 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 )
+
+type mqlAwsWorkdocsInternal struct {
+	rootContentsOnce sync.Once
+	rootFolders      []any
+	rootDocuments    []any
+	rootContentsErr  error
+}
 
 type mqlAwsWorkdocsFolderInternal struct {
 	cacheParentFolderId string
@@ -368,8 +376,19 @@ func (a *mqlAwsWorkdocs) documents() ([]any, error) {
 
 // collectRootFolderContents walks every WorkDocs user's root folder and
 // returns the immediate folder and document children. Discovery stops at one
-// level — deeper subtrees are out of scope for this iteration.
+// level — deeper subtrees are out of scope for this iteration. The traversal
+// is guarded by sync.Once so folders() and documents() share a single pass
+// instead of independently paginating DescribeFolderContents for every user.
 func (a *mqlAwsWorkdocs) collectRootFolderContents() ([]any, []any, error) {
+	a.rootContentsOnce.Do(func() {
+		a.rootFolders, a.rootDocuments, a.rootContentsErr = a.fetchRootFolderContents()
+	})
+	return a.rootFolders, a.rootDocuments, a.rootContentsErr
+}
+
+// fetchRootFolderContents performs the actual traversal. Callers should go
+// through collectRootFolderContents so the result is cached.
+func (a *mqlAwsWorkdocs) fetchRootFolderContents() ([]any, []any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
 	users := a.GetUsers()

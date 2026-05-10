@@ -117292,7 +117292,7 @@ func (c *mqlAwsCodedeployDeployment) GetRollbackInfo() *plugin.TValue[any] {
 type mqlAwsWorkdocs struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsWorkdocsInternal it will be used here
+	mqlAwsWorkdocsInternal
 	Users     plugin.TValue[[]any]
 	Folders   plugin.TValue[[]any]
 	Documents plugin.TValue[[]any]
