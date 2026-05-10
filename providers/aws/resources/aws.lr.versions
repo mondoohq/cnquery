@@ -1778,6 +1778,7 @@ aws.drs.sourceServer.lifeCycleFirstByteAt 13.21.4
 aws.drs.sourceServer.lifeCycleLastLaunchStatus 13.21.4
 aws.drs.sourceServer.lifeCycleLastSeenAt 13.21.4
 aws.drs.sourceServer.recoveryInstance 13.21.4
+aws.drs.sourceServer.recoveryInstanceId 13.21.4
 aws.drs.sourceServer.replicationConfiguration 11.15.2
 aws.drs.sourceServer.replicationDirection 11.15.2
 aws.drs.sourceServer.reversedDirectionSourceServer 13.21.4

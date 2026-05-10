@@ -284,6 +284,7 @@ func (a *mqlAwsDrs) createSourceServerResource(server drstypes.SourceServer, reg
 			"sourceNetworkID":                        llx.StringDataPtr(server.SourceNetworkID),
 			"stagingArea":                            llx.DictData(stagingArea),
 			"replicationDirection":                   llx.StringData(string(server.ReplicationDirection)),
+			"recoveryInstanceId":                     llx.StringDataPtr(server.RecoveryInstanceId),
 			"tags":                                   llx.MapData(tags, types.String),
 		})
 	if err != nil {

@@ -7649,6 +7649,8 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   stagingArea dict
   // Replication direction: FAILOVER_AND_FAILBACK or ONE_WAY
   replicationDirection string
+  // DEPRECATED: use recoveryInstance() instead. ID of the recovery instance launched from this source server
+  recoveryInstanceId @maturity("deprecated") string
   // Recovery instance launched from this source server
   recoveryInstance() aws.drs.recoveryInstance
   // Resource tags
