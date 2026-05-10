@@ -7629,8 +7629,8 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   sourceIdentificationFqdn string
   // Hostname identification hint for the source server
   sourceIdentificationHostname string
-  // AWS instance ID identification hint for an EC2-originated source server
-  sourceIdentificationAwsInstanceID string
+  // EC2 instance this source server was originally running on (for EC2-originated source servers)
+  sourceEc2Instance() aws.ec2.instance
   // For EC2-originated source servers: the origin AWS account ID
   sourceCloudOriginAccountID string
   // For EC2-originated source servers: the origin AWS region

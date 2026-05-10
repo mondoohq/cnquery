@@ -12571,8 +12571,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.drs.sourceServer.sourceIdentificationHostname": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetSourceIdentificationHostname()).ToDataRes(types.String)
 	},
-	"aws.drs.sourceServer.sourceIdentificationAwsInstanceID": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDrsSourceServer).GetSourceIdentificationAwsInstanceID()).ToDataRes(types.String)
+	"aws.drs.sourceServer.sourceEc2Instance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDrsSourceServer).GetSourceEc2Instance()).ToDataRes(types.Resource("aws.ec2.instance"))
 	},
 	"aws.drs.sourceServer.sourceCloudOriginAccountID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDrsSourceServer).GetSourceCloudOriginAccountID()).ToDataRes(types.String)
@@ -38092,8 +38092,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDrsSourceServer).SourceIdentificationHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.drs.sourceServer.sourceIdentificationAwsInstanceID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDrsSourceServer).SourceIdentificationAwsInstanceID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.drs.sourceServer.sourceEc2Instance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDrsSourceServer).SourceEc2Instance, ok = plugin.RawToTValue[*mqlAwsEc2Instance](v.Value, v.Error)
 		return
 	},
 	"aws.drs.sourceServer.sourceCloudOriginAccountID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -92913,7 +92913,7 @@ type mqlAwsDrsSourceServer struct {
 	SourceSupportsNitroInstances           plugin.TValue[bool]
 	SourceIdentificationFqdn               plugin.TValue[string]
 	SourceIdentificationHostname           plugin.TValue[string]
-	SourceIdentificationAwsInstanceID      plugin.TValue[string]
+	SourceEc2Instance                      plugin.TValue[*mqlAwsEc2Instance]
 	SourceCloudOriginAccountID             plugin.TValue[string]
 	SourceCloudOriginRegion                plugin.TValue[string]
 	SourceCloudOriginAvailabilityZone      plugin.TValue[string]
@@ -93057,8 +93057,20 @@ func (c *mqlAwsDrsSourceServer) GetSourceIdentificationHostname() *plugin.TValue
 	return &c.SourceIdentificationHostname
 }
 
-func (c *mqlAwsDrsSourceServer) GetSourceIdentificationAwsInstanceID() *plugin.TValue[string] {
-	return &c.SourceIdentificationAwsInstanceID
+func (c *mqlAwsDrsSourceServer) GetSourceEc2Instance() *plugin.TValue[*mqlAwsEc2Instance] {
+	return plugin.GetOrCompute[*mqlAwsEc2Instance](&c.SourceEc2Instance, func() (*mqlAwsEc2Instance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.drs.sourceServer", c.__id, "sourceEc2Instance")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Instance), nil
+			}
+		}
+
+		return c.sourceEc2Instance()
+	})
 }
 
 func (c *mqlAwsDrsSourceServer) GetSourceCloudOriginAccountID() *plugin.TValue[string] {

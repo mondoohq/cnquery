@@ -23,7 +23,8 @@ import (
 )
 
 type mqlAwsDrsSourceServerInternal struct {
-	region string
+	region             string
+	cacheEc2InstanceID string
 }
 
 type mqlAwsDrsRecoveryInstanceInternal struct {
@@ -273,7 +274,6 @@ func (a *mqlAwsDrs) createSourceServerResource(server drstypes.SourceServer, reg
 			"sourceSupportsNitroInstances":           llx.BoolDataPtr(sourceSupportsNitro),
 			"sourceIdentificationFqdn":               llx.StringData(fqdn),
 			"sourceIdentificationHostname":           llx.StringData(hostname),
-			"sourceIdentificationAwsInstanceID":      llx.StringData(awsInstanceID),
 			"sourceCloudOriginAccountID":             llx.StringData(sourceCloudOriginAccountID),
 			"sourceCloudOriginRegion":                llx.StringData(sourceCloudOriginRegion),
 			"sourceCloudOriginAvailabilityZone":      llx.StringData(sourceCloudOriginAZ),
@@ -290,7 +290,26 @@ func (a *mqlAwsDrs) createSourceServerResource(server drstypes.SourceServer, reg
 
 	mqlSrv := mqlServer.(*mqlAwsDrsSourceServer)
 	mqlSrv.region = region
+	mqlSrv.cacheEc2InstanceID = awsInstanceID
 	return mqlSrv, nil
+}
+
+func (a *mqlAwsDrsSourceServer) sourceEc2Instance() (*mqlAwsEc2Instance, error) {
+	ec2ID := a.cacheEc2InstanceID
+	originAccount := a.SourceCloudOriginAccountID.Data
+	originRegion := a.SourceCloudOriginRegion.Data
+	if ec2ID == "" || originAccount == "" || originRegion == "" {
+		a.SourceEc2Instance.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	ec2Arn := fmt.Sprintf("arn:aws:ec2:%s:%s:instance/%s", originRegion, originAccount, ec2ID)
+	res, err := NewResource(a.MqlRuntime, "aws.ec2.instance",
+		map[string]*llx.RawData{"arn": llx.StringData(ec2Arn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Instance), nil
 }
 
 func (a *mqlAwsDrsSourceServer) replicationConfiguration() (*mqlAwsDrsReplicationConfiguration, error) {

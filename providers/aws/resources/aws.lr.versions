@@ -1787,7 +1787,7 @@ aws.drs.sourceServer.sourceCloudOriginAvailabilityZone 13.21.4
 aws.drs.sourceServer.sourceCloudOriginRegion 13.21.4
 aws.drs.sourceServer.sourceCpuCount 13.21.4
 aws.drs.sourceServer.sourceDiskCount 13.21.4
-aws.drs.sourceServer.sourceIdentificationAwsInstanceID 13.21.4
+aws.drs.sourceServer.sourceEc2Instance 13.21.4
 aws.drs.sourceServer.sourceIdentificationFqdn 13.21.4
 aws.drs.sourceServer.sourceIdentificationHostname 13.21.4
 aws.drs.sourceServer.sourceNetworkID 13.21.4
