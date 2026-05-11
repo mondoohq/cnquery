@@ -21,6 +21,8 @@ openstack {
   roles() []openstack.role
   // Keystone domains (typically admin-only)
   domains() []openstack.domain
+  // Keystone groups (typically admin-only)
+  groups() []openstack.group
 
   // Nova compute servers (instances) in the scoped project
   servers() []openstack.compute.server
@@ -30,6 +32,10 @@ openstack {
   keypairs() []openstack.compute.keypair
   // Nova server groups (affinity / anti-affinity)
   serverGroups() []openstack.compute.serverGroup
+  // Nova hypervisors (admin-only)
+  hypervisors() []openstack.compute.hypervisor
+  // Nova compute services (admin-only)
+  computeServices() []openstack.compute.service
 
   // Neutron networks
   networks() []openstack.network
@@ -78,6 +84,14 @@ openstack {
   firewallPolicies() []openstack.firewall.policy
   // Neutron FWaaS v2 firewall rules in the scoped project
   firewallRules() []openstack.firewall.rule
+
+  // Swift object-storage account for the scoped project
+  objectStorageAccount() openstack.objectstorage.account
+  // Swift object-storage containers in the scoped project
+  objectStorageContainers() []openstack.objectstorage.container
+
+  // Designate DNS zones visible to the scoped project
+  dnsZones() []openstack.dns.zone
 }
 
 // OpenStack Keystone project (formerly "tenant")
@@ -122,6 +136,8 @@ private openstack.user @defaults("id name enabled") {
   defaultProject() openstack.project
   // Roles assigned to this user across all scopes (effective; deduplicated, includes group-derived roles)
   roles() []openstack.role
+  // Groups this user belongs to
+  groups() []openstack.group
 }
 
 // OpenStack Keystone role
@@ -148,6 +164,25 @@ private openstack.domain @defaults("id name enabled") {
   description string
   // Whether the domain is enabled
   enabled bool
+  // Groups in this domain
+  groups() []openstack.group
+}
+
+// OpenStack Keystone group
+private openstack.group @defaults("id name") {
+  init(id? string)
+  // Group ID (UUID)
+  id string
+  // Group name
+  name string
+  // Description
+  description string
+  // Domain this group belongs to
+  domain() openstack.domain
+  // Users that are members of this group
+  users() []openstack.user
+  // Effective roles assigned to this group (deduplicated across project/domain/system scopes)
+  roles() []openstack.role
 }
 
 // OpenStack Nova compute server (instance)
@@ -1194,4 +1229,200 @@ private openstack.firewall.rule @defaults("id name action protocol enabled") {
   project() openstack.project
   // Policies that reference this rule
   policies() []openstack.firewall.policy
+}
+
+// OpenStack Swift object-storage account. Singular per scoped project; aggregates totals across all containers.
+private openstack.objectstorage.account @defaults("bytesUsed containerCount objectCount") {
+  // Account identifier (Swift account URL path, e.g. AUTH_<project_id>)
+  id string
+  // Total bytes stored in this account
+  bytesUsed int
+  // Number of containers
+  containerCount int
+  // Total number of objects across all containers
+  objectCount int
+  // Account-level byte quota (-1 when unset)
+  quotaBytes int
+  // Whether an X-Account-Meta-Temp-URL-Key is configured (presence only; value not exposed)
+  tempUrlKeySet bool
+  // Free-form account metadata (X-Account-Meta-* headers, without the prefix)
+  metadata map[string]string
+}
+
+// OpenStack Swift object-storage container
+private openstack.objectstorage.container @defaults("name objectCount bytes public") {
+  init(name? string)
+  // Container name (also acts as identifier within the account)
+  name string
+  // Number of objects in the container
+  objectCount int
+  // Total bytes stored in the container
+  bytes int
+  // Read ACL entries (X-Container-Read; e.g. ".r:*" means publicly readable)
+  readACL() []string
+  // Write ACL entries (X-Container-Write)
+  writeACL() []string
+  // Storage policy assigned to the container
+  storagePolicy() string
+  // Container that stores prior versions of objects (X-Versions-Location); empty when versioning is disabled
+  versionsLocation() string
+  // Container that records overwritten/deleted object versions (X-History-Location); empty when history is disabled
+  historyLocation() string
+  // Free-form container metadata (X-Container-Meta-* headers, without the prefix)
+  metadata() map[string]string
+  // Whether the container's read ACL grants unauthenticated read access (i.e. contains ".r:*")
+  public() bool
+  // Objects in this container (lazy; full listing can be expensive)
+  objects() []openstack.objectstorage.object
+}
+
+// OpenStack Swift object stored in a container
+private openstack.objectstorage.object @defaults("name contentType bytes") {
+  init(containerName? string, name? string)
+  // Object name (path within the container)
+  name string
+  // Container that holds this object
+  containerName string
+  // MIME content type
+  contentType string
+  // Object size in bytes
+  bytes int
+  // ETag / MD5 hash of the object body
+  hash string
+  // Last modification timestamp
+  lastModified time
+  // Container that holds this object (typed reference)
+  container() openstack.objectstorage.container
+}
+
+// OpenStack Designate DNS zone
+private openstack.dns.zone @defaults("id name type ttl status") {
+  init(id? string)
+  // Zone ID (UUID)
+  id string
+  // Zone name (FQDN, e.g. "example.com.")
+  name string
+  // Email address recorded in the zone SOA
+  email string
+  // Description
+  description string
+  // Default TTL in seconds for records that do not override it
+  ttl int
+  // SOA serial number
+  serial int
+  // Zone status (ACTIVE, PENDING, ERROR, ...)
+  status string
+  // Last action performed on the zone (CREATE, UPDATE, DELETE, NONE)
+  action string
+  // Zone type (PRIMARY or SECONDARY)
+  type string
+  // Master nameservers for SECONDARY zones (empty for PRIMARY zones)
+  masters []string
+  // Project that owns this zone
+  projectId string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Last successful transfer timestamp (SECONDARY zones); null when never transferred
+  transferredAt time
+  // Project that owns this zone
+  project() openstack.project
+  // Recordsets in this zone
+  recordsets() []openstack.dns.recordset
+}
+
+// OpenStack Designate DNS recordset (one or more records sharing a name and type)
+private openstack.dns.recordset @defaults("id name type ttl") {
+  init(id? string)
+  // Recordset ID (UUID)
+  id string
+  // Recordset name (FQDN, e.g. "www.example.com.")
+  name string
+  // Owning zone ID
+  zoneId string
+  // Record type (A, AAAA, MX, CNAME, TXT, SRV, NS, PTR, SPF, SSHFP, CAA, ...)
+  type string
+  // TTL in seconds; null when the zone default applies
+  ttl int
+  // Record values (one entry per record; format depends on type)
+  records []string
+  // Description
+  description string
+  // Recordset status (ACTIVE, PENDING, ERROR, ...)
+  status string
+  // Last action performed (CREATE, UPDATE, DELETE, NONE)
+  action string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Owning zone
+  zone() openstack.dns.zone
+}
+
+// OpenStack Nova hypervisor (compute host). Admin-only.
+private openstack.compute.hypervisor @defaults("id hostname type state status") {
+  init(id? string)
+  // Hypervisor ID (Nova-assigned UUID or integer string)
+  id string
+  // Hypervisor hostname as reported by the compute service
+  hostname string
+  // Hypervisor type (e.g. QEMU, KVM, VMware, Xen, ironic)
+  type string
+  // Hypervisor driver version (Nova `hypervisor_version`)
+  version int
+  // IP address of the hypervisor host
+  hostIp string
+  // Connection state (up, down)
+  state string
+  // Administrative status (enabled, disabled)
+  status string
+  // Total vCPUs on the host
+  vcpus int
+  // vCPUs allocated to running instances
+  vcpusUsed int
+  // Total RAM in megabytes
+  memoryMb int
+  // RAM allocated to running instances in megabytes
+  memoryMbUsed int
+  // Free RAM in megabytes
+  freeRamMb int
+  // Total local disk in gigabytes
+  localGb int
+  // Local disk allocated in gigabytes
+  localGbUsed int
+  // Free local disk in gigabytes
+  freeDiskGb int
+  // Number of instances currently running on the host
+  runningVms int
+  // Current scheduler workload metric
+  currentWorkload int
+  // Hypervisor CPU info (model, vendor, features, topology)
+  cpuInfo dict
+  // The compute service backing this hypervisor (typically the nova-compute on the same host)
+  service() openstack.compute.service
+}
+
+// OpenStack Nova compute service (e.g. nova-compute, nova-scheduler, nova-conductor). Admin-only.
+private openstack.compute.service @defaults("id binary host zone status state") {
+  init(id? string)
+  // Service ID (Nova-assigned UUID or integer string)
+  id string
+  // Service binary name (nova-compute, nova-scheduler, nova-conductor, ...)
+  binary string
+  // Host the service runs on
+  host string
+  // Availability zone
+  zone string
+  // Administrative status (enabled, disabled)
+  status string
+  // Connection state (up, down)
+  state string
+  // Reason given when the service was administratively disabled; empty when enabled
+  disabledReason string
+  // Whether the service is forced down (Nova `forced_down`)
+  forcedDown bool
+  // Last update timestamp reported by the service
+  updatedAt time
 }

@@ -9,9 +9,11 @@ import (
 	"sync"
 
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/hypervisors"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/keypairs"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servergroups"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/services"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/openstack/connection"
@@ -614,6 +616,189 @@ func (r *mqlOpenstackComputeServerGroup) memberServers() ([]any, error) {
 		}
 		res, err := NewResource(r.MqlRuntime, "openstack.compute.server", map[string]*llx.RawData{
 			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// ---- openstack.compute.hypervisor ----
+
+type mqlOpenstackComputeHypervisorInternal struct {
+	cacheServiceID string
+}
+
+func (r *mqlOpenstackComputeHypervisor) id() (string, error) {
+	return "openstack.compute.hypervisor/" + r.Id.Data, nil
+}
+
+func initOpenstackComputeHypervisor(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetHypervisors()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			h := raw.(*mqlOpenstackComputeHypervisor)
+			if h.Id.Data == id {
+				return args, h, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.compute.hypervisor", "id", args)
+	return args, nil, nil
+}
+
+func cpuInfoDict(info hypervisors.CPUInfo) map[string]any {
+	features := make([]any, len(info.Features))
+	for i, f := range info.Features {
+		features[i] = f
+	}
+	return map[string]any{
+		"vendor":   info.Vendor,
+		"arch":     info.Arch,
+		"model":    info.Model,
+		"features": features,
+		"topology": map[string]any{
+			"sockets": info.Topology.Sockets,
+			"cores":   info.Topology.Cores,
+			"threads": info.Topology.Threads,
+		},
+	}
+}
+
+func (o *mqlOpenstack) hypervisors() ([]any, error) {
+	c := conn(o.MqlRuntime)
+	client, err := c.ComputeClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := hypervisors.List(client, hypervisors.ListOpts{}).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := hypervisors.ExtractHypervisors(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for _, h := range items {
+		res, err := CreateResource(o.MqlRuntime, "openstack.compute.hypervisor", map[string]*llx.RawData{
+			"__id":            llx.StringData("openstack.compute.hypervisor/" + h.ID),
+			"id":              llx.StringData(h.ID),
+			"hostname":        llx.StringData(h.HypervisorHostname),
+			"type":            llx.StringData(h.HypervisorType),
+			"version":         llx.IntData(int64(h.HypervisorVersion)),
+			"hostIp":          llx.StringData(h.HostIP),
+			"state":           llx.StringData(h.State),
+			"status":          llx.StringData(h.Status),
+			"vcpus":           llx.IntData(int64(h.VCPUs)),
+			"vcpusUsed":       llx.IntData(int64(h.VCPUsUsed)),
+			"memoryMb":        llx.IntData(int64(h.MemoryMB)),
+			"memoryMbUsed":    llx.IntData(int64(h.MemoryMBUsed)),
+			"freeRamMb":       llx.IntData(int64(h.FreeRamMB)),
+			"localGb":         llx.IntData(int64(h.LocalGB)),
+			"localGbUsed":     llx.IntData(int64(h.LocalGBUsed)),
+			"freeDiskGb":      llx.IntData(int64(h.FreeDiskGB)),
+			"runningVms":      llx.IntData(int64(h.RunningVMs)),
+			"currentWorkload": llx.IntData(int64(h.CurrentWorkload)),
+			"cpuInfo":         llx.DictData(cpuInfoDict(h.CPUInfo)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlHV := res.(*mqlOpenstackComputeHypervisor)
+		mqlHV.cacheServiceID = h.Service.ID
+		out = append(out, mqlHV)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackComputeHypervisor) service() (*mqlOpenstackComputeService, error) {
+	if r.cacheServiceID == "" {
+		r.Service.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.compute.service", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheServiceID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackComputeService), nil
+}
+
+// ---- openstack.compute.service ----
+
+func (r *mqlOpenstackComputeService) id() (string, error) {
+	return "openstack.compute.service/" + r.Id.Data, nil
+}
+
+func initOpenstackComputeService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetComputeServices()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			s := raw.(*mqlOpenstackComputeService)
+			if s.Id.Data == id {
+				return args, s, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.compute.service", "id", args)
+	return args, nil, nil
+}
+
+func (o *mqlOpenstack) computeServices() ([]any, error) {
+	c := conn(o.MqlRuntime)
+	client, err := c.ComputeClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := services.List(client, services.ListOpts{}).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := services.ExtractServices(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for _, s := range items {
+		res, err := CreateResource(o.MqlRuntime, "openstack.compute.service", map[string]*llx.RawData{
+			"__id":           llx.StringData("openstack.compute.service/" + s.ID),
+			"id":             llx.StringData(s.ID),
+			"binary":         llx.StringData(s.Binary),
+			"host":           llx.StringData(s.Host),
+			"zone":           llx.StringData(s.Zone),
+			"status":         llx.StringData(s.Status),
+			"state":          llx.StringData(s.State),
+			"disabledReason": llx.StringData(s.DisabledReason),
+			"forcedDown":     llx.BoolData(s.ForcedDown),
+			"updatedAt":      llx.TimeDataPtr(timePtr(s.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err

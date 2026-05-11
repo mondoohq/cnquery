@@ -5,6 +5,7 @@ package resources
 
 import (
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/domains"
+	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/projects"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/roles"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/users"
@@ -404,6 +405,200 @@ func (o *mqlOpenstack) domains() ([]any, error) {
 			"name":        llx.StringData(d.Name),
 			"description": llx.StringData(d.Description),
 			"enabled":     llx.BoolData(d.Enabled),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// ---- openstack.group ----
+
+type mqlOpenstackGroupInternal struct {
+	cacheDomainID string
+}
+
+func (r *mqlOpenstackGroup) id() (string, error) {
+	return "openstack.group/" + r.Id.Data, nil
+}
+
+func initOpenstackGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetGroups()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			g := raw.(*mqlOpenstackGroup)
+			if g.Id.Data == id {
+				return args, g, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.group", "id", args)
+	return args, nil, nil
+}
+
+func (o *mqlOpenstack) groups() ([]any, error) {
+	return listKeystoneGroups(o.MqlRuntime, groups.ListOpts{})
+}
+
+func (r *mqlOpenstackDomain) groups() ([]any, error) {
+	return listKeystoneGroups(r.MqlRuntime, groups.ListOpts{DomainID: r.Id.Data})
+}
+
+func listKeystoneGroups(runtime *plugin.Runtime, opts groups.ListOpts) ([]any, error) {
+	c := conn(runtime)
+	client, err := c.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := groups.List(client, opts).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := groups.ExtractGroups(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for _, g := range items {
+		res, err := CreateResource(runtime, "openstack.group", map[string]*llx.RawData{
+			"__id":        llx.StringData("openstack.group/" + g.ID),
+			"id":          llx.StringData(g.ID),
+			"name":        llx.StringData(g.Name),
+			"description": llx.StringData(g.Description),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlGroup := res.(*mqlOpenstackGroup)
+		mqlGroup.cacheDomainID = g.DomainID
+		out = append(out, mqlGroup)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackGroup) domain() (*mqlOpenstackDomain, error) {
+	if r.cacheDomainID == "" {
+		r.Domain.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.domain", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheDomainID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackDomain), nil
+}
+
+func (r *mqlOpenstackGroup) users() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := users.ListInGroup(client, r.Id.Data, users.ListOpts{}).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := users.ExtractUsers(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for _, u := range items {
+		res, err := NewResource(r.MqlRuntime, "openstack.user", map[string]*llx.RawData{
+			"id": llx.StringData(u.ID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackGroup) roles() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := roles.ListAssignments(client, roles.ListAssignmentsOpts{
+		GroupID: r.Id.Data,
+	}).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := roles.ExtractRoleAssignments(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[string]struct{}, len(items))
+	out := make([]any, 0, len(items))
+	for _, a := range items {
+		if a.Role.ID == "" {
+			continue
+		}
+		if _, dup := seen[a.Role.ID]; dup {
+			continue
+		}
+		seen[a.Role.ID] = struct{}{}
+		res, err := NewResource(r.MqlRuntime, "openstack.role", map[string]*llx.RawData{
+			"id":   llx.StringData(a.Role.ID),
+			"name": llx.StringData(a.Role.Name),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackUser) groups() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := users.ListGroups(client, r.Id.Data).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := groups.ExtractGroups(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for _, g := range items {
+		res, err := NewResource(r.MqlRuntime, "openstack.group", map[string]*llx.RawData{
+			"id": llx.StringData(g.ID),
 		})
 		if err != nil {
 			return nil, err

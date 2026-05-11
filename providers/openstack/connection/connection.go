@@ -36,14 +36,16 @@ type OpenstackConnection struct {
 	projectID string
 	domainID  string
 
-	clientLock   sync.Mutex
-	identity     *gophercloud.ServiceClient
-	compute      *gophercloud.ServiceClient
-	network      *gophercloud.ServiceClient
-	blockStorage *gophercloud.ServiceClient
-	image        *gophercloud.ServiceClient
-	keyManager   *gophercloud.ServiceClient
-	loadBalancer *gophercloud.ServiceClient
+	clientLock    sync.Mutex
+	identity      *gophercloud.ServiceClient
+	compute       *gophercloud.ServiceClient
+	network       *gophercloud.ServiceClient
+	blockStorage  *gophercloud.ServiceClient
+	image         *gophercloud.ServiceClient
+	keyManager    *gophercloud.ServiceClient
+	loadBalancer  *gophercloud.ServiceClient
+	objectStorage *gophercloud.ServiceClient
+	dns           *gophercloud.ServiceClient
 
 	SGNameCacheLock sync.Mutex
 	SGNameCache     map[string]string
@@ -245,5 +247,33 @@ func (c *OpenstackConnection) LoadBalancerClient() (*gophercloud.ServiceClient, 
 		return nil, fmt.Errorf("failed to initialize Octavia client: %w", err)
 	}
 	c.loadBalancer = client
+	return client, nil
+}
+
+func (c *OpenstackConnection) ObjectStorageClient() (*gophercloud.ServiceClient, error) {
+	c.clientLock.Lock()
+	defer c.clientLock.Unlock()
+	if c.objectStorage != nil {
+		return c.objectStorage, nil
+	}
+	client, err := openstack.NewObjectStorageV1(c.provider, c.endpointOpts())
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Swift client: %w", err)
+	}
+	c.objectStorage = client
+	return client, nil
+}
+
+func (c *OpenstackConnection) DNSClient() (*gophercloud.ServiceClient, error) {
+	c.clientLock.Lock()
+	defer c.clientLock.Unlock()
+	if c.dns != nil {
+		return c.dns, nil
+	}
+	client, err := openstack.NewDNSV2(c.provider, c.endpointOpts())
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Designate client: %w", err)
+	}
+	c.dns = client
 	return client, nil
 }
