@@ -52,6 +52,7 @@ awslogs
 AWSPENDING
 AWSPREVIOUS
 awsvpc
+azurestaticapps
 azurewebsites
 backref
 backupconfiguration
