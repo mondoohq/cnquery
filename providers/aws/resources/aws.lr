@@ -991,6 +991,8 @@ private aws.networkfirewall.firewall @defaults("arn name region") {
   region string
   // VPC where the firewall is deployed
   vpc() aws.vpc
+  // Subnets where the firewall endpoints are deployed
+  subnets() []aws.vpc.subnet
   // Whether delete protection is enabled
   deleteProtection bool
   // Whether subnet change protection is enabled
@@ -1003,8 +1005,20 @@ private aws.networkfirewall.firewall @defaults("arn name region") {
   policy() aws.networkfirewall.policy
   // Subnet mappings for the firewall
   subnetMappings []dict
-  // Customer-managed KMS encryption configuration for firewall resources
-  encryptionConfiguration dict
+  // KMS encryption type for firewall resources (AWS_OWNED_KMS_KEY or CUSTOMER_KMS)
+  encryptionType string
+  // ID of the customer-managed KMS key used to encrypt firewall resources
+  encryptionKmsKeyId string
+  // KMS key used to encrypt firewall resources (set when encryptionType is CUSTOMER_KMS)
+  kmsKey() aws.kms.key
+  // Readiness of the firewall to handle traffic (READY, PROVISIONING, DELETING)
+  status() string
+  // Configuration sync state summary across all Availability Zones (IN_SYNC, PENDING, CAPACITY_CONSTRAINED)
+  configurationSyncStateSummary() string
+  // Per-Availability-Zone sync states for the firewall endpoints
+  syncStates() []dict
+  // Logging destinations configured on the firewall (one entry per log type)
+  loggingDestinations() []dict
   // Tags on the firewall
   tags map[string]string
 }
@@ -1023,16 +1037,36 @@ private aws.networkfirewall.policy @defaults("arn name region") {
   statelessDefaultActions []string
   // Stateless default actions for fragmented packets
   statelessFragmentDefaultActions []string
+  // Custom stateless actions usable by name in the policy's default actions
+  statelessCustomActions []dict
   // Stateless rule group references
   statelessRuleGroupReferences []dict
+  // Stateless rule groups referenced by the policy
+  statelessRuleGroups() []aws.networkfirewall.rulegroup
   // Stateful default actions
   statefulDefaultActions []string
   // Stateful rule group references
   statefulRuleGroupReferences []dict
+  // Stateful rule groups referenced by the policy
+  statefulRuleGroups() []aws.networkfirewall.rulegroup
   // Stateful engine options
   statefulEngineOptions dict
+  // Order in which stateful rules are evaluated (DEFAULT_ACTION_ORDER or STRICT_ORDER)
+  statefulEngineRuleOrder string
+  // Behavior when a network connection breaks midstream (DROP, CONTINUE, REJECT)
+  statefulEngineStreamExceptionPolicy string
+  // Suricata HOME_NET overrides and other policy-level rule variables
+  policyVariables []dict
+  // ARN of the TLS inspection configuration associated with the policy
+  tlsInspectionConfigurationArn string
   // Domain-name specifications consumed by stateful-domain rule groups in the policy
   consumedStatefulDomainCapacity int
+  // KMS encryption type for the firewall policy (AWS_OWNED_KMS_KEY or CUSTOMER_KMS)
+  encryptionType string
+  // ID of the customer-managed KMS key used to encrypt the firewall policy
+  encryptionKmsKeyId string
+  // KMS key used to encrypt the firewall policy (set when encryptionType is CUSTOMER_KMS)
+  kmsKey() aws.kms.key
   // Tags on the firewall policy
   tags map[string]string
 }
@@ -1049,10 +1083,32 @@ private aws.networkfirewall.rulegroup @defaults("arn name region") {
   region string
   // Capacity of the rule group
   capacity int
+  // Capacity units currently consumed by the rule group rules
+  consumedCapacity int
+  // Number of firewall policies that reference this rule group
+  numberOfAssociations int
   // Type of the rule group (STATELESS or STATEFUL)
   type string
+  // Status of the rule group (ACTIVE, DELETING, ERROR)
+  ruleGroupStatus string
   // Rules definition
   rules dict
+  // Raw Suricata-compatible rule body for stateful rule groups
+  rulesString string
+  // Reference sets used by the rule group's rules
+  referenceSets []dict
+  // Rule variables (IP sets and port sets) usable in the rule group's rules
+  ruleVariables []dict
+  // Order in which the rule group's stateful rules are evaluated (DEFAULT_ACTION_ORDER or STRICT_ORDER)
+  statefulRuleOrder string
+  // Metadata about the managed rule group this rule group was copied from
+  sourceMetadata []dict
+  // KMS encryption type for the rule group (AWS_OWNED_KMS_KEY or CUSTOMER_KMS)
+  encryptionType string
+  // ID of the customer-managed KMS key used to encrypt the rule group
+  encryptionKmsKeyId string
+  // KMS key used to encrypt the rule group (set when encryptionType is CUSTOMER_KMS)
+  kmsKey() aws.kms.key
   // Tags on the rule group
   tags map[string]string
 }

@@ -5,7 +5,9 @@ package resources
 
 import (
 	"context"
+	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	nftypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/rs/zerolog/log"
@@ -74,6 +76,7 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 					}
 					f := detail.Firewall
 					subnetMappings := make([]any, 0, len(f.SubnetMappings))
+					subnetIds := make([]string, 0, len(f.SubnetMappings))
 					for _, sm := range f.SubnetMappings {
 						d, err := convert.JsonToDict(sm)
 						if err != nil {
@@ -81,14 +84,15 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 							continue
 						}
 						subnetMappings = append(subnetMappings, d)
-					}
-					var encConfig any
-					if f.EncryptionConfiguration != nil {
-						var encErr error
-						encConfig, encErr = convert.JsonToDict(f.EncryptionConfiguration)
-						if encErr != nil {
-							log.Warn().Err(encErr).Msg("failed to convert encryption configuration")
+						if sm.SubnetId != nil {
+							subnetIds = append(subnetIds, *sm.SubnetId)
 						}
+					}
+					var encryptionType string
+					var encryptionKmsKeyId *string
+					if f.EncryptionConfiguration != nil {
+						encryptionType = string(f.EncryptionConfiguration.Type)
+						encryptionKmsKeyId = f.EncryptionConfiguration.KeyId
 					}
 					tags := nfTagsToMap(f.Tags)
 
@@ -103,7 +107,8 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 							"firewallPolicyChangeProtection": llx.BoolData(f.FirewallPolicyChangeProtection),
 							"firewallPolicyArn":              llx.StringDataPtr(f.FirewallPolicyArn),
 							"subnetMappings":                 llx.ArrayData(subnetMappings, "dict"),
-							"encryptionConfiguration":        llx.DictData(encConfig),
+							"encryptionType":                 llx.StringData(encryptionType),
+							"encryptionKmsKeyId":             llx.StringDataPtr(encryptionKmsKeyId),
 							"tags":                           llx.MapData(tags, "string"),
 						})
 					if err != nil {
@@ -111,6 +116,9 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 					}
 					mqlFw := mqlFirewall.(*mqlAwsNetworkfirewallFirewall)
 					mqlFw.cacheVpcId = f.VpcId
+					mqlFw.cacheSubnetIds = subnetIds
+					mqlFw.cacheKmsKeyId = encryptionKmsKeyId
+					mqlFw.cacheStatusVal = detail.FirewallStatus
 					res = append(res, mqlFirewall)
 				}
 			}
@@ -122,7 +130,23 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 }
 
 type mqlAwsNetworkfirewallFirewallInternal struct {
-	cacheVpcId *string
+	cacheVpcId      *string
+	cacheSubnetIds  []string
+	cacheKmsKeyId   *string
+	cacheStatusVal  *nftypes.FirewallStatus
+	cacheLogConfig  *nftypes.LoggingConfiguration
+	cacheLogFetched bool
+	cacheLogLock    sync.Mutex
+}
+
+type mqlAwsNetworkfirewallPolicyInternal struct {
+	cacheStatelessRuleGroupArns []string
+	cacheStatefulRuleGroupArns  []string
+	cacheKmsKeyId               *string
+}
+
+type mqlAwsNetworkfirewallRulegroupInternal struct {
+	cacheKmsKeyId *string
 }
 
 func (a *mqlAwsNetworkfirewallFirewall) id() (string, error) {
@@ -140,6 +164,152 @@ func (a *mqlAwsNetworkfirewallFirewall) vpc() (*mqlAwsVpc, error) {
 		return nil, err
 	}
 	return mqlVpc.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsNetworkfirewallFirewall) subnets() ([]any, error) {
+	res := []any{}
+	for _, subnetId := range a.cacheSubnetIds {
+		if subnetId == "" {
+			continue
+		}
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{"id": llx.StringData(subnetId)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsNetworkfirewallFirewall) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyId)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsNetworkfirewallFirewall) status() (string, error) {
+	if a.cacheStatusVal == nil {
+		return "", nil
+	}
+	return string(a.cacheStatusVal.Status), nil
+}
+
+func (a *mqlAwsNetworkfirewallFirewall) configurationSyncStateSummary() (string, error) {
+	if a.cacheStatusVal == nil {
+		return "", nil
+	}
+	return string(a.cacheStatusVal.ConfigurationSyncStateSummary), nil
+}
+
+func (a *mqlAwsNetworkfirewallFirewall) syncStates() ([]any, error) {
+	res := []any{}
+	if a.cacheStatusVal == nil {
+		return res, nil
+	}
+	for az, ss := range a.cacheStatusVal.SyncStates {
+		entry := map[string]any{
+			"availabilityZone": az,
+		}
+		if ss.Attachment != nil {
+			if ss.Attachment.SubnetId != nil {
+				entry["subnetId"] = *ss.Attachment.SubnetId
+			}
+			if ss.Attachment.EndpointId != nil {
+				entry["endpointId"] = *ss.Attachment.EndpointId
+			}
+			entry["status"] = string(ss.Attachment.Status)
+			if ss.Attachment.StatusMessage != nil {
+				entry["statusMessage"] = *ss.Attachment.StatusMessage
+			}
+		}
+		if len(ss.Config) > 0 {
+			cfg := make(map[string]any, len(ss.Config))
+			for k, v := range ss.Config {
+				cfgEntry := map[string]any{
+					"syncStatus": string(v.SyncStatus),
+				}
+				if v.UpdateToken != nil {
+					cfgEntry["updateToken"] = *v.UpdateToken
+				}
+				cfg[k] = cfgEntry
+			}
+			entry["config"] = cfg
+		}
+		res = append(res, entry)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsNetworkfirewallFirewall) loggingDestinations() ([]any, error) {
+	res := []any{}
+	logCfg, err := a.fetchLoggingConfig()
+	if err != nil {
+		return nil, err
+	}
+	if logCfg == nil {
+		return res, nil
+	}
+	for _, ld := range logCfg.LogDestinationConfigs {
+		entry := map[string]any{
+			"logDestinationType": string(ld.LogDestinationType),
+			"logType":            string(ld.LogType),
+		}
+		if len(ld.LogDestination) > 0 {
+			dest := make(map[string]any, len(ld.LogDestination))
+			for k, v := range ld.LogDestination {
+				dest[k] = v
+			}
+			entry["logDestination"] = dest
+		}
+		res = append(res, entry)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsNetworkfirewallFirewall) fetchLoggingConfig() (*nftypes.LoggingConfiguration, error) {
+	if a.cacheLogFetched {
+		return a.cacheLogConfig, nil
+	}
+	a.cacheLogLock.Lock()
+	defer a.cacheLogLock.Unlock()
+	if a.cacheLogFetched {
+		return a.cacheLogConfig, nil
+	}
+	if a.Arn.Error != nil {
+		return nil, a.Arn.Error
+	}
+	arn := a.Arn.Data
+	if arn == "" {
+		a.cacheLogFetched = true
+		return nil, nil
+	}
+	if a.Region.Error != nil {
+		return nil, a.Region.Error
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.NetworkFirewall(a.Region.Data)
+	ctx := context.Background()
+	resp, err := svc.DescribeLoggingConfiguration(ctx, &networkfirewall.DescribeLoggingConfigurationInput{
+		FirewallArn: &arn,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.cacheLogFetched = true
+			return nil, nil
+		}
+		return nil, err
+	}
+	a.cacheLogConfig = resp.LoggingConfiguration
+	a.cacheLogFetched = true
+	return a.cacheLogConfig, nil
 }
 
 func (a *mqlAwsNetworkfirewallFirewall) policy() (*mqlAwsNetworkfirewallPolicy, error) {
@@ -244,12 +414,30 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to convert stateful rule group references")
 	}
+	statelessCustomActions, err := convert.JsonToDictSlice(policy.StatelessCustomActions)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to convert stateless custom actions")
+	}
 	var statefulEngineOpts any
+	var statefulEngineRuleOrder string
+	var streamExceptionPolicy string
 	if policy.StatefulEngineOptions != nil {
 		var optErr error
 		statefulEngineOpts, optErr = convert.JsonToDict(policy.StatefulEngineOptions)
 		if optErr != nil {
 			log.Warn().Err(optErr).Msg("failed to convert stateful engine options")
+		}
+		statefulEngineRuleOrder = string(policy.StatefulEngineOptions.RuleOrder)
+		streamExceptionPolicy = string(policy.StatefulEngineOptions.StreamExceptionPolicy)
+	}
+	policyVariables := []any{}
+	if policy.PolicyVariables != nil && len(policy.PolicyVariables.RuleVariables) > 0 {
+		for name, ipSet := range policy.PolicyVariables.RuleVariables {
+			entry := map[string]any{
+				"name":       name,
+				"definition": llx.TArr2Raw(ipSet.Definition),
+			}
+			policyVariables = append(policyVariables, entry)
 		}
 	}
 	tags := nfTagsToMap(policyResp.Tags)
@@ -259,25 +447,93 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 		consumedStatefulDomain = int64(*policyResp.ConsumedStatefulDomainCapacity)
 	}
 
+	statelessArns := make([]string, 0, len(policy.StatelessRuleGroupReferences))
+	for _, ref := range policy.StatelessRuleGroupReferences {
+		if ref.ResourceArn != nil {
+			statelessArns = append(statelessArns, *ref.ResourceArn)
+		}
+	}
+	statefulArns := make([]string, 0, len(policy.StatefulRuleGroupReferences))
+	for _, ref := range policy.StatefulRuleGroupReferences {
+		if ref.ResourceArn != nil {
+			statefulArns = append(statefulArns, *ref.ResourceArn)
+		}
+	}
+
+	var encryptionType string
+	var encryptionKmsKeyId *string
+	if policyResp.EncryptionConfiguration != nil {
+		encryptionType = string(policyResp.EncryptionConfiguration.Type)
+		encryptionKmsKeyId = policyResp.EncryptionConfiguration.KeyId
+	}
+
 	mqlPolicy, err := CreateResource(runtime, "aws.networkfirewall.policy",
 		map[string]*llx.RawData{
-			"arn":                             llx.StringDataPtr(policyResp.FirewallPolicyArn),
-			"name":                            llx.StringDataPtr(policyResp.FirewallPolicyName),
-			"description":                     llx.StringDataPtr(policyResp.Description),
-			"region":                          llx.StringData(region),
-			"statelessDefaultActions":         llx.ArrayData(llx.TArr2Raw(policy.StatelessDefaultActions), "string"),
-			"statelessFragmentDefaultActions": llx.ArrayData(llx.TArr2Raw(policy.StatelessFragmentDefaultActions), "string"),
-			"statelessRuleGroupReferences":    llx.ArrayData(statelessRuleGroupRefs, "dict"),
-			"statefulDefaultActions":          llx.ArrayData(llx.TArr2Raw(policy.StatefulDefaultActions), "string"),
-			"statefulRuleGroupReferences":     llx.ArrayData(statefulRuleGroupRefs, "dict"),
-			"statefulEngineOptions":           llx.DictData(statefulEngineOpts),
-			"consumedStatefulDomainCapacity":  llx.IntData(consumedStatefulDomain),
-			"tags":                            llx.MapData(tags, "string"),
+			"arn":                                 llx.StringDataPtr(policyResp.FirewallPolicyArn),
+			"name":                                llx.StringDataPtr(policyResp.FirewallPolicyName),
+			"description":                         llx.StringDataPtr(policyResp.Description),
+			"region":                              llx.StringData(region),
+			"statelessDefaultActions":             llx.ArrayData(llx.TArr2Raw(policy.StatelessDefaultActions), "string"),
+			"statelessFragmentDefaultActions":     llx.ArrayData(llx.TArr2Raw(policy.StatelessFragmentDefaultActions), "string"),
+			"statelessCustomActions":              llx.ArrayData(statelessCustomActions, "dict"),
+			"statelessRuleGroupReferences":        llx.ArrayData(statelessRuleGroupRefs, "dict"),
+			"statefulDefaultActions":              llx.ArrayData(llx.TArr2Raw(policy.StatefulDefaultActions), "string"),
+			"statefulRuleGroupReferences":         llx.ArrayData(statefulRuleGroupRefs, "dict"),
+			"statefulEngineOptions":               llx.DictData(statefulEngineOpts),
+			"statefulEngineRuleOrder":             llx.StringData(statefulEngineRuleOrder),
+			"statefulEngineStreamExceptionPolicy": llx.StringData(streamExceptionPolicy),
+			"policyVariables":                     llx.ArrayData(policyVariables, "dict"),
+			"tlsInspectionConfigurationArn":       llx.StringDataPtr(policy.TLSInspectionConfigurationArn),
+			"consumedStatefulDomainCapacity":      llx.IntData(consumedStatefulDomain),
+			"encryptionType":                      llx.StringData(encryptionType),
+			"encryptionKmsKeyId":                  llx.StringDataPtr(encryptionKmsKeyId),
+			"tags":                                llx.MapData(tags, "string"),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return mqlPolicy.(*mqlAwsNetworkfirewallPolicy), nil
+	mp := mqlPolicy.(*mqlAwsNetworkfirewallPolicy)
+	mp.cacheStatelessRuleGroupArns = statelessArns
+	mp.cacheStatefulRuleGroupArns = statefulArns
+	mp.cacheKmsKeyId = encryptionKmsKeyId
+	return mp, nil
+}
+
+func (a *mqlAwsNetworkfirewallPolicy) statelessRuleGroups() ([]any, error) {
+	return ruleGroupsFromArns(a.MqlRuntime, a.cacheStatelessRuleGroupArns)
+}
+
+func (a *mqlAwsNetworkfirewallPolicy) statefulRuleGroups() ([]any, error) {
+	return ruleGroupsFromArns(a.MqlRuntime, a.cacheStatefulRuleGroupArns)
+}
+
+func (a *mqlAwsNetworkfirewallPolicy) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyId)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func ruleGroupsFromArns(runtime *plugin.Runtime, arns []string) ([]any, error) {
+	res := []any{}
+	for _, arn := range arns {
+		if arn == "" {
+			continue
+		}
+		mqlRG, err := NewResource(runtime, "aws.networkfirewall.rulegroup",
+			map[string]*llx.RawData{"arn": llx.StringData(arn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRG)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsNetworkfirewallPolicy) id() (string, error) {
@@ -335,28 +591,7 @@ func (a *mqlAwsNetworkfirewall) getRuleGroups(conn *connection.AwsConnection) []
 						}
 						return nil, err
 					}
-					resp := detail.RuleGroupResponse
-					var rules any
-					if detail.RuleGroup != nil {
-						var rulesErr error
-						rules, rulesErr = convert.JsonToDict(detail.RuleGroup)
-						if rulesErr != nil {
-							log.Warn().Err(rulesErr).Msg("failed to convert rule group")
-						}
-					}
-					tags := nfTagsToMap(resp.Tags)
-
-					mqlRuleGroup, err := CreateResource(a.MqlRuntime, "aws.networkfirewall.rulegroup",
-						map[string]*llx.RawData{
-							"arn":         llx.StringDataPtr(resp.RuleGroupArn),
-							"name":        llx.StringDataPtr(resp.RuleGroupName),
-							"description": llx.StringDataPtr(resp.Description),
-							"region":      llx.StringData(region),
-							"capacity":    llx.IntDataDefault(resp.Capacity, 0),
-							"type":        llx.StringData(string(resp.Type)),
-							"rules":       llx.DictData(rules),
-							"tags":        llx.MapData(tags, "string"),
-						})
+					mqlRuleGroup, err := networkfirewallRuleGroupToMql(a.MqlRuntime, detail.RuleGroupResponse, detail.RuleGroup, region)
 					if err != nil {
 						return nil, err
 					}
@@ -372,6 +607,157 @@ func (a *mqlAwsNetworkfirewall) getRuleGroups(conn *connection.AwsConnection) []
 
 func (a *mqlAwsNetworkfirewallRulegroup) id() (string, error) {
 	return a.Arn.Data, a.Arn.Error
+}
+
+func (a *mqlAwsNetworkfirewallRulegroup) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyId)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func initAwsNetworkfirewallRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if args["arn"] == nil {
+		return args, nil, nil
+	}
+	arnValue, ok := args["arn"].Value.(string)
+	if !ok || arnValue == "" {
+		return args, nil, nil
+	}
+	parsed, err := arn.Parse(arnValue)
+	if err != nil {
+		return args, nil, nil
+	}
+	region := parsed.Region
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.NetworkFirewall(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeRuleGroup(ctx, &networkfirewall.DescribeRuleGroupInput{
+		RuleGroupArn: &arnValue,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	mqlRG, err := networkfirewallRuleGroupToMql(runtime, resp.RuleGroupResponse, resp.RuleGroup, region)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlRG, nil
+}
+
+func networkfirewallRuleGroupToMql(runtime *plugin.Runtime, resp *nftypes.RuleGroupResponse, ruleGroup *nftypes.RuleGroup, region string) (*mqlAwsNetworkfirewallRulegroup, error) {
+	var rules any
+	var rulesString string
+	var statefulRuleOrder string
+	referenceSets := []any{}
+	ruleVariables := []any{}
+	if ruleGroup != nil {
+		var rulesErr error
+		rules, rulesErr = convert.JsonToDict(ruleGroup)
+		if rulesErr != nil {
+			log.Warn().Err(rulesErr).Msg("failed to convert rule group")
+		}
+		if ruleGroup.RulesSource != nil && ruleGroup.RulesSource.RulesString != nil {
+			rulesString = *ruleGroup.RulesSource.RulesString
+		}
+		if ruleGroup.StatefulRuleOptions != nil {
+			statefulRuleOrder = string(ruleGroup.StatefulRuleOptions.RuleOrder)
+		}
+		if ruleGroup.ReferenceSets != nil && len(ruleGroup.ReferenceSets.IPSetReferences) > 0 {
+			for name, ref := range ruleGroup.ReferenceSets.IPSetReferences {
+				entry := map[string]any{"name": name}
+				if ref.ReferenceArn != nil {
+					entry["referenceArn"] = *ref.ReferenceArn
+				}
+				referenceSets = append(referenceSets, entry)
+			}
+		}
+		if ruleGroup.RuleVariables != nil {
+			for name, ipSet := range ruleGroup.RuleVariables.IPSets {
+				ruleVariables = append(ruleVariables, map[string]any{
+					"name":       name,
+					"kind":       "ipSet",
+					"definition": llx.TArr2Raw(ipSet.Definition),
+				})
+			}
+			for name, portSet := range ruleGroup.RuleVariables.PortSets {
+				ruleVariables = append(ruleVariables, map[string]any{
+					"name":       name,
+					"kind":       "portSet",
+					"definition": llx.TArr2Raw(portSet.Definition),
+				})
+			}
+		}
+	}
+
+	sourceMetadata := []any{}
+	if resp.SourceMetadata != nil {
+		entry := map[string]any{}
+		if resp.SourceMetadata.SourceArn != nil {
+			entry["sourceArn"] = *resp.SourceMetadata.SourceArn
+		}
+		if resp.SourceMetadata.SourceUpdateToken != nil {
+			entry["sourceUpdateToken"] = *resp.SourceMetadata.SourceUpdateToken
+		}
+		if len(entry) > 0 {
+			sourceMetadata = append(sourceMetadata, entry)
+		}
+	}
+
+	var encryptionType string
+	var encryptionKmsKeyId *string
+	if resp.EncryptionConfiguration != nil {
+		encryptionType = string(resp.EncryptionConfiguration.Type)
+		encryptionKmsKeyId = resp.EncryptionConfiguration.KeyId
+	}
+
+	tags := nfTagsToMap(resp.Tags)
+
+	var consumedCapacity int64
+	if resp.ConsumedCapacity != nil {
+		consumedCapacity = int64(*resp.ConsumedCapacity)
+	}
+	var numberOfAssociations int64
+	if resp.NumberOfAssociations != nil {
+		numberOfAssociations = int64(*resp.NumberOfAssociations)
+	}
+
+	mqlRG, err := CreateResource(runtime, "aws.networkfirewall.rulegroup",
+		map[string]*llx.RawData{
+			"arn":                  llx.StringDataPtr(resp.RuleGroupArn),
+			"name":                 llx.StringDataPtr(resp.RuleGroupName),
+			"description":          llx.StringDataPtr(resp.Description),
+			"region":               llx.StringData(region),
+			"capacity":             llx.IntDataDefault(resp.Capacity, 0),
+			"consumedCapacity":     llx.IntData(consumedCapacity),
+			"numberOfAssociations": llx.IntData(numberOfAssociations),
+			"type":                 llx.StringData(string(resp.Type)),
+			"ruleGroupStatus":      llx.StringData(string(resp.RuleGroupStatus)),
+			"rules":                llx.DictData(rules),
+			"rulesString":          llx.StringData(rulesString),
+			"referenceSets":        llx.ArrayData(referenceSets, "dict"),
+			"ruleVariables":        llx.ArrayData(ruleVariables, "dict"),
+			"statefulRuleOrder":    llx.StringData(statefulRuleOrder),
+			"sourceMetadata":       llx.ArrayData(sourceMetadata, "dict"),
+			"encryptionType":       llx.StringData(encryptionType),
+			"encryptionKmsKeyId":   llx.StringDataPtr(encryptionKmsKeyId),
+			"tags":                 llx.MapData(tags, "string"),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mrg := mqlRG.(*mqlAwsNetworkfirewallRulegroup)
+	mrg.cacheKmsKeyId = encryptionKmsKeyId
+	return mrg, nil
 }
 
 func nfTagsToMap(tags []nftypes.Tag) map[string]any {

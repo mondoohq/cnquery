@@ -987,7 +987,7 @@ func init() {
 			Create: createAwsNetworkfirewallPolicy,
 		},
 		"aws.networkfirewall.rulegroup": {
-			// to override args, implement: initAwsNetworkfirewallRulegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsNetworkfirewallRulegroup,
 			Create: createAwsNetworkfirewallRulegroup,
 		},
 		"aws.efs": {
@@ -4880,6 +4880,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.firewall.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
+	"aws.networkfirewall.firewall.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
 	"aws.networkfirewall.firewall.deleteProtection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetDeleteProtection()).ToDataRes(types.Bool)
 	},
@@ -4898,8 +4901,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.firewall.subnetMappings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetSubnetMappings()).ToDataRes(types.Array(types.Dict))
 	},
-	"aws.networkfirewall.firewall.encryptionConfiguration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsNetworkfirewallFirewall).GetEncryptionConfiguration()).ToDataRes(types.Dict)
+	"aws.networkfirewall.firewall.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.firewall.encryptionKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetEncryptionKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.firewall.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.networkfirewall.firewall.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.firewall.configurationSyncStateSummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetConfigurationSyncStateSummary()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.firewall.syncStates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetSyncStates()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.firewall.loggingDestinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetLoggingDestinations()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.networkfirewall.firewall.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -4922,8 +4943,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.policy.statelessFragmentDefaultActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatelessFragmentDefaultActions()).ToDataRes(types.Array(types.String))
 	},
+	"aws.networkfirewall.policy.statelessCustomActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatelessCustomActions()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.networkfirewall.policy.statelessRuleGroupReferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatelessRuleGroupReferences()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.policy.statelessRuleGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatelessRuleGroups()).ToDataRes(types.Array(types.Resource("aws.networkfirewall.rulegroup")))
 	},
 	"aws.networkfirewall.policy.statefulDefaultActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatefulDefaultActions()).ToDataRes(types.Array(types.String))
@@ -4931,11 +4958,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.policy.statefulRuleGroupReferences": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatefulRuleGroupReferences()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.networkfirewall.policy.statefulRuleGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatefulRuleGroups()).ToDataRes(types.Array(types.Resource("aws.networkfirewall.rulegroup")))
+	},
 	"aws.networkfirewall.policy.statefulEngineOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatefulEngineOptions()).ToDataRes(types.Dict)
 	},
+	"aws.networkfirewall.policy.statefulEngineRuleOrder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatefulEngineRuleOrder()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.statefulEngineStreamExceptionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatefulEngineStreamExceptionPolicy()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.policyVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetPolicyVariables()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.policy.tlsInspectionConfigurationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetTlsInspectionConfigurationArn()).ToDataRes(types.String)
+	},
 	"aws.networkfirewall.policy.consumedStatefulDomainCapacity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetConsumedStatefulDomainCapacity()).ToDataRes(types.Int)
+	},
+	"aws.networkfirewall.policy.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.encryptionKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetEncryptionKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.networkfirewall.policy.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -4955,11 +5006,44 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.rulegroup.capacity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetCapacity()).ToDataRes(types.Int)
 	},
+	"aws.networkfirewall.rulegroup.consumedCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetConsumedCapacity()).ToDataRes(types.Int)
+	},
+	"aws.networkfirewall.rulegroup.numberOfAssociations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetNumberOfAssociations()).ToDataRes(types.Int)
+	},
 	"aws.networkfirewall.rulegroup.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetType()).ToDataRes(types.String)
 	},
+	"aws.networkfirewall.rulegroup.ruleGroupStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetRuleGroupStatus()).ToDataRes(types.String)
+	},
 	"aws.networkfirewall.rulegroup.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetRules()).ToDataRes(types.Dict)
+	},
+	"aws.networkfirewall.rulegroup.rulesString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetRulesString()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.rulegroup.referenceSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetReferenceSets()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.rulegroup.ruleVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetRuleVariables()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.rulegroup.statefulRuleOrder": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetStatefulRuleOrder()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.rulegroup.sourceMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetSourceMetadata()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.rulegroup.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.rulegroup.encryptionKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetEncryptionKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.rulegroup.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.networkfirewall.rulegroup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -27242,6 +27326,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallFirewall).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.firewall.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.firewall.deleteProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallFirewall).DeleteProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -27266,8 +27354,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallFirewall).SubnetMappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.networkfirewall.firewall.encryptionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNetworkfirewallFirewall).EncryptionConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+	"aws.networkfirewall.firewall.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.encryptionKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).EncryptionKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.configurationSyncStateSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).ConfigurationSyncStateSummary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.syncStates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).SyncStates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.loggingDestinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).LoggingDestinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.firewall.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27302,8 +27414,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallPolicy).StatelessFragmentDefaultActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.policy.statelessCustomActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatelessCustomActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.policy.statelessRuleGroupReferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallPolicy).StatelessRuleGroupReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.statelessRuleGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatelessRuleGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.policy.statefulDefaultActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27314,12 +27434,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallPolicy).StatefulRuleGroupReferences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.policy.statefulRuleGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatefulRuleGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.policy.statefulEngineOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallPolicy).StatefulEngineOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.policy.statefulEngineRuleOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatefulEngineRuleOrder, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.statefulEngineStreamExceptionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).StatefulEngineStreamExceptionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.policyVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).PolicyVariables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.tlsInspectionConfigurationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).TlsInspectionConfigurationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.policy.consumedStatefulDomainCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallPolicy).ConsumedStatefulDomainCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.encryptionKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).EncryptionKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.policy.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27350,12 +27502,56 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallRulegroup).Capacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.rulegroup.consumedCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).ConsumedCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.numberOfAssociations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).NumberOfAssociations, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.rulegroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallRulegroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.rulegroup.ruleGroupStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).RuleGroupStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.rulegroup.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallRulegroup).Rules, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.rulesString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).RulesString, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.referenceSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).ReferenceSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.ruleVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).RuleVariables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.statefulRuleOrder": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).StatefulRuleOrder, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.sourceMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).SourceMetadata, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.encryptionKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).EncryptionKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.rulegroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62292,13 +62488,20 @@ type mqlAwsNetworkfirewallFirewall struct {
 	Description                    plugin.TValue[string]
 	Region                         plugin.TValue[string]
 	Vpc                            plugin.TValue[*mqlAwsVpc]
+	Subnets                        plugin.TValue[[]any]
 	DeleteProtection               plugin.TValue[bool]
 	SubnetChangeProtection         plugin.TValue[bool]
 	FirewallPolicyChangeProtection plugin.TValue[bool]
 	FirewallPolicyArn              plugin.TValue[string]
 	Policy                         plugin.TValue[*mqlAwsNetworkfirewallPolicy]
 	SubnetMappings                 plugin.TValue[[]any]
-	EncryptionConfiguration        plugin.TValue[any]
+	EncryptionType                 plugin.TValue[string]
+	EncryptionKmsKeyId             plugin.TValue[string]
+	KmsKey                         plugin.TValue[*mqlAwsKmsKey]
+	Status                         plugin.TValue[string]
+	ConfigurationSyncStateSummary  plugin.TValue[string]
+	SyncStates                     plugin.TValue[[]any]
+	LoggingDestinations            plugin.TValue[[]any]
 	Tags                           plugin.TValue[map[string]any]
 }
 
@@ -62371,6 +62574,22 @@ func (c *mqlAwsNetworkfirewallFirewall) GetVpc() *plugin.TValue[*mqlAwsVpc] {
 	})
 }
 
+func (c *mqlAwsNetworkfirewallFirewall) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.firewall", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
 func (c *mqlAwsNetworkfirewallFirewall) GetDeleteProtection() *plugin.TValue[bool] {
 	return &c.DeleteProtection
 }
@@ -62407,8 +62626,52 @@ func (c *mqlAwsNetworkfirewallFirewall) GetSubnetMappings() *plugin.TValue[[]any
 	return &c.SubnetMappings
 }
 
-func (c *mqlAwsNetworkfirewallFirewall) GetEncryptionConfiguration() *plugin.TValue[any] {
-	return &c.EncryptionConfiguration
+func (c *mqlAwsNetworkfirewallFirewall) GetEncryptionType() *plugin.TValue[string] {
+	return &c.EncryptionType
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetEncryptionKmsKeyId() *plugin.TValue[string] {
+	return &c.EncryptionKmsKeyId
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.firewall", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetConfigurationSyncStateSummary() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ConfigurationSyncStateSummary, func() (string, error) {
+		return c.configurationSyncStateSummary()
+	})
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetSyncStates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SyncStates, func() ([]any, error) {
+		return c.syncStates()
+	})
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetLoggingDestinations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoggingDestinations, func() ([]any, error) {
+		return c.loggingDestinations()
+	})
 }
 
 func (c *mqlAwsNetworkfirewallFirewall) GetTags() *plugin.TValue[map[string]any] {
@@ -62419,19 +62682,29 @@ func (c *mqlAwsNetworkfirewallFirewall) GetTags() *plugin.TValue[map[string]any]
 type mqlAwsNetworkfirewallPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsNetworkfirewallPolicyInternal it will be used here
-	Arn                             plugin.TValue[string]
-	Name                            plugin.TValue[string]
-	Description                     plugin.TValue[string]
-	Region                          plugin.TValue[string]
-	StatelessDefaultActions         plugin.TValue[[]any]
-	StatelessFragmentDefaultActions plugin.TValue[[]any]
-	StatelessRuleGroupReferences    plugin.TValue[[]any]
-	StatefulDefaultActions          plugin.TValue[[]any]
-	StatefulRuleGroupReferences     plugin.TValue[[]any]
-	StatefulEngineOptions           plugin.TValue[any]
-	ConsumedStatefulDomainCapacity  plugin.TValue[int64]
-	Tags                            plugin.TValue[map[string]any]
+	mqlAwsNetworkfirewallPolicyInternal
+	Arn                                 plugin.TValue[string]
+	Name                                plugin.TValue[string]
+	Description                         plugin.TValue[string]
+	Region                              plugin.TValue[string]
+	StatelessDefaultActions             plugin.TValue[[]any]
+	StatelessFragmentDefaultActions     plugin.TValue[[]any]
+	StatelessCustomActions              plugin.TValue[[]any]
+	StatelessRuleGroupReferences        plugin.TValue[[]any]
+	StatelessRuleGroups                 plugin.TValue[[]any]
+	StatefulDefaultActions              plugin.TValue[[]any]
+	StatefulRuleGroupReferences         plugin.TValue[[]any]
+	StatefulRuleGroups                  plugin.TValue[[]any]
+	StatefulEngineOptions               plugin.TValue[any]
+	StatefulEngineRuleOrder             plugin.TValue[string]
+	StatefulEngineStreamExceptionPolicy plugin.TValue[string]
+	PolicyVariables                     plugin.TValue[[]any]
+	TlsInspectionConfigurationArn       plugin.TValue[string]
+	ConsumedStatefulDomainCapacity      plugin.TValue[int64]
+	EncryptionType                      plugin.TValue[string]
+	EncryptionKmsKeyId                  plugin.TValue[string]
+	KmsKey                              plugin.TValue[*mqlAwsKmsKey]
+	Tags                                plugin.TValue[map[string]any]
 }
 
 // createAwsNetworkfirewallPolicy creates a new instance of this resource
@@ -62495,8 +62768,28 @@ func (c *mqlAwsNetworkfirewallPolicy) GetStatelessFragmentDefaultActions() *plug
 	return &c.StatelessFragmentDefaultActions
 }
 
+func (c *mqlAwsNetworkfirewallPolicy) GetStatelessCustomActions() *plugin.TValue[[]any] {
+	return &c.StatelessCustomActions
+}
+
 func (c *mqlAwsNetworkfirewallPolicy) GetStatelessRuleGroupReferences() *plugin.TValue[[]any] {
 	return &c.StatelessRuleGroupReferences
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetStatelessRuleGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StatelessRuleGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.policy", c.__id, "statelessRuleGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.statelessRuleGroups()
+	})
 }
 
 func (c *mqlAwsNetworkfirewallPolicy) GetStatefulDefaultActions() *plugin.TValue[[]any] {
@@ -62507,12 +62800,68 @@ func (c *mqlAwsNetworkfirewallPolicy) GetStatefulRuleGroupReferences() *plugin.T
 	return &c.StatefulRuleGroupReferences
 }
 
+func (c *mqlAwsNetworkfirewallPolicy) GetStatefulRuleGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StatefulRuleGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.policy", c.__id, "statefulRuleGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.statefulRuleGroups()
+	})
+}
+
 func (c *mqlAwsNetworkfirewallPolicy) GetStatefulEngineOptions() *plugin.TValue[any] {
 	return &c.StatefulEngineOptions
 }
 
+func (c *mqlAwsNetworkfirewallPolicy) GetStatefulEngineRuleOrder() *plugin.TValue[string] {
+	return &c.StatefulEngineRuleOrder
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetStatefulEngineStreamExceptionPolicy() *plugin.TValue[string] {
+	return &c.StatefulEngineStreamExceptionPolicy
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetPolicyVariables() *plugin.TValue[[]any] {
+	return &c.PolicyVariables
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetTlsInspectionConfigurationArn() *plugin.TValue[string] {
+	return &c.TlsInspectionConfigurationArn
+}
+
 func (c *mqlAwsNetworkfirewallPolicy) GetConsumedStatefulDomainCapacity() *plugin.TValue[int64] {
 	return &c.ConsumedStatefulDomainCapacity
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetEncryptionType() *plugin.TValue[string] {
+	return &c.EncryptionType
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetEncryptionKmsKeyId() *plugin.TValue[string] {
+	return &c.EncryptionKmsKeyId
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.policy", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsNetworkfirewallPolicy) GetTags() *plugin.TValue[map[string]any] {
@@ -62523,15 +62872,26 @@ func (c *mqlAwsNetworkfirewallPolicy) GetTags() *plugin.TValue[map[string]any] {
 type mqlAwsNetworkfirewallRulegroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsNetworkfirewallRulegroupInternal it will be used here
-	Arn         plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
-	Region      plugin.TValue[string]
-	Capacity    plugin.TValue[int64]
-	Type        plugin.TValue[string]
-	Rules       plugin.TValue[any]
-	Tags        plugin.TValue[map[string]any]
+	mqlAwsNetworkfirewallRulegroupInternal
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Capacity             plugin.TValue[int64]
+	ConsumedCapacity     plugin.TValue[int64]
+	NumberOfAssociations plugin.TValue[int64]
+	Type                 plugin.TValue[string]
+	RuleGroupStatus      plugin.TValue[string]
+	Rules                plugin.TValue[any]
+	RulesString          plugin.TValue[string]
+	ReferenceSets        plugin.TValue[[]any]
+	RuleVariables        plugin.TValue[[]any]
+	StatefulRuleOrder    plugin.TValue[string]
+	SourceMetadata       plugin.TValue[[]any]
+	EncryptionType       plugin.TValue[string]
+	EncryptionKmsKeyId   plugin.TValue[string]
+	KmsKey               plugin.TValue[*mqlAwsKmsKey]
+	Tags                 plugin.TValue[map[string]any]
 }
 
 // createAwsNetworkfirewallRulegroup creates a new instance of this resource
@@ -62591,12 +62951,68 @@ func (c *mqlAwsNetworkfirewallRulegroup) GetCapacity() *plugin.TValue[int64] {
 	return &c.Capacity
 }
 
+func (c *mqlAwsNetworkfirewallRulegroup) GetConsumedCapacity() *plugin.TValue[int64] {
+	return &c.ConsumedCapacity
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetNumberOfAssociations() *plugin.TValue[int64] {
+	return &c.NumberOfAssociations
+}
+
 func (c *mqlAwsNetworkfirewallRulegroup) GetType() *plugin.TValue[string] {
 	return &c.Type
 }
 
+func (c *mqlAwsNetworkfirewallRulegroup) GetRuleGroupStatus() *plugin.TValue[string] {
+	return &c.RuleGroupStatus
+}
+
 func (c *mqlAwsNetworkfirewallRulegroup) GetRules() *plugin.TValue[any] {
 	return &c.Rules
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetRulesString() *plugin.TValue[string] {
+	return &c.RulesString
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetReferenceSets() *plugin.TValue[[]any] {
+	return &c.ReferenceSets
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetRuleVariables() *plugin.TValue[[]any] {
+	return &c.RuleVariables
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetStatefulRuleOrder() *plugin.TValue[string] {
+	return &c.StatefulRuleOrder
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetSourceMetadata() *plugin.TValue[[]any] {
+	return &c.SourceMetadata
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetEncryptionType() *plugin.TValue[string] {
+	return &c.EncryptionType
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetEncryptionKmsKeyId() *plugin.TValue[string] {
+	return &c.EncryptionKmsKeyId
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.rulegroup", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 func (c *mqlAwsNetworkfirewallRulegroup) GetTags() *plugin.TValue[map[string]any] {

@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.21.3",
-  "generated_at": "2026-05-09T16:54:12-07:00",
+  "generated_at": "2026-05-11T07:51:38+01:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -438,6 +438,7 @@
     "neptune-graph:ListTagsForResource",
     "network-firewall:DescribeFirewall",
     "network-firewall:DescribeFirewallPolicy",
+    "network-firewall:DescribeLoggingConfiguration",
     "network-firewall:DescribeRuleGroup",
     "network-firewall:ListFirewallPolicies",
     "network-firewall:ListFirewalls",
@@ -3389,6 +3390,12 @@
       "permission": "network-firewall:DescribeFirewallPolicy",
       "service": "network-firewall",
       "action": "DescribeFirewallPolicy",
+      "source_file": "aws_networkfirewall.go"
+    },
+    {
+      "permission": "network-firewall:DescribeLoggingConfiguration",
+      "service": "network-firewall",
+      "action": "DescribeLoggingConfiguration",
       "source_file": "aws_networkfirewall.go"
     },
     {
