@@ -74,7 +74,7 @@ func prepareAsset(a *inventory.Asset, rootAsset *inventory.Asset, runtimeLabels 
 	a.ManagedBy = rootAsset.ManagedBy
 	a.TraceId = rootAsset.TraceId
 	if platform := a.GetPlatform(); platform != nil {
-		a.KindString = platform.Kind
+		a.KindString = platform.GetKind()
 	}
 	if a.Labels == nil {
 		a.Labels = map[string]string{}

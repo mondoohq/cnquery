@@ -21,7 +21,7 @@ func HandleDelayedDiscovery(ctx context.Context, asset *inventory.Asset, runtime
 	}
 	asset = runtime.Provider.Connection.Asset
 	slices.Sort(asset.PlatformIds)
-	asset.KindString = asset.GetPlatform().Kind
+	asset.KindString = asset.GetPlatform().GetKind()
 
 	return asset, nil
 }

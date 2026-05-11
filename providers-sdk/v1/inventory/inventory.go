@@ -330,10 +330,16 @@ func (p *Platform) Merge(pf *Platform) {
 }
 
 func (p *Platform) IsFamily(family string) bool {
+	if p == nil {
+		return false
+	}
 	return slices.Contains(p.Family, family)
 }
 
 func (p *Platform) PrettyTitle() string {
+	if p == nil {
+		return ""
+	}
 	prettyTitle := p.Title
 
 	// extend the title only for OS and k8s objects
@@ -365,7 +371,7 @@ func (p *Platform) PrettyTitle() string {
 			runtimeNiceName = "vSphere Virtual Machine"
 		}
 	} else {
-		runtimeKind := p.Kind
+		runtimeKind := p.GetKind()
 		switch runtimeKind {
 		case AssetKindBaremetal:
 			runtimeNiceName = "Bare metal system"

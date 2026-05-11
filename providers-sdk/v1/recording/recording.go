@@ -460,22 +460,22 @@ func createResourceAsset(asset *inventory.Asset, id string) *Resource {
 func CreateAssetResourceArgs(asset *inventory.Asset) map[string]*llx.RawData {
 	// FIXME: remove in v12 (or later) vv
 	// we merge `asset.Labels` and `asset.Platform.Labels` for backwards compatibility
-	assetLabelsMergedV11Compat := mapx.Merge(asset.Platform.Labels, asset.Labels)
+	assetLabelsMergedV11Compat := mapx.Merge(asset.GetPlatform().GetLabels(), asset.Labels)
 	// ^^
 	args := map[string]*llx.RawData{
-		"ids":              llx.ArrayData(llx.TArr2Raw(asset.PlatformIds), types.String),
-		"platform":         llx.StringData(asset.Platform.Name),
+		"ids":              llx.ArrayData(llx.TArr2Raw(asset.GetPlatformIds()), types.String),
+		"platform":         llx.StringData(asset.GetPlatform().GetName()),
 		"name":             llx.StringData(asset.Name),
-		"kind":             llx.StringData(asset.Platform.Kind),
-		"runtime":          llx.StringData(asset.Platform.Runtime),
-		"version":          llx.StringData(asset.Platform.Version),
-		"arch":             llx.StringData(asset.Platform.Arch),
-		"title":            llx.StringData(asset.Platform.PrettyTitle()),
-		"family":           llx.ArrayData(llx.TArr2Raw(asset.Platform.Family), types.String),
-		"build":            llx.StringData(asset.Platform.Build),
+		"kind":             llx.StringData(asset.GetPlatform().GetKind()),
+		"runtime":          llx.StringData(asset.GetPlatform().GetRuntime()),
+		"version":          llx.StringData(asset.GetPlatform().GetVersion()),
+		"arch":             llx.StringData(asset.GetPlatform().GetArch()),
+		"title":            llx.StringData(asset.GetPlatform().PrettyTitle()),
+		"family":           llx.ArrayData(llx.TArr2Raw(asset.GetPlatform().GetFamily()), types.String),
+		"build":            llx.StringData(asset.GetPlatform().GetBuild()),
 		"annotations":      llx.MapData(llx.TMap2Raw(asset.Annotations), types.String),
 		"fqdn":             llx.StringData(asset.Fqdn),
-		"platformMetadata": llx.MapData(llx.TMap2Raw(asset.Platform.Metadata), types.String),
+		"platformMetadata": llx.MapData(llx.TMap2Raw(asset.GetPlatform().GetMetadata()), types.String),
 		// FIXME: remove in v12 (or later) vv
 		"labels": llx.MapData(llx.TMap2Raw(assetLabelsMergedV11Compat), types.String),
 		// ^^
