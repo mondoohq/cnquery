@@ -9,10 +9,7 @@ import (
 	"github.com/cloudflare/cloudflare-go"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-)
-
-const (
-	OPTION_API_TOKEN = "api-token"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 )
 
 type CloudflareConnection struct {
@@ -30,13 +27,16 @@ func NewCloudflareConnection(id uint32, asset *inventory.Asset, conf *inventory.
 		asset:      asset,
 	}
 
-	// initialize your connection here
-	token := conf.Options[OPTION_API_TOKEN]
-	if token == "" {
-		token = os.Getenv("CLOUDFLARE_TOKEN")
-		if token == "" {
-			return nil, errors.New("a valid Cloudflare authentication is required, pass --token '<yourtoken>', set CLOUDFLARE_TOKEN environment variable")
+	token := os.Getenv("CLOUDFLARE_TOKEN")
+	if len(conf.Credentials) > 0 {
+		for _, cred := range conf.Credentials {
+			if cred.Type == vault.CredentialType_password {
+				token = string(cred.Secret)
+			}
 		}
+	}
+	if token == "" {
+		return nil, errors.New("a valid Cloudflare token is required (set CLOUDFLARE_TOKEN or use --token)")
 	}
 
 	api, err := cloudflare.NewWithAPIToken(token)

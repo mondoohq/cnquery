@@ -5,11 +5,13 @@ package provider
 import (
 	"context"
 	"errors"
+	"os"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 	"go.mondoo.com/mql/v13/providers/cloudflare/resources"
 )
@@ -52,9 +54,15 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	conf.Discover = &inventory.Discovery{Targets: discoverTargets}
 
-	// token
-	if x, ok := flags["token"]; ok {
-		conf.Options[connection.OPTION_API_TOKEN] = string(x.GetValue())
+	token := ""
+	if x, ok := flags["token"]; ok && len(x.Value) != 0 {
+		token = string(x.Value)
+	}
+	if token == "" {
+		token = os.Getenv("CLOUDFLARE_TOKEN")
+	}
+	if token != "" {
+		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential("", token))
 	}
 
 	asset := inventory.Asset{
