@@ -278,6 +278,9 @@ func array2result(value any, typ types.Type) (*Primitive, error) {
 	}
 	res := make([]*Primitive, len(arr))
 	ct := typ.Child()
+	if ct.NotSet() {
+		ct = types.Unset
+	}
 	var err error
 	for i := range arr {
 		res[i], err = raw2primitive(arr[i], ct)
@@ -323,6 +326,16 @@ func intmap2result(value any, typ types.Type) (*Primitive, error) {
 }
 
 func map2result(value any, typ types.Type) (*Primitive, error) {
+	if len(typ) < 2 {
+		switch value.(type) {
+		case map[string]any:
+			return stringmap2result(value, types.Map(types.String, types.Unset))
+		case map[int64]any:
+			return intmap2result(value, types.Map(types.Int, types.Unset))
+		default:
+			return nil, errors.New("cannot serialize map with unknown key type: " + typ.Label())
+		}
+	}
 	switch typ.Key() {
 	case types.String:
 		return stringmap2result(value, typ)
@@ -366,6 +379,10 @@ func raw2primitive(value any, typ types.Type) (*Primitive, error) {
 		default:
 			return NilPrimitive, nil
 		}
+	}
+
+	if typ.NotSet() {
+		return nil, errors.New("cannot serialize value of unknown type")
 	}
 
 	utyp := typ.Underlying()

@@ -23,6 +23,34 @@ func TestVersion_Conversions(t *testing.T) {
 	})
 }
 
+func TestResultNotPanicsOnBareTypes(t *testing.T) {
+	t.Run("bare ArrayLike with elements", func(t *testing.T) {
+		rd := &llx.RawData{Type: types.ArrayLike, Value: []any{"hello"}}
+		require.NotPanics(t, func() { rd.Result() })
+	})
+
+	t.Run("bare ArrayLike empty", func(t *testing.T) {
+		rd := &llx.RawData{Type: types.ArrayLike, Value: []any{}}
+		require.NotPanics(t, func() { rd.Result() })
+	})
+
+	t.Run("bare MapLike with entries", func(t *testing.T) {
+		rd := &llx.RawData{Type: types.MapLike, Value: map[string]any{"k": "v"}}
+		require.NotPanics(t, func() { rd.Result() })
+	})
+
+	t.Run("Primitive round-trip with bare ArrayLike", func(t *testing.T) {
+		p := &llx.Primitive{
+			Type:  string(types.ArrayLike),
+			Array: []*llx.Primitive{llx.StringPrimitive("hello")},
+		}
+		require.NotPanics(t, func() {
+			raw := p.RawData()
+			raw.Result()
+		})
+	})
+}
+
 func TestResultRawConversions(t *testing.T) {
 	tests := []struct {
 		raw *llx.RawData
