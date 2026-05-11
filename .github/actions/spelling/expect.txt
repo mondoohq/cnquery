@@ -307,6 +307,7 @@ kts
 kty
 kubenet
 kustomization
+KVM
 labelmatchstatement
 Laravel
 lastname
@@ -487,6 +488,7 @@ rdm
 Rdp
 readlines
 recaptcha
+recordsets
 regexmatchstatement
 regexpatternsetreferencestatement
 renv
@@ -554,6 +556,7 @@ sqlimatchstatement
 sqlserver
 sriov
 srp
+SSHFP
 ssis
 sslv
 Sspr
