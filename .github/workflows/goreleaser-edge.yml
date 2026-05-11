@@ -14,7 +14,7 @@ on:
 
 concurrency:
   group: goreleaser-edge
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   REGISTRY: docker.io
