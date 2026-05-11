@@ -15993,8 +15993,10 @@ private aws.elasticbeanstalk.application @defaults("arn name") {
   versionLifecycleMaxCount int
   // Maximum number of days to retain application versions (0 if the max-age rule is not configured)
   versionLifecycleMaxAgeDays int
-  // Whether deleted application versions also have their source bundle removed from Amazon S3
-  versionLifecycleDeleteSourceFromS3 bool
+  // Whether deleted application versions matched by the max-count rule have their source bundle removed from Amazon S3
+  versionLifecycleMaxCountDeleteSourceFromS3 bool
+  // Whether deleted application versions matched by the max-age rule have their source bundle removed from Amazon S3
+  versionLifecycleMaxAgeDeleteSourceFromS3 bool
   // ARN of the IAM service role Elastic Beanstalk assumes to apply lifecycle settings
   versionLifecycleServiceRoleArn string
   // IAM service role Elastic Beanstalk assumes to apply lifecycle settings
@@ -16081,12 +16083,8 @@ private aws.elasticbeanstalk.environment @defaults("arn name status") {
   operationsIamRole() aws.iam.role
   // Whether an in-progress environment configuration update or version deployment can be cancelled
   abortableOperationInProgress bool
-  // Name of the load balancer associated with this environment
-  loadBalancerName string
-  // Domain name of the load balancer associated with this environment
-  loadBalancerDomain string
-  // Listeners configured on the load balancer associated with this environment
-  loadBalancerListeners []dict
+  // Classic load balancer associated with this environment (Beanstalk only exposes the Classic ELB; ALB/NLB environments do not populate this field)
+  loadBalancer() aws.elb.loadbalancer
   // Links to other environments in the same group declared in the environment manifest
   environmentLinks []dict
   // Live summary of the AWS resources (instances, load balancers, Auto Scaling groups, launch configurations, launch templates, triggers, queues) backing this environment

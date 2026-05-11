@@ -5,7 +5,7 @@ package resources
 
 import (
 	"context"
-	"sync"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	ebtypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
@@ -19,9 +19,7 @@ import (
 )
 
 type mqlAwsElasticbeanstalkEnvironmentInternal struct {
-	resourcesFetched      bool
-	cachedResourcesResult any
-	resourcesLock         sync.Mutex
+	cacheLoadBalancerName string
 }
 
 func (a *mqlAwsElasticbeanstalk) id() (string, error) {
@@ -71,24 +69,25 @@ func (a *mqlAwsElasticbeanstalk) getApplications(conn *connection.AwsConnection)
 			}
 
 			for _, app := range resp.Applications {
-				lifecycleEnabled, maxCount, maxAgeDays, deleteFromS3, serviceRoleArn := flattenApplicationLifecycle(app.ResourceLifecycleConfig)
+				lifecycleEnabled, maxCount, maxAgeDays, maxCountDeleteFromS3, maxAgeDeleteFromS3, serviceRoleArn := flattenApplicationLifecycle(app.ResourceLifecycleConfig)
 
 				mqlApp, err := CreateResource(a.MqlRuntime, "aws.elasticbeanstalk.application",
 					map[string]*llx.RawData{
-						"__id":                               llx.StringDataPtr(app.ApplicationArn),
-						"arn":                                llx.StringDataPtr(app.ApplicationArn),
-						"name":                               llx.StringDataPtr(app.ApplicationName),
-						"region":                             llx.StringData(region),
-						"description":                        llx.StringDataPtr(app.Description),
-						"createdAt":                          llx.TimeDataPtr(app.DateCreated),
-						"updatedAt":                          llx.TimeDataPtr(app.DateUpdated),
-						"configurationTemplates":             llx.ArrayData(convert.SliceAnyToInterface(app.ConfigurationTemplates), types.String),
-						"versions":                           llx.ArrayData(convert.SliceAnyToInterface(app.Versions), types.String),
-						"versionLifecycleEnabled":            llx.BoolData(lifecycleEnabled),
-						"versionLifecycleMaxCount":           llx.IntData(int64(maxCount)),
-						"versionLifecycleMaxAgeDays":         llx.IntData(int64(maxAgeDays)),
-						"versionLifecycleDeleteSourceFromS3": llx.BoolData(deleteFromS3),
-						"versionLifecycleServiceRoleArn":     llx.StringData(serviceRoleArn),
+						"__id":                                       llx.StringDataPtr(app.ApplicationArn),
+						"arn":                                        llx.StringDataPtr(app.ApplicationArn),
+						"name":                                       llx.StringDataPtr(app.ApplicationName),
+						"region":                                     llx.StringData(region),
+						"description":                                llx.StringDataPtr(app.Description),
+						"createdAt":                                  llx.TimeDataPtr(app.DateCreated),
+						"updatedAt":                                  llx.TimeDataPtr(app.DateUpdated),
+						"configurationTemplates":                     llx.ArrayData(convert.SliceAnyToInterface(app.ConfigurationTemplates), types.String),
+						"versions":                                   llx.ArrayData(convert.SliceAnyToInterface(app.Versions), types.String),
+						"versionLifecycleEnabled":                    llx.BoolData(lifecycleEnabled),
+						"versionLifecycleMaxCount":                   llx.IntData(int64(maxCount)),
+						"versionLifecycleMaxAgeDays":                 llx.IntData(int64(maxAgeDays)),
+						"versionLifecycleMaxCountDeleteSourceFromS3": llx.BoolData(maxCountDeleteFromS3),
+						"versionLifecycleMaxAgeDeleteSourceFromS3":   llx.BoolData(maxAgeDeleteFromS3),
+						"versionLifecycleServiceRoleArn":             llx.StringData(serviceRoleArn),
 					})
 				if err != nil {
 					return nil, err
@@ -190,24 +189,9 @@ func (a *mqlAwsElasticbeanstalk) getEnvironments(conn *connection.AwsConnection)
 						}
 					}
 
-					var (
-						lbName, lbDomain string
-						lbListeners      []any
-					)
-					if env.Resources != nil && env.Resources.LoadBalancer != nil {
-						lb := env.Resources.LoadBalancer
-						if lb.LoadBalancerName != nil {
-							lbName = *lb.LoadBalancerName
-						}
-						if lb.Domain != nil {
-							lbDomain = *lb.Domain
-						}
-						if len(lb.Listeners) > 0 {
-							lbListeners, err = convert.JsonToDictSlice(lb.Listeners)
-							if err != nil {
-								return nil, err
-							}
-						}
+					var lbName string
+					if env.Resources != nil && env.Resources.LoadBalancer != nil && env.Resources.LoadBalancer.LoadBalancerName != nil {
+						lbName = *env.Resources.LoadBalancer.LoadBalancerName
 					}
 
 					var envLinks []any
@@ -245,9 +229,6 @@ func (a *mqlAwsElasticbeanstalk) getEnvironments(conn *connection.AwsConnection)
 							"templateName":                 llx.StringDataPtr(env.TemplateName),
 							"operationsRoleArn":            llx.StringData(operationsRoleArn),
 							"abortableOperationInProgress": llx.BoolDataPtr(env.AbortableOperationInProgress),
-							"loadBalancerName":             llx.StringData(lbName),
-							"loadBalancerDomain":           llx.StringData(lbDomain),
-							"loadBalancerListeners":        llx.ArrayData(lbListeners, types.Dict),
 							"environmentLinks":             llx.ArrayData(envLinks, types.Dict),
 							"createdAt":                    llx.TimeDataPtr(env.DateCreated),
 							"updatedAt":                    llx.TimeDataPtr(env.DateUpdated),
@@ -256,6 +237,7 @@ func (a *mqlAwsElasticbeanstalk) getEnvironments(conn *connection.AwsConnection)
 					if err != nil {
 						return nil, err
 					}
+					mqlEnv.(*mqlAwsElasticbeanstalkEnvironment).cacheLoadBalancerName = lbName
 					res = append(res, mqlEnv)
 				}
 
@@ -299,16 +281,16 @@ func (a *mqlAwsElasticbeanstalkEnvironment) tags() (map[string]any, error) {
 
 // flattenApplicationLifecycle converts the SDK's ApplicationResourceLifecycleConfig
 // into the scalar fields exposed on aws.elasticbeanstalk.application.
-func flattenApplicationLifecycle(cfg *ebtypes.ApplicationResourceLifecycleConfig) (enabled bool, maxCount, maxAgeDays int, deleteSourceFromS3 bool, serviceRoleArn string) {
+func flattenApplicationLifecycle(cfg *ebtypes.ApplicationResourceLifecycleConfig) (enabled bool, maxCount, maxAgeDays int, maxCountDeleteSourceFromS3, maxAgeDeleteSourceFromS3 bool, serviceRoleArn string) {
 	if cfg == nil {
-		return false, 0, 0, false, ""
+		return
 	}
 	if cfg.ServiceRole != nil {
 		serviceRoleArn = *cfg.ServiceRole
 	}
 	vlc := cfg.VersionLifecycleConfig
 	if vlc == nil {
-		return false, 0, 0, false, serviceRoleArn
+		return
 	}
 	if rule := vlc.MaxCountRule; rule != nil {
 		if rule.Enabled != nil && *rule.Enabled {
@@ -318,7 +300,7 @@ func flattenApplicationLifecycle(cfg *ebtypes.ApplicationResourceLifecycleConfig
 			maxCount = int(*rule.MaxCount)
 		}
 		if rule.DeleteSourceFromS3 != nil && *rule.DeleteSourceFromS3 {
-			deleteSourceFromS3 = true
+			maxCountDeleteSourceFromS3 = true
 		}
 	}
 	if rule := vlc.MaxAgeRule; rule != nil {
@@ -329,10 +311,10 @@ func flattenApplicationLifecycle(cfg *ebtypes.ApplicationResourceLifecycleConfig
 			maxAgeDays = int(*rule.MaxAgeInDays)
 		}
 		if rule.DeleteSourceFromS3 != nil && *rule.DeleteSourceFromS3 {
-			deleteSourceFromS3 = true
+			maxAgeDeleteSourceFromS3 = true
 		}
 	}
-	return enabled, maxCount, maxAgeDays, deleteSourceFromS3, serviceRoleArn
+	return
 }
 
 func (a *mqlAwsElasticbeanstalkApplication) versionLifecycleServiceIamRole() (*mqlAwsIamRole, error) {
@@ -471,15 +453,6 @@ func (a *mqlAwsElasticbeanstalkEnvironment) operationsIamRole() (*mqlAwsIamRole,
 }
 
 func (a *mqlAwsElasticbeanstalkEnvironment) resourcesSummary() (any, error) {
-	if a.resourcesFetched {
-		return a.cachedResourcesResult, nil
-	}
-	a.resourcesLock.Lock()
-	defer a.resourcesLock.Unlock()
-	if a.resourcesFetched {
-		return a.cachedResourcesResult, nil
-	}
-
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	region := a.Region.Data
 	envId := a.EnvironmentId.Data
@@ -492,18 +465,25 @@ func (a *mqlAwsElasticbeanstalkEnvironment) resourcesSummary() (any, error) {
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
-			a.resourcesFetched = true
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	dict, err := convert.JsonToDict(resp.EnvironmentResources)
+	return convert.JsonToDict(resp.EnvironmentResources)
+}
+
+func (a *mqlAwsElasticbeanstalkEnvironment) loadBalancer() (*mqlAwsElbLoadbalancer, error) {
+	if a.cacheLoadBalancerName == "" {
+		a.LoadBalancer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	arn := fmt.Sprintf(elbv1LbArnPattern, a.Region.Data, conn.AccountId(), a.cacheLoadBalancerName)
+	res, err := NewResource(a.MqlRuntime, "aws.elb.loadbalancer",
+		map[string]*llx.RawData{"arn": llx.StringData(arn)})
 	if err != nil {
 		return nil, err
 	}
-
-	a.resourcesFetched = true
-	a.cachedResourcesResult = dict
-	return dict, nil
+	return res.(*mqlAwsElbLoadbalancer), nil
 }

@@ -3227,10 +3227,11 @@ aws.elasticbeanstalk.application.name 11.16.1
 aws.elasticbeanstalk.application.region 11.16.1
 aws.elasticbeanstalk.application.tags 11.16.1
 aws.elasticbeanstalk.application.updatedAt 11.16.1
-aws.elasticbeanstalk.application.versionLifecycleDeleteSourceFromS3 13.21.4
 aws.elasticbeanstalk.application.versionLifecycleEnabled 13.21.4
 aws.elasticbeanstalk.application.versionLifecycleMaxAgeDays 13.21.4
+aws.elasticbeanstalk.application.versionLifecycleMaxAgeDeleteSourceFromS3 13.21.4
 aws.elasticbeanstalk.application.versionLifecycleMaxCount 13.21.4
+aws.elasticbeanstalk.application.versionLifecycleMaxCountDeleteSourceFromS3 13.21.4
 aws.elasticbeanstalk.application.versionLifecycleServiceIamRole 13.21.4
 aws.elasticbeanstalk.application.versionLifecycleServiceRoleArn 13.21.4
 aws.elasticbeanstalk.application.versions 11.16.1
@@ -3263,9 +3264,7 @@ aws.elasticbeanstalk.environment.environmentId 11.16.1
 aws.elasticbeanstalk.environment.environmentLinks 13.21.4
 aws.elasticbeanstalk.environment.health 11.16.1
 aws.elasticbeanstalk.environment.healthStatus 11.16.1
-aws.elasticbeanstalk.environment.loadBalancerDomain 13.21.4
-aws.elasticbeanstalk.environment.loadBalancerListeners 13.21.4
-aws.elasticbeanstalk.environment.loadBalancerName 13.21.4
+aws.elasticbeanstalk.environment.loadBalancer 13.21.4
 aws.elasticbeanstalk.environment.name 11.16.1
 aws.elasticbeanstalk.environment.operationsIamRole 13.21.4
 aws.elasticbeanstalk.environment.operationsRoleArn 13.21.4
