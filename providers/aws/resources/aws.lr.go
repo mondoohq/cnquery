@@ -131664,7 +131664,7 @@ func (c *mqlAwsElasticbeanstalk) GetEnvironments() *plugin.TValue[[]any] {
 type mqlAwsElasticbeanstalkApplication struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsElasticbeanstalkApplicationInternal
+	// optional: if you define mqlAwsElasticbeanstalkApplicationInternal it will be used here
 	Arn                                plugin.TValue[string]
 	Name                               plugin.TValue[string]
 	Region                             plugin.TValue[string]

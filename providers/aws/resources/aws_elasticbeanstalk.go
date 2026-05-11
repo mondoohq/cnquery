@@ -18,13 +18,7 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
-type mqlAwsElasticbeanstalkApplicationInternal struct {
-	cacheServiceRoleArn *string
-}
-
 type mqlAwsElasticbeanstalkEnvironmentInternal struct {
-	cacheOperationsRoleArn *string
-
 	resourcesFetched      bool
 	cachedResourcesResult any
 	resourcesLock         sync.Mutex
@@ -98,11 +92,6 @@ func (a *mqlAwsElasticbeanstalk) getApplications(conn *connection.AwsConnection)
 					})
 				if err != nil {
 					return nil, err
-				}
-				mqlAppRes := mqlApp.(*mqlAwsElasticbeanstalkApplication)
-				if serviceRoleArn != "" {
-					arn := serviceRoleArn
-					mqlAppRes.cacheServiceRoleArn = &arn
 				}
 				res = append(res, mqlApp)
 			}
@@ -234,11 +223,6 @@ func (a *mqlAwsElasticbeanstalk) getEnvironments(conn *connection.AwsConnection)
 						operationsRoleArn = *env.OperationsRole
 					}
 
-					var abortable bool
-					if env.AbortableOperationInProgress != nil {
-						abortable = *env.AbortableOperationInProgress
-					}
-
 					mqlEnv, err := CreateResource(a.MqlRuntime, "aws.elasticbeanstalk.environment",
 						map[string]*llx.RawData{
 							"__id":                         llx.StringDataPtr(env.EnvironmentArn),
@@ -260,7 +244,7 @@ func (a *mqlAwsElasticbeanstalk) getEnvironments(conn *connection.AwsConnection)
 							"tierType":                     llx.StringData(tierType),
 							"templateName":                 llx.StringDataPtr(env.TemplateName),
 							"operationsRoleArn":            llx.StringData(operationsRoleArn),
-							"abortableOperationInProgress": llx.BoolData(abortable),
+							"abortableOperationInProgress": llx.BoolDataPtr(env.AbortableOperationInProgress),
 							"loadBalancerName":             llx.StringData(lbName),
 							"loadBalancerDomain":           llx.StringData(lbDomain),
 							"loadBalancerListeners":        llx.ArrayData(lbListeners, types.Dict),
@@ -271,11 +255,6 @@ func (a *mqlAwsElasticbeanstalk) getEnvironments(conn *connection.AwsConnection)
 						})
 					if err != nil {
 						return nil, err
-					}
-					mqlEnvRes := mqlEnv.(*mqlAwsElasticbeanstalkEnvironment)
-					if operationsRoleArn != "" {
-						arn := operationsRoleArn
-						mqlEnvRes.cacheOperationsRoleArn = &arn
 					}
 					res = append(res, mqlEnv)
 				}
