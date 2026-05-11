@@ -41,6 +41,25 @@ type KernelVersion struct {
 	Running bool   `json:"running"`
 }
 
+// rpmKernelMatchesRunning reports whether the given RPM kernel package
+// describes the currently running kernel, identified by the value
+// /proc/version reports (e.g. "6.1.170-210.320.amzn2023.x86_64").
+//
+// The package version string may carry an RPM epoch prefix like
+// "1:6.1.170-210.320.amzn2023" — see rpm_packages.go where epoch is
+// concatenated into the version when it is non-zero / not "(none)". The
+// running-kernel string from /proc/version never carries the epoch, so a
+// plain string-equality check between "<version>.<arch>" and that string
+// drops the running flag for every package whose epoch is set. AL2023's
+// `kernel` package has epoch 1, so the bug is reproducible there for every
+// installed kernel image. See customer-issues #178.
+func rpmKernelMatchesRunning(pkgVersion, pkgArch, runningKernelVersion string) bool {
+	if idx := strings.IndexByte(pkgVersion, ':'); idx >= 0 {
+		pkgVersion = pkgVersion[idx+1:]
+	}
+	return pkgVersion+"."+pkgArch == runningKernelVersion
+}
+
 func (k *mqlKernel) installed() ([]any, error) {
 	res := []KernelVersion{}
 
@@ -113,18 +132,10 @@ func (k *mqlKernel) installed() ([]any, error) {
 			filterKernel = func(pkg *mqlPackage) {
 				if pkg.Name.Data == "kernel" || pkg.Name.Data == "kernel-uek" {
 					version := pkg.Version.Data
-					arch := pkg.Arch.Data
-
-					kernelName := version + "." + arch
-					running := false
-					if kernelName == runningKernelVersion {
-						running = true
-					}
-
 					res = append(res, KernelVersion{
 						Name:    pkg.Name.Data,
 						Version: version,
-						Running: running,
+						Running: rpmKernelMatchesRunning(version, pkg.Arch.Data, runningKernelVersion),
 					})
 				}
 			}
@@ -145,18 +156,10 @@ func (k *mqlKernel) installed() ([]any, error) {
 			filterKernel = func(pkg *mqlPackage) {
 				if pkg.Name.Data == "kernel" {
 					version := pkg.Version.Data
-					arch := pkg.Arch.Data
-
-					kernelName := version + "." + arch
-					running := false
-					if kernelName == runningKernelVersion {
-						running = true
-					}
-
 					res = append(res, KernelVersion{
 						Name:    pkg.Name.Data,
 						Version: version,
-						Running: running,
+						Running: rpmKernelMatchesRunning(version, pkg.Arch.Data, runningKernelVersion),
 					})
 				}
 			}
