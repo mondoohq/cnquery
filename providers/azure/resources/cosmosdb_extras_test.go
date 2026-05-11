@@ -4,14 +4,44 @@
 package resources
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	cosmos "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 	"github.com/stretchr/testify/assert"
 )
+
+// newAzureResponseError builds an *azcore.ResponseError populated as the
+// azcore runtime would after parsing a real ARM JSON error body. The
+// RawResponse is fully populated (request, URL, body) so rerr.Error()
+// renders the same multi-line message that real callers see, including
+// the JSON body — that is what the substring match in
+// isCosmosServerlessThroughputError reads.
+func newAzureResponseError(statusCode int, errorCode, message string) *azcore.ResponseError {
+	body := fmt.Sprintf(`{"code":%q,"message":%q}`, errorCode, message)
+	reqURL, _ := url.Parse("https://example.documents.azure.com/dbs/x/throughputSettings/default")
+	resp := &http.Response{
+		StatusCode: statusCode,
+		Status:     fmt.Sprintf("%d %s", statusCode, http.StatusText(statusCode)),
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
+		Body:       io.NopCloser(bytes.NewBufferString(body)),
+		Request: &http.Request{
+			Method: http.MethodGet,
+			URL:    reqURL,
+		},
+	}
+	return &azcore.ResponseError{
+		ErrorCode:   errorCode,
+		StatusCode:  statusCode,
+		RawResponse: resp,
+	}
+}
 
 func TestCosmosAccountResourceGroup(t *testing.T) {
 	tests := []struct {
@@ -107,6 +137,54 @@ func TestIsCosmosNotFoundError(t *testing.T) {
 	})
 	t.Run("403 not treated as not-found", func(t *testing.T) {
 		assert.False(t, isCosmosNotFoundError(&azcore.ResponseError{StatusCode: http.StatusForbidden}))
+	})
+}
+
+func TestIsCosmosServerlessThroughputError(t *testing.T) {
+	const serverlessMsg = "Reading or replacing offers is not supported for serverless accounts."
+
+	t.Run("nil error", func(t *testing.T) {
+		assert.False(t, isCosmosServerlessThroughputError(nil))
+	})
+	t.Run("non-azcore error", func(t *testing.T) {
+		assert.False(t, isCosmosServerlessThroughputError(errors.New("boom")))
+	})
+	t.Run("404 not treated as serverless", func(t *testing.T) {
+		err := newAzureResponseError(http.StatusNotFound, "NotFound", serverlessMsg)
+		assert.False(t, isCosmosServerlessThroughputError(err))
+	})
+	t.Run("400 with serverless message", func(t *testing.T) {
+		err := newAzureResponseError(http.StatusBadRequest, "BadRequest", serverlessMsg)
+		assert.True(t, isCosmosServerlessThroughputError(err))
+	})
+	t.Run("400 with empty ErrorCode still matches via body", func(t *testing.T) {
+		// Older SDK responses may not surface ErrorCode.
+		err := newAzureResponseError(http.StatusBadRequest, "", serverlessMsg)
+		assert.True(t, isCosmosServerlessThroughputError(err))
+	})
+	t.Run("400 with unrelated BadRequest message is not treated as serverless", func(t *testing.T) {
+		err := newAzureResponseError(http.StatusBadRequest, "BadRequest", "Invalid throughput value")
+		assert.False(t, isCosmosServerlessThroughputError(err))
+	})
+	t.Run("400 with specific ErrorCode unrelated to BadRequest is rejected", func(t *testing.T) {
+		err := newAzureResponseError(http.StatusBadRequest, "InvalidInput", serverlessMsg)
+		assert.False(t, isCosmosServerlessThroughputError(err))
+	})
+	t.Run("error wrapping does not pick up outer wrapper text", func(t *testing.T) {
+		// An outer wrapper that *does not* mention "serverless" must still
+		// match because we look at the unwrapped rerr.Error(), not err.Error().
+		rerr := newAzureResponseError(http.StatusBadRequest, "BadRequest", serverlessMsg)
+		wrapped := fmt.Errorf("failed to fetch Cosmos DB SQL database throughput: %w", rerr)
+		assert.True(t, isCosmosServerlessThroughputError(wrapped))
+	})
+	t.Run("wrapper substring alone is not enough", func(t *testing.T) {
+		// If the inner ResponseError body does not contain "serverless" but
+		// the outer wrapper happens to, we must reject — otherwise the check
+		// silently passes through any 400 simply because a caller mentioned
+		// the word in a wrapping message.
+		rerr := newAzureResponseError(http.StatusBadRequest, "BadRequest", "Invalid throughput value")
+		wrapped := fmt.Errorf("serverless probe failed: %w", rerr)
+		assert.False(t, isCosmosServerlessThroughputError(wrapped))
 	})
 }
 

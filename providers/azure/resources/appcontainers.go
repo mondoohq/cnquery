@@ -852,9 +852,12 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) authConfigs() ([]a
 		if err != nil {
 			// Container apps without auth configured surface as 404
 			// AuthConfigNotFound from the list endpoint, not as an empty
-			// page. Treat that as "no auth configs" rather than an error.
+			// page. Match the ErrorCode specifically so a 404 from a
+			// different cause (e.g. the container app was deleted
+			// mid-query, or a future API change) still surfaces as a
+			// real error.
 			var rerr *azcore.ResponseError
-			if errors.As(err, &rerr) && rerr.StatusCode == http.StatusNotFound {
+			if errors.As(err, &rerr) && rerr.StatusCode == http.StatusNotFound && rerr.ErrorCode == "AuthConfigNotFound" {
 				a.authConfigsCache = res
 				a.authConfigsFetched.Store(true)
 				return res, nil
