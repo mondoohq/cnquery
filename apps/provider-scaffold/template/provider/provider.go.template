@@ -125,10 +125,11 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.{{ .CamelcaseP
 	asset.Name = conn.Conf.Host
 
 	asset.Platform = &inventory.Platform{
-		Name:   "{{ .ProviderID }}",
-		Family: []string{"{{ .ProviderID }}"},
-		Kind:   "api",
-		Title:  "{{ .ProviderName }}",
+		Name:    "{{ .ProviderID }}",
+		Family:  []string{"{{ .ProviderID }}"},
+		Kind:    "api",
+		Runtime: "{{ .ProviderID }}",
+		Title:   "{{ .ProviderName }}",
 	}
 
 	// TODO: Add platform IDs
