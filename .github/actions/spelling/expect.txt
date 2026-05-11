@@ -170,6 +170,7 @@ ekm
 eku
 elbv
 embeddings
+encryptor
 endpointslice
 eni
 ENIId
@@ -494,6 +495,7 @@ regexpatternsetreferencestatement
 renv
 replicators
 reshard
+RESKEY
 resourcegroup
 resourcepolicy
 resourcequota
@@ -672,6 +674,7 @@ writeback
 Xff
 xlarge
 xssmatchstatement
+xts
 xxxxx
 yara
 zerolog
