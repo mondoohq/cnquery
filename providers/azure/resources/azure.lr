@@ -3380,7 +3380,7 @@ private azure.subscription.webService.certificate @defaults("id name") {
 // status, the identity assignment used for Key Vault references, and
 // counts for private endpoint connections, user-provided function
 // apps, linked backends, and database connections.
-azure.subscription.webService.staticSite @defaults("name location skuName defaultHostname") {
+private azure.subscription.webService.staticSite @defaults("name defaultHostname") {
   // Resource ID of the static web app
   id string
   // Static web app name
