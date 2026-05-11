@@ -6,11 +6,13 @@ package resources
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	apps "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3"
 	"go.mondoo.com/mql/v13/llx"
@@ -848,6 +850,15 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) authConfigs() ([]a
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			// Container apps without auth configured surface as 404
+			// AuthConfigNotFound from the list endpoint, not as an empty
+			// page. Treat that as "no auth configs" rather than an error.
+			var rerr *azcore.ResponseError
+			if errors.As(err, &rerr) && rerr.StatusCode == http.StatusNotFound {
+				a.authConfigsCache = res
+				a.authConfigsFetched.Store(true)
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, entry := range page.Value {
