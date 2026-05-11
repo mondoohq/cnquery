@@ -59,6 +59,8 @@ const (
 	ResourceOpenstackDnsRecordset           string = "openstack.dns.recordset"
 	ResourceOpenstackComputeHypervisor      string = "openstack.compute.hypervisor"
 	ResourceOpenstackComputeService         string = "openstack.compute.service"
+	ResourceOpenstackBlockstorageVolumeType string = "openstack.blockstorage.volumeType"
+	ResourceOpenstackBlockstorageBackup     string = "openstack.blockstorage.backup"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -237,6 +239,14 @@ func init() {
 			Init:   initOpenstackComputeService,
 			Create: createOpenstackComputeService,
 		},
+		"openstack.blockstorage.volumeType": {
+			Init:   initOpenstackBlockstorageVolumeType,
+			Create: createOpenstackBlockstorageVolumeType,
+		},
+		"openstack.blockstorage.backup": {
+			Init:   initOpenstackBlockstorageBackup,
+			Create: createOpenstackBlockstorageBackup,
+		},
 	}
 }
 
@@ -373,6 +383,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.snapshots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetSnapshots()).ToDataRes(types.Array(types.Resource("openstack.blockstorage.snapshot")))
+	},
+	"openstack.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetBackups()).ToDataRes(types.Array(types.Resource("openstack.blockstorage.backup")))
+	},
+	"openstack.volumeTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetVolumeTypes()).ToDataRes(types.Array(types.Resource("openstack.blockstorage.volumeType")))
 	},
 	"openstack.images": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetImages()).ToDataRes(types.Array(types.Resource("openstack.image")))
@@ -1001,8 +1017,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.blockstorage.volume.multiAttach": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBlockstorageVolume).GetMultiAttach()).ToDataRes(types.Bool)
 	},
-	"openstack.blockstorage.volume.volumeType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOpenstackBlockstorageVolume).GetVolumeType()).ToDataRes(types.String)
+	"openstack.blockstorage.volume.volumeTypeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolume).GetVolumeTypeName()).ToDataRes(types.String)
 	},
 	"openstack.blockstorage.volume.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBlockstorageVolume).GetAvailabilityZone()).ToDataRes(types.String)
@@ -1037,8 +1053,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.blockstorage.volume.sourceSnapshot": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBlockstorageVolume).GetSourceSnapshot()).ToDataRes(types.Resource("openstack.blockstorage.snapshot"))
 	},
+	"openstack.blockstorage.volume.restoredFromBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolume).GetRestoredFromBackup()).ToDataRes(types.Resource("openstack.blockstorage.backup"))
+	},
 	"openstack.blockstorage.volume.servers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBlockstorageVolume).GetServers()).ToDataRes(types.Array(types.Resource("openstack.compute.server")))
+	},
+	"openstack.blockstorage.volume.volumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolume).GetVolumeType()).ToDataRes(types.Resource("openstack.blockstorage.volumeType"))
+	},
+	"openstack.blockstorage.volume.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolume).GetBackups()).ToDataRes(types.Array(types.Resource("openstack.blockstorage.backup")))
 	},
 	"openstack.blockstorage.snapshot.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBlockstorageSnapshot).GetId()).ToDataRes(types.String)
@@ -2120,6 +2145,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.compute.service.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackComputeService).GetUpdatedAt()).ToDataRes(types.Time)
 	},
+	"openstack.blockstorage.volumeType.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetId()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.volumeType.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetName()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.volumeType.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.volumeType.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"openstack.blockstorage.volumeType.extraSpecs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetExtraSpecs()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"openstack.blockstorage.volumeType.encryptionProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetEncryptionProvider()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.volumeType.encryptionCipher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetEncryptionCipher()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.volumeType.encryptionKeySize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetEncryptionKeySize()).ToDataRes(types.Int)
+	},
+	"openstack.blockstorage.volumeType.encryptionControlLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetEncryptionControlLocation()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.volumeType.encryptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetEncryptionId()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.volumeType.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageVolumeType).GetVolumes()).ToDataRes(types.Array(types.Resource("openstack.blockstorage.volume")))
+	},
+	"openstack.blockstorage.backup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetId()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.backup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetName()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.backup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.backup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetStatus()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.backup.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetSize()).ToDataRes(types.Int)
+	},
+	"openstack.blockstorage.backup.objectCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetObjectCount()).ToDataRes(types.Int)
+	},
+	"openstack.blockstorage.backup.container": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetContainer()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.backup.hasDependentBackups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetHasDependentBackups()).ToDataRes(types.Bool)
+	},
+	"openstack.blockstorage.backup.isIncremental": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetIsIncremental()).ToDataRes(types.Bool)
+	},
+	"openstack.blockstorage.backup.failReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetFailReason()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.backup.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.backup.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"openstack.blockstorage.backup.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.backup.dataTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetDataTimestamp()).ToDataRes(types.Time)
+	},
+	"openstack.blockstorage.backup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.blockstorage.backup.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.blockstorage.backup.volume": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetVolume()).ToDataRes(types.Resource("openstack.blockstorage.volume"))
+	},
+	"openstack.blockstorage.backup.sourceSnapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetSourceSnapshot()).ToDataRes(types.Resource("openstack.blockstorage.snapshot"))
+	},
+	"openstack.blockstorage.backup.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageBackup).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2222,6 +2337,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.volumeTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).VolumeTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3128,8 +3251,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackBlockstorageVolume).MultiAttach, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"openstack.blockstorage.volume.volumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOpenstackBlockstorageVolume).VolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"openstack.blockstorage.volume.volumeTypeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolume).VolumeTypeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openstack.blockstorage.volume.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3176,8 +3299,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackBlockstorageVolume).SourceSnapshot, ok = plugin.RawToTValue[*mqlOpenstackBlockstorageSnapshot](v.Value, v.Error)
 		return
 	},
+	"openstack.blockstorage.volume.restoredFromBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolume).RestoredFromBackup, ok = plugin.RawToTValue[*mqlOpenstackBlockstorageBackup](v.Value, v.Error)
+		return
+	},
 	"openstack.blockstorage.volume.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackBlockstorageVolume).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volume.volumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolume).VolumeType, ok = plugin.RawToTValue[*mqlOpenstackBlockstorageVolumeType](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volume.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolume).Backups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.blockstorage.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4720,6 +4855,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackComputeService).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"openstack.blockstorage.volumeType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.blockstorage.volumeType.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volumeType.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volumeType.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volumeType.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volumeType.extraSpecs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).ExtraSpecs, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volumeType.encryptionProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).EncryptionProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volumeType.encryptionCipher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).EncryptionCipher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volumeType.encryptionKeySize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).EncryptionKeySize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volumeType.encryptionControlLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).EncryptionControlLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volumeType.encryptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).EncryptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.volumeType.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageVolumeType).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.blockstorage.backup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.objectCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).ObjectCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.container": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).Container, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.hasDependentBackups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).HasDependentBackups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.isIncremental": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).IsIncremental, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.failReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).FailReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.dataTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).DataTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.volume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).Volume, ok = plugin.RawToTValue[*mqlOpenstackBlockstorageVolume](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.sourceSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).SourceSnapshot, ok = plugin.RawToTValue[*mqlOpenstackBlockstorageSnapshot](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.backup.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageBackup).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4771,6 +5034,8 @@ type mqlOpenstack struct {
 	SecurityGroups          plugin.TValue[[]any]
 	Volumes                 plugin.TValue[[]any]
 	Snapshots               plugin.TValue[[]any]
+	Backups                 plugin.TValue[[]any]
+	VolumeTypes             plugin.TValue[[]any]
 	Images                  plugin.TValue[[]any]
 	Secrets                 plugin.TValue[[]any]
 	SecretContainers        plugin.TValue[[]any]
@@ -5141,6 +5406,38 @@ func (c *mqlOpenstack) GetSnapshots() *plugin.TValue[[]any] {
 		}
 
 		return c.snapshots()
+	})
+}
+
+func (c *mqlOpenstack) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
+	})
+}
+
+func (c *mqlOpenstack) GetVolumeTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VolumeTypes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "volumeTypes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumeTypes()
 	})
 }
 
@@ -7394,27 +7691,30 @@ type mqlOpenstackBlockstorageVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOpenstackBlockstorageVolumeInternal
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Description       plugin.TValue[string]
-	Status            plugin.TValue[string]
-	Size              plugin.TValue[int64]
-	Bootable          plugin.TValue[bool]
-	Encrypted         plugin.TValue[bool]
-	MultiAttach       plugin.TValue[bool]
-	VolumeType        plugin.TValue[string]
-	AvailabilityZone  plugin.TValue[string]
-	ReplicationStatus plugin.TValue[string]
-	Metadata          plugin.TValue[map[string]any]
-	ImageMetadata     plugin.TValue[map[string]any]
-	Attachments       plugin.TValue[[]any]
-	CreatedAt         plugin.TValue[*time.Time]
-	UpdatedAt         plugin.TValue[*time.Time]
-	Project           plugin.TValue[*mqlOpenstackProject]
-	User              plugin.TValue[*mqlOpenstackUser]
-	SourceVolume      plugin.TValue[*mqlOpenstackBlockstorageVolume]
-	SourceSnapshot    plugin.TValue[*mqlOpenstackBlockstorageSnapshot]
-	Servers           plugin.TValue[[]any]
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Status             plugin.TValue[string]
+	Size               plugin.TValue[int64]
+	Bootable           plugin.TValue[bool]
+	Encrypted          plugin.TValue[bool]
+	MultiAttach        plugin.TValue[bool]
+	VolumeTypeName     plugin.TValue[string]
+	AvailabilityZone   plugin.TValue[string]
+	ReplicationStatus  plugin.TValue[string]
+	Metadata           plugin.TValue[map[string]any]
+	ImageMetadata      plugin.TValue[map[string]any]
+	Attachments        plugin.TValue[[]any]
+	CreatedAt          plugin.TValue[*time.Time]
+	UpdatedAt          plugin.TValue[*time.Time]
+	Project            plugin.TValue[*mqlOpenstackProject]
+	User               plugin.TValue[*mqlOpenstackUser]
+	SourceVolume       plugin.TValue[*mqlOpenstackBlockstorageVolume]
+	SourceSnapshot     plugin.TValue[*mqlOpenstackBlockstorageSnapshot]
+	RestoredFromBackup plugin.TValue[*mqlOpenstackBlockstorageBackup]
+	Servers            plugin.TValue[[]any]
+	VolumeType         plugin.TValue[*mqlOpenstackBlockstorageVolumeType]
+	Backups            plugin.TValue[[]any]
 }
 
 // createOpenstackBlockstorageVolume creates a new instance of this resource
@@ -7486,8 +7786,8 @@ func (c *mqlOpenstackBlockstorageVolume) GetMultiAttach() *plugin.TValue[bool] {
 	return &c.MultiAttach
 }
 
-func (c *mqlOpenstackBlockstorageVolume) GetVolumeType() *plugin.TValue[string] {
-	return &c.VolumeType
+func (c *mqlOpenstackBlockstorageVolume) GetVolumeTypeName() *plugin.TValue[string] {
+	return &c.VolumeTypeName
 }
 
 func (c *mqlOpenstackBlockstorageVolume) GetAvailabilityZone() *plugin.TValue[string] {
@@ -7582,6 +7882,22 @@ func (c *mqlOpenstackBlockstorageVolume) GetSourceSnapshot() *plugin.TValue[*mql
 	})
 }
 
+func (c *mqlOpenstackBlockstorageVolume) GetRestoredFromBackup() *plugin.TValue[*mqlOpenstackBlockstorageBackup] {
+	return plugin.GetOrCompute[*mqlOpenstackBlockstorageBackup](&c.RestoredFromBackup, func() (*mqlOpenstackBlockstorageBackup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.blockstorage.volume", c.__id, "restoredFromBackup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackBlockstorageBackup), nil
+			}
+		}
+
+		return c.restoredFromBackup()
+	})
+}
+
 func (c *mqlOpenstackBlockstorageVolume) GetServers() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Servers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -7595,6 +7911,38 @@ func (c *mqlOpenstackBlockstorageVolume) GetServers() *plugin.TValue[[]any] {
 		}
 
 		return c.servers()
+	})
+}
+
+func (c *mqlOpenstackBlockstorageVolume) GetVolumeType() *plugin.TValue[*mqlOpenstackBlockstorageVolumeType] {
+	return plugin.GetOrCompute[*mqlOpenstackBlockstorageVolumeType](&c.VolumeType, func() (*mqlOpenstackBlockstorageVolumeType, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.blockstorage.volume", c.__id, "volumeType")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackBlockstorageVolumeType), nil
+			}
+		}
+
+		return c.volumeType()
+	})
+}
+
+func (c *mqlOpenstackBlockstorageVolume) GetBackups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Backups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.blockstorage.volume", c.__id, "backups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backups()
 	})
 }
 
@@ -11278,4 +11626,300 @@ func (c *mqlOpenstackComputeService) GetForcedDown() *plugin.TValue[bool] {
 
 func (c *mqlOpenstackComputeService) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlOpenstackBlockstorageVolumeType for the openstack.blockstorage.volumeType resource
+type mqlOpenstackBlockstorageVolumeType struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackBlockstorageVolumeTypeInternal
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Description               plugin.TValue[string]
+	IsPublic                  plugin.TValue[bool]
+	ExtraSpecs                plugin.TValue[map[string]any]
+	EncryptionProvider        plugin.TValue[string]
+	EncryptionCipher          plugin.TValue[string]
+	EncryptionKeySize         plugin.TValue[int64]
+	EncryptionControlLocation plugin.TValue[string]
+	EncryptionId              plugin.TValue[string]
+	Volumes                   plugin.TValue[[]any]
+}
+
+// createOpenstackBlockstorageVolumeType creates a new instance of this resource
+func createOpenstackBlockstorageVolumeType(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackBlockstorageVolumeType{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.blockstorage.volumeType", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) MqlName() string {
+	return "openstack.blockstorage.volumeType"
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetIsPublic() *plugin.TValue[bool] {
+	return &c.IsPublic
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetExtraSpecs() *plugin.TValue[map[string]any] {
+	return &c.ExtraSpecs
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetEncryptionProvider() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionProvider, func() (string, error) {
+		return c.encryptionProvider()
+	})
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetEncryptionCipher() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionCipher, func() (string, error) {
+		return c.encryptionCipher()
+	})
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetEncryptionKeySize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EncryptionKeySize, func() (int64, error) {
+		return c.encryptionKeySize()
+	})
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetEncryptionControlLocation() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionControlLocation, func() (string, error) {
+		return c.encryptionControlLocation()
+	})
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetEncryptionId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionId, func() (string, error) {
+		return c.encryptionId()
+	})
+}
+
+func (c *mqlOpenstackBlockstorageVolumeType) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.blockstorage.volumeType", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+// mqlOpenstackBlockstorageBackup for the openstack.blockstorage.backup resource
+type mqlOpenstackBlockstorageBackup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackBlockstorageBackupInternal
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Description         plugin.TValue[string]
+	Status              plugin.TValue[string]
+	Size                plugin.TValue[int64]
+	ObjectCount         plugin.TValue[int64]
+	Container           plugin.TValue[string]
+	HasDependentBackups plugin.TValue[bool]
+	IsIncremental       plugin.TValue[bool]
+	FailReason          plugin.TValue[string]
+	AvailabilityZone    plugin.TValue[string]
+	Metadata            plugin.TValue[map[string]any]
+	ProjectId           plugin.TValue[string]
+	DataTimestamp       plugin.TValue[*time.Time]
+	CreatedAt           plugin.TValue[*time.Time]
+	UpdatedAt           plugin.TValue[*time.Time]
+	Volume              plugin.TValue[*mqlOpenstackBlockstorageVolume]
+	SourceSnapshot      plugin.TValue[*mqlOpenstackBlockstorageSnapshot]
+	Project             plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackBlockstorageBackup creates a new instance of this resource
+func createOpenstackBlockstorageBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackBlockstorageBackup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.blockstorage.backup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackBlockstorageBackup) MqlName() string {
+	return "openstack.blockstorage.backup"
+}
+
+func (c *mqlOpenstackBlockstorageBackup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetObjectCount() *plugin.TValue[int64] {
+	return &c.ObjectCount
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetContainer() *plugin.TValue[string] {
+	return &c.Container
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetHasDependentBackups() *plugin.TValue[bool] {
+	return &c.HasDependentBackups
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetIsIncremental() *plugin.TValue[bool] {
+	return &c.IsIncremental
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetFailReason() *plugin.TValue[string] {
+	return &c.FailReason
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetDataTimestamp() *plugin.TValue[*time.Time] {
+	return &c.DataTimestamp
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetVolume() *plugin.TValue[*mqlOpenstackBlockstorageVolume] {
+	return plugin.GetOrCompute[*mqlOpenstackBlockstorageVolume](&c.Volume, func() (*mqlOpenstackBlockstorageVolume, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.blockstorage.backup", c.__id, "volume")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackBlockstorageVolume), nil
+			}
+		}
+
+		return c.volume()
+	})
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetSourceSnapshot() *plugin.TValue[*mqlOpenstackBlockstorageSnapshot] {
+	return plugin.GetOrCompute[*mqlOpenstackBlockstorageSnapshot](&c.SourceSnapshot, func() (*mqlOpenstackBlockstorageSnapshot, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.blockstorage.backup", c.__id, "sourceSnapshot")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackBlockstorageSnapshot), nil
+			}
+		}
+
+		return c.sourceSnapshot()
+	})
+}
+
+func (c *mqlOpenstackBlockstorageBackup) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.blockstorage.backup", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
 }

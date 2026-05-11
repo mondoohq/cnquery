@@ -4,10 +4,15 @@
 package resources
 
 import (
+	"errors"
 	"strings"
+	"sync"
 
+	"github.com/gophercloud/gophercloud/v2"
+	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/backups"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/snapshots"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
+	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumetypes"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -19,6 +24,8 @@ type mqlOpenstackBlockstorageVolumeInternal struct {
 	cacheUserID           string
 	cacheSourceVolumeID   string
 	cacheSourceSnapshotID string
+	cacheBackupID         string
+	cacheVolumeTypeName   string
 	cacheServerIDs        []string
 }
 
@@ -89,7 +96,7 @@ func newMqlOpenstackBlockstorageVolume(runtime *plugin.Runtime, v *volumes.Volum
 		"bootable":          llx.BoolData(parseBootable(v.Bootable)),
 		"encrypted":         llx.BoolData(v.Encrypted),
 		"multiAttach":       llx.BoolData(v.Multiattach),
-		"volumeType":        llx.StringData(v.VolumeType),
+		"volumeTypeName":    llx.StringData(v.VolumeType),
 		"availabilityZone":  llx.StringData(v.AvailabilityZone),
 		"replicationStatus": llx.StringData(v.ReplicationStatus),
 		"metadata":          stringMapData(v.Metadata),
@@ -106,6 +113,10 @@ func newMqlOpenstackBlockstorageVolume(runtime *plugin.Runtime, v *volumes.Volum
 	mqlVol.cacheUserID = v.UserID
 	mqlVol.cacheSourceVolumeID = v.SourceVolID
 	mqlVol.cacheSourceSnapshotID = v.SnapshotID
+	if v.BackupID != nil {
+		mqlVol.cacheBackupID = *v.BackupID
+	}
+	mqlVol.cacheVolumeTypeName = v.VolumeType
 	mqlVol.cacheServerIDs = volumeServerIDs(v.Attachments)
 	return mqlVol, nil
 }
@@ -182,6 +193,62 @@ func (r *mqlOpenstackBlockstorageVolume) servers() ([]any, error) {
 			return nil, err
 		}
 		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackBlockstorageVolume) volumeType() (*mqlOpenstackBlockstorageVolumeType, error) {
+	if r.cacheVolumeTypeName == "" {
+		r.VolumeType.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	root, err := CreateResource(r.MqlRuntime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	list := root.(*mqlOpenstack).GetVolumeTypes()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+	for _, raw := range list.Data {
+		vt := raw.(*mqlOpenstackBlockstorageVolumeType)
+		if vt.Name.Data == r.cacheVolumeTypeName {
+			return vt, nil
+		}
+	}
+	r.VolumeType.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+func (r *mqlOpenstackBlockstorageVolume) restoredFromBackup() (*mqlOpenstackBlockstorageBackup, error) {
+	if r.cacheBackupID == "" {
+		r.RestoredFromBackup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.blockstorage.backup", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheBackupID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackBlockstorageBackup), nil
+}
+
+func (r *mqlOpenstackBlockstorageVolume) backups() ([]any, error) {
+	root, err := CreateResource(r.MqlRuntime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	list := root.(*mqlOpenstack).GetBackups()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+	out := make([]any, 0, len(list.Data))
+	for _, raw := range list.Data {
+		b := raw.(*mqlOpenstackBlockstorageBackup)
+		if b.cacheVolumeID == r.Id.Data {
+			out = append(out, b)
+		}
 	}
 	return out, nil
 }
@@ -346,4 +413,299 @@ func (r *mqlOpenstackBlockstorageSnapshot) user() (*mqlOpenstackUser, error) {
 		return nil, err
 	}
 	return res.(*mqlOpenstackUser), nil
+}
+
+// ---- openstack.blockstorage.volumeType ----
+
+type mqlOpenstackBlockstorageVolumeTypeInternal struct {
+	encOnce sync.Once
+	encErr  error
+	enc     *volumetypes.GetEncryptionType
+}
+
+func (r *mqlOpenstackBlockstorageVolumeType) id() (string, error) {
+	return "openstack.blockstorage.volumeType/" + r.Id.Data, nil
+}
+
+func initOpenstackBlockstorageVolumeType(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetVolumeTypes()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			vt := raw.(*mqlOpenstackBlockstorageVolumeType)
+			if vt.Id.Data == id {
+				return args, vt, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.blockstorage.volumeType", "id", args)
+	return args, nil, nil
+}
+
+func (o *mqlOpenstack) volumeTypes() ([]any, error) {
+	c := conn(o.MqlRuntime)
+	client, err := c.BlockStorageClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := volumetypes.List(client, volumetypes.ListOpts{}).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := volumetypes.ExtractVolumeTypes(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for _, vt := range items {
+		res, err := CreateResource(o.MqlRuntime, "openstack.blockstorage.volumeType", map[string]*llx.RawData{
+			"__id":        llx.StringData("openstack.blockstorage.volumeType/" + vt.ID),
+			"id":          llx.StringData(vt.ID),
+			"name":        llx.StringData(vt.Name),
+			"description": llx.StringData(vt.Description),
+			"isPublic":    llx.BoolData(vt.IsPublic),
+			"extraSpecs":  stringMapData(vt.ExtraSpecs),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackBlockstorageVolumeType) fetchEncryption() (*volumetypes.GetEncryptionType, error) {
+	r.encOnce.Do(func() {
+		c := conn(r.MqlRuntime)
+		client, err := c.BlockStorageClient()
+		if err != nil {
+			r.encErr = err
+			return
+		}
+		enc, err := volumetypes.GetEncryption(ctx(), client, r.Id.Data).Extract()
+		if err != nil {
+			var resp gophercloud.ErrUnexpectedResponseCode
+			if errors.As(err, &resp) {
+				switch resp.Actual {
+				case 401, 403, 404:
+					return
+				}
+			}
+			r.encErr = err
+			return
+		}
+		// Cinder returns an empty body (or all-zero fields) for unencrypted
+		// volume types; treat that as "no encryption configured" rather than
+		// surfacing zero values as if they were real settings.
+		if enc.Provider == "" && enc.Cipher == "" && enc.EncryptionID == "" && enc.KeySize == 0 {
+			return
+		}
+		r.enc = enc
+	})
+	return r.enc, r.encErr
+}
+
+func (r *mqlOpenstackBlockstorageVolumeType) encryptionProvider() (string, error) {
+	enc, err := r.fetchEncryption()
+	if err != nil || enc == nil {
+		return "", err
+	}
+	return enc.Provider, nil
+}
+
+func (r *mqlOpenstackBlockstorageVolumeType) encryptionCipher() (string, error) {
+	enc, err := r.fetchEncryption()
+	if err != nil || enc == nil {
+		return "", err
+	}
+	return enc.Cipher, nil
+}
+
+func (r *mqlOpenstackBlockstorageVolumeType) encryptionKeySize() (int64, error) {
+	enc, err := r.fetchEncryption()
+	if err != nil || enc == nil {
+		return 0, err
+	}
+	return int64(enc.KeySize), nil
+}
+
+func (r *mqlOpenstackBlockstorageVolumeType) encryptionControlLocation() (string, error) {
+	enc, err := r.fetchEncryption()
+	if err != nil || enc == nil {
+		return "", err
+	}
+	return enc.ControlLocation, nil
+}
+
+func (r *mqlOpenstackBlockstorageVolumeType) encryptionId() (string, error) {
+	enc, err := r.fetchEncryption()
+	if err != nil || enc == nil {
+		return "", err
+	}
+	return enc.EncryptionID, nil
+}
+
+func (r *mqlOpenstackBlockstorageVolumeType) volumes() ([]any, error) {
+	root, err := CreateResource(r.MqlRuntime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	list := root.(*mqlOpenstack).GetVolumes()
+	if list.Error != nil {
+		return nil, list.Error
+	}
+	out := make([]any, 0, len(list.Data))
+	for _, raw := range list.Data {
+		v := raw.(*mqlOpenstackBlockstorageVolume)
+		if v.cacheVolumeTypeName == r.Name.Data {
+			out = append(out, v)
+		}
+	}
+	return out, nil
+}
+
+// ---- openstack.blockstorage.backup ----
+
+type mqlOpenstackBlockstorageBackupInternal struct {
+	cacheVolumeID   string
+	cacheSnapshotID string
+	cacheProjectID  string
+}
+
+func (r *mqlOpenstackBlockstorageBackup) id() (string, error) {
+	return "openstack.blockstorage.backup/" + r.Id.Data, nil
+}
+
+func initOpenstackBlockstorageBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	root, err := CreateResource(runtime, "openstack", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	list := root.(*mqlOpenstack).GetBackups()
+	if list.Error == nil {
+		for _, raw := range list.Data {
+			b := raw.(*mqlOpenstackBlockstorageBackup)
+			if b.Id.Data == id {
+				return args, b, nil
+			}
+		}
+	}
+	initSyntheticID("openstack.blockstorage.backup", "id", args)
+	return args, nil, nil
+}
+
+func (o *mqlOpenstack) backups() ([]any, error) {
+	c := conn(o.MqlRuntime)
+	client, err := c.BlockStorageClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := backups.ListDetail(client, backups.ListDetailOpts{}).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := backups.ExtractBackups(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for _, b := range items {
+		az := ""
+		if b.AvailabilityZone != nil {
+			az = *b.AvailabilityZone
+		}
+		meta := map[string]string{}
+		if b.Metadata != nil {
+			meta = *b.Metadata
+		}
+		res, err := CreateResource(o.MqlRuntime, "openstack.blockstorage.backup", map[string]*llx.RawData{
+			"__id":                llx.StringData("openstack.blockstorage.backup/" + b.ID),
+			"id":                  llx.StringData(b.ID),
+			"name":                llx.StringData(b.Name),
+			"description":         llx.StringData(b.Description),
+			"status":              llx.StringData(b.Status),
+			"size":                llx.IntData(int64(b.Size)),
+			"objectCount":         llx.IntData(int64(b.ObjectCount)),
+			"container":           llx.StringData(b.Container),
+			"hasDependentBackups": llx.BoolData(b.HasDependentBackups),
+			"isIncremental":       llx.BoolData(b.IsIncremental),
+			"failReason":          llx.StringData(b.FailReason),
+			"availabilityZone":    llx.StringData(az),
+			"metadata":            stringMapData(meta),
+			"projectId":           llx.StringData(b.ProjectID),
+			"dataTimestamp":       llx.TimeDataPtr(timePtr(b.DataTimestamp)),
+			"createdAt":           llx.TimeDataPtr(timePtr(b.CreatedAt)),
+			"updatedAt":           llx.TimeDataPtr(timePtr(b.UpdatedAt)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlBackup := res.(*mqlOpenstackBlockstorageBackup)
+		mqlBackup.cacheVolumeID = b.VolumeID
+		mqlBackup.cacheSnapshotID = b.SnapshotID
+		mqlBackup.cacheProjectID = b.ProjectID
+		out = append(out, mqlBackup)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackBlockstorageBackup) volume() (*mqlOpenstackBlockstorageVolume, error) {
+	if r.cacheVolumeID == "" {
+		r.Volume.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.blockstorage.volume", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheVolumeID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackBlockstorageVolume), nil
+}
+
+func (r *mqlOpenstackBlockstorageBackup) sourceSnapshot() (*mqlOpenstackBlockstorageSnapshot, error) {
+	if r.cacheSnapshotID == "" {
+		r.SourceSnapshot.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.blockstorage.snapshot", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheSnapshotID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackBlockstorageSnapshot), nil
+}
+
+func (r *mqlOpenstackBlockstorageBackup) project() (*mqlOpenstackProject, error) {
+	if r.cacheProjectID == "" {
+		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheProjectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackProject), nil
 }

@@ -54,6 +54,10 @@ openstack {
   volumes() []openstack.blockstorage.volume
   // Cinder volume snapshots in the scoped project
   snapshots() []openstack.blockstorage.snapshot
+  // Cinder volume backups in the scoped project
+  backups() []openstack.blockstorage.backup
+  // Cinder volume types (storage classes) visible to the scoped project
+  volumeTypes() []openstack.blockstorage.volumeType
   // Glance images visible to the scoped project
   images() []openstack.image
   // Barbican secrets in the scoped project
@@ -557,8 +561,8 @@ private openstack.blockstorage.volume @defaults("id name status size") {
   encrypted bool
   // Whether the volume can be attached to multiple servers concurrently
   multiAttach bool
-  // Volume type (storage class name)
-  volumeType string
+  // Volume type name (storage class name as reported by the API)
+  volumeTypeName string
   // Availability zone
   availabilityZone string
   // Replication status
@@ -581,8 +585,14 @@ private openstack.blockstorage.volume @defaults("id name status size") {
   sourceVolume() openstack.blockstorage.volume
   // Snapshot this volume was created from; null when not created from a snapshot
   sourceSnapshot() openstack.blockstorage.snapshot
+  // Backup this volume was restored from; null when not restored from a backup
+  restoredFromBackup() openstack.blockstorage.backup
   // Servers this volume is attached to; empty when detached
   servers() []openstack.compute.server
+  // Volume type (storage class) for this volume; null when the API does not report one
+  volumeType() openstack.blockstorage.volumeType
+  // Backups of this volume
+  backups() []openstack.blockstorage.backup
 }
 
 // OpenStack Cinder volume snapshot
@@ -1425,4 +1435,74 @@ private openstack.compute.service @defaults("id binary host zone status state") 
   forcedDown bool
   // Last update timestamp reported by the service
   updatedAt time
+}
+
+// OpenStack Cinder volume type (storage class). Encryption posture, if any, is exposed via the encryption* fields.
+private openstack.blockstorage.volumeType @defaults("id name isPublic encryptionProvider") {
+  init(id? string)
+  // Volume type ID (UUID)
+  id string
+  // Volume type name
+  name string
+  // Description
+  description string
+  // Whether the volume type is publicly available to all projects
+  isPublic bool
+  // Backend-specific configuration (e.g. volume_backend_name, RESKEY:availability_zones, encryption keys)
+  extraSpecs map[string]string
+  // Encryption provider class name (e.g. "luks", "nova.volume.encryptors.luks.LuksEncryptor"); empty when the type is unencrypted
+  encryptionProvider() string
+  // Encryption cipher (e.g. "aes-xts-plain64"); empty when the type is unencrypted
+  encryptionCipher() string
+  // Encryption key size in bits; 0 when the type is unencrypted
+  encryptionKeySize() int
+  // Where encryption is performed ("front-end" on the Nova compute host, or "back-end" on the storage system); empty when the type is unencrypted
+  encryptionControlLocation() string
+  // Encryption configuration ID (UUID); empty when the type is unencrypted
+  encryptionId() string
+  // Volumes that use this volume type (filtered from the scoped project's volumes)
+  volumes() []openstack.blockstorage.volume
+}
+
+// OpenStack Cinder volume backup. Backups live in object storage (e.g. Swift) and can be incremental, unlike snapshots.
+private openstack.blockstorage.backup @defaults("id name status size createdAt") {
+  init(id? string)
+  // Backup ID (UUID)
+  id string
+  // Backup name
+  name string
+  // Description
+  description string
+  // Status (available, creating, deleting, error, error_deleting, restoring, ...)
+  status string
+  // Size in GB
+  size int
+  // Number of objects in the backup (Swift container objects when Swift is the backup driver)
+  objectCount int
+  // Container that stores the backup (Swift container name when Swift is the backup driver)
+  container string
+  // Whether other backups depend on this backup (true for full backups with dependent incrementals)
+  hasDependentBackups bool
+  // Whether this is an incremental backup
+  isIncremental bool
+  // Reason for the most recent backup failure; empty when no failure
+  failReason string
+  // Availability zone of the backup; empty when the backup driver does not report one
+  availabilityZone string
+  // Free-form backup metadata (requires Cinder microversion >= 3.43)
+  metadata map[string]string
+  // Project that owns this backup (admin-only attribute; empty for non-admin tokens)
+  projectId string
+  // Timestamp when the data on the source volume was first saved (matches the source's data, not the backup's creation)
+  dataTimestamp time
+  // Backup creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Volume this backup was taken from
+  volume() openstack.blockstorage.volume
+  // Snapshot this backup was taken from; null when the backup was taken directly from a volume
+  sourceSnapshot() openstack.blockstorage.snapshot
+  // Project that owns this backup
+  project() openstack.project
 }
