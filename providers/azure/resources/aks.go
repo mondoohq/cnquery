@@ -99,6 +99,10 @@ func (a *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) id() (string, 
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionAksServiceClusterNodePool) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -346,4 +350,130 @@ func (a *mqlAzureSubscriptionAksServiceCluster) autoUpgradeProfile() (*mqlAzureS
 		return nil, err
 	}
 	return autoUpgradeRes.(*mqlAzureSubscriptionAksServiceClusterAutoUpgradeProfile), nil
+}
+
+func (a *mqlAzureSubscriptionAksServiceCluster) nodePools() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := clusters.NewAgentPoolsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(resourceID.ResourceGroup, a.Name.Data, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			if entry == nil || entry.Properties == nil {
+				continue
+			}
+			props := entry.Properties
+
+			zones := []any{}
+			for _, z := range props.AvailabilityZones {
+				if z != nil {
+					zones = append(zones, *z)
+				}
+			}
+
+			taints := []any{}
+			for _, t := range props.NodeTaints {
+				if t != nil {
+					taints = append(taints, *t)
+				}
+			}
+
+			var spotMaxPrice float64
+			if props.SpotMaxPrice != nil {
+				spotMaxPrice = float64(*props.SpotMaxPrice)
+			}
+
+			var powerState *string
+			if props.PowerState != nil {
+				powerState = (*string)(props.PowerState.Code)
+			}
+
+			var enableSecureBoot, enableVTPM *bool
+			var sshAccess *string
+			if props.SecurityProfile != nil {
+				enableSecureBoot = props.SecurityProfile.EnableSecureBoot
+				enableVTPM = props.SecurityProfile.EnableVTPM
+				sshAccess = (*string)(props.SecurityProfile.SSHAccess)
+			}
+
+			var upgradeMaxSurge, upgradeMaxUnavailable *string
+			var upgradeDrainTimeout, upgradeNodeSoak *int32
+			if props.UpgradeSettings != nil {
+				upgradeMaxSurge = props.UpgradeSettings.MaxSurge
+				upgradeMaxUnavailable = props.UpgradeSettings.MaxUnavailable
+				upgradeDrainTimeout = props.UpgradeSettings.DrainTimeoutInMinutes
+				upgradeNodeSoak = props.UpgradeSettings.NodeSoakDurationInMinutes
+			}
+
+			mqlPool, err := CreateResource(a.MqlRuntime, "azure.subscription.aksService.cluster.nodePool",
+				map[string]*llx.RawData{
+					"id":                               llx.StringDataPtr(entry.ID),
+					"name":                             llx.StringDataPtr(entry.Name),
+					"mode":                             llx.StringDataPtr((*string)(props.Mode)),
+					"vmType":                           llx.StringDataPtr((*string)(props.Type)),
+					"count":                            llx.IntDataDefault(props.Count, 0),
+					"minCount":                         llx.IntDataDefault(props.MinCount, 0),
+					"maxCount":                         llx.IntDataDefault(props.MaxCount, 0),
+					"enableAutoScaling":                llx.BoolDataPtr(props.EnableAutoScaling),
+					"maxPods":                          llx.IntDataDefault(props.MaxPods, 0),
+					"vmSize":                           llx.StringDataPtr(props.VMSize),
+					"osType":                           llx.StringDataPtr((*string)(props.OSType)),
+					"osSku":                            llx.StringDataPtr((*string)(props.OSSKU)),
+					"osDiskType":                       llx.StringDataPtr((*string)(props.OSDiskType)),
+					"osDiskSizeGB":                     llx.IntDataDefault(props.OSDiskSizeGB, 0),
+					"scaleSetPriority":                 llx.StringDataPtr((*string)(props.ScaleSetPriority)),
+					"scaleSetEvictionPolicy":           llx.StringDataPtr((*string)(props.ScaleSetEvictionPolicy)),
+					"spotMaxPrice":                     llx.FloatData(spotMaxPrice),
+					"availabilityZones":                llx.ArrayData(zones, types.String),
+					"enableNodePublicIP":               llx.BoolDataPtr(props.EnableNodePublicIP),
+					"nodePublicIPPrefixId":             llx.StringDataPtr(props.NodePublicIPPrefixID),
+					"enableEncryptionAtHost":           llx.BoolDataPtr(props.EnableEncryptionAtHost),
+					"enableUltraSSD":                   llx.BoolDataPtr(props.EnableUltraSSD),
+					"enableFIPS":                       llx.BoolDataPtr(props.EnableFIPS),
+					"orchestratorVersion":              llx.StringDataPtr(props.OrchestratorVersion),
+					"currentOrchestratorVersion":       llx.StringDataPtr(props.CurrentOrchestratorVersion),
+					"nodeImageVersion":                 llx.StringDataPtr(props.NodeImageVersion),
+					"vnetSubnetId":                     llx.StringDataPtr(props.VnetSubnetID),
+					"podSubnetId":                      llx.StringDataPtr(props.PodSubnetID),
+					"proximityPlacementGroupId":        llx.StringDataPtr(props.ProximityPlacementGroupID),
+					"hostGroupId":                      llx.StringDataPtr(props.HostGroupID),
+					"provisioningState":                llx.StringDataPtr(props.ProvisioningState),
+					"powerState":                       llx.StringDataPtr(powerState),
+					"workloadRuntime":                  llx.StringDataPtr((*string)(props.WorkloadRuntime)),
+					"nodeLabels":                       llx.MapData(convert.PtrMapStrToInterface(props.NodeLabels), types.String),
+					"nodeTaints":                       llx.ArrayData(taints, types.String),
+					"tags":                             llx.MapData(convert.PtrMapStrToInterface(props.Tags), types.String),
+					"upgradeMaxSurge":                  llx.StringDataPtr(upgradeMaxSurge),
+					"upgradeMaxUnavailable":            llx.StringDataPtr(upgradeMaxUnavailable),
+					"upgradeDrainTimeoutInMinutes":     llx.IntDataDefault(upgradeDrainTimeout, 0),
+					"upgradeNodeSoakDurationInMinutes": llx.IntDataDefault(upgradeNodeSoak, 0),
+					"sshAccess":                        llx.StringDataPtr(sshAccess),
+					"enableVTPM":                       llx.BoolDataPtr(enableVTPM),
+					"enableSecureBoot":                 llx.BoolDataPtr(enableSecureBoot),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlPool)
+		}
+	}
+	return res, nil
 }

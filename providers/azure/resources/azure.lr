@@ -5708,8 +5708,10 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   httpProxyConfig dict
   // The add-on profiles of the AKS cluster
   addonProfiles []dict
-  // The agent pool profiles of the AKS cluster
-  agentPoolProfiles []dict
+  // DEPRECATED: use nodePools() instead
+  agentPoolProfiles @maturity("deprecated") []dict
+  // Node pools (agent pools) attached to the cluster
+  nodePools() []azure.subscription.aksService.cluster.nodePool
   // The API server access profile
   apiServerAccessProfile dict
   // FQDN subdomain for private DNS zone clusters
@@ -5800,6 +5802,96 @@ private azure.subscription.aksService.cluster.advancedNetworking @defaults("tran
   accelerationMode string
   // Whether advanced network security (FQDN-based policies) is enabled
   securityEnabled bool
+}
+
+// Azure Kubernetes Service cluster node pool (agent pool)
+private azure.subscription.aksService.cluster.nodePool @defaults("name mode vmSize count") {
+  // Node pool resource ID
+  id string
+  // Node pool name
+  name string
+  // Pool mode ("System" for kube-system pods, "User" for workloads, "Gateway" for static-egress gateway pools)
+  mode string
+  // Pool VM type ("VirtualMachineScaleSets" or "AvailabilitySet")
+  vmType string
+  // Number of nodes currently in the pool
+  count int
+  // Minimum node count when autoscaling is enabled
+  minCount int
+  // Maximum node count when autoscaling is enabled
+  maxCount int
+  // Whether the cluster autoscaler manages this pool
+  enableAutoScaling bool
+  // Maximum number of pods that can run on a node
+  maxPods int
+  // Size of the node VMs
+  vmSize string
+  // OS type ("Linux" or "Windows")
+  osType string
+  // OS SKU ("Ubuntu", "AzureLinux", "Mariner", "Windows2019", "Windows2022", etc.)
+  osSku string
+  // OS disk type ("Ephemeral" or "Managed")
+  osDiskType string
+  // OS disk size in GB
+  osDiskSizeGB int
+  // Scale set priority ("Regular" or "Spot")
+  scaleSetPriority string
+  // Spot eviction policy ("Delete" or "Deallocate"; only when scaleSetPriority is "Spot")
+  scaleSetEvictionPolicy string
+  // Maximum price billed for spot nodes (-1 indicates "any on-demand price")
+  spotMaxPrice float
+  // Availability zones the pool is spread across
+  availabilityZones []string
+  // Whether each node receives its own public IP
+  enableNodePublicIP bool
+  // Resource ID of the public IP prefix used for node IPs (empty when not configured)
+  nodePublicIPPrefixId string
+  // Whether host-based encryption is enabled on nodes
+  enableEncryptionAtHost bool
+  // Whether ultra-SSD support is enabled on the pool
+  enableUltraSSD bool
+  // Whether nodes use a FIPS-enabled OS image
+  enableFIPS bool
+  // Kubernetes version requested for the pool (may be major.minor or major.minor.patch)
+  orchestratorVersion string
+  // Resolved Kubernetes version currently running on the nodes
+  currentOrchestratorVersion string
+  // Image version the nodes are currently running
+  nodeImageVersion string
+  // Resource ID of the subnet the pool nodes are joined to (empty when AKS auto-creates the VNet)
+  vnetSubnetId string
+  // Resource ID of the subnet pods are placed in when using delegated pod subnets (empty otherwise)
+  podSubnetId string
+  // Resource ID of the proximity placement group (empty when not configured)
+  proximityPlacementGroupId string
+  // Resource ID of the dedicated host group (empty when not configured)
+  hostGroupId string
+  // Provisioning state of the pool
+  provisioningState string
+  // Power state of the pool ("Running" or "Stopped")
+  powerState string
+  // Workload runtime ("OCIContainer", "WasmWasi", or "KataMshvVmIsolation")
+  workloadRuntime string
+  // Node labels applied to every node in the pool
+  nodeLabels map[string]string
+  // Node taints applied to every node in the pool (e.g. "key=value:NoSchedule")
+  nodeTaints []string
+  // Tags on the pool's underlying scale set
+  tags map[string]string
+  // Maximum surge during pool upgrades (e.g. "10%" or "1")
+  upgradeMaxSurge string
+  // Maximum unavailable nodes during pool upgrades (e.g. "5%" or "1")
+  upgradeMaxUnavailable string
+  // Drain timeout in minutes during pool upgrades
+  upgradeDrainTimeoutInMinutes int
+  // Soak duration in minutes between draining a node and reimaging it during upgrades
+  upgradeNodeSoakDurationInMinutes int
+  // SSH access mode for the pool ("LocalUser" or "Disabled")
+  sshAccess string
+  // Whether vTPM is enabled on nodes (Trusted Launch)
+  enableVTPM bool
+  // Whether Secure Boot is enabled on nodes (Trusted Launch)
+  enableSecureBoot bool
 }
 
 // Azure Advisor

@@ -361,6 +361,7 @@ mno
 modelarmor
 mongodb
 Mpim
+Mshv
 msk
 mtls
 MULTIAZ
@@ -656,6 +657,7 @@ vulns
 VVOL
 vxlan
 vztmpl
+Wasi
 webauthn
 webide
 WEBSERVERS

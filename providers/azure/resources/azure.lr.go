@@ -229,6 +229,7 @@ const (
 	ResourceAzureSubscriptionAksServiceClusterAadProfile                                         string = "azure.subscription.aksService.cluster.aadProfile"
 	ResourceAzureSubscriptionAksServiceClusterAutoUpgradeProfile                                 string = "azure.subscription.aksService.cluster.autoUpgradeProfile"
 	ResourceAzureSubscriptionAksServiceClusterAdvancedNetworking                                 string = "azure.subscription.aksService.cluster.advancedNetworking"
+	ResourceAzureSubscriptionAksServiceClusterNodePool                                           string = "azure.subscription.aksService.cluster.nodePool"
 	ResourceAzureSubscriptionAdvisorService                                                      string = "azure.subscription.advisorService"
 	ResourceAzureSubscriptionAdvisorServiceRecommendation                                        string = "azure.subscription.advisorService.recommendation"
 	ResourceAzureSubscriptionAdvisorServiceScore                                                 string = "azure.subscription.advisorService.score"
@@ -1184,6 +1185,10 @@ func init() {
 		"azure.subscription.aksService.cluster.advancedNetworking": {
 			// to override args, implement: initAzureSubscriptionAksServiceClusterAdvancedNetworking(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionAksServiceClusterAdvancedNetworking,
+		},
+		"azure.subscription.aksService.cluster.nodePool": {
+			// to override args, implement: initAzureSubscriptionAksServiceClusterNodePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionAksServiceClusterNodePool,
 		},
 		"azure.subscription.advisorService": {
 			Init:   initAzureSubscriptionAdvisorService,
@@ -8410,6 +8415,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.aksService.cluster.agentPoolProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetAgentPoolProfiles()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.aksService.cluster.nodePools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetNodePools()).ToDataRes(types.Array(types.Resource("azure.subscription.aksService.cluster.nodePool")))
+	},
 	"azure.subscription.aksService.cluster.apiServerAccessProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetApiServerAccessProfile()).ToDataRes(types.Dict)
 	},
@@ -8526,6 +8534,135 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.aksService.cluster.advancedNetworking.securityEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).GetSecurityEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.nodePool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.vmType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetVmType()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.count": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.aksService.cluster.nodePool.minCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetMinCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.aksService.cluster.nodePool.maxCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetMaxCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableAutoScaling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetEnableAutoScaling()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.nodePool.maxPods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetMaxPods()).ToDataRes(types.Int)
+	},
+	"azure.subscription.aksService.cluster.nodePool.vmSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetVmSize()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.osType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetOsType()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.osSku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetOsSku()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.osDiskType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetOsDiskType()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.osDiskSizeGB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetOsDiskSizeGB()).ToDataRes(types.Int)
+	},
+	"azure.subscription.aksService.cluster.nodePool.scaleSetPriority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetScaleSetPriority()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.scaleSetEvictionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetScaleSetEvictionPolicy()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.spotMaxPrice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetSpotMaxPrice()).ToDataRes(types.Float)
+	},
+	"azure.subscription.aksService.cluster.nodePool.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableNodePublicIP": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetEnableNodePublicIP()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.nodePool.nodePublicIPPrefixId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetNodePublicIPPrefixId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableEncryptionAtHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetEnableEncryptionAtHost()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableUltraSSD": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetEnableUltraSSD()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableFIPS": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetEnableFIPS()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.nodePool.orchestratorVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetOrchestratorVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.currentOrchestratorVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetCurrentOrchestratorVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.nodeImageVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetNodeImageVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.vnetSubnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetVnetSubnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.podSubnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetPodSubnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.proximityPlacementGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetProximityPlacementGroupId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.hostGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetHostGroupId()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.powerState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetPowerState()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.workloadRuntime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetWorkloadRuntime()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.nodeLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetNodeLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.aksService.cluster.nodePool.nodeTaints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetNodeTaints()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.aksService.cluster.nodePool.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.aksService.cluster.nodePool.upgradeMaxSurge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetUpgradeMaxSurge()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.upgradeMaxUnavailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetUpgradeMaxUnavailable()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.upgradeDrainTimeoutInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetUpgradeDrainTimeoutInMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.aksService.cluster.nodePool.upgradeNodeSoakDurationInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetUpgradeNodeSoakDurationInMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.aksService.cluster.nodePool.sshAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetSshAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableVTPM": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetEnableVTPM()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableSecureBoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceClusterNodePool).GetEnableSecureBoot()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.advisorService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAdvisorService).GetSubscriptionId()).ToDataRes(types.String)
@@ -21071,6 +21208,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAksServiceCluster).AgentPoolProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.aksService.cluster.nodePools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).NodePools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.aksService.cluster.apiServerAccessProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceCluster).ApiServerAccessProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -21237,6 +21378,182 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.aksService.cluster.advancedNetworking.securityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAksServiceClusterAdvancedNetworking).SecurityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.vmType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).VmType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.count": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).Count, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.minCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).MinCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.maxCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).MaxCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableAutoScaling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).EnableAutoScaling, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.maxPods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).MaxPods, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.vmSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).VmSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.osType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).OsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.osSku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).OsSku, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.osDiskType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).OsDiskType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.osDiskSizeGB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).OsDiskSizeGB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.scaleSetPriority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).ScaleSetPriority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.scaleSetEvictionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).ScaleSetEvictionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.spotMaxPrice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).SpotMaxPrice, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableNodePublicIP": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).EnableNodePublicIP, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.nodePublicIPPrefixId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).NodePublicIPPrefixId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableEncryptionAtHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).EnableEncryptionAtHost, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableUltraSSD": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).EnableUltraSSD, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableFIPS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).EnableFIPS, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.orchestratorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).OrchestratorVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.currentOrchestratorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).CurrentOrchestratorVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.nodeImageVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).NodeImageVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.vnetSubnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).VnetSubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.podSubnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).PodSubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.proximityPlacementGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).ProximityPlacementGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.hostGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).HostGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.powerState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).PowerState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.workloadRuntime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).WorkloadRuntime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.nodeLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).NodeLabels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.nodeTaints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).NodeTaints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.upgradeMaxSurge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).UpgradeMaxSurge, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.upgradeMaxUnavailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).UpgradeMaxUnavailable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.upgradeDrainTimeoutInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).UpgradeDrainTimeoutInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.upgradeNodeSoakDurationInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).UpgradeNodeSoakDurationInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.sshAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).SshAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableVTPM": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).EnableVTPM, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.aksService.cluster.nodePool.enableSecureBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceClusterNodePool).EnableSecureBoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.advisorService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49163,6 +49480,7 @@ type mqlAzureSubscriptionAksServiceCluster struct {
 	HttpProxyConfig                   plugin.TValue[any]
 	AddonProfiles                     plugin.TValue[[]any]
 	AgentPoolProfiles                 plugin.TValue[[]any]
+	NodePools                         plugin.TValue[[]any]
 	ApiServerAccessProfile            plugin.TValue[any]
 	FqdnSubdomain                     plugin.TValue[string]
 	PrivateFqdn                       plugin.TValue[string]
@@ -49307,6 +49625,22 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetAddonProfiles() *plugin.TValu
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetAgentPoolProfiles() *plugin.TValue[[]any] {
 	return &c.AgentPoolProfiles
+}
+
+func (c *mqlAzureSubscriptionAksServiceCluster) GetNodePools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NodePools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.aksService.cluster", c.__id, "nodePools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.nodePools()
+	})
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetApiServerAccessProfile() *plugin.TValue[any] {
@@ -49643,6 +49977,265 @@ func (c *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) GetAcceleratio
 
 func (c *mqlAzureSubscriptionAksServiceClusterAdvancedNetworking) GetSecurityEnabled() *plugin.TValue[bool] {
 	return &c.SecurityEnabled
+}
+
+// mqlAzureSubscriptionAksServiceClusterNodePool for the azure.subscription.aksService.cluster.nodePool resource
+type mqlAzureSubscriptionAksServiceClusterNodePool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionAksServiceClusterNodePoolInternal it will be used here
+	Id                               plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Mode                             plugin.TValue[string]
+	VmType                           plugin.TValue[string]
+	Count                            plugin.TValue[int64]
+	MinCount                         plugin.TValue[int64]
+	MaxCount                         plugin.TValue[int64]
+	EnableAutoScaling                plugin.TValue[bool]
+	MaxPods                          plugin.TValue[int64]
+	VmSize                           plugin.TValue[string]
+	OsType                           plugin.TValue[string]
+	OsSku                            plugin.TValue[string]
+	OsDiskType                       plugin.TValue[string]
+	OsDiskSizeGB                     plugin.TValue[int64]
+	ScaleSetPriority                 plugin.TValue[string]
+	ScaleSetEvictionPolicy           plugin.TValue[string]
+	SpotMaxPrice                     plugin.TValue[float64]
+	AvailabilityZones                plugin.TValue[[]any]
+	EnableNodePublicIP               plugin.TValue[bool]
+	NodePublicIPPrefixId             plugin.TValue[string]
+	EnableEncryptionAtHost           plugin.TValue[bool]
+	EnableUltraSSD                   plugin.TValue[bool]
+	EnableFIPS                       plugin.TValue[bool]
+	OrchestratorVersion              plugin.TValue[string]
+	CurrentOrchestratorVersion       plugin.TValue[string]
+	NodeImageVersion                 plugin.TValue[string]
+	VnetSubnetId                     plugin.TValue[string]
+	PodSubnetId                      plugin.TValue[string]
+	ProximityPlacementGroupId        plugin.TValue[string]
+	HostGroupId                      plugin.TValue[string]
+	ProvisioningState                plugin.TValue[string]
+	PowerState                       plugin.TValue[string]
+	WorkloadRuntime                  plugin.TValue[string]
+	NodeLabels                       plugin.TValue[map[string]any]
+	NodeTaints                       plugin.TValue[[]any]
+	Tags                             plugin.TValue[map[string]any]
+	UpgradeMaxSurge                  plugin.TValue[string]
+	UpgradeMaxUnavailable            plugin.TValue[string]
+	UpgradeDrainTimeoutInMinutes     plugin.TValue[int64]
+	UpgradeNodeSoakDurationInMinutes plugin.TValue[int64]
+	SshAccess                        plugin.TValue[string]
+	EnableVTPM                       plugin.TValue[bool]
+	EnableSecureBoot                 plugin.TValue[bool]
+}
+
+// createAzureSubscriptionAksServiceClusterNodePool creates a new instance of this resource
+func createAzureSubscriptionAksServiceClusterNodePool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionAksServiceClusterNodePool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.aksService.cluster.nodePool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) MqlName() string {
+	return "azure.subscription.aksService.cluster.nodePool"
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetVmType() *plugin.TValue[string] {
+	return &c.VmType
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetCount() *plugin.TValue[int64] {
+	return &c.Count
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetMinCount() *plugin.TValue[int64] {
+	return &c.MinCount
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetMaxCount() *plugin.TValue[int64] {
+	return &c.MaxCount
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetEnableAutoScaling() *plugin.TValue[bool] {
+	return &c.EnableAutoScaling
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetMaxPods() *plugin.TValue[int64] {
+	return &c.MaxPods
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetVmSize() *plugin.TValue[string] {
+	return &c.VmSize
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetOsType() *plugin.TValue[string] {
+	return &c.OsType
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetOsSku() *plugin.TValue[string] {
+	return &c.OsSku
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetOsDiskType() *plugin.TValue[string] {
+	return &c.OsDiskType
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetOsDiskSizeGB() *plugin.TValue[int64] {
+	return &c.OsDiskSizeGB
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetScaleSetPriority() *plugin.TValue[string] {
+	return &c.ScaleSetPriority
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetScaleSetEvictionPolicy() *plugin.TValue[string] {
+	return &c.ScaleSetEvictionPolicy
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetSpotMaxPrice() *plugin.TValue[float64] {
+	return &c.SpotMaxPrice
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetAvailabilityZones() *plugin.TValue[[]any] {
+	return &c.AvailabilityZones
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetEnableNodePublicIP() *plugin.TValue[bool] {
+	return &c.EnableNodePublicIP
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetNodePublicIPPrefixId() *plugin.TValue[string] {
+	return &c.NodePublicIPPrefixId
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetEnableEncryptionAtHost() *plugin.TValue[bool] {
+	return &c.EnableEncryptionAtHost
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetEnableUltraSSD() *plugin.TValue[bool] {
+	return &c.EnableUltraSSD
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetEnableFIPS() *plugin.TValue[bool] {
+	return &c.EnableFIPS
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetOrchestratorVersion() *plugin.TValue[string] {
+	return &c.OrchestratorVersion
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetCurrentOrchestratorVersion() *plugin.TValue[string] {
+	return &c.CurrentOrchestratorVersion
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetNodeImageVersion() *plugin.TValue[string] {
+	return &c.NodeImageVersion
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetVnetSubnetId() *plugin.TValue[string] {
+	return &c.VnetSubnetId
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetPodSubnetId() *plugin.TValue[string] {
+	return &c.PodSubnetId
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetProximityPlacementGroupId() *plugin.TValue[string] {
+	return &c.ProximityPlacementGroupId
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetHostGroupId() *plugin.TValue[string] {
+	return &c.HostGroupId
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetPowerState() *plugin.TValue[string] {
+	return &c.PowerState
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetWorkloadRuntime() *plugin.TValue[string] {
+	return &c.WorkloadRuntime
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetNodeLabels() *plugin.TValue[map[string]any] {
+	return &c.NodeLabels
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetNodeTaints() *plugin.TValue[[]any] {
+	return &c.NodeTaints
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetUpgradeMaxSurge() *plugin.TValue[string] {
+	return &c.UpgradeMaxSurge
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetUpgradeMaxUnavailable() *plugin.TValue[string] {
+	return &c.UpgradeMaxUnavailable
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetUpgradeDrainTimeoutInMinutes() *plugin.TValue[int64] {
+	return &c.UpgradeDrainTimeoutInMinutes
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetUpgradeNodeSoakDurationInMinutes() *plugin.TValue[int64] {
+	return &c.UpgradeNodeSoakDurationInMinutes
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetSshAccess() *plugin.TValue[string] {
+	return &c.SshAccess
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetEnableVTPM() *plugin.TValue[bool] {
+	return &c.EnableVTPM
+}
+
+func (c *mqlAzureSubscriptionAksServiceClusterNodePool) GetEnableSecureBoot() *plugin.TValue[bool] {
+	return &c.EnableSecureBoot
 }
 
 // mqlAzureSubscriptionAdvisorService for the azure.subscription.advisorService resource
