@@ -4629,10 +4629,14 @@ private aws.elb.loadbalancer.attribute {
 // CodeBuild project — each row surfaces the source provider, build
 // environment (image, compute type, environment variables), service role,
 // VPC and security-group configuration, artifact destinations, and
-// CloudWatch log settings.
+// CloudWatch log settings. Iterate `reportGroups()` for the test and code
+// coverage report groups produced by builds, including their S3 export
+// destinations.
 aws.codebuild {
   // List of build projects
   projects() []aws.codebuild.project
+  // List of report groups for test and code coverage results
+  reportGroups() []aws.codebuild.reportGroup
 }
 
 // AWS CodeBuild project
@@ -4665,8 +4669,122 @@ private aws.codebuild.project @defaults("arn name") {
   encryptionKey() aws.kms.key
   // IAM service role ARN used by the build project
   serviceRole string
+  // IAM service role used by the build project
+  serviceIamRole() aws.iam.role
   // Minutes a build is allowed to be queued before it times out
   queuedTimeoutInMinutes int
+  // Type of the primary build output artifact: CODEPIPELINE, NO_ARTIFACTS, or S3
+  artifactsType string
+  // Location of the primary build output artifact (S3 bucket name when type is S3)
+  artifactsLocation string
+  // Name of the primary build output artifact
+  artifactsName string
+  // Namespace pattern for the primary build output artifact: NONE or BUILD_ID
+  artifactsNamespaceType string
+  // Packaging type for the primary build output artifact: NONE or ZIP
+  artifactsPackaging string
+  // Sub-path under `artifactsLocation` for the primary build output artifact
+  artifactsPath string
+  // Whether buildspec-specified artifact name overrides the configured name
+  artifactsOverrideArtifactName bool
+  // Whether output artifact encryption is disabled
+  artifactsEncryptionDisabled bool
+  // Identifier for the primary build output artifact
+  artifactsIdentifier string
+  // S3 bucket owner access mode for primary artifacts: NONE, READ_ONLY, or FULL
+  artifactsBucketOwnerAccess string
+  // Secondary build output artifact configurations
+  secondaryArtifacts []dict
+  // Type of cache used by the build project: NO_CACHE, S3, or LOCAL
+  cacheType string
+  // Location of the cache (S3 bucket name/prefix when type is S3)
+  cacheLocation string
+  // Local cache modes: LOCAL_SOURCE_CACHE, LOCAL_DOCKER_LAYER_CACHE, LOCAL_CUSTOM_CACHE
+  cacheModes []string
+  // Whether CloudWatch logs are enabled for builds in this project
+  logsCloudWatchEnabled bool
+  // CloudWatch log group name for build logs
+  logsCloudWatchGroupName string
+  // CloudWatch log stream name prefix for build logs
+  logsCloudWatchStreamName string
+  // CloudWatch log group for build logs
+  logsCloudWatchLogGroup() aws.cloudwatch.loggroup
+  // Whether S3 build log uploads are enabled for this project
+  logsS3Enabled bool
+  // S3 bucket and path prefix where build logs are uploaded
+  logsS3Location string
+  // Whether S3 build log encryption is disabled
+  logsS3EncryptionDisabled bool
+  // ID of the VPC the build project runs in
+  vpcConfigVpcId string
+  // List of subnet IDs the build project attaches to in the VPC
+  vpcConfigSubnetIds []string
+  // List of security group IDs attached to the build project network interface
+  vpcConfigSecurityGroupIds []string
+  // VPC the build project runs in
+  vpc() aws.vpc
+  // Subnets the build project attaches to in the VPC
+  subnets() []aws.vpc.subnet
+  // Security groups attached to the build project network interface
+  securityGroups() []aws.ec2.securitygroup
+  // Build environment type: LINUX_CONTAINER, LINUX_GPU_CONTAINER, WINDOWS_SERVER_2019_CONTAINER, ARM_CONTAINER, LINUX_LAMBDA_CONTAINER, ARM_LAMBDA_CONTAINER, MAC_ARM
+  environmentType string
+  // Docker image tag or digest used for the build environment
+  environmentImage string
+  // Compute size used for builds: BUILD_GENERAL1_SMALL, BUILD_GENERAL1_MEDIUM, BUILD_GENERAL1_LARGE, BUILD_GENERAL1_XLARGE, BUILD_GENERAL1_2XLARGE, BUILD_LAMBDA_1GB through BUILD_LAMBDA_10GB, or ATTRIBUTE_BASED_COMPUTE
+  environmentComputeType string
+  // ARN of an S3 object containing the PEM-encoded certificate for the build environment
+  environmentCertificate string
+  // Credentials CodeBuild uses to pull build images: CODEBUILD or SERVICE_ROLE
+  environmentImagePullCredentialsType string
+  // Environment variables exposed to builds; each entry has `name`, `value`, and `type` (PLAINTEXT, PARAMETER_STORE, or SECRETS_MANAGER)
+  environmentVariables []dict
+  // Source provider type: CODECOMMIT, CODEPIPELINE, GITHUB, GITHUB_ENTERPRISE, GITLAB, GITLAB_SELF_MANAGED, BITBUCKET, S3, or NO_SOURCE
+  sourceType string
+  // Location of the source code (HTTPS clone URL, S3 path, etc.)
+  sourceLocation string
+  // Git clone depth for the build source (0 means full clone)
+  sourceGitCloneDepth int
+  // Inline buildspec or path to the buildspec file used for builds
+  sourceBuildspec string
+  // Whether SSL warnings are ignored when connecting to the project source
+  sourceInsecureSsl bool
+  // Whether build start and finish are reported back to the source provider
+  sourceReportBuildStatus bool
+  // Identifier for the primary project source
+  sourceIdentifier string
+  // Secondary build input source configurations
+  secondarySources []dict
+  // Webhook configuration that connects repository events to this build project
+  webhook dict
+  // Batch build configuration for the project
+  buildBatchConfig dict
+  // Maximum number of concurrent builds allowed for this project
+  concurrentBuildLimit int
+}
+
+// AWS CodeBuild report group
+private aws.codebuild.reportGroup @defaults("arn name type status") {
+  // ARN for the report group
+  arn string
+  // Name of the report group
+  name string
+  // Type of reports the group collects: TEST or CODE_COVERAGE
+  type string
+  // Status of the report group: ACTIVE or DELETING
+  status string
+  // Export destination type: NO_EXPORT or S3
+  exportConfigType string
+  // S3 export destination details (`bucket`, `bucketOwner`, `encryptionDisabled`, `encryptionKey`, `packaging`, `path`) when `exportConfigType` is S3
+  exportConfigS3 dict
+  // Date the report group was created
+  createdAt time
+  // Date the report group was last modified
+  modifiedAt time
+  // Region where the report group exists
+  region string
+  // Tags for the report group
+  tags map[string]string
 }
 
 // Amazon GuardDuty

@@ -209,6 +209,7 @@ const (
 	ResourceAwsElbLoadbalancerAttribute                                         string = "aws.elb.loadbalancer.attribute"
 	ResourceAwsCodebuild                                                        string = "aws.codebuild"
 	ResourceAwsCodebuildProject                                                 string = "aws.codebuild.project"
+	ResourceAwsCodebuildReportGroup                                             string = "aws.codebuild.reportGroup"
 	ResourceAwsGuardduty                                                        string = "aws.guardduty"
 	ResourceAwsGuarddutyDetector                                                string = "aws.guardduty.detector"
 	ResourceAwsGuarddutyDetectorFeature                                         string = "aws.guardduty.detector.feature"
@@ -1541,6 +1542,10 @@ func init() {
 		"aws.codebuild.project": {
 			Init:   initAwsCodebuildProject,
 			Create: createAwsCodebuildProject,
+		},
+		"aws.codebuild.reportGroup": {
+			// to override args, implement: initAwsCodebuildReportGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCodebuildReportGroup,
 		},
 		"aws.guardduty": {
 			// to override args, implement: initAwsGuardduty(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9335,6 +9340,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.codebuild.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuild).GetProjects()).ToDataRes(types.Array(types.Resource("aws.codebuild.project")))
 	},
+	"aws.codebuild.reportGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuild).GetReportGroups()).ToDataRes(types.Array(types.Resource("aws.codebuild.reportGroup")))
+	},
 	"aws.codebuild.project.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuildProject).GetArn()).ToDataRes(types.String)
 	},
@@ -9377,8 +9385,173 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.codebuild.project.serviceRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuildProject).GetServiceRole()).ToDataRes(types.String)
 	},
+	"aws.codebuild.project.serviceIamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetServiceIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
 	"aws.codebuild.project.queuedTimeoutInMinutes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCodebuildProject).GetQueuedTimeoutInMinutes()).ToDataRes(types.Int)
+	},
+	"aws.codebuild.project.artifactsType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.artifactsLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsLocation()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.artifactsName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsName()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.artifactsNamespaceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsNamespaceType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.artifactsPackaging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsPackaging()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.artifactsPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsPath()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.artifactsOverrideArtifactName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsOverrideArtifactName()).ToDataRes(types.Bool)
+	},
+	"aws.codebuild.project.artifactsEncryptionDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsEncryptionDisabled()).ToDataRes(types.Bool)
+	},
+	"aws.codebuild.project.artifactsIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsIdentifier()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.artifactsBucketOwnerAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetArtifactsBucketOwnerAccess()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.secondaryArtifacts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSecondaryArtifacts()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codebuild.project.cacheType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetCacheType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.cacheLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetCacheLocation()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.cacheModes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetCacheModes()).ToDataRes(types.Array(types.String))
+	},
+	"aws.codebuild.project.logsCloudWatchEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetLogsCloudWatchEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.codebuild.project.logsCloudWatchGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetLogsCloudWatchGroupName()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.logsCloudWatchStreamName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetLogsCloudWatchStreamName()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.logsCloudWatchLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetLogsCloudWatchLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.codebuild.project.logsS3Enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetLogsS3Enabled()).ToDataRes(types.Bool)
+	},
+	"aws.codebuild.project.logsS3Location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetLogsS3Location()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.logsS3EncryptionDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetLogsS3EncryptionDisabled()).ToDataRes(types.Bool)
+	},
+	"aws.codebuild.project.vpcConfigVpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetVpcConfigVpcId()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.vpcConfigSubnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetVpcConfigSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.codebuild.project.vpcConfigSecurityGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetVpcConfigSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.codebuild.project.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.codebuild.project.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.codebuild.project.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.codebuild.project.environmentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.environmentImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentImage()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.environmentComputeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentComputeType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.environmentCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentCertificate()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.environmentImagePullCredentialsType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentImagePullCredentialsType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.environmentVariables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetEnvironmentVariables()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codebuild.project.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSourceType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.sourceLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSourceLocation()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.sourceGitCloneDepth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSourceGitCloneDepth()).ToDataRes(types.Int)
+	},
+	"aws.codebuild.project.sourceBuildspec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSourceBuildspec()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.sourceInsecureSsl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSourceInsecureSsl()).ToDataRes(types.Bool)
+	},
+	"aws.codebuild.project.sourceReportBuildStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSourceReportBuildStatus()).ToDataRes(types.Bool)
+	},
+	"aws.codebuild.project.sourceIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSourceIdentifier()).ToDataRes(types.String)
+	},
+	"aws.codebuild.project.secondarySources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetSecondarySources()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.codebuild.project.webhook": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetWebhook()).ToDataRes(types.Dict)
+	},
+	"aws.codebuild.project.buildBatchConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetBuildBatchConfig()).ToDataRes(types.Dict)
+	},
+	"aws.codebuild.project.concurrentBuildLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildProject).GetConcurrentBuildLimit()).ToDataRes(types.Int)
+	},
+	"aws.codebuild.reportGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.codebuild.reportGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.codebuild.reportGroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.reportGroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.codebuild.reportGroup.exportConfigType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetExportConfigType()).ToDataRes(types.String)
+	},
+	"aws.codebuild.reportGroup.exportConfigS3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetExportConfigS3()).ToDataRes(types.Dict)
+	},
+	"aws.codebuild.reportGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.codebuild.reportGroup.modifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.codebuild.reportGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.codebuild.reportGroup.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCodebuildReportGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.guardduty.findings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGuardduty).GetFindings()).ToDataRes(types.Array(types.Resource("aws.guardduty.finding")))
@@ -33738,6 +33911,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCodebuild).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.codebuild.reportGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuild).ReportGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.codebuild.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCodebuildProject).__id, ok = v.Value.(string)
 		return
@@ -33798,8 +33975,232 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCodebuildProject).ServiceRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.codebuild.project.serviceIamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ServiceIamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
 	"aws.codebuild.project.queuedTimeoutInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCodebuildProject).QueuedTimeoutInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsNamespaceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsNamespaceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsPackaging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsPackaging, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsOverrideArtifactName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsOverrideArtifactName, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsEncryptionDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsEncryptionDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.artifactsBucketOwnerAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ArtifactsBucketOwnerAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.secondaryArtifacts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SecondaryArtifacts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.cacheType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).CacheType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.cacheLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).CacheLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.cacheModes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).CacheModes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.logsCloudWatchEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).LogsCloudWatchEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.logsCloudWatchGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).LogsCloudWatchGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.logsCloudWatchStreamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).LogsCloudWatchStreamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.logsCloudWatchLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).LogsCloudWatchLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.logsS3Enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).LogsS3Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.logsS3Location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).LogsS3Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.logsS3EncryptionDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).LogsS3EncryptionDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.vpcConfigVpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).VpcConfigVpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.vpcConfigSubnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).VpcConfigSubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.vpcConfigSecurityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).VpcConfigSecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentImage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentComputeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentComputeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentImagePullCredentialsType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentImagePullCredentialsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.environmentVariables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).EnvironmentVariables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.sourceLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SourceLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.sourceGitCloneDepth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SourceGitCloneDepth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.sourceBuildspec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SourceBuildspec, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.sourceInsecureSsl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SourceInsecureSsl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.sourceReportBuildStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SourceReportBuildStatus, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.sourceIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SourceIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.secondarySources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).SecondarySources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.webhook": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).Webhook, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.buildBatchConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).BuildBatchConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.project.concurrentBuildLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildProject).ConcurrentBuildLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.codebuild.reportGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.exportConfigType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).ExportConfigType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.exportConfigS3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).ExportConfigS3, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.modifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).ModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.codebuild.reportGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCodebuildReportGroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.guardduty.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79560,7 +79961,8 @@ type mqlAwsCodebuild struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsCodebuildInternal it will be used here
-	Projects plugin.TValue[[]any]
+	Projects     plugin.TValue[[]any]
+	ReportGroups plugin.TValue[[]any]
 }
 
 // createAwsCodebuild creates a new instance of this resource
@@ -79616,26 +80018,87 @@ func (c *mqlAwsCodebuild) GetProjects() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsCodebuild) GetReportGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReportGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild", c.__id, "reportGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.reportGroups()
+	})
+}
+
 // mqlAwsCodebuildProject for the aws.codebuild.project resource
 type mqlAwsCodebuildProject struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsCodebuildProjectInternal
-	Arn                    plugin.TValue[string]
-	Description            plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Environment            plugin.TValue[any]
-	Region                 plugin.TValue[string]
-	Source                 plugin.TValue[any]
-	Tags                   plugin.TValue[map[string]any]
-	CreatedAt              plugin.TValue[*time.Time]
-	ModifiedAt             plugin.TValue[*time.Time]
-	PrivilegedMode         plugin.TValue[bool]
-	ProjectVisibility      plugin.TValue[string]
-	TimeoutInMinutes       plugin.TValue[int64]
-	EncryptionKey          plugin.TValue[*mqlAwsKmsKey]
-	ServiceRole            plugin.TValue[string]
-	QueuedTimeoutInMinutes plugin.TValue[int64]
+	Arn                                 plugin.TValue[string]
+	Description                         plugin.TValue[string]
+	Name                                plugin.TValue[string]
+	Environment                         plugin.TValue[any]
+	Region                              plugin.TValue[string]
+	Source                              plugin.TValue[any]
+	Tags                                plugin.TValue[map[string]any]
+	CreatedAt                           plugin.TValue[*time.Time]
+	ModifiedAt                          plugin.TValue[*time.Time]
+	PrivilegedMode                      plugin.TValue[bool]
+	ProjectVisibility                   plugin.TValue[string]
+	TimeoutInMinutes                    plugin.TValue[int64]
+	EncryptionKey                       plugin.TValue[*mqlAwsKmsKey]
+	ServiceRole                         plugin.TValue[string]
+	ServiceIamRole                      plugin.TValue[*mqlAwsIamRole]
+	QueuedTimeoutInMinutes              plugin.TValue[int64]
+	ArtifactsType                       plugin.TValue[string]
+	ArtifactsLocation                   plugin.TValue[string]
+	ArtifactsName                       plugin.TValue[string]
+	ArtifactsNamespaceType              plugin.TValue[string]
+	ArtifactsPackaging                  plugin.TValue[string]
+	ArtifactsPath                       plugin.TValue[string]
+	ArtifactsOverrideArtifactName       plugin.TValue[bool]
+	ArtifactsEncryptionDisabled         plugin.TValue[bool]
+	ArtifactsIdentifier                 plugin.TValue[string]
+	ArtifactsBucketOwnerAccess          plugin.TValue[string]
+	SecondaryArtifacts                  plugin.TValue[[]any]
+	CacheType                           plugin.TValue[string]
+	CacheLocation                       plugin.TValue[string]
+	CacheModes                          plugin.TValue[[]any]
+	LogsCloudWatchEnabled               plugin.TValue[bool]
+	LogsCloudWatchGroupName             plugin.TValue[string]
+	LogsCloudWatchStreamName            plugin.TValue[string]
+	LogsCloudWatchLogGroup              plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	LogsS3Enabled                       plugin.TValue[bool]
+	LogsS3Location                      plugin.TValue[string]
+	LogsS3EncryptionDisabled            plugin.TValue[bool]
+	VpcConfigVpcId                      plugin.TValue[string]
+	VpcConfigSubnetIds                  plugin.TValue[[]any]
+	VpcConfigSecurityGroupIds           plugin.TValue[[]any]
+	Vpc                                 plugin.TValue[*mqlAwsVpc]
+	Subnets                             plugin.TValue[[]any]
+	SecurityGroups                      plugin.TValue[[]any]
+	EnvironmentType                     plugin.TValue[string]
+	EnvironmentImage                    plugin.TValue[string]
+	EnvironmentComputeType              plugin.TValue[string]
+	EnvironmentCertificate              plugin.TValue[string]
+	EnvironmentImagePullCredentialsType plugin.TValue[string]
+	EnvironmentVariables                plugin.TValue[[]any]
+	SourceType                          plugin.TValue[string]
+	SourceLocation                      plugin.TValue[string]
+	SourceGitCloneDepth                 plugin.TValue[int64]
+	SourceBuildspec                     plugin.TValue[string]
+	SourceInsecureSsl                   plugin.TValue[bool]
+	SourceReportBuildStatus             plugin.TValue[bool]
+	SourceIdentifier                    plugin.TValue[string]
+	SecondarySources                    plugin.TValue[[]any]
+	Webhook                             plugin.TValue[any]
+	BuildBatchConfig                    plugin.TValue[any]
+	ConcurrentBuildLimit                plugin.TValue[int64]
 }
 
 // createAwsCodebuildProject creates a new instance of this resource
@@ -79743,8 +80206,342 @@ func (c *mqlAwsCodebuildProject) GetServiceRole() *plugin.TValue[string] {
 	return &c.ServiceRole
 }
 
+func (c *mqlAwsCodebuildProject) GetServiceIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ServiceIamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild.project", c.__id, "serviceIamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.serviceIamRole()
+	})
+}
+
 func (c *mqlAwsCodebuildProject) GetQueuedTimeoutInMinutes() *plugin.TValue[int64] {
 	return &c.QueuedTimeoutInMinutes
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsType() *plugin.TValue[string] {
+	return &c.ArtifactsType
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsLocation() *plugin.TValue[string] {
+	return &c.ArtifactsLocation
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsName() *plugin.TValue[string] {
+	return &c.ArtifactsName
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsNamespaceType() *plugin.TValue[string] {
+	return &c.ArtifactsNamespaceType
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsPackaging() *plugin.TValue[string] {
+	return &c.ArtifactsPackaging
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsPath() *plugin.TValue[string] {
+	return &c.ArtifactsPath
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsOverrideArtifactName() *plugin.TValue[bool] {
+	return &c.ArtifactsOverrideArtifactName
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsEncryptionDisabled() *plugin.TValue[bool] {
+	return &c.ArtifactsEncryptionDisabled
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsIdentifier() *plugin.TValue[string] {
+	return &c.ArtifactsIdentifier
+}
+
+func (c *mqlAwsCodebuildProject) GetArtifactsBucketOwnerAccess() *plugin.TValue[string] {
+	return &c.ArtifactsBucketOwnerAccess
+}
+
+func (c *mqlAwsCodebuildProject) GetSecondaryArtifacts() *plugin.TValue[[]any] {
+	return &c.SecondaryArtifacts
+}
+
+func (c *mqlAwsCodebuildProject) GetCacheType() *plugin.TValue[string] {
+	return &c.CacheType
+}
+
+func (c *mqlAwsCodebuildProject) GetCacheLocation() *plugin.TValue[string] {
+	return &c.CacheLocation
+}
+
+func (c *mqlAwsCodebuildProject) GetCacheModes() *plugin.TValue[[]any] {
+	return &c.CacheModes
+}
+
+func (c *mqlAwsCodebuildProject) GetLogsCloudWatchEnabled() *plugin.TValue[bool] {
+	return &c.LogsCloudWatchEnabled
+}
+
+func (c *mqlAwsCodebuildProject) GetLogsCloudWatchGroupName() *plugin.TValue[string] {
+	return &c.LogsCloudWatchGroupName
+}
+
+func (c *mqlAwsCodebuildProject) GetLogsCloudWatchStreamName() *plugin.TValue[string] {
+	return &c.LogsCloudWatchStreamName
+}
+
+func (c *mqlAwsCodebuildProject) GetLogsCloudWatchLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.LogsCloudWatchLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild.project", c.__id, "logsCloudWatchLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.logsCloudWatchLogGroup()
+	})
+}
+
+func (c *mqlAwsCodebuildProject) GetLogsS3Enabled() *plugin.TValue[bool] {
+	return &c.LogsS3Enabled
+}
+
+func (c *mqlAwsCodebuildProject) GetLogsS3Location() *plugin.TValue[string] {
+	return &c.LogsS3Location
+}
+
+func (c *mqlAwsCodebuildProject) GetLogsS3EncryptionDisabled() *plugin.TValue[bool] {
+	return &c.LogsS3EncryptionDisabled
+}
+
+func (c *mqlAwsCodebuildProject) GetVpcConfigVpcId() *plugin.TValue[string] {
+	return &c.VpcConfigVpcId
+}
+
+func (c *mqlAwsCodebuildProject) GetVpcConfigSubnetIds() *plugin.TValue[[]any] {
+	return &c.VpcConfigSubnetIds
+}
+
+func (c *mqlAwsCodebuildProject) GetVpcConfigSecurityGroupIds() *plugin.TValue[[]any] {
+	return &c.VpcConfigSecurityGroupIds
+}
+
+func (c *mqlAwsCodebuildProject) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild.project", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsCodebuildProject) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild.project", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsCodebuildProject) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.codebuild.project", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentType() *plugin.TValue[string] {
+	return &c.EnvironmentType
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentImage() *plugin.TValue[string] {
+	return &c.EnvironmentImage
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentComputeType() *plugin.TValue[string] {
+	return &c.EnvironmentComputeType
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentCertificate() *plugin.TValue[string] {
+	return &c.EnvironmentCertificate
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentImagePullCredentialsType() *plugin.TValue[string] {
+	return &c.EnvironmentImagePullCredentialsType
+}
+
+func (c *mqlAwsCodebuildProject) GetEnvironmentVariables() *plugin.TValue[[]any] {
+	return &c.EnvironmentVariables
+}
+
+func (c *mqlAwsCodebuildProject) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlAwsCodebuildProject) GetSourceLocation() *plugin.TValue[string] {
+	return &c.SourceLocation
+}
+
+func (c *mqlAwsCodebuildProject) GetSourceGitCloneDepth() *plugin.TValue[int64] {
+	return &c.SourceGitCloneDepth
+}
+
+func (c *mqlAwsCodebuildProject) GetSourceBuildspec() *plugin.TValue[string] {
+	return &c.SourceBuildspec
+}
+
+func (c *mqlAwsCodebuildProject) GetSourceInsecureSsl() *plugin.TValue[bool] {
+	return &c.SourceInsecureSsl
+}
+
+func (c *mqlAwsCodebuildProject) GetSourceReportBuildStatus() *plugin.TValue[bool] {
+	return &c.SourceReportBuildStatus
+}
+
+func (c *mqlAwsCodebuildProject) GetSourceIdentifier() *plugin.TValue[string] {
+	return &c.SourceIdentifier
+}
+
+func (c *mqlAwsCodebuildProject) GetSecondarySources() *plugin.TValue[[]any] {
+	return &c.SecondarySources
+}
+
+func (c *mqlAwsCodebuildProject) GetWebhook() *plugin.TValue[any] {
+	return &c.Webhook
+}
+
+func (c *mqlAwsCodebuildProject) GetBuildBatchConfig() *plugin.TValue[any] {
+	return &c.BuildBatchConfig
+}
+
+func (c *mqlAwsCodebuildProject) GetConcurrentBuildLimit() *plugin.TValue[int64] {
+	return &c.ConcurrentBuildLimit
+}
+
+// mqlAwsCodebuildReportGroup for the aws.codebuild.reportGroup resource
+type mqlAwsCodebuildReportGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCodebuildReportGroupInternal it will be used here
+	Arn              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Status           plugin.TValue[string]
+	ExportConfigType plugin.TValue[string]
+	ExportConfigS3   plugin.TValue[any]
+	CreatedAt        plugin.TValue[*time.Time]
+	ModifiedAt       plugin.TValue[*time.Time]
+	Region           plugin.TValue[string]
+	Tags             plugin.TValue[map[string]any]
+}
+
+// createAwsCodebuildReportGroup creates a new instance of this resource
+func createAwsCodebuildReportGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCodebuildReportGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.codebuild.reportGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCodebuildReportGroup) MqlName() string {
+	return "aws.codebuild.reportGroup"
+}
+
+func (c *mqlAwsCodebuildReportGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetExportConfigType() *plugin.TValue[string] {
+	return &c.ExportConfigType
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetExportConfigS3() *plugin.TValue[any] {
+	return &c.ExportConfigS3
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.ModifiedAt
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsCodebuildReportGroup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 // mqlAwsGuardduty for the aws.guardduty resource

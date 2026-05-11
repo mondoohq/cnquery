@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	cbtypes "github.com/aws/aws-sdk-go-v2/service/codebuild/types"
@@ -17,6 +18,8 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+const logGroupArnPattern = "arn:aws:logs:%s:%s:log-group:%s:*"
 
 func (a *mqlAwsCodebuild) id() (string, error) {
 	return "aws.codebuild", nil
@@ -137,18 +140,215 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	args["serviceRole"] = llx.StringDataPtr(project.ServiceRole)
 	args["queuedTimeoutInMinutes"] = llx.IntDataDefault(project.QueuedTimeoutInMinutes, 480)
 
-	// Cache the encryption key ARN for lazy loading in encryptionKey()
+	if project.ConcurrentBuildLimit != nil {
+		args["concurrentBuildLimit"] = llx.IntData(int64(*project.ConcurrentBuildLimit))
+	} else {
+		args["concurrentBuildLimit"] = llx.IntData(0)
+	}
+
+	// Artifacts
+	primaryArtifacts := project.Artifacts
+	args["artifactsType"] = llx.StringData(artifactsTypeString(primaryArtifacts))
+	args["artifactsLocation"] = llx.StringData(artifactsField(primaryArtifacts, func(a *cbtypes.ProjectArtifacts) *string { return a.Location }))
+	args["artifactsName"] = llx.StringData(artifactsField(primaryArtifacts, func(a *cbtypes.ProjectArtifacts) *string { return a.Name }))
+	args["artifactsNamespaceType"] = llx.StringData(artifactsNamespaceString(primaryArtifacts))
+	args["artifactsPackaging"] = llx.StringData(artifactsPackagingString(primaryArtifacts))
+	args["artifactsPath"] = llx.StringData(artifactsField(primaryArtifacts, func(a *cbtypes.ProjectArtifacts) *string { return a.Path }))
+	args["artifactsOverrideArtifactName"] = llx.BoolData(artifactsBoolField(primaryArtifacts, func(a *cbtypes.ProjectArtifacts) *bool { return a.OverrideArtifactName }))
+	args["artifactsEncryptionDisabled"] = llx.BoolData(artifactsBoolField(primaryArtifacts, func(a *cbtypes.ProjectArtifacts) *bool { return a.EncryptionDisabled }))
+	args["artifactsIdentifier"] = llx.StringData(artifactsField(primaryArtifacts, func(a *cbtypes.ProjectArtifacts) *string { return a.ArtifactIdentifier }))
+	args["artifactsBucketOwnerAccess"] = llx.StringData(artifactsBucketOwnerAccessString(primaryArtifacts))
+
+	secondaryArtifacts, err := cbArtifactsToDicts(project.SecondaryArtifacts)
+	if err != nil {
+		return nil, nil, err
+	}
+	args["secondaryArtifacts"] = llx.ArrayData(secondaryArtifacts, types.Dict)
+
+	// Cache
+	if project.Cache != nil {
+		args["cacheType"] = llx.StringData(string(project.Cache.Type))
+		args["cacheLocation"] = llx.StringDataPtr(project.Cache.Location)
+		modes := make([]any, 0, len(project.Cache.Modes))
+		for _, m := range project.Cache.Modes {
+			modes = append(modes, string(m))
+		}
+		args["cacheModes"] = llx.ArrayData(modes, types.String)
+	} else {
+		args["cacheType"] = llx.StringData("")
+		args["cacheLocation"] = llx.StringData("")
+		args["cacheModes"] = llx.ArrayData([]any{}, types.String)
+	}
+
+	// Logs
+	var logsCWEnabled, logsS3Enabled, logsS3EncryptionDisabled bool
+	var logsCWGroupName, logsCWStreamName, logsS3Location string
+	var cacheLogGroupArn *string
+	if project.LogsConfig != nil {
+		if cw := project.LogsConfig.CloudWatchLogs; cw != nil {
+			logsCWEnabled = cw.Status == cbtypes.LogsConfigStatusTypeEnabled
+			if cw.GroupName != nil {
+				logsCWGroupName = *cw.GroupName
+				if logsCWEnabled && logsCWGroupName != "" {
+					arn := fmt.Sprintf(logGroupArnPattern, region, conn.AccountId(), logsCWGroupName)
+					cacheLogGroupArn = &arn
+				}
+			}
+			if cw.StreamName != nil {
+				logsCWStreamName = *cw.StreamName
+			}
+		}
+		if s3 := project.LogsConfig.S3Logs; s3 != nil {
+			logsS3Enabled = s3.Status == cbtypes.LogsConfigStatusTypeEnabled
+			if s3.Location != nil {
+				logsS3Location = *s3.Location
+			}
+			if s3.EncryptionDisabled != nil {
+				logsS3EncryptionDisabled = *s3.EncryptionDisabled
+			}
+		}
+	}
+	args["logsCloudWatchEnabled"] = llx.BoolData(logsCWEnabled)
+	args["logsCloudWatchGroupName"] = llx.StringData(logsCWGroupName)
+	args["logsCloudWatchStreamName"] = llx.StringData(logsCWStreamName)
+	args["logsS3Enabled"] = llx.BoolData(logsS3Enabled)
+	args["logsS3Location"] = llx.StringData(logsS3Location)
+	args["logsS3EncryptionDisabled"] = llx.BoolData(logsS3EncryptionDisabled)
+
+	// VPC config
+	var vpcId string
+	var subnetIds, sgIds []string
+	var cacheVpcId *string
+	if project.VpcConfig != nil {
+		if project.VpcConfig.VpcId != nil {
+			vpcId = *project.VpcConfig.VpcId
+			cacheVpcId = project.VpcConfig.VpcId
+		}
+		subnetIds = project.VpcConfig.Subnets
+		sgIds = project.VpcConfig.SecurityGroupIds
+	}
+	args["vpcConfigVpcId"] = llx.StringData(vpcId)
+	args["vpcConfigSubnetIds"] = llx.ArrayData(stringsToInterface(subnetIds), types.String)
+	args["vpcConfigSecurityGroupIds"] = llx.ArrayData(stringsToInterface(sgIds), types.String)
+
+	// Environment scalars + variables
+	var (
+		envType, envImage, envCompute, envCert, envImagePullCreds string
+		envVars                                                   []any
+	)
+	if project.Environment != nil {
+		envType = string(project.Environment.Type)
+		if project.Environment.Image != nil {
+			envImage = *project.Environment.Image
+		}
+		envCompute = string(project.Environment.ComputeType)
+		if project.Environment.Certificate != nil {
+			envCert = *project.Environment.Certificate
+		}
+		envImagePullCreds = string(project.Environment.ImagePullCredentialsType)
+		for _, ev := range project.Environment.EnvironmentVariables {
+			evDict := map[string]any{
+				"name":  convert.ToValue(ev.Name),
+				"value": convert.ToValue(ev.Value),
+				"type":  string(ev.Type),
+			}
+			envVars = append(envVars, evDict)
+		}
+	}
+	args["environmentType"] = llx.StringData(envType)
+	args["environmentImage"] = llx.StringData(envImage)
+	args["environmentComputeType"] = llx.StringData(envCompute)
+	args["environmentCertificate"] = llx.StringData(envCert)
+	args["environmentImagePullCredentialsType"] = llx.StringData(envImagePullCreds)
+	args["environmentVariables"] = llx.ArrayData(envVars, types.Dict)
+
+	// Source scalars
+	var (
+		sourceType, sourceLocation, sourceBuildspec, sourceIdentifier string
+		sourceGitCloneDepth                                           int64
+		sourceInsecureSsl, sourceReportBuildStatus                    bool
+	)
+	if project.Source != nil {
+		sourceType = string(project.Source.Type)
+		if project.Source.Location != nil {
+			sourceLocation = *project.Source.Location
+		}
+		if project.Source.GitCloneDepth != nil {
+			sourceGitCloneDepth = int64(*project.Source.GitCloneDepth)
+		}
+		if project.Source.Buildspec != nil {
+			sourceBuildspec = *project.Source.Buildspec
+		}
+		if project.Source.InsecureSsl != nil {
+			sourceInsecureSsl = *project.Source.InsecureSsl
+		}
+		if project.Source.ReportBuildStatus != nil {
+			sourceReportBuildStatus = *project.Source.ReportBuildStatus
+		}
+		if project.Source.SourceIdentifier != nil {
+			sourceIdentifier = *project.Source.SourceIdentifier
+		}
+	}
+	args["sourceType"] = llx.StringData(sourceType)
+	args["sourceLocation"] = llx.StringData(sourceLocation)
+	args["sourceGitCloneDepth"] = llx.IntData(sourceGitCloneDepth)
+	args["sourceBuildspec"] = llx.StringData(sourceBuildspec)
+	args["sourceInsecureSsl"] = llx.BoolData(sourceInsecureSsl)
+	args["sourceReportBuildStatus"] = llx.BoolData(sourceReportBuildStatus)
+	args["sourceIdentifier"] = llx.StringData(sourceIdentifier)
+
+	secondarySources := make([]any, 0, len(project.SecondarySources))
+	for i := range project.SecondarySources {
+		d, err := convert.JsonToDict(project.SecondarySources[i])
+		if err != nil {
+			return nil, nil, err
+		}
+		secondarySources = append(secondarySources, d)
+	}
+	args["secondarySources"] = llx.ArrayData(secondarySources, types.Dict)
+
+	webhookDict, err := convert.JsonToDict(project.Webhook)
+	if err != nil {
+		return nil, nil, err
+	}
+	args["webhook"] = llx.MapData(webhookDict, types.String)
+
+	buildBatchDict, err := convert.JsonToDict(project.BuildBatchConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+	args["buildBatchConfig"] = llx.MapData(buildBatchDict, types.String)
+
 	obj, err := CreateResource(runtime, "aws.codebuild.project", args)
 	if err != nil {
 		return nil, nil, err
 	}
 	mqlProject := obj.(*mqlAwsCodebuildProject)
 	mqlProject.cacheEncryptionKeyArn = project.EncryptionKey
+	mqlProject.cacheServiceRoleArn = project.ServiceRole
+	mqlProject.cacheLogGroupArn = cacheLogGroupArn
+	mqlProject.cacheVpcId = cacheVpcId
+	mqlProject.cacheSubnetIds = subnetIds
+	mqlProject.region = region
+	mqlProject.accountID = conn.AccountId()
+	// Pre-compute security group ARNs for the embedded handler
+	sgArns := make([]string, 0, len(sgIds))
+	for _, sgId := range sgIds {
+		sgArns = append(sgArns, NewSecurityGroupArn(region, conn.AccountId(), sgId))
+	}
+	mqlProject.setSecurityGroupArns(sgArns)
 	return args, mqlProject, nil
 }
 
 type mqlAwsCodebuildProjectInternal struct {
+	securityGroupIdHandler
 	cacheEncryptionKeyArn *string
+	cacheServiceRoleArn   *string
+	cacheLogGroupArn      *string
+	cacheVpcId            *string
+	cacheSubnetIds        []string
+	region                string
+	accountID             string
 }
 
 func (a *mqlAwsCodebuildProject) encryptionKey() (*mqlAwsKmsKey, error) {
@@ -165,6 +365,182 @@ func (a *mqlAwsCodebuildProject) encryptionKey() (*mqlAwsKmsKey, error) {
 	return nil, nil
 }
 
+func (a *mqlAwsCodebuildProject) serviceIamRole() (*mqlAwsIamRole, error) {
+	if a.cacheServiceRoleArn == nil || *a.cacheServiceRoleArn == "" {
+		a.ServiceIamRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheServiceRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsCodebuildProject) logsCloudWatchLogGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	if a.cacheLogGroupArn == nil || *a.cacheLogGroupArn == "" {
+		a.LogsCloudWatchLogGroup.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.cloudwatch.loggroup",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheLogGroupArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsCloudwatchLoggroup), nil
+}
+
+func (a *mqlAwsCodebuildProject) vpc() (*mqlAwsVpc, error) {
+	if a.cacheVpcId == nil || *a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	vpcArn := fmt.Sprintf(vpcArnPattern, a.region, a.accountID, *a.cacheVpcId)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc",
+		map[string]*llx.RawData{"arn": llx.StringData(vpcArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsCodebuildProject) subnets() ([]any, error) {
+	if len(a.cacheSubnetIds) == 0 {
+		return []any{}, nil
+	}
+	res := []any{}
+	for _, subnetId := range a.cacheSubnetIds {
+		subnetArn := fmt.Sprintf(subnetArnPattern, a.region, a.accountID, subnetId)
+		mqlSubnet, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{"arn": llx.StringData(subnetArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCodebuildProject) securityGroups() ([]any, error) {
+	return a.newSecurityGroupResources(a.MqlRuntime)
+}
+
+// ===== reportGroups =====
+
+func (a *mqlAwsCodebuild) reportGroups() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getReportGroups(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsCodebuild) getReportGroups(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Codebuild(region)
+			ctx := context.Background()
+
+			res := []any{}
+			arns := []string{}
+			paginator := codebuild.NewListReportGroupsPaginator(svc, &codebuild.ListReportGroupsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				arns = append(arns, page.ReportGroups...)
+			}
+
+			// BatchGetReportGroups accepts up to 100 ARNs per call
+			for start := 0; start < len(arns); start += 100 {
+				end := start + 100
+				if end > len(arns) {
+					end = len(arns)
+				}
+				batch, err := svc.BatchGetReportGroups(ctx, &codebuild.BatchGetReportGroupsInput{
+					ReportGroupArns: arns[start:end],
+				})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing report groups for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for i := range batch.ReportGroups {
+					mqlRG, err := newMqlAwsCodebuildReportGroup(a.MqlRuntime, region, batch.ReportGroups[i])
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlRG)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsCodebuildReportGroup(runtime *plugin.Runtime, region string, rg cbtypes.ReportGroup) (plugin.Resource, error) {
+	exportType := ""
+	var exportS3 map[string]any
+	if rg.ExportConfig != nil {
+		exportType = string(rg.ExportConfig.ExportConfigType)
+		if rg.ExportConfig.S3Destination != nil {
+			s3d := rg.ExportConfig.S3Destination
+			exportS3 = map[string]any{
+				"bucket":             convert.ToValue(s3d.Bucket),
+				"bucketOwner":        convert.ToValue(s3d.BucketOwner),
+				"encryptionDisabled": s3d.EncryptionDisabled != nil && *s3d.EncryptionDisabled,
+				"encryptionKey":      convert.ToValue(s3d.EncryptionKey),
+				"packaging":          string(s3d.Packaging),
+				"path":               convert.ToValue(s3d.Path),
+			}
+		}
+	}
+	args := map[string]*llx.RawData{
+		"__id":             llx.StringDataPtr(rg.Arn),
+		"arn":              llx.StringDataPtr(rg.Arn),
+		"name":             llx.StringDataPtr(rg.Name),
+		"type":             llx.StringData(string(rg.Type)),
+		"status":           llx.StringData(string(rg.Status)),
+		"exportConfigType": llx.StringData(exportType),
+		"exportConfigS3":   llx.MapData(exportS3, types.String),
+		"createdAt":        llx.TimeDataPtr(rg.Created),
+		"modifiedAt":       llx.TimeDataPtr(rg.LastModified),
+		"region":           llx.StringData(region),
+		"tags":             llx.MapData(cbTagsToMap(rg.Tags), types.String),
+	}
+	return CreateResource(runtime, "aws.codebuild.reportGroup", args)
+}
+
+func (a *mqlAwsCodebuildReportGroup) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+// ===== helpers =====
+
 func cbTagsToMap(tags []cbtypes.Tag) map[string]any {
 	tagsMap := make(map[string]any)
 
@@ -176,4 +552,74 @@ func cbTagsToMap(tags []cbtypes.Tag) map[string]any {
 	}
 
 	return tagsMap
+}
+
+func cbArtifactsToDicts(arts []cbtypes.ProjectArtifacts) ([]any, error) {
+	res := make([]any, 0, len(arts))
+	for i := range arts {
+		d, err := convert.JsonToDict(arts[i])
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, d)
+	}
+	return res, nil
+}
+
+func stringsToInterface(s []string) []any {
+	res := make([]any, 0, len(s))
+	for _, v := range s {
+		res = append(res, v)
+	}
+	return res
+}
+
+func artifactsTypeString(a *cbtypes.ProjectArtifacts) string {
+	if a == nil {
+		return ""
+	}
+	return string(a.Type)
+}
+
+func artifactsNamespaceString(a *cbtypes.ProjectArtifacts) string {
+	if a == nil {
+		return ""
+	}
+	return string(a.NamespaceType)
+}
+
+func artifactsPackagingString(a *cbtypes.ProjectArtifacts) string {
+	if a == nil {
+		return ""
+	}
+	return string(a.Packaging)
+}
+
+func artifactsBucketOwnerAccessString(a *cbtypes.ProjectArtifacts) string {
+	if a == nil {
+		return ""
+	}
+	return string(a.BucketOwnerAccess)
+}
+
+func artifactsField(a *cbtypes.ProjectArtifacts, get func(*cbtypes.ProjectArtifacts) *string) string {
+	if a == nil {
+		return ""
+	}
+	v := get(a)
+	if v == nil {
+		return ""
+	}
+	return *v
+}
+
+func artifactsBoolField(a *cbtypes.ProjectArtifacts, get func(*cbtypes.ProjectArtifacts) *bool) bool {
+	if a == nil {
+		return false
+	}
+	v := get(a)
+	if v == nil {
+		return false
+	}
+	return *v
 }
