@@ -649,6 +649,7 @@ const (
 	ResourceAwsGlueDatabaseTable                                                string = "aws.glue.database.table"
 	ResourceAwsElasticbeanstalk                                                 string = "aws.elasticbeanstalk"
 	ResourceAwsElasticbeanstalkApplication                                      string = "aws.elasticbeanstalk.application"
+	ResourceAwsElasticbeanstalkApplicationVersion                               string = "aws.elasticbeanstalk.applicationVersion"
 	ResourceAwsElasticbeanstalkEnvironment                                      string = "aws.elasticbeanstalk.environment"
 	ResourceAwsRdsProxy                                                         string = "aws.rds.proxy"
 	ResourceAwsRdsEventSubscription                                             string = "aws.rds.eventSubscription"
@@ -3306,6 +3307,10 @@ func init() {
 		"aws.elasticbeanstalk.application": {
 			// to override args, implement: initAwsElasticbeanstalkApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElasticbeanstalkApplication,
+		},
+		"aws.elasticbeanstalk.applicationVersion": {
+			// to override args, implement: initAwsElasticbeanstalkApplicationVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElasticbeanstalkApplicationVersion,
 		},
 		"aws.elasticbeanstalk.environment": {
 			// to override args, implement: initAwsElasticbeanstalkEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -22764,8 +22769,74 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticbeanstalk.application.versions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticbeanstalkApplication).GetVersions()).ToDataRes(types.Array(types.String))
 	},
+	"aws.elasticbeanstalk.application.versionLifecycleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetVersionLifecycleEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.elasticbeanstalk.application.versionLifecycleMaxCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetVersionLifecycleMaxCount()).ToDataRes(types.Int)
+	},
+	"aws.elasticbeanstalk.application.versionLifecycleMaxAgeDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetVersionLifecycleMaxAgeDays()).ToDataRes(types.Int)
+	},
+	"aws.elasticbeanstalk.application.versionLifecycleDeleteSourceFromS3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetVersionLifecycleDeleteSourceFromS3()).ToDataRes(types.Bool)
+	},
+	"aws.elasticbeanstalk.application.versionLifecycleServiceRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetVersionLifecycleServiceRoleArn()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.application.versionLifecycleServiceIamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetVersionLifecycleServiceIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.elasticbeanstalk.application.applicationVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplication).GetApplicationVersions()).ToDataRes(types.Array(types.Resource("aws.elasticbeanstalk.applicationVersion")))
+	},
 	"aws.elasticbeanstalk.application.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticbeanstalkApplication).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.elasticbeanstalk.applicationVersion.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetArn()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.applicationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetApplicationName()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.versionLabel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetVersionLabel()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.elasticbeanstalk.applicationVersion.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.elasticbeanstalk.applicationVersion.buildArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetBuildArn()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.sourceBundleS3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetSourceBundleS3Bucket()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.sourceBundleS3Key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetSourceBundleS3Key()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.sourceLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetSourceLocation()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.sourceRepository": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetSourceRepository()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetSourceType()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.applicationVersion.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkApplicationVersion).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.elasticbeanstalk.environment.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetArn()).ToDataRes(types.String)
@@ -22808,6 +22879,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elasticbeanstalk.environment.tier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetTier()).ToDataRes(types.Dict)
+	},
+	"aws.elasticbeanstalk.environment.tierName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetTierName()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.tierType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetTierType()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.templateName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetTemplateName()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.operationsRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetOperationsRoleArn()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.operationsIamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetOperationsIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.elasticbeanstalk.environment.abortableOperationInProgress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetAbortableOperationInProgress()).ToDataRes(types.Bool)
+	},
+	"aws.elasticbeanstalk.environment.loadBalancerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetLoadBalancerName()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.loadBalancerDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetLoadBalancerDomain()).ToDataRes(types.String)
+	},
+	"aws.elasticbeanstalk.environment.loadBalancerListeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetLoadBalancerListeners()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.elasticbeanstalk.environment.environmentLinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetEnvironmentLinks()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.elasticbeanstalk.environment.resourcesSummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetResourcesSummary()).ToDataRes(types.Dict)
 	},
 	"aws.elasticbeanstalk.environment.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetCreatedAt()).ToDataRes(types.Time)
@@ -54071,8 +54175,100 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElasticbeanstalkApplication).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.elasticbeanstalk.application.versionLifecycleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).VersionLifecycleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.versionLifecycleMaxCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).VersionLifecycleMaxCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.versionLifecycleMaxAgeDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).VersionLifecycleMaxAgeDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.versionLifecycleDeleteSourceFromS3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).VersionLifecycleDeleteSourceFromS3, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.versionLifecycleServiceRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).VersionLifecycleServiceRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.versionLifecycleServiceIamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).VersionLifecycleServiceIamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.application.applicationVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplication).ApplicationVersions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.elasticbeanstalk.application.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticbeanstalkApplication).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.applicationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).ApplicationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.versionLabel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).VersionLabel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.buildArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).BuildArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.sourceBundleS3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).SourceBundleS3Bucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.sourceBundleS3Key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).SourceBundleS3Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.sourceLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).SourceLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.sourceRepository": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).SourceRepository, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.applicationVersion.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkApplicationVersion).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.elasticbeanstalk.environment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54133,6 +54329,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elasticbeanstalk.environment.tier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticbeanstalkEnvironment).Tier, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.tierName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).TierName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.tierType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).TierType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.templateName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).TemplateName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.operationsRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).OperationsRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.operationsIamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).OperationsIamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.abortableOperationInProgress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).AbortableOperationInProgress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.loadBalancerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).LoadBalancerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.loadBalancerDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).LoadBalancerDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.loadBalancerListeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).LoadBalancerListeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.environmentLinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).EnvironmentLinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.elasticbeanstalk.environment.resourcesSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).ResourcesSummary, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.elasticbeanstalk.environment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -131424,16 +131664,23 @@ func (c *mqlAwsElasticbeanstalk) GetEnvironments() *plugin.TValue[[]any] {
 type mqlAwsElasticbeanstalkApplication struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsElasticbeanstalkApplicationInternal it will be used here
-	Arn                    plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Region                 plugin.TValue[string]
-	Description            plugin.TValue[string]
-	CreatedAt              plugin.TValue[*time.Time]
-	UpdatedAt              plugin.TValue[*time.Time]
-	ConfigurationTemplates plugin.TValue[[]any]
-	Versions               plugin.TValue[[]any]
-	Tags                   plugin.TValue[map[string]any]
+	mqlAwsElasticbeanstalkApplicationInternal
+	Arn                                plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	Region                             plugin.TValue[string]
+	Description                        plugin.TValue[string]
+	CreatedAt                          plugin.TValue[*time.Time]
+	UpdatedAt                          plugin.TValue[*time.Time]
+	ConfigurationTemplates             plugin.TValue[[]any]
+	Versions                           plugin.TValue[[]any]
+	VersionLifecycleEnabled            plugin.TValue[bool]
+	VersionLifecycleMaxCount           plugin.TValue[int64]
+	VersionLifecycleMaxAgeDays         plugin.TValue[int64]
+	VersionLifecycleDeleteSourceFromS3 plugin.TValue[bool]
+	VersionLifecycleServiceRoleArn     plugin.TValue[string]
+	VersionLifecycleServiceIamRole     plugin.TValue[*mqlAwsIamRole]
+	ApplicationVersions                plugin.TValue[[]any]
+	Tags                               plugin.TValue[map[string]any]
 }
 
 // createAwsElasticbeanstalkApplication creates a new instance of this resource
@@ -131500,7 +131747,180 @@ func (c *mqlAwsElasticbeanstalkApplication) GetVersions() *plugin.TValue[[]any] 
 	return &c.Versions
 }
 
+func (c *mqlAwsElasticbeanstalkApplication) GetVersionLifecycleEnabled() *plugin.TValue[bool] {
+	return &c.VersionLifecycleEnabled
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetVersionLifecycleMaxCount() *plugin.TValue[int64] {
+	return &c.VersionLifecycleMaxCount
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetVersionLifecycleMaxAgeDays() *plugin.TValue[int64] {
+	return &c.VersionLifecycleMaxAgeDays
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetVersionLifecycleDeleteSourceFromS3() *plugin.TValue[bool] {
+	return &c.VersionLifecycleDeleteSourceFromS3
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetVersionLifecycleServiceRoleArn() *plugin.TValue[string] {
+	return &c.VersionLifecycleServiceRoleArn
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetVersionLifecycleServiceIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.VersionLifecycleServiceIamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticbeanstalk.application", c.__id, "versionLifecycleServiceIamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.versionLifecycleServiceIamRole()
+	})
+}
+
+func (c *mqlAwsElasticbeanstalkApplication) GetApplicationVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApplicationVersions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticbeanstalk.application", c.__id, "applicationVersions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applicationVersions()
+	})
+}
+
 func (c *mqlAwsElasticbeanstalkApplication) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsElasticbeanstalkApplicationVersion for the aws.elasticbeanstalk.applicationVersion resource
+type mqlAwsElasticbeanstalkApplicationVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsElasticbeanstalkApplicationVersionInternal it will be used here
+	Arn                  plugin.TValue[string]
+	ApplicationName      plugin.TValue[string]
+	VersionLabel         plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Description          plugin.TValue[string]
+	Status               plugin.TValue[string]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
+	BuildArn             plugin.TValue[string]
+	SourceBundleS3Bucket plugin.TValue[string]
+	SourceBundleS3Key    plugin.TValue[string]
+	SourceLocation       plugin.TValue[string]
+	SourceRepository     plugin.TValue[string]
+	SourceType           plugin.TValue[string]
+	Tags                 plugin.TValue[map[string]any]
+}
+
+// createAwsElasticbeanstalkApplicationVersion creates a new instance of this resource
+func createAwsElasticbeanstalkApplicationVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElasticbeanstalkApplicationVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elasticbeanstalk.applicationVersion", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) MqlName() string {
+	return "aws.elasticbeanstalk.applicationVersion"
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetApplicationName() *plugin.TValue[string] {
+	return &c.ApplicationName
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetVersionLabel() *plugin.TValue[string] {
+	return &c.VersionLabel
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetBuildArn() *plugin.TValue[string] {
+	return &c.BuildArn
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetSourceBundleS3Bucket() *plugin.TValue[string] {
+	return &c.SourceBundleS3Bucket
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetSourceBundleS3Key() *plugin.TValue[string] {
+	return &c.SourceBundleS3Key
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetSourceLocation() *plugin.TValue[string] {
+	return &c.SourceLocation
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetSourceRepository() *plugin.TValue[string] {
+	return &c.SourceRepository
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlAwsElasticbeanstalkApplicationVersion) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
@@ -131510,25 +131930,36 @@ func (c *mqlAwsElasticbeanstalkApplication) GetTags() *plugin.TValue[map[string]
 type mqlAwsElasticbeanstalkEnvironment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsElasticbeanstalkEnvironmentInternal it will be used here
-	Arn               plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Region            plugin.TValue[string]
-	ApplicationName   plugin.TValue[string]
-	Description       plugin.TValue[string]
-	EnvironmentId     plugin.TValue[string]
-	PlatformArn       plugin.TValue[string]
-	SolutionStackName plugin.TValue[string]
-	Status            plugin.TValue[string]
-	Health            plugin.TValue[string]
-	HealthStatus      plugin.TValue[string]
-	Cname             plugin.TValue[string]
-	EndpointUrl       plugin.TValue[string]
-	Tier              plugin.TValue[any]
-	CreatedAt         plugin.TValue[*time.Time]
-	UpdatedAt         plugin.TValue[*time.Time]
-	VersionLabel      plugin.TValue[string]
-	Tags              plugin.TValue[map[string]any]
+	mqlAwsElasticbeanstalkEnvironmentInternal
+	Arn                          plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Region                       plugin.TValue[string]
+	ApplicationName              plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	EnvironmentId                plugin.TValue[string]
+	PlatformArn                  plugin.TValue[string]
+	SolutionStackName            plugin.TValue[string]
+	Status                       plugin.TValue[string]
+	Health                       plugin.TValue[string]
+	HealthStatus                 plugin.TValue[string]
+	Cname                        plugin.TValue[string]
+	EndpointUrl                  plugin.TValue[string]
+	Tier                         plugin.TValue[any]
+	TierName                     plugin.TValue[string]
+	TierType                     plugin.TValue[string]
+	TemplateName                 plugin.TValue[string]
+	OperationsRoleArn            plugin.TValue[string]
+	OperationsIamRole            plugin.TValue[*mqlAwsIamRole]
+	AbortableOperationInProgress plugin.TValue[bool]
+	LoadBalancerName             plugin.TValue[string]
+	LoadBalancerDomain           plugin.TValue[string]
+	LoadBalancerListeners        plugin.TValue[[]any]
+	EnvironmentLinks             plugin.TValue[[]any]
+	ResourcesSummary             plugin.TValue[any]
+	CreatedAt                    plugin.TValue[*time.Time]
+	UpdatedAt                    plugin.TValue[*time.Time]
+	VersionLabel                 plugin.TValue[string]
+	Tags                         plugin.TValue[map[string]any]
 }
 
 // createAwsElasticbeanstalkEnvironment creates a new instance of this resource
@@ -131617,6 +132048,64 @@ func (c *mqlAwsElasticbeanstalkEnvironment) GetEndpointUrl() *plugin.TValue[stri
 
 func (c *mqlAwsElasticbeanstalkEnvironment) GetTier() *plugin.TValue[any] {
 	return &c.Tier
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetTierName() *plugin.TValue[string] {
+	return &c.TierName
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetTierType() *plugin.TValue[string] {
+	return &c.TierType
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetTemplateName() *plugin.TValue[string] {
+	return &c.TemplateName
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetOperationsRoleArn() *plugin.TValue[string] {
+	return &c.OperationsRoleArn
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetOperationsIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.OperationsIamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elasticbeanstalk.environment", c.__id, "operationsIamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.operationsIamRole()
+	})
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetAbortableOperationInProgress() *plugin.TValue[bool] {
+	return &c.AbortableOperationInProgress
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetLoadBalancerName() *plugin.TValue[string] {
+	return &c.LoadBalancerName
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetLoadBalancerDomain() *plugin.TValue[string] {
+	return &c.LoadBalancerDomain
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetLoadBalancerListeners() *plugin.TValue[[]any] {
+	return &c.LoadBalancerListeners
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetEnvironmentLinks() *plugin.TValue[[]any] {
+	return &c.EnvironmentLinks
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetResourcesSummary() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ResourcesSummary, func() (any, error) {
+		return c.resourcesSummary()
+	})
 }
 
 func (c *mqlAwsElasticbeanstalkEnvironment) GetCreatedAt() *plugin.TValue[*time.Time] {

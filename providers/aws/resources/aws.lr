@@ -15987,7 +15987,55 @@ private aws.elasticbeanstalk.application @defaults("arn name") {
   configurationTemplates []string
   // Application version labels
   versions []string
+  // Whether a version lifecycle rule (max age or max count) is enabled
+  versionLifecycleEnabled bool
+  // Maximum number of application versions to retain (0 if the max-count rule is not configured)
+  versionLifecycleMaxCount int
+  // Maximum number of days to retain application versions (0 if the max-age rule is not configured)
+  versionLifecycleMaxAgeDays int
+  // Whether deleted application versions also have their source bundle removed from Amazon S3
+  versionLifecycleDeleteSourceFromS3 bool
+  // ARN of the IAM service role Elastic Beanstalk assumes to apply lifecycle settings
+  versionLifecycleServiceRoleArn string
+  // IAM service role Elastic Beanstalk assumes to apply lifecycle settings
+  versionLifecycleServiceIamRole() aws.iam.role
+  // Application versions for this application
+  applicationVersions() []aws.elasticbeanstalk.applicationVersion
   // Tags for the application
+  tags() map[string]string
+}
+
+// AWS Elastic Beanstalk application version
+private aws.elasticbeanstalk.applicationVersion @defaults("arn versionLabel status") {
+  // ARN of the application version
+  arn string
+  // Name of the application this version belongs to
+  applicationName string
+  // Label that uniquely identifies the application version
+  versionLabel string
+  // Region of the application version
+  region string
+  // Description of the application version
+  description string
+  // Processing status of the application version: Unprocessed, Processing, Building, Processed, or Failed
+  status string
+  // Date the application version was created
+  createdAt time
+  // Date the application version was last updated
+  updatedAt time
+  // ARN of the AWS CodeBuild build artifact reference, if the version was built by CodeBuild
+  buildArn string
+  // Amazon S3 bucket holding the source bundle for the application version
+  sourceBundleS3Bucket string
+  // Amazon S3 key for the source bundle of the application version
+  sourceBundleS3Key string
+  // Location of the source code, formatted per the source repository
+  sourceLocation string
+  // Source repository where the application version's source code is stored: CodeCommit or S3
+  sourceRepository string
+  // Type of source repository: Git or Zip
+  sourceType string
+  // Tags for the application version
   tags() map[string]string
 }
 
@@ -16021,6 +16069,28 @@ private aws.elasticbeanstalk.environment @defaults("arn name status") {
   endpointUrl string
   // Environment tier (Worker or WebServer)
   tier dict
+  // Name of the environment tier: WebServer or Worker
+  tierName string
+  // Type of the environment tier: Standard (web server) or SQS/HTTP (worker)
+  tierType string
+  // Name of the configuration template originally used to launch the environment
+  templateName string
+  // ARN of the environment's operations role
+  operationsRoleArn string
+  // IAM operations role assumed by Elastic Beanstalk when managing the environment
+  operationsIamRole() aws.iam.role
+  // Whether an in-progress environment configuration update or version deployment can be cancelled
+  abortableOperationInProgress bool
+  // Name of the load balancer associated with this environment
+  loadBalancerName string
+  // Domain name of the load balancer associated with this environment
+  loadBalancerDomain string
+  // Listeners configured on the load balancer associated with this environment
+  loadBalancerListeners []dict
+  // Links to other environments in the same group declared in the environment manifest
+  environmentLinks []dict
+  // Live summary of the AWS resources (instances, load balancers, Auto Scaling groups, launch configurations, launch templates, triggers, queues) backing this environment
+  resourcesSummary() dict
   // Date the environment was created
   createdAt time
   // Date the environment was last updated

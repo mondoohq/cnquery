@@ -270,7 +270,9 @@
     "elasticache:DescribeSnapshots",
     "elasticache:DescribeUsers",
     "elasticache:ListTagsForResource",
+    "elasticbeanstalk:DescribeApplicationVersions",
     "elasticbeanstalk:DescribeApplications",
+    "elasticbeanstalk:DescribeEnvironmentResources",
     "elasticbeanstalk:DescribeEnvironments",
     "elasticbeanstalk:ListTagsForResource",
     "elasticloadbalancing:DescribeListeners",
@@ -2375,9 +2377,21 @@
       "source_file": "aws_elasticache.go"
     },
     {
+      "permission": "elasticbeanstalk:DescribeApplicationVersions",
+      "service": "elasticbeanstalk",
+      "action": "DescribeApplicationVersions",
+      "source_file": "aws_elasticbeanstalk.go"
+    },
+    {
       "permission": "elasticbeanstalk:DescribeApplications",
       "service": "elasticbeanstalk",
       "action": "DescribeApplications",
+      "source_file": "aws_elasticbeanstalk.go"
+    },
+    {
+      "permission": "elasticbeanstalk:DescribeEnvironmentResources",
+      "service": "elasticbeanstalk",
+      "action": "DescribeEnvironmentResources",
       "source_file": "aws_elasticbeanstalk.go"
     },
     {
