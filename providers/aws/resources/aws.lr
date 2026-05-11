@@ -17125,10 +17125,6 @@ private aws.lightsail.database @defaults("name arn state") {
   endpointAddress() string
   // Endpoint port
   endpointPort() int
-  // DNS address of the master database endpoint
-  masterEndpointAddress() string
-  // Port the master database endpoint listens on
-  masterEndpointPort() int
   // CPU count for the database
   cpuCount() int
   // Amount of RAM in GB for the database
@@ -17142,7 +17138,7 @@ private aws.lightsail.database @defaults("name arn state") {
   // Whether pending modified values exist
   hasPendingModifiedValues() bool
   // Pending database value modifications (backupRetentionEnabled, engineVersion, masterUserPassword)
-  pendingModifiedValues() []dict
+  pendingModifiedValues() dict
   // Support code for AWS Support inquiries about the database
   supportCode string
   // Date the database was created

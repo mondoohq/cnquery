@@ -4567,8 +4567,6 @@ aws.lightsail.database.engineVersion 13.1.1
 aws.lightsail.database.hasPendingModifiedValues 13.1.1
 aws.lightsail.database.latestRestorableTime 13.21.4
 aws.lightsail.database.masterDatabaseName 13.1.1
-aws.lightsail.database.masterEndpointAddress 13.21.4
-aws.lightsail.database.masterEndpointPort 13.21.4
 aws.lightsail.database.masterUsername 13.1.1
 aws.lightsail.database.name 13.1.1
 aws.lightsail.database.parameterApplyStatus 13.21.4

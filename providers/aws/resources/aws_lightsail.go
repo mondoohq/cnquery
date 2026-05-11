@@ -382,20 +382,6 @@ func (a *mqlAwsLightsailDatabase) hasPendingModifiedValues() (bool, error) {
 	return p.BackupRetentionEnabled != nil || p.EngineVersion != nil || p.MasterUserPassword != nil, nil
 }
 
-func (a *mqlAwsLightsailDatabase) masterEndpointAddress() (string, error) {
-	if a.cacheEndpoint == nil || a.cacheEndpoint.Address == nil {
-		return "", nil
-	}
-	return *a.cacheEndpoint.Address, nil
-}
-
-func (a *mqlAwsLightsailDatabase) masterEndpointPort() (int64, error) {
-	if a.cacheEndpoint == nil || a.cacheEndpoint.Port == nil {
-		return 0, nil
-	}
-	return int64(*a.cacheEndpoint.Port), nil
-}
-
 func (a *mqlAwsLightsailDatabase) cpuCount() (int64, error) {
 	if a.cacheHardware == nil || a.cacheHardware.CpuCount == nil {
 		return 0, nil
@@ -417,9 +403,9 @@ func (a *mqlAwsLightsailDatabase) diskSizeInGb() (int64, error) {
 	return int64(*a.cacheHardware.DiskSizeInGb), nil
 }
 
-func (a *mqlAwsLightsailDatabase) pendingModifiedValues() ([]any, error) {
+func (a *mqlAwsLightsailDatabase) pendingModifiedValues() (any, error) {
 	if a.cachePendingModifiedValues == nil {
-		return []any{}, nil
+		return nil, nil
 	}
 	p := a.cachePendingModifiedValues
 	entry := map[string]any{}
@@ -433,9 +419,9 @@ func (a *mqlAwsLightsailDatabase) pendingModifiedValues() ([]any, error) {
 		entry["masterUserPassword"] = *p.MasterUserPassword
 	}
 	if len(entry) == 0 {
-		return []any{}, nil
+		return nil, nil
 	}
-	return []any{entry}, nil
+	return entry, nil
 }
 
 func (a *mqlAwsLightsail) loadBalancers() ([]any, error) {
@@ -591,6 +577,7 @@ func (a *mqlAwsLightsailLoadBalancer) sessionStickinessLbCookieDurationSeconds()
 	}
 	n, err := strconv.ParseInt(val, 10, 64)
 	if err != nil {
+		log.Warn().Str("value", val).Err(err).Msg("lightsail: invalid SessionStickiness_LB_CookieDurationSeconds")
 		return 0, nil
 	}
 	return n, nil

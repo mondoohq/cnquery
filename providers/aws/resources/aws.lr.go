@@ -24067,12 +24067,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lightsail.database.endpointPort": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetEndpointPort()).ToDataRes(types.Int)
 	},
-	"aws.lightsail.database.masterEndpointAddress": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsLightsailDatabase).GetMasterEndpointAddress()).ToDataRes(types.String)
-	},
-	"aws.lightsail.database.masterEndpointPort": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsLightsailDatabase).GetMasterEndpointPort()).ToDataRes(types.Int)
-	},
 	"aws.lightsail.database.cpuCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetCpuCount()).ToDataRes(types.Int)
 	},
@@ -24092,7 +24086,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsLightsailDatabase).GetHasPendingModifiedValues()).ToDataRes(types.Bool)
 	},
 	"aws.lightsail.database.pendingModifiedValues": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsLightsailDatabase).GetPendingModifiedValues()).ToDataRes(types.Array(types.Dict))
+		return (r.(*mqlAwsLightsailDatabase).GetPendingModifiedValues()).ToDataRes(types.Dict)
 	},
 	"aws.lightsail.database.supportCode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetSupportCode()).ToDataRes(types.String)
@@ -55467,14 +55461,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLightsailDatabase).EndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"aws.lightsail.database.masterEndpointAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsLightsailDatabase).MasterEndpointAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.lightsail.database.masterEndpointPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsLightsailDatabase).MasterEndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
 	"aws.lightsail.database.cpuCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailDatabase).CpuCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -55500,7 +55486,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.lightsail.database.pendingModifiedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsLightsailDatabase).PendingModifiedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		r.(*mqlAwsLightsailDatabase).PendingModifiedValues, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.database.supportCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -135594,15 +135580,13 @@ type mqlAwsLightsailDatabase struct {
 	PubliclyAccessible            plugin.TValue[bool]
 	EndpointAddress               plugin.TValue[string]
 	EndpointPort                  plugin.TValue[int64]
-	MasterEndpointAddress         plugin.TValue[string]
-	MasterEndpointPort            plugin.TValue[int64]
 	CpuCount                      plugin.TValue[int64]
 	RamSizeInGb                   plugin.TValue[float64]
 	DiskSizeInGb                  plugin.TValue[int64]
 	ParameterApplyStatus          plugin.TValue[string]
 	CaCertificateIdentifier       plugin.TValue[string]
 	HasPendingModifiedValues      plugin.TValue[bool]
-	PendingModifiedValues         plugin.TValue[[]any]
+	PendingModifiedValues         plugin.TValue[any]
 	SupportCode                   plugin.TValue[string]
 	CreatedAt                     plugin.TValue[*time.Time]
 	Tags                          plugin.TValue[map[string]any]
@@ -135720,18 +135704,6 @@ func (c *mqlAwsLightsailDatabase) GetEndpointPort() *plugin.TValue[int64] {
 	})
 }
 
-func (c *mqlAwsLightsailDatabase) GetMasterEndpointAddress() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.MasterEndpointAddress, func() (string, error) {
-		return c.masterEndpointAddress()
-	})
-}
-
-func (c *mqlAwsLightsailDatabase) GetMasterEndpointPort() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.MasterEndpointPort, func() (int64, error) {
-		return c.masterEndpointPort()
-	})
-}
-
 func (c *mqlAwsLightsailDatabase) GetCpuCount() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.CpuCount, func() (int64, error) {
 		return c.cpuCount()
@@ -135764,8 +135736,8 @@ func (c *mqlAwsLightsailDatabase) GetHasPendingModifiedValues() *plugin.TValue[b
 	})
 }
 
-func (c *mqlAwsLightsailDatabase) GetPendingModifiedValues() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.PendingModifiedValues, func() ([]any, error) {
+func (c *mqlAwsLightsailDatabase) GetPendingModifiedValues() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PendingModifiedValues, func() (any, error) {
 		return c.pendingModifiedValues()
 	})
 }
