@@ -189,7 +189,14 @@ func (a *mqlAwsCloudfrontDistribution) logging() (*mqlAwsCloudfrontDistributionL
 }
 
 func (a *mqlAwsCloudfrontFunction) id() (string, error) {
-	return a.Arn.Data, nil
+	// ARN is the same for the DEVELOPMENT and LIVE versions of a function, so
+	// `ListFunctions` returns the same function twice on a published function.
+	// Composite the stage into the cache key so both versions surface as
+	// distinct rows instead of one silently overwriting the other.
+	if a.Stage.Data == "" {
+		return a.Arn.Data, nil
+	}
+	return a.Arn.Data + ":" + a.Stage.Data, nil
 }
 
 func (a *mqlAwsCloudfrontFunction) tags() (map[string]any, error) {

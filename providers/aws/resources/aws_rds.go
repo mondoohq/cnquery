@@ -1706,6 +1706,7 @@ func (a *mqlAwsRdsDbinstance) optionGroups() ([]any, error) {
 	}
 
 	wanted := make(map[string]bool, len(a.cacheOptionGroupNames))
+	instanceRegion := a.Region.Data
 	for _, n := range a.cacheOptionGroupNames {
 		wanted[n] = true
 	}
@@ -1713,6 +1714,12 @@ func (a *mqlAwsRdsDbinstance) optionGroups() ([]any, error) {
 	res := []any{}
 	for _, raw := range rawResources.Data {
 		og := raw.(*mqlAwsRdsOptionGroup)
+		// Filter by region too — option groups with the same name exist in
+		// every region (default:mysql-8-0 etc.), so matching on name alone
+		// produces one entry per region the name appears in.
+		if og.Region.Data != instanceRegion {
+			continue
+		}
 		if wanted[og.OptionGroupName.Data] {
 			res = append(res, og)
 		}

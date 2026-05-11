@@ -488,13 +488,27 @@ func (a *mqlAwsCognitoUserPoolClient) id() (string, error) {
 	return a.UserPoolId.Data + "/" + a.ClientId.Data, nil
 }
 
-func (a *mqlAwsCognitoUserPoolClient) userPool() (*mqlAwsCognitoUserPool, error) {
-	mqlPool, err := NewResource(a.MqlRuntime, "aws.cognito.userPool",
-		map[string]*llx.RawData{"id": llx.StringData(a.UserPoolId.Data)})
+// resolveCognitoUserPool returns the lazy user-pool reference for a
+// sub-resource keyed by region+userPoolId. The user pool list creates
+// each pool with `__id = ARN`, so the NewResource call must pass the
+// same ARN — without it the lookup misses the cache and there's no init
+// to backfill the rest of the user-pool fields.
+func resolveCognitoUserPool(runtime *plugin.Runtime, region, userPoolId string) (*mqlAwsCognitoUserPool, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	poolArn := "arn:aws:cognito-idp:" + region + ":" + conn.AccountId() + ":userpool/" + userPoolId
+	mqlPool, err := NewResource(runtime, "aws.cognito.userPool",
+		map[string]*llx.RawData{
+			"__id": llx.StringData(poolArn),
+			"id":   llx.StringData(userPoolId),
+		})
 	if err != nil {
 		return nil, err
 	}
 	return mqlPool.(*mqlAwsCognitoUserPool), nil
+}
+
+func (a *mqlAwsCognitoUserPoolClient) userPool() (*mqlAwsCognitoUserPool, error) {
+	return resolveCognitoUserPool(a.MqlRuntime, a.Region.Data, a.UserPoolId.Data)
 }
 
 // User pool hosted UI domain
@@ -560,12 +574,7 @@ func (a *mqlAwsCognitoUserPoolDomain) id() (string, error) {
 }
 
 func (a *mqlAwsCognitoUserPoolDomain) userPool() (*mqlAwsCognitoUserPool, error) {
-	mqlPool, err := NewResource(a.MqlRuntime, "aws.cognito.userPool",
-		map[string]*llx.RawData{"id": llx.StringData(a.UserPoolId.Data)})
-	if err != nil {
-		return nil, err
-	}
-	return mqlPool.(*mqlAwsCognitoUserPool), nil
+	return resolveCognitoUserPool(a.MqlRuntime, a.Region.Data, a.UserPoolId.Data)
 }
 
 // User pool federated identity providers
@@ -634,10 +643,5 @@ func (a *mqlAwsCognitoUserPoolIdentityProvider) id() (string, error) {
 }
 
 func (a *mqlAwsCognitoUserPoolIdentityProvider) userPool() (*mqlAwsCognitoUserPool, error) {
-	mqlPool, err := NewResource(a.MqlRuntime, "aws.cognito.userPool",
-		map[string]*llx.RawData{"id": llx.StringData(a.UserPoolId.Data)})
-	if err != nil {
-		return nil, err
-	}
-	return mqlPool.(*mqlAwsCognitoUserPool), nil
+	return resolveCognitoUserPool(a.MqlRuntime, a.Region.Data, a.UserPoolId.Data)
 }
