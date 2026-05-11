@@ -17596,20 +17596,63 @@ private aws.sfn.stateMachine @defaults("arn name type status") {
   type string
   // Status of the state machine: ACTIVE or DELETING
   status() string
+  // Description of the state machine
+  description() string
+  // Revision identifier for the latest published version of the state machine configuration
+  revisionId() string
+  // Label that identifies a Map state when the ARN is a qualified state machine ARN
+  label() string
   // Amazon States Language definition of the state machine
   definition() string
   // IAM role used by the state machine
   iamRole() aws.iam.role
-  // Logging configuration
-  loggingConfiguration() dict
+  // CloudWatch Logs log level: ALL, ERROR, FATAL, or OFF
+  loggingLevel() string
+  // Whether execution data is included in CloudWatch Logs entries
+  loggingIncludeExecutionData() bool
+  // CloudWatch Logs log groups that receive execution history events
+  loggingDestinations() []aws.cloudwatch.loggroup
+  // DEPRECATED: use loggingLevel, loggingIncludeExecutionData, and loggingDestinations instead
+  loggingConfiguration() @maturity("deprecated") dict
   // Whether X-Ray tracing is enabled
   tracingEnabled() bool
+  // Encryption type: AWS_OWNED_KEY or CUSTOMER_MANAGED_KMS_KEY
+  encryptionType() string
+  // Customer-managed KMS key identifier (alias, alias ARN, key ID, or key ARN) used to encrypt the state machine, empty when AWS-owned
+  encryptionKmsKeyId() string
+  // Customer-managed KMS key used to encrypt the state machine, null when AWS-owned
+  kmsKey() aws.kms.key
+  // Maximum duration in seconds that Step Functions reuses data keys before calling GenerateDataKey
+  encryptionKmsDataKeyReusePeriodSeconds() int
+  // DEPRECATED: use encryptionType, encryptionKmsKeyId, kmsKey, and encryptionKmsDataKeyReusePeriodSeconds instead
+  encryptionConfiguration() @maturity("deprecated") dict
   // Date the state machine was created
   createdAt time
   // Tags for the state machine
   tags() map[string]string
-  // Encryption configuration
-  encryptionConfiguration() dict
+  // Published versions of the state machine
+  versions() []aws.sfn.stateMachineVersion
+}
+
+// AWS Step Functions state machine version
+//
+// Examine a single published version of a Step Functions state machine —
+// each version is an immutable snapshot of the definition and
+// configuration as of the time it was published, and is selected by an
+// ARN of the form `<stateMachineArn>:<versionNumber>`. The `revisionId`
+// links the version back to the configuration revision it was published
+// from, which is useful when correlating alias routing
+// (`RoutingConfigurationListItem`) to specific revisions or when
+// comparing versions during a rollout.
+private aws.sfn.stateMachineVersion @defaults("arn revisionId") {
+  // ARN of the state machine version, in the form <stateMachineArn>:<versionNumber>
+  arn string
+  // Date the state machine version was created
+  createdAt time
+  // Description of the state machine version
+  description() string
+  // Revision identifier of the state machine configuration the version was published from
+  revisionId() string
 }
 
 // AWS Step Functions activity

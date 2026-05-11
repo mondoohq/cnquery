@@ -720,6 +720,7 @@ const (
 	ResourceAwsEc2VpcEndpointServiceConfigurationConnection                     string = "aws.ec2.vpcEndpointServiceConfiguration.connection"
 	ResourceAwsSfn                                                              string = "aws.sfn"
 	ResourceAwsSfnStateMachine                                                  string = "aws.sfn.stateMachine"
+	ResourceAwsSfnStateMachineVersion                                           string = "aws.sfn.stateMachineVersion"
 	ResourceAwsSfnActivity                                                      string = "aws.sfn.activity"
 	ResourceAwsRam                                                              string = "aws.ram"
 	ResourceAwsRamResourceShare                                                 string = "aws.ram.resourceShare"
@@ -3585,6 +3586,10 @@ func init() {
 		"aws.sfn.stateMachine": {
 			// to override args, implement: initAwsSfnStateMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSfnStateMachine,
+		},
+		"aws.sfn.stateMachineVersion": {
+			Init:   initAwsSfnStateMachineVersion,
+			Create: createAwsSfnStateMachineVersion,
 		},
 		"aws.sfn.activity": {
 			// to override args, implement: initAwsSfnActivity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -24611,11 +24616,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sfn.stateMachine.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSfnStateMachine).GetStatus()).ToDataRes(types.String)
 	},
+	"aws.sfn.stateMachine.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.revisionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetRevisionId()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetLabel()).ToDataRes(types.String)
+	},
 	"aws.sfn.stateMachine.definition": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSfnStateMachine).GetDefinition()).ToDataRes(types.String)
 	},
 	"aws.sfn.stateMachine.iamRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSfnStateMachine).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.sfn.stateMachine.loggingLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetLoggingLevel()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.loggingIncludeExecutionData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetLoggingIncludeExecutionData()).ToDataRes(types.Bool)
+	},
+	"aws.sfn.stateMachine.loggingDestinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetLoggingDestinations()).ToDataRes(types.Array(types.Resource("aws.cloudwatch.loggroup")))
 	},
 	"aws.sfn.stateMachine.loggingConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSfnStateMachine).GetLoggingConfiguration()).ToDataRes(types.Dict)
@@ -24623,14 +24646,41 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sfn.stateMachine.tracingEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSfnStateMachine).GetTracingEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.sfn.stateMachine.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.encryptionKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetEncryptionKmsKeyId()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachine.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.sfn.stateMachine.encryptionKmsDataKeyReusePeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetEncryptionKmsDataKeyReusePeriodSeconds()).ToDataRes(types.Int)
+	},
+	"aws.sfn.stateMachine.encryptionConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetEncryptionConfiguration()).ToDataRes(types.Dict)
+	},
 	"aws.sfn.stateMachine.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSfnStateMachine).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.sfn.stateMachine.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSfnStateMachine).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"aws.sfn.stateMachine.encryptionConfiguration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsSfnStateMachine).GetEncryptionConfiguration()).ToDataRes(types.Dict)
+	"aws.sfn.stateMachine.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachine).GetVersions()).ToDataRes(types.Array(types.Resource("aws.sfn.stateMachineVersion")))
+	},
+	"aws.sfn.stateMachineVersion.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachineVersion).GetArn()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachineVersion.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachineVersion).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sfn.stateMachineVersion.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachineVersion).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.sfn.stateMachineVersion.revisionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSfnStateMachineVersion).GetRevisionId()).ToDataRes(types.String)
 	},
 	"aws.sfn.activity.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSfnActivity).GetArn()).ToDataRes(types.String)
@@ -56154,12 +56204,36 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSfnStateMachine).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.sfn.stateMachine.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.revisionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).RevisionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.sfn.stateMachine.definition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSfnStateMachine).Definition, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sfn.stateMachine.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSfnStateMachine).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.loggingLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).LoggingLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.loggingIncludeExecutionData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).LoggingIncludeExecutionData, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.loggingDestinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).LoggingDestinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.sfn.stateMachine.loggingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56170,6 +56244,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSfnStateMachine).TracingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.sfn.stateMachine.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.encryptionKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).EncryptionKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.encryptionKmsDataKeyReusePeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).EncryptionKmsDataKeyReusePeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachine.encryptionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).EncryptionConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.sfn.stateMachine.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSfnStateMachine).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -56178,8 +56272,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSfnStateMachine).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"aws.sfn.stateMachine.encryptionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsSfnStateMachine).EncryptionConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+	"aws.sfn.stateMachine.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachine).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachineVersion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachineVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.sfn.stateMachineVersion.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachineVersion).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachineVersion.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachineVersion).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachineVersion.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachineVersion).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.sfn.stateMachineVersion.revisionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSfnStateMachineVersion).RevisionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sfn.activity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -137362,18 +137476,29 @@ type mqlAwsSfnStateMachine struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSfnStateMachineInternal
-	Arn                     plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	Region                  plugin.TValue[string]
-	Type                    plugin.TValue[string]
-	Status                  plugin.TValue[string]
-	Definition              plugin.TValue[string]
-	IamRole                 plugin.TValue[*mqlAwsIamRole]
-	LoggingConfiguration    plugin.TValue[any]
-	TracingEnabled          plugin.TValue[bool]
-	CreatedAt               plugin.TValue[*time.Time]
-	Tags                    plugin.TValue[map[string]any]
-	EncryptionConfiguration plugin.TValue[any]
+	Arn                                    plugin.TValue[string]
+	Name                                   plugin.TValue[string]
+	Region                                 plugin.TValue[string]
+	Type                                   plugin.TValue[string]
+	Status                                 plugin.TValue[string]
+	Description                            plugin.TValue[string]
+	RevisionId                             plugin.TValue[string]
+	Label                                  plugin.TValue[string]
+	Definition                             plugin.TValue[string]
+	IamRole                                plugin.TValue[*mqlAwsIamRole]
+	LoggingLevel                           plugin.TValue[string]
+	LoggingIncludeExecutionData            plugin.TValue[bool]
+	LoggingDestinations                    plugin.TValue[[]any]
+	LoggingConfiguration                   plugin.TValue[any]
+	TracingEnabled                         plugin.TValue[bool]
+	EncryptionType                         plugin.TValue[string]
+	EncryptionKmsKeyId                     plugin.TValue[string]
+	KmsKey                                 plugin.TValue[*mqlAwsKmsKey]
+	EncryptionKmsDataKeyReusePeriodSeconds plugin.TValue[int64]
+	EncryptionConfiguration                plugin.TValue[any]
+	CreatedAt                              plugin.TValue[*time.Time]
+	Tags                                   plugin.TValue[map[string]any]
+	Versions                               plugin.TValue[[]any]
 }
 
 // createAwsSfnStateMachine creates a new instance of this resource
@@ -137435,6 +137560,24 @@ func (c *mqlAwsSfnStateMachine) GetStatus() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsSfnStateMachine) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetRevisionId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RevisionId, func() (string, error) {
+		return c.revisionId()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetLabel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Label, func() (string, error) {
+		return c.label()
+	})
+}
+
 func (c *mqlAwsSfnStateMachine) GetDefinition() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Definition, func() (string, error) {
 		return c.definition()
@@ -137457,6 +137600,34 @@ func (c *mqlAwsSfnStateMachine) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
 	})
 }
 
+func (c *mqlAwsSfnStateMachine) GetLoggingLevel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LoggingLevel, func() (string, error) {
+		return c.loggingLevel()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetLoggingIncludeExecutionData() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LoggingIncludeExecutionData, func() (bool, error) {
+		return c.loggingIncludeExecutionData()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetLoggingDestinations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoggingDestinations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sfn.stateMachine", c.__id, "loggingDestinations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loggingDestinations()
+	})
+}
+
 func (c *mqlAwsSfnStateMachine) GetLoggingConfiguration() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.LoggingConfiguration, func() (any, error) {
 		return c.loggingConfiguration()
@@ -137466,6 +137637,46 @@ func (c *mqlAwsSfnStateMachine) GetLoggingConfiguration() *plugin.TValue[any] {
 func (c *mqlAwsSfnStateMachine) GetTracingEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.TracingEnabled, func() (bool, error) {
 		return c.tracingEnabled()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetEncryptionType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionType, func() (string, error) {
+		return c.encryptionType()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetEncryptionKmsKeyId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionKmsKeyId, func() (string, error) {
+		return c.encryptionKmsKeyId()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sfn.stateMachine", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetEncryptionKmsDataKeyReusePeriodSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EncryptionKmsDataKeyReusePeriodSeconds, func() (int64, error) {
+		return c.encryptionKmsDataKeyReusePeriodSeconds()
+	})
+}
+
+func (c *mqlAwsSfnStateMachine) GetEncryptionConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.EncryptionConfiguration, func() (any, error) {
+		return c.encryptionConfiguration()
 	})
 }
 
@@ -137479,9 +137690,87 @@ func (c *mqlAwsSfnStateMachine) GetTags() *plugin.TValue[map[string]any] {
 	})
 }
 
-func (c *mqlAwsSfnStateMachine) GetEncryptionConfiguration() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.EncryptionConfiguration, func() (any, error) {
-		return c.encryptionConfiguration()
+func (c *mqlAwsSfnStateMachine) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.sfn.stateMachine", c.__id, "versions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.versions()
+	})
+}
+
+// mqlAwsSfnStateMachineVersion for the aws.sfn.stateMachineVersion resource
+type mqlAwsSfnStateMachineVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSfnStateMachineVersionInternal
+	Arn         plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	Description plugin.TValue[string]
+	RevisionId  plugin.TValue[string]
+}
+
+// createAwsSfnStateMachineVersion creates a new instance of this resource
+func createAwsSfnStateMachineVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSfnStateMachineVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.sfn.stateMachineVersion", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSfnStateMachineVersion) MqlName() string {
+	return "aws.sfn.stateMachineVersion"
+}
+
+func (c *mqlAwsSfnStateMachineVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSfnStateMachineVersion) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSfnStateMachineVersion) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsSfnStateMachineVersion) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsSfnStateMachineVersion) GetRevisionId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RevisionId, func() (string, error) {
+		return c.revisionId()
 	})
 }
 

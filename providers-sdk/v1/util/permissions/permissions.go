@@ -523,6 +523,7 @@ func awsConnectionMethodToService(method string) string {
 		"directoryservice":         "directoryservice",
 		"pipes":                    "pipes",
 		"scheduler":                "scheduler",
+		"sfn":                      "sfn",
 		"accessanalyzer":           "accessanalyzer",
 		"timestreamliveanalytics":  "timestreamwrite",
 		"timestreamwrite":          "timestreamwrite",

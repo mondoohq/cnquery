@@ -5,8 +5,11 @@ package resources
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/rs/zerolog/log"
@@ -116,9 +119,9 @@ func (a *mqlAwsSfnStateMachine) fetchDetail() (*sfn.DescribeStateMachineOutput, 
 	svc := conn.Sfn(region)
 	ctx := context.Background()
 
-	arn := a.Arn.Data
+	smArn := a.Arn.Data
 	resp, err := svc.DescribeStateMachine(ctx, &sfn.DescribeStateMachineInput{
-		StateMachineArn: &arn,
+		StateMachineArn: &smArn,
 	})
 	if err != nil {
 		return nil, err
@@ -134,6 +137,30 @@ func (a *mqlAwsSfnStateMachine) status() (string, error) {
 		return "", err
 	}
 	return string(resp.Status), nil
+}
+
+func (a *mqlAwsSfnStateMachine) description() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.Description), nil
+}
+
+func (a *mqlAwsSfnStateMachine) revisionId() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.RevisionId), nil
+}
+
+func (a *mqlAwsSfnStateMachine) label() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.Label), nil
 }
 
 func (a *mqlAwsSfnStateMachine) definition() (string, error) {
@@ -161,6 +188,53 @@ func (a *mqlAwsSfnStateMachine) iamRole() (*mqlAwsIamRole, error) {
 		return nil, err
 	}
 	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsSfnStateMachine) loggingLevel() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if resp.LoggingConfiguration == nil {
+		return string(sfntypes.LogLevelOff), nil
+	}
+	return string(resp.LoggingConfiguration.Level), nil
+}
+
+func (a *mqlAwsSfnStateMachine) loggingIncludeExecutionData() (bool, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return false, err
+	}
+	if resp.LoggingConfiguration == nil {
+		return false, nil
+	}
+	return resp.LoggingConfiguration.IncludeExecutionData, nil
+}
+
+func (a *mqlAwsSfnStateMachine) loggingDestinations() ([]any, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	if resp.LoggingConfiguration == nil {
+		return []any{}, nil
+	}
+	out := make([]any, 0, len(resp.LoggingConfiguration.Destinations))
+	for _, d := range resp.LoggingConfiguration.Destinations {
+		if d.CloudWatchLogsLogGroup == nil || d.CloudWatchLogsLogGroup.LogGroupArn == nil {
+			continue
+		}
+		mqlLg, err := NewResource(a.MqlRuntime, "aws.cloudwatch.loggroup",
+			map[string]*llx.RawData{
+				"arn": llx.StringDataPtr(d.CloudWatchLogsLogGroup.LogGroupArn),
+			})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mqlLg)
+	}
+	return out, nil
 }
 
 func (a *mqlAwsSfnStateMachine) loggingConfiguration() (map[string]any, error) {
@@ -202,14 +276,70 @@ func (a *mqlAwsSfnStateMachine) tags() (map[string]any, error) {
 	svc := conn.Sfn(region)
 	ctx := context.Background()
 
-	arn := a.Arn.Data
+	smArn := a.Arn.Data
 	resp, err := svc.ListTagsForResource(ctx, &sfn.ListTagsForResourceInput{
-		ResourceArn: &arn,
+		ResourceArn: &smArn,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return sfnTagsToMap(resp.Tags), nil
+}
+
+func (a *mqlAwsSfnStateMachine) encryptionType() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if resp.EncryptionConfiguration == nil {
+		return string(sfntypes.EncryptionTypeAwsOwnedKey), nil
+	}
+	return string(resp.EncryptionConfiguration.Type), nil
+}
+
+func (a *mqlAwsSfnStateMachine) encryptionKmsKeyId() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if resp.EncryptionConfiguration == nil {
+		return "", nil
+	}
+	return convert.ToValue(resp.EncryptionConfiguration.KmsKeyId), nil
+}
+
+func (a *mqlAwsSfnStateMachine) kmsKey() (*mqlAwsKmsKey, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	if resp.EncryptionConfiguration == nil ||
+		resp.EncryptionConfiguration.Type != sfntypes.EncryptionTypeCustomerManagedKmsKey ||
+		resp.EncryptionConfiguration.KmsKeyId == nil || *resp.EncryptionConfiguration.KmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	keyRef := *resp.EncryptionConfiguration.KmsKeyId
+	args := map[string]*llx.RawData{
+		"arn":    llx.StringData(keyRef),
+		"region": llx.StringData(a.Region.Data),
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key", args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsSfnStateMachine) encryptionKmsDataKeyReusePeriodSeconds() (int64, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return 0, err
+	}
+	if resp.EncryptionConfiguration == nil || resp.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds == nil {
+		return 0, nil
+	}
+	return int64(*resp.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds), nil
 }
 
 func (a *mqlAwsSfnStateMachine) encryptionConfiguration() (map[string]any, error) {
@@ -231,6 +361,162 @@ func (a *mqlAwsSfnStateMachine) encryptionConfiguration() (map[string]any, error
 		result["kmsDataKeyReusePeriodSeconds"] = *cfg.KmsDataKeyReusePeriodSeconds
 	}
 	return result, nil
+}
+
+func (a *mqlAwsSfnStateMachine) versions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	svc := conn.Sfn(region)
+	ctx := context.Background()
+
+	smArn := a.Arn.Data
+	res := []any{}
+	var nextToken *string
+	for {
+		resp, err := svc.ListStateMachineVersions(ctx, &sfn.ListStateMachineVersionsInput{
+			StateMachineArn: &smArn,
+			NextToken:       nextToken,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("state_machine", smArn).Msg("error listing state machine versions")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, v := range resp.StateMachineVersions {
+			mqlVersion, err := CreateResource(a.MqlRuntime, "aws.sfn.stateMachineVersion",
+				map[string]*llx.RawData{
+					"__id":      llx.StringDataPtr(v.StateMachineVersionArn),
+					"arn":       llx.StringDataPtr(v.StateMachineVersionArn),
+					"createdAt": llx.TimeDataPtr(v.CreationDate),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlVersion)
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		nextToken = resp.NextToken
+	}
+	return res, nil
+}
+
+// State machine versions
+
+type mqlAwsSfnStateMachineVersionInternal struct {
+	fetched  bool
+	lock     sync.Mutex
+	descResp *sfn.DescribeStateMachineOutput
+}
+
+func (a *mqlAwsSfnStateMachineVersion) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsSfnStateMachineVersion) fetchDetail() (*sfn.DescribeStateMachineOutput, error) {
+	if a.fetched {
+		return a.descResp, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return a.descResp, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	versionArn := a.Arn.Data
+	region, err := sfnRegionFromVersionArn(versionArn)
+	if err != nil {
+		return nil, err
+	}
+	svc := conn.Sfn(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeStateMachine(ctx, &sfn.DescribeStateMachineInput{
+		StateMachineArn: &versionArn,
+	})
+	if err != nil {
+		return nil, err
+	}
+	a.fetched = true
+	a.descResp = resp
+	return resp, nil
+}
+
+func (a *mqlAwsSfnStateMachineVersion) description() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.Description), nil
+}
+
+func (a *mqlAwsSfnStateMachineVersion) revisionId() (string, error) {
+	resp, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(resp.RevisionId), nil
+}
+
+func initAwsSfnStateMachineVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	raw, ok := args["arn"]
+	if !ok || raw == nil {
+		return nil, nil, errors.New("arn required to fetch aws.sfn.stateMachineVersion")
+	}
+	versionArn, ok := raw.Value.(string)
+	if !ok || versionArn == "" {
+		return nil, nil, errors.New("arn required to fetch aws.sfn.stateMachineVersion")
+	}
+
+	region, err := sfnRegionFromVersionArn(versionArn)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Sfn(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeStateMachine(ctx, &sfn.DescribeStateMachineInput{
+		StateMachineArn: &versionArn,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := CreateResource(runtime, "aws.sfn.stateMachineVersion",
+		map[string]*llx.RawData{
+			"__id":      llx.StringData(versionArn),
+			"arn":       llx.StringData(versionArn),
+			"createdAt": llx.TimeDataPtr(resp.CreationDate),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlRes := res.(*mqlAwsSfnStateMachineVersion)
+	mqlRes.fetched = true
+	mqlRes.descResp = resp
+	return nil, mqlRes, nil
+}
+
+// sfnRegionFromVersionArn extracts the AWS region from a Step Functions
+// state machine (or version) ARN. The arn package accepts the version ARN
+// form (resource has a trailing `:<versionNumber>`) without modification.
+func sfnRegionFromVersionArn(versionArn string) (string, error) {
+	if !strings.HasPrefix(versionArn, "arn:") {
+		return "", errors.New("invalid state machine version ARN")
+	}
+	parsed, err := arn.Parse(versionArn)
+	if err != nil {
+		return "", err
+	}
+	return parsed.Region, nil
 }
 
 // Activities

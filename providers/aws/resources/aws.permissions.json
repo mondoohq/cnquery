@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.21.3",
-  "generated_at": "2026-05-09T16:54:12-07:00",
+  "generated_at": "2026-05-11T07:51:38+01:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -664,8 +664,11 @@
     "sso:ListManagedPoliciesInPermissionSet",
     "sso:ListPermissionSets",
     "sso:ListTagsForResource",
+    "states:DescribeStateMachine",
     "states:ListActivities",
+    "states:ListStateMachineVersions",
     "states:ListStateMachines",
+    "states:ListTagsForResource",
     "timestream-influxdb:GetDbCluster",
     "timestream-influxdb:GetDbInstance",
     "timestream-influxdb:ListDbClusters",
@@ -4832,12 +4835,30 @@
       "source_file": "aws_identitycenter.go"
     },
     {
+      "permission": "states:DescribeStateMachine",
+      "service": "states",
+      "action": "DescribeStateMachine",
+      "source_file": "aws_sfn.go"
+    },
+    {
+      "permission": "states:DescribeStateMachine",
+      "service": "states",
+      "action": "DescribeStateMachine",
+      "source_file": "aws_stepfunctions.go"
+    },
+    {
       "permission": "states:ListActivities",
       "service": "states",
       "action": "ListActivities",
       "source_file": "aws_sfn.go"
     },
     {
+      "permission": "states:ListStateMachineVersions",
+      "service": "states",
+      "action": "ListStateMachineVersions",
+      "source_file": "aws_sfn.go"
+    },
+    {
       "permission": "states:ListStateMachines",
       "service": "states",
       "action": "ListStateMachines",
@@ -4847,6 +4868,18 @@
       "permission": "states:ListStateMachines",
       "service": "states",
       "action": "ListStateMachines",
+      "source_file": "aws_stepfunctions.go"
+    },
+    {
+      "permission": "states:ListTagsForResource",
+      "service": "states",
+      "action": "ListTagsForResource",
+      "source_file": "aws_sfn.go"
+    },
+    {
+      "permission": "states:ListTagsForResource",
+      "service": "states",
+      "action": "ListTagsForResource",
       "source_file": "aws_stepfunctions.go"
     },
     {
