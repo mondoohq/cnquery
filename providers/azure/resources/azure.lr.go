@@ -128,6 +128,7 @@ const (
 	ResourceAzureSubscriptionWebServiceHostingEnvironmentVirtualNetwork                          string = "azure.subscription.webService.hostingEnvironment.virtualNetwork"
 	ResourceAzureSubscriptionWebServiceAppServicePlan                                            string = "azure.subscription.webService.appServicePlan"
 	ResourceAzureSubscriptionWebServiceCertificate                                               string = "azure.subscription.webService.certificate"
+	ResourceAzureSubscriptionWebServiceStaticSite                                                string = "azure.subscription.webService.staticSite"
 	ResourceAzureSubscriptionWebServiceAppsiteHostNameBinding                                    string = "azure.subscription.webService.appsite.hostNameBinding"
 	ResourceAzureSubscriptionWebServiceAppsiteVirtualNetworkConnection                           string = "azure.subscription.webService.appsite.virtualNetworkConnection"
 	ResourceAzureSubscriptionSqlService                                                          string = "azure.subscription.sqlService"
@@ -781,6 +782,10 @@ func init() {
 		"azure.subscription.webService.certificate": {
 			// to override args, implement: initAzureSubscriptionWebServiceCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceCertificate,
+		},
+		"azure.subscription.webService.staticSite": {
+			// to override args, implement: initAzureSubscriptionWebServiceStaticSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceStaticSite,
 		},
 		"azure.subscription.webService.appsite.hostNameBinding": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsiteHostNameBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5043,6 +5048,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebService).GetCertificates()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.certificate")))
 	},
+	"azure.subscription.webService.staticSites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebService).GetStaticSites()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.staticSite")))
+	},
 	"azure.subscription.webService.appRuntimeStack.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).GetName()).ToDataRes(types.String)
 	},
@@ -5555,6 +5563,75 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.certificate.valid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceCertificate).GetValid()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.staticSite.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.webService.staticSite.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.skuTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetSkuTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.defaultHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetDefaultHostname()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.contentDistributionEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetContentDistributionEndpoint()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.customDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetCustomDomains()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.webService.staticSite.repositoryUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetRepositoryUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetBranch()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetProvider()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.allowConfigFileUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetAllowConfigFileUpdates()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.staticSite.stagingEnvironmentPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetStagingEnvironmentPolicy()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.enterpriseGradeCdnStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetEnterpriseGradeCdnStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.keyVaultReferenceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetKeyVaultReferenceIdentity()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.staticSite.privateEndpointConnectionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetPrivateEndpointConnectionCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.webService.staticSite.userProvidedFunctionAppCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetUserProvidedFunctionAppCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.webService.staticSite.linkedBackendCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetLinkedBackendCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.webService.staticSite.databaseConnectionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceStaticSite).GetDatabaseConnectionCount()).ToDataRes(types.Int)
 	},
 	"azure.subscription.webService.appsite.hostNameBinding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteHostNameBinding).GetId()).ToDataRes(types.String)
@@ -16264,6 +16341,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebService).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.webService.staticSites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebService).StaticSites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.webService.appRuntimeStack.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppRuntimeStack).__id, ok = v.Value.(string)
 		return
@@ -17002,6 +17083,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.certificate.valid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceCertificate).Valid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.webService.staticSite.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.skuTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).SkuTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.defaultHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).DefaultHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.contentDistributionEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).ContentDistributionEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.customDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).CustomDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.repositoryUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).RepositoryUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).Branch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.allowConfigFileUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).AllowConfigFileUpdates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.stagingEnvironmentPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).StagingEnvironmentPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.enterpriseGradeCdnStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).EnterpriseGradeCdnStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.keyVaultReferenceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).KeyVaultReferenceIdentity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.privateEndpointConnectionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).PrivateEndpointConnectionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.userProvidedFunctionAppCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).UserProvidedFunctionAppCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.linkedBackendCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).LinkedBackendCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.staticSite.databaseConnectionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceStaticSite).DatabaseConnectionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsite.hostNameBinding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37158,6 +37335,7 @@ type mqlAzureSubscriptionWebService struct {
 	HostingEnvironments plugin.TValue[[]any]
 	AppServicePlans     plugin.TValue[[]any]
 	Certificates        plugin.TValue[[]any]
+	StaticSites         plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionWebService creates a new instance of this resource
@@ -37278,6 +37456,22 @@ func (c *mqlAzureSubscriptionWebService) GetCertificates() *plugin.TValue[[]any]
 		}
 
 		return c.certificates()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebService) GetStaticSites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StaticSites, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService", c.__id, "staticSites")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.staticSites()
 	})
 }
 
@@ -38978,6 +39172,165 @@ func (c *mqlAzureSubscriptionWebServiceCertificate) GetHostNames() *plugin.TValu
 
 func (c *mqlAzureSubscriptionWebServiceCertificate) GetValid() *plugin.TValue[bool] {
 	return &c.Valid
+}
+
+// mqlAzureSubscriptionWebServiceStaticSite for the azure.subscription.webService.staticSite resource
+type mqlAzureSubscriptionWebServiceStaticSite struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionWebServiceStaticSiteInternal it will be used here
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Location                       plugin.TValue[string]
+	Kind                           plugin.TValue[string]
+	Tags                           plugin.TValue[map[string]any]
+	SkuName                        plugin.TValue[string]
+	SkuTier                        plugin.TValue[string]
+	IdentityType                   plugin.TValue[string]
+	DefaultHostname                plugin.TValue[string]
+	ContentDistributionEndpoint    plugin.TValue[string]
+	CustomDomains                  plugin.TValue[[]any]
+	RepositoryUrl                  plugin.TValue[string]
+	Branch                         plugin.TValue[string]
+	Provider                       plugin.TValue[string]
+	PublicNetworkAccess            plugin.TValue[string]
+	AllowConfigFileUpdates         plugin.TValue[bool]
+	StagingEnvironmentPolicy       plugin.TValue[string]
+	EnterpriseGradeCdnStatus       plugin.TValue[string]
+	KeyVaultReferenceIdentity      plugin.TValue[string]
+	PrivateEndpointConnectionCount plugin.TValue[int64]
+	UserProvidedFunctionAppCount   plugin.TValue[int64]
+	LinkedBackendCount             plugin.TValue[int64]
+	DatabaseConnectionCount        plugin.TValue[int64]
+}
+
+// createAzureSubscriptionWebServiceStaticSite creates a new instance of this resource
+func createAzureSubscriptionWebServiceStaticSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceStaticSite{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.staticSite", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) MqlName() string {
+	return "azure.subscription.webService.staticSite"
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetSkuTier() *plugin.TValue[string] {
+	return &c.SkuTier
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetDefaultHostname() *plugin.TValue[string] {
+	return &c.DefaultHostname
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetContentDistributionEndpoint() *plugin.TValue[string] {
+	return &c.ContentDistributionEndpoint
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetCustomDomains() *plugin.TValue[[]any] {
+	return &c.CustomDomains
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetRepositoryUrl() *plugin.TValue[string] {
+	return &c.RepositoryUrl
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetBranch() *plugin.TValue[string] {
+	return &c.Branch
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetAllowConfigFileUpdates() *plugin.TValue[bool] {
+	return &c.AllowConfigFileUpdates
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetStagingEnvironmentPolicy() *plugin.TValue[string] {
+	return &c.StagingEnvironmentPolicy
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetEnterpriseGradeCdnStatus() *plugin.TValue[string] {
+	return &c.EnterpriseGradeCdnStatus
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetKeyVaultReferenceIdentity() *plugin.TValue[string] {
+	return &c.KeyVaultReferenceIdentity
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetPrivateEndpointConnectionCount() *plugin.TValue[int64] {
+	return &c.PrivateEndpointConnectionCount
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetUserProvidedFunctionAppCount() *plugin.TValue[int64] {
+	return &c.UserProvidedFunctionAppCount
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetLinkedBackendCount() *plugin.TValue[int64] {
+	return &c.LinkedBackendCount
+}
+
+func (c *mqlAzureSubscriptionWebServiceStaticSite) GetDatabaseConnectionCount() *plugin.TValue[int64] {
+	return &c.DatabaseConnectionCount
 }
 
 // mqlAzureSubscriptionWebServiceAppsiteHostNameBinding for the azure.subscription.webService.appsite.hostNameBinding resource
