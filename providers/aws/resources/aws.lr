@@ -1011,6 +1011,8 @@ private aws.networkfirewall.firewall @defaults("arn name region") {
   encryptionKmsKeyId string
   // KMS key used to encrypt firewall resources (set when encryptionType is CUSTOMER_KMS)
   kmsKey() aws.kms.key
+  // DEPRECATED: use encryptionType, encryptionKmsKeyId, and kmsKey instead
+  encryptionConfiguration @maturity("deprecated") dict
   // Readiness of the firewall to handle traffic (READY, PROVISIONING, DELETING)
   status() string
   // Configuration sync state summary across all Availability Zones (IN_SYNC, PENDING, CAPACITY_CONSTRAINED)

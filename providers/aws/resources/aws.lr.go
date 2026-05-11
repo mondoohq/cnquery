@@ -4910,6 +4910,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.firewall.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
+	"aws.networkfirewall.firewall.encryptionConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetEncryptionConfiguration()).ToDataRes(types.Dict)
+	},
 	"aws.networkfirewall.firewall.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetStatus()).ToDataRes(types.String)
 	},
@@ -27364,6 +27367,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.networkfirewall.firewall.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallFirewall).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.firewall.encryptionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).EncryptionConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.firewall.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62498,6 +62505,7 @@ type mqlAwsNetworkfirewallFirewall struct {
 	EncryptionType                 plugin.TValue[string]
 	EncryptionKmsKeyId             plugin.TValue[string]
 	KmsKey                         plugin.TValue[*mqlAwsKmsKey]
+	EncryptionConfiguration        plugin.TValue[any]
 	Status                         plugin.TValue[string]
 	ConfigurationSyncStateSummary  plugin.TValue[string]
 	SyncStates                     plugin.TValue[[]any]
@@ -62648,6 +62656,10 @@ func (c *mqlAwsNetworkfirewallFirewall) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey
 
 		return c.kmsKey()
 	})
+}
+
+func (c *mqlAwsNetworkfirewallFirewall) GetEncryptionConfiguration() *plugin.TValue[any] {
+	return &c.EncryptionConfiguration
 }
 
 func (c *mqlAwsNetworkfirewallFirewall) GetStatus() *plugin.TValue[string] {

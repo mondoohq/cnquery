@@ -5099,6 +5099,7 @@ aws.networkfirewall.firewall.arn 11.16.1
 aws.networkfirewall.firewall.configurationSyncStateSummary 13.21.4
 aws.networkfirewall.firewall.deleteProtection 11.16.1
 aws.networkfirewall.firewall.description 11.16.1
+aws.networkfirewall.firewall.encryptionConfiguration 11.16.1
 aws.networkfirewall.firewall.encryptionKmsKeyId 13.21.4
 aws.networkfirewall.firewall.encryptionType 13.21.4
 aws.networkfirewall.firewall.firewallPolicyArn 11.16.1
