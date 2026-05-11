@@ -1007,11 +1007,9 @@ private aws.networkfirewall.firewall @defaults("arn name region") {
   subnetMappings []dict
   // KMS encryption type for firewall resources (AWS_OWNED_KMS_KEY or CUSTOMER_KMS)
   encryptionType string
-  // ID of the customer-managed KMS key used to encrypt firewall resources
-  encryptionKmsKeyId string
   // KMS key used to encrypt firewall resources (set when encryptionType is CUSTOMER_KMS)
   kmsKey() aws.kms.key
-  // DEPRECATED: use encryptionType, encryptionKmsKeyId, and kmsKey instead
+  // DEPRECATED: use encryptionType and kmsKey instead
   encryptionConfiguration @maturity("deprecated") dict
   // Readiness of the firewall to handle traffic (READY, PROVISIONING, DELETING)
   status() string
@@ -1065,8 +1063,6 @@ private aws.networkfirewall.policy @defaults("arn name region") {
   consumedStatefulDomainCapacity int
   // KMS encryption type for the firewall policy (AWS_OWNED_KMS_KEY or CUSTOMER_KMS)
   encryptionType string
-  // ID of the customer-managed KMS key used to encrypt the firewall policy
-  encryptionKmsKeyId string
   // KMS key used to encrypt the firewall policy (set when encryptionType is CUSTOMER_KMS)
   kmsKey() aws.kms.key
   // Tags on the firewall policy
@@ -1107,8 +1103,6 @@ private aws.networkfirewall.rulegroup @defaults("arn name region") {
   sourceMetadata []dict
   // KMS encryption type for the rule group (AWS_OWNED_KMS_KEY or CUSTOMER_KMS)
   encryptionType string
-  // ID of the customer-managed KMS key used to encrypt the rule group
-  encryptionKmsKeyId string
   // KMS key used to encrypt the rule group (set when encryptionType is CUSTOMER_KMS)
   kmsKey() aws.kms.key
   // Tags on the rule group

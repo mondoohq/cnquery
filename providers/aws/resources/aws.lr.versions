@@ -5100,7 +5100,6 @@ aws.networkfirewall.firewall.configurationSyncStateSummary 13.21.4
 aws.networkfirewall.firewall.deleteProtection 11.16.1
 aws.networkfirewall.firewall.description 11.16.1
 aws.networkfirewall.firewall.encryptionConfiguration 11.16.1
-aws.networkfirewall.firewall.encryptionKmsKeyId 13.21.4
 aws.networkfirewall.firewall.encryptionType 13.21.4
 aws.networkfirewall.firewall.firewallPolicyArn 11.16.1
 aws.networkfirewall.firewall.firewallPolicyChangeProtection 11.16.1
@@ -5122,7 +5121,6 @@ aws.networkfirewall.policy 11.16.1
 aws.networkfirewall.policy.arn 11.16.1
 aws.networkfirewall.policy.consumedStatefulDomainCapacity 13.17.1
 aws.networkfirewall.policy.description 11.16.1
-aws.networkfirewall.policy.encryptionKmsKeyId 13.21.4
 aws.networkfirewall.policy.encryptionType 13.21.4
 aws.networkfirewall.policy.kmsKey 13.21.4
 aws.networkfirewall.policy.name 11.16.1
@@ -5147,7 +5145,6 @@ aws.networkfirewall.rulegroup.arn 11.16.1
 aws.networkfirewall.rulegroup.capacity 11.16.1
 aws.networkfirewall.rulegroup.consumedCapacity 13.21.4
 aws.networkfirewall.rulegroup.description 11.16.1
-aws.networkfirewall.rulegroup.encryptionKmsKeyId 13.21.4
 aws.networkfirewall.rulegroup.encryptionType 13.21.4
 aws.networkfirewall.rulegroup.kmsKey 13.21.4
 aws.networkfirewall.rulegroup.name 11.16.1

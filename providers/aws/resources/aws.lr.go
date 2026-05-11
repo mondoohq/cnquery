@@ -4904,9 +4904,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.firewall.encryptionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetEncryptionType()).ToDataRes(types.String)
 	},
-	"aws.networkfirewall.firewall.encryptionKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsNetworkfirewallFirewall).GetEncryptionKmsKeyId()).ToDataRes(types.String)
-	},
 	"aws.networkfirewall.firewall.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
@@ -4985,9 +4982,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.policy.encryptionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetEncryptionType()).ToDataRes(types.String)
 	},
-	"aws.networkfirewall.policy.encryptionKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsNetworkfirewallPolicy).GetEncryptionKmsKeyId()).ToDataRes(types.String)
-	},
 	"aws.networkfirewall.policy.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
@@ -5041,9 +5035,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.networkfirewall.rulegroup.encryptionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetEncryptionType()).ToDataRes(types.String)
-	},
-	"aws.networkfirewall.rulegroup.encryptionKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsNetworkfirewallRulegroup).GetEncryptionKmsKeyId()).ToDataRes(types.String)
 	},
 	"aws.networkfirewall.rulegroup.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
@@ -27361,10 +27352,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallFirewall).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.networkfirewall.firewall.encryptionKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNetworkfirewallFirewall).EncryptionKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"aws.networkfirewall.firewall.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallFirewall).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
@@ -27473,10 +27460,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallPolicy).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.networkfirewall.policy.encryptionKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNetworkfirewallPolicy).EncryptionKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"aws.networkfirewall.policy.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallPolicy).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
@@ -27551,10 +27534,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.networkfirewall.rulegroup.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallRulegroup).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.networkfirewall.rulegroup.encryptionKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNetworkfirewallRulegroup).EncryptionKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.rulegroup.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62503,7 +62482,6 @@ type mqlAwsNetworkfirewallFirewall struct {
 	Policy                         plugin.TValue[*mqlAwsNetworkfirewallPolicy]
 	SubnetMappings                 plugin.TValue[[]any]
 	EncryptionType                 plugin.TValue[string]
-	EncryptionKmsKeyId             plugin.TValue[string]
 	KmsKey                         plugin.TValue[*mqlAwsKmsKey]
 	EncryptionConfiguration        plugin.TValue[any]
 	Status                         plugin.TValue[string]
@@ -62638,10 +62616,6 @@ func (c *mqlAwsNetworkfirewallFirewall) GetEncryptionType() *plugin.TValue[strin
 	return &c.EncryptionType
 }
 
-func (c *mqlAwsNetworkfirewallFirewall) GetEncryptionKmsKeyId() *plugin.TValue[string] {
-	return &c.EncryptionKmsKeyId
-}
-
 func (c *mqlAwsNetworkfirewallFirewall) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
 		if c.MqlRuntime.HasRecording {
@@ -62714,7 +62688,6 @@ type mqlAwsNetworkfirewallPolicy struct {
 	TlsInspectionConfigurationArn       plugin.TValue[string]
 	ConsumedStatefulDomainCapacity      plugin.TValue[int64]
 	EncryptionType                      plugin.TValue[string]
-	EncryptionKmsKeyId                  plugin.TValue[string]
 	KmsKey                              plugin.TValue[*mqlAwsKmsKey]
 	Tags                                plugin.TValue[map[string]any]
 }
@@ -62856,10 +62829,6 @@ func (c *mqlAwsNetworkfirewallPolicy) GetEncryptionType() *plugin.TValue[string]
 	return &c.EncryptionType
 }
 
-func (c *mqlAwsNetworkfirewallPolicy) GetEncryptionKmsKeyId() *plugin.TValue[string] {
-	return &c.EncryptionKmsKeyId
-}
-
 func (c *mqlAwsNetworkfirewallPolicy) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
 		if c.MqlRuntime.HasRecording {
@@ -62901,7 +62870,6 @@ type mqlAwsNetworkfirewallRulegroup struct {
 	StatefulRuleOrder    plugin.TValue[string]
 	SourceMetadata       plugin.TValue[[]any]
 	EncryptionType       plugin.TValue[string]
-	EncryptionKmsKeyId   plugin.TValue[string]
 	KmsKey               plugin.TValue[*mqlAwsKmsKey]
 	Tags                 plugin.TValue[map[string]any]
 }
@@ -63005,10 +62973,6 @@ func (c *mqlAwsNetworkfirewallRulegroup) GetSourceMetadata() *plugin.TValue[[]an
 
 func (c *mqlAwsNetworkfirewallRulegroup) GetEncryptionType() *plugin.TValue[string] {
 	return &c.EncryptionType
-}
-
-func (c *mqlAwsNetworkfirewallRulegroup) GetEncryptionKmsKeyId() *plugin.TValue[string] {
-	return &c.EncryptionKmsKeyId
 }
 
 func (c *mqlAwsNetworkfirewallRulegroup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {

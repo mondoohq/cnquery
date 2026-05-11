@@ -89,14 +89,14 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 						}
 					}
 					var encryptionType string
-					var encryptionKmsKeyId *string
+					var kmsKeyId *string
 					var encryptionDict any
 					if f.EncryptionConfiguration != nil {
 						encryptionType = string(f.EncryptionConfiguration.Type)
-						encryptionKmsKeyId = f.EncryptionConfiguration.KeyId
+						kmsKeyId = f.EncryptionConfiguration.KeyId
 						// Populate the deprecated encryptionConfiguration dict so existing
 						// queries continue to resolve. New code should use the typed
-						// encryptionType / encryptionKmsKeyId / kmsKey fields.
+						// encryptionType and kmsKey fields.
 						if d, derr := convert.JsonToDict(f.EncryptionConfiguration); derr == nil {
 							encryptionDict = d
 						}
@@ -115,7 +115,6 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 							"firewallPolicyArn":              llx.StringDataPtr(f.FirewallPolicyArn),
 							"subnetMappings":                 llx.ArrayData(subnetMappings, "dict"),
 							"encryptionType":                 llx.StringData(encryptionType),
-							"encryptionKmsKeyId":             llx.StringDataPtr(encryptionKmsKeyId),
 							"encryptionConfiguration":        llx.DictData(encryptionDict),
 							"tags":                           llx.MapData(tags, "string"),
 						})
@@ -125,7 +124,7 @@ func (a *mqlAwsNetworkfirewall) getFirewalls(conn *connection.AwsConnection) []*
 					mqlFw := mqlFirewall.(*mqlAwsNetworkfirewallFirewall)
 					mqlFw.cacheVpcId = f.VpcId
 					mqlFw.cacheSubnetIds = subnetIds
-					mqlFw.cacheKmsKeyId = encryptionKmsKeyId
+					mqlFw.cacheKmsKeyId = kmsKeyId
 					mqlFw.cacheStatusVal = detail.FirewallStatus
 					res = append(res, mqlFirewall)
 				}
@@ -469,10 +468,10 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 	}
 
 	var encryptionType string
-	var encryptionKmsKeyId *string
+	var kmsKeyId *string
 	if policyResp.EncryptionConfiguration != nil {
 		encryptionType = string(policyResp.EncryptionConfiguration.Type)
-		encryptionKmsKeyId = policyResp.EncryptionConfiguration.KeyId
+		kmsKeyId = policyResp.EncryptionConfiguration.KeyId
 	}
 
 	mqlPolicy, err := CreateResource(runtime, "aws.networkfirewall.policy",
@@ -494,7 +493,6 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 			"tlsInspectionConfigurationArn":       llx.StringDataPtr(policy.TLSInspectionConfigurationArn),
 			"consumedStatefulDomainCapacity":      llx.IntData(consumedStatefulDomain),
 			"encryptionType":                      llx.StringData(encryptionType),
-			"encryptionKmsKeyId":                  llx.StringDataPtr(encryptionKmsKeyId),
 			"tags":                                llx.MapData(tags, "string"),
 		})
 	if err != nil {
@@ -503,7 +501,7 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 	mp := mqlPolicy.(*mqlAwsNetworkfirewallPolicy)
 	mp.cacheStatelessRuleGroupArns = statelessArns
 	mp.cacheStatefulRuleGroupArns = statefulArns
-	mp.cacheKmsKeyId = encryptionKmsKeyId
+	mp.cacheKmsKeyId = kmsKeyId
 	return mp, nil
 }
 
@@ -722,10 +720,10 @@ func networkfirewallRuleGroupToMql(runtime *plugin.Runtime, resp *nftypes.RuleGr
 	}
 
 	var encryptionType string
-	var encryptionKmsKeyId *string
+	var kmsKeyId *string
 	if resp.EncryptionConfiguration != nil {
 		encryptionType = string(resp.EncryptionConfiguration.Type)
-		encryptionKmsKeyId = resp.EncryptionConfiguration.KeyId
+		kmsKeyId = resp.EncryptionConfiguration.KeyId
 	}
 
 	tags := nfTagsToMap(resp.Tags)
@@ -757,14 +755,13 @@ func networkfirewallRuleGroupToMql(runtime *plugin.Runtime, resp *nftypes.RuleGr
 			"statefulRuleOrder":    llx.StringData(statefulRuleOrder),
 			"sourceMetadata":       llx.ArrayData(sourceMetadata, "dict"),
 			"encryptionType":       llx.StringData(encryptionType),
-			"encryptionKmsKeyId":   llx.StringDataPtr(encryptionKmsKeyId),
 			"tags":                 llx.MapData(tags, "string"),
 		})
 	if err != nil {
 		return nil, err
 	}
 	mrg := mqlRG.(*mqlAwsNetworkfirewallRulegroup)
-	mrg.cacheKmsKeyId = encryptionKmsKeyId
+	mrg.cacheKmsKeyId = kmsKeyId
 	return mrg, nil
 }
 
