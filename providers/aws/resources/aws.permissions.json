@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.21.3",
-  "generated_at": "2026-05-09T16:54:12-07:00",
+  "generated_at": "2026-05-11T07:51:38+01:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -433,6 +433,7 @@
     "memorydb:ListTags",
     "mq:DescribeBroker",
     "mq:ListBrokers",
+    "mq:ListConfigurations",
     "neptune-graph:GetGraph",
     "neptune-graph:ListGraphs",
     "neptune-graph:ListTagsForResource",
@@ -3359,6 +3360,12 @@
       "permission": "mq:ListBrokers",
       "service": "mq",
       "action": "ListBrokers",
+      "source_file": "aws_mq.go"
+    },
+    {
+      "permission": "mq:ListConfigurations",
+      "service": "mq",
+      "action": "ListConfigurations",
       "source_file": "aws_mq.go"
     },
     {

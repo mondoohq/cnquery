@@ -16506,15 +16506,21 @@ private aws.msk.replicator.logDelivery.s3 @defaults("enabled") {
 
 // Amazon MQ
 //
-// Use the MQ namespace to enumerate managed message brokers in the
-// account. Iterate `brokers()` for every Amazon MQ broker — each row
-// surfaces the broker engine (ActiveMQ or RabbitMQ), engine version,
-// deployment mode (single-instance, active/standby, cluster), public
-// accessibility, instance type, KMS encryption, security groups and
-// subnets, the configuration revision, and the wire-protocol endpoints.
+// Use the MQ namespace to enumerate managed message brokers and stored
+// broker configurations in the account. Iterate `brokers()` for every Amazon
+// MQ broker — each row surfaces the broker engine (ActiveMQ or RabbitMQ),
+// engine version, deployment mode (single-instance, active/standby, cluster),
+// public accessibility, instance type, KMS encryption, security groups and
+// subnets, log destinations, LDAP server metadata, the maintenance window,
+// the applied configuration revision, the user list, and the wire-protocol
+// endpoints. Iterate `configurations()` for every stored broker configuration
+// that can be attached to a broker, along with its engine type, engine
+// version, authentication strategy, and latest revision.
 aws.mq @defaults("brokers") {
   // List of MQ brokers
   brokers() []aws.mq.broker
+  // List of MQ broker configurations
+  configurations() []aws.mq.configuration
 }
 
 // Amazon MQ message broker
@@ -16549,6 +16555,10 @@ private aws.mq.broker @defaults("name engineType deploymentMode state region") {
   generalLogsEnabled() bool
   // Whether audit logging is enabled (ActiveMQ only)
   auditLogsEnabled() bool
+  // CloudWatch Logs log group that receives general broker logs
+  generalLogGroup() aws.cloudwatch.loggroup
+  // CloudWatch Logs log group that receives audit broker logs (ActiveMQ only)
+  auditLogGroup() aws.cloudwatch.loggroup
   // Whether automatic minor version upgrades are enabled
   autoMinorVersionUpgrade() bool
   // Storage type: EBS or EFS
@@ -16557,10 +16567,78 @@ private aws.mq.broker @defaults("name engineType deploymentMode state region") {
   subnets() []aws.vpc.subnet
   // Security groups attached to the broker
   securityGroups() []aws.ec2.securitygroup
+  // Day of the week when the maintenance window begins: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+  maintenanceDayOfWeek() string
+  // Time of day, in 24-hour format, when the maintenance window begins
+  maintenanceTimeOfDay() string
+  // Time zone for the maintenance window, in Country/City or UTC offset format (UTC by default)
+  maintenanceTimeZone() string
+  // Cross-region data replication mode: NONE or CRDR
+  dataReplicationMode() string
+  // Cross-region data replication mode that will be applied after the next reboot: NONE or CRDR
+  pendingDataReplicationMode() string
+  // Role this broker plays in its CRDR replication pair (only set when dataReplicationMode is CRDR)
+  dataReplicationRole() string
+  // Replication partner broker in a CRDR replication pair
+  replicationPartnerBroker() aws.mq.broker
+  // Engine version that will be applied at the next maintenance window or reboot
+  pendingEngineVersion() string
+  // Host instance type that will be applied at the next reboot
+  pendingHostInstanceType() string
+  // Authentication strategy that will be applied at the next reboot: SIMPLE, LDAP, or CONFIG_MANAGED
+  pendingAuthenticationStrategy() string
+  // Security groups that will be applied at the next reboot
+  pendingSecurityGroups() []aws.ec2.securitygroup
+  // LDAP server metadata used to authenticate and authorize connections to the broker (one entry when LDAP is configured); each entry has Hosts, RoleBase, RoleName, RoleSearchMatching, RoleSearchSubtree, ServiceAccountUsername, UserBase, UserRoleName, UserSearchMatching, UserSearchSubtree
+  ldapServerMetadata() []dict
+  // Configurations applied to the broker: current revision, pending revision, and applied history; each entry has Kind ("current", "pending", or "history"), Id, and Revision
+  configurations() []dict
+  // Actions required to resolve outstanding broker issues; each entry has ActionRequiredCode and ActionRequiredInfo
+  actionsRequired() []dict
+  // Broker user accounts (does not apply to RabbitMQ brokers); each entry has Username and PendingChange
+  users() []dict
   // Date the broker was created
   createdAt time
   // Tags for the broker
   tags() map[string]string
+}
+
+// Amazon MQ broker configuration
+//
+// Examine a stored ActiveMQ or RabbitMQ broker configuration that can be
+// attached to a broker. Each configuration is keyed by its ARN — for example
+// `aws.mq.configuration(arn: "arn:aws:mq:us-east-1:123456789012:configuration:c-abcd...")` —
+// and exposes the broker engine type and version, authentication strategy,
+// description, creation time, latest revision number, and tags. The latest
+// revision number, creation time, and description are flattened onto the
+// configuration so audits can compare current revisions across brokers.
+private aws.mq.configuration @defaults("name engineType engineVersion region") {
+  // ARN of the configuration
+  arn string
+  // Unique ID of the configuration
+  id string
+  // Name of the configuration
+  name string
+  // Description of the configuration
+  description string
+  // Engine type: ACTIVEMQ or RABBITMQ
+  engineType string
+  // Engine version
+  engineVersion string
+  // Authentication strategy: SIMPLE, LDAP, or CONFIG_MANAGED
+  authenticationStrategy string
+  // Date the configuration was created
+  created time
+  // Latest revision number of the configuration
+  latestRevisionNumber int
+  // Date the latest revision of the configuration was created
+  latestRevisionCreated time
+  // Description of the latest revision of the configuration
+  latestRevisionDescription string
+  // Region where the configuration is stored
+  region string
+  // Tags for the configuration
+  tags map[string]string
 }
 
 // AWS Batch

@@ -682,6 +682,7 @@ const (
 	ResourceAwsMskReplicatorLogDeliveryS3                                       string = "aws.msk.replicator.logDelivery.s3"
 	ResourceAwsMq                                                               string = "aws.mq"
 	ResourceAwsMqBroker                                                         string = "aws.mq.broker"
+	ResourceAwsMqConfiguration                                                  string = "aws.mq.configuration"
 	ResourceAwsBatch                                                            string = "aws.batch"
 	ResourceAwsBatchComputeEnvironment                                          string = "aws.batch.computeEnvironment"
 	ResourceAwsBatchJobQueue                                                    string = "aws.batch.jobQueue"
@@ -3431,8 +3432,12 @@ func init() {
 			Create: createAwsMq,
 		},
 		"aws.mq.broker": {
-			// to override args, implement: initAwsMqBroker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsMqBroker,
 			Create: createAwsMqBroker,
+		},
+		"aws.mq.configuration": {
+			// to override args, implement: initAwsMqConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMqConfiguration,
 		},
 		"aws.batch": {
 			// to override args, implement: initAwsBatch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -23318,6 +23323,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.mq.brokers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMq).GetBrokers()).ToDataRes(types.Array(types.Resource("aws.mq.broker")))
 	},
+	"aws.mq.configurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMq).GetConfigurations()).ToDataRes(types.Array(types.Resource("aws.mq.configuration")))
+	},
 	"aws.mq.broker.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetArn()).ToDataRes(types.String)
 	},
@@ -23363,6 +23371,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.mq.broker.auditLogsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetAuditLogsEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.mq.broker.generalLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetGeneralLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.mq.broker.auditLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetAuditLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
 	"aws.mq.broker.autoMinorVersionUpgrade": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetAutoMinorVersionUpgrade()).ToDataRes(types.Bool)
 	},
@@ -23375,11 +23389,95 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.mq.broker.securityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
+	"aws.mq.broker.maintenanceDayOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetMaintenanceDayOfWeek()).ToDataRes(types.String)
+	},
+	"aws.mq.broker.maintenanceTimeOfDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetMaintenanceTimeOfDay()).ToDataRes(types.String)
+	},
+	"aws.mq.broker.maintenanceTimeZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetMaintenanceTimeZone()).ToDataRes(types.String)
+	},
+	"aws.mq.broker.dataReplicationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetDataReplicationMode()).ToDataRes(types.String)
+	},
+	"aws.mq.broker.pendingDataReplicationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetPendingDataReplicationMode()).ToDataRes(types.String)
+	},
+	"aws.mq.broker.dataReplicationRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetDataReplicationRole()).ToDataRes(types.String)
+	},
+	"aws.mq.broker.replicationPartnerBroker": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetReplicationPartnerBroker()).ToDataRes(types.Resource("aws.mq.broker"))
+	},
+	"aws.mq.broker.pendingEngineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetPendingEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.mq.broker.pendingHostInstanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetPendingHostInstanceType()).ToDataRes(types.String)
+	},
+	"aws.mq.broker.pendingAuthenticationStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetPendingAuthenticationStrategy()).ToDataRes(types.String)
+	},
+	"aws.mq.broker.pendingSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetPendingSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.mq.broker.ldapServerMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetLdapServerMetadata()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.mq.broker.configurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.mq.broker.actionsRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetActionsRequired()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.mq.broker.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetUsers()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.mq.broker.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.mq.broker.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.mq.configuration.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetArn()).ToDataRes(types.String)
+	},
+	"aws.mq.configuration.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetId()).ToDataRes(types.String)
+	},
+	"aws.mq.configuration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"aws.mq.configuration.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.mq.configuration.engineType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetEngineType()).ToDataRes(types.String)
+	},
+	"aws.mq.configuration.engineVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.mq.configuration.authenticationStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetAuthenticationStrategy()).ToDataRes(types.String)
+	},
+	"aws.mq.configuration.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetCreated()).ToDataRes(types.Time)
+	},
+	"aws.mq.configuration.latestRevisionNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetLatestRevisionNumber()).ToDataRes(types.Int)
+	},
+	"aws.mq.configuration.latestRevisionCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetLatestRevisionCreated()).ToDataRes(types.Time)
+	},
+	"aws.mq.configuration.latestRevisionDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetLatestRevisionDescription()).ToDataRes(types.String)
+	},
+	"aws.mq.configuration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.mq.configuration.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqConfiguration).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.batch.computeEnvironments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatch).GetComputeEnvironments()).ToDataRes(types.Array(types.Resource("aws.batch.computeEnvironment")))
@@ -54274,6 +54372,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMq).Brokers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.mq.configurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMq).Configurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.mq.broker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMqBroker).__id, ok = v.Value.(string)
 		return
@@ -54338,6 +54440,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMqBroker).AuditLogsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.mq.broker.generalLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).GeneralLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.auditLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).AuditLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
 	"aws.mq.broker.autoMinorVersionUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMqBroker).AutoMinorVersionUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -54354,12 +54464,128 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMqBroker).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.mq.broker.maintenanceDayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).MaintenanceDayOfWeek, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.maintenanceTimeOfDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).MaintenanceTimeOfDay, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.maintenanceTimeZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).MaintenanceTimeZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.dataReplicationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).DataReplicationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.pendingDataReplicationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).PendingDataReplicationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.dataReplicationRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).DataReplicationRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.replicationPartnerBroker": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).ReplicationPartnerBroker, ok = plugin.RawToTValue[*mqlAwsMqBroker](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.pendingEngineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).PendingEngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.pendingHostInstanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).PendingHostInstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.pendingAuthenticationStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).PendingAuthenticationStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.pendingSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).PendingSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.ldapServerMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).LdapServerMetadata, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.configurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).Configurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.actionsRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).ActionsRequired, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.mq.broker.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMqBroker).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.mq.broker.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMqBroker).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.mq.configuration.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.engineType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).EngineType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.authenticationStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).AuthenticationStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.latestRevisionNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).LatestRevisionNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.latestRevisionCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).LatestRevisionCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.latestRevisionDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).LatestRevisionDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.configuration.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqConfiguration).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.batch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -132676,7 +132902,8 @@ type mqlAwsMq struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsMqInternal it will be used here
-	Brokers plugin.TValue[[]any]
+	Brokers        plugin.TValue[[]any]
+	Configurations plugin.TValue[[]any]
 }
 
 // createAwsMq creates a new instance of this resource
@@ -132732,32 +132959,65 @@ func (c *mqlAwsMq) GetBrokers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsMq) GetConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Configurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.mq", c.__id, "configurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.configurations()
+	})
+}
+
 // mqlAwsMqBroker for the aws.mq.broker resource
 type mqlAwsMqBroker struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsMqBrokerInternal
-	Arn                     plugin.TValue[string]
-	BrokerId                plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	State                   plugin.TValue[string]
-	EngineType              plugin.TValue[string]
-	EngineVersion           plugin.TValue[string]
-	DeploymentMode          plugin.TValue[string]
-	HostInstanceType        plugin.TValue[string]
-	Region                  plugin.TValue[string]
-	PubliclyAccessible      plugin.TValue[bool]
-	AuthenticationStrategy  plugin.TValue[string]
-	UseAwsOwnedKey          plugin.TValue[bool]
-	KmsKey                  plugin.TValue[*mqlAwsKmsKey]
-	GeneralLogsEnabled      plugin.TValue[bool]
-	AuditLogsEnabled        plugin.TValue[bool]
-	AutoMinorVersionUpgrade plugin.TValue[bool]
-	StorageType             plugin.TValue[string]
-	Subnets                 plugin.TValue[[]any]
-	SecurityGroups          plugin.TValue[[]any]
-	CreatedAt               plugin.TValue[*time.Time]
-	Tags                    plugin.TValue[map[string]any]
+	Arn                           plugin.TValue[string]
+	BrokerId                      plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	State                         plugin.TValue[string]
+	EngineType                    plugin.TValue[string]
+	EngineVersion                 plugin.TValue[string]
+	DeploymentMode                plugin.TValue[string]
+	HostInstanceType              plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	PubliclyAccessible            plugin.TValue[bool]
+	AuthenticationStrategy        plugin.TValue[string]
+	UseAwsOwnedKey                plugin.TValue[bool]
+	KmsKey                        plugin.TValue[*mqlAwsKmsKey]
+	GeneralLogsEnabled            plugin.TValue[bool]
+	AuditLogsEnabled              plugin.TValue[bool]
+	GeneralLogGroup               plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	AuditLogGroup                 plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	AutoMinorVersionUpgrade       plugin.TValue[bool]
+	StorageType                   plugin.TValue[string]
+	Subnets                       plugin.TValue[[]any]
+	SecurityGroups                plugin.TValue[[]any]
+	MaintenanceDayOfWeek          plugin.TValue[string]
+	MaintenanceTimeOfDay          plugin.TValue[string]
+	MaintenanceTimeZone           plugin.TValue[string]
+	DataReplicationMode           plugin.TValue[string]
+	PendingDataReplicationMode    plugin.TValue[string]
+	DataReplicationRole           plugin.TValue[string]
+	ReplicationPartnerBroker      plugin.TValue[*mqlAwsMqBroker]
+	PendingEngineVersion          plugin.TValue[string]
+	PendingHostInstanceType       plugin.TValue[string]
+	PendingAuthenticationStrategy plugin.TValue[string]
+	PendingSecurityGroups         plugin.TValue[[]any]
+	LdapServerMetadata            plugin.TValue[[]any]
+	Configurations                plugin.TValue[[]any]
+	ActionsRequired               plugin.TValue[[]any]
+	Users                         plugin.TValue[[]any]
+	CreatedAt                     plugin.TValue[*time.Time]
+	Tags                          plugin.TValue[map[string]any]
 }
 
 // createAwsMqBroker creates a new instance of this resource
@@ -132876,6 +133136,38 @@ func (c *mqlAwsMqBroker) GetAuditLogsEnabled() *plugin.TValue[bool] {
 	})
 }
 
+func (c *mqlAwsMqBroker) GetGeneralLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.GeneralLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.mq.broker", c.__id, "generalLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.generalLogGroup()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetAuditLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.AuditLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.mq.broker", c.__id, "auditLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.auditLogGroup()
+	})
+}
+
 func (c *mqlAwsMqBroker) GetAutoMinorVersionUpgrade() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.AutoMinorVersionUpgrade, func() (bool, error) {
 		return c.autoMinorVersionUpgrade()
@@ -132920,6 +133212,116 @@ func (c *mqlAwsMqBroker) GetSecurityGroups() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsMqBroker) GetMaintenanceDayOfWeek() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MaintenanceDayOfWeek, func() (string, error) {
+		return c.maintenanceDayOfWeek()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetMaintenanceTimeOfDay() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MaintenanceTimeOfDay, func() (string, error) {
+		return c.maintenanceTimeOfDay()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetMaintenanceTimeZone() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MaintenanceTimeZone, func() (string, error) {
+		return c.maintenanceTimeZone()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetDataReplicationMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DataReplicationMode, func() (string, error) {
+		return c.dataReplicationMode()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetPendingDataReplicationMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PendingDataReplicationMode, func() (string, error) {
+		return c.pendingDataReplicationMode()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetDataReplicationRole() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DataReplicationRole, func() (string, error) {
+		return c.dataReplicationRole()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetReplicationPartnerBroker() *plugin.TValue[*mqlAwsMqBroker] {
+	return plugin.GetOrCompute[*mqlAwsMqBroker](&c.ReplicationPartnerBroker, func() (*mqlAwsMqBroker, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.mq.broker", c.__id, "replicationPartnerBroker")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMqBroker), nil
+			}
+		}
+
+		return c.replicationPartnerBroker()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetPendingEngineVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PendingEngineVersion, func() (string, error) {
+		return c.pendingEngineVersion()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetPendingHostInstanceType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PendingHostInstanceType, func() (string, error) {
+		return c.pendingHostInstanceType()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetPendingAuthenticationStrategy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PendingAuthenticationStrategy, func() (string, error) {
+		return c.pendingAuthenticationStrategy()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetPendingSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PendingSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.mq.broker", c.__id, "pendingSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pendingSecurityGroups()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetLdapServerMetadata() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LdapServerMetadata, func() ([]any, error) {
+		return c.ldapServerMetadata()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Configurations, func() ([]any, error) {
+		return c.configurations()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetActionsRequired() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ActionsRequired, func() ([]any, error) {
+		return c.actionsRequired()
+	})
+}
+
+func (c *mqlAwsMqBroker) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		return c.users()
+	})
+}
+
 func (c *mqlAwsMqBroker) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -132928,6 +133330,115 @@ func (c *mqlAwsMqBroker) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+// mqlAwsMqConfiguration for the aws.mq.configuration resource
+type mqlAwsMqConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMqConfigurationInternal it will be used here
+	Arn                       plugin.TValue[string]
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Description               plugin.TValue[string]
+	EngineType                plugin.TValue[string]
+	EngineVersion             plugin.TValue[string]
+	AuthenticationStrategy    plugin.TValue[string]
+	Created                   plugin.TValue[*time.Time]
+	LatestRevisionNumber      plugin.TValue[int64]
+	LatestRevisionCreated     plugin.TValue[*time.Time]
+	LatestRevisionDescription plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	Tags                      plugin.TValue[map[string]any]
+}
+
+// createAwsMqConfiguration creates a new instance of this resource
+func createAwsMqConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMqConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.mq.configuration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMqConfiguration) MqlName() string {
+	return "aws.mq.configuration"
+}
+
+func (c *mqlAwsMqConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMqConfiguration) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsMqConfiguration) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsMqConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsMqConfiguration) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsMqConfiguration) GetEngineType() *plugin.TValue[string] {
+	return &c.EngineType
+}
+
+func (c *mqlAwsMqConfiguration) GetEngineVersion() *plugin.TValue[string] {
+	return &c.EngineVersion
+}
+
+func (c *mqlAwsMqConfiguration) GetAuthenticationStrategy() *plugin.TValue[string] {
+	return &c.AuthenticationStrategy
+}
+
+func (c *mqlAwsMqConfiguration) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlAwsMqConfiguration) GetLatestRevisionNumber() *plugin.TValue[int64] {
+	return &c.LatestRevisionNumber
+}
+
+func (c *mqlAwsMqConfiguration) GetLatestRevisionCreated() *plugin.TValue[*time.Time] {
+	return &c.LatestRevisionCreated
+}
+
+func (c *mqlAwsMqConfiguration) GetLatestRevisionDescription() *plugin.TValue[string] {
+	return &c.LatestRevisionDescription
+}
+
+func (c *mqlAwsMqConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMqConfiguration) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 // mqlAwsBatch for the aws.batch resource
