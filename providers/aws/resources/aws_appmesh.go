@@ -602,7 +602,18 @@ func initAwsAppmeshVirtualNode(runtime *plugin.Runtime, args map[string]*llx.Raw
 	args["name"] = llx.StringData(name)
 	args["meshName"] = llx.StringData(meshName)
 	args["region"] = llx.StringData(region)
-	return args, nil, nil
+	// Cache the Describe response on the resource so the next lazy-loaded
+	// field (status, tags, etc.) doesn't re-fire the same RPC.
+	res, err := CreateResource(runtime, "aws.appmesh.virtualNode", args)
+	if err != nil {
+		return nil, nil, err
+	}
+	node := res.(*mqlAwsAppmeshVirtualNode)
+	node.descResp = resp
+	node.fetched = true
+	node.region = region
+	node.meshName = meshName
+	return args, res, nil
 }
 
 func initAwsAppmeshVirtualRouter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -643,7 +654,16 @@ func initAwsAppmeshVirtualRouter(runtime *plugin.Runtime, args map[string]*llx.R
 	args["name"] = llx.StringData(name)
 	args["meshName"] = llx.StringData(meshName)
 	args["region"] = llx.StringData(region)
-	return args, nil, nil
+	res, err := CreateResource(runtime, "aws.appmesh.virtualRouter", args)
+	if err != nil {
+		return nil, nil, err
+	}
+	router := res.(*mqlAwsAppmeshVirtualRouter)
+	router.descResp = resp
+	router.fetched = true
+	router.region = region
+	router.meshName = meshName
+	return args, res, nil
 }
 
 // parseAppmeshArn extracts (region, meshName, childKind, childName) from an
@@ -1306,7 +1326,15 @@ func (a *mqlAwsAppmeshVirtualRouter) routes() ([]any, error) {
 
 func (a *mqlAwsAppmeshVirtualRouter) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.AppMesh(a.region)
+	// a.region is only populated when the resource was built via the parent
+	// listing; via initAwsAppmeshVirtualRouter, only a.Region.Data is set.
+	// Fall back to the schema field so the AppMesh client is constructed for
+	// the correct region regardless of which path the caller took.
+	region := a.region
+	if region == "" {
+		region = a.Region.Data
+	}
+	svc := conn.AppMesh(region)
 	ctx := context.Background()
 
 	arn := a.Arn.Data
@@ -1525,7 +1553,13 @@ func (a *mqlAwsAppmeshRoute) grpcRouteSpec() (map[string]any, error) {
 
 func (a *mqlAwsAppmeshRoute) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.AppMesh(a.region)
+	// Same a.region vs a.Region.Data caveat as the sibling virtual* resources
+	// — fall back so init-created Routes still tag-fetch from the right region.
+	region := a.region
+	if region == "" {
+		region = a.Region.Data
+	}
+	svc := conn.AppMesh(region)
 	ctx := context.Background()
 
 	arn := a.Arn.Data
@@ -1654,7 +1688,16 @@ func initAwsAppmeshVirtualGateway(runtime *plugin.Runtime, args map[string]*llx.
 		args["createdAt"] = llx.TimeDataPtr(vg.Metadata.CreatedAt)
 		args["lastUpdatedAt"] = llx.TimeDataPtr(vg.Metadata.LastUpdatedAt)
 	}
-	return args, nil, nil
+	res, err := CreateResource(runtime, "aws.appmesh.virtualGateway", args)
+	if err != nil {
+		return nil, nil, err
+	}
+	gateway := res.(*mqlAwsAppmeshVirtualGateway)
+	gateway.descResp = resp
+	gateway.fetched = true
+	gateway.region = region
+	gateway.meshName = meshName
+	return args, res, nil
 }
 
 func (a *mqlAwsAppmeshVirtualGateway) fetchDetail() (*appmesh.DescribeVirtualGatewayOutput, error) {
@@ -1769,7 +1812,15 @@ func (a *mqlAwsAppmeshVirtualGateway) logging() ([]any, error) {
 
 func (a *mqlAwsAppmeshVirtualGateway) tags() (map[string]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.AppMesh(a.region)
+	// a.region is only populated when the resource was built via the parent
+	// listing; via initAwsAppmeshVirtualGateway, only a.Region.Data is set.
+	// Fall back to the schema field so the AppMesh client is constructed for
+	// the correct region regardless of which path the caller took.
+	region := a.region
+	if region == "" {
+		region = a.Region.Data
+	}
+	svc := conn.AppMesh(region)
 	ctx := context.Background()
 
 	arn := a.Arn.Data
