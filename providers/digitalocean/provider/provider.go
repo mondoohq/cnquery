@@ -128,10 +128,11 @@ func (s *Service) detect(asset *inventory.Asset, conn *connection.DigitaloceanCo
 	asset.Name = "DigitalOcean Account"
 
 	asset.Platform = &inventory.Platform{
-		Name:   "digitalocean",
-		Family: []string{"digitalocean"},
-		Kind:   "api",
-		Title:  "DigitalOcean",
+		Name:    "digitalocean",
+		Family:  []string{"digitalocean"},
+		Kind:    "api",
+		Runtime: "digitalocean",
+		Title:   "DigitalOcean",
 	}
 
 	platformId := "//platformid.api.mondoo.app/runtime/digitalocean"
