@@ -16579,8 +16579,10 @@ private aws.mq.broker @defaults("name engineType deploymentMode state region") {
   pendingDataReplicationMode() string
   // Role this broker plays in its CRDR replication pair (only set when dataReplicationMode is CRDR)
   dataReplicationRole() string
-  // Replication partner broker in a CRDR replication pair
-  replicationPartnerBroker() aws.mq.broker
+  // CRDR replication partner broker ID (the `b-…` UUID). The MQ DescribeBroker API exposes only the partner's broker ID and region — not its name — so a fully qualified ARN cannot be synthesized without an extra DescribeBroker call; resolve the partner via `aws.mq.brokers.where(...)` when needed.
+  replicationPartnerBrokerId() string
+  // CRDR replication partner region (e.g. us-east-1)
+  replicationPartnerRegion() string
   // Engine version that will be applied at the next maintenance window or reboot
   pendingEngineVersion() string
   // Host instance type that will be applied at the next reboot

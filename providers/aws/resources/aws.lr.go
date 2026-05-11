@@ -23407,8 +23407,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.mq.broker.dataReplicationRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetDataReplicationRole()).ToDataRes(types.String)
 	},
-	"aws.mq.broker.replicationPartnerBroker": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsMqBroker).GetReplicationPartnerBroker()).ToDataRes(types.Resource("aws.mq.broker"))
+	"aws.mq.broker.replicationPartnerBrokerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetReplicationPartnerBrokerId()).ToDataRes(types.String)
+	},
+	"aws.mq.broker.replicationPartnerRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMqBroker).GetReplicationPartnerRegion()).ToDataRes(types.String)
 	},
 	"aws.mq.broker.pendingEngineVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMqBroker).GetPendingEngineVersion()).ToDataRes(types.String)
@@ -54488,8 +54491,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMqBroker).DataReplicationRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.mq.broker.replicationPartnerBroker": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsMqBroker).ReplicationPartnerBroker, ok = plugin.RawToTValue[*mqlAwsMqBroker](v.Value, v.Error)
+	"aws.mq.broker.replicationPartnerBrokerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).ReplicationPartnerBrokerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.mq.broker.replicationPartnerRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMqBroker).ReplicationPartnerRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.mq.broker.pendingEngineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -133007,7 +133014,8 @@ type mqlAwsMqBroker struct {
 	DataReplicationMode           plugin.TValue[string]
 	PendingDataReplicationMode    plugin.TValue[string]
 	DataReplicationRole           plugin.TValue[string]
-	ReplicationPartnerBroker      plugin.TValue[*mqlAwsMqBroker]
+	ReplicationPartnerBrokerId    plugin.TValue[string]
+	ReplicationPartnerRegion      plugin.TValue[string]
 	PendingEngineVersion          plugin.TValue[string]
 	PendingHostInstanceType       plugin.TValue[string]
 	PendingAuthenticationStrategy plugin.TValue[string]
@@ -133248,19 +133256,15 @@ func (c *mqlAwsMqBroker) GetDataReplicationRole() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsMqBroker) GetReplicationPartnerBroker() *plugin.TValue[*mqlAwsMqBroker] {
-	return plugin.GetOrCompute[*mqlAwsMqBroker](&c.ReplicationPartnerBroker, func() (*mqlAwsMqBroker, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.mq.broker", c.__id, "replicationPartnerBroker")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsMqBroker), nil
-			}
-		}
+func (c *mqlAwsMqBroker) GetReplicationPartnerBrokerId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReplicationPartnerBrokerId, func() (string, error) {
+		return c.replicationPartnerBrokerId()
+	})
+}
 
-		return c.replicationPartnerBroker()
+func (c *mqlAwsMqBroker) GetReplicationPartnerRegion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReplicationPartnerRegion, func() (string, error) {
+		return c.replicationPartnerRegion()
 	})
 }
 

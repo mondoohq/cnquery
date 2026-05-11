@@ -23,6 +23,17 @@ func (a *mqlAwsMq) id() (string, error) {
 	return "aws.mq", nil
 }
 
+// mqLogGroupArn turns a CloudWatch Logs log-group *name* (the form MQ returns
+// in LogsSummary.GeneralLogGroup / AuditLogGroup) into the canonical ARN that
+// the aws.cloudwatch.loggroup init expects. Returns empty when any input is
+// empty so callers can keep their null-handling identical.
+func mqLogGroupArn(region, accountID, groupName string) string {
+	if region == "" || accountID == "" || groupName == "" {
+		return ""
+	}
+	return fmt.Sprintf("arn:aws:logs:%s:%s:log-group:%s", region, accountID, groupName)
+}
+
 func (a *mqlAwsMq) brokers() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
@@ -256,7 +267,6 @@ type mqlAwsMqBrokerInternal struct {
 	cacheTags                    map[string]any
 	cacheAuditLogGroupArn        string
 	cacheGeneralLogGroupArn      string
-	cacheReplicationPartnerArn   string
 	cachePendingSecurityGroupIds []string
 	region                       string
 	accountID                    string
@@ -349,8 +359,12 @@ func (a *mqlAwsMqBroker) fetchDetails() error {
 	}
 	a.GeneralLogsEnabled = plugin.TValue[bool]{Data: generalLogs, State: plugin.StateIsSet}
 	a.AuditLogsEnabled = plugin.TValue[bool]{Data: auditLogs, State: plugin.StateIsSet}
-	a.cacheGeneralLogGroupArn = generalLogGroup
-	a.cacheAuditLogGroupArn = auditLogGroup
+	// LogsSummary.GeneralLogGroup / AuditLogGroup return CloudWatch log group
+	// *names* (e.g. /aws/amazonmq/broker/b-xxx/general), not ARNs. Construct the
+	// canonical ARN so the typed cross-ref to aws.cloudwatch.loggroup resolves
+	// via its existing ARN-based init.
+	a.cacheGeneralLogGroupArn = mqLogGroupArn(a.region, a.accountID, generalLogGroup)
+	a.cacheAuditLogGroupArn = mqLogGroupArn(a.region, a.accountID, auditLogGroup)
 
 	autoUpgrade := false
 	if resp.AutoMinorVersionUpgrade != nil {
@@ -382,21 +396,24 @@ func (a *mqlAwsMqBroker) fetchDetails() error {
 	a.PendingDataReplicationMode = plugin.TValue[string]{Data: string(resp.PendingDataReplicationMode), State: plugin.StateIsSet}
 
 	dataReplicationRole := ""
-	replicationPartnerArn := ""
+	replicationPartnerBrokerId := ""
+	replicationPartnerRegion := ""
 	if resp.DataReplicationMetadata != nil {
 		if resp.DataReplicationMetadata.DataReplicationRole != nil {
 			dataReplicationRole = *resp.DataReplicationMetadata.DataReplicationRole
 		}
 		if cp := resp.DataReplicationMetadata.DataReplicationCounterpart; cp != nil {
-			// Build the partner broker ARN from the broker id and counterpart region.
-			// CRDR counterparts share the account ID; use this broker's account ID.
-			if cp.BrokerId != nil && cp.Region != nil && a.accountID != "" {
-				replicationPartnerArn = fmt.Sprintf("arn:aws:mq:%s:%s:broker:%s", *cp.Region, a.accountID, *cp.BrokerId)
+			if cp.BrokerId != nil {
+				replicationPartnerBrokerId = *cp.BrokerId
+			}
+			if cp.Region != nil {
+				replicationPartnerRegion = *cp.Region
 			}
 		}
 	}
 	a.DataReplicationRole = plugin.TValue[string]{Data: dataReplicationRole, State: plugin.StateIsSet}
-	a.cacheReplicationPartnerArn = replicationPartnerArn
+	a.ReplicationPartnerBrokerId = plugin.TValue[string]{Data: replicationPartnerBrokerId, State: plugin.StateIsSet}
+	a.ReplicationPartnerRegion = plugin.TValue[string]{Data: replicationPartnerRegion, State: plugin.StateIsSet}
 
 	// Pending values.
 	if resp.PendingEngineVersion != nil {
@@ -584,22 +601,12 @@ func (a *mqlAwsMqBroker) dataReplicationRole() (string, error) {
 	return "", a.fetchDetails()
 }
 
-func (a *mqlAwsMqBroker) replicationPartnerBroker() (*mqlAwsMqBroker, error) {
-	if err := a.fetchDetails(); err != nil {
-		return nil, err
-	}
-	if a.cacheReplicationPartnerArn == "" {
-		a.ReplicationPartnerBroker.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	res, err := NewResource(a.MqlRuntime, "aws.mq.broker",
-		map[string]*llx.RawData{
-			"arn": llx.StringData(a.cacheReplicationPartnerArn),
-		})
-	if err != nil {
-		return nil, err
-	}
-	return res.(*mqlAwsMqBroker), nil
+func (a *mqlAwsMqBroker) replicationPartnerBrokerId() (string, error) {
+	return "", a.fetchDetails()
+}
+
+func (a *mqlAwsMqBroker) replicationPartnerRegion() (string, error) {
+	return "", a.fetchDetails()
 }
 
 func (a *mqlAwsMqBroker) pendingEngineVersion() (string, error) {
@@ -691,9 +698,11 @@ func initAwsMqBroker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch aws mq broker")
 	}
-	// Resource may already be cached by __id (broker ARN); the runtime resolves
-	// that path. Otherwise we return the bare resource so callers can still get
-	// the ARN even when the broker is in a different region or account.
+	// __id must equal arn so the runtime cache can match against brokers already
+	// listed by `aws.mq.brokers`. Without this, every NewResource("aws.mq.broker",
+	// {arn:…}) creates a fresh resource with no region/cacheBrokerId set, and
+	// every lazy-loaded field would call DescribeBroker with an empty broker ID.
+	args["__id"] = args["arn"]
 	return args, nil, nil
 }
 

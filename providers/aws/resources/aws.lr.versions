@@ -4761,7 +4761,8 @@ aws.mq.broker.pendingHostInstanceType 13.21.4
 aws.mq.broker.pendingSecurityGroups 13.21.4
 aws.mq.broker.publiclyAccessible 11.16.1
 aws.mq.broker.region 11.16.1
-aws.mq.broker.replicationPartnerBroker 13.21.4
+aws.mq.broker.replicationPartnerBrokerId 13.21.4
+aws.mq.broker.replicationPartnerRegion 13.21.4
 aws.mq.broker.securityGroups 11.16.1
 aws.mq.broker.state 11.16.1
 aws.mq.broker.storageType 11.16.1
