@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.10.1",
-  "generated_at": "2026-05-11T05:59:21+01:00",
+  "generated_at": "2026-05-11T07:53:18+01:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -182,7 +182,8 @@
     "Microsoft.Web/certificates/read",
     "Microsoft.Web/hostingEnvironments/read",
     "Microsoft.Web/serverfarms/read",
-    "Microsoft.Web/sites/read"
+    "Microsoft.Web/sites/read",
+    "Microsoft.Web/staticSites/read"
   ],
   "details": [
     {
@@ -350,7 +351,7 @@
     {
       "permission": "Microsoft.Compute/disks/read",
       "service": "Microsoft.Compute",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "compute.go"
     },
     {
@@ -434,7 +435,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/credentialSets/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "containerregistry.go"
     },
     {
@@ -446,7 +447,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/scopeMaps/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "containerregistry.go"
     },
     {
@@ -590,13 +591,13 @@
     {
       "permission": "Microsoft.DocumentDB/sQLResources/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListSQLRoleDefinitionsPager",
+      "action": "NewListSQLRoleAssignmentsPager",
       "source_file": "cosmosdb.go"
     },
     {
       "permission": "Microsoft.DocumentDB/sQLResources/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListSQLDatabasesPager",
+      "action": "NewListSQLContainersPager",
       "source_file": "cosmosdb_extras.go"
     },
     {
@@ -680,7 +681,7 @@
     {
       "permission": "Microsoft.KeyVault/vaults/read",
       "service": "Microsoft.KeyVault",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "keyvault.go"
     },
     {
@@ -698,13 +699,13 @@
     {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
       "permission": "Microsoft.Network/applicationGateways/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -716,7 +717,7 @@
     {
       "permission": "Microsoft.Network/azureFirewalls/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -770,7 +771,7 @@
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -830,8 +831,14 @@
     {
       "permission": "Microsoft.Network/privateLinkServices/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListBySubscriptionPager",
       "source_file": "network.go"
+    },
+    {
+      "permission": "Microsoft.Network/publicIPAddresses/read",
+      "service": "Microsoft.Network",
+      "action": "Get",
+      "source_file": "apimanagement.go"
     },
     {
       "permission": "Microsoft.Network/publicIPAddresses/read",
@@ -866,7 +873,7 @@
     {
       "permission": "Microsoft.Network/virtualNetworks/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -902,7 +909,7 @@
     {
       "permission": "Microsoft.OperationalInsights/workspaces/read",
       "service": "Microsoft.OperationalInsights",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "loganalytics.go"
     },
     {
@@ -1250,7 +1257,7 @@
     {
       "permission": "Microsoft.Storage/storageAccounts/queueServices/queues/read",
       "service": "Microsoft.Storage",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "storage_extras.go"
     },
     {
@@ -1292,7 +1299,7 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListFunctionsPager",
+      "action": "NewListPager",
       "source_file": "functions.go"
     },
     {
@@ -1300,6 +1307,12 @@
       "service": "Microsoft.Web",
       "action": "NewListSlotsPager",
       "source_file": "web.go"
+    },
+    {
+      "permission": "Microsoft.Web/staticSites/read",
+      "service": "Microsoft.Web",
+      "action": "NewListPager",
+      "source_file": "web_staticsites.go"
     }
   ]
 }

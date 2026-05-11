@@ -11532,8 +11532,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.apiManagementService.service.zones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetZones()).ToDataRes(types.Array(types.String))
 	},
-	"azure.subscription.apiManagementService.service.publicIpAddressId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPublicIpAddressId()).ToDataRes(types.String)
+	"azure.subscription.apiManagementService.service.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPublicIpAddress()).ToDataRes(types.Resource("azure.subscription.networkService.ipAddress"))
 	},
 	"azure.subscription.apiManagementService.service.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetCreatedAt()).ToDataRes(types.Time)
@@ -25962,8 +25962,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionApiManagementServiceService).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.apiManagementService.service.publicIpAddressId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionApiManagementServiceService).PublicIpAddressId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.apiManagementService.service.publicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PublicIpAddress, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceIpAddress](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.apiManagementService.service.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -60768,7 +60768,7 @@ func (c *mqlAzureSubscriptionApiManagementService) GetServices() *plugin.TValue[
 type mqlAzureSubscriptionApiManagementServiceService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionApiManagementServiceServiceInternal it will be used here
+	mqlAzureSubscriptionApiManagementServiceServiceInternal
 	Id                             plugin.TValue[string]
 	Name                           plugin.TValue[string]
 	Location                       plugin.TValue[string]
@@ -60801,7 +60801,7 @@ type mqlAzureSubscriptionApiManagementServiceService struct {
 	OutboundPublicIpAddresses      plugin.TValue[[]any]
 	PrivateEndpointConnectionCount plugin.TValue[int64]
 	Zones                          plugin.TValue[[]any]
-	PublicIpAddressId              plugin.TValue[string]
+	PublicIpAddress                plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress]
 	CreatedAt                      plugin.TValue[*time.Time]
 }
 
@@ -60970,8 +60970,20 @@ func (c *mqlAzureSubscriptionApiManagementServiceService) GetZones() *plugin.TVa
 	return &c.Zones
 }
 
-func (c *mqlAzureSubscriptionApiManagementServiceService) GetPublicIpAddressId() *plugin.TValue[string] {
-	return &c.PublicIpAddressId
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPublicIpAddress() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceIpAddress] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceIpAddress](&c.PublicIpAddress, func() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.apiManagementService.service", c.__id, "publicIpAddress")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceIpAddress), nil
+			}
+		}
+
+		return c.publicIpAddress()
+	})
 }
 
 func (c *mqlAzureSubscriptionApiManagementServiceService) GetCreatedAt() *plugin.TValue[*time.Time] {

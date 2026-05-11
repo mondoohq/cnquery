@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	apim "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement/v3"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -19,6 +20,10 @@ import (
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+type mqlAzureSubscriptionApiManagementServiceServiceInternal struct {
+	cachePublicIpAddressId string
+}
 
 func (a *mqlAzureSubscriptionApiManagementService) id() (string, error) {
 	return "azure.subscription.apiManagement/" + a.SubscriptionId.Data, nil
@@ -230,14 +235,42 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 					"outboundPublicIpAddresses":      llx.ArrayData(outboundPublicIpAddresses, types.String),
 					"privateEndpointConnectionCount": llx.IntData(privateEndpointConnectionCount),
 					"zones":                          llx.ArrayData(zones, types.String),
-					"publicIpAddressId":              llx.StringData(publicIpAddressId),
 					"createdAt":                      llx.TimeDataPtr(createdAt),
 				})
 			if err != nil {
 				return nil, err
 			}
+			mqlSvc.(*mqlAzureSubscriptionApiManagementServiceService).cachePublicIpAddressId = publicIpAddressId
 			res = append(res, mqlSvc)
 		}
 	}
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionApiManagementServiceService) publicIpAddress() (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
+	if a.cachePublicIpAddressId == "" {
+		a.PublicIpAddress.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	azureId, err := ParseResourceID(a.cachePublicIpAddressId)
+	if err != nil {
+		return nil, err
+	}
+	ipName, err := azureId.Component("publicIPAddresses")
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewPublicIPAddressesClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Get(ctx, azureId.ResourceGroup, ipName, nil)
+	if err != nil {
+		return nil, err
+	}
+	return azureIpToMql(a.MqlRuntime, resp.PublicIPAddress)
 }

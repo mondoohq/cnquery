@@ -173,7 +173,7 @@ azure.subscription.apiManagementService.service.portalUrl 13.10.2
 azure.subscription.apiManagementService.service.privateEndpointConnectionCount 13.10.2
 azure.subscription.apiManagementService.service.privateIpAddresses 13.10.2
 azure.subscription.apiManagementService.service.provisioningState 13.10.2
-azure.subscription.apiManagementService.service.publicIpAddressId 13.10.2
+azure.subscription.apiManagementService.service.publicIpAddress 13.10.2
 azure.subscription.apiManagementService.service.publicIpAddresses 13.10.2
 azure.subscription.apiManagementService.service.publicNetworkAccess 13.10.2
 azure.subscription.apiManagementService.service.publisherEmail 13.10.2

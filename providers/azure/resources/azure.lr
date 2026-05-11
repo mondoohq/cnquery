@@ -8474,8 +8474,8 @@ azure.subscription.apiManagementService.service @defaults("name location skuName
   privateEndpointConnectionCount int
   // Availability zones the service is spread across
   zones []string
-  // Resource ID of the public IP address attached to the service (empty when not configured)
-  publicIpAddressId string
+  // Public IP address attached to the service (null when not configured)
+  publicIpAddress() azure.subscription.networkService.ipAddress
   // Service creation time
   createdAt time
 }
