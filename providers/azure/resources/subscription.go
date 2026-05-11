@@ -395,3 +395,13 @@ func (a *mqlAzureSubscription) eventGrid() (*mqlAzureSubscriptionEventGridServic
 	}
 	return svc.(*mqlAzureSubscriptionEventGridService), nil
 }
+
+func (a *mqlAzureSubscription) apiManagement() (*mqlAzureSubscriptionApiManagementService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.apiManagementService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionApiManagementService), nil
+}

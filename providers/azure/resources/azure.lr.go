@@ -329,6 +329,8 @@ const (
 	ResourceAzureSubscriptionContainerInstanceServiceContainerGroupContainer                     string = "azure.subscription.containerInstanceService.containerGroup.container"
 	ResourceAzureSubscriptionLogicService                                                        string = "azure.subscription.logicService"
 	ResourceAzureSubscriptionLogicServiceWorkflow                                                string = "azure.subscription.logicService.workflow"
+	ResourceAzureSubscriptionApiManagementService                                                string = "azure.subscription.apiManagementService"
+	ResourceAzureSubscriptionApiManagementServiceService                                         string = "azure.subscription.apiManagementService.service"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1587,6 +1589,14 @@ func init() {
 			// to override args, implement: initAzureSubscriptionLogicServiceWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionLogicServiceWorkflow,
 		},
+		"azure.subscription.apiManagementService": {
+			Init:   initAzureSubscriptionApiManagementService,
+			Create: createAzureSubscriptionApiManagementService,
+		},
+		"azure.subscription.apiManagementService.service": {
+			// to override args, implement: initAzureSubscriptionApiManagementServiceService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionApiManagementServiceService,
+		},
 	}
 }
 
@@ -1786,6 +1796,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.eventGrid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetEventGrid()).ToDataRes(types.Resource("azure.subscription.eventGridService"))
+	},
+	"azure.subscription.apiManagement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetApiManagement()).ToDataRes(types.Resource("azure.subscription.apiManagementService"))
 	},
 	"azure.subscription.webService.function.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceFunction).GetId()).ToDataRes(types.String)
@@ -11417,6 +11430,114 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.logicService.workflow.connectionNames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetConnectionNames()).ToDataRes(types.Array(types.String))
 	},
+	"azure.subscription.apiManagementService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementService).GetServices()).ToDataRes(types.Array(types.Resource("azure.subscription.apiManagementService.service")))
+	},
+	"azure.subscription.apiManagementService.service.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.apiManagementService.service.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.skuCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetSkuCapacity()).ToDataRes(types.Int)
+	},
+	"azure.subscription.apiManagementService.service.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.targetProvisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetTargetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.publisherEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPublisherEmail()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.publisherName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPublisherName()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.notificationSenderEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetNotificationSenderEmail()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.gatewayUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetGatewayUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.gatewayRegionalUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetGatewayRegionalUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.managementApiUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetManagementApiUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.portalUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPortalUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.developerPortalUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetDeveloperPortalUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.scmUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetScmUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.virtualNetworkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetVirtualNetworkType()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.natGatewayState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetNatGatewayState()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.disableGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetDisableGateway()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.enableClientCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetEnableClientCertificate()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.apiManagementService.service.developerPortalStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetDeveloperPortalStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.legacyPortalStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetLegacyPortalStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.platformVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPlatformVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.customProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetCustomProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.apiManagementService.service.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.publicIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPublicIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.apiManagementService.service.privateIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPrivateIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.apiManagementService.service.outboundPublicIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetOutboundPublicIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.apiManagementService.service.privateEndpointConnectionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPrivateEndpointConnectionCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.apiManagementService.service.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.apiManagementService.service.publicIpAddressId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetPublicIpAddressId()).ToDataRes(types.String)
+	},
+	"azure.subscription.apiManagementService.service.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionApiManagementServiceService).GetCreatedAt()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -11607,6 +11728,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.eventGrid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).EventGrid, ok = plugin.RawToTValue[*mqlAzureSubscriptionEventGridService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).ApiManagement, ok = plugin.RawToTValue[*mqlAzureSubscriptionApiManagementService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25693,6 +25818,158 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionLogicServiceWorkflow).ConnectionNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.apiManagementService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.apiManagementService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementService).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.apiManagementService.service.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.skuCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).SkuCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.targetProvisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).TargetProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.publisherEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PublisherEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.publisherName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PublisherName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.notificationSenderEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).NotificationSenderEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.gatewayUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).GatewayUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.gatewayRegionalUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).GatewayRegionalUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.managementApiUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).ManagementApiUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.portalUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PortalUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.developerPortalUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).DeveloperPortalUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.scmUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).ScmUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.virtualNetworkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).VirtualNetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.natGatewayState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).NatGatewayState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.disableGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).DisableGateway, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.enableClientCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).EnableClientCertificate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.developerPortalStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).DeveloperPortalStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.legacyPortalStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).LegacyPortalStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.platformVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PlatformVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.customProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).CustomProperties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.publicIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PublicIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.privateIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PrivateIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.outboundPublicIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).OutboundPublicIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.privateEndpointConnectionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PrivateEndpointConnectionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.publicIpAddressId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).PublicIpAddressId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.apiManagementService.service.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionApiManagementServiceService).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -25804,6 +26081,7 @@ type mqlAzureSubscription struct {
 	ContainerInstance     plugin.TValue[*mqlAzureSubscriptionContainerInstanceService]
 	Logic                 plugin.TValue[*mqlAzureSubscriptionLogicService]
 	EventGrid             plugin.TValue[*mqlAzureSubscriptionEventGridService]
+	ApiManagement         plugin.TValue[*mqlAzureSubscriptionApiManagementService]
 }
 
 // createAzureSubscription creates a new instance of this resource
@@ -26408,6 +26686,22 @@ func (c *mqlAzureSubscription) GetEventGrid() *plugin.TValue[*mqlAzureSubscripti
 		}
 
 		return c.eventGrid()
+	})
+}
+
+func (c *mqlAzureSubscription) GetApiManagement() *plugin.TValue[*mqlAzureSubscriptionApiManagementService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionApiManagementService](&c.ApiManagement, func() (*mqlAzureSubscriptionApiManagementService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "apiManagement")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionApiManagementService), nil
+			}
+		}
+
+		return c.apiManagement()
 	})
 }
 
@@ -60402,4 +60696,284 @@ func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetActions() *plugin.TValue[[
 
 func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetConnectionNames() *plugin.TValue[[]any] {
 	return &c.ConnectionNames
+}
+
+// mqlAzureSubscriptionApiManagementService for the azure.subscription.apiManagementService resource
+type mqlAzureSubscriptionApiManagementService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionApiManagementServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Services       plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionApiManagementService creates a new instance of this resource
+func createAzureSubscriptionApiManagementService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionApiManagementService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.apiManagementService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionApiManagementService) MqlName() string {
+	return "azure.subscription.apiManagementService"
+}
+
+func (c *mqlAzureSubscriptionApiManagementService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionApiManagementService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionApiManagementService) GetServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Services, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.apiManagementService", c.__id, "services")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.services()
+	})
+}
+
+// mqlAzureSubscriptionApiManagementServiceService for the azure.subscription.apiManagementService.service resource
+type mqlAzureSubscriptionApiManagementServiceService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionApiManagementServiceServiceInternal it will be used here
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Location                       plugin.TValue[string]
+	Tags                           plugin.TValue[map[string]any]
+	SkuName                        plugin.TValue[string]
+	SkuCapacity                    plugin.TValue[int64]
+	ProvisioningState              plugin.TValue[string]
+	TargetProvisioningState        plugin.TValue[string]
+	PublisherEmail                 plugin.TValue[string]
+	PublisherName                  plugin.TValue[string]
+	NotificationSenderEmail        plugin.TValue[string]
+	GatewayUrl                     plugin.TValue[string]
+	GatewayRegionalUrl             plugin.TValue[string]
+	ManagementApiUrl               plugin.TValue[string]
+	PortalUrl                      plugin.TValue[string]
+	DeveloperPortalUrl             plugin.TValue[string]
+	ScmUrl                         plugin.TValue[string]
+	VirtualNetworkType             plugin.TValue[string]
+	PublicNetworkAccess            plugin.TValue[string]
+	NatGatewayState                plugin.TValue[string]
+	DisableGateway                 plugin.TValue[bool]
+	EnableClientCertificate        plugin.TValue[bool]
+	DeveloperPortalStatus          plugin.TValue[string]
+	LegacyPortalStatus             plugin.TValue[string]
+	PlatformVersion                plugin.TValue[string]
+	CustomProperties               plugin.TValue[map[string]any]
+	IdentityType                   plugin.TValue[string]
+	PublicIpAddresses              plugin.TValue[[]any]
+	PrivateIpAddresses             plugin.TValue[[]any]
+	OutboundPublicIpAddresses      plugin.TValue[[]any]
+	PrivateEndpointConnectionCount plugin.TValue[int64]
+	Zones                          plugin.TValue[[]any]
+	PublicIpAddressId              plugin.TValue[string]
+	CreatedAt                      plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionApiManagementServiceService creates a new instance of this resource
+func createAzureSubscriptionApiManagementServiceService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionApiManagementServiceService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.apiManagementService.service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) MqlName() string {
+	return "azure.subscription.apiManagementService.service"
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetSkuCapacity() *plugin.TValue[int64] {
+	return &c.SkuCapacity
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetTargetProvisioningState() *plugin.TValue[string] {
+	return &c.TargetProvisioningState
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPublisherEmail() *plugin.TValue[string] {
+	return &c.PublisherEmail
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPublisherName() *plugin.TValue[string] {
+	return &c.PublisherName
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetNotificationSenderEmail() *plugin.TValue[string] {
+	return &c.NotificationSenderEmail
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetGatewayUrl() *plugin.TValue[string] {
+	return &c.GatewayUrl
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetGatewayRegionalUrl() *plugin.TValue[string] {
+	return &c.GatewayRegionalUrl
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetManagementApiUrl() *plugin.TValue[string] {
+	return &c.ManagementApiUrl
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPortalUrl() *plugin.TValue[string] {
+	return &c.PortalUrl
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetDeveloperPortalUrl() *plugin.TValue[string] {
+	return &c.DeveloperPortalUrl
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetScmUrl() *plugin.TValue[string] {
+	return &c.ScmUrl
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetVirtualNetworkType() *plugin.TValue[string] {
+	return &c.VirtualNetworkType
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetNatGatewayState() *plugin.TValue[string] {
+	return &c.NatGatewayState
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetDisableGateway() *plugin.TValue[bool] {
+	return &c.DisableGateway
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetEnableClientCertificate() *plugin.TValue[bool] {
+	return &c.EnableClientCertificate
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetDeveloperPortalStatus() *plugin.TValue[string] {
+	return &c.DeveloperPortalStatus
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetLegacyPortalStatus() *plugin.TValue[string] {
+	return &c.LegacyPortalStatus
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPlatformVersion() *plugin.TValue[string] {
+	return &c.PlatformVersion
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetCustomProperties() *plugin.TValue[map[string]any] {
+	return &c.CustomProperties
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPublicIpAddresses() *plugin.TValue[[]any] {
+	return &c.PublicIpAddresses
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPrivateIpAddresses() *plugin.TValue[[]any] {
+	return &c.PrivateIpAddresses
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetOutboundPublicIpAddresses() *plugin.TValue[[]any] {
+	return &c.OutboundPublicIpAddresses
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPrivateEndpointConnectionCount() *plugin.TValue[int64] {
+	return &c.PrivateEndpointConnectionCount
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetZones() *plugin.TValue[[]any] {
+	return &c.Zones
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetPublicIpAddressId() *plugin.TValue[string] {
+	return &c.PublicIpAddressId
+}
+
+func (c *mqlAzureSubscriptionApiManagementServiceService) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }

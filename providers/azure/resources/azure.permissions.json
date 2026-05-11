@@ -1,9 +1,10 @@
 {
   "provider": "azure",
   "version": "13.10.1",
-  "generated_at": "2026-05-11T05:58:18+01:00",
+  "generated_at": "2026-05-11T05:59:21+01:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
+    "Microsoft.Apimanagement/service/read",
     "Microsoft.App/certificates/read",
     "Microsoft.App/containerApps/read",
     "Microsoft.App/containerAppsAuthConfigs/read",
@@ -181,8 +182,7 @@
     "Microsoft.Web/certificates/read",
     "Microsoft.Web/hostingEnvironments/read",
     "Microsoft.Web/serverfarms/read",
-    "Microsoft.Web/sites/read",
-    "Microsoft.Web/staticSites/read"
+    "Microsoft.Web/sites/read"
   ],
   "details": [
     {
@@ -190,6 +190,12 @@
       "service": "Microsoft.Advisor",
       "action": "NewListPager",
       "source_file": "advisor.go"
+    },
+    {
+      "permission": "Microsoft.Apimanagement/service/read",
+      "service": "Microsoft.Apimanagement",
+      "action": "NewListPager",
+      "source_file": "apimanagement.go"
     },
     {
       "permission": "Microsoft.App/certificates/read",
@@ -428,7 +434,7 @@
     {
       "permission": "Microsoft.ContainerRegistry/registries/credentialSets/read",
       "service": "Microsoft.ContainerRegistry",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "containerregistry.go"
     },
     {
@@ -470,7 +476,7 @@
     {
       "permission": "Microsoft.DBforMySQL/servers/configurations/read",
       "service": "Microsoft.DBforMySQL",
-      "action": "Get",
+      "action": "NewListByServerPager",
       "source_file": "mysql.go"
     },
     {
@@ -590,7 +596,7 @@
     {
       "permission": "Microsoft.DocumentDB/sQLResources/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListSQLContainersPager",
+      "action": "NewListSQLDatabasesPager",
       "source_file": "cosmosdb_extras.go"
     },
     {
@@ -692,13 +698,13 @@
     {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
       "permission": "Microsoft.Network/applicationGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -722,7 +728,7 @@
     {
       "permission": "Microsoft.Network/connections/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "network.go"
     },
     {
@@ -758,13 +764,13 @@
     {
       "permission": "Microsoft.Network/localNetworkGateways/read",
       "service": "Microsoft.Network",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -824,7 +830,7 @@
     {
       "permission": "Microsoft.Network/privateLinkServices/read",
       "service": "Microsoft.Network",
-      "action": "NewListBySubscriptionPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -896,7 +902,7 @@
     {
       "permission": "Microsoft.OperationalInsights/workspaces/read",
       "service": "Microsoft.OperationalInsights",
-      "action": "NewListNSPPager",
+      "action": "Get",
       "source_file": "loganalytics.go"
     },
     {
@@ -932,7 +938,7 @@
     {
       "permission": "Microsoft.RecoveryServices/vaults/read",
       "service": "Microsoft.RecoveryServices",
-      "action": "Get",
+      "action": "NewListBySubscriptionIDPager",
       "source_file": "recoveryservices.go"
     },
     {
@@ -1294,12 +1300,6 @@
       "service": "Microsoft.Web",
       "action": "NewListSlotsPager",
       "source_file": "web.go"
-    },
-    {
-      "permission": "Microsoft.Web/staticSites/read",
-      "service": "Microsoft.Web",
-      "action": "NewListPager",
-      "source_file": "web_staticsites.go"
     }
   ]
 }

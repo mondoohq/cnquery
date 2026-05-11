@@ -1,0 +1,243 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"time"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	apim "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/apimanagement/armapimanagement/v3"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/azure/connection"
+	"go.mondoo.com/mql/v13/types"
+)
+
+func (a *mqlAzureSubscriptionApiManagementService) id() (string, error) {
+	return "azure.subscription.apiManagement/" + a.SubscriptionId.Data, nil
+}
+
+func (a *mqlAzureSubscriptionApiManagementServiceService) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func initAzureSubscriptionApiManagementService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	args["subscriptionId"] = llx.StringData(conn.SubId())
+	return args, nil, nil
+}
+
+func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	client, err := apim.NewServiceClient(a.SubscriptionId.Data, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list api management services due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, svc := range page.Value {
+			if svc == nil {
+				continue
+			}
+
+			var skuName string
+			var skuCapacity *int32
+			if svc.SKU != nil {
+				if svc.SKU.Name != nil {
+					skuName = string(*svc.SKU.Name)
+				}
+				skuCapacity = svc.SKU.Capacity
+			}
+
+			var identityType string
+			if svc.Identity != nil && svc.Identity.Type != nil {
+				identityType = string(*svc.Identity.Type)
+			}
+
+			var (
+				provisioningState              string
+				targetProvisioningState        string
+				publisherEmail                 string
+				publisherName                  string
+				notificationSenderEmail        string
+				gatewayUrl                     string
+				gatewayRegionalUrl             string
+				managementApiUrl               string
+				portalUrl                      string
+				developerPortalUrl             string
+				scmUrl                         string
+				virtualNetworkType             string
+				publicNetworkAccess            string
+				natGatewayState                string
+				disableGateway                 *bool
+				enableClientCertificate        *bool
+				developerPortalStatus          string
+				legacyPortalStatus             string
+				platformVersion                string
+				customProperties               = map[string]any{}
+				publicIpAddresses              = []any{}
+				privateIpAddresses             = []any{}
+				outboundPublicIpAddresses      = []any{}
+				privateEndpointConnectionCount int64
+				publicIpAddressId              string
+				createdAt                      *time.Time
+			)
+			if p := svc.Properties; p != nil {
+				if p.ProvisioningState != nil {
+					provisioningState = *p.ProvisioningState
+				}
+				if p.TargetProvisioningState != nil {
+					targetProvisioningState = *p.TargetProvisioningState
+				}
+				if p.PublisherEmail != nil {
+					publisherEmail = *p.PublisherEmail
+				}
+				if p.PublisherName != nil {
+					publisherName = *p.PublisherName
+				}
+				if p.NotificationSenderEmail != nil {
+					notificationSenderEmail = *p.NotificationSenderEmail
+				}
+				if p.GatewayURL != nil {
+					gatewayUrl = *p.GatewayURL
+				}
+				if p.GatewayRegionalURL != nil {
+					gatewayRegionalUrl = *p.GatewayRegionalURL
+				}
+				if p.ManagementAPIURL != nil {
+					managementApiUrl = *p.ManagementAPIURL
+				}
+				if p.PortalURL != nil {
+					portalUrl = *p.PortalURL
+				}
+				if p.DeveloperPortalURL != nil {
+					developerPortalUrl = *p.DeveloperPortalURL
+				}
+				if p.ScmURL != nil {
+					scmUrl = *p.ScmURL
+				}
+				if p.VirtualNetworkType != nil {
+					virtualNetworkType = string(*p.VirtualNetworkType)
+				}
+				if p.PublicNetworkAccess != nil {
+					publicNetworkAccess = string(*p.PublicNetworkAccess)
+				}
+				if p.NatGatewayState != nil {
+					natGatewayState = string(*p.NatGatewayState)
+				}
+				disableGateway = p.DisableGateway
+				enableClientCertificate = p.EnableClientCertificate
+				if p.DeveloperPortalStatus != nil {
+					developerPortalStatus = string(*p.DeveloperPortalStatus)
+				}
+				if p.LegacyPortalStatus != nil {
+					legacyPortalStatus = string(*p.LegacyPortalStatus)
+				}
+				if p.PlatformVersion != nil {
+					platformVersion = string(*p.PlatformVersion)
+				}
+				for k, v := range p.CustomProperties {
+					if v != nil {
+						customProperties[k] = *v
+					}
+				}
+				for _, ip := range p.PublicIPAddresses {
+					if ip != nil {
+						publicIpAddresses = append(publicIpAddresses, *ip)
+					}
+				}
+				for _, ip := range p.PrivateIPAddresses {
+					if ip != nil {
+						privateIpAddresses = append(privateIpAddresses, *ip)
+					}
+				}
+				for _, ip := range p.OutboundPublicIPAddresses {
+					if ip != nil {
+						outboundPublicIpAddresses = append(outboundPublicIpAddresses, *ip)
+					}
+				}
+				privateEndpointConnectionCount = int64(len(p.PrivateEndpointConnections))
+				if p.PublicIPAddressID != nil {
+					publicIpAddressId = *p.PublicIPAddressID
+				}
+				createdAt = p.CreatedAtUTC
+			}
+
+			zones := []any{}
+			for _, z := range svc.Zones {
+				if z != nil {
+					zones = append(zones, *z)
+				}
+			}
+
+			mqlSvc, err := CreateResource(a.MqlRuntime, "azure.subscription.apiManagementService.service",
+				map[string]*llx.RawData{
+					"id":                             llx.StringDataPtr(svc.ID),
+					"name":                           llx.StringDataPtr(svc.Name),
+					"location":                       llx.StringDataPtr(svc.Location),
+					"tags":                           llx.MapData(convert.PtrMapStrToInterface(svc.Tags), types.String),
+					"skuName":                        llx.StringData(skuName),
+					"skuCapacity":                    llx.IntDataPtr(skuCapacity),
+					"provisioningState":              llx.StringData(provisioningState),
+					"targetProvisioningState":        llx.StringData(targetProvisioningState),
+					"publisherEmail":                 llx.StringData(publisherEmail),
+					"publisherName":                  llx.StringData(publisherName),
+					"notificationSenderEmail":        llx.StringData(notificationSenderEmail),
+					"gatewayUrl":                     llx.StringData(gatewayUrl),
+					"gatewayRegionalUrl":             llx.StringData(gatewayRegionalUrl),
+					"managementApiUrl":               llx.StringData(managementApiUrl),
+					"portalUrl":                      llx.StringData(portalUrl),
+					"developerPortalUrl":             llx.StringData(developerPortalUrl),
+					"scmUrl":                         llx.StringData(scmUrl),
+					"virtualNetworkType":             llx.StringData(virtualNetworkType),
+					"publicNetworkAccess":            llx.StringData(publicNetworkAccess),
+					"natGatewayState":                llx.StringData(natGatewayState),
+					"disableGateway":                 llx.BoolDataPtr(disableGateway),
+					"enableClientCertificate":        llx.BoolDataPtr(enableClientCertificate),
+					"developerPortalStatus":          llx.StringData(developerPortalStatus),
+					"legacyPortalStatus":             llx.StringData(legacyPortalStatus),
+					"platformVersion":                llx.StringData(platformVersion),
+					"customProperties":               llx.MapData(customProperties, types.String),
+					"identityType":                   llx.StringData(identityType),
+					"publicIpAddresses":              llx.ArrayData(publicIpAddresses, types.String),
+					"privateIpAddresses":             llx.ArrayData(privateIpAddresses, types.String),
+					"outboundPublicIpAddresses":      llx.ArrayData(outboundPublicIpAddresses, types.String),
+					"privateEndpointConnectionCount": llx.IntData(privateEndpointConnectionCount),
+					"zones":                          llx.ArrayData(zones, types.String),
+					"publicIpAddressId":              llx.StringData(publicIpAddressId),
+					"createdAt":                      llx.TimeDataPtr(createdAt),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlSvc)
+		}
+	}
+	return res, nil
+}

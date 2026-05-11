@@ -119,6 +119,8 @@ azure.subscription @defaults ("name") {
   logic() azure.subscription.logicService
   // Event Grid resources in the subscription
   eventGrid() azure.subscription.eventGridService
+  // API Management resources in the subscription
+  apiManagement() azure.subscription.apiManagementService
 }
 
 // Azure function
@@ -8373,4 +8375,107 @@ azure.subscription.logicService.workflow @defaults("name location state provisio
   actions []dict
   // Names of API connections referenced by triggers and actions (i.e., `parameters.$connections` keys)
   connectionNames []string
+}
+
+// ===== Azure API Management Service =====
+
+// Azure API Management
+//
+// Use this namespace to enumerate the API Management gateway instances
+// configured in the subscription via `services()`. The returned
+// `azure.subscription.apiManagementService.service` resources expose
+// SKU, virtual-network integration mode, public network access,
+// gateway TLS / cipher policy, identity, endpoints, and private
+// endpoint connection state.
+private azure.subscription.apiManagementService {
+  // Subscription identifier
+  subscriptionId string
+  // API Management service instances
+  services() []azure.subscription.apiManagementService.service
+}
+
+// Azure API Management service instance
+//
+// Examine an API Management gateway service — the multi-tenant API
+// gateway that fronts backend APIs with auth, rate limiting, transforms,
+// and a developer portal. Surfaces the SKU and capacity, virtual-network
+// integration mode (None / External / Internal), public network access
+// state, the NAT gateway toggle, gateway / management / portal /
+// developer-portal / SCM endpoint URLs, the `disableGateway` flag, the
+// `enableClientCertificate` flag for Consumption SKU mTLS, status of
+// the developer and legacy portals, platform version, the custom
+// properties map that encodes the gateway TLS / cipher policy
+// (`Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10`
+// etc.), publisher email and name, identity, public / private /
+// outbound IP addresses, the count of private endpoint connections, and
+// the availability zones.
+azure.subscription.apiManagementService.service @defaults("name location skuName provisioningState") {
+  // Resource ID of the API Management service
+  id string
+  // Service name
+  name string
+  // Resource location
+  location string
+  // Resource tags
+  tags map[string]string
+  // SKU name ("Developer", "Basic", "Standard", "Premium", "Consumption", "BasicV2", "StandardV2", "PremiumV2", "Isolated")
+  skuName string
+  // Number of deployed units of the SKU
+  skuCapacity int
+  // Provisioning state ("Created", "Activating", "Succeeded", "Updating", "Failed", "Stopped", "Terminating", "TerminationFailed", "Deleted")
+  provisioningState string
+  // Target provisioning state for any in-flight long-running operation (empty when none)
+  targetProvisioningState string
+  // Publisher email address used as the From address for notifications
+  publisherEmail string
+  // Publisher display name
+  publisherName string
+  // Notification sender email address
+  notificationSenderEmail string
+  // Gateway URL clients use to call APIs hosted on the service
+  gatewayUrl string
+  // Gateway URL in the default region (set on multi-region deployments)
+  gatewayRegionalUrl string
+  // Management API endpoint URL
+  managementApiUrl string
+  // Publisher portal endpoint URL (legacy portal)
+  portalUrl string
+  // Developer portal endpoint URL
+  developerPortalUrl string
+  // SCM (source-control management) endpoint URL
+  scmUrl string
+  // Virtual network integration mode ("None", "External", or "Internal")
+  virtualNetworkType string
+  // Public network access ("Enabled" or "Disabled")
+  publicNetworkAccess string
+  // NAT gateway state ("Enabled" or "Disabled")
+  natGatewayState string
+  // Whether the gateway is disabled in the master region (multi-region deployments only)
+  disableGateway bool
+  // Whether clients are required to present a TLS certificate on every request (Consumption SKU only)
+  enableClientCertificate bool
+  // Developer portal status ("Enabled" or "Disabled")
+  developerPortalStatus string
+  // Legacy portal status ("Enabled" or "Disabled")
+  legacyPortalStatus string
+  // Compute platform version running the service (e.g. "stv2", "stv1", "mtv1")
+  platformVersion string
+  // Custom properties controlling gateway TLS protocol / cipher policy. Keys like `Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10` map to "True"/"False" string values.
+  customProperties map[string]string
+  // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
+  identityType string
+  // Public load-balanced IPv4 addresses of the service in its primary region (Basic / Standard / Premium / Isolated SKUs)
+  publicIpAddresses []string
+  // Private load-balanced IPv4 addresses of the service in its primary region when deployed in an Internal VNet
+  privateIpAddresses []string
+  // Outbound public IPv4 prefixes associated with NAT Gateway-deployed services (Premium SKU on stv2)
+  outboundPublicIpAddresses []string
+  // Number of private endpoint connections to the service
+  privateEndpointConnectionCount int
+  // Availability zones the service is spread across
+  zones []string
+  // Resource ID of the public IP address attached to the service (empty when not configured)
+  publicIpAddressId string
+  // Service creation time
+  createdAt time
 }
