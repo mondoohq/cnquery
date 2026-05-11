@@ -116,6 +116,7 @@ cowlib
 cpe
 CPWn
 cpx
+CRDR
 crowdstrike
 cryptokey
 ctx
