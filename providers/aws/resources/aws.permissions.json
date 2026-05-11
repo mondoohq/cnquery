@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.21.3",
-  "generated_at": "2026-05-09T16:54:12-07:00",
+  "generated_at": "2026-05-11T07:51:38+01:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -407,6 +407,7 @@
     "lambda:ListTags",
     "lambda:ListVersionsByFunction",
     "lightsail:GetBuckets",
+    "lightsail:GetDisks",
     "lightsail:GetInstances",
     "lightsail:GetLoadBalancers",
     "lightsail:GetRelationalDatabases",
@@ -3203,6 +3204,12 @@
       "permission": "lightsail:GetBuckets",
       "service": "lightsail",
       "action": "GetBuckets",
+      "source_file": "aws_lightsail.go"
+    },
+    {
+      "permission": "lightsail:GetDisks",
+      "service": "lightsail",
+      "action": "GetDisks",
       "source_file": "aws_lightsail.go"
     },
     {

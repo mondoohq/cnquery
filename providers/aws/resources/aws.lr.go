@@ -701,6 +701,7 @@ const (
 	ResourceAwsLightsailInstance                                                string = "aws.lightsail.instance"
 	ResourceAwsLightsailDatabase                                                string = "aws.lightsail.database"
 	ResourceAwsLightsailLoadBalancer                                            string = "aws.lightsail.loadBalancer"
+	ResourceAwsLightsailDisk                                                    string = "aws.lightsail.disk"
 	ResourceAwsLightsailBucket                                                  string = "aws.lightsail.bucket"
 	ResourceAwsCloudformation                                                   string = "aws.cloudformation"
 	ResourceAwsCloudformationStack                                              string = "aws.cloudformation.stack"
@@ -3509,6 +3510,10 @@ func init() {
 		"aws.lightsail.loadBalancer": {
 			// to override args, implement: initAwsLightsailLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsLightsailLoadBalancer,
+		},
+		"aws.lightsail.disk": {
+			// to override args, implement: initAwsLightsailDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLightsailDisk,
 		},
 		"aws.lightsail.bucket": {
 			// to override args, implement: initAwsLightsailBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -23927,6 +23932,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lightsail.buckets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsail).GetBuckets()).ToDataRes(types.Array(types.Resource("aws.lightsail.bucket")))
 	},
+	"aws.lightsail.disks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsail).GetDisks()).ToDataRes(types.Array(types.Resource("aws.lightsail.disk")))
+	},
 	"aws.lightsail.instance.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetName()).ToDataRes(types.String)
 	},
@@ -23951,6 +23959,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lightsail.instance.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetState()).ToDataRes(types.String)
 	},
+	"aws.lightsail.instance.stateCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstance).GetStateCode()).ToDataRes(types.Int)
+	},
+	"aws.lightsail.instance.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstance).GetIpAddressType()).ToDataRes(types.String)
+	},
 	"aws.lightsail.instance.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetPublicIpAddress()).ToDataRes(types.String)
 	},
@@ -23962,6 +23976,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lightsail.instance.isStaticIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetIsStaticIp()).ToDataRes(types.Bool)
+	},
+	"aws.lightsail.instance.monthlyTransferGbPerMonthAllocated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstance).GetMonthlyTransferGbPerMonthAllocated()).ToDataRes(types.Int)
 	},
 	"aws.lightsail.instance.cpuCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetCpuCount()).ToDataRes(types.Int)
@@ -23975,6 +23992,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lightsail.instance.sshKeyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetSshKeyName()).ToDataRes(types.String)
 	},
+	"aws.lightsail.instance.supportCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstance).GetSupportCode()).ToDataRes(types.String)
+	},
 	"aws.lightsail.instance.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -23983,6 +24003,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lightsail.instance.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetFirewallRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.lightsail.instance.ports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstance).GetPorts()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.lightsail.instance.addOns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailInstance).GetAddOns()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.lightsail.database.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetName()).ToDataRes(types.String)
@@ -23996,11 +24022,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lightsail.database.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetAvailabilityZone()).ToDataRes(types.String)
 	},
+	"aws.lightsail.database.secondaryAvailabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetSecondaryAvailabilityZone()).ToDataRes(types.String)
+	},
 	"aws.lightsail.database.engine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetEngine()).ToDataRes(types.String)
 	},
 	"aws.lightsail.database.engineVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetEngineVersion()).ToDataRes(types.String)
+	},
+	"aws.lightsail.database.relationalDatabaseBlueprintId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetRelationalDatabaseBlueprintId()).ToDataRes(types.String)
+	},
+	"aws.lightsail.database.relationalDatabaseBundleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetRelationalDatabaseBundleId()).ToDataRes(types.String)
 	},
 	"aws.lightsail.database.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetState()).ToDataRes(types.String)
@@ -24013,6 +24048,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lightsail.database.backupRetentionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetBackupRetentionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.lightsail.database.latestRestorableTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetLatestRestorableTime()).ToDataRes(types.Time)
 	},
 	"aws.lightsail.database.preferredBackupWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetPreferredBackupWindow()).ToDataRes(types.String)
@@ -24029,11 +24067,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lightsail.database.endpointPort": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetEndpointPort()).ToDataRes(types.Int)
 	},
+	"aws.lightsail.database.masterEndpointAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetMasterEndpointAddress()).ToDataRes(types.String)
+	},
+	"aws.lightsail.database.masterEndpointPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetMasterEndpointPort()).ToDataRes(types.Int)
+	},
+	"aws.lightsail.database.cpuCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetCpuCount()).ToDataRes(types.Int)
+	},
+	"aws.lightsail.database.ramSizeInGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetRamSizeInGb()).ToDataRes(types.Float)
+	},
+	"aws.lightsail.database.diskSizeInGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetDiskSizeInGb()).ToDataRes(types.Int)
+	},
+	"aws.lightsail.database.parameterApplyStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetParameterApplyStatus()).ToDataRes(types.String)
+	},
 	"aws.lightsail.database.caCertificateIdentifier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetCaCertificateIdentifier()).ToDataRes(types.String)
 	},
 	"aws.lightsail.database.hasPendingModifiedValues": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetHasPendingModifiedValues()).ToDataRes(types.Bool)
+	},
+	"aws.lightsail.database.pendingModifiedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetPendingModifiedValues()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.lightsail.database.supportCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDatabase).GetSupportCode()).ToDataRes(types.String)
 	},
 	"aws.lightsail.database.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailDatabase).GetCreatedAt()).ToDataRes(types.Time)
@@ -24059,6 +24121,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lightsail.loadBalancer.protocol": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailLoadBalancer).GetProtocol()).ToDataRes(types.String)
 	},
+	"aws.lightsail.loadBalancer.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailLoadBalancer).GetIpAddressType()).ToDataRes(types.String)
+	},
 	"aws.lightsail.loadBalancer.publicPorts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailLoadBalancer).GetPublicPorts()).ToDataRes(types.Array(types.Int))
 	},
@@ -24074,17 +24139,77 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lightsail.loadBalancer.tlsCertificateSummaries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailLoadBalancer).GetTlsCertificateSummaries()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.lightsail.loadBalancer.tlsPolicyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailLoadBalancer).GetTlsPolicyName()).ToDataRes(types.String)
+	},
 	"aws.lightsail.loadBalancer.httpsRedirectionEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailLoadBalancer).GetHttpsRedirectionEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.lightsail.loadBalancer.sessionStickinessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailLoadBalancer).GetSessionStickinessEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.lightsail.loadBalancer.sessionStickinessLbCookieDurationSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailLoadBalancer).GetSessionStickinessLbCookieDurationSeconds()).ToDataRes(types.Int)
+	},
 	"aws.lightsail.loadBalancer.dnsName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailLoadBalancer).GetDnsName()).ToDataRes(types.String)
+	},
+	"aws.lightsail.loadBalancer.supportCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailLoadBalancer).GetSupportCode()).ToDataRes(types.String)
 	},
 	"aws.lightsail.loadBalancer.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailLoadBalancer).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.lightsail.loadBalancer.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailLoadBalancer).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.lightsail.disk.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetName()).ToDataRes(types.String)
+	},
+	"aws.lightsail.disk.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetArn()).ToDataRes(types.String)
+	},
+	"aws.lightsail.disk.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.lightsail.disk.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"aws.lightsail.disk.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.lightsail.disk.sizeInGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetSizeInGb()).ToDataRes(types.Int)
+	},
+	"aws.lightsail.disk.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetState()).ToDataRes(types.String)
+	},
+	"aws.lightsail.disk.iops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetIops()).ToDataRes(types.Int)
+	},
+	"aws.lightsail.disk.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetPath()).ToDataRes(types.String)
+	},
+	"aws.lightsail.disk.isSystemDisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetIsSystemDisk()).ToDataRes(types.Bool)
+	},
+	"aws.lightsail.disk.isAttached": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetIsAttached()).ToDataRes(types.Bool)
+	},
+	"aws.lightsail.disk.attachedToName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetAttachedToName()).ToDataRes(types.String)
+	},
+	"aws.lightsail.disk.attachedTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetAttachedTo()).ToDataRes(types.Resource("aws.lightsail.instance"))
+	},
+	"aws.lightsail.disk.supportCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetSupportCode()).ToDataRes(types.String)
+	},
+	"aws.lightsail.disk.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.lightsail.disk.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDisk).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.lightsail.bucket.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailBucket).GetName()).ToDataRes(types.String)
@@ -55154,6 +55279,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLightsail).Buckets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.lightsail.disks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsail).Disks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.lightsail.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailInstance).__id, ok = v.Value.(string)
 		return
@@ -55190,6 +55319,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLightsailInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.lightsail.instance.stateCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstance).StateCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.instance.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstance).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.lightsail.instance.publicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailInstance).PublicIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -55204,6 +55341,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lightsail.instance.isStaticIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailInstance).IsStaticIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.instance.monthlyTransferGbPerMonthAllocated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstance).MonthlyTransferGbPerMonthAllocated, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.instance.cpuCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55222,6 +55363,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLightsailInstance).SshKeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.lightsail.instance.supportCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstance).SupportCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.lightsail.instance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailInstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -55232,6 +55377,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lightsail.instance.firewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailInstance).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.instance.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstance).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.instance.addOns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailInstance).AddOns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.database.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55254,12 +55407,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLightsailDatabase).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.lightsail.database.secondaryAvailabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).SecondaryAvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.lightsail.database.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailDatabase).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.database.engineVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailDatabase).EngineVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.database.relationalDatabaseBlueprintId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).RelationalDatabaseBlueprintId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.database.relationalDatabaseBundleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).RelationalDatabaseBundleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.database.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55276,6 +55441,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lightsail.database.backupRetentionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailDatabase).BackupRetentionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.database.latestRestorableTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).LatestRestorableTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.database.preferredBackupWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55298,12 +55467,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLightsailDatabase).EndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.lightsail.database.masterEndpointAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).MasterEndpointAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.database.masterEndpointPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).MasterEndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.database.cpuCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).CpuCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.database.ramSizeInGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).RamSizeInGb, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.database.diskSizeInGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).DiskSizeInGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.database.parameterApplyStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).ParameterApplyStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.lightsail.database.caCertificateIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailDatabase).CaCertificateIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.database.hasPendingModifiedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailDatabase).HasPendingModifiedValues, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.database.pendingModifiedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).PendingModifiedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.database.supportCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDatabase).SupportCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.database.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55342,6 +55543,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLightsailLoadBalancer).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.lightsail.loadBalancer.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailLoadBalancer).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.lightsail.loadBalancer.publicPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailLoadBalancer).PublicPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -55362,12 +55567,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLightsailLoadBalancer).TlsCertificateSummaries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.lightsail.loadBalancer.tlsPolicyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailLoadBalancer).TlsPolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.lightsail.loadBalancer.httpsRedirectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailLoadBalancer).HttpsRedirectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.lightsail.loadBalancer.sessionStickinessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailLoadBalancer).SessionStickinessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.loadBalancer.sessionStickinessLbCookieDurationSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailLoadBalancer).SessionStickinessLbCookieDurationSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.lightsail.loadBalancer.dnsName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailLoadBalancer).DnsName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.loadBalancer.supportCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailLoadBalancer).SupportCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.loadBalancer.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55376,6 +55597,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lightsail.loadBalancer.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailLoadBalancer).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lightsail.disk.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.sizeInGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).SizeInGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.iops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).Iops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.isSystemDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).IsSystemDisk, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.isAttached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).IsAttached, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.attachedToName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).AttachedToName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.attachedTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).AttachedTo, ok = plugin.RawToTValue[*mqlAwsLightsailInstance](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.supportCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).SupportCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.disk.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDisk).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.lightsail.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -134987,6 +135276,7 @@ type mqlAwsLightsail struct {
 	Databases     plugin.TValue[[]any]
 	LoadBalancers plugin.TValue[[]any]
 	Buckets       plugin.TValue[[]any]
+	Disks         plugin.TValue[[]any]
 }
 
 // createAwsLightsail creates a new instance of this resource
@@ -135090,30 +135380,52 @@ func (c *mqlAwsLightsail) GetBuckets() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsLightsail) GetDisks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Disks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lightsail", c.__id, "disks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.disks()
+	})
+}
+
 // mqlAwsLightsailInstance for the aws.lightsail.instance resource
 type mqlAwsLightsailInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsLightsailInstanceInternal
-	Name             plugin.TValue[string]
-	Arn              plugin.TValue[string]
-	Region           plugin.TValue[string]
-	AvailabilityZone plugin.TValue[string]
-	BlueprintId      plugin.TValue[string]
-	BlueprintName    plugin.TValue[string]
-	BundleId         plugin.TValue[string]
-	State            plugin.TValue[string]
-	PublicIpAddress  plugin.TValue[string]
-	PrivateIpAddress plugin.TValue[string]
-	Ipv6Addresses    plugin.TValue[[]any]
-	IsStaticIp       plugin.TValue[bool]
-	CpuCount         plugin.TValue[int64]
-	RamSizeInGb      plugin.TValue[float64]
-	Username         plugin.TValue[string]
-	SshKeyName       plugin.TValue[string]
-	CreatedAt        plugin.TValue[*time.Time]
-	Tags             plugin.TValue[map[string]any]
-	FirewallRules    plugin.TValue[[]any]
+	Name                               plugin.TValue[string]
+	Arn                                plugin.TValue[string]
+	Region                             plugin.TValue[string]
+	AvailabilityZone                   plugin.TValue[string]
+	BlueprintId                        plugin.TValue[string]
+	BlueprintName                      plugin.TValue[string]
+	BundleId                           plugin.TValue[string]
+	State                              plugin.TValue[string]
+	StateCode                          plugin.TValue[int64]
+	IpAddressType                      plugin.TValue[string]
+	PublicIpAddress                    plugin.TValue[string]
+	PrivateIpAddress                   plugin.TValue[string]
+	Ipv6Addresses                      plugin.TValue[[]any]
+	IsStaticIp                         plugin.TValue[bool]
+	MonthlyTransferGbPerMonthAllocated plugin.TValue[int64]
+	CpuCount                           plugin.TValue[int64]
+	RamSizeInGb                        plugin.TValue[float64]
+	Username                           plugin.TValue[string]
+	SshKeyName                         plugin.TValue[string]
+	SupportCode                        plugin.TValue[string]
+	CreatedAt                          plugin.TValue[*time.Time]
+	Tags                               plugin.TValue[map[string]any]
+	FirewallRules                      plugin.TValue[[]any]
+	Ports                              plugin.TValue[[]any]
+	AddOns                             plugin.TValue[[]any]
 }
 
 // createAwsLightsailInstance creates a new instance of this resource
@@ -135180,6 +135492,14 @@ func (c *mqlAwsLightsailInstance) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
+func (c *mqlAwsLightsailInstance) GetStateCode() *plugin.TValue[int64] {
+	return &c.StateCode
+}
+
+func (c *mqlAwsLightsailInstance) GetIpAddressType() *plugin.TValue[string] {
+	return &c.IpAddressType
+}
+
 func (c *mqlAwsLightsailInstance) GetPublicIpAddress() *plugin.TValue[string] {
 	return &c.PublicIpAddress
 }
@@ -135194,6 +135514,10 @@ func (c *mqlAwsLightsailInstance) GetIpv6Addresses() *plugin.TValue[[]any] {
 
 func (c *mqlAwsLightsailInstance) GetIsStaticIp() *plugin.TValue[bool] {
 	return &c.IsStaticIp
+}
+
+func (c *mqlAwsLightsailInstance) GetMonthlyTransferGbPerMonthAllocated() *plugin.TValue[int64] {
+	return &c.MonthlyTransferGbPerMonthAllocated
 }
 
 func (c *mqlAwsLightsailInstance) GetCpuCount() *plugin.TValue[int64] {
@@ -135216,6 +135540,10 @@ func (c *mqlAwsLightsailInstance) GetSshKeyName() *plugin.TValue[string] {
 	return &c.SshKeyName
 }
 
+func (c *mqlAwsLightsailInstance) GetSupportCode() *plugin.TValue[string] {
+	return &c.SupportCode
+}
+
 func (c *mqlAwsLightsailInstance) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -135230,30 +135558,54 @@ func (c *mqlAwsLightsailInstance) GetFirewallRules() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsLightsailInstance) GetPorts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ports, func() ([]any, error) {
+		return c.ports()
+	})
+}
+
+func (c *mqlAwsLightsailInstance) GetAddOns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AddOns, func() ([]any, error) {
+		return c.addOns()
+	})
+}
+
 // mqlAwsLightsailDatabase for the aws.lightsail.database resource
 type mqlAwsLightsailDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsLightsailDatabaseInternal
-	Name                       plugin.TValue[string]
-	Arn                        plugin.TValue[string]
-	Region                     plugin.TValue[string]
-	AvailabilityZone           plugin.TValue[string]
-	Engine                     plugin.TValue[string]
-	EngineVersion              plugin.TValue[string]
-	State                      plugin.TValue[string]
-	MasterUsername             plugin.TValue[string]
-	MasterDatabaseName         plugin.TValue[string]
-	BackupRetentionEnabled     plugin.TValue[bool]
-	PreferredBackupWindow      plugin.TValue[string]
-	PreferredMaintenanceWindow plugin.TValue[string]
-	PubliclyAccessible         plugin.TValue[bool]
-	EndpointAddress            plugin.TValue[string]
-	EndpointPort               plugin.TValue[int64]
-	CaCertificateIdentifier    plugin.TValue[string]
-	HasPendingModifiedValues   plugin.TValue[bool]
-	CreatedAt                  plugin.TValue[*time.Time]
-	Tags                       plugin.TValue[map[string]any]
+	Name                          plugin.TValue[string]
+	Arn                           plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	AvailabilityZone              plugin.TValue[string]
+	SecondaryAvailabilityZone     plugin.TValue[string]
+	Engine                        plugin.TValue[string]
+	EngineVersion                 plugin.TValue[string]
+	RelationalDatabaseBlueprintId plugin.TValue[string]
+	RelationalDatabaseBundleId    plugin.TValue[string]
+	State                         plugin.TValue[string]
+	MasterUsername                plugin.TValue[string]
+	MasterDatabaseName            plugin.TValue[string]
+	BackupRetentionEnabled        plugin.TValue[bool]
+	LatestRestorableTime          plugin.TValue[*time.Time]
+	PreferredBackupWindow         plugin.TValue[string]
+	PreferredMaintenanceWindow    plugin.TValue[string]
+	PubliclyAccessible            plugin.TValue[bool]
+	EndpointAddress               plugin.TValue[string]
+	EndpointPort                  plugin.TValue[int64]
+	MasterEndpointAddress         plugin.TValue[string]
+	MasterEndpointPort            plugin.TValue[int64]
+	CpuCount                      plugin.TValue[int64]
+	RamSizeInGb                   plugin.TValue[float64]
+	DiskSizeInGb                  plugin.TValue[int64]
+	ParameterApplyStatus          plugin.TValue[string]
+	CaCertificateIdentifier       plugin.TValue[string]
+	HasPendingModifiedValues      plugin.TValue[bool]
+	PendingModifiedValues         plugin.TValue[[]any]
+	SupportCode                   plugin.TValue[string]
+	CreatedAt                     plugin.TValue[*time.Time]
+	Tags                          plugin.TValue[map[string]any]
 }
 
 // createAwsLightsailDatabase creates a new instance of this resource
@@ -135304,12 +135656,24 @@ func (c *mqlAwsLightsailDatabase) GetAvailabilityZone() *plugin.TValue[string] {
 	return &c.AvailabilityZone
 }
 
+func (c *mqlAwsLightsailDatabase) GetSecondaryAvailabilityZone() *plugin.TValue[string] {
+	return &c.SecondaryAvailabilityZone
+}
+
 func (c *mqlAwsLightsailDatabase) GetEngine() *plugin.TValue[string] {
 	return &c.Engine
 }
 
 func (c *mqlAwsLightsailDatabase) GetEngineVersion() *plugin.TValue[string] {
 	return &c.EngineVersion
+}
+
+func (c *mqlAwsLightsailDatabase) GetRelationalDatabaseBlueprintId() *plugin.TValue[string] {
+	return &c.RelationalDatabaseBlueprintId
+}
+
+func (c *mqlAwsLightsailDatabase) GetRelationalDatabaseBundleId() *plugin.TValue[string] {
+	return &c.RelationalDatabaseBundleId
 }
 
 func (c *mqlAwsLightsailDatabase) GetState() *plugin.TValue[string] {
@@ -135326,6 +135690,10 @@ func (c *mqlAwsLightsailDatabase) GetMasterDatabaseName() *plugin.TValue[string]
 
 func (c *mqlAwsLightsailDatabase) GetBackupRetentionEnabled() *plugin.TValue[bool] {
 	return &c.BackupRetentionEnabled
+}
+
+func (c *mqlAwsLightsailDatabase) GetLatestRestorableTime() *plugin.TValue[*time.Time] {
+	return &c.LatestRestorableTime
 }
 
 func (c *mqlAwsLightsailDatabase) GetPreferredBackupWindow() *plugin.TValue[string] {
@@ -135352,6 +135720,40 @@ func (c *mqlAwsLightsailDatabase) GetEndpointPort() *plugin.TValue[int64] {
 	})
 }
 
+func (c *mqlAwsLightsailDatabase) GetMasterEndpointAddress() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MasterEndpointAddress, func() (string, error) {
+		return c.masterEndpointAddress()
+	})
+}
+
+func (c *mqlAwsLightsailDatabase) GetMasterEndpointPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MasterEndpointPort, func() (int64, error) {
+		return c.masterEndpointPort()
+	})
+}
+
+func (c *mqlAwsLightsailDatabase) GetCpuCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CpuCount, func() (int64, error) {
+		return c.cpuCount()
+	})
+}
+
+func (c *mqlAwsLightsailDatabase) GetRamSizeInGb() *plugin.TValue[float64] {
+	return plugin.GetOrCompute[float64](&c.RamSizeInGb, func() (float64, error) {
+		return c.ramSizeInGb()
+	})
+}
+
+func (c *mqlAwsLightsailDatabase) GetDiskSizeInGb() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.DiskSizeInGb, func() (int64, error) {
+		return c.diskSizeInGb()
+	})
+}
+
+func (c *mqlAwsLightsailDatabase) GetParameterApplyStatus() *plugin.TValue[string] {
+	return &c.ParameterApplyStatus
+}
+
 func (c *mqlAwsLightsailDatabase) GetCaCertificateIdentifier() *plugin.TValue[string] {
 	return &c.CaCertificateIdentifier
 }
@@ -135360,6 +135762,16 @@ func (c *mqlAwsLightsailDatabase) GetHasPendingModifiedValues() *plugin.TValue[b
 	return plugin.GetOrCompute[bool](&c.HasPendingModifiedValues, func() (bool, error) {
 		return c.hasPendingModifiedValues()
 	})
+}
+
+func (c *mqlAwsLightsailDatabase) GetPendingModifiedValues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PendingModifiedValues, func() ([]any, error) {
+		return c.pendingModifiedValues()
+	})
+}
+
+func (c *mqlAwsLightsailDatabase) GetSupportCode() *plugin.TValue[string] {
+	return &c.SupportCode
 }
 
 func (c *mqlAwsLightsailDatabase) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -135375,21 +135787,26 @@ type mqlAwsLightsailLoadBalancer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsLightsailLoadBalancerInternal
-	Name                    plugin.TValue[string]
-	Arn                     plugin.TValue[string]
-	Region                  plugin.TValue[string]
-	AvailabilityZones       plugin.TValue[[]any]
-	State                   plugin.TValue[string]
-	Protocol                plugin.TValue[string]
-	PublicPorts             plugin.TValue[[]any]
-	HealthCheckPath         plugin.TValue[string]
-	InstancePort            plugin.TValue[int64]
-	InstanceHealthSummary   plugin.TValue[[]any]
-	TlsCertificateSummaries plugin.TValue[[]any]
-	HttpsRedirectionEnabled plugin.TValue[bool]
-	DnsName                 plugin.TValue[string]
-	CreatedAt               plugin.TValue[*time.Time]
-	Tags                    plugin.TValue[map[string]any]
+	Name                                     plugin.TValue[string]
+	Arn                                      plugin.TValue[string]
+	Region                                   plugin.TValue[string]
+	AvailabilityZones                        plugin.TValue[[]any]
+	State                                    plugin.TValue[string]
+	Protocol                                 plugin.TValue[string]
+	IpAddressType                            plugin.TValue[string]
+	PublicPorts                              plugin.TValue[[]any]
+	HealthCheckPath                          plugin.TValue[string]
+	InstancePort                             plugin.TValue[int64]
+	InstanceHealthSummary                    plugin.TValue[[]any]
+	TlsCertificateSummaries                  plugin.TValue[[]any]
+	TlsPolicyName                            plugin.TValue[string]
+	HttpsRedirectionEnabled                  plugin.TValue[bool]
+	SessionStickinessEnabled                 plugin.TValue[bool]
+	SessionStickinessLbCookieDurationSeconds plugin.TValue[int64]
+	DnsName                                  plugin.TValue[string]
+	SupportCode                              plugin.TValue[string]
+	CreatedAt                                plugin.TValue[*time.Time]
+	Tags                                     plugin.TValue[map[string]any]
 }
 
 // createAwsLightsailLoadBalancer creates a new instance of this resource
@@ -135448,6 +135865,10 @@ func (c *mqlAwsLightsailLoadBalancer) GetProtocol() *plugin.TValue[string] {
 	return &c.Protocol
 }
 
+func (c *mqlAwsLightsailLoadBalancer) GetIpAddressType() *plugin.TValue[string] {
+	return &c.IpAddressType
+}
+
 func (c *mqlAwsLightsailLoadBalancer) GetPublicPorts() *plugin.TValue[[]any] {
 	return &c.PublicPorts
 }
@@ -135472,9 +135893,25 @@ func (c *mqlAwsLightsailLoadBalancer) GetTlsCertificateSummaries() *plugin.TValu
 	})
 }
 
+func (c *mqlAwsLightsailLoadBalancer) GetTlsPolicyName() *plugin.TValue[string] {
+	return &c.TlsPolicyName
+}
+
 func (c *mqlAwsLightsailLoadBalancer) GetHttpsRedirectionEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HttpsRedirectionEnabled, func() (bool, error) {
 		return c.httpsRedirectionEnabled()
+	})
+}
+
+func (c *mqlAwsLightsailLoadBalancer) GetSessionStickinessEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SessionStickinessEnabled, func() (bool, error) {
+		return c.sessionStickinessEnabled()
+	})
+}
+
+func (c *mqlAwsLightsailLoadBalancer) GetSessionStickinessLbCookieDurationSeconds() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SessionStickinessLbCookieDurationSeconds, func() (int64, error) {
+		return c.sessionStickinessLbCookieDurationSeconds()
 	})
 }
 
@@ -135482,11 +135919,146 @@ func (c *mqlAwsLightsailLoadBalancer) GetDnsName() *plugin.TValue[string] {
 	return &c.DnsName
 }
 
+func (c *mqlAwsLightsailLoadBalancer) GetSupportCode() *plugin.TValue[string] {
+	return &c.SupportCode
+}
+
 func (c *mqlAwsLightsailLoadBalancer) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
 func (c *mqlAwsLightsailLoadBalancer) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsLightsailDisk for the aws.lightsail.disk resource
+type mqlAwsLightsailDisk struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsLightsailDiskInternal
+	Name             plugin.TValue[string]
+	Arn              plugin.TValue[string]
+	Region           plugin.TValue[string]
+	AvailabilityZone plugin.TValue[string]
+	ResourceType     plugin.TValue[string]
+	SizeInGb         plugin.TValue[int64]
+	State            plugin.TValue[string]
+	Iops             plugin.TValue[int64]
+	Path             plugin.TValue[string]
+	IsSystemDisk     plugin.TValue[bool]
+	IsAttached       plugin.TValue[bool]
+	AttachedToName   plugin.TValue[string]
+	AttachedTo       plugin.TValue[*mqlAwsLightsailInstance]
+	SupportCode      plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	Tags             plugin.TValue[map[string]any]
+}
+
+// createAwsLightsailDisk creates a new instance of this resource
+func createAwsLightsailDisk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLightsailDisk{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lightsail.disk", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLightsailDisk) MqlName() string {
+	return "aws.lightsail.disk"
+}
+
+func (c *mqlAwsLightsailDisk) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLightsailDisk) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsLightsailDisk) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsLightsailDisk) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsLightsailDisk) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlAwsLightsailDisk) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAwsLightsailDisk) GetSizeInGb() *plugin.TValue[int64] {
+	return &c.SizeInGb
+}
+
+func (c *mqlAwsLightsailDisk) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsLightsailDisk) GetIops() *plugin.TValue[int64] {
+	return &c.Iops
+}
+
+func (c *mqlAwsLightsailDisk) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAwsLightsailDisk) GetIsSystemDisk() *plugin.TValue[bool] {
+	return &c.IsSystemDisk
+}
+
+func (c *mqlAwsLightsailDisk) GetIsAttached() *plugin.TValue[bool] {
+	return &c.IsAttached
+}
+
+func (c *mqlAwsLightsailDisk) GetAttachedToName() *plugin.TValue[string] {
+	return &c.AttachedToName
+}
+
+func (c *mqlAwsLightsailDisk) GetAttachedTo() *plugin.TValue[*mqlAwsLightsailInstance] {
+	return plugin.GetOrCompute[*mqlAwsLightsailInstance](&c.AttachedTo, func() (*mqlAwsLightsailInstance, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lightsail.disk", c.__id, "attachedTo")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLightsailInstance), nil
+			}
+		}
+
+		return c.attachedTo()
+	})
+}
+
+func (c *mqlAwsLightsailDisk) GetSupportCode() *plugin.TValue[string] {
+	return &c.SupportCode
+}
+
+func (c *mqlAwsLightsailDisk) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsLightsailDisk) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 

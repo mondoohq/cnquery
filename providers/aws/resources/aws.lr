@@ -17027,6 +17027,8 @@ aws.lightsail @defaults("instances") {
   loadBalancers() []aws.lightsail.loadBalancer
   // List of Lightsail buckets
   buckets() []aws.lightsail.bucket
+  // List of Lightsail block storage disks
+  disks() []aws.lightsail.disk
 }
 
 // Amazon Lightsail instance
@@ -17047,6 +17049,10 @@ private aws.lightsail.instance @defaults("name arn state") {
   bundleId string
   // Instance state (running, stopped, pending, stopping)
   state string
+  // Numeric state code reported by the instance
+  stateCode int
+  // IP address type (ipv4, ipv6, or dualstack)
+  ipAddressType string
   // Public IP address
   publicIpAddress string
   // Private IP address
@@ -17055,6 +17061,8 @@ private aws.lightsail.instance @defaults("name arn state") {
   ipv6Addresses []string
   // Whether the instance has a static IP
   isStaticIp bool
+  // Amount of data in GB allocated for monthly data transfers
+  monthlyTransferGbPerMonthAllocated int
   // CPU count
   cpuCount() int
   // RAM size in GB
@@ -17063,12 +17071,18 @@ private aws.lightsail.instance @defaults("name arn state") {
   username string
   // SSH key name
   sshKeyName string
+  // Support code for AWS Support inquiries about the instance
+  supportCode string
   // Date the instance was created
   createdAt time
   // Tags for the instance
   tags map[string]string
   // Firewall rules (open ports, CIDRs, protocols)
   firewallRules() []dict
+  // Open ports on the instance with access policies (fromPort, toPort, protocol, accessFrom, accessType, commonName, accessDirection, cidrs, ipv6Cidrs, cidrListAliases)
+  ports() []dict
+  // Add-ons enabled on the instance (name, status, snapshotTimeOfDay, nextSnapshotTimeOfDay, threshold, duration)
+  addOns() []dict
 }
 
 // Amazon Lightsail relational database
@@ -17081,21 +17095,29 @@ private aws.lightsail.database @defaults("name arn state") {
   region string
   // Availability zone
   availabilityZone string
-  // Database engine (mysql or postgres)
+  // Secondary Availability Zone used by high-availability databases for failover
+  secondaryAvailabilityZone string
+  // Database engine (for example, mysql or postgres)
   engine string
   // Database engine version
   engineVersion string
+  // Blueprint ID for the database (describes the major engine version)
+  relationalDatabaseBlueprintId string
+  // Bundle ID for the database (describes performance specifications)
+  relationalDatabaseBundleId string
   // State of the database
   state string
   // Master username
   masterUsername string
-  // Master database name
+  // Master database name created when the database resource was provisioned
   masterDatabaseName string
-  // Whether backup retention is enabled
+  // Whether automated backup retention is enabled
   backupRetentionEnabled bool
-  // Preferred backup window
+  // Latest point in time to which the database can be restored
+  latestRestorableTime time
+  // Preferred backup window (for example, 16:00-16:30)
   preferredBackupWindow string
-  // Preferred maintenance window
+  // Preferred weekly maintenance window (for example, Tue:17:00-Tue:17:30)
   preferredMaintenanceWindow string
   // Whether the database is publicly accessible
   publiclyAccessible bool
@@ -17103,10 +17125,26 @@ private aws.lightsail.database @defaults("name arn state") {
   endpointAddress() string
   // Endpoint port
   endpointPort() int
+  // DNS address of the master database endpoint
+  masterEndpointAddress() string
+  // Port the master database endpoint listens on
+  masterEndpointPort() int
+  // CPU count for the database
+  cpuCount() int
+  // Amount of RAM in GB for the database
+  ramSizeInGb() float
+  // Disk size in GB for the database
+  diskSizeInGb() int
+  // Status of parameter updates for the database
+  parameterApplyStatus string
   // CA certificate identifier
   caCertificateIdentifier string
   // Whether pending modified values exist
   hasPendingModifiedValues() bool
+  // Pending database value modifications (backupRetentionEnabled, engineVersion, masterUserPassword)
+  pendingModifiedValues() []dict
+  // Support code for AWS Support inquiries about the database
+  supportCode string
   // Date the database was created
   createdAt time
   // Tags for the database
@@ -17127,6 +17165,8 @@ private aws.lightsail.loadBalancer @defaults("name arn state") {
   state string
   // Protocol: HTTP_HTTPS or HTTP
   protocol string
+  // IP address type (ipv4, ipv6, or dualstack)
+  ipAddressType string
   // Public ports
   publicPorts []int
   // Health check path
@@ -17135,15 +17175,59 @@ private aws.lightsail.loadBalancer @defaults("name arn state") {
   instancePort int
   // Instance health summary
   instanceHealthSummary() []dict
-  // TLS certificate summaries
+  // TLS certificate summaries (name, isAttached)
   tlsCertificateSummaries() []dict
+  // Name of the TLS security policy attached to the load balancer
+  tlsPolicyName string
   // Whether HTTPS redirection is enabled
   httpsRedirectionEnabled() bool
+  // Whether session stickiness (cookie-based) is enabled
+  sessionStickinessEnabled() bool
+  // Lifetime in seconds of the session stickiness cookie when stickiness is enabled
+  sessionStickinessLbCookieDurationSeconds() int
   // DNS name
   dnsName string
+  // Support code for AWS Support inquiries about the load balancer
+  supportCode string
   // Date the load balancer was created
   createdAt time
   // Tags for the load balancer
+  tags map[string]string
+}
+
+// Amazon Lightsail block storage disk
+private aws.lightsail.disk @defaults("name arn state sizeInGb isAttached") {
+  // Name of the disk
+  name string
+  // ARN of the disk
+  arn string
+  // Region of the disk
+  region string
+  // Availability zone of the disk
+  availabilityZone string
+  // Lightsail resource type (typically Disk)
+  resourceType string
+  // Size of the disk in GB
+  sizeInGb int
+  // Status of the disk (pending, error, available, in-use, unknown)
+  state string
+  // Input/output operations per second (IOPS) provisioned for the disk
+  iops int
+  // Path the disk is exposed at on the attached instance (for example, /dev/xvdf)
+  path string
+  // Whether the disk is a system disk (has an operating system loaded on it)
+  isSystemDisk bool
+  // Whether the disk is attached to a Lightsail resource
+  isAttached bool
+  // Name of the Lightsail resource the disk is attached to (typically an instance)
+  attachedToName string
+  // Lightsail instance the disk is attached to, when attached
+  attachedTo() aws.lightsail.instance
+  // Support code for AWS Support inquiries about the disk
+  supportCode string
+  // Date the disk was created
+  createdAt time
+  // Tags for the disk
   tags map[string]string
 }
 
