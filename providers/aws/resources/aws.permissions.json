@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.21.3",
-  "generated_at": "2026-05-09T16:54:12-07:00",
+  "generated_at": "2026-05-11T07:51:38+01:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -29,6 +29,7 @@
     "appmesh:ListMeshes",
     "appmesh:ListRoutes",
     "appmesh:ListTagsForResource",
+    "appmesh:ListVirtualGateways",
     "appmesh:ListVirtualNodes",
     "appmesh:ListVirtualRouters",
     "appmesh:ListVirtualServices",
@@ -875,6 +876,12 @@
       "permission": "appmesh:ListTagsForResource",
       "service": "appmesh",
       "action": "ListTagsForResource",
+      "source_file": "aws_appmesh.go"
+    },
+    {
+      "permission": "appmesh:ListVirtualGateways",
+      "service": "appmesh",
+      "action": "ListVirtualGateways",
       "source_file": "aws_appmesh.go"
     },
     {

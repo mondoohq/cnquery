@@ -17805,8 +17805,12 @@ private aws.appmesh.mesh @defaults("arn name") {
   name string
   // Region where the mesh exists
   region string
-  // Mesh owner account ID
+  // AWS account ID of the mesh owner
   meshOwner string
+  // AWS account ID of the resource owner
+  resourceOwner() string
+  // Resource version, incremented on each update
+  version() int
   // Status of the mesh: ACTIVE, INACTIVE, DELETED
   status() string
   // Egress filter type: DROP_ALL or ALLOW_ALL
@@ -17815,6 +17819,8 @@ private aws.appmesh.mesh @defaults("arn name") {
   serviceDiscoveryIpPreference() string
   // Date the mesh was created
   createdAt time
+  // Date the mesh was last updated
+  lastUpdatedAt() time
   // Tags for the mesh
   tags() map[string]string
   // Virtual services in the mesh
@@ -17823,6 +17829,8 @@ private aws.appmesh.mesh @defaults("arn name") {
   virtualNodes() []aws.appmesh.virtualNode
   // Virtual routers in this mesh
   virtualRouters() []aws.appmesh.virtualRouter
+  // Virtual gateways in this mesh
+  virtualGateways() []aws.appmesh.virtualGateway
 }
 
 // AWS App Mesh virtual service
@@ -17835,12 +17843,26 @@ private aws.appmesh.virtualService @defaults("arn name") {
   meshName string
   // Region where the virtual service exists
   region string
+  // AWS account ID of the mesh owner
+  meshOwner() string
+  // AWS account ID of the resource owner
+  resourceOwner() string
+  // Resource version, incremented on each update
+  version() int
+  // Date the virtual service was created
+  createdAt() time
+  // Date the virtual service was last updated
+  lastUpdatedAt() time
   // Status of the virtual service: ACTIVE, INACTIVE, DELETED
   status() string
   // Provider type: virtualNode or virtualRouter
   providerType() string
   // Provider resource name (virtual node or virtual router name)
   providerName() string
+  // Virtual node backing the virtual service, when the provider type is virtualNode
+  virtualNode() aws.appmesh.virtualNode
+  // Virtual router backing the virtual service, when the provider type is virtualRouter
+  virtualRouter() aws.appmesh.virtualRouter
 }
 
 // AWS App Mesh virtual node
@@ -17853,14 +17875,48 @@ private aws.appmesh.virtualNode @defaults("arn name") {
   meshName string
   // Region where the virtual node exists
   region string
+  // AWS account ID of the mesh owner
+  meshOwner() string
+  // AWS account ID of the resource owner
+  resourceOwner() string
+  // Resource version, incremented on each update
+  version() int
+  // Date the virtual node was created
+  createdAt() time
+  // Date the virtual node was last updated
+  lastUpdatedAt() time
   // Status of the virtual node: ACTIVE, INACTIVE, DELETED
   status() string
-  // DEPRECATED: Use backendServices() instead
+  // DEPRECATED: use backendServices() instead
   backends() @maturity("deprecated") int
-  // Backend services this node communicates with
+  // Backend services this node communicates with, including per-backend client policy
   backendServices() []dict
-  // Service discovery configuration
-  serviceDiscovery() dict
+  // Listeners that the node receives inbound traffic on, including port mapping, health check, TLS, timeout, outlier detection, and connection pool
+  listeners() []dict
+  // Default client policy applied to backend traffic
+  backendDefaults() []dict
+  // Service discovery type: DNS or AWS_CLOUD_MAP
+  serviceDiscoveryType() string
+  // DNS hostname for the virtual node, when service discovery type is DNS
+  serviceDiscoveryDnsHostname() string
+  // DNS response type: ENDPOINTS or LOADBALANCER, when service discovery type is DNS
+  serviceDiscoveryDnsResponseType() string
+  // IP preference for DNS service discovery: IPv4_PREFERRED, IPv4_ONLY, IPv6_PREFERRED, IPv6_ONLY
+  serviceDiscoveryDnsIpPreference() string
+  // Cloud Map namespace name, when service discovery type is AWS_CLOUD_MAP
+  serviceDiscoveryCloudMapNamespaceName() string
+  // Cloud Map service name, when service discovery type is AWS_CLOUD_MAP
+  serviceDiscoveryCloudMapServiceName() string
+  // Cloud Map instance attribute filters, when service discovery type is AWS_CLOUD_MAP
+  serviceDiscoveryCloudMapAttributes() map[string]string
+  // IP preference for Cloud Map service discovery
+  serviceDiscoveryCloudMapIpPreference() string
+  // DEPRECATED: use serviceDiscoveryType and the flattened serviceDiscovery* fields instead
+  serviceDiscovery() @maturity("deprecated") dict
+  // File path for access logs written by the Envoy proxy
+  loggingAccessLogPath() string
+  // Format of access log entries — entries describe either the JSON key/value pairs or the text format string
+  loggingAccessLogFormat() []dict
 }
 
 // AWS App Mesh virtual router
@@ -17873,9 +17929,19 @@ private aws.appmesh.virtualRouter @defaults("arn name") {
   meshName string
   // AWS region of the virtual router
   region string
+  // AWS account ID of the mesh owner
+  meshOwner() string
+  // AWS account ID of the resource owner
+  resourceOwner() string
+  // Resource version, incremented on each update
+  version() int
+  // Date the virtual router was created
+  createdAt() time
+  // Date the virtual router was last updated
+  lastUpdatedAt() time
   // Status: ACTIVE, INACTIVE, DELETED
   status() string
-  // Listener port and protocol
+  // Listeners that the virtual router exposes, including port mapping
   listeners() []dict
   // Routes for this virtual router
   routes() []aws.appmesh.route
@@ -17895,11 +17961,71 @@ private aws.appmesh.route @defaults("name") {
   virtualRouterName string
   // AWS region of the route
   region string
+  // AWS account ID of the mesh owner
+  meshOwner() string
+  // AWS account ID of the resource owner
+  resourceOwner() string
+  // Resource version, incremented on each update
+  version() int
+  // Date the route was created
+  createdAt() time
+  // Date the route was last updated
+  lastUpdatedAt() time
   // Status: ACTIVE, INACTIVE, DELETED
   status() string
-  // Route specification (match, action, retry policy, timeout)
+  // Priority for the route — lower numbers match before higher numbers
+  priority() int
+  // Route specification (match, action, retry policy, timeout) including http/http2/tcp/grpc variants
   spec() dict
+  // HTTP route specification, when set
+  httpRouteSpec() dict
+  // HTTP/2 route specification, when set
+  http2RouteSpec() dict
+  // TCP route specification, when set
+  tcpRouteSpec() dict
+  // gRPC route specification, when set
+  grpcRouteSpec() dict
   // Tags on the route
+  tags() map[string]string
+}
+
+// AWS App Mesh virtual gateway
+//
+// Examine a virtual gateway that routes traffic from outside the mesh to
+// resources inside the mesh. Each gateway exposes one listener (port,
+// protocol, health check, TLS, connection pool), an optional default
+// client policy used for backend traffic, and optional access logging.
+// Use the `arn` field to select a specific gateway —
+// `aws.appmesh.virtualGateway(arn: "arn:aws:appmesh:...")` — or iterate
+// `aws.appmesh.mesh.virtualGateways` to walk every gateway in a mesh.
+private aws.appmesh.virtualGateway @defaults("arn name meshName") {
+  // ARN of the virtual gateway
+  arn string
+  // Name of the virtual gateway
+  name string
+  // Mesh name the virtual gateway belongs to
+  meshName string
+  // AWS region of the virtual gateway
+  region string
+  // AWS account ID of the mesh owner
+  meshOwner string
+  // AWS account ID of the resource owner
+  resourceOwner() string
+  // Resource version, incremented on each update
+  version int
+  // Date the virtual gateway was created
+  createdAt time
+  // Date the virtual gateway was last updated
+  lastUpdatedAt time
+  // Status: ACTIVE, INACTIVE, DELETED
+  status() string
+  // Listeners the gateway receives inbound traffic on, including port mapping, health check, TLS, and connection pool
+  listeners() []dict
+  // Default client policy applied to backend traffic
+  backendDefaults() []dict
+  // Access logging configuration for the gateway
+  logging() []dict
+  // Tags on the virtual gateway
   tags() map[string]string
 }
 

@@ -734,6 +734,7 @@ const (
 	ResourceAwsAppmeshVirtualNode                                               string = "aws.appmesh.virtualNode"
 	ResourceAwsAppmeshVirtualRouter                                             string = "aws.appmesh.virtualRouter"
 	ResourceAwsAppmeshRoute                                                     string = "aws.appmesh.route"
+	ResourceAwsAppmeshVirtualGateway                                            string = "aws.appmesh.virtualGateway"
 	ResourceAwsIdentitycenter                                                   string = "aws.identitycenter"
 	ResourceAwsIdentitycenterInstance                                           string = "aws.identitycenter.instance"
 	ResourceAwsIdentitycenterApplication                                        string = "aws.identitycenter.application"
@@ -3631,16 +3632,20 @@ func init() {
 			Create: createAwsAppmeshVirtualService,
 		},
 		"aws.appmesh.virtualNode": {
-			// to override args, implement: initAwsAppmeshVirtualNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsAppmeshVirtualNode,
 			Create: createAwsAppmeshVirtualNode,
 		},
 		"aws.appmesh.virtualRouter": {
-			// to override args, implement: initAwsAppmeshVirtualRouter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsAppmeshVirtualRouter,
 			Create: createAwsAppmeshVirtualRouter,
 		},
 		"aws.appmesh.route": {
 			// to override args, implement: initAwsAppmeshRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAppmeshRoute,
+		},
+		"aws.appmesh.virtualGateway": {
+			Init:   initAwsAppmeshVirtualGateway,
+			Create: createAwsAppmeshVirtualGateway,
 		},
 		"aws.identitycenter": {
 			// to override args, implement: initAwsIdentitycenter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -24830,6 +24835,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appmesh.mesh.meshOwner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshMesh).GetMeshOwner()).ToDataRes(types.String)
 	},
+	"aws.appmesh.mesh.resourceOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetResourceOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.mesh.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetVersion()).ToDataRes(types.Int)
+	},
 	"aws.appmesh.mesh.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshMesh).GetStatus()).ToDataRes(types.String)
 	},
@@ -24841,6 +24852,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.appmesh.mesh.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshMesh).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appmesh.mesh.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetLastUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.appmesh.mesh.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshMesh).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -24854,6 +24868,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appmesh.mesh.virtualRouters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshMesh).GetVirtualRouters()).ToDataRes(types.Array(types.Resource("aws.appmesh.virtualRouter")))
 	},
+	"aws.appmesh.mesh.virtualGateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshMesh).GetVirtualGateways()).ToDataRes(types.Array(types.Resource("aws.appmesh.virtualGateway")))
+	},
 	"aws.appmesh.virtualService.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualService).GetArn()).ToDataRes(types.String)
 	},
@@ -24866,6 +24883,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appmesh.virtualService.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualService).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.appmesh.virtualService.meshOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetMeshOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualService.resourceOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetResourceOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualService.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetVersion()).ToDataRes(types.Int)
+	},
+	"aws.appmesh.virtualService.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appmesh.virtualService.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
 	"aws.appmesh.virtualService.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualService).GetStatus()).ToDataRes(types.String)
 	},
@@ -24874,6 +24906,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.appmesh.virtualService.providerName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualService).GetProviderName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualService.virtualNode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetVirtualNode()).ToDataRes(types.Resource("aws.appmesh.virtualNode"))
+	},
+	"aws.appmesh.virtualService.virtualRouter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualService).GetVirtualRouter()).ToDataRes(types.Resource("aws.appmesh.virtualRouter"))
 	},
 	"aws.appmesh.virtualNode.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualNode).GetArn()).ToDataRes(types.String)
@@ -24887,6 +24925,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appmesh.virtualNode.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualNode).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.appmesh.virtualNode.meshOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetMeshOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.resourceOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetResourceOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetVersion()).ToDataRes(types.Int)
+	},
+	"aws.appmesh.virtualNode.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appmesh.virtualNode.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
 	"aws.appmesh.virtualNode.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualNode).GetStatus()).ToDataRes(types.String)
 	},
@@ -24896,8 +24949,44 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appmesh.virtualNode.backendServices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualNode).GetBackendServices()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.appmesh.virtualNode.listeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetListeners()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.appmesh.virtualNode.backendDefaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetBackendDefaults()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscoveryType()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryDnsHostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscoveryDnsHostname()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryDnsResponseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscoveryDnsResponseType()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryDnsIpPreference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscoveryDnsIpPreference()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryCloudMapNamespaceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscoveryCloudMapNamespaceName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryCloudMapServiceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscoveryCloudMapServiceName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryCloudMapAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscoveryCloudMapAttributes()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryCloudMapIpPreference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscoveryCloudMapIpPreference()).ToDataRes(types.String)
+	},
 	"aws.appmesh.virtualNode.serviceDiscovery": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualNode).GetServiceDiscovery()).ToDataRes(types.Dict)
+	},
+	"aws.appmesh.virtualNode.loggingAccessLogPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetLoggingAccessLogPath()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualNode.loggingAccessLogFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualNode).GetLoggingAccessLogFormat()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.appmesh.virtualRouter.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualRouter).GetArn()).ToDataRes(types.String)
@@ -24910,6 +24999,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.appmesh.virtualRouter.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualRouter).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualRouter.meshOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualRouter).GetMeshOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualRouter.resourceOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualRouter).GetResourceOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualRouter.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualRouter).GetVersion()).ToDataRes(types.Int)
+	},
+	"aws.appmesh.virtualRouter.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualRouter).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appmesh.virtualRouter.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualRouter).GetLastUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.appmesh.virtualRouter.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshVirtualRouter).GetStatus()).ToDataRes(types.String)
@@ -24938,14 +25042,86 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.appmesh.route.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshRoute).GetRegion()).ToDataRes(types.String)
 	},
+	"aws.appmesh.route.meshOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshRoute).GetMeshOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.route.resourceOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshRoute).GetResourceOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.route.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshRoute).GetVersion()).ToDataRes(types.Int)
+	},
+	"aws.appmesh.route.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshRoute).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appmesh.route.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshRoute).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
 	"aws.appmesh.route.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshRoute).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.appmesh.route.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshRoute).GetPriority()).ToDataRes(types.Int)
 	},
 	"aws.appmesh.route.spec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshRoute).GetSpec()).ToDataRes(types.Dict)
 	},
+	"aws.appmesh.route.httpRouteSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshRoute).GetHttpRouteSpec()).ToDataRes(types.Dict)
+	},
+	"aws.appmesh.route.http2RouteSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshRoute).GetHttp2RouteSpec()).ToDataRes(types.Dict)
+	},
+	"aws.appmesh.route.tcpRouteSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshRoute).GetTcpRouteSpec()).ToDataRes(types.Dict)
+	},
+	"aws.appmesh.route.grpcRouteSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshRoute).GetGrpcRouteSpec()).ToDataRes(types.Dict)
+	},
 	"aws.appmesh.route.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppmeshRoute).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.appmesh.virtualGateway.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetArn()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualGateway.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualGateway.meshName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetMeshName()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualGateway.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualGateway.meshOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetMeshOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualGateway.resourceOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetResourceOwner()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualGateway.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetVersion()).ToDataRes(types.Int)
+	},
+	"aws.appmesh.virtualGateway.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appmesh.virtualGateway.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.appmesh.virtualGateway.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.appmesh.virtualGateway.listeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetListeners()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.appmesh.virtualGateway.backendDefaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetBackendDefaults()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.appmesh.virtualGateway.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetLogging()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.appmesh.virtualGateway.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppmeshVirtualGateway).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.identitycenter.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenter).GetInstances()).ToDataRes(types.Array(types.Resource("aws.identitycenter.instance")))
@@ -56486,6 +56662,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppmeshMesh).MeshOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.appmesh.mesh.resourceOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).ResourceOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.appmesh.mesh.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshMesh).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -56502,6 +56686,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppmeshMesh).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.appmesh.mesh.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.appmesh.mesh.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshMesh).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -56516,6 +56704,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.appmesh.mesh.virtualRouters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshMesh).VirtualRouters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.mesh.virtualGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshMesh).VirtualGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.appmesh.virtualService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56538,6 +56730,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppmeshVirtualService).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.appmesh.virtualService.meshOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).MeshOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.resourceOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).ResourceOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.appmesh.virtualService.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshVirtualService).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -56548,6 +56760,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.appmesh.virtualService.providerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshVirtualService).ProviderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.virtualNode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).VirtualNode, ok = plugin.RawToTValue[*mqlAwsAppmeshVirtualNode](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualService.virtualRouter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualService).VirtualRouter, ok = plugin.RawToTValue[*mqlAwsAppmeshVirtualRouter](v.Value, v.Error)
 		return
 	},
 	"aws.appmesh.virtualNode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56570,6 +56790,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppmeshVirtualNode).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.appmesh.virtualNode.meshOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).MeshOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.resourceOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).ResourceOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.appmesh.virtualNode.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshVirtualNode).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -56582,8 +56822,56 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppmeshVirtualNode).BackendServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.appmesh.virtualNode.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.backendDefaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).BackendDefaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).ServiceDiscoveryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryDnsHostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).ServiceDiscoveryDnsHostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryDnsResponseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).ServiceDiscoveryDnsResponseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryDnsIpPreference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).ServiceDiscoveryDnsIpPreference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryCloudMapNamespaceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).ServiceDiscoveryCloudMapNamespaceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryCloudMapServiceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).ServiceDiscoveryCloudMapServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryCloudMapAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).ServiceDiscoveryCloudMapAttributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.serviceDiscoveryCloudMapIpPreference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).ServiceDiscoveryCloudMapIpPreference, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.appmesh.virtualNode.serviceDiscovery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshVirtualNode).ServiceDiscovery, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.loggingAccessLogPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).LoggingAccessLogPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualNode.loggingAccessLogFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualNode).LoggingAccessLogFormat, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.appmesh.virtualRouter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56604,6 +56892,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.appmesh.virtualRouter.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshVirtualRouter).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualRouter.meshOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualRouter).MeshOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualRouter.resourceOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualRouter).ResourceOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualRouter.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualRouter).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualRouter.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualRouter).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualRouter.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualRouter).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.appmesh.virtualRouter.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -56646,16 +56954,116 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAppmeshRoute).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.appmesh.route.meshOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshRoute).MeshOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.route.resourceOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshRoute).ResourceOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.route.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshRoute).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.route.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshRoute).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.route.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshRoute).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.appmesh.route.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshRoute).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.route.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshRoute).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.appmesh.route.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshRoute).Spec, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.appmesh.route.httpRouteSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshRoute).HttpRouteSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.route.http2RouteSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshRoute).Http2RouteSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.route.tcpRouteSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshRoute).TcpRouteSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.route.grpcRouteSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshRoute).GrpcRouteSpec, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.appmesh.route.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppmeshRoute).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appmesh.virtualGateway.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.meshName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).MeshName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.meshOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).MeshOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.resourceOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).ResourceOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.backendDefaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).BackendDefaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).Logging, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appmesh.virtualGateway.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppmeshVirtualGateway).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.identitycenter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -138360,14 +138768,18 @@ type mqlAwsAppmeshMesh struct {
 	Name                         plugin.TValue[string]
 	Region                       plugin.TValue[string]
 	MeshOwner                    plugin.TValue[string]
+	ResourceOwner                plugin.TValue[string]
+	Version                      plugin.TValue[int64]
 	Status                       plugin.TValue[string]
 	EgressFilterType             plugin.TValue[string]
 	ServiceDiscoveryIpPreference plugin.TValue[string]
 	CreatedAt                    plugin.TValue[*time.Time]
+	LastUpdatedAt                plugin.TValue[*time.Time]
 	Tags                         plugin.TValue[map[string]any]
 	VirtualServices              plugin.TValue[[]any]
 	VirtualNodes                 plugin.TValue[[]any]
 	VirtualRouters               plugin.TValue[[]any]
+	VirtualGateways              plugin.TValue[[]any]
 }
 
 // createAwsAppmeshMesh creates a new instance of this resource
@@ -138423,6 +138835,18 @@ func (c *mqlAwsAppmeshMesh) GetMeshOwner() *plugin.TValue[string] {
 	return &c.MeshOwner
 }
 
+func (c *mqlAwsAppmeshMesh) GetResourceOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourceOwner, func() (string, error) {
+		return c.resourceOwner()
+	})
+}
+
+func (c *mqlAwsAppmeshMesh) GetVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Version, func() (int64, error) {
+		return c.version()
+	})
+}
+
 func (c *mqlAwsAppmeshMesh) GetStatus() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
 		return c.status()
@@ -138443,6 +138867,12 @@ func (c *mqlAwsAppmeshMesh) GetServiceDiscoveryIpPreference() *plugin.TValue[str
 
 func (c *mqlAwsAppmeshMesh) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsAppmeshMesh) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastUpdatedAt, func() (*time.Time, error) {
+		return c.lastUpdatedAt()
+	})
 }
 
 func (c *mqlAwsAppmeshMesh) GetTags() *plugin.TValue[map[string]any] {
@@ -138499,18 +138929,41 @@ func (c *mqlAwsAppmeshMesh) GetVirtualRouters() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsAppmeshMesh) GetVirtualGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualGateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appmesh.mesh", c.__id, "virtualGateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualGateways()
+	})
+}
+
 // mqlAwsAppmeshVirtualService for the aws.appmesh.virtualService resource
 type mqlAwsAppmeshVirtualService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsAppmeshVirtualServiceInternal
-	Arn          plugin.TValue[string]
-	Name         plugin.TValue[string]
-	MeshName     plugin.TValue[string]
-	Region       plugin.TValue[string]
-	Status       plugin.TValue[string]
-	ProviderType plugin.TValue[string]
-	ProviderName plugin.TValue[string]
+	Arn           plugin.TValue[string]
+	Name          plugin.TValue[string]
+	MeshName      plugin.TValue[string]
+	Region        plugin.TValue[string]
+	MeshOwner     plugin.TValue[string]
+	ResourceOwner plugin.TValue[string]
+	Version       plugin.TValue[int64]
+	CreatedAt     plugin.TValue[*time.Time]
+	LastUpdatedAt plugin.TValue[*time.Time]
+	Status        plugin.TValue[string]
+	ProviderType  plugin.TValue[string]
+	ProviderName  plugin.TValue[string]
+	VirtualNode   plugin.TValue[*mqlAwsAppmeshVirtualNode]
+	VirtualRouter plugin.TValue[*mqlAwsAppmeshVirtualRouter]
 }
 
 // createAwsAppmeshVirtualService creates a new instance of this resource
@@ -138566,6 +139019,36 @@ func (c *mqlAwsAppmeshVirtualService) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+func (c *mqlAwsAppmeshVirtualService) GetMeshOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MeshOwner, func() (string, error) {
+		return c.meshOwner()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetResourceOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourceOwner, func() (string, error) {
+		return c.resourceOwner()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Version, func() (int64, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastUpdatedAt, func() (*time.Time, error) {
+		return c.lastUpdatedAt()
+	})
+}
+
 func (c *mqlAwsAppmeshVirtualService) GetStatus() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
 		return c.status()
@@ -138584,19 +139067,68 @@ func (c *mqlAwsAppmeshVirtualService) GetProviderName() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsAppmeshVirtualService) GetVirtualNode() *plugin.TValue[*mqlAwsAppmeshVirtualNode] {
+	return plugin.GetOrCompute[*mqlAwsAppmeshVirtualNode](&c.VirtualNode, func() (*mqlAwsAppmeshVirtualNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appmesh.virtualService", c.__id, "virtualNode")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAppmeshVirtualNode), nil
+			}
+		}
+
+		return c.virtualNode()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualService) GetVirtualRouter() *plugin.TValue[*mqlAwsAppmeshVirtualRouter] {
+	return plugin.GetOrCompute[*mqlAwsAppmeshVirtualRouter](&c.VirtualRouter, func() (*mqlAwsAppmeshVirtualRouter, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appmesh.virtualService", c.__id, "virtualRouter")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAppmeshVirtualRouter), nil
+			}
+		}
+
+		return c.virtualRouter()
+	})
+}
+
 // mqlAwsAppmeshVirtualNode for the aws.appmesh.virtualNode resource
 type mqlAwsAppmeshVirtualNode struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsAppmeshVirtualNodeInternal
-	Arn              plugin.TValue[string]
-	Name             plugin.TValue[string]
-	MeshName         plugin.TValue[string]
-	Region           plugin.TValue[string]
-	Status           plugin.TValue[string]
-	Backends         plugin.TValue[int64]
-	BackendServices  plugin.TValue[[]any]
-	ServiceDiscovery plugin.TValue[any]
+	Arn                                   plugin.TValue[string]
+	Name                                  plugin.TValue[string]
+	MeshName                              plugin.TValue[string]
+	Region                                plugin.TValue[string]
+	MeshOwner                             plugin.TValue[string]
+	ResourceOwner                         plugin.TValue[string]
+	Version                               plugin.TValue[int64]
+	CreatedAt                             plugin.TValue[*time.Time]
+	LastUpdatedAt                         plugin.TValue[*time.Time]
+	Status                                plugin.TValue[string]
+	Backends                              plugin.TValue[int64]
+	BackendServices                       plugin.TValue[[]any]
+	Listeners                             plugin.TValue[[]any]
+	BackendDefaults                       plugin.TValue[[]any]
+	ServiceDiscoveryType                  plugin.TValue[string]
+	ServiceDiscoveryDnsHostname           plugin.TValue[string]
+	ServiceDiscoveryDnsResponseType       plugin.TValue[string]
+	ServiceDiscoveryDnsIpPreference       plugin.TValue[string]
+	ServiceDiscoveryCloudMapNamespaceName plugin.TValue[string]
+	ServiceDiscoveryCloudMapServiceName   plugin.TValue[string]
+	ServiceDiscoveryCloudMapAttributes    plugin.TValue[map[string]any]
+	ServiceDiscoveryCloudMapIpPreference  plugin.TValue[string]
+	ServiceDiscovery                      plugin.TValue[any]
+	LoggingAccessLogPath                  plugin.TValue[string]
+	LoggingAccessLogFormat                plugin.TValue[[]any]
 }
 
 // createAwsAppmeshVirtualNode creates a new instance of this resource
@@ -138652,6 +139184,36 @@ func (c *mqlAwsAppmeshVirtualNode) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+func (c *mqlAwsAppmeshVirtualNode) GetMeshOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MeshOwner, func() (string, error) {
+		return c.meshOwner()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetResourceOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourceOwner, func() (string, error) {
+		return c.resourceOwner()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Version, func() (int64, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastUpdatedAt, func() (*time.Time, error) {
+		return c.lastUpdatedAt()
+	})
+}
+
 func (c *mqlAwsAppmeshVirtualNode) GetStatus() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
 		return c.status()
@@ -138670,9 +139232,81 @@ func (c *mqlAwsAppmeshVirtualNode) GetBackendServices() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsAppmeshVirtualNode) GetListeners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Listeners, func() ([]any, error) {
+		return c.listeners()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetBackendDefaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BackendDefaults, func() ([]any, error) {
+		return c.backendDefaults()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetServiceDiscoveryType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceDiscoveryType, func() (string, error) {
+		return c.serviceDiscoveryType()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetServiceDiscoveryDnsHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceDiscoveryDnsHostname, func() (string, error) {
+		return c.serviceDiscoveryDnsHostname()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetServiceDiscoveryDnsResponseType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceDiscoveryDnsResponseType, func() (string, error) {
+		return c.serviceDiscoveryDnsResponseType()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetServiceDiscoveryDnsIpPreference() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceDiscoveryDnsIpPreference, func() (string, error) {
+		return c.serviceDiscoveryDnsIpPreference()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetServiceDiscoveryCloudMapNamespaceName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceDiscoveryCloudMapNamespaceName, func() (string, error) {
+		return c.serviceDiscoveryCloudMapNamespaceName()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetServiceDiscoveryCloudMapServiceName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceDiscoveryCloudMapServiceName, func() (string, error) {
+		return c.serviceDiscoveryCloudMapServiceName()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetServiceDiscoveryCloudMapAttributes() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ServiceDiscoveryCloudMapAttributes, func() (map[string]any, error) {
+		return c.serviceDiscoveryCloudMapAttributes()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetServiceDiscoveryCloudMapIpPreference() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ServiceDiscoveryCloudMapIpPreference, func() (string, error) {
+		return c.serviceDiscoveryCloudMapIpPreference()
+	})
+}
+
 func (c *mqlAwsAppmeshVirtualNode) GetServiceDiscovery() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.ServiceDiscovery, func() (any, error) {
 		return c.serviceDiscovery()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetLoggingAccessLogPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LoggingAccessLogPath, func() (string, error) {
+		return c.loggingAccessLogPath()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualNode) GetLoggingAccessLogFormat() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoggingAccessLogFormat, func() ([]any, error) {
+		return c.loggingAccessLogFormat()
 	})
 }
 
@@ -138681,14 +139315,19 @@ type mqlAwsAppmeshVirtualRouter struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsAppmeshVirtualRouterInternal
-	Arn       plugin.TValue[string]
-	Name      plugin.TValue[string]
-	MeshName  plugin.TValue[string]
-	Region    plugin.TValue[string]
-	Status    plugin.TValue[string]
-	Listeners plugin.TValue[[]any]
-	Routes    plugin.TValue[[]any]
-	Tags      plugin.TValue[map[string]any]
+	Arn           plugin.TValue[string]
+	Name          plugin.TValue[string]
+	MeshName      plugin.TValue[string]
+	Region        plugin.TValue[string]
+	MeshOwner     plugin.TValue[string]
+	ResourceOwner plugin.TValue[string]
+	Version       plugin.TValue[int64]
+	CreatedAt     plugin.TValue[*time.Time]
+	LastUpdatedAt plugin.TValue[*time.Time]
+	Status        plugin.TValue[string]
+	Listeners     plugin.TValue[[]any]
+	Routes        plugin.TValue[[]any]
+	Tags          plugin.TValue[map[string]any]
 }
 
 // createAwsAppmeshVirtualRouter creates a new instance of this resource
@@ -138744,6 +139383,36 @@ func (c *mqlAwsAppmeshVirtualRouter) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+func (c *mqlAwsAppmeshVirtualRouter) GetMeshOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MeshOwner, func() (string, error) {
+		return c.meshOwner()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualRouter) GetResourceOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourceOwner, func() (string, error) {
+		return c.resourceOwner()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualRouter) GetVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Version, func() (int64, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualRouter) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualRouter) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastUpdatedAt, func() (*time.Time, error) {
+		return c.lastUpdatedAt()
+	})
+}
+
 func (c *mqlAwsAppmeshVirtualRouter) GetStatus() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
 		return c.status()
@@ -138788,8 +139457,18 @@ type mqlAwsAppmeshRoute struct {
 	MeshName          plugin.TValue[string]
 	VirtualRouterName plugin.TValue[string]
 	Region            plugin.TValue[string]
+	MeshOwner         plugin.TValue[string]
+	ResourceOwner     plugin.TValue[string]
+	Version           plugin.TValue[int64]
+	CreatedAt         plugin.TValue[*time.Time]
+	LastUpdatedAt     plugin.TValue[*time.Time]
 	Status            plugin.TValue[string]
+	Priority          plugin.TValue[int64]
 	Spec              plugin.TValue[any]
+	HttpRouteSpec     plugin.TValue[any]
+	Http2RouteSpec    plugin.TValue[any]
+	TcpRouteSpec      plugin.TValue[any]
+	GrpcRouteSpec     plugin.TValue[any]
 	Tags              plugin.TValue[map[string]any]
 }
 
@@ -138850,9 +139529,45 @@ func (c *mqlAwsAppmeshRoute) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 
+func (c *mqlAwsAppmeshRoute) GetMeshOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MeshOwner, func() (string, error) {
+		return c.meshOwner()
+	})
+}
+
+func (c *mqlAwsAppmeshRoute) GetResourceOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourceOwner, func() (string, error) {
+		return c.resourceOwner()
+	})
+}
+
+func (c *mqlAwsAppmeshRoute) GetVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Version, func() (int64, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlAwsAppmeshRoute) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsAppmeshRoute) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastUpdatedAt, func() (*time.Time, error) {
+		return c.lastUpdatedAt()
+	})
+}
+
 func (c *mqlAwsAppmeshRoute) GetStatus() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
 		return c.status()
+	})
+}
+
+func (c *mqlAwsAppmeshRoute) GetPriority() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Priority, func() (int64, error) {
+		return c.priority()
 	})
 }
 
@@ -138862,7 +139577,157 @@ func (c *mqlAwsAppmeshRoute) GetSpec() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsAppmeshRoute) GetHttpRouteSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.HttpRouteSpec, func() (any, error) {
+		return c.httpRouteSpec()
+	})
+}
+
+func (c *mqlAwsAppmeshRoute) GetHttp2RouteSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Http2RouteSpec, func() (any, error) {
+		return c.http2RouteSpec()
+	})
+}
+
+func (c *mqlAwsAppmeshRoute) GetTcpRouteSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.TcpRouteSpec, func() (any, error) {
+		return c.tcpRouteSpec()
+	})
+}
+
+func (c *mqlAwsAppmeshRoute) GetGrpcRouteSpec() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.GrpcRouteSpec, func() (any, error) {
+		return c.grpcRouteSpec()
+	})
+}
+
 func (c *mqlAwsAppmeshRoute) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsAppmeshVirtualGateway for the aws.appmesh.virtualGateway resource
+type mqlAwsAppmeshVirtualGateway struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsAppmeshVirtualGatewayInternal
+	Arn             plugin.TValue[string]
+	Name            plugin.TValue[string]
+	MeshName        plugin.TValue[string]
+	Region          plugin.TValue[string]
+	MeshOwner       plugin.TValue[string]
+	ResourceOwner   plugin.TValue[string]
+	Version         plugin.TValue[int64]
+	CreatedAt       plugin.TValue[*time.Time]
+	LastUpdatedAt   plugin.TValue[*time.Time]
+	Status          plugin.TValue[string]
+	Listeners       plugin.TValue[[]any]
+	BackendDefaults plugin.TValue[[]any]
+	Logging         plugin.TValue[[]any]
+	Tags            plugin.TValue[map[string]any]
+}
+
+// createAwsAppmeshVirtualGateway creates a new instance of this resource
+func createAwsAppmeshVirtualGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppmeshVirtualGateway{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appmesh.virtualGateway", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) MqlName() string {
+	return "aws.appmesh.virtualGateway"
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetMeshName() *plugin.TValue[string] {
+	return &c.MeshName
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetMeshOwner() *plugin.TValue[string] {
+	return &c.MeshOwner
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetResourceOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResourceOwner, func() (string, error) {
+		return c.resourceOwner()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetListeners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Listeners, func() ([]any, error) {
+		return c.listeners()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetBackendDefaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BackendDefaults, func() ([]any, error) {
+		return c.backendDefaults()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetLogging() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Logging, func() ([]any, error) {
+		return c.logging()
+	})
+}
+
+func (c *mqlAwsAppmeshVirtualGateway) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
