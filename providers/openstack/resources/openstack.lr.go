@@ -61,6 +61,13 @@ const (
 	ResourceOpenstackComputeService         string = "openstack.compute.service"
 	ResourceOpenstackBlockstorageVolumeType string = "openstack.blockstorage.volumeType"
 	ResourceOpenstackBlockstorageBackup     string = "openstack.blockstorage.backup"
+	ResourceOpenstackImageMember            string = "openstack.image.member"
+	ResourceOpenstackApplicationCredential  string = "openstack.applicationCredential"
+	ResourceOpenstackComputeAggregate       string = "openstack.compute.aggregate"
+	ResourceOpenstackComputeLimits          string = "openstack.compute.limits"
+	ResourceOpenstackBlockstorageQuotaSet   string = "openstack.blockstorage.quotaSet"
+	ResourceOpenstackNetworkQuotaSet        string = "openstack.network.quotaSet"
+	ResourceOpenstackKeymanagerAcl          string = "openstack.keymanager.acl"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -247,6 +254,34 @@ func init() {
 			Init:   initOpenstackBlockstorageBackup,
 			Create: createOpenstackBlockstorageBackup,
 		},
+		"openstack.image.member": {
+			Init:   initOpenstackImageMember,
+			Create: createOpenstackImageMember,
+		},
+		"openstack.applicationCredential": {
+			Init:   initOpenstackApplicationCredential,
+			Create: createOpenstackApplicationCredential,
+		},
+		"openstack.compute.aggregate": {
+			Init:   initOpenstackComputeAggregate,
+			Create: createOpenstackComputeAggregate,
+		},
+		"openstack.compute.limits": {
+			// to override args, implement: initOpenstackComputeLimits(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenstackComputeLimits,
+		},
+		"openstack.blockstorage.quotaSet": {
+			// to override args, implement: initOpenstackBlockstorageQuotaSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenstackBlockstorageQuotaSet,
+		},
+		"openstack.network.quotaSet": {
+			// to override args, implement: initOpenstackNetworkQuotaSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenstackNetworkQuotaSet,
+		},
+		"openstack.keymanager.acl": {
+			// to override args, implement: initOpenstackKeymanagerAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenstackKeymanagerAcl,
+		},
 	}
 }
 
@@ -359,6 +394,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.computeServices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetComputeServices()).ToDataRes(types.Array(types.Resource("openstack.compute.service")))
+	},
+	"openstack.aggregates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetAggregates()).ToDataRes(types.Array(types.Resource("openstack.compute.aggregate")))
+	},
+	"openstack.computeLimits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetComputeLimits()).ToDataRes(types.Resource("openstack.compute.limits"))
+	},
+	"openstack.blockStorageQuotaSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetBlockStorageQuotaSet()).ToDataRes(types.Resource("openstack.blockstorage.quotaSet"))
+	},
+	"openstack.networkQuotaSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstack).GetNetworkQuotaSet()).ToDataRes(types.Resource("openstack.network.quotaSet"))
 	},
 	"openstack.networks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstack).GetNetworks()).ToDataRes(types.Array(types.Resource("openstack.network")))
@@ -497,6 +544,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.user.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackUser).GetGroups()).ToDataRes(types.Array(types.Resource("openstack.group")))
+	},
+	"openstack.user.applicationCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackUser).GetApplicationCredentials()).ToDataRes(types.Array(types.Resource("openstack.applicationCredential")))
 	},
 	"openstack.role.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackRole).GetId()).ToDataRes(types.String)
@@ -1164,6 +1214,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.image.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackImage).GetOwner()).ToDataRes(types.Resource("openstack.project"))
 	},
+	"openstack.image.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackImage).GetMembers()).ToDataRes(types.Array(types.Resource("openstack.image.member")))
+	},
 	"openstack.keymanager.secret.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackKeymanagerSecret).GetId()).ToDataRes(types.String)
 	},
@@ -1202,6 +1255,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.keymanager.secret.creator": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackKeymanagerSecret).GetCreator()).ToDataRes(types.Resource("openstack.user"))
+	},
+	"openstack.keymanager.secret.acl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackKeymanagerSecret).GetAcl()).ToDataRes(types.Resource("openstack.keymanager.acl"))
 	},
 	"openstack.keymanager.container.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackKeymanagerContainer).GetId()).ToDataRes(types.String)
@@ -1244,6 +1300,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"openstack.keymanager.container.intermediates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackKeymanagerContainer).GetIntermediates()).ToDataRes(types.Resource("openstack.keymanager.secret"))
+	},
+	"openstack.keymanager.container.acl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackKeymanagerContainer).GetAcl()).ToDataRes(types.Resource("openstack.keymanager.acl"))
 	},
 	"openstack.keymanager.order.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackKeymanagerOrder).GetId()).ToDataRes(types.String)
@@ -2235,6 +2294,207 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openstack.blockstorage.backup.project": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenstackBlockstorageBackup).GetProject()).ToDataRes(types.Resource("openstack.project"))
 	},
+	"openstack.image.member.memberId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackImageMember).GetMemberId()).ToDataRes(types.String)
+	},
+	"openstack.image.member.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackImageMember).GetImageId()).ToDataRes(types.String)
+	},
+	"openstack.image.member.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackImageMember).GetStatus()).ToDataRes(types.String)
+	},
+	"openstack.image.member.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackImageMember).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.image.member.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackImageMember).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.image.member.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackImageMember).GetImage()).ToDataRes(types.Resource("openstack.image"))
+	},
+	"openstack.image.member.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackImageMember).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.applicationCredential.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetId()).ToDataRes(types.String)
+	},
+	"openstack.applicationCredential.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetName()).ToDataRes(types.String)
+	},
+	"openstack.applicationCredential.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetDescription()).ToDataRes(types.String)
+	},
+	"openstack.applicationCredential.unrestricted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetUnrestricted()).ToDataRes(types.Bool)
+	},
+	"openstack.applicationCredential.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetUserId()).ToDataRes(types.String)
+	},
+	"openstack.applicationCredential.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.applicationCredential.roleNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetRoleNames()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.applicationCredential.accessRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetAccessRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"openstack.applicationCredential.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"openstack.applicationCredential.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetUser()).ToDataRes(types.Resource("openstack.user"))
+	},
+	"openstack.applicationCredential.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackApplicationCredential).GetProject()).ToDataRes(types.Resource("openstack.project"))
+	},
+	"openstack.compute.aggregate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeAggregate).GetId()).ToDataRes(types.Int)
+	},
+	"openstack.compute.aggregate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeAggregate).GetName()).ToDataRes(types.String)
+	},
+	"openstack.compute.aggregate.availabilityZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeAggregate).GetAvailabilityZone()).ToDataRes(types.String)
+	},
+	"openstack.compute.aggregate.hosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeAggregate).GetHosts()).ToDataRes(types.Array(types.String))
+	},
+	"openstack.compute.aggregate.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeAggregate).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"openstack.compute.aggregate.hostCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeAggregate).GetHostCount()).ToDataRes(types.Int)
+	},
+	"openstack.compute.aggregate.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeAggregate).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.compute.aggregate.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeAggregate).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"openstack.compute.aggregate.deleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeAggregate).GetDeleted()).ToDataRes(types.Bool)
+	},
+	"openstack.compute.limits.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.compute.limits.maxTotalCores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxTotalCores()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.totalCoresUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetTotalCoresUsed()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxTotalInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxTotalInstances()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.totalInstancesUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetTotalInstancesUsed()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxTotalRAMSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxTotalRAMSize()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.totalRAMUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetTotalRAMUsed()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxTotalKeypairs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxTotalKeypairs()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxSecurityGroups()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.totalSecurityGroupsUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetTotalSecurityGroupsUsed()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxSecurityGroupRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxSecurityGroupRules()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxTotalFloatingIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxTotalFloatingIps()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.totalFloatingIpsUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetTotalFloatingIpsUsed()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxServerGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxServerGroups()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.totalServerGroupsUsed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetTotalServerGroupsUsed()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxServerGroupMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxServerGroupMembers()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxImageMeta": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxImageMeta()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxServerMeta": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxServerMeta()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxPersonality": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxPersonality()).ToDataRes(types.Int)
+	},
+	"openstack.compute.limits.maxPersonalitySize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackComputeLimits).GetMaxPersonalitySize()).ToDataRes(types.Int)
+	},
+	"openstack.blockstorage.quotaSet.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQuotaSet).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.blockstorage.quotaSet.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQuotaSet).GetVolumes()).ToDataRes(types.Int)
+	},
+	"openstack.blockstorage.quotaSet.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQuotaSet).GetSnapshots()).ToDataRes(types.Int)
+	},
+	"openstack.blockstorage.quotaSet.gigabytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQuotaSet).GetGigabytes()).ToDataRes(types.Int)
+	},
+	"openstack.blockstorage.quotaSet.perVolumeGigabytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQuotaSet).GetPerVolumeGigabytes()).ToDataRes(types.Int)
+	},
+	"openstack.blockstorage.quotaSet.backups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQuotaSet).GetBackups()).ToDataRes(types.Int)
+	},
+	"openstack.blockstorage.quotaSet.backupGigabytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQuotaSet).GetBackupGigabytes()).ToDataRes(types.Int)
+	},
+	"openstack.blockstorage.quotaSet.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackBlockstorageQuotaSet).GetGroups()).ToDataRes(types.Int)
+	},
+	"openstack.network.quotaSet.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetProjectId()).ToDataRes(types.String)
+	},
+	"openstack.network.quotaSet.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetNetwork()).ToDataRes(types.Int)
+	},
+	"openstack.network.quotaSet.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetSubnet()).ToDataRes(types.Int)
+	},
+	"openstack.network.quotaSet.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetPort()).ToDataRes(types.Int)
+	},
+	"openstack.network.quotaSet.router": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetRouter()).ToDataRes(types.Int)
+	},
+	"openstack.network.quotaSet.floatingIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetFloatingIp()).ToDataRes(types.Int)
+	},
+	"openstack.network.quotaSet.securityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetSecurityGroup()).ToDataRes(types.Int)
+	},
+	"openstack.network.quotaSet.securityGroupRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetSecurityGroupRule()).ToDataRes(types.Int)
+	},
+	"openstack.network.quotaSet.subnetPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetSubnetPool()).ToDataRes(types.Int)
+	},
+	"openstack.network.quotaSet.rbacPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetRbacPolicy()).ToDataRes(types.Int)
+	},
+	"openstack.network.quotaSet.trunk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackNetworkQuotaSet).GetTrunk()).ToDataRes(types.Int)
+	},
+	"openstack.keymanager.acl.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenstackKeymanagerAcl).GetEntries()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2305,6 +2565,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.computeServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstack).ComputeServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.aggregates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).Aggregates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.computeLimits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).ComputeLimits, ok = plugin.RawToTValue[*mqlOpenstackComputeLimits](v.Value, v.Error)
+		return
+	},
+	"openstack.blockStorageQuotaSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).BlockStorageQuotaSet, ok = plugin.RawToTValue[*mqlOpenstackBlockstorageQuotaSet](v.Value, v.Error)
+		return
+	},
+	"openstack.networkQuotaSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstack).NetworkQuotaSet, ok = plugin.RawToTValue[*mqlOpenstackNetworkQuotaSet](v.Value, v.Error)
 		return
 	},
 	"openstack.networks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2497,6 +2773,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.user.applicationCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackUser).ApplicationCredentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"openstack.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3455,6 +3735,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackImage).Owner, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
 		return
 	},
+	"openstack.image.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackImage).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"openstack.keymanager.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackKeymanagerSecret).__id, ok = v.Value.(string)
 		return
@@ -3509,6 +3793,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.keymanager.secret.creator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackKeymanagerSecret).Creator, ok = plugin.RawToTValue[*mqlOpenstackUser](v.Value, v.Error)
+		return
+	},
+	"openstack.keymanager.secret.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackKeymanagerSecret).Acl, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerAcl](v.Value, v.Error)
 		return
 	},
 	"openstack.keymanager.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3569,6 +3857,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openstack.keymanager.container.intermediates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenstackKeymanagerContainer).Intermediates, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerSecret](v.Value, v.Error)
+		return
+	},
+	"openstack.keymanager.container.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackKeymanagerContainer).Acl, ok = plugin.RawToTValue[*mqlOpenstackKeymanagerAcl](v.Value, v.Error)
 		return
 	},
 	"openstack.keymanager.order.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4983,6 +5275,302 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenstackBlockstorageBackup).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
 		return
 	},
+	"openstack.image.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackImageMember).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.image.member.memberId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackImageMember).MemberId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.image.member.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackImageMember).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.image.member.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackImageMember).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.image.member.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackImageMember).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.image.member.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackImageMember).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.image.member.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackImageMember).Image, ok = plugin.RawToTValue[*mqlOpenstackImage](v.Value, v.Error)
+		return
+	},
+	"openstack.image.member.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackImageMember).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.applicationCredential.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.unrestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).Unrestricted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.roleNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).RoleNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.accessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).AccessRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).User, ok = plugin.RawToTValue[*mqlOpenstackUser](v.Value, v.Error)
+		return
+	},
+	"openstack.applicationCredential.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackApplicationCredential).Project, ok = plugin.RawToTValue[*mqlOpenstackProject](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.aggregate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeAggregate).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.compute.aggregate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeAggregate).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.aggregate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeAggregate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.aggregate.availabilityZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeAggregate).AvailabilityZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.aggregate.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeAggregate).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.aggregate.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeAggregate).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.aggregate.hostCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeAggregate).HostCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.aggregate.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeAggregate).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.aggregate.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeAggregate).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.aggregate.deleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeAggregate).Deleted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.compute.limits.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxTotalCores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxTotalCores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.totalCoresUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).TotalCoresUsed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxTotalInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxTotalInstances, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.totalInstancesUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).TotalInstancesUsed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxTotalRAMSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxTotalRAMSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.totalRAMUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).TotalRAMUsed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxTotalKeypairs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxTotalKeypairs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxSecurityGroups, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.totalSecurityGroupsUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).TotalSecurityGroupsUsed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxSecurityGroupRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxSecurityGroupRules, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxTotalFloatingIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxTotalFloatingIps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.totalFloatingIpsUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).TotalFloatingIpsUsed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxServerGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxServerGroups, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.totalServerGroupsUsed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).TotalServerGroupsUsed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxServerGroupMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxServerGroupMembers, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxImageMeta": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxImageMeta, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxServerMeta": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxServerMeta, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxPersonality": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxPersonality, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.compute.limits.maxPersonalitySize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackComputeLimits).MaxPersonalitySize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.quotaSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQuotaSet).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.blockstorage.quotaSet.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQuotaSet).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.quotaSet.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQuotaSet).Volumes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.quotaSet.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQuotaSet).Snapshots, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.quotaSet.gigabytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQuotaSet).Gigabytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.quotaSet.perVolumeGigabytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQuotaSet).PerVolumeGigabytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.quotaSet.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQuotaSet).Backups, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.quotaSet.backupGigabytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQuotaSet).BackupGigabytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.blockstorage.quotaSet.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackBlockstorageQuotaSet).Groups, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.network.quotaSet.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).Network, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).Subnet, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.router": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).Router, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.floatingIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).FloatingIp, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.securityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).SecurityGroup, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.securityGroupRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).SecurityGroupRule, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.subnetPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).SubnetPool, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.rbacPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).RbacPolicy, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.network.quotaSet.trunk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackNetworkQuotaSet).Trunk, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openstack.keymanager.acl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackKeymanagerAcl).__id, ok = v.Value.(string)
+		return
+	},
+	"openstack.keymanager.acl.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenstackKeymanagerAcl).Entries, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -5026,6 +5614,10 @@ type mqlOpenstack struct {
 	ServerGroups            plugin.TValue[[]any]
 	Hypervisors             plugin.TValue[[]any]
 	ComputeServices         plugin.TValue[[]any]
+	Aggregates              plugin.TValue[[]any]
+	ComputeLimits           plugin.TValue[*mqlOpenstackComputeLimits]
+	BlockStorageQuotaSet    plugin.TValue[*mqlOpenstackBlockstorageQuotaSet]
+	NetworkQuotaSet         plugin.TValue[*mqlOpenstackNetworkQuotaSet]
 	Networks                plugin.TValue[[]any]
 	Subnets                 plugin.TValue[[]any]
 	Routers                 plugin.TValue[[]any]
@@ -5278,6 +5870,70 @@ func (c *mqlOpenstack) GetComputeServices() *plugin.TValue[[]any] {
 		}
 
 		return c.computeServices()
+	})
+}
+
+func (c *mqlOpenstack) GetAggregates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Aggregates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "aggregates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.aggregates()
+	})
+}
+
+func (c *mqlOpenstack) GetComputeLimits() *plugin.TValue[*mqlOpenstackComputeLimits] {
+	return plugin.GetOrCompute[*mqlOpenstackComputeLimits](&c.ComputeLimits, func() (*mqlOpenstackComputeLimits, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "computeLimits")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackComputeLimits), nil
+			}
+		}
+
+		return c.computeLimits()
+	})
+}
+
+func (c *mqlOpenstack) GetBlockStorageQuotaSet() *plugin.TValue[*mqlOpenstackBlockstorageQuotaSet] {
+	return plugin.GetOrCompute[*mqlOpenstackBlockstorageQuotaSet](&c.BlockStorageQuotaSet, func() (*mqlOpenstackBlockstorageQuotaSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "blockStorageQuotaSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackBlockstorageQuotaSet), nil
+			}
+		}
+
+		return c.blockStorageQuotaSet()
+	})
+}
+
+func (c *mqlOpenstack) GetNetworkQuotaSet() *plugin.TValue[*mqlOpenstackNetworkQuotaSet] {
+	return plugin.GetOrCompute[*mqlOpenstackNetworkQuotaSet](&c.NetworkQuotaSet, func() (*mqlOpenstackNetworkQuotaSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack", c.__id, "networkQuotaSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackNetworkQuotaSet), nil
+			}
+		}
+
+		return c.networkQuotaSet()
 	})
 }
 
@@ -5852,6 +6508,7 @@ type mqlOpenstackUser struct {
 	DefaultProject               plugin.TValue[*mqlOpenstackProject]
 	Roles                        plugin.TValue[[]any]
 	Groups                       plugin.TValue[[]any]
+	ApplicationCredentials       plugin.TValue[[]any]
 }
 
 // createOpenstackUser creates a new instance of this resource
@@ -5976,6 +6633,22 @@ func (c *mqlOpenstackUser) GetGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.groups()
+	})
+}
+
+func (c *mqlOpenstackUser) GetApplicationCredentials() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApplicationCredentials, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.user", c.__id, "applicationCredentials")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applicationCredentials()
 	})
 }
 
@@ -8120,6 +8793,7 @@ type mqlOpenstackImage struct {
 	CreatedAt        plugin.TValue[*time.Time]
 	UpdatedAt        plugin.TValue[*time.Time]
 	Owner            plugin.TValue[*mqlOpenstackProject]
+	Members          plugin.TValue[[]any]
 }
 
 // createOpenstackImage creates a new instance of this resource
@@ -8247,6 +8921,22 @@ func (c *mqlOpenstackImage) GetOwner() *plugin.TValue[*mqlOpenstackProject] {
 	})
 }
 
+func (c *mqlOpenstackImage) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.image", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
 // mqlOpenstackKeymanagerSecret for the openstack.keymanager.secret resource
 type mqlOpenstackKeymanagerSecret struct {
 	MqlRuntime *plugin.Runtime
@@ -8265,6 +8955,7 @@ type mqlOpenstackKeymanagerSecret struct {
 	CreatedAt    plugin.TValue[*time.Time]
 	UpdatedAt    plugin.TValue[*time.Time]
 	Creator      plugin.TValue[*mqlOpenstackUser]
+	Acl          plugin.TValue[*mqlOpenstackKeymanagerAcl]
 }
 
 // createOpenstackKeymanagerSecret creates a new instance of this resource
@@ -8368,6 +9059,22 @@ func (c *mqlOpenstackKeymanagerSecret) GetCreator() *plugin.TValue[*mqlOpenstack
 	})
 }
 
+func (c *mqlOpenstackKeymanagerSecret) GetAcl() *plugin.TValue[*mqlOpenstackKeymanagerAcl] {
+	return plugin.GetOrCompute[*mqlOpenstackKeymanagerAcl](&c.Acl, func() (*mqlOpenstackKeymanagerAcl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.keymanager.secret", c.__id, "acl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackKeymanagerAcl), nil
+			}
+		}
+
+		return c.acl()
+	})
+}
+
 // mqlOpenstackKeymanagerContainer for the openstack.keymanager.container resource
 type mqlOpenstackKeymanagerContainer struct {
 	MqlRuntime *plugin.Runtime
@@ -8387,6 +9094,7 @@ type mqlOpenstackKeymanagerContainer struct {
 	Certificate   plugin.TValue[*mqlOpenstackKeymanagerSecret]
 	PrivateKey    plugin.TValue[*mqlOpenstackKeymanagerSecret]
 	Intermediates plugin.TValue[*mqlOpenstackKeymanagerSecret]
+	Acl           plugin.TValue[*mqlOpenstackKeymanagerAcl]
 }
 
 // createOpenstackKeymanagerContainer creates a new instance of this resource
@@ -8539,6 +9247,22 @@ func (c *mqlOpenstackKeymanagerContainer) GetIntermediates() *plugin.TValue[*mql
 		}
 
 		return c.intermediates()
+	})
+}
+
+func (c *mqlOpenstackKeymanagerContainer) GetAcl() *plugin.TValue[*mqlOpenstackKeymanagerAcl] {
+	return plugin.GetOrCompute[*mqlOpenstackKeymanagerAcl](&c.Acl, func() (*mqlOpenstackKeymanagerAcl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.keymanager.container", c.__id, "acl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackKeymanagerAcl), nil
+			}
+		}
+
+		return c.acl()
 	})
 }
 
@@ -11922,4 +12646,695 @@ func (c *mqlOpenstackBlockstorageBackup) GetProject() *plugin.TValue[*mqlOpensta
 
 		return c.project()
 	})
+}
+
+// mqlOpenstackImageMember for the openstack.image.member resource
+type mqlOpenstackImageMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackImageMemberInternal it will be used here
+	MemberId  plugin.TValue[string]
+	ImageId   plugin.TValue[string]
+	Status    plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+	Image     plugin.TValue[*mqlOpenstackImage]
+	Project   plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackImageMember creates a new instance of this resource
+func createOpenstackImageMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackImageMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.image.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackImageMember) MqlName() string {
+	return "openstack.image.member"
+}
+
+func (c *mqlOpenstackImageMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackImageMember) GetMemberId() *plugin.TValue[string] {
+	return &c.MemberId
+}
+
+func (c *mqlOpenstackImageMember) GetImageId() *plugin.TValue[string] {
+	return &c.ImageId
+}
+
+func (c *mqlOpenstackImageMember) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOpenstackImageMember) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackImageMember) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackImageMember) GetImage() *plugin.TValue[*mqlOpenstackImage] {
+	return plugin.GetOrCompute[*mqlOpenstackImage](&c.Image, func() (*mqlOpenstackImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.image.member", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackImage), nil
+			}
+		}
+
+		return c.image()
+	})
+}
+
+func (c *mqlOpenstackImageMember) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.image.member", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackApplicationCredential for the openstack.applicationCredential resource
+type mqlOpenstackApplicationCredential struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackApplicationCredentialInternal
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Description  plugin.TValue[string]
+	Unrestricted plugin.TValue[bool]
+	UserId       plugin.TValue[string]
+	ProjectId    plugin.TValue[string]
+	RoleNames    plugin.TValue[[]any]
+	AccessRules  plugin.TValue[[]any]
+	ExpiresAt    plugin.TValue[*time.Time]
+	User         plugin.TValue[*mqlOpenstackUser]
+	Project      plugin.TValue[*mqlOpenstackProject]
+}
+
+// createOpenstackApplicationCredential creates a new instance of this resource
+func createOpenstackApplicationCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackApplicationCredential{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.applicationCredential", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackApplicationCredential) MqlName() string {
+	return "openstack.applicationCredential"
+}
+
+func (c *mqlOpenstackApplicationCredential) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackApplicationCredential) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackApplicationCredential) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackApplicationCredential) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOpenstackApplicationCredential) GetUnrestricted() *plugin.TValue[bool] {
+	return &c.Unrestricted
+}
+
+func (c *mqlOpenstackApplicationCredential) GetUserId() *plugin.TValue[string] {
+	return &c.UserId
+}
+
+func (c *mqlOpenstackApplicationCredential) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackApplicationCredential) GetRoleNames() *plugin.TValue[[]any] {
+	return &c.RoleNames
+}
+
+func (c *mqlOpenstackApplicationCredential) GetAccessRules() *plugin.TValue[[]any] {
+	return &c.AccessRules
+}
+
+func (c *mqlOpenstackApplicationCredential) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+func (c *mqlOpenstackApplicationCredential) GetUser() *plugin.TValue[*mqlOpenstackUser] {
+	return plugin.GetOrCompute[*mqlOpenstackUser](&c.User, func() (*mqlOpenstackUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.applicationCredential", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+func (c *mqlOpenstackApplicationCredential) GetProject() *plugin.TValue[*mqlOpenstackProject] {
+	return plugin.GetOrCompute[*mqlOpenstackProject](&c.Project, func() (*mqlOpenstackProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openstack.applicationCredential", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOpenstackProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlOpenstackComputeAggregate for the openstack.compute.aggregate resource
+type mqlOpenstackComputeAggregate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackComputeAggregateInternal it will be used here
+	Id               plugin.TValue[int64]
+	Name             plugin.TValue[string]
+	AvailabilityZone plugin.TValue[string]
+	Hosts            plugin.TValue[[]any]
+	Metadata         plugin.TValue[map[string]any]
+	HostCount        plugin.TValue[int64]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+	Deleted          plugin.TValue[bool]
+}
+
+// createOpenstackComputeAggregate creates a new instance of this resource
+func createOpenstackComputeAggregate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackComputeAggregate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.compute.aggregate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackComputeAggregate) MqlName() string {
+	return "openstack.compute.aggregate"
+}
+
+func (c *mqlOpenstackComputeAggregate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackComputeAggregate) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlOpenstackComputeAggregate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenstackComputeAggregate) GetAvailabilityZone() *plugin.TValue[string] {
+	return &c.AvailabilityZone
+}
+
+func (c *mqlOpenstackComputeAggregate) GetHosts() *plugin.TValue[[]any] {
+	return &c.Hosts
+}
+
+func (c *mqlOpenstackComputeAggregate) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlOpenstackComputeAggregate) GetHostCount() *plugin.TValue[int64] {
+	return &c.HostCount
+}
+
+func (c *mqlOpenstackComputeAggregate) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlOpenstackComputeAggregate) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlOpenstackComputeAggregate) GetDeleted() *plugin.TValue[bool] {
+	return &c.Deleted
+}
+
+// mqlOpenstackComputeLimits for the openstack.compute.limits resource
+type mqlOpenstackComputeLimits struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackComputeLimitsInternal it will be used here
+	ProjectId               plugin.TValue[string]
+	MaxTotalCores           plugin.TValue[int64]
+	TotalCoresUsed          plugin.TValue[int64]
+	MaxTotalInstances       plugin.TValue[int64]
+	TotalInstancesUsed      plugin.TValue[int64]
+	MaxTotalRAMSize         plugin.TValue[int64]
+	TotalRAMUsed            plugin.TValue[int64]
+	MaxTotalKeypairs        plugin.TValue[int64]
+	MaxSecurityGroups       plugin.TValue[int64]
+	TotalSecurityGroupsUsed plugin.TValue[int64]
+	MaxSecurityGroupRules   plugin.TValue[int64]
+	MaxTotalFloatingIps     plugin.TValue[int64]
+	TotalFloatingIpsUsed    plugin.TValue[int64]
+	MaxServerGroups         plugin.TValue[int64]
+	TotalServerGroupsUsed   plugin.TValue[int64]
+	MaxServerGroupMembers   plugin.TValue[int64]
+	MaxImageMeta            plugin.TValue[int64]
+	MaxServerMeta           plugin.TValue[int64]
+	MaxPersonality          plugin.TValue[int64]
+	MaxPersonalitySize      plugin.TValue[int64]
+}
+
+// createOpenstackComputeLimits creates a new instance of this resource
+func createOpenstackComputeLimits(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackComputeLimits{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.compute.limits", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackComputeLimits) MqlName() string {
+	return "openstack.compute.limits"
+}
+
+func (c *mqlOpenstackComputeLimits) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackComputeLimits) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxTotalCores() *plugin.TValue[int64] {
+	return &c.MaxTotalCores
+}
+
+func (c *mqlOpenstackComputeLimits) GetTotalCoresUsed() *plugin.TValue[int64] {
+	return &c.TotalCoresUsed
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxTotalInstances() *plugin.TValue[int64] {
+	return &c.MaxTotalInstances
+}
+
+func (c *mqlOpenstackComputeLimits) GetTotalInstancesUsed() *plugin.TValue[int64] {
+	return &c.TotalInstancesUsed
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxTotalRAMSize() *plugin.TValue[int64] {
+	return &c.MaxTotalRAMSize
+}
+
+func (c *mqlOpenstackComputeLimits) GetTotalRAMUsed() *plugin.TValue[int64] {
+	return &c.TotalRAMUsed
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxTotalKeypairs() *plugin.TValue[int64] {
+	return &c.MaxTotalKeypairs
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxSecurityGroups() *plugin.TValue[int64] {
+	return &c.MaxSecurityGroups
+}
+
+func (c *mqlOpenstackComputeLimits) GetTotalSecurityGroupsUsed() *plugin.TValue[int64] {
+	return &c.TotalSecurityGroupsUsed
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxSecurityGroupRules() *plugin.TValue[int64] {
+	return &c.MaxSecurityGroupRules
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxTotalFloatingIps() *plugin.TValue[int64] {
+	return &c.MaxTotalFloatingIps
+}
+
+func (c *mqlOpenstackComputeLimits) GetTotalFloatingIpsUsed() *plugin.TValue[int64] {
+	return &c.TotalFloatingIpsUsed
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxServerGroups() *plugin.TValue[int64] {
+	return &c.MaxServerGroups
+}
+
+func (c *mqlOpenstackComputeLimits) GetTotalServerGroupsUsed() *plugin.TValue[int64] {
+	return &c.TotalServerGroupsUsed
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxServerGroupMembers() *plugin.TValue[int64] {
+	return &c.MaxServerGroupMembers
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxImageMeta() *plugin.TValue[int64] {
+	return &c.MaxImageMeta
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxServerMeta() *plugin.TValue[int64] {
+	return &c.MaxServerMeta
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxPersonality() *plugin.TValue[int64] {
+	return &c.MaxPersonality
+}
+
+func (c *mqlOpenstackComputeLimits) GetMaxPersonalitySize() *plugin.TValue[int64] {
+	return &c.MaxPersonalitySize
+}
+
+// mqlOpenstackBlockstorageQuotaSet for the openstack.blockstorage.quotaSet resource
+type mqlOpenstackBlockstorageQuotaSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackBlockstorageQuotaSetInternal it will be used here
+	ProjectId          plugin.TValue[string]
+	Volumes            plugin.TValue[int64]
+	Snapshots          plugin.TValue[int64]
+	Gigabytes          plugin.TValue[int64]
+	PerVolumeGigabytes plugin.TValue[int64]
+	Backups            plugin.TValue[int64]
+	BackupGigabytes    plugin.TValue[int64]
+	Groups             plugin.TValue[int64]
+}
+
+// createOpenstackBlockstorageQuotaSet creates a new instance of this resource
+func createOpenstackBlockstorageQuotaSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackBlockstorageQuotaSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.blockstorage.quotaSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackBlockstorageQuotaSet) MqlName() string {
+	return "openstack.blockstorage.quotaSet"
+}
+
+func (c *mqlOpenstackBlockstorageQuotaSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackBlockstorageQuotaSet) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackBlockstorageQuotaSet) GetVolumes() *plugin.TValue[int64] {
+	return &c.Volumes
+}
+
+func (c *mqlOpenstackBlockstorageQuotaSet) GetSnapshots() *plugin.TValue[int64] {
+	return &c.Snapshots
+}
+
+func (c *mqlOpenstackBlockstorageQuotaSet) GetGigabytes() *plugin.TValue[int64] {
+	return &c.Gigabytes
+}
+
+func (c *mqlOpenstackBlockstorageQuotaSet) GetPerVolumeGigabytes() *plugin.TValue[int64] {
+	return &c.PerVolumeGigabytes
+}
+
+func (c *mqlOpenstackBlockstorageQuotaSet) GetBackups() *plugin.TValue[int64] {
+	return &c.Backups
+}
+
+func (c *mqlOpenstackBlockstorageQuotaSet) GetBackupGigabytes() *plugin.TValue[int64] {
+	return &c.BackupGigabytes
+}
+
+func (c *mqlOpenstackBlockstorageQuotaSet) GetGroups() *plugin.TValue[int64] {
+	return &c.Groups
+}
+
+// mqlOpenstackNetworkQuotaSet for the openstack.network.quotaSet resource
+type mqlOpenstackNetworkQuotaSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOpenstackNetworkQuotaSetInternal it will be used here
+	ProjectId         plugin.TValue[string]
+	Network           plugin.TValue[int64]
+	Subnet            plugin.TValue[int64]
+	Port              plugin.TValue[int64]
+	Router            plugin.TValue[int64]
+	FloatingIp        plugin.TValue[int64]
+	SecurityGroup     plugin.TValue[int64]
+	SecurityGroupRule plugin.TValue[int64]
+	SubnetPool        plugin.TValue[int64]
+	RbacPolicy        plugin.TValue[int64]
+	Trunk             plugin.TValue[int64]
+}
+
+// createOpenstackNetworkQuotaSet creates a new instance of this resource
+func createOpenstackNetworkQuotaSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackNetworkQuotaSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.network.quotaSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) MqlName() string {
+	return "openstack.network.quotaSet"
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetNetwork() *plugin.TValue[int64] {
+	return &c.Network
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetSubnet() *plugin.TValue[int64] {
+	return &c.Subnet
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetRouter() *plugin.TValue[int64] {
+	return &c.Router
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetFloatingIp() *plugin.TValue[int64] {
+	return &c.FloatingIp
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetSecurityGroup() *plugin.TValue[int64] {
+	return &c.SecurityGroup
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetSecurityGroupRule() *plugin.TValue[int64] {
+	return &c.SecurityGroupRule
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetSubnetPool() *plugin.TValue[int64] {
+	return &c.SubnetPool
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetRbacPolicy() *plugin.TValue[int64] {
+	return &c.RbacPolicy
+}
+
+func (c *mqlOpenstackNetworkQuotaSet) GetTrunk() *plugin.TValue[int64] {
+	return &c.Trunk
+}
+
+// mqlOpenstackKeymanagerAcl for the openstack.keymanager.acl resource
+type mqlOpenstackKeymanagerAcl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOpenstackKeymanagerAclInternal
+	Entries plugin.TValue[any]
+}
+
+// createOpenstackKeymanagerAcl creates a new instance of this resource
+func createOpenstackKeymanagerAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenstackKeymanagerAcl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openstack.keymanager.acl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenstackKeymanagerAcl) MqlName() string {
+	return "openstack.keymanager.acl"
+}
+
+func (c *mqlOpenstackKeymanagerAcl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenstackKeymanagerAcl) GetEntries() *plugin.TValue[any] {
+	return &c.Entries
 }

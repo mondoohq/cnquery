@@ -6,6 +6,7 @@ package resources
 import (
 	"strings"
 
+	"github.com/gophercloud/gophercloud/v2/openstack/keymanager/v1/acls"
 	"github.com/gophercloud/gophercloud/v2/openstack/keymanager/v1/containers"
 	"github.com/gophercloud/gophercloud/v2/openstack/keymanager/v1/orders"
 	"github.com/gophercloud/gophercloud/v2/openstack/keymanager/v1/secrets"
@@ -439,4 +440,81 @@ func orderMetaToDict(m orders.Meta) map[string]any {
 		out["expiration"] = m.Expiration
 	}
 	return out
+}
+
+// ---- openstack.keymanager.acl ----
+
+func (r *mqlOpenstackKeymanagerSecret) acl() (*mqlOpenstackKeymanagerAcl, error) {
+	return loadKeymanagerACL(r.MqlRuntime, "secret", r.Id.Data, &r.Acl)
+}
+
+func (r *mqlOpenstackKeymanagerContainer) acl() (*mqlOpenstackKeymanagerAcl, error) {
+	return loadKeymanagerACL(r.MqlRuntime, "container", r.Id.Data, &r.Acl)
+}
+
+type mqlOpenstackKeymanagerAclInternal struct {
+	synthId string
+}
+
+func (r *mqlOpenstackKeymanagerAcl) id() (string, error) {
+	return r.synthId, nil
+}
+
+func loadKeymanagerACL(runtime *plugin.Runtime, kind, id string, field *plugin.TValue[*mqlOpenstackKeymanagerAcl]) (*mqlOpenstackKeymanagerAcl, error) {
+	if id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.KeyManagerClient()
+	if err != nil {
+		return nil, err
+	}
+	var raw *acls.ACL
+	switch kind {
+	case "secret":
+		raw, err = acls.GetSecretACL(ctx(), client, id).Extract()
+	case "container":
+		raw, err = acls.GetContainerACL(ctx(), client, id).Extract()
+	}
+	if err != nil {
+		if translateGetError(err) == nil {
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	if raw == nil || len(*raw) == 0 {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	entries := map[string]any{}
+	for op, details := range *raw {
+		users := make([]any, len(details.Users))
+		for i, u := range details.Users {
+			users[i] = u
+		}
+		entry := map[string]any{
+			"users":          users,
+			"project_access": details.ProjectAccess,
+		}
+		if !details.Created.IsZero() {
+			entry["created"] = details.Created
+		}
+		if !details.Updated.IsZero() {
+			entry["updated"] = details.Updated
+		}
+		entries[op] = entry
+	}
+	synth := "openstack.keymanager.acl/" + kind + "/" + id
+	res, err := CreateResource(runtime, "openstack.keymanager.acl", map[string]*llx.RawData{
+		"__id":    llx.StringData(synth),
+		"entries": llx.DictData(entries),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlAcl := res.(*mqlOpenstackKeymanagerAcl)
+	mqlAcl.synthId = synth
+	return mqlAcl, nil
 }

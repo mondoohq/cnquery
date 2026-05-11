@@ -6,11 +6,14 @@ package resources
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"sync"
 
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/aggregates"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/hypervisors"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/keypairs"
+	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/limits"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servergroups"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/services"
@@ -806,4 +809,117 @@ func (o *mqlOpenstack) computeServices() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// ---- openstack.compute.aggregate ----
+
+func (r *mqlOpenstackComputeAggregate) id() (string, error) {
+	return "openstack.compute.aggregate/" + strconv.FormatInt(r.Id.Data, 10), nil
+}
+
+func initOpenstackComputeAggregate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	idRaw, ok := args["id"]
+	if !ok || idRaw == nil {
+		return args, nil, nil
+	}
+	idVal, ok := idRaw.Value.(int64)
+	if !ok || idVal == 0 {
+		return args, nil, nil
+	}
+	if _, ok := args["__id"]; !ok {
+		args["__id"] = llx.StringData("openstack.compute.aggregate/" + strconv.FormatInt(idVal, 10))
+	}
+	return args, nil, nil
+}
+
+func (o *mqlOpenstack) aggregates() ([]any, error) {
+	c := conn(o.MqlRuntime)
+	client, err := c.ComputeClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := aggregates.List(client).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := aggregates.ExtractAggregates(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for _, a := range items {
+		res, err := CreateResource(o.MqlRuntime, "openstack.compute.aggregate", map[string]*llx.RawData{
+			"__id":             llx.StringData("openstack.compute.aggregate/" + strconv.Itoa(a.ID)),
+			"id":               llx.IntData(int64(a.ID)),
+			"name":             llx.StringData(a.Name),
+			"availabilityZone": llx.StringData(a.AvailabilityZone),
+			"hosts":            stringSliceData(a.Hosts),
+			"metadata":         stringMapData(a.Metadata),
+			"hostCount":        llx.IntData(int64(len(a.Hosts))),
+			"createdAt":        llx.TimeDataPtr(timePtr(a.CreatedAt)),
+			"updatedAt":        llx.TimeDataPtr(timePtr(a.UpdatedAt)),
+			"deleted":          llx.BoolData(a.Deleted),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// ---- openstack.compute.limits ----
+
+func (r *mqlOpenstackComputeLimits) id() (string, error) {
+	return "openstack.compute.limits/" + r.ProjectId.Data, nil
+}
+
+func (o *mqlOpenstack) computeLimits() (*mqlOpenstackComputeLimits, error) {
+	c := conn(o.MqlRuntime)
+	client, err := c.ComputeClient()
+	if err != nil {
+		o.ComputeLimits.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	lim, err := limits.Get(ctx(), client, nil).Extract()
+	if err != nil {
+		if translateGetError(err) == nil {
+			o.ComputeLimits.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	abs := lim.Absolute
+	projectId := c.ProjectID()
+	res, err := CreateResource(o.MqlRuntime, "openstack.compute.limits", map[string]*llx.RawData{
+		"__id":                    llx.StringData("openstack.compute.limits/" + projectId),
+		"projectId":               llx.StringData(projectId),
+		"maxTotalCores":           llx.IntData(int64(abs.MaxTotalCores)),
+		"totalCoresUsed":          llx.IntData(int64(abs.TotalCoresUsed)),
+		"maxTotalInstances":       llx.IntData(int64(abs.MaxTotalInstances)),
+		"totalInstancesUsed":      llx.IntData(int64(abs.TotalInstancesUsed)),
+		"maxTotalRAMSize":         llx.IntData(int64(abs.MaxTotalRAMSize)),
+		"totalRAMUsed":            llx.IntData(int64(abs.TotalRAMUsed)),
+		"maxTotalKeypairs":        llx.IntData(int64(abs.MaxTotalKeypairs)),
+		"maxSecurityGroups":       llx.IntData(int64(abs.MaxSecurityGroups)),
+		"totalSecurityGroupsUsed": llx.IntData(int64(abs.TotalSecurityGroupsUsed)),
+		"maxSecurityGroupRules":   llx.IntData(int64(abs.MaxSecurityGroupRules)),
+		"maxTotalFloatingIps":     llx.IntData(int64(abs.MaxTotalFloatingIps)),
+		"totalFloatingIpsUsed":    llx.IntData(int64(abs.TotalFloatingIpsUsed)),
+		"maxServerGroups":         llx.IntData(int64(abs.MaxServerGroups)),
+		"totalServerGroupsUsed":   llx.IntData(int64(abs.TotalServerGroupsUsed)),
+		"maxServerGroupMembers":   llx.IntData(int64(abs.MaxServerGroupMembers)),
+		"maxImageMeta":            llx.IntData(int64(abs.MaxImageMeta)),
+		"maxServerMeta":           llx.IntData(int64(abs.MaxServerMeta)),
+		"maxPersonality":          llx.IntData(int64(abs.MaxPersonality)),
+		"maxPersonalitySize":      llx.IntData(int64(abs.MaxPersonalitySize)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackComputeLimits), nil
 }

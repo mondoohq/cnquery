@@ -5,6 +5,7 @@ package resources
 
 import (
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
+	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/members"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
@@ -100,6 +101,88 @@ func (r *mqlOpenstackImage) owner() (*mqlOpenstackProject, error) {
 	}
 	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
 		"id": llx.StringData(r.cacheOwnerID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackProject), nil
+}
+
+func (r *mqlOpenstackImage) members() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.ImageClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := members.List(client, r.Id.Data).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := members.ExtractMembers(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for _, m := range items {
+		res, err := CreateResource(r.MqlRuntime, "openstack.image.member", map[string]*llx.RawData{
+			"__id":      llx.StringData("openstack.image.member/" + m.ImageID + "/" + m.MemberID),
+			"memberId":  llx.StringData(m.MemberID),
+			"imageId":   llx.StringData(m.ImageID),
+			"status":    llx.StringData(m.Status),
+			"createdAt": llx.TimeDataPtr(timePtr(m.CreatedAt)),
+			"updatedAt": llx.TimeDataPtr(timePtr(m.UpdatedAt)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// ---- openstack.image.member ----
+
+func (r *mqlOpenstackImageMember) id() (string, error) {
+	return "openstack.image.member/" + r.ImageId.Data + "/" + r.MemberId.Data, nil
+}
+
+func initOpenstackImageMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	imageId, _ := stringArg(args, "imageId")
+	memberId, _ := stringArg(args, "memberId")
+	if imageId == "" || memberId == "" {
+		return args, nil, nil
+	}
+	if _, ok := args["__id"]; !ok {
+		args["__id"] = llx.StringData("openstack.image.member/" + imageId + "/" + memberId)
+	}
+	return args, nil, nil
+}
+
+func (r *mqlOpenstackImageMember) image() (*mqlOpenstackImage, error) {
+	if r.ImageId.Data == "" {
+		r.Image.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.image", map[string]*llx.RawData{
+		"id": llx.StringData(r.ImageId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackImage), nil
+}
+
+func (r *mqlOpenstackImageMember) project() (*mqlOpenstackProject, error) {
+	if r.MemberId.Data == "" {
+		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
+		"id": llx.StringData(r.MemberId.Data),
 	})
 	if err != nil {
 		return nil, err

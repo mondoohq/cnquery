@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/applicationcredentials"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/domains"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/projects"
@@ -606,4 +607,108 @@ func (r *mqlOpenstackUser) groups() ([]any, error) {
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// ---- openstack.applicationCredential ----
+
+type mqlOpenstackApplicationCredentialInternal struct {
+	cacheUserID    string
+	cacheProjectID string
+}
+
+func (r *mqlOpenstackApplicationCredential) id() (string, error) {
+	return "openstack.applicationCredential/" + r.Id.Data, nil
+}
+
+func initOpenstackApplicationCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := stringArg(args, "id")
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	initSyntheticID("openstack.applicationCredential", "id", args)
+	return args, nil, nil
+}
+
+func (r *mqlOpenstackUser) applicationCredentials() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+	pages, err := applicationcredentials.List(client, r.Id.Data, nil).AllPages(ctx())
+	if err != nil {
+		if translateOpenstackError(err) == nil {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, err := applicationcredentials.ExtractApplicationCredentials(pages)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]any, 0, len(items))
+	for _, ac := range items {
+		roleNames := make([]string, 0, len(ac.Roles))
+		for _, role := range ac.Roles {
+			roleNames = append(roleNames, role.Name)
+		}
+		rules := make([]any, 0, len(ac.AccessRules))
+		for _, rule := range ac.AccessRules {
+			rules = append(rules, map[string]any{
+				"id":      rule.ID,
+				"service": rule.Service,
+				"method":  rule.Method,
+				"path":    rule.Path,
+			})
+		}
+		res, err := CreateResource(r.MqlRuntime, "openstack.applicationCredential", map[string]*llx.RawData{
+			"__id":         llx.StringData("openstack.applicationCredential/" + ac.ID),
+			"id":           llx.StringData(ac.ID),
+			"name":         llx.StringData(ac.Name),
+			"description":  llx.StringData(ac.Description),
+			"unrestricted": llx.BoolData(ac.Unrestricted),
+			"userId":       llx.StringData(r.Id.Data),
+			"projectId":    llx.StringData(ac.ProjectID),
+			"roleNames":    stringSliceData(roleNames),
+			"accessRules":  dictSliceData(rules),
+			"expiresAt":    llx.TimeDataPtr(timePtr(ac.ExpiresAt)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlAC := res.(*mqlOpenstackApplicationCredential)
+		mqlAC.cacheUserID = r.Id.Data
+		mqlAC.cacheProjectID = ac.ProjectID
+		out = append(out, mqlAC)
+	}
+	return out, nil
+}
+
+func (r *mqlOpenstackApplicationCredential) user() (*mqlOpenstackUser, error) {
+	if r.cacheUserID == "" {
+		r.User.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.user", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheUserID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackUser), nil
+}
+
+func (r *mqlOpenstackApplicationCredential) project() (*mqlOpenstackProject, error) {
+	if r.cacheProjectID == "" {
+		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.project", map[string]*llx.RawData{
+		"id": llx.StringData(r.cacheProjectID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackProject), nil
 }

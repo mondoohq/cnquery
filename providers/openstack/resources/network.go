@@ -11,6 +11,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/mtu"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/portsecurity"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/provider"
+	neutronquotas "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/quotas"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/security/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/ports"
@@ -837,4 +838,46 @@ func lookupSecurityGroupIDByName(c *connection.OpenstackConnection, client *goph
 	}
 
 	return c.SGNameCache[name], nil
+}
+
+// ---- openstack.network.quotaSet ----
+
+func (r *mqlOpenstackNetworkQuotaSet) id() (string, error) {
+	return "openstack.network.quotaSet/" + r.ProjectId.Data, nil
+}
+
+func (o *mqlOpenstack) networkQuotaSet() (*mqlOpenstackNetworkQuotaSet, error) {
+	c := conn(o.MqlRuntime)
+	client, err := c.NetworkClient()
+	if err != nil {
+		o.NetworkQuotaSet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	projectId := c.ProjectID()
+	q, err := neutronquotas.Get(ctx(), client, projectId).Extract()
+	if err != nil {
+		if translateGetError(err) == nil {
+			o.NetworkQuotaSet.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	res, err := CreateResource(o.MqlRuntime, "openstack.network.quotaSet", map[string]*llx.RawData{
+		"__id":              llx.StringData("openstack.network.quotaSet/" + projectId),
+		"projectId":         llx.StringData(projectId),
+		"network":           llx.IntData(int64(q.Network)),
+		"subnet":            llx.IntData(int64(q.Subnet)),
+		"port":              llx.IntData(int64(q.Port)),
+		"router":            llx.IntData(int64(q.Router)),
+		"floatingIp":        llx.IntData(int64(q.FloatingIP)),
+		"securityGroup":     llx.IntData(int64(q.SecurityGroup)),
+		"securityGroupRule": llx.IntData(int64(q.SecurityGroupRule)),
+		"subnetPool":        llx.IntData(int64(q.SubnetPool)),
+		"rbacPolicy":        llx.IntData(int64(q.RBACPolicy)),
+		"trunk":             llx.IntData(int64(q.Trunk)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackNetworkQuotaSet), nil
 }

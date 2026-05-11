@@ -10,6 +10,7 @@ import (
 
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/backups"
+	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/quotasets"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/snapshots"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumetypes"
@@ -708,4 +709,43 @@ func (r *mqlOpenstackBlockstorageBackup) project() (*mqlOpenstackProject, error)
 		return nil, err
 	}
 	return res.(*mqlOpenstackProject), nil
+}
+
+// ---- openstack.blockstorage.quotaSet ----
+
+func (r *mqlOpenstackBlockstorageQuotaSet) id() (string, error) {
+	return "openstack.blockstorage.quotaSet/" + r.ProjectId.Data, nil
+}
+
+func (o *mqlOpenstack) blockStorageQuotaSet() (*mqlOpenstackBlockstorageQuotaSet, error) {
+	c := conn(o.MqlRuntime)
+	client, err := c.BlockStorageClient()
+	if err != nil {
+		o.BlockStorageQuotaSet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	projectId := c.ProjectID()
+	q, err := quotasets.Get(ctx(), client, projectId).Extract()
+	if err != nil {
+		if translateGetError(err) == nil {
+			o.BlockStorageQuotaSet.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	res, err := CreateResource(o.MqlRuntime, "openstack.blockstorage.quotaSet", map[string]*llx.RawData{
+		"__id":               llx.StringData("openstack.blockstorage.quotaSet/" + projectId),
+		"projectId":          llx.StringData(projectId),
+		"volumes":            llx.IntData(int64(q.Volumes)),
+		"snapshots":          llx.IntData(int64(q.Snapshots)),
+		"gigabytes":          llx.IntData(int64(q.Gigabytes)),
+		"perVolumeGigabytes": llx.IntData(int64(q.PerVolumeGigabytes)),
+		"backups":            llx.IntData(int64(q.Backups)),
+		"backupGigabytes":    llx.IntData(int64(q.BackupGigabytes)),
+		"groups":             llx.IntData(int64(q.Groups)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackBlockstorageQuotaSet), nil
 }

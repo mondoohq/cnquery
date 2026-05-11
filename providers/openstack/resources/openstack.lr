@@ -36,6 +36,14 @@ openstack {
   hypervisors() []openstack.compute.hypervisor
   // Nova compute services (admin-only)
   computeServices() []openstack.compute.service
+  // Nova host aggregates (admin-only)
+  aggregates() []openstack.compute.aggregate
+  // Per-project Nova resource limits and current usage
+  computeLimits() openstack.compute.limits
+  // Per-project Cinder quota
+  blockStorageQuotaSet() openstack.blockstorage.quotaSet
+  // Per-project Neutron quota
+  networkQuotaSet() openstack.network.quotaSet
 
   // Neutron networks
   networks() []openstack.network
@@ -142,6 +150,8 @@ private openstack.user @defaults("id name enabled") {
   roles() []openstack.role
   // Groups this user belongs to
   groups() []openstack.group
+  // Application credentials owned by this user
+  applicationCredentials() []openstack.applicationCredential
 }
 
 // OpenStack Keystone role
@@ -669,6 +679,8 @@ private openstack.image @defaults("id name status visibility") {
   updatedAt time
   // Project that owns the image
   owner() openstack.project
+  // Sharing members for this image (projects the image has been shared with). Returns empty for community/public images and for non-shared private images.
+  members() []openstack.image.member
 }
 
 // OpenStack Barbican secret. The `payload` (raw secret material) is intentionally not exposed.
@@ -700,6 +712,8 @@ private openstack.keymanager.secret @defaults("id name secretType status") {
   updatedAt time
   // User that created this secret; null when the API does not return a creator
   creator() openstack.user
+  // Access control list for this secret; null when no ACL is set
+  acl() openstack.keymanager.acl
 }
 
 // OpenStack Barbican secret container. Bundles secrets together; certificate-typed containers are what Octavia listeners reference for TLS termination.
@@ -733,6 +747,8 @@ private openstack.keymanager.container @defaults("id name type status") {
   privateKey() openstack.keymanager.secret
   // Intermediate CA bundle; only set on certificate-typed containers that include intermediates
   intermediates() openstack.keymanager.secret
+  // Access control list for this container; null when no ACL is set
+  acl() openstack.keymanager.acl
 }
 
 // OpenStack Barbican secret-generation order
@@ -1505,4 +1521,169 @@ private openstack.blockstorage.backup @defaults("id name status size createdAt")
   sourceSnapshot() openstack.blockstorage.snapshot
   // Project that owns this backup
   project() openstack.project
+}
+
+// OpenStack Glance image-sharing member. One entry per project the image has been shared with.
+private openstack.image.member @defaults("memberId imageId status") {
+  init(imageId? string, memberId? string)
+  // Member ID (project UUID the image is shared with)
+  memberId string
+  // Image ID (image being shared)
+  imageId string
+  // Member status (pending, accepted, rejected)
+  status string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Image being shared
+  image() openstack.image
+  // Project the image has been shared with
+  project() openstack.project
+}
+
+// OpenStack Keystone application credential. Long-lived authentication credential for service principals (often used by automation), scoped to a single project with a subset of the owning user's roles.
+private openstack.applicationCredential @defaults("id name unrestricted expiresAt") {
+  init(id? string)
+  // Application credential ID (UUID)
+  id string
+  // Credential name (human-readable label, unique per owning user)
+  name string
+  // Description
+  description string
+  // Whether the credential can use restricted operations (creating other credentials or trusts). Unrestricted credentials are equivalent to long-lived tokens for the scoped roles and should be reviewed closely.
+  unrestricted bool
+  // Owning user ID
+  userId string
+  // Project the credential is scoped to
+  projectId string
+  // Role names this credential is allowed to assume (subset of the owning user's roles)
+  roleNames []string
+  // Access rules ([{id, service, method, path}]) limiting which API endpoints this credential can call; empty means all endpoints the granted roles allow
+  accessRules []dict
+  // Expiration timestamp; null when the credential never expires
+  expiresAt time
+  // Owning user
+  user() openstack.user
+  // Project the credential is scoped to
+  project() openstack.project
+}
+
+// OpenStack Nova host aggregate. Admin-defined grouping of compute hosts, commonly used as a building block for availability zones or to expose pinned scheduling capabilities.
+private openstack.compute.aggregate @defaults("id name availabilityZone hostCount") {
+  init(id? int)
+  // Aggregate ID (Nova-assigned integer)
+  id int
+  // Aggregate name
+  name string
+  // Availability zone this aggregate defines; empty when the aggregate is not zone-defining
+  availabilityZone string
+  // Hostnames of compute hosts in this aggregate
+  hosts []string
+  // Free-form aggregate metadata (e.g. `pinned=true`, `filter_tenant_id=...`)
+  metadata map[string]string
+  // Number of hosts in the aggregate (matches hosts.length)
+  hostCount int
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // Whether the aggregate has been soft-deleted
+  deleted bool
+}
+
+// OpenStack Nova compute limits and usage for the scoped project. Reports both the configured maximum (`max*`) and the current usage (`*Used`) for each tracked resource. Limits without a usage counter are admin-set caps only.
+private openstack.compute.limits @defaults("maxTotalInstances totalInstancesUsed maxTotalCores totalCoresUsed maxTotalRAMSize totalRAMUsed") {
+  // Project the limits report applies to
+  projectId string
+  // Maximum number of vCPU cores
+  maxTotalCores int
+  // vCPU cores currently in use
+  totalCoresUsed int
+  // Maximum number of running instances
+  maxTotalInstances int
+  // Running instances currently in use
+  totalInstancesUsed int
+  // Maximum total RAM in megabytes
+  maxTotalRAMSize int
+  // RAM currently allocated in megabytes
+  totalRAMUsed int
+  // Maximum number of SSH keypairs
+  maxTotalKeypairs int
+  // Maximum number of security groups
+  maxSecurityGroups int
+  // Security groups currently in use
+  totalSecurityGroupsUsed int
+  // Maximum number of security group rules per security group
+  maxSecurityGroupRules int
+  // Maximum number of floating IPs
+  maxTotalFloatingIps int
+  // Floating IPs currently in use
+  totalFloatingIpsUsed int
+  // Maximum number of server groups
+  maxServerGroups int
+  // Server groups currently in use
+  totalServerGroupsUsed int
+  // Maximum number of members per server group
+  maxServerGroupMembers int
+  // Maximum image metadata items per image
+  maxImageMeta int
+  // Maximum server metadata items per instance
+  maxServerMeta int
+  // Maximum number of personality files per instance (legacy)
+  maxPersonality int
+  // Maximum personality file content size in bytes (legacy)
+  maxPersonalitySize int
+}
+
+// OpenStack Cinder block-storage quota for the scoped project (configured maximums; usage values are not exposed by the default API path).
+private openstack.blockstorage.quotaSet @defaults("volumes snapshots gigabytes backups") {
+  // Project the quota applies to
+  projectId string
+  // Maximum number of volumes
+  volumes int
+  // Maximum number of snapshots
+  snapshots int
+  // Maximum total volume storage in gigabytes
+  gigabytes int
+  // Maximum size of a single volume in gigabytes (-1 when unlimited)
+  perVolumeGigabytes int
+  // Maximum number of backups
+  backups int
+  // Maximum total backup storage in gigabytes
+  backupGigabytes int
+  // Maximum number of volume groups (modern replacement for consistency groups); 0 when groups are unsupported on this cloud
+  groups int
+}
+
+// OpenStack Neutron network-service quota for the scoped project (configured maximums; usage values are not exposed by the default API path).
+private openstack.network.quotaSet @defaults("network subnet port floatingIp router") {
+  // Project the quota applies to
+  projectId string
+  // Maximum number of networks
+  network int
+  // Maximum number of subnets
+  subnet int
+  // Maximum number of ports
+  port int
+  // Maximum number of routers
+  router int
+  // Maximum number of floating IPs
+  floatingIp int
+  // Maximum number of security groups
+  securityGroup int
+  // Maximum number of security group rules
+  securityGroupRule int
+  // Maximum number of subnet pools
+  subnetPool int
+  // Maximum number of RBAC policies
+  rbacPolicy int
+  // Maximum number of trunks
+  trunk int
+}
+
+// OpenStack Barbican access control list for a secret or container. Per-operation list of users granted access; operation keys typically include "read".
+private openstack.keymanager.acl @defaults("entries") {
+  // ACL entries keyed by operation (e.g. "read"); each entry contains `{users: [string], project_access: bool, created, updated}`
+  entries dict
 }
