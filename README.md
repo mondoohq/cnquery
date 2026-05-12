@@ -156,6 +156,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Slack team                    | `slack`                    | `mql shell slack --token TOKEN`                                                                                                                 |
 | Snowflake data warehouse      | `snowflake`                | `mql shell snowflake --account ACCOUNT_ID --region REGION --user USER --role ROLE --ask-pass`                                                   |
 | SSL certificates on websites  | `host`                     | `mql shell host mondoo.com`                                                                                                                     |
+| STACKIT projects              | `stackit`                  | `mql shell stackit --project-id PROJECT_ID --service-account-key-path KEY_FILE`                                                                |
 | Tailscale network             | `tailscale`                | `mql shell tailscale --token ACCESS_TOKEN`                                                                                                      |
 | Terraform HCL                 | `terraform`                | `mql shell terraform HCL_FILE_OR_PATH`                                                                                                          |
 | Terraform plan                | `terraform plan`           | `mql shell terraform plan plan.json`                                                                                                            |

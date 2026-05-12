@@ -1,0 +1,1199 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/stackit"
+option go_package = "go.mondoo.com/mql/v13/providers/stackit/resources"
+
+// STACKIT project
+//
+// Use the STACKIT namespace as the project-scoped entry point for the
+// stackit provider. Read `project` for the project's metadata
+// (parent organization, lifecycle state, labels) and `region` for the
+// region the connection targets. Iterate `servers()`, `volumes()`,
+// `snapshots()`, `images()`, `networks()`, `publicIps()`,
+// `securityGroups()`, and `keyPairs()` for the IaaS layer;
+// `ske.clusters()` for managed Kubernetes; `objectStorage.buckets()`
+// for S3-compatible storage; `dns.zones()` for managed DNS;
+// `loadBalancers()` for the L4/L7 load balancers; the `postgresFlex`,
+// `mongoDbFlex`, `openSearch`, `mariaDb`, `redis`, and `rabbitMq`
+// namespaces for managed databases; `secretsManager.instances()` for
+// the secrets-vault service; `observability.instances()` for the
+// managed Prometheus/Alertmanager stack; and `serviceAccounts()` for
+// project service accounts.
+stackit {
+  // STACKIT project the connection is scoped to
+  project() stackit.project
+  // Region the connection targets (e.g., eu01)
+  region string
+  // Compute servers (virtual machines)
+  servers() []stackit.server
+  // Block storage volumes
+  volumes() []stackit.volume
+  // Volume snapshots
+  snapshots() []stackit.snapshot
+  // VM images
+  images() []stackit.image
+  // Project networks
+  networks() []stackit.network
+  // Public (floating) IP addresses
+  publicIps() []stackit.publicIp
+  // Security groups
+  securityGroups() []stackit.securityGroup
+  // SSH key pairs available in the project
+  keyPairs() []stackit.keyPair
+  // Load balancers
+  loadBalancers() []stackit.loadBalancer
+  // Managed Kubernetes (SKE) namespace
+  ske() stackit.ske
+  // S3-compatible object storage namespace
+  objectStorage() stackit.objectStorage
+  // Managed DNS namespace
+  dns() stackit.dns
+  // Postgres Flex managed database namespace
+  postgresFlex() stackit.postgresFlex
+  // MongoDB Flex managed database namespace
+  mongoDbFlex() stackit.mongoDbFlex
+  // OpenSearch managed namespace
+  openSearch() stackit.openSearch
+  // MariaDB managed namespace
+  mariaDb() stackit.mariaDb
+  // Redis managed namespace
+  redis() stackit.redis
+  // RabbitMQ managed namespace
+  rabbitMq() stackit.rabbitMq
+  // Secrets Manager namespace
+  secretsManager() stackit.secretsManager
+  // Observability (managed Prometheus/Alertmanager) namespace
+  observability() stackit.observability
+  // Project service accounts
+  serviceAccounts() []stackit.serviceAccount
+  // TLS server certificates managed by STACKIT Certificates
+  certificates() []stackit.certificate
+  // Application Load Balancers (ALB — separate product from the legacy
+  // `loadBalancers()`)
+  albLoadBalancers() []stackit.alb.loadBalancer
+  // Key Management Service namespace (key rings + keys)
+  kms() stackit.kms
+  // Project-level IAM bindings (members) and roles
+  iam() stackit.iam
+}
+
+// STACKIT project metadata
+//
+// Examine the project the connection is scoped to. Includes the
+// container ID and the human-readable name (`name`), the parent
+// container ID, the lifecycle state (`ACTIVE`, `CREATING`, `DELETING`),
+// the creation timestamp, and the user-defined labels attached to the
+// project.
+private stackit.project @defaults("id name lifecycleState") {
+  // Project container ID (UUID)
+  id string
+  // Project name
+  name string
+  // Parent container ID (organization or folder)
+  parent string
+  // Lifecycle state (ACTIVE, CREATING, DELETING, INACTIVE, FAILED)
+  lifecycleState string
+  // Creation timestamp
+  creationTime time
+  // User-defined labels attached to the project
+  labels map[string]string
+}
+
+// STACKIT compute server
+//
+// Examine a single virtual machine. The server is keyed by its UUID
+// `id` — for example `stackit.server(id: "fa1d2…")` — and exposes the
+// `name`, `status` and `powerStatus`, machine type, availability zone,
+// labels and metadata, attached `volumes()` and `securityGroups()`,
+// network interfaces (`nics`), referenced `image()` and `keyPair()`,
+// associated service account mails, and timestamps for creation,
+// launch, and last update.
+private stackit.server @defaults("id name status machineType") {
+  init(id? string)
+  // Server UUID
+  id string
+  // Server name
+  name string
+  // Server status (ACTIVE, CREATING, ERROR, …)
+  status string
+  // Power status (RUNNING, STOPPED, CRASHED, ERROR)
+  powerStatus string
+  // Machine type / flavor name
+  machineType string
+  // Availability zone
+  availabilityZone string
+  // Creation timestamp
+  createdAt time
+  // Launch timestamp
+  launchedAt time
+  // Last update timestamp
+  updatedAt time
+  // Last error message reported by the server (empty if none)
+  errorMessage string
+  // Whether a config drive is attached
+  configDrive bool
+  // SSH key pair name used at boot (empty if none)
+  keypairName string
+  // SSH key pair used at boot (nullable)
+  keyPair() stackit.keyPair
+  // Image ID the server was created from (empty for boot-volume-only servers)
+  imageId string
+  // Image the server was created from (nullable)
+  image() stackit.image
+  // Volume UUIDs attached to the server
+  volumeIds []string
+  // Volumes attached to the server
+  volumes() []stackit.volume
+  // Security group IDs attached to the server
+  securityGroupIds []string
+  // Security groups attached to the server
+  securityGroups() []stackit.securityGroup
+  // Service account mail addresses attached to the server
+  serviceAccountMails []string
+  // Network interfaces: [{nicId, ipv4, ipv6, mac, networkId, securityGroups, allowedAddresses}]
+  nics []dict
+  // User data (base64-encoded cloud-init)
+  userData string
+  // User-defined labels
+  labels map[string]string
+  // Free-form metadata key/value pairs
+  metadata map[string]string
+}
+
+// STACKIT block storage volume
+//
+// Examine a single block volume. The volume is keyed by its UUID `id`
+// and exposes the `name`, `size` (GiB), `status`, availability zone,
+// performance class, source image and snapshot IDs, server attachment
+// info, encryption status, and the user-defined labels.
+private stackit.volume @defaults("id name size status") {
+  init(id? string)
+  // Volume UUID
+  id string
+  // Volume name
+  name string
+  // Description
+  description string
+  // Size in GiB
+  size int
+  // Status (CREATING, AVAILABLE, IN_USE, DELETING, ERROR)
+  status string
+  // Availability zone
+  availabilityZone string
+  // Performance class (storage_premium, storage_standard, …)
+  performanceClass string
+  // Whether the volume is bootable
+  bootable bool
+  // Source image UUID (empty if not image-based)
+  imageId string
+  // Image the volume was created from (nullable)
+  image() stackit.image
+  // Source snapshot UUID (empty if not snapshot-based)
+  sourceSnapshotId string
+  // Server the volume is attached to (nullable)
+  server() stackit.server
+  // Attached server UUID (empty if detached)
+  serverId string
+  // Whether the volume is encrypted at rest
+  encrypted bool
+  // KEK (Key-Encryption Key) UUID used to wrap the volume's data-encryption
+  // key (empty when the volume uses platform-managed encryption)
+  encryptionKeyId string
+  // KEK version number; 0 when unset
+  encryptionKeyVersion int
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // User-defined labels
+  labels map[string]string
+}
+
+// STACKIT volume snapshot
+//
+// Examine a single volume snapshot. The snapshot is keyed by its UUID
+// `id` and exposes the `name`, `size`, `status`, source volume, and
+// creation timestamp.
+private stackit.snapshot @defaults("id name status") {
+  init(id? string)
+  // Snapshot UUID
+  id string
+  // Snapshot name
+  name string
+  // Status (CREATING, AVAILABLE, DELETING, ERROR)
+  status string
+  // Size in GiB
+  size int
+  // Source volume UUID
+  volumeId string
+  // Source volume (nullable)
+  volume() stackit.volume
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // User-defined labels
+  labels map[string]string
+}
+
+// STACKIT compute image
+//
+// Examine a single VM image. The image is keyed by its UUID `id` and
+// exposes the `name`, `disk_format`, `min_disk_size`, `min_ram`, the
+// underlying `scope` (public, private), checksum, owner, status, and
+// configuration block (boot mode, OS family, OS version, …).
+private stackit.image @defaults("id name status diskFormat") {
+  init(id? string)
+  // Image UUID
+  id string
+  // Image name
+  name string
+  // Status (CREATING, AVAILABLE, DELETING, ERROR)
+  status string
+  // Disk format (qcow2, raw, iso, …)
+  diskFormat string
+  // Minimum disk size required (GiB)
+  minDiskSize int
+  // Minimum RAM required (MiB)
+  minRam int
+  // Image protected flag (true = cannot be deleted)
+  protected bool
+  // Owning project (empty for public images)
+  owner string
+  // Image scope (public, private)
+  scope string
+  // Image checksum [{algorithm, digest}]
+  checksum dict
+  // Image config (OS family, OS version, boot mode, secure boot, …)
+  config dict
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // User-defined labels
+  labels map[string]string
+}
+
+// STACKIT project network
+//
+// Examine a single network. The network is keyed by its UUID `id` and
+// exposes the `name`, IPv4/IPv6 CIDR ranges and gateways, name servers,
+// routing flags (`routed`), and the user-defined labels.
+private stackit.network @defaults("id name routed") {
+  init(id? string)
+  // Network UUID
+  id string
+  // Network name
+  name string
+  // Whether the network is routed (true) or isolated (false)
+  routed bool
+  // IPv4 prefix CIDR
+  ipv4Prefix string
+  // IPv4 gateway address (empty if no gateway)
+  ipv4Gateway string
+  // IPv4 name servers
+  ipv4Nameservers []string
+  // IPv4 prefix list
+  ipv4Prefixes []string
+  // IPv6 prefix CIDR
+  ipv6Prefix string
+  // IPv6 gateway address (empty if no gateway)
+  ipv6Gateway string
+  // IPv6 name servers
+  ipv6Nameservers []string
+  // IPv6 prefix list
+  ipv6Prefixes []string
+  // Network state (CREATING, CREATED, UPDATING, DELETING, FAILED)
+  state string
+  // User-defined labels
+  labels map[string]string
+}
+
+// STACKIT public IP address
+//
+// Examine a single floating/public IP. The IP is keyed by its UUID
+// `id` and exposes the `ip` address, network interface it is bound to
+// (if any), assigned resource ID, and user-defined labels.
+private stackit.publicIp @defaults("id ip") {
+  init(id? string)
+  // Public IP UUID
+  id string
+  // IP address
+  ip string
+  // Network interface UUID the IP is bound to (empty if unassigned)
+  networkInterfaceId string
+  // User-defined labels
+  labels map[string]string
+}
+
+// STACKIT security group
+//
+// Examine a single security group. The group is keyed by its UUID
+// `id` and exposes the `name`, `description`, whether it is stateful,
+// the user-defined labels, and the ingress/egress rule list.
+private stackit.securityGroup @defaults("id name stateful") {
+  init(id? string)
+  // Security group UUID
+  id string
+  // Security group name
+  name string
+  // Description
+  description string
+  // Whether the security group is stateful
+  stateful bool
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // User-defined labels
+  labels map[string]string
+  // Security group rules
+  rules() []stackit.securityGroup.rule
+}
+
+// STACKIT security group rule
+//
+// Examine a single rule attached to a security group. Each rule is
+// keyed by its UUID `id` (unique within the security group) and
+// exposes the direction, ethertype, protocol, port range, ICMP code
+// and type, remote CIDR, and remote security-group reference.
+private stackit.securityGroup.rule @defaults("id direction protocol") {
+  // Rule UUID
+  id string
+  // Owning security group UUID
+  securityGroupId string
+  // Direction (ingress, egress)
+  direction string
+  // Ethertype (IPv4, IPv6)
+  ethertype string
+  // Protocol name or number (tcp, udp, icmp, …)
+  protocol string
+  // Description
+  description string
+  // ICMP type (nullable)
+  icmpType int
+  // ICMP code (nullable)
+  icmpCode int
+  // Lower bound of the port range (0 if not applicable)
+  portRangeMin int
+  // Upper bound of the port range (0 if not applicable)
+  portRangeMax int
+  // Remote IP CIDR (empty if remote is a security group)
+  ipRange string
+  // Remote security group UUID (empty if remote is a CIDR)
+  remoteSecurityGroupId string
+}
+
+// STACKIT SSH key pair
+//
+// Examine a single SSH key pair available in the project. The pair is
+// keyed by `name` and exposes the public key, fingerprint, and the
+// user-defined labels.
+private stackit.keyPair @defaults("name fingerprint") {
+  init(name? string)
+  // Key pair name (primary identifier)
+  name string
+  // SHA256 fingerprint
+  fingerprint string
+  // Public key content (OpenSSH format)
+  publicKey string
+  // Creation timestamp
+  createdAt time
+  // Last update timestamp
+  updatedAt time
+  // User-defined labels
+  labels map[string]string
+}
+
+// STACKIT load balancer
+//
+// Examine a single load balancer. The balancer is keyed by its `name`
+// (unique within the project+region) and exposes the external public
+// IP, target pools, listeners, ACL CIDRs, networks, options
+// (including TLS settings and access logs), status, and creation
+// errors.
+private stackit.loadBalancer @defaults("name status externalAddress") {
+  init(name? string)
+  // Load balancer name
+  name string
+  // External (public) IPv4/IPv6 address (empty if private only)
+  externalAddress string
+  // Plan ID (sizing tier)
+  planId string
+  // Status (READY, PENDING, ERROR, …)
+  status string
+  // Whether the load balancer is reachable *only* from inside the project's private network (no public IP)
+  privateNetworkOnly bool
+  // Region (network and listeners live here)
+  region string
+  // Listeners — frontend port/protocol bindings
+  listeners() []stackit.loadBalancer.listener
+  // Networks attached to the load balancer [{networkId, role}]
+  networks []dict
+  // Target pools — backend groups with their health checks and members
+  targetPools() []stackit.loadBalancer.targetPool
+  // Options (ACL, access log, observability, private network only, error logs)
+  options dict
+  // Errors reported during creation/operation [{type, description}]
+  errors []dict
+}
+
+// STACKIT load balancer listener
+//
+// Examine a single listener — a frontend port/protocol binding that
+// routes traffic into one target pool. Listeners are keyed by the
+// parent load-balancer name and listener `name`/displayName.
+private stackit.loadBalancer.listener @defaults("name port protocol targetPool") {
+  // Listener machine name (parent-unique key)
+  name string
+  // Listener display name (user-facing label)
+  displayName string
+  // Parent load-balancer name
+  loadBalancerName string
+  // Frontend port the listener binds
+  port int
+  // Wire protocol (PROTOCOL_TCP, PROTOCOL_UDP, PROTOCOL_TCP_PROXY, …)
+  protocol string
+  // Name of the targetPool this listener forwards to
+  targetPool string
+  // SNI hostnames matched by this listener (TLS only)
+  serverNameIndicators []string
+  // TCP-specific options ({idleTimeout, …})
+  tcp dict
+  // UDP-specific options
+  udp dict
+}
+
+// STACKIT load balancer target pool
+//
+// Examine a single backend group. Each target pool holds one or more
+// targets (member IPs and ports) plus the active health check and
+// session-persistence policy used to route requests across them.
+private stackit.loadBalancer.targetPool @defaults("name targetPort") {
+  // Target pool name (parent-unique key)
+  name string
+  // Parent load-balancer name
+  loadBalancerName string
+  // Backend port the pool forwards to
+  targetPort int
+  // Targets [{displayName, ip}] — member backends
+  targets []dict
+  // Active health-check config {interval, intervalJitter, timeout, healthyThreshold, unhealthyThreshold}
+  activeHealthCheck dict
+  // Session-persistence settings (cookie, source-IP, none)
+  sessionPersistence dict
+}
+
+// STACKIT Kubernetes Engine namespace
+//
+// Use the SKE namespace to enumerate managed Kubernetes clusters in
+// the project via `clusters()`. Individual clusters are exposed as
+// stackit.ske.cluster records.
+stackit.ske {
+  // Managed Kubernetes clusters
+  clusters() []stackit.ske.cluster
+}
+
+// STACKIT managed Kubernetes (SKE) cluster
+//
+// Examine a single managed Kubernetes cluster. The cluster is keyed
+// by its `name` (unique within the project+region) and exposes the
+// `status` (aggregated lifecycle), the Kubernetes version, the node
+// pools (with their flavor, OS, taints, autoscaling, labels), the
+// hibernation and maintenance windows, network and DNS overrides,
+// extensions (ACL, argus observability), and the creation/update
+// timestamps.
+private stackit.ske.cluster @defaults("name kubernetesVersion status") {
+  init(name? string)
+  // Cluster name
+  name string
+  // Aggregated status (HEALTHY, HIBERNATED, UNHEALTHY, RECONCILING, …)
+  status string
+  // Status object (raw): aggregated state, hibernated, errors, credentials rotation, …
+  statusDetails dict
+  // Kubernetes minor version (e.g., 1.30)
+  kubernetesVersion string
+  // Node pools — one stackit.ske.cluster.nodePool per pool
+  nodePools() []stackit.ske.cluster.nodePool
+  // Hibernation schedules [{start, end, timezone}]
+  hibernations []dict
+  // Maintenance window {timeWindow, autoUpdate: {kubernetesVersion, machineImageVersion}}
+  maintenance dict
+  // Extensions (acl, argus, dns) — observability/network add-ons
+  extensions dict
+  // Cluster networking overrides (services range, pods range, …)
+  network dict
+  // Creation timestamp
+  creationTime time
+}
+
+// SKE node pool
+//
+// Examine a single node pool within a managed-Kubernetes cluster. The
+// pool is keyed by `clusterName/name` and exposes the machine type and
+// image, volume size/type, node-count bounds and rolling-update budget
+// (maxSurge/maxUnavailable), the worker availability zones, container
+// runtime, taints, labels, and whether the cluster's system components
+// are allowed to schedule onto the pool.
+private stackit.ske.cluster.nodePool @defaults("name machineType minimum maximum") {
+  // Node pool name (unique within the cluster)
+  name string
+  // Parent cluster name
+  clusterName string
+  // Machine flavor (e.g., g1.2)
+  machineType string
+  // OS image name (e.g., flatcar)
+  machineImage string
+  // OS image version
+  machineImageVersion string
+  // Boot volume size in GiB
+  volumeSize int
+  // Boot volume type (e.g., storage_premium)
+  volumeType string
+  // Minimum node count (cluster-autoscaler lower bound)
+  minimum int
+  // Maximum node count (cluster-autoscaler upper bound)
+  maximum int
+  // MaxSurge for rolling updates (extra nodes allowed beyond `maximum`)
+  maxSurge int
+  // MaxUnavailable nodes during rolling updates
+  maxUnavailable int
+  // Worker availability zones
+  availabilityZones []string
+  // Container runtime name (containerd, docker, …)
+  cri string
+  // Taints [{key, value, effect}]
+  taints []dict
+  // Kubelet/Node labels
+  labels map[string]string
+  // Whether DaemonSets/system components may schedule on this pool
+  allowSystemComponents bool
+}
+
+// STACKIT Object Storage namespace
+//
+// Use the object-storage namespace to enumerate S3-compatible buckets
+// in the project via `buckets()`. Individual buckets are exposed as
+// stackit.objectStorage.bucket records.
+stackit.objectStorage {
+  // Object Storage buckets
+  buckets() []stackit.objectStorage.bucket
+}
+
+// STACKIT Object Storage bucket
+//
+// Examine a single bucket. The bucket is keyed by its `name` (unique
+// within the project+region) and exposes the S3 region, the public
+// and S3-style URLs, and the bucket status.
+private stackit.objectStorage.bucket @defaults("name region urlPathStyle") {
+  init(name? string)
+  // Bucket name (primary identifier)
+  name string
+  // Bucket region
+  region string
+  // S3-compatible URL in virtual-hosted style (https://<bucket>.<endpoint>)
+  urlVirtualHostedStyle string
+  // S3-compatible URL in path style (https://<endpoint>/<bucket>)
+  urlPathStyle string
+  // Whether S3 Object Lock is enabled (WORM retention)
+  objectLockEnabled bool
+  // Default-retention policy: number of days objects are protected from
+  // deletion by default. 0 when no default retention is configured.
+  defaultRetentionDays() int
+  // Default-retention mode: COMPLIANCE (immutable) or GOVERNANCE (privileged
+  // users can override). Empty when no default retention is configured.
+  defaultRetentionMode() string
+}
+
+// STACKIT DNS namespace
+//
+// Use the DNS namespace to enumerate managed DNS zones in the project
+// via `zones()`. Zones expose their record sets through the
+// `recordSets()` field on each stackit.dns.zone.
+stackit.dns {
+  // DNS zones managed by the project
+  zones() []stackit.dns.zone
+}
+
+// STACKIT DNS zone
+//
+// Examine a single managed DNS zone. The zone is keyed by its UUID
+// `id` and exposes the `dnsName`, type (primary / secondary), default
+// TTL, refresh / retry / expire / negative-cache, the authoritative
+// SOA contact email, record counts, state, ACL, primary servers (for
+// secondary zones), and the user-defined labels.
+private stackit.dns.zone @defaults("id dnsName type state") {
+  init(id? string)
+  // Zone UUID
+  id string
+  // Zone name (e.g., `example.com.`)
+  dnsName string
+  // Description
+  description string
+  // Zone type (primary, secondary)
+  type string
+  // Visibility (public, private)
+  visibility string
+  // Lifecycle state (CREATING, CREATING_PRIMARY_ZONE, ACTIVE, UPDATING, DELETING, FAILED, …)
+  state string
+  // Default record TTL (seconds)
+  defaultTtl int
+  // Authoritative contact email
+  contactEmail string
+  // SOA serial
+  serialNumber int
+  // SOA primary nameserver
+  primaryNameServer string
+  // SOA expire (seconds)
+  expireTime int
+  // SOA refresh (seconds)
+  refreshTime int
+  // SOA retry (seconds)
+  retryTime int
+  // Negative-cache TTL (seconds)
+  negativeCache int
+  // Number of record sets in the zone
+  recordCount int
+  // ACL CIDRs allowed to query (for zones with restricted ACL)
+  acl string
+  // Primary nameservers (for secondary zones)
+  primaries []string
+  // Whether DNSSEC is enabled for the zone
+  isReverseZone bool
+  // Creation timestamp
+  creationFinishedAt time
+  // User-defined labels
+  labels map[string]string
+  // Record sets in the zone
+  recordSets() []stackit.dns.recordSet
+}
+
+// STACKIT DNS record set
+//
+// Examine a single RRSet within a DNS zone. The record set is keyed
+// by its UUID `id` and exposes the owning zone, the `name`, `type`
+// (A, AAAA, CNAME, MX, TXT, NS, SRV, …), TTL, lifecycle state, and
+// the list of record values.
+private stackit.dns.recordSet @defaults("name type state") {
+  // Record set UUID
+  id string
+  // Owning zone UUID
+  zoneId string
+  // Record name (FQDN, e.g., `www.example.com.`)
+  name string
+  // Record type (A, AAAA, CNAME, MX, TXT, NS, SRV, …)
+  type string
+  // Record TTL (seconds)
+  ttl int
+  // Lifecycle state (ACTIVE, CREATING, DELETING, FAILED, UPDATING)
+  state string
+  // Comment
+  comment string
+  // Record values (textual representation of each record in the set)
+  records []string
+  // Whether the record set is for active healthcheck failover
+  active bool
+  // Creation timestamp
+  creationFinishedAt time
+  // Last update timestamp
+  updateFinishedAt time
+}
+
+// STACKIT Postgres Flex namespace
+//
+// Use the Postgres-Flex namespace to enumerate managed PostgreSQL
+// instances in the project via `instances()`.
+stackit.postgresFlex {
+  // Postgres Flex instances
+  instances() []stackit.postgresFlex.instance
+}
+
+// STACKIT Postgres Flex managed database instance
+//
+// Examine a single managed PostgreSQL instance. The instance is keyed
+// by its UUID `id` and exposes the `name`, `version`, status, flavor
+// (`acl`, replicas, backup schedule, storage), region, and the
+// configured options.
+private stackit.postgresFlex.instance @defaults("id name version status") {
+  init(id? string)
+  // Instance UUID
+  id string
+  // Instance name
+  name string
+  // Status (READY, CREATING, UPDATING, DELETING, FAILED, …)
+  status string
+  // Region the instance runs in
+  region string
+  // Postgres major version (lazy-loaded from the detail API)
+  version() string
+  // Flavor info {id, cpu, memory, description} (lazy-loaded from the detail API)
+  flavor() dict
+  // ACL CIDRs allowed to connect (lazy-loaded from the detail API)
+  acl() []string
+  // Number of replicas (lazy-loaded from the detail API)
+  replicas() int
+  // Storage configuration {size, class} (lazy-loaded from the detail API)
+  storage() dict
+  // Backup schedule (cron expression, lazy-loaded from the detail API)
+  backupSchedule() string
+  // Free-form operator-tunable options (lazy-loaded from the detail API)
+  options() map[string]string
+}
+
+// STACKIT MongoDB Flex namespace
+//
+// Use the MongoDB-Flex namespace to enumerate managed MongoDB
+// instances in the project via `instances()`.
+stackit.mongoDbFlex {
+  // MongoDB Flex instances
+  instances() []stackit.mongoDbFlex.instance
+}
+
+// STACKIT MongoDB Flex managed database instance
+//
+// Examine a single managed MongoDB instance. The instance is keyed by
+// its UUID `id` and exposes the `name`, `version`, status, flavor,
+// replicas, backup schedule, storage, region, ACL, and configured
+// options.
+private stackit.mongoDbFlex.instance @defaults("id name version status") {
+  init(id? string)
+  // Instance UUID
+  id string
+  // Instance name
+  name string
+  // Status (READY, CREATING, UPDATING, DELETING, FAILED, …)
+  status string
+  // Region the instance runs in
+  region string
+  // MongoDB major version (lazy-loaded from the detail API)
+  version() string
+  // Flavor info {id, cpu, memory, description} (lazy-loaded from the detail API)
+  flavor() dict
+  // Number of replicas (lazy-loaded from the detail API)
+  replicas() int
+  // Storage configuration {size, class} (lazy-loaded from the detail API)
+  storage() dict
+  // Backup schedule (cron expression, lazy-loaded from the detail API)
+  backupSchedule() string
+  // ACL CIDRs allowed to connect (lazy-loaded from the detail API)
+  acl() []string
+  // Free-form operator-tunable options (lazy-loaded from the detail API)
+  options() map[string]string
+}
+
+// STACKIT OpenSearch namespace
+//
+// Use the OpenSearch namespace to enumerate managed OpenSearch
+// instances in the project via `instances()`.
+stackit.openSearch {
+  // OpenSearch instances
+  instances() []stackit.openSearch.instance
+}
+
+// STACKIT OpenSearch managed database instance
+//
+// Examine a single managed OpenSearch instance. The instance is keyed
+// by its UUID `id` and exposes the `name`, plan, status, the offering
+// being run, the cluster parameters object, the DBaaS dashboard URL,
+// the bound CF-style organization/space, and the connection
+// parameters (excluding the password).
+private stackit.openSearch.instance @defaults("id name status planName") {
+  init(id? string)
+  // Instance UUID
+  id string
+  // Instance name
+  name string
+  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  status string
+  // Plan name (sizing/quota tier)
+  planName string
+  // Plan UUID
+  planId string
+  // Service offering name (e.g., opensearch)
+  offeringName string
+  // Cloud-Foundry-style organization GUID
+  cfOrganizationGuid string
+  // Cloud-Foundry-style space GUID
+  cfSpaceGuid string
+  // Dashboard URL for the DBaaS UI (empty if not provisioned)
+  dashboardUrl string
+  // Image / engine version
+  imageUrl string
+  // Connection parameters returned by the API (free-form)
+  parameters dict
+}
+
+// STACKIT MariaDB namespace
+//
+// Use the MariaDB namespace to enumerate managed MariaDB instances in
+// the project via `instances()`.
+stackit.mariaDb {
+  // MariaDB instances
+  instances() []stackit.mariaDb.instance
+}
+
+// STACKIT MariaDB managed database instance
+//
+// Examine a single managed MariaDB instance. The instance is keyed by
+// its UUID `id` and exposes the same plan / offering / parameter
+// surface as the other DBaaS services in the project.
+private stackit.mariaDb.instance @defaults("id name status planName") {
+  init(id? string)
+  // Instance UUID
+  id string
+  // Instance name
+  name string
+  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  status string
+  // Plan name (sizing/quota tier)
+  planName string
+  // Plan UUID
+  planId string
+  // Service offering name
+  offeringName string
+  // Cloud-Foundry-style organization GUID
+  cfOrganizationGuid string
+  // Cloud-Foundry-style space GUID
+  cfSpaceGuid string
+  // Dashboard URL for the DBaaS UI (empty if not provisioned)
+  dashboardUrl string
+  // Image / engine version
+  imageUrl string
+  // Connection parameters returned by the API
+  parameters dict
+}
+
+// STACKIT Redis namespace
+//
+// Use the Redis namespace to enumerate managed Redis instances in the
+// project via `instances()`.
+stackit.redis {
+  // Redis instances
+  instances() []stackit.redis.instance
+}
+
+// STACKIT Redis managed instance
+//
+// Examine a single managed Redis instance. The instance is keyed by
+// its UUID `id` and exposes the same plan / offering / parameter
+// surface as the other DBaaS services in the project.
+private stackit.redis.instance @defaults("id name status planName") {
+  init(id? string)
+  // Instance UUID
+  id string
+  // Instance name
+  name string
+  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  status string
+  // Plan name (sizing/quota tier)
+  planName string
+  // Plan UUID
+  planId string
+  // Service offering name
+  offeringName string
+  // Cloud-Foundry-style organization GUID
+  cfOrganizationGuid string
+  // Cloud-Foundry-style space GUID
+  cfSpaceGuid string
+  // Dashboard URL for the DBaaS UI (empty if not provisioned)
+  dashboardUrl string
+  // Image / engine version
+  imageUrl string
+  // Connection parameters returned by the API
+  parameters dict
+}
+
+// STACKIT RabbitMQ namespace
+//
+// Use the RabbitMQ namespace to enumerate managed RabbitMQ instances
+// in the project via `instances()`.
+stackit.rabbitMq {
+  // RabbitMQ instances
+  instances() []stackit.rabbitMq.instance
+}
+
+// STACKIT RabbitMQ managed instance
+//
+// Examine a single managed RabbitMQ instance. The instance is keyed
+// by its UUID `id` and exposes the same plan / offering / parameter
+// surface as the other DBaaS services in the project.
+private stackit.rabbitMq.instance @defaults("id name status planName") {
+  init(id? string)
+  // Instance UUID
+  id string
+  // Instance name
+  name string
+  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  status string
+  // Plan name (sizing/quota tier)
+  planName string
+  // Plan UUID
+  planId string
+  // Service offering name
+  offeringName string
+  // Cloud-Foundry-style organization GUID
+  cfOrganizationGuid string
+  // Cloud-Foundry-style space GUID
+  cfSpaceGuid string
+  // Dashboard URL for the DBaaS UI (empty if not provisioned)
+  dashboardUrl string
+  // Image / engine version
+  imageUrl string
+  // Connection parameters returned by the API
+  parameters dict
+}
+
+// STACKIT Secrets Manager namespace
+//
+// Use the Secrets-Manager namespace to enumerate managed
+// secrets-vault instances in the project via `instances()`.
+stackit.secretsManager {
+  // Secrets Manager instances
+  instances() []stackit.secretsManager.instance
+}
+
+// STACKIT Secrets Manager instance
+//
+// Examine a single Secrets Manager instance. The instance is keyed
+// by its UUID `id` and exposes the `name`, status, API URL, secrets
+// engine, configured ACL list, and the number of secrets stored.
+private stackit.secretsManager.instance @defaults("id name state") {
+  init(id? string)
+  // Instance UUID
+  id string
+  // Instance name
+  name string
+  // Lifecycle state (CREATING, CREATED, UPDATING, FAILED, DELETING, …)
+  state string
+  // API URL
+  apiUrl string
+  // Engine type (e.g., kv)
+  secretsEngine string
+  // Number of secrets stored in the instance
+  secretCount int
+  // ACL CIDRs allowed to connect
+  acls() []string
+}
+
+// STACKIT Observability namespace
+//
+// Use the Observability namespace to enumerate managed
+// Prometheus/Alertmanager instances in the project via `instances()`.
+stackit.observability {
+  // Observability instances
+  instances() []stackit.observability.instance
+}
+
+// STACKIT Observability managed instance
+//
+// Examine a single managed Prometheus/Alertmanager instance. The
+// instance is keyed by its UUID `id` and exposes the `name`, status,
+// plan, the dashboard URL, and the connection parameters returned by
+// the API.
+private stackit.observability.instance @defaults("id name status planName") {
+  init(id? string)
+  // Instance UUID
+  id string
+  // Instance name
+  name string
+  // Status (CREATE_SUCCEEDED, CREATING, UPDATING, DELETING, FAILED, …)
+  status string
+  // Plan name (sizing/quota tier)
+  planName string
+  // Service offering name (e.g., "observability")
+  offeringName string
+  // Plan UUID
+  planId() string
+  // Dashboard URL for the observability UI (empty if not provisioned)
+  dashboardUrl() string
+  // Connection parameters returned by the API (Alertmanager/Prometheus/etc.
+  // endpoints, credentials hints)
+  parameters() dict
+  // Whether the instance can be updated
+  isUpdatable() bool
+}
+
+// STACKIT project service account
+//
+// Examine a single service account in the project. Service accounts
+// are keyed by their email address (`email`) and expose the
+// associated project ID and the human-readable ID. They are the
+// project-scoped principals used by automation and SDK callers.
+private stackit.serviceAccount @defaults("email projectId") {
+  init(email? string)
+  // Service account email (primary identifier)
+  email string
+  // Project ID the service account belongs to
+  projectId string
+  // Internal service-account ID (UUID), if returned by the API
+  id string
+  // Access tokens issued for this service account (id, createdAt, validUntil, active)
+  accessTokens() []dict
+  // Long-lived keys associated with this service account (id, keyType, createdAt, validUntil, active)
+  keys() []dict
+}
+
+
+// STACKIT-managed TLS server certificate
+//
+// Examine a single managed TLS certificate. The certificate is keyed
+// by its UUID `id` and exposes the user-supplied `name`, the region
+// it was uploaded to, and the PEM-encoded `publicKey` chain. Parse
+// `publicKey` with `parse.certificates(...)` for subject, issuer,
+// expiry, and key strength.
+private stackit.certificate @defaults("id name region") {
+  init(id? string)
+  // Certificate UUID
+  id string
+  // User-supplied certificate name
+  name string
+  // Region the certificate is uploaded to
+  region string
+  // PEM-encoded certificate chain (leaf + intermediates)
+  publicKey string
+}
+
+// STACKIT Application Load Balancer
+//
+// Examine a single Application Load Balancer (ALB) — the newer L7
+// LB product separate from the legacy `stackit.loadBalancer`. The
+// ALB is keyed by `name` and exposes the public/private addresses,
+// plan, status, listeners and target pools, the optional security-
+// group ID attached to the LB, and configuration options.
+private stackit.alb.loadBalancer @defaults("name status externalAddress") {
+  // ALB name (unique within the project+region)
+  name string
+  // External (public) IPv4/IPv6 address (empty if private-only)
+  externalAddress string
+  // Internal/private address
+  privateAddress string
+  // Plan ID (sizing tier)
+  planId string
+  // Status (READY, PENDING, ERROR, …)
+  status string
+  // Region the ALB lives in
+  region string
+  // Listeners — frontend port/protocol bindings ({name, port, protocol, targetPool, …})
+  listeners []dict
+  // Networks attached to the LB ([{networkId, role}])
+  networks []dict
+  // Target pools — backend groups ([{name, targetPort, activeHealthCheck, …}])
+  targetPools []dict
+  // Options (ACL, access log, observability, etc.)
+  options dict
+  // Errors reported by the ALB ([{type, description}])
+  errors []dict
+  // STACKIT-managed security group attached to the LB itself (nullable)
+  loadBalancerSecurityGroup dict
+  // STACKIT-managed security group used on backend targets (nullable)
+  targetSecurityGroup dict
+  // Whether the operator opted out of auto-assigning the target SG to backends
+  disableTargetSecurityGroupAssignment bool
+  // User-defined labels
+  labels map[string]string
+}
+
+// STACKIT KMS namespace
+//
+// Use the KMS namespace to enumerate cryptographic key rings and the
+// keys within them. STACKIT KMS is the source of the KEKs that wrap
+// volume- and bucket-level data-encryption keys, so this is the entry
+// point for customer-managed-key audits.
+stackit.kms {
+  // Key rings in the project's KMS scope
+  keyRings() []stackit.kms.keyRing
+  // All keys across all key rings (flattened convenience)
+  keys() []stackit.kms.key
+}
+
+// STACKIT KMS key ring
+//
+// Examine a single key ring — a logical container that groups keys
+// for IAM and lifecycle purposes. Keyed by its UUID `id`.
+private stackit.kms.keyRing @defaults("id displayName state") {
+  // Key ring UUID
+  id string
+  // User-supplied display name
+  displayName string
+  // Description (free text)
+  description string
+  // Lifecycle state (CREATING, CREATED, DELETING, …)
+  state string
+  // Creation timestamp
+  createdAt time
+  // Keys inside this key ring
+  keys() []stackit.kms.key
+}
+
+// STACKIT KMS key
+//
+// Examine a single key. Each key is keyed by its UUID `id` and is
+// scoped to a `keyRingId`. The `purpose` describes what the key is
+// allowed to do (SYMMETRIC_ENCRYPT_DECRYPT, …), `algorithm` is the
+// underlying primitive, `protection` is the storage backend
+// (SOFTWARE, HSM), and `state` is the lifecycle phase. `deletionDate`
+// is non-null only when the key has been scheduled for deletion.
+private stackit.kms.key @defaults("id displayName state purpose") {
+  // Key UUID
+  id string
+  // Parent key ring UUID
+  keyRingId string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Purpose (SYMMETRIC_ENCRYPT_DECRYPT, ASYMMETRIC_DECRYPT, ASYMMETRIC_SIGN_VERIFY, MAC)
+  purpose string
+  // Algorithm (e.g., AES_256, RSA_4096_OAEP_SHA256, EC_P256_SHA256)
+  algorithm string
+  // Protection level (SOFTWARE, HSM)
+  protection string
+  // Access scope (PROJECT, …)
+  accessScope string
+  // Whether the key material was imported (cannot be rotated server-side)
+  importOnly bool
+  // Lifecycle state (CREATING, CREATED, ENABLED, DISABLED, DELETING, DELETED)
+  state string
+  // Creation timestamp
+  createdAt time
+  // Scheduled deletion timestamp (nil unless the key is in PENDING_DELETION)
+  deletionDate time
+}
+
+// STACKIT IAM namespace
+//
+// Use the IAM namespace to enumerate project-level member bindings
+// and the roles defined on the project. STACKIT IAM is the source
+// for least-privilege and stale-access audits.
+stackit.iam {
+  // Members bound to the project (one entry per (subject, role) pair)
+  members() []stackit.iam.member
+  // Roles defined on the project
+  roles() []stackit.iam.role
+}
+
+// STACKIT IAM project member
+//
+// Examine a single project member binding. Each binding is keyed by
+// `subject/role` and ties one principal (user email, service-account
+// email, or group identifier) to one role on the project.
+private stackit.iam.member @defaults("subject role") {
+  // Principal identifier (user/service-account email, group id)
+  subject string
+  // Role assigned to the subject
+  role string
+}
+
+// STACKIT IAM role
+//
+// Examine a single role defined on the project. Each role groups a
+// set of `permissions` that members assigned to it are granted.
+private stackit.iam.role @defaults("name") {
+  // Role name (unique within the project)
+  name string
+  // Description (free text)
+  description string
+  // Permissions granted by the role (`<resource>.<action>` strings)
+  permissions []string
+}

@@ -1,0 +1,911 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"sync"
+
+	"github.com/stackitcloud/stackit-sdk-go/services/mongodbflex"
+	"github.com/stackitcloud/stackit-sdk-go/services/observability"
+	"github.com/stackitcloud/stackit-sdk-go/services/postgresflex"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+)
+
+// ------------------------- Postgres Flex -------------------------
+//
+// The ListInstances endpoint returns id/name/status only. Everything else
+// (version, flavor, ACL, replicas, storage, backup schedule, options) lives
+// behind GetInstance(projectId, region, instanceId). We model that detail as
+// computed methods that share a single cached fetch per instance.
+
+type mqlStackitPostgresFlexInstanceInternal struct {
+	fetched bool
+	detail  *postgresflex.Instance
+	lock    sync.Mutex
+}
+
+func (r *mqlStackitPostgresFlex) instances() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.PostgresFlex()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetItemsOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		inst := items[i]
+		args := map[string]*llx.RawData{
+			"id":     llx.StringData(inst.GetId()),
+			"name":   llx.StringData(inst.GetName()),
+			"status": llx.StringData(inst.GetStatus()),
+			"region": llx.StringData(c.Region()),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.postgresFlex.instance", args)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitPostgresFlexInstance) id() (string, error) {
+	return "stackit.postgresFlex.instance/" + r.Id.Data, nil
+}
+
+// fetchDetail pulls the full instance object via GetInstance and caches it
+// for the lifetime of this resource. Double-check locked so concurrent field
+// accesses share one API call.
+func (r *mqlStackitPostgresFlexInstance) fetchDetail() (*postgresflex.Instance, error) {
+	if r.fetched {
+		return r.detail, nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched {
+		return r.detail, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.PostgresFlex()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), r.Id.Data)
+	if err != nil {
+		if isAccessDenied(err) {
+			r.fetched = true
+			return nil, nil
+		}
+		return nil, err
+	}
+	if item, ok := resp.GetItemOk(); ok {
+		r.detail = &item
+	}
+	r.fetched = true
+	return r.detail, nil
+}
+
+func (r *mqlStackitPostgresFlexInstance) version() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetVersion(), nil
+}
+
+func (r *mqlStackitPostgresFlexInstance) flavor() (any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	return toDict(d.GetFlavor()), nil
+}
+
+func (r *mqlStackitPostgresFlexInstance) acl() ([]any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return []any{}, err
+	}
+	if a, ok := d.GetAclOk(); ok {
+		return strSlice(a.GetItems()), nil
+	}
+	return []any{}, nil
+}
+
+func (r *mqlStackitPostgresFlexInstance) replicas() (int64, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return 0, err
+	}
+	return int64(d.GetReplicas()), nil
+}
+
+func (r *mqlStackitPostgresFlexInstance) storage() (any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	return toDict(d.GetStorage()), nil
+}
+
+func (r *mqlStackitPostgresFlexInstance) backupSchedule() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetBackupSchedule(), nil
+}
+
+func (r *mqlStackitPostgresFlexInstance) options() (map[string]any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return map[string]any{}, err
+	}
+	return stringMap(d.GetOptions()), nil
+}
+
+// ------------------------- MongoDB Flex -------------------------
+//
+// Mirrors the Postgres Flex pattern: list returns id/name/status only,
+// detail (version/flavor/replicas/storage/backupSchedule/acl/options) is
+// lazy-loaded once per instance.
+
+type mqlStackitMongoDbFlexInstanceInternal struct {
+	fetched bool
+	detail  *mongodbflex.Instance
+	lock    sync.Mutex
+}
+
+func (r *mqlStackitMongoDbFlex) instances() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.MongoDbFlex()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID(), c.Region())
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetItemsOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		inst := items[i]
+		args := map[string]*llx.RawData{
+			"id":     llx.StringData(inst.GetId()),
+			"name":   llx.StringData(inst.GetName()),
+			"status": llx.StringData(string(inst.GetStatus())),
+			"region": llx.StringData(c.Region()),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.mongoDbFlex.instance", args)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitMongoDbFlexInstance) id() (string, error) {
+	return "stackit.mongoDbFlex.instance/" + r.Id.Data, nil
+}
+
+func (r *mqlStackitMongoDbFlexInstance) fetchDetail() (*mongodbflex.Instance, error) {
+	if r.fetched {
+		return r.detail, nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched {
+		return r.detail, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.MongoDbFlex()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), r.Id.Data, c.Region())
+	if err != nil {
+		if isAccessDenied(err) {
+			r.fetched = true
+			return nil, nil
+		}
+		return nil, err
+	}
+	if item, ok := resp.GetItemOk(); ok {
+		r.detail = &item
+	}
+	r.fetched = true
+	return r.detail, nil
+}
+
+func (r *mqlStackitMongoDbFlexInstance) version() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetVersion(), nil
+}
+
+func (r *mqlStackitMongoDbFlexInstance) flavor() (any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	return toDict(d.GetFlavor()), nil
+}
+
+func (r *mqlStackitMongoDbFlexInstance) replicas() (int64, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return 0, err
+	}
+	return int64(d.GetReplicas()), nil
+}
+
+func (r *mqlStackitMongoDbFlexInstance) storage() (any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	return toDict(d.GetStorage()), nil
+}
+
+func (r *mqlStackitMongoDbFlexInstance) backupSchedule() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetBackupSchedule(), nil
+}
+
+func (r *mqlStackitMongoDbFlexInstance) acl() ([]any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return []any{}, err
+	}
+	if a, ok := d.GetAclOk(); ok {
+		return strSlice(a.GetItems()), nil
+	}
+	return []any{}, nil
+}
+
+func (r *mqlStackitMongoDbFlexInstance) options() (map[string]any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return map[string]any{}, err
+	}
+	return stringMap(d.GetOptions()), nil
+}
+
+// ------------------------- OpenSearch -------------------------
+
+func (r *mqlStackitOpenSearch) instances() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.OpenSearch()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID())
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetInstancesOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		inst := items[i]
+		lop := inst.GetLastOperation()
+		args := map[string]*llx.RawData{
+			"id":                 llx.StringData(inst.GetInstanceId()),
+			"name":               llx.StringData(inst.GetName()),
+			"status":             llx.StringData(string(lop.GetState())),
+			"planName":           llx.StringData(inst.GetPlanName()),
+			"planId":             llx.StringData(inst.GetPlanId()),
+			"offeringName":       llx.StringData(inst.GetOfferingName()),
+			"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
+			"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
+			"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
+			"imageUrl":           llx.StringData(inst.GetImageUrl()),
+			"parameters":         llx.DictData(toDict(inst.GetParameters())),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.openSearch.instance", args)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitOpenSearchInstance) id() (string, error) {
+	return "stackit.openSearch.instance/" + r.Id.Data, nil
+}
+
+// ------------------------- MariaDB -------------------------
+
+func (r *mqlStackitMariaDb) instances() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.MariaDb()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID())
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetInstancesOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		inst := items[i]
+		lop := inst.GetLastOperation()
+		args := map[string]*llx.RawData{
+			"id":                 llx.StringData(inst.GetInstanceId()),
+			"name":               llx.StringData(inst.GetName()),
+			"status":             llx.StringData(string(lop.GetState())),
+			"planName":           llx.StringData(inst.GetPlanName()),
+			"planId":             llx.StringData(inst.GetPlanId()),
+			"offeringName":       llx.StringData(inst.GetOfferingName()),
+			"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
+			"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
+			"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
+			"imageUrl":           llx.StringData(inst.GetImageUrl()),
+			"parameters":         llx.DictData(toDict(inst.GetParameters())),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.mariaDb.instance", args)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitMariaDbInstance) id() (string, error) {
+	return "stackit.mariaDb.instance/" + r.Id.Data, nil
+}
+
+// ------------------------- Redis -------------------------
+
+func (r *mqlStackitRedis) instances() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.Redis()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID())
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetInstancesOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		inst := items[i]
+		lop := inst.GetLastOperation()
+		args := map[string]*llx.RawData{
+			"id":                 llx.StringData(inst.GetInstanceId()),
+			"name":               llx.StringData(inst.GetName()),
+			"status":             llx.StringData(string(lop.GetState())),
+			"planName":           llx.StringData(inst.GetPlanName()),
+			"planId":             llx.StringData(inst.GetPlanId()),
+			"offeringName":       llx.StringData(inst.GetOfferingName()),
+			"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
+			"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
+			"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
+			"imageUrl":           llx.StringData(inst.GetImageUrl()),
+			"parameters":         llx.DictData(toDict(inst.GetParameters())),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.redis.instance", args)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitRedisInstance) id() (string, error) {
+	return "stackit.redis.instance/" + r.Id.Data, nil
+}
+
+// ------------------------- RabbitMQ -------------------------
+
+func (r *mqlStackitRabbitMq) instances() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.RabbitMq()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID())
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetInstancesOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		inst := items[i]
+		lop := inst.GetLastOperation()
+		args := map[string]*llx.RawData{
+			"id":                 llx.StringData(inst.GetInstanceId()),
+			"name":               llx.StringData(inst.GetName()),
+			"status":             llx.StringData(string(lop.GetState())),
+			"planName":           llx.StringData(inst.GetPlanName()),
+			"planId":             llx.StringData(inst.GetPlanId()),
+			"offeringName":       llx.StringData(inst.GetOfferingName()),
+			"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
+			"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
+			"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
+			"imageUrl":           llx.StringData(inst.GetImageUrl()),
+			"parameters":         llx.DictData(toDict(inst.GetParameters())),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.rabbitMq.instance", args)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitRabbitMqInstance) id() (string, error) {
+	return "stackit.rabbitMq.instance/" + r.Id.Data, nil
+}
+
+// ------------------------- Secrets Manager -------------------------
+
+func (r *mqlStackitSecretsManager) instances() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.SecretsManager()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID())
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetInstancesOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		inst := items[i]
+		args := map[string]*llx.RawData{
+			"id":            llx.StringData(inst.GetId()),
+			"name":          llx.StringData(inst.GetName()),
+			"state":         llx.StringData(inst.GetState()),
+			"apiUrl":        llx.StringData(inst.GetApiUrl()),
+			"secretsEngine": llx.StringData(inst.GetSecretsEngine()),
+			"secretCount":   llx.IntData(int64(inst.GetSecretCount())),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.secretsManager.instance", args)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitSecretsManagerInstance) id() (string, error) {
+	return "stackit.secretsManager.instance/" + r.Id.Data, nil
+}
+
+func (r *mqlStackitSecretsManagerInstance) acls() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.SecretsManager()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListACLsExecute(bgctx(), c.ProjectID(), r.Id.Data)
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	acls, _ := resp.GetAclsOk()
+	out := make([]any, 0, len(acls))
+	for i := range acls {
+		out = append(out, acls[i].GetCidr())
+	}
+	return out, nil
+}
+
+// ------------------------- Observability -------------------------
+//
+// The list endpoint returns id/name/status/planName/serviceName only.
+// planId/dashboardUrl/parameters/isUpdatable live behind GetInstance and
+// are lazy-loaded once per instance.
+
+type mqlStackitObservabilityInstanceInternal struct {
+	fetched bool
+	detail  *observability.GetInstanceResponse
+	lock    sync.Mutex
+}
+
+func (r *mqlStackitObservability) instances() ([]any, error) {
+	c := conn(r.MqlRuntime)
+	client, err := c.Observability()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.ListInstancesExecute(bgctx(), c.ProjectID())
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+	items, _ := resp.GetInstancesOk()
+	out := make([]any, 0, len(items))
+	for i := range items {
+		inst := items[i]
+		args := map[string]*llx.RawData{
+			"id":           llx.StringData(inst.GetId()),
+			"name":         llx.StringData(inst.GetName()),
+			"status":       llx.StringData(string(inst.GetStatus())),
+			"planName":     llx.StringData(inst.GetPlanName()),
+			"offeringName": llx.StringData(inst.GetServiceName()),
+		}
+		res, err := CreateResource(r.MqlRuntime, "stackit.observability.instance", args)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (r *mqlStackitObservabilityInstance) id() (string, error) {
+	return "stackit.observability.instance/" + r.Id.Data, nil
+}
+
+func (r *mqlStackitObservabilityInstance) fetchDetail() (*observability.GetInstanceResponse, error) {
+	if r.fetched {
+		return r.detail, nil
+	}
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched {
+		return r.detail, nil
+	}
+	c := conn(r.MqlRuntime)
+	client, err := c.Observability()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.GetInstanceExecute(bgctx(), r.Id.Data, c.ProjectID())
+	if err != nil {
+		if isAccessDenied(err) {
+			r.fetched = true
+			return nil, nil
+		}
+		return nil, err
+	}
+	r.detail = resp
+	r.fetched = true
+	return r.detail, nil
+}
+
+func (r *mqlStackitObservabilityInstance) planId() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetPlanId(), nil
+}
+
+func (r *mqlStackitObservabilityInstance) dashboardUrl() (string, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return "", err
+	}
+	return d.GetDashboardUrl(), nil
+}
+
+func (r *mqlStackitObservabilityInstance) parameters() (any, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return nil, err
+	}
+	params, _ := d.GetParametersOk()
+	return stringMap(params), nil
+}
+
+func (r *mqlStackitObservabilityInstance) isUpdatable() (bool, error) {
+	d, err := r.fetchDetail()
+	if err != nil || d == nil {
+		return false, err
+	}
+	return d.GetIsUpdatable(), nil
+}
+
+// ------------------------- DBaaS init functions -------------------------
+//
+// Each instance type's schema declares `init(id? string)` so a user can
+// query a single instance by id without listing first. Without these
+// functions, `stackit.postgresFlex.instance(id: "uuid")` would hand back
+// a zero-value resource and silently fail any downstream field reads.
+
+func initStackitPostgresFlexInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := idArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.PostgresFlex()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), c.Region(), id)
+	if err != nil {
+		return nil, nil, err
+	}
+	inst, ok := resp.GetItemOk()
+	if !ok {
+		return args, nil, nil
+	}
+	res, err := CreateResource(runtime, "stackit.postgresFlex.instance", map[string]*llx.RawData{
+		"id":     llx.StringData(inst.GetId()),
+		"name":   llx.StringData(inst.GetName()),
+		"status": llx.StringData(inst.GetStatus()),
+		"region": llx.StringData(c.Region()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	r := res.(*mqlStackitPostgresFlexInstance)
+	r.detail = &inst
+	r.fetched = true
+	return nil, res, nil
+}
+
+func initStackitMongoDbFlexInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := idArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.MongoDbFlex()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id, c.Region())
+	if err != nil {
+		return nil, nil, err
+	}
+	inst, ok := resp.GetItemOk()
+	if !ok {
+		return args, nil, nil
+	}
+	res, err := CreateResource(runtime, "stackit.mongoDbFlex.instance", map[string]*llx.RawData{
+		"id":     llx.StringData(inst.GetId()),
+		"name":   llx.StringData(inst.GetName()),
+		"status": llx.StringData(string(inst.GetStatus())),
+		"region": llx.StringData(c.Region()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	r := res.(*mqlStackitMongoDbFlexInstance)
+	r.detail = &inst
+	r.fetched = true
+	return nil, res, nil
+}
+
+func initStackitOpenSearchInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := idArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.OpenSearch()
+	if err != nil {
+		return nil, nil, err
+	}
+	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id)
+	if err != nil {
+		return nil, nil, err
+	}
+	lop := inst.GetLastOperation()
+	res, err := CreateResource(runtime, "stackit.openSearch.instance", map[string]*llx.RawData{
+		"id":                 llx.StringData(inst.GetInstanceId()),
+		"name":               llx.StringData(inst.GetName()),
+		"status":             llx.StringData(string(lop.GetState())),
+		"planName":           llx.StringData(inst.GetPlanName()),
+		"planId":             llx.StringData(inst.GetPlanId()),
+		"offeringName":       llx.StringData(inst.GetOfferingName()),
+		"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
+		"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
+		"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
+		"imageUrl":           llx.StringData(inst.GetImageUrl()),
+		"parameters":         llx.DictData(toDict(inst.GetParameters())),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
+func initStackitMariaDbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := idArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.MariaDb()
+	if err != nil {
+		return nil, nil, err
+	}
+	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id)
+	if err != nil {
+		return nil, nil, err
+	}
+	lop := inst.GetLastOperation()
+	res, err := CreateResource(runtime, "stackit.mariaDb.instance", map[string]*llx.RawData{
+		"id":                 llx.StringData(inst.GetInstanceId()),
+		"name":               llx.StringData(inst.GetName()),
+		"status":             llx.StringData(string(lop.GetState())),
+		"planName":           llx.StringData(inst.GetPlanName()),
+		"planId":             llx.StringData(inst.GetPlanId()),
+		"offeringName":       llx.StringData(inst.GetOfferingName()),
+		"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
+		"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
+		"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
+		"imageUrl":           llx.StringData(inst.GetImageUrl()),
+		"parameters":         llx.DictData(toDict(inst.GetParameters())),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
+func initStackitRedisInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := idArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.Redis()
+	if err != nil {
+		return nil, nil, err
+	}
+	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id)
+	if err != nil {
+		return nil, nil, err
+	}
+	lop := inst.GetLastOperation()
+	res, err := CreateResource(runtime, "stackit.redis.instance", map[string]*llx.RawData{
+		"id":                 llx.StringData(inst.GetInstanceId()),
+		"name":               llx.StringData(inst.GetName()),
+		"status":             llx.StringData(string(lop.GetState())),
+		"planName":           llx.StringData(inst.GetPlanName()),
+		"planId":             llx.StringData(inst.GetPlanId()),
+		"offeringName":       llx.StringData(inst.GetOfferingName()),
+		"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
+		"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
+		"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
+		"imageUrl":           llx.StringData(inst.GetImageUrl()),
+		"parameters":         llx.DictData(toDict(inst.GetParameters())),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
+func initStackitRabbitMqInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := idArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.RabbitMq()
+	if err != nil {
+		return nil, nil, err
+	}
+	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id)
+	if err != nil {
+		return nil, nil, err
+	}
+	lop := inst.GetLastOperation()
+	res, err := CreateResource(runtime, "stackit.rabbitMq.instance", map[string]*llx.RawData{
+		"id":                 llx.StringData(inst.GetInstanceId()),
+		"name":               llx.StringData(inst.GetName()),
+		"status":             llx.StringData(string(lop.GetState())),
+		"planName":           llx.StringData(inst.GetPlanName()),
+		"planId":             llx.StringData(inst.GetPlanId()),
+		"offeringName":       llx.StringData(inst.GetOfferingName()),
+		"cfOrganizationGuid": llx.StringData(inst.GetCfOrganizationGuid()),
+		"cfSpaceGuid":        llx.StringData(inst.GetCfSpaceGuid()),
+		"dashboardUrl":       llx.StringData(inst.GetDashboardUrl()),
+		"imageUrl":           llx.StringData(inst.GetImageUrl()),
+		"parameters":         llx.DictData(toDict(inst.GetParameters())),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
+func initStackitSecretsManagerInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := idArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.SecretsManager()
+	if err != nil {
+		return nil, nil, err
+	}
+	inst, err := client.GetInstanceExecute(bgctx(), c.ProjectID(), id)
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := CreateResource(runtime, "stackit.secretsManager.instance", map[string]*llx.RawData{
+		"id":            llx.StringData(inst.GetId()),
+		"name":          llx.StringData(inst.GetName()),
+		"state":         llx.StringData(inst.GetState()),
+		"apiUrl":        llx.StringData(inst.GetApiUrl()),
+		"secretsEngine": llx.StringData(inst.GetSecretsEngine()),
+		"secretCount":   llx.IntData(int64(inst.GetSecretCount())),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
+func initStackitObservabilityInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	id, ok := idArg(args, "id")
+	if !ok {
+		return args, nil, nil
+	}
+	c := conn(runtime)
+	client, err := c.Observability()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.GetInstanceExecute(bgctx(), id, c.ProjectID())
+	if err != nil {
+		return nil, nil, err
+	}
+	res, err := CreateResource(runtime, "stackit.observability.instance", map[string]*llx.RawData{
+		"id":           llx.StringData(resp.GetId()),
+		"name":         llx.StringData(resp.GetName()),
+		"status":       llx.StringData(string(resp.GetStatus())),
+		"planName":     llx.StringData(resp.GetPlanName()),
+		"offeringName": llx.StringData(resp.GetServiceName()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	r := res.(*mqlStackitObservabilityInstance)
+	r.detail = resp
+	r.fetched = true
+	return nil, res, nil
+}

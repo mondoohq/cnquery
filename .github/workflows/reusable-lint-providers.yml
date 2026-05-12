@@ -81,6 +81,17 @@ jobs:
           for provider in ${providers}; do
             name=$(basename "$provider")
             echo "=== Linting provider: $name ==="
+            # Pre-populate the module cache before invoking golangci-lint.
+            # Without this, `golangci-lint run` (via go/packages → go list with
+            # -mod=readonly) intermittently fails on providers with many direct
+            # deps with "go: updates to go.mod needed" when modules need to be
+            # downloaded as a side-effect of package loading. Running `go mod
+            # download` first makes the downloads explicit and side-effect-free.
+            (cd "$provider" && go mod download) || {
+              echo "=== go mod download failed for $name ==="
+              failed="$failed $name"
+              continue
+            }
             if ! (cd "$provider" && golangci-lint run --timeout=30m $extra_args); then
               failed="$failed $name"
             fi

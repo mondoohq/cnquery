@@ -753,6 +753,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"stackit": {
+		Provider: &plugin.Provider{
+			Name:            "stackit",
+			ID:              "go.mondoo.com/mql/providers/stackit",
+			ConnectionTypes: []string{"stackit"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "stackit",
+					Use:   "stackit",
+					Short: "a STACKIT project",
+				},
+			},
+		},
+	},
+
 	"snowflake": {
 		Provider: &plugin.Provider{
 			Name:            "snowflake",
