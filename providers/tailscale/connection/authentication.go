@@ -42,25 +42,12 @@ func GetToken(conf *inventory.Config) (string, bool) {
 	// env variable
 	token, set := getOptionValueFrom(conf.Options, TAILSCALE_API_KEY_VAR, OPTION_TOKEN)
 
-	// special case for tokens that are passed as credentials
-	if len(conf.Credentials) > 0 {
-		for _, cred := range conf.Credentials {
-			// support only for credentials of type password
-			if cred.Type != vault.CredentialType_password {
-				log.Warn().
-					Str("credential-type", cred.Type.String()).
-					Msg("unsupported credential type for Tailscale provider")
-				continue
-			}
-			// check if the password is empty
-			if len(cred.Secret) == 0 {
-				log.Warn().
-					Str("credential-type", cred.Type.String()).
-					Msg("empty credentials")
-				continue
-			}
-			// use it as the token
-			token = string(cred.Secret)
+	// special case for tokens that are passed as credentials. When an OAuth
+	// client id is configured the password credential is the client secret, not
+	// the API token, so we only fall back to credentials in token mode.
+	if _, oauth := getOptionValueFrom(conf.Options, TAILSCALE_OAUTH_CLIENT_ID_VAR, OPTION_CLIENT_ID); !oauth {
+		if cred, ok := firstPasswordCredential(conf); ok {
+			token = string(cred)
 			set = true
 		}
 	}
@@ -71,7 +58,41 @@ func GetClientID(conf *inventory.Config) (string, bool) {
 	return getOptionValueFrom(conf.Options, TAILSCALE_OAUTH_CLIENT_ID_VAR, OPTION_CLIENT_ID)
 }
 func GetClientSecret(conf *inventory.Config) (string, bool) {
-	return getOptionValueFrom(conf.Options, TAILSCALE_OAUTH_CLIENT_SECRET_VAR, OPTION_CLIENT_SECRET)
+	secret, set := getOptionValueFrom(conf.Options, TAILSCALE_OAUTH_CLIENT_SECRET_VAR, OPTION_CLIENT_SECRET)
+
+	// special case for OAuth client secrets that are passed as credentials. We
+	// only treat password credentials as the client secret when an OAuth client
+	// id is configured — otherwise the credential is the API token (see
+	// GetToken).
+	if _, oauth := getOptionValueFrom(conf.Options, TAILSCALE_OAUTH_CLIENT_ID_VAR, OPTION_CLIENT_ID); oauth {
+		if cred, ok := firstPasswordCredential(conf); ok {
+			secret = string(cred)
+			set = true
+		}
+	}
+
+	return secret, set
+}
+
+// firstPasswordCredential returns the secret bytes of the first non-empty
+// password credential in conf, or false if none is present.
+func firstPasswordCredential(conf *inventory.Config) ([]byte, bool) {
+	for _, cred := range conf.Credentials {
+		if cred.Type != vault.CredentialType_password {
+			log.Warn().
+				Str("credential-type", cred.Type.String()).
+				Msg("unsupported credential type for Tailscale provider")
+			continue
+		}
+		if len(cred.Secret) == 0 {
+			log.Warn().
+				Str("credential-type", cred.Type.String()).
+				Msg("empty credentials")
+			continue
+		}
+		return cred.Secret, true
+	}
+	return nil, false
 }
 func GetBaseURL(conf *inventory.Config) (string, bool) {
 	return getOptionValueFrom(conf.Options, TAILSCALE_BASE_URL_VAR, OPTION_BASE_URL)
