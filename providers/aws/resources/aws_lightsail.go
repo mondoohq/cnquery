@@ -178,8 +178,8 @@ func (a *mqlAwsLightsailInstance) firewallRules() ([]any, error) {
 			"toPort":     int64(p.ToPort),
 			"protocol":   string(p.Protocol),
 			"accessType": string(p.AccessType),
-			"cidrs":      p.Cidrs,
-			"ipv6Cidrs":  p.Ipv6Cidrs,
+			"cidrs":      stringsToInterface(p.Cidrs),
+			"ipv6Cidrs":  stringsToInterface(p.Ipv6Cidrs),
 		}
 		if p.AccessFrom != nil {
 			rule["accessFrom"] = *p.AccessFrom
@@ -204,9 +204,9 @@ func (a *mqlAwsLightsailInstance) ports() ([]any, error) {
 			"protocol":        string(p.Protocol),
 			"accessType":      string(p.AccessType),
 			"accessDirection": string(p.AccessDirection),
-			"cidrs":           p.Cidrs,
-			"ipv6Cidrs":       p.Ipv6Cidrs,
-			"cidrListAliases": p.CidrListAliases,
+			"cidrs":           stringsToInterface(p.Cidrs),
+			"ipv6Cidrs":       stringsToInterface(p.Ipv6Cidrs),
+			"cidrListAliases": stringsToInterface(p.CidrListAliases),
 		}
 		if p.AccessFrom != nil {
 			entry["accessFrom"] = *p.AccessFrom
