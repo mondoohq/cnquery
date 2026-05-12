@@ -7,7 +7,7 @@ go 1.26.2
 require (
 	github.com/gopcua/opcua v0.8.0
 	github.com/mozillazg/go-slugify v0.2.0
-	go.mondoo.com/mql/v13 v13.8.2
+	go.mondoo.com/mql/v13 v13.9.0
 )
 
 require (
@@ -154,7 +154,7 @@ require (
 	google.golang.org/api v0.248.0 // indirect
 	google.golang.org/genproto v0.0.0-20250826171959-ef028d996bc1 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260226221140-a57be14db171 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260504160031-60b97b32f348 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260511170946-3700d4141b60 // indirect
 	google.golang.org/grpc v1.81.0 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect

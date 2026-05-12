@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/proxmox
 
 go 1.26.2
 
-require go.mondoo.com/mql/v13 v13.8.2
+require go.mondoo.com/mql/v13 v13.9.0
 
 require (
 	cloud.google.com/go v0.115.1 // indirect
@@ -52,8 +52,8 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/getsentry/sentry-go v0.46.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.8.0 // indirect
-	github.com/go-git/go-git/v5 v5.18.0 // indirect
+	github.com/go-git/go-billy/v5 v5.9.0 // indirect
+	github.com/go-git/go-git/v5 v5.19.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
