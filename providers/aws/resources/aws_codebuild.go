@@ -56,10 +56,10 @@ func (a *mqlAwsCodebuild) getProjects(conn *connection.AwsConnection) []*jobpool
 			ctx := context.Background()
 
 			res := []any{}
-			params := &codebuild.ListProjectsInput{}
-			paginator := codebuild.NewListProjectsPaginator(svc, params)
+			names := []string{}
+			paginator := codebuild.NewListProjectsPaginator(svc, &codebuild.ListProjectsInput{})
 			for paginator.HasMorePages() {
-				projects, err := paginator.NextPage(ctx)
+				page, err := paginator.NextPage(ctx)
 				if err != nil {
 					if Is400AccessDeniedError(err) {
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
@@ -67,13 +67,25 @@ func (a *mqlAwsCodebuild) getProjects(conn *connection.AwsConnection) []*jobpool
 					}
 					return nil, err
 				}
+				names = append(names, page.Projects...)
+			}
 
-				for _, project := range projects.Projects {
-					mqlProject, err := CreateResource(a.MqlRuntime, "aws.codebuild.project",
-						map[string]*llx.RawData{
-							"name":   llx.StringData(project),
-							"region": llx.StringData(region),
-						})
+			// BatchGetProjects accepts up to 100 names per call.
+			for start := 0; start < len(names); start += 100 {
+				end := start + 100
+				if end > len(names) {
+					end = len(names)
+				}
+				batch, err := svc.BatchGetProjects(ctx, &codebuild.BatchGetProjectsInput{Names: names[start:end]})
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for i := range batch.Projects {
+					mqlProject, err := newMqlAwsCodebuildProject(a.MqlRuntime, conn, region, batch.Projects[i])
 					if err != nil {
 						return nil, err
 					}
@@ -114,14 +126,29 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return nil, nil, errors.New("aws codebuild project not found")
 	}
 
-	project := projectDetails.Projects[0]
-	jsonEnv, err := convert.JsonToDict(project.Environment)
+	mqlProject, err := newMqlAwsCodebuildProject(runtime, conn, region, projectDetails.Projects[0])
 	if err != nil {
 		return nil, nil, err
 	}
+	return nil, mqlProject, nil
+}
+
+// newMqlAwsCodebuildProject builds a fully populated aws.codebuild.project
+// MQL resource from a single CodeBuild API project. Used by both the
+// `projects()` iterator and the resource init function so iterated rows have
+// every scalar field set without depending on init re-running on field access.
+func newMqlAwsCodebuildProject(runtime *plugin.Runtime, conn *connection.AwsConnection, region string, project cbtypes.Project) (plugin.Resource, error) {
+	jsonEnv, err := convert.JsonToDict(project.Environment)
+	if err != nil {
+		return nil, err
+	}
 	jsonSource, err := convert.JsonToDict(project.Source)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
+	}
+	args := map[string]*llx.RawData{
+		"name":   llx.StringDataPtr(project.Name),
+		"region": llx.StringData(region),
 	}
 	args["arn"] = llx.StringDataPtr(project.Arn)
 	args["description"] = llx.StringDataPtr(project.Description)
@@ -161,7 +188,7 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 	secondaryArtifacts, err := cbArtifactsToDicts(project.SecondaryArtifacts)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	args["secondaryArtifacts"] = llx.ArrayData(secondaryArtifacts, types.Dict)
 
@@ -301,7 +328,7 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	for i := range project.SecondarySources {
 		d, err := convert.JsonToDict(project.SecondarySources[i])
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		secondarySources = append(secondarySources, d)
 	}
@@ -309,19 +336,19 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 
 	webhookDict, err := convert.JsonToDict(project.Webhook)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	args["webhook"] = llx.MapData(webhookDict, types.String)
 
 	buildBatchDict, err := convert.JsonToDict(project.BuildBatchConfig)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	args["buildBatchConfig"] = llx.MapData(buildBatchDict, types.String)
 
 	obj, err := CreateResource(runtime, "aws.codebuild.project", args)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	mqlProject := obj.(*mqlAwsCodebuildProject)
 	mqlProject.cacheEncryptionKeyArn = project.EncryptionKey
@@ -337,7 +364,7 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		sgArns = append(sgArns, NewSecurityGroupArn(region, conn.AccountId(), sgId))
 	}
 	mqlProject.setSecurityGroupArns(sgArns)
-	return args, mqlProject, nil
+	return mqlProject, nil
 }
 
 type mqlAwsCodebuildProjectInternal struct {
