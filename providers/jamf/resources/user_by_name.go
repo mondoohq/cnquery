@@ -1,0 +1,52 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"errors"
+
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/jamf/connection"
+)
+
+func (u *mqlJamfUserByName) id() (string, error) {
+	return "jamf.userByName/" + u.Name.Data, nil
+}
+
+func initJamfUserByName(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// Already hydrated (e.g., from a recording or a previous fetch) — skip the API call.
+	if _, ok := args["id"]; ok {
+		return args, nil, nil
+	}
+
+	nameArg, ok := args["name"]
+	if !ok || nameArg.Value == nil {
+		// Bare resource access is a valid empty state, not an error.
+		return args, nil, nil
+	}
+	name := nameArg.Value.(string)
+
+	conn := runtime.Connection.(*connection.JamfConnection)
+	client := conn.Client
+
+	user, err := client.GetUserByName(name)
+	if err != nil {
+		return nil, nil, err
+	}
+	if user == nil {
+		return nil, nil, errors.New("jamf user not found: " + name)
+	}
+
+	args["__id"] = llx.StringData("jamf.userByName/" + user.Name)
+	args["id"] = llx.IntData(user.ID)
+	args["name"] = llx.StringData(user.Name)
+	args["fullName"] = llx.StringData(user.FullName)
+	args["email"] = llx.StringData(user.Email)
+	args["phone"] = llx.StringData(user.PhoneNumber)
+	args["position"] = llx.StringData(user.Position)
+	args["enableCustomPhoto"] = llx.BoolData(user.EnableCustomPhoto)
+
+	return args, nil, nil
+}

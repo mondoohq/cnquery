@@ -351,6 +351,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"jamf": {
+		Provider: &plugin.Provider{
+			Name:            "jamf",
+			ID:              "go.mondoo.com/mql/providers/jamf",
+			ConnectionTypes: []string{"jamf"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "jamf",
+					Use:   "jamf",
+					Short: "a Jamf Pro instance",
+				},
+			},
+		},
+	},
+
 	"junos": {
 		Provider: &plugin.Provider{
 			Name:            "junos",

@@ -280,6 +280,7 @@ ipsetreferencestatement
 isos
 issuewild
 istio
+itunes
 ixgbe
 jamf
 JFi
@@ -536,6 +537,7 @@ secureboot
 selfservice
 sentinelone
 serde
+SInstall
 serviceconnection
 servicedesk
 serviceprincipals

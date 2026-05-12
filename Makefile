@@ -217,6 +217,7 @@ PROVIDERS := \
 	hetzner \
 	ipinfo \
 	ipmi \
+	jamf \
 	k8s \
 	kustomize \
 	mondoo \
