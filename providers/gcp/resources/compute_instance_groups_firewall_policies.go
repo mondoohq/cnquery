@@ -274,7 +274,7 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 	for _, r := range g.cacheRules {
 		match, _ := convert.JsonToDict(r.Match)
 
-		var srcIpRanges, destIpRanges, srcAddressGroups, destAddressGroups, srcFqdns, srcRegionCodes []any
+		var srcIpRanges, destIpRanges, srcAddressGroups, destAddressGroups []any
 		var layer4Configs []any
 		srcSecureTags := map[string]any{}
 		if r.Match != nil {
@@ -282,8 +282,6 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 			destIpRanges = convert.SliceAnyToInterface(r.Match.DestIpRanges)
 			srcAddressGroups = convert.SliceAnyToInterface(r.Match.SrcAddressGroups)
 			destAddressGroups = convert.SliceAnyToInterface(r.Match.DestAddressGroups)
-			srcFqdns = convert.SliceAnyToInterface(r.Match.SrcFqdns)
-			srcRegionCodes = convert.SliceAnyToInterface(r.Match.SrcRegionCodes)
 			for _, l4 := range r.Match.Layer4Configs {
 				if l4 == nil {
 					continue
@@ -327,8 +325,6 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 			"srcSecureTags":         llx.MapData(srcSecureTags, types.String),
 			"srcAddressGroups":      llx.ArrayData(srcAddressGroups, types.String),
 			"destAddressGroups":     llx.ArrayData(destAddressGroups, types.String),
-			"srcFqdns":              llx.ArrayData(srcFqdns, types.String),
-			"srcRegionCodes":        llx.ArrayData(srcRegionCodes, types.String),
 			"targetSecureTags":      llx.MapData(targetSecureTags, types.String),
 		})
 		if err != nil {
@@ -338,7 +334,6 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 	}
 	return res, nil
 }
-
 
 func (g *mqlGcpProjectComputeServiceFirewallPolicyRule) id() (string, error) {
 	return g.Id.Data, g.Id.Error

@@ -9492,12 +9492,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.firewallPolicy.rule.destAddressGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetDestAddressGroups()).ToDataRes(types.Array(types.String))
 	},
-	"gcp.project.computeService.firewallPolicy.rule.srcFqdns": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSrcFqdns()).ToDataRes(types.Array(types.String))
-	},
-	"gcp.project.computeService.firewallPolicy.rule.srcRegionCodes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSrcRegionCodes()).ToDataRes(types.Array(types.String))
-	},
 	"gcp.project.computeService.firewallPolicy.rule.targetSecureTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetTargetSecureTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -24170,14 +24164,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.firewallPolicy.rule.destAddressGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).DestAddressGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.firewallPolicy.rule.srcFqdns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).SrcFqdns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.firewallPolicy.rule.srcRegionCodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).SrcRegionCodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.firewallPolicy.rule.targetSecureTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55649,8 +55635,6 @@ type mqlGcpProjectComputeServiceFirewallPolicyRule struct {
 	SrcSecureTags         plugin.TValue[map[string]any]
 	SrcAddressGroups      plugin.TValue[[]any]
 	DestAddressGroups     plugin.TValue[[]any]
-	SrcFqdns              plugin.TValue[[]any]
-	SrcRegionCodes        plugin.TValue[[]any]
 	TargetSecureTags      plugin.TValue[map[string]any]
 }
 
@@ -55761,14 +55745,6 @@ func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSrcAddressGroups() *p
 
 func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetDestAddressGroups() *plugin.TValue[[]any] {
 	return &c.DestAddressGroups
-}
-
-func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSrcFqdns() *plugin.TValue[[]any] {
-	return &c.SrcFqdns
-}
-
-func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSrcRegionCodes() *plugin.TValue[[]any] {
-	return &c.SrcRegionCodes
 }
 
 func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetTargetSecureTags() *plugin.TValue[map[string]any] {

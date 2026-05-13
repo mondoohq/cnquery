@@ -6223,10 +6223,6 @@ private gcp.project.computeService.firewallPolicy.rule @defaults("priority actio
   srcAddressGroups []string
   // Destination address groups the rule matches
   destAddressGroups []string
-  // Source FQDNs the rule matches
-  srcFqdns []string
-  // Source region codes (ISO 3166-1 alpha-2) the rule matches
-  srcRegionCodes []string
   // Target secure tag values (tag name -> state); the modern replacement for instance targetTags on hierarchical policies
   targetSecureTags map[string]string
 }

@@ -1306,9 +1306,7 @@ gcp.project.computeService.firewallPolicy.rule.priority 11.6.6
 gcp.project.computeService.firewallPolicy.rule.ruleName 11.6.6
 gcp.project.computeService.firewallPolicy.rule.securityProfileGroup 11.6.6
 gcp.project.computeService.firewallPolicy.rule.srcAddressGroups 13.14.2
-gcp.project.computeService.firewallPolicy.rule.srcFqdns 13.14.2
 gcp.project.computeService.firewallPolicy.rule.srcIpRanges 13.14.2
-gcp.project.computeService.firewallPolicy.rule.srcRegionCodes 13.14.2
 gcp.project.computeService.firewallPolicy.rule.srcSecureTags 13.14.2
 gcp.project.computeService.firewallPolicy.rule.targetResources 11.6.6
 gcp.project.computeService.firewallPolicy.rule.targetSecureTags 13.14.2
