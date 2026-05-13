@@ -3569,10 +3569,20 @@ func azureAppSecurityGroupToMql(runtime *plugin.Runtime, asg network.Application
 	if err != nil {
 		return nil, err
 	}
+	// When the ASG is referenced from a security rule, the Azure API returns
+	// only the ARM resource ID. Recover the name from the ID's final segment
+	// so consumers don't see name=null on otherwise-valid typed references.
+	name := asg.Name
+	if (name == nil || *name == "") && asg.ID != nil {
+		if i := strings.LastIndex(*asg.ID, "/"); i >= 0 && i+1 < len(*asg.ID) {
+			n := (*asg.ID)[i+1:]
+			name = &n
+		}
+	}
 	res, err := CreateResource(runtime, "azure.subscription.networkService.appSecurityGroup",
 		map[string]*llx.RawData{
 			"id":         llx.StringDataPtr(asg.ID),
-			"name":       llx.StringDataPtr(asg.Name),
+			"name":       llx.StringDataPtr(name),
 			"type":       llx.StringDataPtr(asg.Type),
 			"location":   llx.StringDataPtr(asg.Location),
 			"tags":       llx.MapData(convert.PtrMapStrToInterface(asg.Tags), types.String),
