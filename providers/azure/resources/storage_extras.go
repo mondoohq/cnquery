@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"net/http"
 	"sync"
 	"time"
 
@@ -415,6 +416,11 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAz
 	}
 	resp, err := client.Get(ctx, resourceId, armsecurity.SettingNameCurrent, nil)
 	if err != nil {
+		var rerr *azcore.ResponseError
+		if errors.As(err, &rerr) && (rerr.StatusCode == http.StatusForbidden || rerr.StatusCode == http.StatusNotFound) {
+			a.DefenderForStorage.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
 		return nil, err
 	}
 
