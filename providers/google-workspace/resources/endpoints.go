@@ -6,6 +6,7 @@ package resources
 import (
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -113,6 +114,7 @@ func parseRFC3339(s string) *time.Time {
 	}
 	t, err := time.Parse(time.RFC3339, s)
 	if err != nil {
+		log.Debug().Err(err).Str("value", s).Msg("google-workspace: failed to parse RFC3339 timestamp")
 		return nil
 	}
 	return &t
