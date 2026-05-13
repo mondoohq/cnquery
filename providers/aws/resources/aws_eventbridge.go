@@ -110,6 +110,26 @@ func (a *mqlAwsEventbridge) rules() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAwsEventbridgeEventBus) policy() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.EventBridge(a.Region.Data)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeEventBus(ctx, &eventbridge.DescribeEventBusInput{
+		Name: &a.Name.Data,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	if resp.Policy == nil {
+		return "", nil
+	}
+	return *resp.Policy, nil
+}
+
 func (a *mqlAwsEventbridgeEventBus) tags() (map[string]any, error) {
 	arn := a.Arn.Data
 	region := a.Region.Data

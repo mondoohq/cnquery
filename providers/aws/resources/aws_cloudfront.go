@@ -53,14 +53,20 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 			origins := []any{}
 			if or := distribution.Origins; or != nil {
 				for _, origin := range distribution.Origins.Items {
+					var oai string
+					if origin.S3OriginConfig != nil && origin.S3OriginConfig.OriginAccessIdentity != nil {
+						oai = *origin.S3OriginConfig.OriginAccessIdentity
+					}
 					mqlAwsCloudfrontOrigin, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution.origin",
 						map[string]*llx.RawData{
-							"domainName":         llx.StringDataPtr(origin.DomainName),
-							"id":                 llx.StringDataPtr(origin.Id),
-							"connectionAttempts": llx.IntDataDefault(origin.ConnectionAttempts, 0),
-							"connectionTimeout":  llx.IntDataDefault(origin.ConnectionTimeout, 0),
-							"originPath":         llx.StringDataPtr(origin.OriginPath),
-							"account":            llx.StringData(conn.AccountId()),
+							"domainName":            llx.StringDataPtr(origin.DomainName),
+							"id":                    llx.StringDataPtr(origin.Id),
+							"connectionAttempts":    llx.IntDataDefault(origin.ConnectionAttempts, 0),
+							"connectionTimeout":     llx.IntDataDefault(origin.ConnectionTimeout, 0),
+							"originPath":            llx.StringDataPtr(origin.OriginPath),
+							"account":               llx.StringData(conn.AccountId()),
+							"originAccessControlId": llx.StringDataPtr(origin.OriginAccessControlId),
+							"originAccessIdentity":  llx.StringData(oai),
 						})
 					if err != nil {
 						return nil, err

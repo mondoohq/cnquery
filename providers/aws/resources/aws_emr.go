@@ -1129,3 +1129,225 @@ func initAwsEmrSecurityConfiguration(runtime *plugin.Runtime, args map[string]*l
 	}
 	return nil, nil, errors.New("emr security configuration does not exist")
 }
+
+type mqlAwsEmrStudioInternal struct {
+	cacheVpcId                  string
+	cacheSubnetIds              []string
+	cacheServiceRoleArn         string
+	cacheUserRoleArn            string
+	cacheWorkspaceSecurityGroup string
+	cacheEngineSecurityGroup    string
+	cacheEncryptionKeyArn       string
+}
+
+func (a *mqlAwsEmrStudio) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsEmr) studios() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getStudios(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEmr) getStudios(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		region := region
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Emr(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := emr.NewListStudiosPaginator(svc, &emr.ListStudiosInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, summary := range page.Studios {
+					if summary.StudioId == nil {
+						continue
+					}
+					details, err := svc.DescribeStudio(ctx, &emr.DescribeStudioInput{StudioId: summary.StudioId})
+					if err != nil {
+						if Is400AccessDeniedError(err) {
+							continue
+						}
+						return nil, err
+					}
+					mqlStudio, err := newMqlAwsEmrStudio(a.MqlRuntime, region, details.Studio)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlStudio)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsEmrStudio(runtime *plugin.Runtime, region string, studio *emrtypes.Studio) (*mqlAwsEmrStudio, error) {
+	if studio == nil {
+		return nil, errors.New("studio is nil")
+	}
+	res, err := CreateResource(runtime, "aws.emr.studio",
+		map[string]*llx.RawData{
+			"studioId":                   llx.StringDataPtr(studio.StudioId),
+			"arn":                        llx.StringDataPtr(studio.StudioArn),
+			"region":                     llx.StringData(region),
+			"name":                       llx.StringDataPtr(studio.Name),
+			"description":                llx.StringDataPtr(studio.Description),
+			"authMode":                   llx.StringData(string(studio.AuthMode)),
+			"defaultS3Location":          llx.StringDataPtr(studio.DefaultS3Location),
+			"encryptionKeyArn":           llx.StringDataPtr(studio.EncryptionKeyArn),
+			"idpAuthUrl":                 llx.StringDataPtr(studio.IdpAuthUrl),
+			"idpRelayStateParameterName": llx.StringDataPtr(studio.IdpRelayStateParameterName),
+			"url":                        llx.StringDataPtr(studio.Url),
+			"createdAt":                  llx.TimeDataPtr(studio.CreationTime),
+			"tags":                       llx.MapData(toInterfaceMap(emrTagsToMap(studio.Tags)), types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlStudio := res.(*mqlAwsEmrStudio)
+	mqlStudio.cacheVpcId = convert.ToValue(studio.VpcId)
+	mqlStudio.cacheSubnetIds = studio.SubnetIds
+	mqlStudio.cacheServiceRoleArn = convert.ToValue(studio.ServiceRole)
+	mqlStudio.cacheUserRoleArn = convert.ToValue(studio.UserRole)
+	mqlStudio.cacheWorkspaceSecurityGroup = convert.ToValue(studio.WorkspaceSecurityGroupId)
+	mqlStudio.cacheEngineSecurityGroup = convert.ToValue(studio.EngineSecurityGroupId)
+	mqlStudio.cacheEncryptionKeyArn = convert.ToValue(studio.EncryptionKeyArn)
+	return mqlStudio, nil
+}
+
+func emrTagsToMap(tags []emrtypes.Tag) map[string]string {
+	out := make(map[string]string, len(tags))
+	for _, t := range tags {
+		if t.Key != nil && t.Value != nil {
+			out[*t.Key] = *t.Value
+		}
+	}
+	return out
+}
+
+func (a *mqlAwsEmrStudio) vpc() (*mqlAwsVpc, error) {
+	if a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res, err := NewResource(a.MqlRuntime, "aws.vpc",
+		map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(vpcArnPattern, a.Region.Data, conn.AccountId(), a.cacheVpcId))})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
+}
+
+func (a *mqlAwsEmrStudio) subnets() ([]any, error) {
+	if len(a.cacheSubnetIds) == 0 {
+		return []any{}, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := make([]any, 0, len(a.cacheSubnetIds))
+	for _, sid := range a.cacheSubnetIds {
+		s, err := NewResource(a.MqlRuntime, "aws.vpc.subnet",
+			map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(subnetArnPattern, a.Region.Data, conn.AccountId(), sid))})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, s)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEmrStudio) serviceIamRole() (*mqlAwsIamRole, error) {
+	if a.cacheServiceRoleArn == "" {
+		a.ServiceIamRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheServiceRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsEmrStudio) userIamRole() (*mqlAwsIamRole, error) {
+	if a.cacheUserRoleArn == "" {
+		a.UserIamRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheUserRoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsEmrStudio) workspaceSecurityGroup() (*mqlAwsEc2Securitygroup, error) {
+	if a.cacheWorkspaceSecurityGroup == "" {
+		a.WorkspaceSecurityGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
+		map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, a.Region.Data, conn.AccountId(), a.cacheWorkspaceSecurityGroup))})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Securitygroup), nil
+}
+
+func (a *mqlAwsEmrStudio) engineSecurityGroup() (*mqlAwsEc2Securitygroup, error) {
+	if a.cacheEngineSecurityGroup == "" {
+		a.EngineSecurityGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup",
+		map[string]*llx.RawData{"arn": llx.StringData(fmt.Sprintf(securityGroupArnPattern, a.Region.Data, conn.AccountId(), a.cacheEngineSecurityGroup))})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEc2Securitygroup), nil
+}
+
+func (a *mqlAwsEmrStudio) encryptionKey() (*mqlAwsKmsKey, error) {
+	if a.cacheEncryptionKeyArn == "" {
+		a.EncryptionKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringData(a.cacheEncryptionKeyArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
+}

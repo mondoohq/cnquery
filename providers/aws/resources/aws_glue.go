@@ -681,3 +681,88 @@ func (a *mqlAwsGlueWorkflow) tags() (map[string]any, error) {
 	}
 	return toInterfaceMap(resp.Tags), nil
 }
+
+func (a *mqlAwsGlue) connections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getConnections(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGlue) getConnections(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("glue>getConnections>calling aws with region %s", region)
+
+			svc := conn.Glue(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := glue.NewGetConnectionsPaginator(svc, &glue.GetConnectionsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, c := range page.ConnectionList {
+					connArn := fmt.Sprintf("arn:aws:glue:%s:%s:connection/%s", region, conn.AccountId(), convert.ToValue(c.Name))
+
+					physical, err := convert.JsonToDict(c.PhysicalConnectionRequirements)
+					if err != nil {
+						return nil, err
+					}
+
+					mqlConn, err := CreateResource(a.MqlRuntime, "aws.glue.connection",
+						map[string]*llx.RawData{
+							"__id":                           llx.StringData(connArn),
+							"name":                           llx.StringDataPtr(c.Name),
+							"region":                         llx.StringData(region),
+							"description":                    llx.StringDataPtr(c.Description),
+							"connectionType":                 llx.StringData(string(c.ConnectionType)),
+							"connectionProperties":           llx.MapData(toInterfaceMapStringEnum(c.ConnectionProperties), types.String),
+							"matchCriteria":                  llx.ArrayData(convert.SliceAnyToInterface(c.MatchCriteria), types.String),
+							"physicalConnectionRequirements": llx.DictData(physical),
+							"createdAt":                      llx.TimeDataPtr(c.CreationTime),
+							"updatedAt":                      llx.TimeDataPtr(c.LastUpdatedTime),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlConn)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+// toInterfaceMapStringEnum converts AWS SDK maps keyed by string-enum types to plain map[string]any.
+func toInterfaceMapStringEnum[K ~string](m map[K]string) map[string]any {
+	out := make(map[string]any, len(m))
+	for k, v := range m {
+		out[string(k)] = v
+	}
+	return out
+}

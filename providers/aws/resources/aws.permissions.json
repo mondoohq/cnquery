@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.23.1",
-  "generated_at": "2026-05-12T22:06:10+01:00",
+  "version": "13.24.0",
+  "generated_at": "2026-05-13T12:31:17+01:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -272,6 +272,7 @@
     "elasticache:ListTagsForResource",
     "elasticbeanstalk:DescribeApplicationVersions",
     "elasticbeanstalk:DescribeApplications",
+    "elasticbeanstalk:DescribeConfigurationSettings",
     "elasticbeanstalk:DescribeEnvironmentResources",
     "elasticbeanstalk:DescribeEnvironments",
     "elasticbeanstalk:ListTagsForResource",
@@ -284,6 +285,7 @@
     "emr:DescribeCluster",
     "emr:DescribeSecurityConfiguration",
     "emr:DescribeStep",
+    "emr:DescribeStudio",
     "emr:GetAutoTerminationPolicy",
     "emr:GetBlockPublicAccessConfiguration",
     "emr:ListBootstrapActions",
@@ -292,10 +294,12 @@
     "emr:ListInstances",
     "emr:ListSecurityConfigurations",
     "emr:ListSteps",
+    "emr:ListStudios",
     "es:DescribeDomains",
     "es:DescribeElasticsearchDomain",
     "es:ListDomainNames",
     "es:ListTags",
+    "events:DescribeEventBus",
     "events:ListEventBuses",
     "events:ListRules",
     "events:ListTagsForResource",
@@ -318,6 +322,7 @@
     "fsx:DescribeFileSystems",
     "fsx:DescribeVolumes",
     "glue:BatchGetWorkflows",
+    "glue:GetConnections",
     "glue:GetCrawlers",
     "glue:GetDataCatalogEncryptionSettings",
     "glue:GetDatabases",
@@ -2409,6 +2414,12 @@
       "source_file": "aws_elasticbeanstalk.go"
     },
     {
+      "permission": "elasticbeanstalk:DescribeConfigurationSettings",
+      "service": "elasticbeanstalk",
+      "action": "DescribeConfigurationSettings",
+      "source_file": "aws_elasticbeanstalk.go"
+    },
+    {
       "permission": "elasticbeanstalk:DescribeEnvironmentResources",
       "service": "elasticbeanstalk",
       "action": "DescribeEnvironmentResources",
@@ -2481,6 +2492,12 @@
       "source_file": "aws_emr.go"
     },
     {
+      "permission": "emr:DescribeStudio",
+      "service": "emr",
+      "action": "DescribeStudio",
+      "source_file": "aws_emr.go"
+    },
+    {
       "permission": "emr:GetAutoTerminationPolicy",
       "service": "emr",
       "action": "GetAutoTerminationPolicy",
@@ -2529,6 +2546,12 @@
       "source_file": "aws_emr.go"
     },
     {
+      "permission": "emr:ListStudios",
+      "service": "emr",
+      "action": "ListStudios",
+      "source_file": "aws_emr.go"
+    },
+    {
       "permission": "es:DescribeDomains",
       "service": "es",
       "action": "DescribeDomains",
@@ -2557,6 +2580,12 @@
       "service": "es",
       "action": "ListTags",
       "source_file": "aws_opensearch.go"
+    },
+    {
+      "permission": "events:DescribeEventBus",
+      "service": "events",
+      "action": "DescribeEventBus",
+      "source_file": "aws_eventbridge.go"
     },
     {
       "permission": "events:ListEventBuses",
@@ -2688,6 +2717,12 @@
       "permission": "glue:BatchGetWorkflows",
       "service": "glue",
       "action": "BatchGetWorkflows",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetConnections",
+      "service": "glue",
+      "action": "GetConnections",
       "source_file": "aws_glue.go"
     },
     {

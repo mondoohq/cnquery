@@ -291,6 +291,7 @@ const (
 	ResourceAwsEmrClusterStep                                                   string = "aws.emr.cluster.step"
 	ResourceAwsEmrClusterInstanceGroup                                          string = "aws.emr.cluster.instanceGroup"
 	ResourceAwsEmrClusterBootstrapAction                                        string = "aws.emr.cluster.bootstrapAction"
+	ResourceAwsEmrStudio                                                        string = "aws.emr.studio"
 	ResourceAwsEventbridge                                                      string = "aws.eventbridge"
 	ResourceAwsEventbridgeEventBus                                              string = "aws.eventbridge.eventBus"
 	ResourceAwsEventbridgeRule                                                  string = "aws.eventbridge.rule"
@@ -662,6 +663,7 @@ const (
 	ResourceAwsRdsProxy                                                         string = "aws.rds.proxy"
 	ResourceAwsRdsEventSubscription                                             string = "aws.rds.eventSubscription"
 	ResourceAwsGlueWorkflow                                                     string = "aws.glue.workflow"
+	ResourceAwsGlueConnection                                                   string = "aws.glue.connection"
 	ResourceAwsMsk                                                              string = "aws.msk"
 	ResourceAwsMskCluster                                                       string = "aws.msk.cluster"
 	ResourceAwsMskClusterEncryptionInfo                                         string = "aws.msk.cluster.encryptionInfo"
@@ -1890,6 +1892,10 @@ func init() {
 		"aws.emr.cluster.bootstrapAction": {
 			// to override args, implement: initAwsEmrClusterBootstrapAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEmrClusterBootstrapAction,
+		},
+		"aws.emr.studio": {
+			// to override args, implement: initAwsEmrStudio(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEmrStudio,
 		},
 		"aws.eventbridge": {
 			// to override args, implement: initAwsEventbridge(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3374,6 +3380,10 @@ func init() {
 		"aws.glue.workflow": {
 			// to override args, implement: initAwsGlueWorkflow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsGlueWorkflow,
+		},
+		"aws.glue.connection": {
+			// to override args, implement: initAwsGlueConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsGlueConnection,
 		},
 		"aws.msk": {
 			// to override args, implement: initAwsMsk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11462,6 +11472,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.securityConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmr).GetSecurityConfigurations()).ToDataRes(types.Array(types.Resource("aws.emr.securityConfiguration")))
 	},
+	"aws.emr.studios": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmr).GetStudios()).ToDataRes(types.Array(types.Resource("aws.emr.studio")))
+	},
 	"aws.emr.cluster.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrCluster).GetArn()).ToDataRes(types.String)
 	},
@@ -11681,6 +11694,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.emr.cluster.bootstrapAction.args": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEmrClusterBootstrapAction).GetArgs()).ToDataRes(types.Array(types.String))
 	},
+	"aws.emr.studio.studioId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetStudioId()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetArn()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetName()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.authMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetAuthMode()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.emr.studio.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetSubnets()).ToDataRes(types.Array(types.Resource("aws.vpc.subnet")))
+	},
+	"aws.emr.studio.serviceIamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetServiceIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.emr.studio.userIamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetUserIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.emr.studio.workspaceSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetWorkspaceSecurityGroup()).ToDataRes(types.Resource("aws.ec2.securitygroup"))
+	},
+	"aws.emr.studio.engineSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetEngineSecurityGroup()).ToDataRes(types.Resource("aws.ec2.securitygroup"))
+	},
+	"aws.emr.studio.defaultS3Location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetDefaultS3Location()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.encryptionKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetEncryptionKeyArn()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetEncryptionKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.emr.studio.idpAuthUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetIdpAuthUrl()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.idpRelayStateParameterName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetIdpRelayStateParameterName()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetUrl()).ToDataRes(types.String)
+	},
+	"aws.emr.studio.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.emr.studio.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEmrStudio).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.eventbridge.eventBuses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridge).GetEventBuses()).ToDataRes(types.Array(types.Resource("aws.eventbridge.eventBus")))
 	},
@@ -11710,6 +11783,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eventbridge.eventBus.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeEventBus).GetRules()).ToDataRes(types.Array(types.Resource("aws.eventbridge.rule")))
+	},
+	"aws.eventbridge.eventBus.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEventBus).GetPolicy()).ToDataRes(types.String)
 	},
 	"aws.eventbridge.rule.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeRule).GetArn()).ToDataRes(types.String)
@@ -12841,6 +12917,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudfront.distribution.origin.originMtlsClientCertificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetOriginMtlsClientCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
+	},
+	"aws.cloudfront.distribution.origin.originAccessControlId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetOriginAccessControlId()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.origin.originAccessIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetOriginAccessIdentity()).ToDataRes(types.String)
 	},
 	"aws.cloudfront.function.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontFunction).GetName()).ToDataRes(types.String)
@@ -22925,6 +23007,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.glue.workflows": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlue).GetWorkflows()).ToDataRes(types.Array(types.Resource("aws.glue.workflow")))
 	},
+	"aws.glue.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlue).GetConnections()).ToDataRes(types.Array(types.Resource("aws.glue.connection")))
+	},
 	"aws.glue.crawler.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueCrawler).GetName()).ToDataRes(types.String)
 	},
@@ -23285,6 +23370,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticbeanstalk.environment.resourcesSummary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetResourcesSummary()).ToDataRes(types.Dict)
 	},
+	"aws.elasticbeanstalk.environment.optionSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetOptionSettings()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.elasticbeanstalk.environment.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticbeanstalkEnvironment).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -23407,6 +23495,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.glue.workflow.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueWorkflow).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueConnection).GetName()).ToDataRes(types.String)
+	},
+	"aws.glue.connection.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueConnection).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.glue.connection.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueConnection).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.glue.connection.connectionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueConnection).GetConnectionType()).ToDataRes(types.String)
+	},
+	"aws.glue.connection.connectionProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueConnection).GetConnectionProperties()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.glue.connection.matchCriteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueConnection).GetMatchCriteria()).ToDataRes(types.Array(types.String))
+	},
+	"aws.glue.connection.physicalConnectionRequirements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueConnection).GetPhysicalConnectionRequirements()).ToDataRes(types.Dict)
+	},
+	"aws.glue.connection.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueConnection).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.glue.connection.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueConnection).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.msk.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMsk).GetClusters()).ToDataRes(types.Array(types.Resource("aws.msk.cluster")))
@@ -38059,6 +38174,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmr).SecurityConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.emr.studios": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmr).Studios, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.emr.cluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEmrCluster).__id, ok = v.Value.(string)
 		return
@@ -38375,6 +38494,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEmrClusterBootstrapAction).Args, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.emr.studio.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.emr.studio.studioId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).StudioId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.authMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).AuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.serviceIamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).ServiceIamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.userIamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).UserIamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.workspaceSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).WorkspaceSecurityGroup, ok = plugin.RawToTValue[*mqlAwsEc2Securitygroup](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.engineSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).EngineSecurityGroup, ok = plugin.RawToTValue[*mqlAwsEc2Securitygroup](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.defaultS3Location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).DefaultS3Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.encryptionKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).EncryptionKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).EncryptionKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.idpAuthUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).IdpAuthUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.idpRelayStateParameterName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).IdpRelayStateParameterName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.emr.studio.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEmrStudio).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.eventbridge.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridge).__id, ok = v.Value.(string)
 		return
@@ -38421,6 +38624,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eventbridge.eventBus.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgeEventBus).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.eventBus.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEventBus).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40165,6 +40372,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudfront.distribution.origin.originMtlsClientCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistributionOrigin).OriginMtlsClientCertificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.origin.originAccessControlId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionOrigin).OriginAccessControlId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.origin.originAccessIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionOrigin).OriginAccessIdentity, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54803,6 +55018,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsGlue).Workflows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.glue.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlue).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.glue.crawler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGlueCrawler).__id, ok = v.Value.(string)
 		return
@@ -55319,6 +55538,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElasticbeanstalkEnvironment).ResourcesSummary, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.elasticbeanstalk.environment.optionSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticbeanstalkEnvironment).OptionSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.elasticbeanstalk.environment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticbeanstalkEnvironment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -55493,6 +55716,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.glue.workflow.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGlueWorkflow).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.glue.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.connection.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.connection.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.connection.connectionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).ConnectionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.connection.connectionProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).ConnectionProperties, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.connection.matchCriteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).MatchCriteria, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.connection.physicalConnectionRequirements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).PhysicalConnectionRequirements, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.connection.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.glue.connection.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueConnection).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.msk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -90618,6 +90881,7 @@ type mqlAwsEmr struct {
 	Clusters                       plugin.TValue[[]any]
 	BlockPublicAccessConfiguration plugin.TValue[any]
 	SecurityConfigurations         plugin.TValue[[]any]
+	Studios                        plugin.TValue[[]any]
 }
 
 // createAwsEmr creates a new instance of this resource
@@ -90692,6 +90956,22 @@ func (c *mqlAwsEmr) GetSecurityConfigurations() *plugin.TValue[[]any] {
 		}
 
 		return c.securityConfigurations()
+	})
+}
+
+func (c *mqlAwsEmr) GetStudios() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Studios, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr", c.__id, "studios")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.studios()
 	})
 }
 
@@ -91471,6 +91751,234 @@ func (c *mqlAwsEmrClusterBootstrapAction) GetArgs() *plugin.TValue[[]any] {
 	return &c.Args
 }
 
+// mqlAwsEmrStudio for the aws.emr.studio resource
+type mqlAwsEmrStudio struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEmrStudioInternal
+	StudioId                   plugin.TValue[string]
+	Arn                        plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Description                plugin.TValue[string]
+	AuthMode                   plugin.TValue[string]
+	Vpc                        plugin.TValue[*mqlAwsVpc]
+	Subnets                    plugin.TValue[[]any]
+	ServiceIamRole             plugin.TValue[*mqlAwsIamRole]
+	UserIamRole                plugin.TValue[*mqlAwsIamRole]
+	WorkspaceSecurityGroup     plugin.TValue[*mqlAwsEc2Securitygroup]
+	EngineSecurityGroup        plugin.TValue[*mqlAwsEc2Securitygroup]
+	DefaultS3Location          plugin.TValue[string]
+	EncryptionKeyArn           plugin.TValue[string]
+	EncryptionKey              plugin.TValue[*mqlAwsKmsKey]
+	IdpAuthUrl                 plugin.TValue[string]
+	IdpRelayStateParameterName plugin.TValue[string]
+	Url                        plugin.TValue[string]
+	CreatedAt                  plugin.TValue[*time.Time]
+	Tags                       plugin.TValue[map[string]any]
+}
+
+// createAwsEmrStudio creates a new instance of this resource
+func createAwsEmrStudio(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEmrStudio{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.emr.studio", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEmrStudio) MqlName() string {
+	return "aws.emr.studio"
+}
+
+func (c *mqlAwsEmrStudio) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEmrStudio) GetStudioId() *plugin.TValue[string] {
+	return &c.StudioId
+}
+
+func (c *mqlAwsEmrStudio) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEmrStudio) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEmrStudio) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEmrStudio) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEmrStudio) GetAuthMode() *plugin.TValue[string] {
+	return &c.AuthMode
+}
+
+func (c *mqlAwsEmrStudio) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.studio", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsEmrStudio) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.studio", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
+func (c *mqlAwsEmrStudio) GetServiceIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ServiceIamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.studio", c.__id, "serviceIamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.serviceIamRole()
+	})
+}
+
+func (c *mqlAwsEmrStudio) GetUserIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.UserIamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.studio", c.__id, "userIamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.userIamRole()
+	})
+}
+
+func (c *mqlAwsEmrStudio) GetWorkspaceSecurityGroup() *plugin.TValue[*mqlAwsEc2Securitygroup] {
+	return plugin.GetOrCompute[*mqlAwsEc2Securitygroup](&c.WorkspaceSecurityGroup, func() (*mqlAwsEc2Securitygroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.studio", c.__id, "workspaceSecurityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Securitygroup), nil
+			}
+		}
+
+		return c.workspaceSecurityGroup()
+	})
+}
+
+func (c *mqlAwsEmrStudio) GetEngineSecurityGroup() *plugin.TValue[*mqlAwsEc2Securitygroup] {
+	return plugin.GetOrCompute[*mqlAwsEc2Securitygroup](&c.EngineSecurityGroup, func() (*mqlAwsEc2Securitygroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.studio", c.__id, "engineSecurityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Securitygroup), nil
+			}
+		}
+
+		return c.engineSecurityGroup()
+	})
+}
+
+func (c *mqlAwsEmrStudio) GetDefaultS3Location() *plugin.TValue[string] {
+	return &c.DefaultS3Location
+}
+
+func (c *mqlAwsEmrStudio) GetEncryptionKeyArn() *plugin.TValue[string] {
+	return &c.EncryptionKeyArn
+}
+
+func (c *mqlAwsEmrStudio) GetEncryptionKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.EncryptionKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.emr.studio", c.__id, "encryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.encryptionKey()
+	})
+}
+
+func (c *mqlAwsEmrStudio) GetIdpAuthUrl() *plugin.TValue[string] {
+	return &c.IdpAuthUrl
+}
+
+func (c *mqlAwsEmrStudio) GetIdpRelayStateParameterName() *plugin.TValue[string] {
+	return &c.IdpRelayStateParameterName
+}
+
+func (c *mqlAwsEmrStudio) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlAwsEmrStudio) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsEmrStudio) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
 // mqlAwsEventbridge for the aws.eventbridge resource
 type mqlAwsEventbridge struct {
 	MqlRuntime *plugin.Runtime
@@ -91610,6 +92118,7 @@ type mqlAwsEventbridgeEventBus struct {
 	Region plugin.TValue[string]
 	Tags   plugin.TValue[map[string]any]
 	Rules  plugin.TValue[[]any]
+	Policy plugin.TValue[string]
 }
 
 // createAwsEventbridgeEventBus creates a new instance of this resource
@@ -91675,6 +92184,12 @@ func (c *mqlAwsEventbridgeEventBus) GetRules() *plugin.TValue[[]any] {
 		}
 
 		return c.rules()
+	})
+}
+
+func (c *mqlAwsEventbridgeEventBus) GetPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Policy, func() (string, error) {
+		return c.policy()
 	})
 }
 
@@ -96962,6 +97477,8 @@ type mqlAwsCloudfrontDistributionOrigin struct {
 	OriginPath                  plugin.TValue[string]
 	Account                     plugin.TValue[string]
 	OriginMtlsClientCertificate plugin.TValue[*mqlAwsAcmCertificate]
+	OriginAccessControlId       plugin.TValue[string]
+	OriginAccessIdentity        plugin.TValue[string]
 }
 
 // createAwsCloudfrontDistributionOrigin creates a new instance of this resource
@@ -97039,6 +97556,14 @@ func (c *mqlAwsCloudfrontDistributionOrigin) GetOriginMtlsClientCertificate() *p
 
 		return c.originMtlsClientCertificate()
 	})
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) GetOriginAccessControlId() *plugin.TValue[string] {
+	return &c.OriginAccessControlId
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) GetOriginAccessIdentity() *plugin.TValue[string] {
+	return &c.OriginAccessIdentity
 }
 
 // mqlAwsCloudfrontFunction for the aws.cloudfront.function resource
@@ -133155,6 +133680,7 @@ type mqlAwsGlue struct {
 	Databases                 plugin.TValue[[]any]
 	CatalogEncryptionSettings plugin.TValue[[]any]
 	Workflows                 plugin.TValue[[]any]
+	Connections               plugin.TValue[[]any]
 }
 
 // createAwsGlue creates a new instance of this resource
@@ -133277,6 +133803,22 @@ func (c *mqlAwsGlue) GetWorkflows() *plugin.TValue[[]any] {
 		}
 
 		return c.workflows()
+	})
+}
+
+func (c *mqlAwsGlue) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
 	})
 }
 
@@ -134183,6 +134725,7 @@ type mqlAwsElasticbeanstalkEnvironment struct {
 	LoadBalancer                 plugin.TValue[*mqlAwsElbLoadbalancer]
 	EnvironmentLinks             plugin.TValue[[]any]
 	ResourcesSummary             plugin.TValue[any]
+	OptionSettings               plugin.TValue[[]any]
 	CreatedAt                    plugin.TValue[*time.Time]
 	UpdatedAt                    plugin.TValue[*time.Time]
 	VersionLabel                 plugin.TValue[string]
@@ -134336,6 +134879,12 @@ func (c *mqlAwsElasticbeanstalkEnvironment) GetEnvironmentLinks() *plugin.TValue
 func (c *mqlAwsElasticbeanstalkEnvironment) GetResourcesSummary() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.ResourcesSummary, func() (any, error) {
 		return c.resourcesSummary()
+	})
+}
+
+func (c *mqlAwsElasticbeanstalkEnvironment) GetOptionSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OptionSettings, func() ([]any, error) {
+		return c.optionSettings()
 	})
 }
 
@@ -134731,6 +135280,90 @@ func (c *mqlAwsGlueWorkflow) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+// mqlAwsGlueConnection for the aws.glue.connection resource
+type mqlAwsGlueConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsGlueConnectionInternal it will be used here
+	Name                           plugin.TValue[string]
+	Region                         plugin.TValue[string]
+	Description                    plugin.TValue[string]
+	ConnectionType                 plugin.TValue[string]
+	ConnectionProperties           plugin.TValue[map[string]any]
+	MatchCriteria                  plugin.TValue[[]any]
+	PhysicalConnectionRequirements plugin.TValue[any]
+	CreatedAt                      plugin.TValue[*time.Time]
+	UpdatedAt                      plugin.TValue[*time.Time]
+}
+
+// createAwsGlueConnection creates a new instance of this resource
+func createAwsGlueConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsGlueConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.glue.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsGlueConnection) MqlName() string {
+	return "aws.glue.connection"
+}
+
+func (c *mqlAwsGlueConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsGlueConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsGlueConnection) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsGlueConnection) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsGlueConnection) GetConnectionType() *plugin.TValue[string] {
+	return &c.ConnectionType
+}
+
+func (c *mqlAwsGlueConnection) GetConnectionProperties() *plugin.TValue[map[string]any] {
+	return &c.ConnectionProperties
+}
+
+func (c *mqlAwsGlueConnection) GetMatchCriteria() *plugin.TValue[[]any] {
+	return &c.MatchCriteria
+}
+
+func (c *mqlAwsGlueConnection) GetPhysicalConnectionRequirements() *plugin.TValue[any] {
+	return &c.PhysicalConnectionRequirements
+}
+
+func (c *mqlAwsGlueConnection) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsGlueConnection) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlAwsMsk for the aws.msk resource

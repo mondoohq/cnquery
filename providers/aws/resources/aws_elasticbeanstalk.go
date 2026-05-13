@@ -473,6 +473,41 @@ func (a *mqlAwsElasticbeanstalkEnvironment) resourcesSummary() (any, error) {
 	return convert.JsonToDict(resp.EnvironmentResources)
 }
 
+func (a *mqlAwsElasticbeanstalkEnvironment) optionSettings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	region := a.Region.Data
+	appName := a.ApplicationName.Data
+	envName := a.Name.Data
+
+	svc := conn.ElasticBeanstalk(region)
+	ctx := context.Background()
+
+	resp, err := svc.DescribeConfigurationSettings(ctx, &elasticbeanstalk.DescribeConfigurationSettingsInput{
+		ApplicationName: &appName,
+		EnvironmentName: &envName,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for _, cs := range resp.ConfigurationSettings {
+		for _, opt := range cs.OptionSettings {
+			entry := map[string]any{
+				"namespace":    convert.ToValue(opt.Namespace),
+				"optionName":   convert.ToValue(opt.OptionName),
+				"value":        convert.ToValue(opt.Value),
+				"resourceName": convert.ToValue(opt.ResourceName),
+			}
+			res = append(res, entry)
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAwsElasticbeanstalkEnvironment) loadBalancer() (*mqlAwsElbLoadbalancer, error) {
 	if a.cacheLoadBalancerName == "" {
 		a.LoadBalancer.State = plugin.StateIsSet | plugin.StateIsNull

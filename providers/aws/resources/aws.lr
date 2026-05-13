@@ -6410,6 +6410,8 @@ aws.emr {
   blockPublicAccessConfiguration() dict
   // Security configurations defined in the account
   securityConfigurations() []aws.emr.securityConfiguration
+  // List of EMR Studios (web-based development environments backed by EMR)
+  studios() []aws.emr.studio
 }
 
 // Amazon EMR cluster
@@ -6590,6 +6592,50 @@ private aws.emr.cluster.bootstrapAction @defaults("name scriptPath") {
   args []string
 }
 
+// Amazon EMR Studio (managed Jupyter / IDE environment for EMR)
+private aws.emr.studio @defaults("studioId name region") {
+  // Studio ID
+  studioId string
+  // ARN of the Studio
+  arn string
+  // Region of the Studio
+  region string
+  // Display name of the Studio
+  name string
+  // Description of the Studio
+  description string
+  // Authentication mode: SSO or IAM
+  authMode string
+  // VPC the Studio is deployed in
+  vpc() aws.vpc
+  // Subnets the Studio is deployed across
+  subnets() []aws.vpc.subnet
+  // Service IAM role that the Studio assumes
+  serviceIamRole() aws.iam.role
+  // User IAM role used by Studio users when authMode is IAM
+  userIamRole() aws.iam.role
+  // Workspace security group attached to the workspace ENIs
+  workspaceSecurityGroup() aws.ec2.securitygroup
+  // Engine security group attached to compute cluster ENIs
+  engineSecurityGroup() aws.ec2.securitygroup
+  // Default S3 location for Studio notebook files (s3://bucket/prefix)
+  defaultS3Location string
+  // Customer-managed KMS key used to encrypt the Studio's notebook files at rest (empty if the Studio uses the default AWS-managed key)
+  encryptionKeyArn string
+  // Customer-managed KMS key used to encrypt the Studio's notebook files (null if the Studio uses the default AWS-managed key)
+  encryptionKey() aws.kms.key
+  // Identity provider authentication URL (SSO mode)
+  idpAuthUrl string
+  // Identity provider relay-state parameter name
+  idpRelayStateParameterName string
+  // URL users visit to access the Studio
+  url string
+  // Date the Studio was created
+  createdAt time
+  // Tags for the Studio
+  tags map[string]string
+}
+
 // Amazon EventBridge
 //
 // Use the EventBridge namespace to enumerate event-driven plumbing in the
@@ -6626,6 +6672,8 @@ private aws.eventbridge.eventBus @defaults("arn name") {
   tags() map[string]string
   // Rules on this event bus
   rules() []aws.eventbridge.rule
+  // Resource policy document attached to the event bus (JSON); empty if no policy is attached
+  policy() string
 }
 
 // Amazon EventBridge rule
@@ -7648,6 +7696,10 @@ private aws.cloudfront.distribution.origin @defaults("id originPath") {
   account string
   // ACM certificate that CloudFront uses for mutual TLS to the origin (null when origin mTLS is disabled)
   originMtlsClientCertificate() aws.acm.certificate
+  // Origin Access Control ID for the origin (empty when OAC is not configured)
+  originAccessControlId string
+  // S3CanonicalUserId of the legacy Origin Access Identity for S3 origins (empty when OAI is not configured); modern setups should prefer originAccessControlId
+  originAccessIdentity string
 }
 
 // Amazon CloudFront function
@@ -16079,6 +16131,8 @@ aws.glue @defaults("crawlers") {
   catalogEncryptionSettings() []dict
   // List of Glue workflows
   workflows() []aws.glue.workflow
+  // List of Glue connections (catalog-stored data store connection definitions)
+  connections() []aws.glue.connection
 }
 
 // AWS Glue crawler
@@ -16362,6 +16416,8 @@ private aws.elasticbeanstalk.environment @defaults("arn name status") {
   environmentLinks []dict
   // Live summary of the AWS resources (instances, load balancers, Auto Scaling groups, launch configurations, launch templates, triggers, queues) backing this environment
   resourcesSummary() dict
+  // Configuration option settings for the environment (each entry: {namespace, optionName, value, resourceName}); covers the full DescribeConfigurationSettings response, including aws:elbv2:listener:* listener protocol settings
+  optionSettings() []dict
   // Date the environment was created
   createdAt time
   // Date the environment was last updated
@@ -16457,6 +16513,28 @@ private aws.glue.workflow @defaults("name region") {
   updatedAt time
   // Tags for the workflow
   tags() map[string]string
+}
+
+// AWS Glue connection (data store connection definition stored in the Data Catalog)
+private aws.glue.connection @defaults("name connectionType region") {
+  // Name of the connection
+  name string
+  // Region of the connection
+  region string
+  // Description of the connection
+  description string
+  // Connection type: JDBC, KAFKA, MONGODB, NETWORK, MARKETPLACE, CUSTOM, SFTP, VIEW_VALIDATION_REDSHIFT, VIEW_VALIDATION_ATHENA
+  connectionType string
+  // Connection properties (key/value pairs). For JDBC the key set includes JDBC_CONNECTION_URL, USERNAME, PASSWORD, SECRET_ID, JDBC_ENFORCE_SSL; prefer SECRET_ID over PASSWORD so credentials live in Secrets Manager
+  connectionProperties map[string]string
+  // List of criteria the connection's data store must match (e.g. enforced source identity)
+  matchCriteria []string
+  // Physical connection details (subnet, security groups, availability zone) when the connection runs inside a customer VPC
+  physicalConnectionRequirements dict
+  // Date the connection was created
+  createdAt time
+  // Date the connection was last updated
+  updatedAt time
 }
 
 // Amazon MSK (Managed Streaming for Apache Kafka)
