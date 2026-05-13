@@ -336,6 +336,7 @@ LONGTERM
 longtermretentionpolicy
 LSN
 lsp
+lte
 lvm
 lvmthin
 MACSEC
@@ -382,6 +383,7 @@ naflags
 natgateway
 nativead
 NCUs
+neq
 netbios
 netin
 netout
@@ -412,6 +414,8 @@ nullgroup
 nullstring
 NUnit
 nvmxnet
+OAC
+OAI
 objectstorage
 ocr
 octavia
