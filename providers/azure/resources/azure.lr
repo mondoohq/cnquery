@@ -2078,8 +2078,10 @@ private azure.subscription.networkService.securityGroup @defaults("id name locat
   etag string
   // Security group properties
   properties dict
-  // Security group interfaces
+  // Network interfaces this NSG is attached to
   interfaces() []azure.subscription.networkService.interface
+  // Subnets this NSG is attached to
+  subnets() []azure.subscription.networkService.subnet
   // Security group rules
   securityRules() []azure.subscription.networkService.securityrule
   // Security group default security rules
@@ -2112,6 +2114,10 @@ private azure.subscription.networkService.securityrule @defaults("id name") {
   sourceAddressPrefix string
   // Security rule destination address prefix (CIDR or *)
   destinationAddressPrefix string
+  // Application security groups the rule sources traffic from
+  sourceApplicationSecurityGroups() []azure.subscription.networkService.appSecurityGroup
+  // Application security groups the rule targets as destination
+  destinationApplicationSecurityGroups() []azure.subscription.networkService.appSecurityGroup
   // Security rule description
   description string
 }

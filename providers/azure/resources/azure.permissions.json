@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.10.1",
-  "generated_at": "2026-05-11T07:53:18+01:00",
+  "version": "13.11.1",
+  "generated_at": "2026-05-13T09:46:57+01:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -765,13 +765,13 @@
     {
       "permission": "Microsoft.Network/localNetworkGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "network.go"
     },
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -825,7 +825,7 @@
     {
       "permission": "Microsoft.Network/privateEndpoints/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListBySubscriptionPager",
       "source_file": "network.go"
     },
     {
@@ -1257,7 +1257,7 @@
     {
       "permission": "Microsoft.Storage/storageAccounts/queueServices/queues/read",
       "service": "Microsoft.Storage",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "storage_extras.go"
     },
     {
@@ -1299,7 +1299,7 @@
     {
       "permission": "Microsoft.Web/sites/read",
       "service": "Microsoft.Web",
-      "action": "NewListPager",
+      "action": "NewListFunctionsPager",
       "source_file": "functions.go"
     },
     {

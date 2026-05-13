@@ -1244,20 +1244,10 @@ func (a *mqlAzureSubscriptionNetworkService) applicationSecurityGroups() ([]any,
 			return nil, err
 		}
 		for _, asg := range page.Value {
-			props, err := convert.JsonToDict(asg.Properties)
-			if err != nil {
-				return nil, err
+			if asg == nil {
+				continue
 			}
-			mqlAppSecGroup, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.appSecurityGroup",
-				map[string]*llx.RawData{
-					"id":         llx.StringDataPtr(asg.ID),
-					"name":       llx.StringDataPtr(asg.Name),
-					"type":       llx.StringDataPtr(asg.Type),
-					"location":   llx.StringDataPtr(asg.Location),
-					"tags":       llx.MapData(convert.PtrMapStrToInterface(asg.Tags), types.String),
-					"etag":       llx.StringDataPtr(asg.Etag),
-					"properties": llx.DictData(props),
-				})
+			mqlAppSecGroup, err := azureAppSecurityGroupToMql(a.MqlRuntime, *asg)
 			if err != nil {
 				return nil, err
 			}
@@ -3211,6 +3201,53 @@ func azureNatGatewayToMql(runtime *plugin.Runtime, ng network.NatGateway) (*mqlA
 	return mqlNg.(*mqlAzureSubscriptionNetworkServiceNatGateway), nil
 }
 
+func initAzureSubscriptionNetworkServiceSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return args, nil, nil
+	}
+	vnName, err := azureId.Component("virtualNetworks")
+	if err != nil {
+		return args, nil, nil
+	}
+	subnetName, err := azureId.Component("subnets")
+	if err != nil {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	client, err := network.NewSubnetsClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), azureId.ResourceGroup, vnName, subnetName, &network.SubnetsClientGetOptions{})
+	if err != nil {
+		return args, nil, nil
+	}
+
+	mqlSubnet, err := azureSubnetToMql(runtime, resp.Subnet)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlSubnet, nil
+}
+
 func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
 	props, err := convert.JsonToDict(subnet.Properties)
 	if err != nil {
@@ -3386,6 +3423,25 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) interfaces() ([]any, e
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) subnets() ([]any, error) {
+	if a.cacheProperties == nil || a.cacheProperties.Subnets == nil {
+		return []any{}, nil
+	}
+	res := []any{}
+	for _, subnet := range a.cacheProperties.Subnets {
+		if subnet == nil || subnet.ID == nil {
+			continue
+		}
+		mqlSubnet, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+			map[string]*llx.RawData{"id": llx.StringDataPtr(subnet.ID)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSubnet)
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) securityRules() ([]any, error) {
 	if a.cacheProperties == nil || a.cacheProperties.SecurityRules == nil {
 		return []any{}, nil
@@ -3499,7 +3555,63 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionNetworkServiceSecurityrule), nil
+	mqlRule := res.(*mqlAzureSubscriptionNetworkServiceSecurityrule)
+	mqlRule.cacheProperties = secRule.Properties
+	return mqlRule, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceSecurityruleInternal struct {
+	cacheProperties *network.SecurityRulePropertiesFormat
+}
+
+func azureAppSecurityGroupToMql(runtime *plugin.Runtime, asg network.ApplicationSecurityGroup) (*mqlAzureSubscriptionNetworkServiceAppSecurityGroup, error) {
+	props, err := convert.JsonToDict(asg.Properties)
+	if err != nil {
+		return nil, err
+	}
+	res, err := CreateResource(runtime, "azure.subscription.networkService.appSecurityGroup",
+		map[string]*llx.RawData{
+			"id":         llx.StringDataPtr(asg.ID),
+			"name":       llx.StringDataPtr(asg.Name),
+			"type":       llx.StringDataPtr(asg.Type),
+			"location":   llx.StringDataPtr(asg.Location),
+			"tags":       llx.MapData(convert.PtrMapStrToInterface(asg.Tags), types.String),
+			"etag":       llx.StringDataPtr(asg.Etag),
+			"properties": llx.DictData(props),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceAppSecurityGroup), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceSecurityrule) sourceApplicationSecurityGroups() ([]any, error) {
+	if a.cacheProperties == nil {
+		return []any{}, nil
+	}
+	return azureAsgListToMql(a.MqlRuntime, a.cacheProperties.SourceApplicationSecurityGroups)
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceSecurityrule) destinationApplicationSecurityGroups() ([]any, error) {
+	if a.cacheProperties == nil {
+		return []any{}, nil
+	}
+	return azureAsgListToMql(a.MqlRuntime, a.cacheProperties.DestinationApplicationSecurityGroups)
+}
+
+func azureAsgListToMql(runtime *plugin.Runtime, asgs []*network.ApplicationSecurityGroup) ([]any, error) {
+	res := []any{}
+	for _, asg := range asgs {
+		if asg == nil {
+			continue
+		}
+		mqlAsg, err := azureAppSecurityGroupToMql(runtime, *asg)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlAsg)
+	}
+	return res, nil
 }
 
 type AzureSecurityRulePortRange struct {

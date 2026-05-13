@@ -522,7 +522,7 @@ func init() {
 			Create: createAzureSubscriptionNetworkServiceNatGateway,
 		},
 		"azure.subscription.networkService.subnet": {
-			// to override args, implement: initAzureSubscriptionNetworkServiceSubnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionNetworkServiceSubnet,
 			Create: createAzureSubscriptionNetworkServiceSubnet,
 		},
 		"azure.subscription.networkService.virtualNetwork": {
@@ -4026,6 +4026,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.securityGroup.interfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).GetInterfaces()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.interface")))
 	},
+	"azure.subscription.networkService.securityGroup.subnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).GetSubnets()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.subnet")))
+	},
 	"azure.subscription.networkService.securityGroup.securityRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).GetSecurityRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.securityrule")))
 	},
@@ -4067,6 +4070,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.securityrule.destinationAddressPrefix": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).GetDestinationAddressPrefix()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.securityrule.sourceApplicationSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).GetSourceApplicationSecurityGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.appSecurityGroup")))
+	},
+	"azure.subscription.networkService.securityrule.destinationApplicationSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).GetDestinationApplicationSecurityGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.appSecurityGroup")))
 	},
 	"azure.subscription.networkService.securityrule.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).GetDescription()).ToDataRes(types.String)
@@ -14942,6 +14951,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).Interfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.securityGroup.subnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).Subnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.securityGroup.securityRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceSecurityGroup).SecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -15000,6 +15013,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.securityrule.destinationAddressPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).DestinationAddressPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityrule.sourceApplicationSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).SourceApplicationSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.securityrule.destinationApplicationSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSecurityrule).DestinationApplicationSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.securityrule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34022,6 +34043,7 @@ type mqlAzureSubscriptionNetworkServiceSecurityGroup struct {
 	Etag                 plugin.TValue[string]
 	Properties           plugin.TValue[any]
 	Interfaces           plugin.TValue[[]any]
+	Subnets              plugin.TValue[[]any]
 	SecurityRules        plugin.TValue[[]any]
 	DefaultSecurityRules plugin.TValue[[]any]
 }
@@ -34107,6 +34129,22 @@ func (c *mqlAzureSubscriptionNetworkServiceSecurityGroup) GetInterfaces() *plugi
 	})
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceSecurityGroup) GetSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Subnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityGroup", c.__id, "subnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.subnets()
+	})
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceSecurityGroup) GetSecurityRules() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.SecurityRules, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -34143,20 +34181,22 @@ func (c *mqlAzureSubscriptionNetworkServiceSecurityGroup) GetDefaultSecurityRule
 type mqlAzureSubscriptionNetworkServiceSecurityrule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceSecurityruleInternal it will be used here
-	Id                       plugin.TValue[string]
-	Name                     plugin.TValue[string]
-	Etag                     plugin.TValue[string]
-	Properties               plugin.TValue[any]
-	DestinationPortRange     plugin.TValue[[]any]
-	Direction                plugin.TValue[string]
-	Protocol                 plugin.TValue[string]
-	Access                   plugin.TValue[string]
-	Priority                 plugin.TValue[int64]
-	SourcePortRange          plugin.TValue[string]
-	SourceAddressPrefix      plugin.TValue[string]
-	DestinationAddressPrefix plugin.TValue[string]
-	Description              plugin.TValue[string]
+	mqlAzureSubscriptionNetworkServiceSecurityruleInternal
+	Id                                   plugin.TValue[string]
+	Name                                 plugin.TValue[string]
+	Etag                                 plugin.TValue[string]
+	Properties                           plugin.TValue[any]
+	DestinationPortRange                 plugin.TValue[[]any]
+	Direction                            plugin.TValue[string]
+	Protocol                             plugin.TValue[string]
+	Access                               plugin.TValue[string]
+	Priority                             plugin.TValue[int64]
+	SourcePortRange                      plugin.TValue[string]
+	SourceAddressPrefix                  plugin.TValue[string]
+	DestinationAddressPrefix             plugin.TValue[string]
+	SourceApplicationSecurityGroups      plugin.TValue[[]any]
+	DestinationApplicationSecurityGroups plugin.TValue[[]any]
+	Description                          plugin.TValue[string]
 }
 
 // createAzureSubscriptionNetworkServiceSecurityrule creates a new instance of this resource
@@ -34242,6 +34282,38 @@ func (c *mqlAzureSubscriptionNetworkServiceSecurityrule) GetSourceAddressPrefix(
 
 func (c *mqlAzureSubscriptionNetworkServiceSecurityrule) GetDestinationAddressPrefix() *plugin.TValue[string] {
 	return &c.DestinationAddressPrefix
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityrule) GetSourceApplicationSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SourceApplicationSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityrule", c.__id, "sourceApplicationSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sourceApplicationSecurityGroups()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSecurityrule) GetDestinationApplicationSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DestinationApplicationSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.securityrule", c.__id, "destinationApplicationSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.destinationApplicationSecurityGroups()
+	})
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceSecurityrule) GetDescription() *plugin.TValue[string] {
