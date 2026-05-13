@@ -715,6 +715,7 @@ func initAwsMacieBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	if region == "" {
+		log.Warn().Str("bucket", bucketName).Msg("aws.macie.bucket initialized without region — scanning every enabled region serially. Pass `region` for a single targeted lookup")
 		regions, err := conn.Regions()
 		if err != nil {
 			return args, nil, err
@@ -722,6 +723,10 @@ func initAwsMacieBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		for _, r := range regions {
 			res, err := describeMacieBucket(runtime, conn, r, bucketName)
 			if err != nil {
+				if IsMacieNotEnabledError(err) {
+					continue
+				}
+				log.Warn().Err(err).Str("region", r).Str("bucket", bucketName).Msg("failed to describe Macie bucket")
 				continue
 			}
 			if res != nil {
@@ -956,10 +961,6 @@ func (a *mqlAwsS3Bucket) macieCoverage() (*mqlAwsMacieBucket, error) {
 	})
 	if err != nil {
 		return nil, err
-	}
-	if mqlBucket == nil {
-		a.MacieCoverage.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
 	}
 	return mqlBucket.(*mqlAwsMacieBucket), nil
 }
