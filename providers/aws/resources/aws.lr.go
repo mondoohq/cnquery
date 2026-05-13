@@ -112635,7 +112635,7 @@ func (c *mqlAwsEc2TransitgatewayPeeringAttachment) GetStatusMessage() *plugin.TV
 type mqlAwsEc2ManagedPrefixList struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsEc2ManagedPrefixListInternal
+	// optional: if you define mqlAwsEc2ManagedPrefixListInternal it will be used here
 	Id            plugin.TValue[string]
 	Arn           plugin.TValue[string]
 	Name          plugin.TValue[string]

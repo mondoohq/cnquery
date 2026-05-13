@@ -26,10 +26,6 @@ func (a *mqlAwsEc2ManagedPrefixListEntry) id() (string, error) {
 	return a.Cidr.Data, nil
 }
 
-type mqlAwsEc2ManagedPrefixListInternal struct {
-	region string
-}
-
 func initAwsEc2ManagedPrefixList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -53,6 +49,10 @@ func initAwsEc2ManagedPrefixList(runtime *plugin.Runtime, args map[string]*llx.R
 		return args, nil, nil
 	}
 	plId := parts[len(parts)-1]
+
+	args["id"] = llx.StringData(plId)
+	args["arn"] = llx.StringData(arnVal)
+	args["region"] = llx.StringData(region)
 
 	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.Ec2(region)
@@ -81,9 +81,7 @@ func initAwsEc2ManagedPrefixList(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	args["id"] = llx.StringData(convert.ToValue(pl.PrefixListId))
-	args["arn"] = llx.StringData(arnVal)
 	args["name"] = llx.StringData(convert.ToValue(pl.PrefixListName))
-	args["region"] = llx.StringData(region)
 	args["state"] = llx.StringData(string(pl.State))
 	args["addressFamily"] = llx.StringData(convert.ToValue(pl.AddressFamily))
 	args["maxEntries"] = llx.IntData(maxEntries)
@@ -164,7 +162,6 @@ func (a *mqlAwsEc2) getManagedPrefixLists(conn *connection.AwsConnection) []*job
 					if err != nil {
 						return nil, err
 					}
-					mqlPl.(*mqlAwsEc2ManagedPrefixList).region = region
 					res = append(res, mqlPl)
 				}
 			}
