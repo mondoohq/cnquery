@@ -300,9 +300,11 @@ jupyter
 jwks
 KEDA
 kerberoastable
+KEYSTORE
 keymanager
 keymap
 keyspace
+KEYTAB
 kilocode
 kiro
 kmip
