@@ -188,6 +188,7 @@ eventhubs
 evs
 EXACC
 Exadata
+exadata
 exo
 faa
 failback
