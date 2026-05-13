@@ -500,18 +500,22 @@ private oci.network.subnet @defaults("name") {
 private oci.network.securityList @defaults("name") {
   // Security list OCID
   id string
-  // Compartment OCID containing the security list
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the security list
+  compartment() oci.compartment
   // Security list display name
   name string
   // Security list creation time
   created time
   // Security list lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
   state string
-  // Egress security rules for outbound traffic
+  // Egress security rules for outbound traffic; each entry: {description, stateless, protocol (IANA number, e.g. "6"=TCP, "17"=UDP, "1"=ICMP), destination, destinationType, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}
   egressSecurityRules []dict
-  // Ingress security rules for inbound traffic
+  // Ingress security rules for inbound traffic; same shape as egressSecurityRules but with source/sourceType instead of destination/destinationType
   ingressSecurityRules []dict
+  // Whether any rule (ingress or egress) is stateless
+  hasStatelessRules() bool
   // DEPRECATED: Use vcn() instead
   vcnId @maturity("deprecated") string
   // VCN that this security list belongs to
@@ -528,8 +532,10 @@ private oci.network.networkSecurityGroup @defaults("name") {
   id string
   // NSG display name
   name string
-  // Compartment OCID containing the NSG
-  compartmentID string
+  // DEPRECATED: use compartment() instead
+  compartmentID @maturity("deprecated") string
+  // Compartment containing the NSG
+  compartment() oci.compartment
   // VCN the NSG belongs to
   vcn() oci.network.vcn
   // NSG lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
@@ -540,10 +546,14 @@ private oci.network.networkSecurityGroup @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
-  // Ingress security rules
+  // Ingress security rules; each entry: {direction, protocol (IANA number, e.g. "6"=TCP), description, source, sourceType, isStateless, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}
   ingressSecurityRules() []dict
-  // Egress security rules
+  // Egress security rules; same shape as ingressSecurityRules but with destination/destinationType instead of source/sourceType
   egressSecurityRules() []dict
+  // Whether any rule (ingress or egress) is stateless
+  hasStatelessRules() bool
+  // VNICs this NSG is attached to (from ListNetworkSecurityGroupVnics + GetVnic)
+  attachedVnics() []oci.compute.vnic
 }
 
 // Oracle Cloud Infrastructure (OCI) internet gateway (connects VCN to the internet)

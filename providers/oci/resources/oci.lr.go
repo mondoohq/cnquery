@@ -134,7 +134,7 @@ func init() {
 			Create: createOciRegion,
 		},
 		"oci.compartment": {
-			// to override args, implement: initOciCompartment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initOciCompartment,
 			Create: createOciCompartment,
 		},
 		"oci.identity": {
@@ -1149,6 +1149,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.securityList.compartmentID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetCompartmentID()).ToDataRes(types.String)
 	},
+	"oci.network.securityList.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityList).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
 	"oci.network.securityList.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetName()).ToDataRes(types.String)
 	},
@@ -1163,6 +1166,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.securityList.ingressSecurityRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetIngressSecurityRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.network.securityList.hasStatelessRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkSecurityList).GetHasStatelessRules()).ToDataRes(types.Bool)
 	},
 	"oci.network.securityList.vcnId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkSecurityList).GetVcnId()).ToDataRes(types.String)
@@ -1185,6 +1191,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.network.networkSecurityGroup.compartmentID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetCompartmentID()).ToDataRes(types.String)
 	},
+	"oci.network.networkSecurityGroup.compartment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetCompartment()).ToDataRes(types.Resource("oci.compartment"))
+	},
 	"oci.network.networkSecurityGroup.vcn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetVcn()).ToDataRes(types.Resource("oci.network.vcn"))
 	},
@@ -1205,6 +1214,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.network.networkSecurityGroup.egressSecurityRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetEgressSecurityRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"oci.network.networkSecurityGroup.hasStatelessRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetHasStatelessRules()).ToDataRes(types.Bool)
+	},
+	"oci.network.networkSecurityGroup.attachedVnics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkNetworkSecurityGroup).GetAttachedVnics()).ToDataRes(types.Array(types.Resource("oci.compute.vnic")))
 	},
 	"oci.network.internetGateway.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkInternetGateway).GetId()).ToDataRes(types.String)
@@ -4154,6 +4169,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkSecurityList).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.network.securityList.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityList).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
 	"oci.network.securityList.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkSecurityList).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4172,6 +4191,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.securityList.ingressSecurityRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkSecurityList).IngressSecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.securityList.hasStatelessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkSecurityList).HasStatelessRules, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.network.securityList.vcnId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4206,6 +4229,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkNetworkSecurityGroup).CompartmentID, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.network.networkSecurityGroup.compartment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).Compartment, ok = plugin.RawToTValue[*mqlOciCompartment](v.Value, v.Error)
+		return
+	},
 	"oci.network.networkSecurityGroup.vcn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkNetworkSecurityGroup).Vcn, ok = plugin.RawToTValue[*mqlOciNetworkVcn](v.Value, v.Error)
 		return
@@ -4232,6 +4259,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.network.networkSecurityGroup.egressSecurityRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkNetworkSecurityGroup).EgressSecurityRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.hasStatelessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).HasStatelessRules, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.network.networkSecurityGroup.attachedVnics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkNetworkSecurityGroup).AttachedVnics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.network.internetGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9580,11 +9615,13 @@ type mqlOciNetworkSecurityList struct {
 	mqlOciNetworkSecurityListInternal
 	Id                   plugin.TValue[string]
 	CompartmentID        plugin.TValue[string]
+	Compartment          plugin.TValue[*mqlOciCompartment]
 	Name                 plugin.TValue[string]
 	Created              plugin.TValue[*time.Time]
 	State                plugin.TValue[string]
 	EgressSecurityRules  plugin.TValue[[]any]
 	IngressSecurityRules plugin.TValue[[]any]
+	HasStatelessRules    plugin.TValue[bool]
 	VcnId                plugin.TValue[string]
 	Vcn                  plugin.TValue[*mqlOciNetworkVcn]
 	FreeformTags         plugin.TValue[map[string]any]
@@ -9636,6 +9673,22 @@ func (c *mqlOciNetworkSecurityList) GetCompartmentID() *plugin.TValue[string] {
 	return &c.CompartmentID
 }
 
+func (c *mqlOciNetworkSecurityList) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.securityList", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
 func (c *mqlOciNetworkSecurityList) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -9654,6 +9707,12 @@ func (c *mqlOciNetworkSecurityList) GetEgressSecurityRules() *plugin.TValue[[]an
 
 func (c *mqlOciNetworkSecurityList) GetIngressSecurityRules() *plugin.TValue[[]any] {
 	return &c.IngressSecurityRules
+}
+
+func (c *mqlOciNetworkSecurityList) GetHasStatelessRules() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasStatelessRules, func() (bool, error) {
+		return c.hasStatelessRules()
+	})
 }
 
 func (c *mqlOciNetworkSecurityList) GetVcnId() *plugin.TValue[string] {
@@ -9692,6 +9751,7 @@ type mqlOciNetworkNetworkSecurityGroup struct {
 	Id                   plugin.TValue[string]
 	Name                 plugin.TValue[string]
 	CompartmentID        plugin.TValue[string]
+	Compartment          plugin.TValue[*mqlOciCompartment]
 	Vcn                  plugin.TValue[*mqlOciNetworkVcn]
 	State                plugin.TValue[string]
 	Created              plugin.TValue[*time.Time]
@@ -9699,6 +9759,8 @@ type mqlOciNetworkNetworkSecurityGroup struct {
 	DefinedTags          plugin.TValue[map[string]any]
 	IngressSecurityRules plugin.TValue[[]any]
 	EgressSecurityRules  plugin.TValue[[]any]
+	HasStatelessRules    plugin.TValue[bool]
+	AttachedVnics        plugin.TValue[[]any]
 }
 
 // createOciNetworkNetworkSecurityGroup creates a new instance of this resource
@@ -9750,6 +9812,22 @@ func (c *mqlOciNetworkNetworkSecurityGroup) GetCompartmentID() *plugin.TValue[st
 	return &c.CompartmentID
 }
 
+func (c *mqlOciNetworkNetworkSecurityGroup) GetCompartment() *plugin.TValue[*mqlOciCompartment] {
+	return plugin.GetOrCompute[*mqlOciCompartment](&c.Compartment, func() (*mqlOciCompartment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.networkSecurityGroup", c.__id, "compartment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciCompartment), nil
+			}
+		}
+
+		return c.compartment()
+	})
+}
+
 func (c *mqlOciNetworkNetworkSecurityGroup) GetVcn() *plugin.TValue[*mqlOciNetworkVcn] {
 	return plugin.GetOrCompute[*mqlOciNetworkVcn](&c.Vcn, func() (*mqlOciNetworkVcn, error) {
 		if c.MqlRuntime.HasRecording {
@@ -9791,6 +9869,28 @@ func (c *mqlOciNetworkNetworkSecurityGroup) GetIngressSecurityRules() *plugin.TV
 func (c *mqlOciNetworkNetworkSecurityGroup) GetEgressSecurityRules() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.EgressSecurityRules, func() ([]any, error) {
 		return c.egressSecurityRules()
+	})
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetHasStatelessRules() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasStatelessRules, func() (bool, error) {
+		return c.hasStatelessRules()
+	})
+}
+
+func (c *mqlOciNetworkNetworkSecurityGroup) GetAttachedVnics() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AttachedVnics, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.network.networkSecurityGroup", c.__id, "attachedVnics")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.attachedVnics()
 	})
 }
 

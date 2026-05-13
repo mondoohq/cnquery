@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/audit"
+	"github.com/oracle/oci-go-sdk/v65/common"
+	"github.com/oracle/oci-go-sdk/v65/identity"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/oci/connection"
@@ -89,6 +91,47 @@ func (o *mqlOci) compartments() ([]any, error) {
 
 func (o *mqlOciCompartment) id() (string, error) {
 	return "oci.compartment/" + o.Id.Data, nil
+}
+
+func initOciCompartment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["id"] == nil || args["id"].Value == nil {
+		return args, nil, nil
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.OciConnection)
+	client, err := conn.IdentityClient()
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.GetCompartment(context.Background(), identity.GetCompartmentRequest{
+		CompartmentId: common.String(id),
+	})
+	if err != nil {
+		// Return only the id so the resource is identifiable even when the
+		// caller can't read details (cross-tenancy / IAM denial). entries()
+		// and other deeper lookups will surface the same error if reached.
+		return args, nil, nil
+	}
+	compartment := resp.Compartment
+
+	var created *time.Time
+	if compartment.TimeCreated != nil {
+		created = &compartment.TimeCreated.Time
+	}
+
+	args["id"] = llx.StringDataPtr(compartment.Id)
+	args["name"] = llx.StringDataPtr(compartment.Name)
+	args["description"] = llx.StringDataPtr(compartment.Description)
+	args["created"] = llx.TimeDataPtr(created)
+	args["state"] = llx.StringData(string(compartment.LifecycleState))
+	return args, nil, nil
 }
 
 func (o *mqlOciTenancy) id() (string, error) {

@@ -429,6 +429,50 @@ func (o *mqlOciNetworkSecurityList) vcn() (*mqlOciNetworkVcn, error) {
 	return mqlVcn.(*mqlOciNetworkVcn), nil
 }
 
+func (o *mqlOciNetworkSecurityList) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciNetworkSecurityList) hasStatelessRules() (bool, error) {
+	if o.IngressSecurityRules.Error != nil {
+		return false, o.IngressSecurityRules.Error
+	}
+	if anyRuleStateless(o.IngressSecurityRules.Data, "stateless") {
+		return true, nil
+	}
+	if o.EgressSecurityRules.Error != nil {
+		return false, o.EgressSecurityRules.Error
+	}
+	return anyRuleStateless(o.EgressSecurityRules.Data, "stateless"), nil
+}
+
+func resolveOciCompartment(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciCompartment]) (*mqlOciCompartment, error) {
+	if id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "oci.compartment", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciCompartment), nil
+}
+
+func anyRuleStateless(rules []any, key string) bool {
+	for _, r := range rules {
+		m, ok := r.(map[string]any)
+		if !ok {
+			continue
+		}
+		if v, ok := m[key].(bool); ok && v {
+			return true
+		}
+	}
+	return false
+}
+
 func (o *mqlOciNetwork) subnets() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 
@@ -859,6 +903,113 @@ func (o *mqlOciNetworkNetworkSecurityGroup) egressSecurityRules() ([]any, error)
 		return nil, err
 	}
 	return o.EgressSecurityRules.Data, nil
+}
+
+func (o *mqlOciNetworkNetworkSecurityGroup) compartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.CompartmentID.Data, &o.Compartment)
+}
+
+func (o *mqlOciNetworkNetworkSecurityGroup) hasStatelessRules() (bool, error) {
+	ingress, egress, err := o.fetchSecurityRules()
+	if err != nil {
+		return false, err
+	}
+	if ingress == nil {
+		ingress = o.IngressSecurityRules.Data
+	}
+	if egress == nil {
+		egress = o.EgressSecurityRules.Data
+	}
+	if anyRuleStateless(ingress, "isStateless") {
+		return true, nil
+	}
+	return anyRuleStateless(egress, "isStateless"), nil
+}
+
+func (o *mqlOciNetworkNetworkSecurityGroup) attachedVnics() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+	ctx := context.Background()
+
+	networkClient, err := conn.NetworkClient(o.region)
+	if err != nil {
+		return nil, err
+	}
+
+	var attachments []core.NetworkSecurityGroupVnic
+	var page *string
+	for {
+		response, err := networkClient.ListNetworkSecurityGroupVnics(ctx, core.ListNetworkSecurityGroupVnicsRequest{
+			NetworkSecurityGroupId: common.String(o.Id.Data),
+			Page:                   page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		attachments = append(attachments, response.Items...)
+		if response.OpcNextPage == nil {
+			break
+		}
+		page = response.OpcNextPage
+	}
+
+	res := make([]any, 0, len(attachments))
+	for i := range attachments {
+		att := attachments[i]
+		if att.VnicId == nil {
+			continue
+		}
+		// OCI has no batch GetVnic API, so each attachment requires a separate call.
+		vnicResp, err := networkClient.GetVnic(ctx, core.GetVnicRequest{VnicId: att.VnicId})
+		if err != nil {
+			log.Debug().Err(err).Msgf("failed to get VNIC %s", *att.VnicId)
+			continue
+		}
+		mqlVnic, err := ociVnicToMql(o.MqlRuntime, vnicResp.Vnic)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlVnic)
+	}
+	return res, nil
+}
+
+func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, error) {
+	var created *time.Time
+	if vnic.TimeCreated != nil {
+		created = &vnic.TimeCreated.Time
+	}
+
+	freeformTags := make(map[string]interface{}, len(vnic.FreeformTags))
+	for k, v := range vnic.FreeformTags {
+		freeformTags[k] = v
+	}
+	definedTags := make(map[string]interface{}, len(vnic.DefinedTags))
+	for k, v := range vnic.DefinedTags {
+		definedTags[k] = v
+	}
+
+	res, err := CreateResource(runtime, "oci.compute.vnic", map[string]*llx.RawData{
+		"id":                  llx.StringDataPtr(vnic.Id),
+		"name":                llx.StringDataPtr(vnic.DisplayName),
+		"compartmentID":       llx.StringDataPtr(vnic.CompartmentId),
+		"isPrimary":           llx.BoolDataPtr(vnic.IsPrimary),
+		"privateIp":           llx.StringDataPtr(vnic.PrivateIp),
+		"publicIp":            llx.StringDataPtr(vnic.PublicIp),
+		"macAddress":          llx.StringDataPtr(vnic.MacAddress),
+		"hostnameLabel":       llx.StringDataPtr(vnic.HostnameLabel),
+		"nsgIds":              llx.ArrayData(convert.SliceAnyToInterface(vnic.NsgIds), types.String),
+		"skipSourceDestCheck": llx.BoolDataPtr(vnic.SkipSourceDestCheck),
+		"state":               llx.StringData(string(vnic.LifecycleState)),
+		"created":             llx.TimeDataPtr(created),
+		"freeformTags":        llx.MapData(freeformTags, types.String),
+		"definedTags":         llx.MapData(definedTags, types.Any),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlVnic := res.(*mqlOciComputeVnic)
+	mqlVnic.cacheSubnetId = stringValue(vnic.SubnetId)
+	return mqlVnic, nil
 }
 
 // Internet Gateways
