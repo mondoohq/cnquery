@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	dlp "cloud.google.com/go/dlp/apiv2"
 	"cloud.google.com/go/dlp/apiv2/dlppb"
@@ -397,9 +398,29 @@ const dlpDataProfilesLocation = "global"
 // dlpRegionalListLocations is the set of locations the DLP API supports
 // for resources that cannot live in "global" at project scope —
 // DiscoveryConfig and Connection. We query the three multi-regions and
-// skip per-location errors so a project that has resources in only one
-// of them still returns useful data.
+// skip per-location errors so a project that has resources in any of
+// them still returns useful data.
+//
+// Limitation: DLP also supports ~40 single-region locations
+// (us-central1, europe-west1, asia-southeast1, ...). DiscoveryConfigs
+// and Connections pinned to a specific region (rather than the
+// containing multi-region) are *not* returned here. The DLP API does
+// not expose a `locations.list` for client SDKs, so iterating every
+// known region would multiply the listing cost by ~40x for every
+// query — an unacceptable trade-off when the vast majority of
+// customers use the multi-regions. If single-region coverage is
+// needed, expand this list or add a connection-level location
+// configuration.
 var dlpRegionalListLocations = []string{"us", "eu", "asia"}
+
+// dlpFilterEscape escapes characters that would break a double-quoted
+// DLP list-filter string. The DLP filter grammar treats `\"` as a
+// literal double quote inside a quoted value, so escaping `"` is enough
+// for the identifiers we interpolate (BigQuery project / dataset /
+// table IDs).
+func dlpFilterEscape(s string) string {
+	return strings.ReplaceAll(s, `"`, `\"`)
+}
 
 func dlpProtoSliceToDict[T proto.Message](items []T) ([]any, error) {
 	res := make([]any, 0, len(items))
@@ -895,6 +916,8 @@ func (g *mqlGcpProjectDlpService) columnDataProfiles() ([]any, error) {
 	// ListColumnDataProfiles requires a filter with project_id, dataset_id,
 	// and table_id; there is no project-wide list. Iterate the project's
 	// table data profiles first and gather column profiles per-table.
+	// This is O(tables) API calls — slow on projects with many profiled
+	// tables — but it is the only path the API exposes for this collection.
 	parent := fmt.Sprintf("projects/%s/locations/%s", projectId, dlpDataProfilesLocation)
 	tableIt := client.ListTableDataProfiles(ctx, &dlppb.ListTableDataProfilesRequest{Parent: parent})
 
@@ -912,8 +935,11 @@ func (g *mqlGcpProjectDlpService) columnDataProfiles() ([]any, error) {
 			return nil, err
 		}
 
-		filter := fmt.Sprintf("table_id=\"%s\" AND dataset_id=\"%s\" AND project_id=\"%s\"",
-			t.TableId, t.DatasetId, t.DatasetProjectId)
+		// Escape embedded double quotes so a BigQuery identifier containing
+		// a literal `"` (rare but legal in some characters) can't break out
+		// of the filter expression.
+		filter := fmt.Sprintf(`table_id="%s" AND dataset_id="%s" AND project_id="%s"`,
+			dlpFilterEscape(t.TableId), dlpFilterEscape(t.DatasetId), dlpFilterEscape(t.DatasetProjectId))
 		colIt := client.ListColumnDataProfiles(ctx, &dlppb.ListColumnDataProfilesRequest{
 			Parent: parent,
 			Filter: filter,
