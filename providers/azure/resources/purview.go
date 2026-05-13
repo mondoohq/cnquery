@@ -112,12 +112,14 @@ func purviewAccountToMql(runtime *plugin.Runtime, account *armpurview.Account) (
 		createdBy                string
 		createdByObjectId        string
 	)
-	var createdAtPtr *plugin.TValue[any]
-	_ = createdAtPtr // silence unused if not assigned below
 	createdAt := llx.NilData
 
-	endpointsDict, managedResourcesDict, cloudConnectorsDict := map[string]any{}, map[string]any{}, map[string]any{}
-	var privateEndpointConnections []any
+	var (
+		endpointsDict              map[string]any
+		managedResourcesDict       map[string]any
+		cloudConnectorsDict        map[string]any
+		privateEndpointConnections []any
+	)
 
 	if p := account.Properties; p != nil {
 		if p.FriendlyName != nil {
