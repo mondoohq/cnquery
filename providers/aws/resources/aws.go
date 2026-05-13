@@ -92,7 +92,12 @@ func isBadRequestError(err error) bool {
 	return false
 }
 
-// IsMacieNotEnabledError checks if the error indicates Macie is not enabled in the region
+// IsMacieNotEnabledError checks if the error indicates Macie is not enabled in the region.
+// The macie2 API returns this in three shapes across endpoints:
+//   - 401 AccessDeniedException ("Macie is not enabled") on most session and listing APIs
+//   - 403 AccessDeniedException on a handful of endpoints
+//   - 404 ResourceNotFoundException ("Amazon Macie isn't enabled for your account") on
+//     GetClassificationExportConfiguration and a few of the discovery Get* endpoints.
 func IsMacieNotEnabledError(err error) bool {
 	if err == nil {
 		return false
@@ -107,6 +112,12 @@ func IsMacieNotEnabledError(err error) bool {
 		// Also catch general access denied cases for Macie
 		if (respErr.HTTPStatusCode() == 400 || respErr.HTTPStatusCode() == 401 || respErr.HTTPStatusCode() == 403) &&
 			(strings.Contains(respErr.Error(), "AccessDeniedException") || strings.Contains(respErr.Error(), "AccessDenied")) {
+			return true
+		}
+		// GetClassificationExportConfiguration / GetAutomatedDiscoveryConfiguration
+		// return 404 ResourceNotFoundException when Macie isn't enabled in the region.
+		if respErr.HTTPStatusCode() == 404 &&
+			(strings.Contains(respErr.Error(), "Macie isn't enabled") || strings.Contains(respErr.Error(), "Macie is not enabled")) {
 			return true
 		}
 	}

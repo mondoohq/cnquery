@@ -346,9 +346,10 @@ func (a *mqlAwsMacieCustomDataIdentifier) id() (string, error) {
 
 // Internal cache structures
 type mqlAwsMacieClassificationJobInternal struct {
-	cacheJob       *types.JobSummary
-	detailsFetched bool
-	detailsLock    sync.Mutex
+	cacheJob          *types.JobSummary
+	cacheStaticBucket []string
+	detailsFetched    bool
+	detailsLock       sync.Mutex
 }
 
 type mqlAwsMacieCustomDataIdentifierInternal struct {
@@ -393,6 +394,9 @@ func (a *mqlAwsMacieClassificationJob) populateJobDetails() error {
 	if job.S3JobDefinition != nil && job.S3JobDefinition.BucketDefinitions != nil {
 		bucketDefs, _ := convert.JsonToDictSlice(job.S3JobDefinition.BucketDefinitions)
 		a.BucketDefinitions = plugin.TValue[[]any]{Data: bucketDefs, State: plugin.StateIsSet}
+		for _, bd := range job.S3JobDefinition.BucketDefinitions {
+			a.cacheStaticBucket = append(a.cacheStaticBucket, bd.Buckets...)
+		}
 	}
 	if job.ScheduleFrequency != nil {
 		scheduleFreq, _ := convert.JsonToDict(job.ScheduleFrequency)
@@ -664,27 +668,16 @@ func (a *mqlAwsMacieClassificationJob) buckets() ([]any, error) {
 		return nil, err
 	}
 	res := []any{}
-	for _, raw := range a.BucketDefinitions.Data {
-		bd, ok := raw.(map[string]any)
-		if !ok {
+	for _, name := range a.cacheStaticBucket {
+		if name == "" {
 			continue
 		}
-		bucketsRaw, ok := bd["buckets"].([]any)
-		if !ok {
-			continue
+		mqlBucket, err := NewResource(a.MqlRuntime, ResourceAwsS3Bucket,
+			map[string]*llx.RawData{"name": llx.StringData(name)})
+		if err != nil {
+			return nil, err
 		}
-		for _, b := range bucketsRaw {
-			name, ok := b.(string)
-			if !ok || name == "" {
-				continue
-			}
-			mqlBucket, err := NewResource(a.MqlRuntime, ResourceAwsS3Bucket,
-				map[string]*llx.RawData{"name": llx.StringData(name)})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlBucket)
-		}
+		res = append(res, mqlBucket)
 	}
 	return res, nil
 }
