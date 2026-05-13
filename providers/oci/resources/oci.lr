@@ -2189,3 +2189,268 @@ private oci.redis.cluster @defaults("name softwareVersion state") {
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
 }
+
+// Oracle Data Safe
+//
+// Use the Data Safe namespace to enumerate Data Safe coverage in the
+// tenancy. Iterate `targetDatabases()` for the databases registered
+// under Data Safe; `securityAssessments()` and `userAssessments()` for
+// the latest configuration-posture and user-risk findings;
+// `sensitiveDataModels()` and `sensitiveTypes()` for the
+// data-discovery catalog; and `maskingPolicies()` for the masking
+// definitions applied during refresh, clone, or export. `configurations`
+// reports per-region service enablement.
+oci.dataSafe {
+  // Per-region Data Safe service enablement records, with the URL, lifecycle state, and global settings of each region where Data Safe has been turned on
+  configurations() []oci.dataSafe.configuration
+  // Databases registered under Data Safe across every region and compartment in the tenancy
+  targetDatabases() []oci.dataSafe.targetDatabase
+  // Security assessments (configuration-posture findings) produced by Data Safe
+  securityAssessments() []oci.dataSafe.securityAssessment
+  // User assessments (user-risk findings) produced by Data Safe
+  userAssessments() []oci.dataSafe.userAssessment
+  // Sensitive data models — the per-target catalogs of sensitive columns produced by data discovery
+  sensitiveDataModels() []oci.dataSafe.sensitiveDataModel
+  // Sensitive type definitions (predefined Oracle types and tenant-defined types) used during data discovery
+  sensitiveTypes() []oci.dataSafe.sensitiveType
+  // Masking policies that define how columns are masked during a sensitive-data masking job
+  maskingPolicies() []oci.dataSafe.maskingPolicy
+}
+
+// Oracle Data Safe service enablement configuration for a single region
+//
+// Examine the per-region Data Safe configuration — whether Data Safe is
+// turned on in this region, the service URL and lifecycle state, and the
+// `globalSettings` block that controls offline retention, online
+// retention, and paid-usage flags.
+private oci.dataSafe.configuration @defaults("region isEnabled lifecycleState") {
+  // OCI region key the configuration was retrieved from (e.g. `us-ashburn-1`)
+  region string
+  // Whether Data Safe is enabled in this region
+  isEnabled bool
+  // URL of the Data Safe service in this region
+  url string
+  // OCID of the tenancy used to enable Data Safe
+  compartmentId string
+  // Lifecycle state of Data Safe in this region (CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED)
+  lifecycleState string
+  // NAT Gateway IP address used by Data Safe to reach customer databases in this region
+  natGatewayIpAddress string
+  // Global settings controlling offline / online retention and paid-usage flags
+  globalSettings dict
+  // Time Data Safe was enabled in this region
+  enabledAt time
+  // Free-form tags applied to the configuration
+  freeformTags map[string]string
+  // Defined tags applied to the configuration
+  definedTags map[string]map[string]string
+}
+
+// Oracle Data Safe target database
+//
+// Examine a single registered target database. `infrastructureType`
+// distinguishes Oracle DB systems on Exadata, Autonomous DB, base DB,
+// or external/on-premise. `databaseType` reflects the deployment model
+// (Autonomous Database, DB system, installed DB). `associatedResourceIds`
+// lists the connected resources (database, private endpoint).
+private oci.dataSafe.targetDatabase @defaults("displayName databaseType lifecycleState region") {
+  // OCID of the target database
+  id string
+  // OCID of the compartment that contains the target database
+  compartmentId string
+  // OCI region the target is registered in
+  region string
+  // Display name of the target in Data Safe
+  displayName string
+  // Description of the target
+  description string
+  // Infrastructure type (ORACLE_CLOUD, ORACLE_EXADATA_CLOUD_AT_CUSTOMER, ORACLE_EXADATA_CLOUD, ORACLE_EXACC, INSTALLED_DATABASE, NON_ORACLE_CLOUD)
+  infrastructureType string
+  // Database type (DATABASE_CLOUD_SERVICE, AUTONOMOUS_DATABASE, INSTALLED_DATABASE)
+  databaseType string
+  // Lifecycle state (CREATING, UPDATING, ACTIVE, INACTIVE, NEEDS_ATTENTION, FAILED, DELETING, DELETED)
+  lifecycleState string
+  // Details about the current lifecycle state when state is FAILED or NEEDS_ATTENTION
+  lifecycleDetails string
+  // OCIDs of associated resources like the underlying database, Data Safe private endpoint, etc.
+  associatedResourceIds []string
+  // Time the target was registered
+  created time
+  // Free-form tags on the target
+  freeformTags map[string]string
+  // Defined tags on the target
+  definedTags map[string]map[string]string
+}
+
+// Oracle Data Safe security assessment
+//
+// Examine a single security assessment — the configuration-posture
+// finding produced by Data Safe against one or more target databases.
+// `type` distinguishes LATEST (auto-generated per target), SAVED
+// (snapshot), SAVE_SCHEDULE (periodic save config), TEMPLATE (user-defined
+// check set), TEMPLATE_BASELINE (template with severity caps), and
+// COMPARTMENT (aggregate of every target in a compartment). `targetIds`
+// names the targets the assessment covers.
+private oci.dataSafe.securityAssessment @defaults("displayName type lifecycleState region") {
+  // OCID of the security assessment
+  id string
+  // OCID of the compartment that contains the assessment
+  compartmentId string
+  // OCI region the assessment was produced in
+  region string
+  // Display name of the assessment
+  displayName string
+  // Lifecycle state (CREATING, SUCCEEDED, UPDATING, FAILED, DELETING, DELETED)
+  lifecycleState string
+  // Assessment type: LATEST, SAVED, SAVE_SCHEDULE, TEMPLATE, TEMPLATE_BASELINE, COMPARTMENT
+  type string
+  // OCIDs of the target databases the assessment covers
+  targetIds []string
+  // Whether this is a baseline assessment used as the comparison reference
+  isBaseline bool
+  // Whether the assessment deviates from its configured baseline
+  isDeviatedFromBaseline bool
+  // Time the assessment was created
+  created time
+  // Time the assessment was last updated
+  timeUpdated time
+  // Free-form tags on the assessment
+  freeformTags map[string]string
+  // Defined tags on the assessment
+  definedTags map[string]map[string]string
+}
+
+// Oracle Data Safe user assessment
+//
+// Examine a single user assessment — the user-risk finding produced
+// against one or more target databases. Inspect `type` to distinguish
+// LATEST, SAVED, SAVE_SCHEDULE, TEMPLATE, TEMPLATE_BASELINE, and
+// COMPARTMENT (aggregate), and `targetIds` for the targets covered.
+private oci.dataSafe.userAssessment @defaults("displayName type lifecycleState region") {
+  // OCID of the user assessment
+  id string
+  // OCID of the compartment that contains the user assessment
+  compartmentId string
+  // OCI region the assessment was produced in
+  region string
+  // Display name of the assessment
+  displayName string
+  // Lifecycle state (CREATING, SUCCEEDED, UPDATING, FAILED, DELETING, DELETED)
+  lifecycleState string
+  // Assessment type: LATEST, SAVED, SAVE_SCHEDULE, TEMPLATE, TEMPLATE_BASELINE, COMPARTMENT
+  type string
+  // OCIDs of the target databases the assessment covers
+  targetIds []string
+  // Whether this is the baseline assessment used as the comparison reference
+  isBaseline bool
+  // Whether the assessment deviates from its configured baseline
+  isDeviatedFromBaseline bool
+  // Time the assessment was created
+  created time
+  // Time the assessment was last updated
+  timeUpdated time
+  // Free-form tags on the assessment
+  freeformTags map[string]string
+  // Defined tags on the assessment
+  definedTags map[string]map[string]string
+}
+
+// Oracle Data Safe sensitive data model
+//
+// Examine a single sensitive data model — the per-target catalog of
+// sensitive columns produced by data discovery. `targetId` is the
+// reference database the model was discovered against; `appSuiteName`
+// groups models that belong to the same application suite.
+private oci.dataSafe.sensitiveDataModel @defaults("displayName lifecycleState appSuiteName region") {
+  // OCID of the sensitive data model
+  id string
+  // OCID of the compartment that contains the sensitive data model
+  compartmentId string
+  // OCI region the sensitive data model is hosted in
+  region string
+  // Display name of the model
+  displayName string
+  // Description of the model
+  description string
+  // Lifecycle state (CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  lifecycleState string
+  // OCID of the reference target database the model was discovered against
+  targetId string
+  // Application suite name identifying a collection of applications, default GENERIC
+  appSuiteName string
+  // Time the model was created
+  created time
+  // Time the model was last updated
+  timeUpdated time
+  // Free-form tags on the model
+  freeformTags map[string]string
+  // Defined tags on the model
+  definedTags map[string]map[string]string
+}
+
+// Oracle Data Safe sensitive type
+//
+// Examine a single sensitive type definition — either an Oracle
+// predefined type or a tenant-defined custom type used during data
+// discovery. `entityType` distinguishes a single regex-backed
+// sensitive type (SENSITIVE_TYPE) from a sensitive category grouping
+// multiple types (SENSITIVE_CATEGORY). `source` reflects whether the
+// type ships with Oracle (ORACLE) or was defined by the tenant (USER).
+private oci.dataSafe.sensitiveType @defaults("displayName entityType source region") {
+  // OCID of the sensitive type
+  id string
+  // OCID of the compartment that contains the sensitive type
+  compartmentId string
+  // OCI region the sensitive type is hosted in
+  region string
+  // Display name of the sensitive type
+  displayName string
+  // Short name of the sensitive type
+  shortName string
+  // Lifecycle state (CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED)
+  lifecycleState string
+  // Whether the sensitive type is shipped by Oracle (ORACLE) or defined by the tenant (USER)
+  source string
+  // Whether the entry is a single regex-backed sensitive type (SENSITIVE_TYPE) or a sensitive category (SENSITIVE_CATEGORY) grouping multiple types
+  entityType string
+  // Time the sensitive type was created
+  created time
+  // Time the sensitive type was last updated
+  timeUpdated time
+  // Free-form tags on the sensitive type
+  freeformTags map[string]string
+  // Defined tags on the sensitive type
+  definedTags map[string]map[string]string
+}
+
+// Oracle Data Safe masking policy
+//
+// Examine a single masking policy — the definition of how columns
+// are masked during a sensitive-data masking job (refresh, clone,
+// export). `columnSource` is the dict that names the sensitive data
+// model or target the policy's columns are sourced from; its shape
+// varies by the configured source type.
+private oci.dataSafe.maskingPolicy @defaults("displayName lifecycleState region") {
+  // OCID of the masking policy
+  id string
+  // OCID of the compartment that contains the masking policy
+  compartmentId string
+  // OCI region the masking policy is hosted in
+  region string
+  // Display name of the masking policy
+  displayName string
+  // Description of the masking policy
+  description string
+  // Lifecycle state (CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED, NEEDS_ATTENTION)
+  lifecycleState string
+  // Column source for the masking policy. Keys vary by source type: SENSITIVE_DATA_MODEL has `sensitiveDataModelId`; TARGET has `targetId`
+  columnSource dict
+  // Time the masking policy was created
+  created time
+  // Time the masking policy was last updated
+  timeUpdated time
+  // Free-form tags on the masking policy
+  freeformTags map[string]string
+  // Defined tags on the masking policy
+  definedTags map[string]map[string]string
+}

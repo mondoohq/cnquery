@@ -107,6 +107,14 @@ const (
 	ResourceOciCertificatesCaBundle             string = "oci.certificates.caBundle"
 	ResourceOciRedis                            string = "oci.redis"
 	ResourceOciRedisCluster                     string = "oci.redis.cluster"
+	ResourceOciDataSafe                         string = "oci.dataSafe"
+	ResourceOciDataSafeConfiguration            string = "oci.dataSafe.configuration"
+	ResourceOciDataSafeTargetDatabase           string = "oci.dataSafe.targetDatabase"
+	ResourceOciDataSafeSecurityAssessment       string = "oci.dataSafe.securityAssessment"
+	ResourceOciDataSafeUserAssessment           string = "oci.dataSafe.userAssessment"
+	ResourceOciDataSafeSensitiveDataModel       string = "oci.dataSafe.sensitiveDataModel"
+	ResourceOciDataSafeSensitiveType            string = "oci.dataSafe.sensitiveType"
+	ResourceOciDataSafeMaskingPolicy            string = "oci.dataSafe.maskingPolicy"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -476,6 +484,38 @@ func init() {
 		"oci.redis.cluster": {
 			Init:   initOciRedisCluster,
 			Create: createOciRedisCluster,
+		},
+		"oci.dataSafe": {
+			// to override args, implement: initOciDataSafe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDataSafe,
+		},
+		"oci.dataSafe.configuration": {
+			// to override args, implement: initOciDataSafeConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDataSafeConfiguration,
+		},
+		"oci.dataSafe.targetDatabase": {
+			// to override args, implement: initOciDataSafeTargetDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDataSafeTargetDatabase,
+		},
+		"oci.dataSafe.securityAssessment": {
+			// to override args, implement: initOciDataSafeSecurityAssessment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDataSafeSecurityAssessment,
+		},
+		"oci.dataSafe.userAssessment": {
+			// to override args, implement: initOciDataSafeUserAssessment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDataSafeUserAssessment,
+		},
+		"oci.dataSafe.sensitiveDataModel": {
+			// to override args, implement: initOciDataSafeSensitiveDataModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDataSafeSensitiveDataModel,
+		},
+		"oci.dataSafe.sensitiveType": {
+			// to override args, implement: initOciDataSafeSensitiveType(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDataSafeSensitiveType,
+		},
+		"oci.dataSafe.maskingPolicy": {
+			// to override args, implement: initOciDataSafeMaskingPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciDataSafeMaskingPolicy,
 		},
 	}
 }
@@ -2992,6 +3032,279 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.redis.cluster.definedTags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciRedisCluster).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.dataSafe.configurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafe).GetConfigurations()).ToDataRes(types.Array(types.Resource("oci.dataSafe.configuration")))
+	},
+	"oci.dataSafe.targetDatabases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafe).GetTargetDatabases()).ToDataRes(types.Array(types.Resource("oci.dataSafe.targetDatabase")))
+	},
+	"oci.dataSafe.securityAssessments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafe).GetSecurityAssessments()).ToDataRes(types.Array(types.Resource("oci.dataSafe.securityAssessment")))
+	},
+	"oci.dataSafe.userAssessments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafe).GetUserAssessments()).ToDataRes(types.Array(types.Resource("oci.dataSafe.userAssessment")))
+	},
+	"oci.dataSafe.sensitiveDataModels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafe).GetSensitiveDataModels()).ToDataRes(types.Array(types.Resource("oci.dataSafe.sensitiveDataModel")))
+	},
+	"oci.dataSafe.sensitiveTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafe).GetSensitiveTypes()).ToDataRes(types.Array(types.Resource("oci.dataSafe.sensitiveType")))
+	},
+	"oci.dataSafe.maskingPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafe).GetMaskingPolicies()).ToDataRes(types.Array(types.Resource("oci.dataSafe.maskingPolicy")))
+	},
+	"oci.dataSafe.configuration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.configuration.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeConfiguration).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.dataSafe.configuration.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeConfiguration).GetUrl()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.configuration.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeConfiguration).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.configuration.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeConfiguration).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.configuration.natGatewayIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeConfiguration).GetNatGatewayIpAddress()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.configuration.globalSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeConfiguration).GetGlobalSettings()).ToDataRes(types.Dict)
+	},
+	"oci.dataSafe.configuration.enabledAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeConfiguration).GetEnabledAt()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.configuration.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeConfiguration).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.dataSafe.configuration.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeConfiguration).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.dataSafe.targetDatabase.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.targetDatabase.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.targetDatabase.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetRegion()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.targetDatabase.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetDisplayName()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.targetDatabase.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.targetDatabase.infrastructureType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetInfrastructureType()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.targetDatabase.databaseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetDatabaseType()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.targetDatabase.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.targetDatabase.lifecycleDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetLifecycleDetails()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.targetDatabase.associatedResourceIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetAssociatedResourceIds()).ToDataRes(types.Array(types.String))
+	},
+	"oci.dataSafe.targetDatabase.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.targetDatabase.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.dataSafe.targetDatabase.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeTargetDatabase).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.dataSafe.securityAssessment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.securityAssessment.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.securityAssessment.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetRegion()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.securityAssessment.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetDisplayName()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.securityAssessment.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.securityAssessment.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetType()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.securityAssessment.targetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetTargetIds()).ToDataRes(types.Array(types.String))
+	},
+	"oci.dataSafe.securityAssessment.isBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetIsBaseline()).ToDataRes(types.Bool)
+	},
+	"oci.dataSafe.securityAssessment.isDeviatedFromBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetIsDeviatedFromBaseline()).ToDataRes(types.Bool)
+	},
+	"oci.dataSafe.securityAssessment.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.securityAssessment.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.securityAssessment.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.dataSafe.securityAssessment.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSecurityAssessment).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.dataSafe.userAssessment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.userAssessment.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.userAssessment.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetRegion()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.userAssessment.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetDisplayName()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.userAssessment.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.userAssessment.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetType()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.userAssessment.targetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetTargetIds()).ToDataRes(types.Array(types.String))
+	},
+	"oci.dataSafe.userAssessment.isBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetIsBaseline()).ToDataRes(types.Bool)
+	},
+	"oci.dataSafe.userAssessment.isDeviatedFromBaseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetIsDeviatedFromBaseline()).ToDataRes(types.Bool)
+	},
+	"oci.dataSafe.userAssessment.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.userAssessment.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.userAssessment.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.dataSafe.userAssessment.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeUserAssessment).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.dataSafe.sensitiveDataModel.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveDataModel.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveDataModel.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetRegion()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveDataModel.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetDisplayName()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveDataModel.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveDataModel.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveDataModel.targetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetTargetId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveDataModel.appSuiteName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetAppSuiteName()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveDataModel.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.sensitiveDataModel.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.sensitiveDataModel.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.dataSafe.sensitiveDataModel.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveDataModel).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.dataSafe.sensitiveType.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveType.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveType.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetRegion()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveType.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetDisplayName()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveType.shortName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetShortName()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveType.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveType.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetSource()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveType.entityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetEntityType()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.sensitiveType.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.sensitiveType.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.sensitiveType.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.dataSafe.sensitiveType.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeSensitiveType).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"oci.dataSafe.maskingPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.maskingPolicy.compartmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetCompartmentId()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.maskingPolicy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetRegion()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.maskingPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.maskingPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.maskingPolicy.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetLifecycleState()).ToDataRes(types.String)
+	},
+	"oci.dataSafe.maskingPolicy.columnSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetColumnSource()).ToDataRes(types.Dict)
+	},
+	"oci.dataSafe.maskingPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.maskingPolicy.timeUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetTimeUpdated()).ToDataRes(types.Time)
+	},
+	"oci.dataSafe.maskingPolicy.freeformTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetFreeformTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"oci.dataSafe.maskingPolicy.definedTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDataSafeMaskingPolicy).GetDefinedTags()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
 	},
 }
 
@@ -6627,6 +6940,402 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.redis.cluster.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciRedisCluster).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafe).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dataSafe.configurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafe).Configurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafe).TargetDatabases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafe).SecurityAssessments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafe).UserAssessments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafe).SensitiveDataModels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafe).SensitiveTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafe).MaskingPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.configuration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dataSafe.configuration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.configuration.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.configuration.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.configuration.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.configuration.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.configuration.natGatewayIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).NatGatewayIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.configuration.globalSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).GlobalSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.configuration.enabledAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).EnabledAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.configuration.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.configuration.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeConfiguration).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dataSafe.targetDatabase.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.infrastructureType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).InfrastructureType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.databaseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).DatabaseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.lifecycleDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).LifecycleDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.associatedResourceIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).AssociatedResourceIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.targetDatabase.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeTargetDatabase).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dataSafe.securityAssessment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.targetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).TargetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.isBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).IsBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.isDeviatedFromBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).IsDeviatedFromBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.securityAssessment.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSecurityAssessment).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dataSafe.userAssessment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.targetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).TargetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.isBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).IsBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.isDeviatedFromBaseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).IsDeviatedFromBaseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.userAssessment.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeUserAssessment).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.targetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).TargetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.appSuiteName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).AppSuiteName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveDataModel.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveDataModel).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dataSafe.sensitiveType.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.shortName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).ShortName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.entityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).EntityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.sensitiveType.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeSensitiveType).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.compartmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).CompartmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.columnSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).ColumnSource, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.timeUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).TimeUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.freeformTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).FreeformTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"oci.dataSafe.maskingPolicy.definedTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDataSafeMaskingPolicy).DefinedTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 }
@@ -16229,5 +16938,896 @@ func (c *mqlOciRedisCluster) GetFreeformTags() *plugin.TValue[map[string]any] {
 }
 
 func (c *mqlOciRedisCluster) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciDataSafe for the oci.dataSafe resource
+type mqlOciDataSafe struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDataSafeInternal it will be used here
+	Configurations      plugin.TValue[[]any]
+	TargetDatabases     plugin.TValue[[]any]
+	SecurityAssessments plugin.TValue[[]any]
+	UserAssessments     plugin.TValue[[]any]
+	SensitiveDataModels plugin.TValue[[]any]
+	SensitiveTypes      plugin.TValue[[]any]
+	MaskingPolicies     plugin.TValue[[]any]
+}
+
+// createOciDataSafe creates a new instance of this resource
+func createOciDataSafe(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDataSafe{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dataSafe", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDataSafe) MqlName() string {
+	return "oci.dataSafe"
+}
+
+func (c *mqlOciDataSafe) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDataSafe) GetConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Configurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dataSafe", c.__id, "configurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.configurations()
+	})
+}
+
+func (c *mqlOciDataSafe) GetTargetDatabases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TargetDatabases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dataSafe", c.__id, "targetDatabases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.targetDatabases()
+	})
+}
+
+func (c *mqlOciDataSafe) GetSecurityAssessments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityAssessments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dataSafe", c.__id, "securityAssessments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityAssessments()
+	})
+}
+
+func (c *mqlOciDataSafe) GetUserAssessments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssessments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dataSafe", c.__id, "userAssessments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssessments()
+	})
+}
+
+func (c *mqlOciDataSafe) GetSensitiveDataModels() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SensitiveDataModels, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dataSafe", c.__id, "sensitiveDataModels")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sensitiveDataModels()
+	})
+}
+
+func (c *mqlOciDataSafe) GetSensitiveTypes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SensitiveTypes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dataSafe", c.__id, "sensitiveTypes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sensitiveTypes()
+	})
+}
+
+func (c *mqlOciDataSafe) GetMaskingPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MaskingPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.dataSafe", c.__id, "maskingPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.maskingPolicies()
+	})
+}
+
+// mqlOciDataSafeConfiguration for the oci.dataSafe.configuration resource
+type mqlOciDataSafeConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDataSafeConfigurationInternal it will be used here
+	Region              plugin.TValue[string]
+	IsEnabled           plugin.TValue[bool]
+	Url                 plugin.TValue[string]
+	CompartmentId       plugin.TValue[string]
+	LifecycleState      plugin.TValue[string]
+	NatGatewayIpAddress plugin.TValue[string]
+	GlobalSettings      plugin.TValue[any]
+	EnabledAt           plugin.TValue[*time.Time]
+	FreeformTags        plugin.TValue[map[string]any]
+	DefinedTags         plugin.TValue[map[string]any]
+}
+
+// createOciDataSafeConfiguration creates a new instance of this resource
+func createOciDataSafeConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDataSafeConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dataSafe.configuration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDataSafeConfiguration) MqlName() string {
+	return "oci.dataSafe.configuration"
+}
+
+func (c *mqlOciDataSafeConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDataSafeConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlOciDataSafeConfiguration) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlOciDataSafeConfiguration) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlOciDataSafeConfiguration) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciDataSafeConfiguration) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlOciDataSafeConfiguration) GetNatGatewayIpAddress() *plugin.TValue[string] {
+	return &c.NatGatewayIpAddress
+}
+
+func (c *mqlOciDataSafeConfiguration) GetGlobalSettings() *plugin.TValue[any] {
+	return &c.GlobalSettings
+}
+
+func (c *mqlOciDataSafeConfiguration) GetEnabledAt() *plugin.TValue[*time.Time] {
+	return &c.EnabledAt
+}
+
+func (c *mqlOciDataSafeConfiguration) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDataSafeConfiguration) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciDataSafeTargetDatabase for the oci.dataSafe.targetDatabase resource
+type mqlOciDataSafeTargetDatabase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDataSafeTargetDatabaseInternal it will be used here
+	Id                    plugin.TValue[string]
+	CompartmentId         plugin.TValue[string]
+	Region                plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	Description           plugin.TValue[string]
+	InfrastructureType    plugin.TValue[string]
+	DatabaseType          plugin.TValue[string]
+	LifecycleState        plugin.TValue[string]
+	LifecycleDetails      plugin.TValue[string]
+	AssociatedResourceIds plugin.TValue[[]any]
+	Created               plugin.TValue[*time.Time]
+	FreeformTags          plugin.TValue[map[string]any]
+	DefinedTags           plugin.TValue[map[string]any]
+}
+
+// createOciDataSafeTargetDatabase creates a new instance of this resource
+func createOciDataSafeTargetDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDataSafeTargetDatabase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dataSafe.targetDatabase", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDataSafeTargetDatabase) MqlName() string {
+	return "oci.dataSafe.targetDatabase"
+}
+
+func (c *mqlOciDataSafeTargetDatabase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetInfrastructureType() *plugin.TValue[string] {
+	return &c.InfrastructureType
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetDatabaseType() *plugin.TValue[string] {
+	return &c.DatabaseType
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetLifecycleDetails() *plugin.TValue[string] {
+	return &c.LifecycleDetails
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetAssociatedResourceIds() *plugin.TValue[[]any] {
+	return &c.AssociatedResourceIds
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDataSafeTargetDatabase) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciDataSafeSecurityAssessment for the oci.dataSafe.securityAssessment resource
+type mqlOciDataSafeSecurityAssessment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDataSafeSecurityAssessmentInternal it will be used here
+	Id                     plugin.TValue[string]
+	CompartmentId          plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	DisplayName            plugin.TValue[string]
+	LifecycleState         plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	TargetIds              plugin.TValue[[]any]
+	IsBaseline             plugin.TValue[bool]
+	IsDeviatedFromBaseline plugin.TValue[bool]
+	Created                plugin.TValue[*time.Time]
+	TimeUpdated            plugin.TValue[*time.Time]
+	FreeformTags           plugin.TValue[map[string]any]
+	DefinedTags            plugin.TValue[map[string]any]
+}
+
+// createOciDataSafeSecurityAssessment creates a new instance of this resource
+func createOciDataSafeSecurityAssessment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDataSafeSecurityAssessment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dataSafe.securityAssessment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) MqlName() string {
+	return "oci.dataSafe.securityAssessment"
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetTargetIds() *plugin.TValue[[]any] {
+	return &c.TargetIds
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetIsBaseline() *plugin.TValue[bool] {
+	return &c.IsBaseline
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetIsDeviatedFromBaseline() *plugin.TValue[bool] {
+	return &c.IsDeviatedFromBaseline
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDataSafeSecurityAssessment) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciDataSafeUserAssessment for the oci.dataSafe.userAssessment resource
+type mqlOciDataSafeUserAssessment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDataSafeUserAssessmentInternal it will be used here
+	Id                     plugin.TValue[string]
+	CompartmentId          plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	DisplayName            plugin.TValue[string]
+	LifecycleState         plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	TargetIds              plugin.TValue[[]any]
+	IsBaseline             plugin.TValue[bool]
+	IsDeviatedFromBaseline plugin.TValue[bool]
+	Created                plugin.TValue[*time.Time]
+	TimeUpdated            plugin.TValue[*time.Time]
+	FreeformTags           plugin.TValue[map[string]any]
+	DefinedTags            plugin.TValue[map[string]any]
+}
+
+// createOciDataSafeUserAssessment creates a new instance of this resource
+func createOciDataSafeUserAssessment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDataSafeUserAssessment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dataSafe.userAssessment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDataSafeUserAssessment) MqlName() string {
+	return "oci.dataSafe.userAssessment"
+}
+
+func (c *mqlOciDataSafeUserAssessment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetTargetIds() *plugin.TValue[[]any] {
+	return &c.TargetIds
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetIsBaseline() *plugin.TValue[bool] {
+	return &c.IsBaseline
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetIsDeviatedFromBaseline() *plugin.TValue[bool] {
+	return &c.IsDeviatedFromBaseline
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDataSafeUserAssessment) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciDataSafeSensitiveDataModel for the oci.dataSafe.sensitiveDataModel resource
+type mqlOciDataSafeSensitiveDataModel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDataSafeSensitiveDataModelInternal it will be used here
+	Id             plugin.TValue[string]
+	CompartmentId  plugin.TValue[string]
+	Region         plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Description    plugin.TValue[string]
+	LifecycleState plugin.TValue[string]
+	TargetId       plugin.TValue[string]
+	AppSuiteName   plugin.TValue[string]
+	Created        plugin.TValue[*time.Time]
+	TimeUpdated    plugin.TValue[*time.Time]
+	FreeformTags   plugin.TValue[map[string]any]
+	DefinedTags    plugin.TValue[map[string]any]
+}
+
+// createOciDataSafeSensitiveDataModel creates a new instance of this resource
+func createOciDataSafeSensitiveDataModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDataSafeSensitiveDataModel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dataSafe.sensitiveDataModel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) MqlName() string {
+	return "oci.dataSafe.sensitiveDataModel"
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetTargetId() *plugin.TValue[string] {
+	return &c.TargetId
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetAppSuiteName() *plugin.TValue[string] {
+	return &c.AppSuiteName
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDataSafeSensitiveDataModel) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciDataSafeSensitiveType for the oci.dataSafe.sensitiveType resource
+type mqlOciDataSafeSensitiveType struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDataSafeSensitiveTypeInternal it will be used here
+	Id             plugin.TValue[string]
+	CompartmentId  plugin.TValue[string]
+	Region         plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	ShortName      plugin.TValue[string]
+	LifecycleState plugin.TValue[string]
+	Source         plugin.TValue[string]
+	EntityType     plugin.TValue[string]
+	Created        plugin.TValue[*time.Time]
+	TimeUpdated    plugin.TValue[*time.Time]
+	FreeformTags   plugin.TValue[map[string]any]
+	DefinedTags    plugin.TValue[map[string]any]
+}
+
+// createOciDataSafeSensitiveType creates a new instance of this resource
+func createOciDataSafeSensitiveType(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDataSafeSensitiveType{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dataSafe.sensitiveType", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDataSafeSensitiveType) MqlName() string {
+	return "oci.dataSafe.sensitiveType"
+}
+
+func (c *mqlOciDataSafeSensitiveType) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetShortName() *plugin.TValue[string] {
+	return &c.ShortName
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetEntityType() *plugin.TValue[string] {
+	return &c.EntityType
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDataSafeSensitiveType) GetDefinedTags() *plugin.TValue[map[string]any] {
+	return &c.DefinedTags
+}
+
+// mqlOciDataSafeMaskingPolicy for the oci.dataSafe.maskingPolicy resource
+type mqlOciDataSafeMaskingPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciDataSafeMaskingPolicyInternal it will be used here
+	Id             plugin.TValue[string]
+	CompartmentId  plugin.TValue[string]
+	Region         plugin.TValue[string]
+	DisplayName    plugin.TValue[string]
+	Description    plugin.TValue[string]
+	LifecycleState plugin.TValue[string]
+	ColumnSource   plugin.TValue[any]
+	Created        plugin.TValue[*time.Time]
+	TimeUpdated    plugin.TValue[*time.Time]
+	FreeformTags   plugin.TValue[map[string]any]
+	DefinedTags    plugin.TValue[map[string]any]
+}
+
+// createOciDataSafeMaskingPolicy creates a new instance of this resource
+func createOciDataSafeMaskingPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciDataSafeMaskingPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.dataSafe.maskingPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) MqlName() string {
+	return "oci.dataSafe.maskingPolicy"
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetCompartmentId() *plugin.TValue[string] {
+	return &c.CompartmentId
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetLifecycleState() *plugin.TValue[string] {
+	return &c.LifecycleState
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetColumnSource() *plugin.TValue[any] {
+	return &c.ColumnSource
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetTimeUpdated() *plugin.TValue[*time.Time] {
+	return &c.TimeUpdated
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetFreeformTags() *plugin.TValue[map[string]any] {
+	return &c.FreeformTags
+}
+
+func (c *mqlOciDataSafeMaskingPolicy) GetDefinedTags() *plugin.TValue[map[string]any] {
 	return &c.DefinedTags
 }

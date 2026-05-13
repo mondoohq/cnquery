@@ -17,6 +17,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/containerinstances"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/oracle/oci-go-sdk/v65/database"
+	"github.com/oracle/oci-go-sdk/v65/datasafe"
 	"github.com/oracle/oci-go-sdk/v65/events"
 	"github.com/oracle/oci-go-sdk/v65/filestorage"
 	"github.com/oracle/oci-go-sdk/v65/functions"
@@ -317,6 +318,15 @@ func (c *OciConnection) WafClient(region string) (*waf.WafClient, error) {
 
 func (c *OciConnection) DatabaseClient(region string) (*database.DatabaseClient, error) {
 	client, err := database.NewDatabaseClientWithConfigurationProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (c *OciConnection) DataSafeClient(region string) (*datasafe.DataSafeClient, error) {
+	client, err := datasafe.NewDataSafeClientWithConfigurationProvider(c.config)
 	if err != nil {
 		return nil, err
 	}
