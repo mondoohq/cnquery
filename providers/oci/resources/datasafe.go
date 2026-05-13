@@ -124,14 +124,10 @@ func (o *mqlOciDataSafe) configurations() ([]any, error) {
 			}
 
 			cfg := resp.DataSafeConfiguration
-			globalSettingsDict, _ := convert.JsonToDict(cfg.GlobalSettings)
-
-			var enabledAt *common.SDKTime
-			if cfg.TimeEnabled != nil {
-				enabledAt = cfg.TimeEnabled
+			globalSettingsDict, err := convert.JsonToDict(cfg.GlobalSettings)
+			if err != nil {
+				log.Debug().Err(err).Str("region", regionId).Msg("could not convert Data Safe global settings to dict")
 			}
-			var enabledAtTime *common.SDKTime
-			_ = enabledAtTime
 
 			args := map[string]*llx.RawData{
 				"region":              llx.StringData(regionId),
@@ -141,11 +137,11 @@ func (o *mqlOciDataSafe) configurations() ([]any, error) {
 				"lifecycleState":      llx.StringData(string(cfg.LifecycleState)),
 				"natGatewayIpAddress": llx.StringData(stringValue(cfg.DataSafeNatGatewayIpAddress)),
 				"globalSettings":      llx.DictData(globalSettingsDict),
-				"freeformTags":        llx.MapData(strMapToInterface(cfg.FreeformTags), llxTypeString),
-				"definedTags":         llx.MapData(definedTagsToInterface(cfg.DefinedTags), llxTypeMapString),
+				"freeformTags":        llx.MapData(strMapToAny(cfg.FreeformTags), types.String),
+				"definedTags":         llx.MapData(definedTagsToAny(cfg.DefinedTags), types.Any),
 			}
-			if enabledAt != nil {
-				args["enabledAt"] = llx.TimeData(enabledAt.Time)
+			if cfg.TimeEnabled != nil {
+				args["enabledAt"] = llx.TimeData(cfg.TimeEnabled.Time)
 			} else {
 				args["enabledAt"] = llx.NilData
 			}
@@ -213,10 +209,10 @@ func (o *mqlOciDataSafe) targetDatabases() ([]any, error) {
 					"databaseType":          llx.StringData(string(t.DatabaseType)),
 					"lifecycleState":        llx.StringData(string(t.LifecycleState)),
 					"lifecycleDetails":      llx.StringData(stringValue(t.LifecycleDetails)),
-					"associatedResourceIds": llx.ArrayData(stringsToAnySliceOci(t.AssociatedResourceIds), llxTypeString),
+					"associatedResourceIds": llx.ArrayData(stringsToAny(t.AssociatedResourceIds), types.String),
 					"created":               sdkTimeData(t.TimeCreated),
-					"freeformTags":          llx.MapData(strMapToInterface(t.FreeformTags), llxTypeString),
-					"definedTags":           llx.MapData(definedTagsToInterface(t.DefinedTags), llxTypeMapString),
+					"freeformTags":          llx.MapData(strMapToAny(t.FreeformTags), types.String),
+					"definedTags":           llx.MapData(definedTagsToAny(t.DefinedTags), types.Any),
 				}
 				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.targetDatabase", args)
 				if err != nil {
@@ -280,13 +276,13 @@ func (o *mqlOciDataSafe) securityAssessments() ([]any, error) {
 					"displayName":            llx.StringDataPtr(a.DisplayName),
 					"lifecycleState":         llx.StringData(string(a.LifecycleState)),
 					"type":                   llx.StringData(string(a.Type)),
-					"targetIds":              llx.ArrayData(stringsToAnySliceOci(a.TargetIds), llxTypeString),
+					"targetIds":              llx.ArrayData(stringsToAny(a.TargetIds), types.String),
 					"isBaseline":             llx.BoolData(boolValue(a.IsBaseline)),
 					"isDeviatedFromBaseline": llx.BoolData(boolValue(a.IsDeviatedFromBaseline)),
 					"created":                sdkTimeData(a.TimeCreated),
 					"timeUpdated":            sdkTimeData(a.TimeUpdated),
-					"freeformTags":           llx.MapData(strMapToInterface(a.FreeformTags), llxTypeString),
-					"definedTags":            llx.MapData(definedTagsToInterface(a.DefinedTags), llxTypeMapString),
+					"freeformTags":           llx.MapData(strMapToAny(a.FreeformTags), types.String),
+					"definedTags":            llx.MapData(definedTagsToAny(a.DefinedTags), types.Any),
 				}
 				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.securityAssessment", args)
 				if err != nil {
@@ -350,13 +346,13 @@ func (o *mqlOciDataSafe) userAssessments() ([]any, error) {
 					"displayName":            llx.StringDataPtr(a.DisplayName),
 					"lifecycleState":         llx.StringData(string(a.LifecycleState)),
 					"type":                   llx.StringData(string(a.Type)),
-					"targetIds":              llx.ArrayData(stringsToAnySliceOci(a.TargetIds), llxTypeString),
+					"targetIds":              llx.ArrayData(stringsToAny(a.TargetIds), types.String),
 					"isBaseline":             llx.BoolData(boolValue(a.IsBaseline)),
 					"isDeviatedFromBaseline": llx.BoolData(boolValue(a.IsDeviatedFromBaseline)),
 					"created":                sdkTimeData(a.TimeCreated),
 					"timeUpdated":            sdkTimeData(a.TimeUpdated),
-					"freeformTags":           llx.MapData(strMapToInterface(a.FreeformTags), llxTypeString),
-					"definedTags":            llx.MapData(definedTagsToInterface(a.DefinedTags), llxTypeMapString),
+					"freeformTags":           llx.MapData(strMapToAny(a.FreeformTags), types.String),
+					"definedTags":            llx.MapData(definedTagsToAny(a.DefinedTags), types.Any),
 				}
 				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.userAssessment", args)
 				if err != nil {
@@ -424,8 +420,8 @@ func (o *mqlOciDataSafe) sensitiveDataModels() ([]any, error) {
 					"appSuiteName":   llx.StringDataPtr(m.AppSuiteName),
 					"created":        sdkTimeData(m.TimeCreated),
 					"timeUpdated":    sdkTimeData(m.TimeUpdated),
-					"freeformTags":   llx.MapData(strMapToInterface(m.FreeformTags), llxTypeString),
-					"definedTags":    llx.MapData(definedTagsToInterface(m.DefinedTags), llxTypeMapString),
+					"freeformTags":   llx.MapData(strMapToAny(m.FreeformTags), types.String),
+					"definedTags":    llx.MapData(definedTagsToAny(m.DefinedTags), types.Any),
 				}
 				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.sensitiveDataModel", args)
 				if err != nil {
@@ -493,8 +489,8 @@ func (o *mqlOciDataSafe) sensitiveTypes() ([]any, error) {
 					"entityType":     llx.StringData(string(t.EntityType)),
 					"created":        sdkTimeData(t.TimeCreated),
 					"timeUpdated":    sdkTimeData(t.TimeUpdated),
-					"freeformTags":   llx.MapData(strMapToInterface(t.FreeformTags), llxTypeString),
-					"definedTags":    llx.MapData(definedTagsToInterface(t.DefinedTags), llxTypeMapString),
+					"freeformTags":   llx.MapData(strMapToAny(t.FreeformTags), types.String),
+					"definedTags":    llx.MapData(definedTagsToAny(t.DefinedTags), types.Any),
 				}
 				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.sensitiveType", args)
 				if err != nil {
@@ -551,7 +547,10 @@ func (o *mqlOciDataSafe) maskingPolicies() ([]any, error) {
 			res := make([]any, 0, len(items))
 			for i := range items {
 				p := items[i]
-				columnSourceDict, _ := convert.JsonToDict(p.ColumnSource)
+				columnSourceDict, err := convert.JsonToDict(p.ColumnSource)
+				if err != nil {
+					log.Debug().Err(err).Str("region", regionId).Str("policy", stringValue(p.Id)).Msg("could not convert masking policy column source to dict")
+				}
 				args := map[string]*llx.RawData{
 					"id":             llx.StringDataPtr(p.Id),
 					"compartmentId":  llx.StringDataPtr(p.CompartmentId),
@@ -562,8 +561,8 @@ func (o *mqlOciDataSafe) maskingPolicies() ([]any, error) {
 					"columnSource":   llx.DictData(columnSourceDict),
 					"created":        sdkTimeData(p.TimeCreated),
 					"timeUpdated":    sdkTimeData(p.TimeUpdated),
-					"freeformTags":   llx.MapData(strMapToInterface(p.FreeformTags), llxTypeString),
-					"definedTags":    llx.MapData(definedTagsToInterface(p.DefinedTags), llxTypeMapString),
+					"freeformTags":   llx.MapData(strMapToAny(p.FreeformTags), types.String),
+					"definedTags":    llx.MapData(definedTagsToAny(p.DefinedTags), types.Any),
 				}
 				mql, err := CreateResource(o.MqlRuntime, "oci.dataSafe.maskingPolicy", args)
 				if err != nil {
@@ -577,53 +576,3 @@ func (o *mqlOciDataSafe) maskingPolicies() ([]any, error) {
 	}
 	return o.gatherResults(tasks, nil)
 }
-
-// ============================================================================
-// helpers (shared by data-safe accessors)
-// ============================================================================
-
-func sdkTimeData(t *common.SDKTime) *llx.RawData {
-	if t == nil {
-		return llx.NilData
-	}
-	return llx.TimeData(t.Time)
-}
-
-func stringsToAnySliceOci(in []string) []any {
-	out := make([]any, len(in))
-	for i, s := range in {
-		out[i] = s
-	}
-	return out
-}
-
-func strMapToInterface(in map[string]string) map[string]any {
-	out := make(map[string]any, len(in))
-	for k, v := range in {
-		out[k] = v
-	}
-	return out
-}
-
-func definedTagsToInterface(in map[string]map[string]interface{}) map[string]any {
-	out := make(map[string]any, len(in))
-	for ns, kv := range in {
-		nsOut := make(map[string]any, len(kv))
-		for k, v := range kv {
-			if s, ok := v.(string); ok {
-				nsOut[k] = s
-				continue
-			}
-			nsOut[k] = v
-		}
-		out[ns] = nsOut
-	}
-	return out
-}
-
-// llxTypeString / llxTypeMapString are the type tags used by llx.MapData for
-// scalar string maps and nested string-map-of-string-map maps respectively.
-var (
-	llxTypeString    = types.String
-	llxTypeMapString = types.Any
-)

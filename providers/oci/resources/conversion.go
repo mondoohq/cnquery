@@ -6,6 +6,8 @@ package resources
 import (
 	"strings"
 
+	"github.com/oracle/oci-go-sdk/v65/common"
+	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 )
 
@@ -46,4 +48,50 @@ func isOcid(s string) bool {
 
 func jobErr(err error) []*jobpool.Job {
 	return []*jobpool.Job{{Err: err}}
+}
+
+// sdkTimeData wraps an OCI SDKTime as RawData, returning NilData for nil.
+func sdkTimeData(t *common.SDKTime) *llx.RawData {
+	if t == nil {
+		return llx.NilData
+	}
+	return llx.TimeData(t.Time)
+}
+
+// stringsToAny converts an OCI-typed []string to []any for llx.ArrayData.
+func stringsToAny(in []string) []any {
+	out := make([]any, len(in))
+	for i, s := range in {
+		out[i] = s
+	}
+	return out
+}
+
+// strMapToAny converts an OCI freeform-tags-style map[string]string to
+// map[string]any so it can be passed to llx.MapData.
+func strMapToAny(in map[string]string) map[string]any {
+	out := make(map[string]any, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+// definedTagsToAny converts the OCI defined-tags shape (namespace -> key -> value)
+// to map[string]any (namespace -> map[string]any), preserving string values and
+// passing through anything non-string unchanged.
+func definedTagsToAny(in map[string]map[string]interface{}) map[string]any {
+	out := make(map[string]any, len(in))
+	for ns, kv := range in {
+		nsOut := make(map[string]any, len(kv))
+		for k, v := range kv {
+			if s, ok := v.(string); ok {
+				nsOut[k] = s
+				continue
+			}
+			nsOut[k] = v
+		}
+		out[ns] = nsOut
+	}
+	return out
 }
