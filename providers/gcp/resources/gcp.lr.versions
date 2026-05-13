@@ -1293,8 +1293,6 @@ gcp.project.computeService.firewallPolicy.projectId 11.6.6
 gcp.project.computeService.firewallPolicy.regionUrl 11.6.6
 gcp.project.computeService.firewallPolicy.rule 11.6.6
 gcp.project.computeService.firewallPolicy.rule.action 11.6.6
-gcp.project.computeService.firewallPolicy.rule.allowsRdpFromInternet 13.14.2
-gcp.project.computeService.firewallPolicy.rule.allowsSshFromInternet 13.14.2
 gcp.project.computeService.firewallPolicy.rule.description 11.6.6
 gcp.project.computeService.firewallPolicy.rule.destAddressGroups 13.14.2
 gcp.project.computeService.firewallPolicy.rule.destIpRanges 13.14.2
@@ -1304,7 +1302,6 @@ gcp.project.computeService.firewallPolicy.rule.enableLogging 11.6.6
 gcp.project.computeService.firewallPolicy.rule.id 11.6.6
 gcp.project.computeService.firewallPolicy.rule.layer4Configs 13.14.2
 gcp.project.computeService.firewallPolicy.rule.match 11.6.6
-gcp.project.computeService.firewallPolicy.rule.openToInternet 13.14.2
 gcp.project.computeService.firewallPolicy.rule.priority 11.6.6
 gcp.project.computeService.firewallPolicy.rule.ruleName 11.6.6
 gcp.project.computeService.firewallPolicy.rule.securityProfileGroup 11.6.6
