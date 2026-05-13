@@ -5044,6 +5044,22 @@ aws.macie {
   findings() []aws.macie.finding
   // List of custom data identifiers
   customDataIdentifiers() []aws.macie.customDataIdentifier
+  // S3 buckets that Macie monitors, with per-bucket sensitivity, public access, encryption, sharing, and automated-discovery coverage state
+  buckets() []aws.macie.bucket
+  // Saved allow lists (regex or S3-object word lists) that Macie ignores when classifying data
+  allowLists() []aws.macie.allowList
+  // Findings filters (saved query criteria) that suppress or archive matching findings
+  findingsFilters() []aws.macie.findingsFilter
+  // Member accounts of the Macie administrator for this account
+  members() []aws.macie.member
+  // Inbound Macie membership invitations for this account
+  invitations() []aws.macie.invitation
+  // Administrator account associations for this Macie account (one per region where a relationship exists)
+  administrators() []aws.macie.administrator
+  // Automated sensitive data discovery configuration per region
+  automatedDiscoveryConfigurations() []aws.macie.automatedDiscoveryConfiguration
+  // Classification result export configuration per region (S3 destination + KMS key)
+  classificationExportConfigurations() []aws.macie.classificationExportConfiguration
 }
 
 // Amazon Macie session
@@ -5062,6 +5078,8 @@ private aws.macie.session @defaults("arn region status") {
   findingPublishingFrequency() string
   // Service role ARN used by Macie
   serviceRole() string
+  // IAM service role that Macie assumes in the account
+  serviceRoleIamRole() aws.iam.role
   // Number of S3 buckets monitored by Macie
   s3BucketCount() int
 }
@@ -5088,6 +5106,8 @@ private aws.macie.classificationJob @defaults("jobId name status region") {
   samplingPercentage() int
   // Bucket definitions for the job
   bucketDefinitions() []dict
+  // S3 buckets selected by the job's static bucket definitions (empty for jobs using dynamic bucket criteria)
+  buckets() []aws.s3.bucket
   // Schedule frequency for the job
   scheduleFrequency() dict
   // Statistics for the job
@@ -5128,6 +5148,14 @@ private aws.macie.finding @defaults("id arn region type severity") {
   classificationDetails() dict
   // Resources affected by the finding
   resourcesAffected() dict
+  // Name of the S3 bucket the finding applies to (empty if the finding is not bucket-scoped)
+  bucketName string
+  // ARN of the S3 bucket the finding applies to
+  bucketArn string
+  // Key of the S3 object the finding applies to (empty for bucket-policy findings)
+  objectKey string
+  // S3 bucket the finding applies to
+  bucket() aws.s3.bucket
 }
 
 // Amazon Macie custom data identifier
@@ -5148,6 +5176,243 @@ private aws.macie.customDataIdentifier @defaults("id name") {
   createdAt time
   // Tags for the identifier
   tags() map[string]string
+}
+
+// Amazon Macie bucket coverage entry
+//
+// Examine a single S3 bucket as Macie sees it: its sensitivity score, public-access
+// summary, server-side encryption defaults, sharing status, last-analyzed time, and
+// whether a classification job has run against it. Use `bucket` to traverse to the
+// underlying `aws.s3.bucket` resource for owner-side queries, and inspect
+// `automatedDiscoveryMonitoringStatus` to confirm whether the bucket is in scope
+// for Macie's automated sensitive data discovery.
+private aws.macie.bucket @defaults("name region sensitivityScore sharedAccess") {
+  // ARN of the bucket
+  arn string
+  // Name of the bucket
+  name string
+  // Region that hosts the bucket
+  region string
+  // Account ID that owns the bucket
+  accountId string
+  // S3 bucket this Macie record describes
+  bucket() aws.s3.bucket
+  // Date and time when the bucket was created (or most recently had its policy changed)
+  bucketCreatedAt time
+  // Date and time when Macie most recently retrieved bucket or object metadata
+  lastUpdated time
+  // Date and time when Macie last analyzed objects in this bucket for automated sensitive data discovery
+  lastAutomatedDiscoveryTime time
+  // Total objects in the bucket that Macie can analyze (supported storage class and file format)
+  classifiableObjectCount int
+  // Total storage size, in bytes, of objects Macie can analyze
+  classifiableSizeInBytes int
+  // Total objects in the bucket
+  objectCount int
+  // Total storage size, in bytes, of the bucket
+  sizeInBytes int
+  // Total compressed storage size, in bytes, for compressed objects (.gz, .gzip, .zip)
+  sizeInBytesCompressed int
+  // Sensitivity score for the bucket, -1 (classification error) to 100 (sensitive). 50 means excluded from analyses; 1 means the bucket is empty
+  sensitivityScore int
+  // Whether the bucket is shared with another account or a CloudFront OAI/OAC: EXTERNAL, INTERNAL, NOT_SHARED, or UNKNOWN
+  sharedAccess string
+  // Public-access summary, including whether the bucket is publicly accessible and the account-level and bucket-level permissions that determine it
+  publicAccess dict
+  // Default server-side encryption settings (type and KMS key, if any)
+  serverSideEncryption dict
+  // Whether versioning is enabled for the bucket
+  versioning bool
+  // Whether the bucket policy requires server-side encryption of new objects: FALSE (required), TRUE (not required or no policy), UNKNOWN
+  allowsUnencryptedObjectUploads string
+  // Whether the bucket is in scope for automated sensitive data discovery: MONITORED or NOT_MONITORED
+  automatedDiscoveryMonitoringStatus string
+  // Information about classification jobs configured to analyze the bucket and details of the most recent run
+  jobDetails dict
+  // Object replication state — whether the bucket replicates objects to buckets in other accounts and which accounts those are
+  replicationDetails dict
+  // Object counts grouped by server-side encryption type (KMS-managed, S3-managed, customer-provided, none, unknown)
+  objectCountByEncryptionType dict
+  // Object count breakdown for objects Macie cannot analyze (file type and storage class)
+  unclassifiableObjectCount dict
+  // Storage size, in bytes, for objects Macie cannot analyze (file type and storage class)
+  unclassifiableObjectSizeInBytes dict
+  // Error code if Macie could not retrieve bucket information: ACCESS_DENIED or BUCKET_COUNT_EXCEEDS_QUOTA
+  errorCode string
+  // Description of the error returned by Macie when it could not process the bucket
+  errorMessage string
+  // Tags on the bucket as captured by Macie
+  tags map[string]string
+}
+
+// Amazon Macie allow list
+//
+// Examine a single Macie allow list. An allow list specifies text or a text pattern
+// (regex or S3-hosted word list) that Macie ignores when looking for sensitive data.
+// Inspect `criteria` for the underlying regex or S3 object reference, `status` for
+// the list's accessibility state, and `tags` for governance.
+private aws.macie.allowList @defaults("id name region status") {
+  // Unique ID of the allow list
+  id string
+  // ARN of the allow list
+  arn string
+  // Region where the allow list is defined
+  region string
+  // Name of the allow list
+  name string
+  // Description of the allow list
+  description() string
+  // Status code: OK or one of S3_OBJECT_ACCESS_DENIED, S3_OBJECT_EMPTY, S3_OBJECT_NOT_FOUND, S3_OBJECT_OVERSIZE, S3_THROTTLED, S3_USER_ACCESS_DENIED, UNKNOWN_ERROR
+  status() string
+  // Status description if Macie could not access or parse the allow list's criteria
+  statusDescription() string
+  // Criteria of the allow list, with shape varying by type: `regex` (regular expression string) or `s3WordsList` ({bucketName, objectKey})
+  criteria() dict
+  // Date and time when the allow list was created
+  createdAt time
+  // Date and time when the allow list's settings were last changed
+  updatedAt time
+  // Tags on the allow list
+  tags() map[string]string
+}
+
+// Amazon Macie findings filter
+//
+// Examine a saved findings filter — the criteria Macie applies to findings, and
+// whether matching findings are archived (suppressed) or left alone. Use `action`
+// to identify suppression rules and `findingCriteria` to inspect the field-level
+// match conditions.
+private aws.macie.findingsFilter @defaults("id name action region") {
+  // Unique ID of the filter
+  id string
+  // ARN of the filter
+  arn string
+  // Region where the filter is defined
+  region string
+  // Name of the filter
+  name string
+  // Action taken on matching findings: ARCHIVE (suppress) or NOOP
+  action string
+  // Description of the filter
+  description() string
+  // Position of the filter in the Macie console — also the order matching is applied in
+  position() int
+  // Criteria of the filter, keyed by finding field name. Each value is a `{eq, neq, gt, gte, lt, lte}` set of comparison constraints
+  findingCriteria() dict
+  // Tags on the filter
+  tags map[string]string
+}
+
+// Amazon Macie member account
+//
+// Examine a member account associated with this Macie administrator account.
+// `relationshipStatus` indicates whether Macie is enabled on the member account
+// and whether the administrator can manage it; `administratorAccountId` is the
+// account ID of the delegated administrator.
+private aws.macie.member @defaults("accountId relationshipStatus region") {
+  // Account ID of the member
+  accountId string
+  // ARN of the member account record
+  arn string
+  // Region where this member relationship is recorded
+  region string
+  // Account ID of the Macie administrator account
+  administratorAccountId string
+  // Email address of the member account (null when associated via AWS Organizations)
+  email string
+  // Status of the relationship: Enabled, Paused, Invited, Created, Removed, Resigned, EmailVerificationInProgress, EmailVerificationFailed, RegionDisabled, AccountSuspended
+  relationshipStatus string
+  // Date and time when the most recent Macie membership invitation was sent (null if invited via Organizations)
+  invitedAt time
+  // Date and time of the most recent change to the relationship status
+  updatedAt time
+  // Tags on the member account record
+  tags map[string]string
+}
+
+// Amazon Macie membership invitation
+//
+// Examine an inbound Macie membership invitation that has not yet been accepted or
+// declined by this account. Use `relationshipStatus` to distinguish invited from
+// other states, and `accountId` to identify the inviting administrator.
+private aws.macie.invitation @defaults("invitationId accountId relationshipStatus region") {
+  // Unique ID of the invitation
+  invitationId string
+  // Account ID of the account that sent the invitation
+  accountId string
+  // Region where the invitation was received
+  region string
+  // Status of the relationship between this account and the inviting account
+  relationshipStatus string
+  // Date and time when the invitation was sent
+  invitedAt time
+}
+
+// Amazon Macie administrator association
+//
+// Examine the delegated administrator association for this Macie account in a
+// given region. Use `accountId` to identify the administrator account and
+// `relationshipStatus` to confirm the association is active.
+private aws.macie.administrator @defaults("accountId relationshipStatus region") {
+  // Account ID of the administrator account
+  accountId string
+  // Region where the association is recorded
+  region string
+  // ID of the invitation that established the relationship (null when associated via AWS Organizations)
+  invitationId string
+  // Date and time when the invitation was sent (null when associated via AWS Organizations)
+  invitedAt time
+  // Status of the relationship to the administrator account
+  relationshipStatus string
+}
+
+// Amazon Macie automated sensitive data discovery configuration
+//
+// Examine the automated sensitive data discovery state and policy for an account
+// in a given region. `status` reports whether discovery is currently running,
+// `autoEnableOrganizationMembers` controls onboarding of new org accounts, and
+// `classificationScopeId` / `sensitivityInspectionTemplateId` identify the
+// configuration objects that select which buckets and detectors are used.
+private aws.macie.automatedDiscoveryConfiguration @defaults("region status autoEnableOrganizationMembers") {
+  // Region this configuration applies to
+  region string
+  // Current status of automated discovery: ENABLED or DISABLED
+  status string
+  // Policy for enabling automated discovery on organization member accounts: ALL, NEW, or NONE
+  autoEnableOrganizationMembers string
+  // ID of the classification scope (S3-bucket exclusion list) used for analyses
+  classificationScopeId string
+  // ID of the sensitivity inspection template (allow lists, custom/managed identifiers) used for analyses
+  sensitivityInspectionTemplateId string
+  // Date and time when automated discovery was first enabled
+  firstEnabledAt time
+  // Date and time when automated discovery was most recently disabled (null if currently enabled)
+  disabledAt time
+  // Date and time when the configuration was most recently changed
+  lastUpdatedAt time
+}
+
+// Amazon Macie classification result export configuration
+//
+// Examine where Macie writes data classification results in a given region: the
+// destination S3 bucket and KMS key. Use `bucket` and `kmsKey` to traverse to the
+// modeled S3 and KMS resources for further inspection (bucket policy, key rotation,
+// grants).
+private aws.macie.classificationExportConfiguration @defaults("region s3BucketName") {
+  // Region this configuration applies to
+  region string
+  // Name of the destination S3 bucket
+  s3BucketName string
+  // Key prefix within the destination bucket
+  s3KeyPrefix string
+  // Expected owner account ID of the destination bucket
+  expectedBucketOwner string
+  // ARN of the customer-managed KMS key used to encrypt results
+  kmsKeyArn string
+  // S3 bucket Macie writes classification results to
+  bucket() aws.s3.bucket
+  // KMS key used to encrypt classification results
+  kmsKey() aws.kms.key
 }
 
 // Amazon Detective
@@ -7692,6 +7957,8 @@ private aws.s3.bucket @defaults("name location public") {
   notificationConfiguration() dict
   // Object ownership setting: BucketOwnerEnforced, BucketOwnerPreferred, or ObjectWriter
   ownershipControls() string
+  // Amazon Macie coverage record for this bucket — sensitivity score, public-access summary, encryption defaults, and automated-discovery status. Null when Macie is not enabled in the bucket's region or the bucket is outside Macie's monitored set
+  macieCoverage() aws.macie.bucket
 }
 
 // Amazon S3 bucket grant

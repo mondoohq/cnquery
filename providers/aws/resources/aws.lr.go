@@ -225,6 +225,14 @@ const (
 	ResourceAwsMacieClassificationJob                                           string = "aws.macie.classificationJob"
 	ResourceAwsMacieFinding                                                     string = "aws.macie.finding"
 	ResourceAwsMacieCustomDataIdentifier                                        string = "aws.macie.customDataIdentifier"
+	ResourceAwsMacieBucket                                                      string = "aws.macie.bucket"
+	ResourceAwsMacieAllowList                                                   string = "aws.macie.allowList"
+	ResourceAwsMacieFindingsFilter                                              string = "aws.macie.findingsFilter"
+	ResourceAwsMacieMember                                                      string = "aws.macie.member"
+	ResourceAwsMacieInvitation                                                  string = "aws.macie.invitation"
+	ResourceAwsMacieAdministrator                                               string = "aws.macie.administrator"
+	ResourceAwsMacieAutomatedDiscoveryConfiguration                             string = "aws.macie.automatedDiscoveryConfiguration"
+	ResourceAwsMacieClassificationExportConfiguration                           string = "aws.macie.classificationExportConfiguration"
 	ResourceAwsDetective                                                        string = "aws.detective"
 	ResourceAwsDetectiveGraph                                                   string = "aws.detective.graph"
 	ResourceAwsDetectiveGraphMember                                             string = "aws.detective.graph.member"
@@ -1611,6 +1619,38 @@ func init() {
 		"aws.macie.customDataIdentifier": {
 			// to override args, implement: initAwsMacieCustomDataIdentifier(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsMacieCustomDataIdentifier,
+		},
+		"aws.macie.bucket": {
+			Init:   initAwsMacieBucket,
+			Create: createAwsMacieBucket,
+		},
+		"aws.macie.allowList": {
+			// to override args, implement: initAwsMacieAllowList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMacieAllowList,
+		},
+		"aws.macie.findingsFilter": {
+			// to override args, implement: initAwsMacieFindingsFilter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMacieFindingsFilter,
+		},
+		"aws.macie.member": {
+			// to override args, implement: initAwsMacieMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMacieMember,
+		},
+		"aws.macie.invitation": {
+			// to override args, implement: initAwsMacieInvitation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMacieInvitation,
+		},
+		"aws.macie.administrator": {
+			// to override args, implement: initAwsMacieAdministrator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMacieAdministrator,
+		},
+		"aws.macie.automatedDiscoveryConfiguration": {
+			// to override args, implement: initAwsMacieAutomatedDiscoveryConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMacieAutomatedDiscoveryConfiguration,
+		},
+		"aws.macie.classificationExportConfiguration": {
+			// to override args, implement: initAwsMacieClassificationExportConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMacieClassificationExportConfiguration,
 		},
 		"aws.detective": {
 			// to override args, implement: initAwsDetective(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9881,6 +9921,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.macie.customDataIdentifiers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacie).GetCustomDataIdentifiers()).ToDataRes(types.Array(types.Resource("aws.macie.customDataIdentifier")))
 	},
+	"aws.macie.buckets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacie).GetBuckets()).ToDataRes(types.Array(types.Resource("aws.macie.bucket")))
+	},
+	"aws.macie.allowLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacie).GetAllowLists()).ToDataRes(types.Array(types.Resource("aws.macie.allowList")))
+	},
+	"aws.macie.findingsFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacie).GetFindingsFilters()).ToDataRes(types.Array(types.Resource("aws.macie.findingsFilter")))
+	},
+	"aws.macie.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacie).GetMembers()).ToDataRes(types.Array(types.Resource("aws.macie.member")))
+	},
+	"aws.macie.invitations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacie).GetInvitations()).ToDataRes(types.Array(types.Resource("aws.macie.invitation")))
+	},
+	"aws.macie.administrators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacie).GetAdministrators()).ToDataRes(types.Array(types.Resource("aws.macie.administrator")))
+	},
+	"aws.macie.automatedDiscoveryConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacie).GetAutomatedDiscoveryConfigurations()).ToDataRes(types.Array(types.Resource("aws.macie.automatedDiscoveryConfiguration")))
+	},
+	"aws.macie.classificationExportConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacie).GetClassificationExportConfigurations()).ToDataRes(types.Array(types.Resource("aws.macie.classificationExportConfiguration")))
+	},
 	"aws.macie.session.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieSession).GetArn()).ToDataRes(types.String)
 	},
@@ -9901,6 +9965,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.macie.session.serviceRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieSession).GetServiceRole()).ToDataRes(types.String)
+	},
+	"aws.macie.session.serviceRoleIamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieSession).GetServiceRoleIamRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
 	"aws.macie.session.s3BucketCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieSession).GetS3BucketCount()).ToDataRes(types.Int)
@@ -9934,6 +10001,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.macie.classificationJob.bucketDefinitions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieClassificationJob).GetBucketDefinitions()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.macie.classificationJob.buckets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieClassificationJob).GetBuckets()).ToDataRes(types.Array(types.Resource("aws.s3.bucket")))
 	},
 	"aws.macie.classificationJob.scheduleFrequency": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieClassificationJob).GetScheduleFrequency()).ToDataRes(types.Dict)
@@ -9989,6 +10059,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.macie.finding.resourcesAffected": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieFinding).GetResourcesAffected()).ToDataRes(types.Dict)
 	},
+	"aws.macie.finding.bucketName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFinding).GetBucketName()).ToDataRes(types.String)
+	},
+	"aws.macie.finding.bucketArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFinding).GetBucketArn()).ToDataRes(types.String)
+	},
+	"aws.macie.finding.objectKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFinding).GetObjectKey()).ToDataRes(types.String)
+	},
+	"aws.macie.finding.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFinding).GetBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
 	"aws.macie.customDataIdentifier.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieCustomDataIdentifier).GetId()).ToDataRes(types.String)
 	},
@@ -10012,6 +10094,252 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.macie.customDataIdentifier.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieCustomDataIdentifier).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.macie.bucket.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetArn()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetName()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.macie.bucket.bucketCreatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetBucketCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.macie.bucket.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"aws.macie.bucket.lastAutomatedDiscoveryTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetLastAutomatedDiscoveryTime()).ToDataRes(types.Time)
+	},
+	"aws.macie.bucket.classifiableObjectCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetClassifiableObjectCount()).ToDataRes(types.Int)
+	},
+	"aws.macie.bucket.classifiableSizeInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetClassifiableSizeInBytes()).ToDataRes(types.Int)
+	},
+	"aws.macie.bucket.objectCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetObjectCount()).ToDataRes(types.Int)
+	},
+	"aws.macie.bucket.sizeInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetSizeInBytes()).ToDataRes(types.Int)
+	},
+	"aws.macie.bucket.sizeInBytesCompressed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetSizeInBytesCompressed()).ToDataRes(types.Int)
+	},
+	"aws.macie.bucket.sensitivityScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetSensitivityScore()).ToDataRes(types.Int)
+	},
+	"aws.macie.bucket.sharedAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetSharedAccess()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.publicAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetPublicAccess()).ToDataRes(types.Dict)
+	},
+	"aws.macie.bucket.serverSideEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetServerSideEncryption()).ToDataRes(types.Dict)
+	},
+	"aws.macie.bucket.versioning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetVersioning()).ToDataRes(types.Bool)
+	},
+	"aws.macie.bucket.allowsUnencryptedObjectUploads": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetAllowsUnencryptedObjectUploads()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.automatedDiscoveryMonitoringStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetAutomatedDiscoveryMonitoringStatus()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.jobDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetJobDetails()).ToDataRes(types.Dict)
+	},
+	"aws.macie.bucket.replicationDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetReplicationDetails()).ToDataRes(types.Dict)
+	},
+	"aws.macie.bucket.objectCountByEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetObjectCountByEncryptionType()).ToDataRes(types.Dict)
+	},
+	"aws.macie.bucket.unclassifiableObjectCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetUnclassifiableObjectCount()).ToDataRes(types.Dict)
+	},
+	"aws.macie.bucket.unclassifiableObjectSizeInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetUnclassifiableObjectSizeInBytes()).ToDataRes(types.Dict)
+	},
+	"aws.macie.bucket.errorCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetErrorCode()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.errorMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetErrorMessage()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.macie.allowList.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetId()).ToDataRes(types.String)
+	},
+	"aws.macie.allowList.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetArn()).ToDataRes(types.String)
+	},
+	"aws.macie.allowList.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.macie.allowList.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetName()).ToDataRes(types.String)
+	},
+	"aws.macie.allowList.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.macie.allowList.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.macie.allowList.statusDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetStatusDescription()).ToDataRes(types.String)
+	},
+	"aws.macie.allowList.criteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetCriteria()).ToDataRes(types.Dict)
+	},
+	"aws.macie.allowList.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.macie.allowList.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.macie.allowList.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAllowList).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.macie.findingsFilter.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFindingsFilter).GetId()).ToDataRes(types.String)
+	},
+	"aws.macie.findingsFilter.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFindingsFilter).GetArn()).ToDataRes(types.String)
+	},
+	"aws.macie.findingsFilter.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFindingsFilter).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.macie.findingsFilter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFindingsFilter).GetName()).ToDataRes(types.String)
+	},
+	"aws.macie.findingsFilter.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFindingsFilter).GetAction()).ToDataRes(types.String)
+	},
+	"aws.macie.findingsFilter.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFindingsFilter).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.macie.findingsFilter.position": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFindingsFilter).GetPosition()).ToDataRes(types.Int)
+	},
+	"aws.macie.findingsFilter.findingCriteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFindingsFilter).GetFindingCriteria()).ToDataRes(types.Dict)
+	},
+	"aws.macie.findingsFilter.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieFindingsFilter).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.macie.member.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieMember).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.macie.member.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieMember).GetArn()).ToDataRes(types.String)
+	},
+	"aws.macie.member.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieMember).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.macie.member.administratorAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieMember).GetAdministratorAccountId()).ToDataRes(types.String)
+	},
+	"aws.macie.member.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieMember).GetEmail()).ToDataRes(types.String)
+	},
+	"aws.macie.member.relationshipStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieMember).GetRelationshipStatus()).ToDataRes(types.String)
+	},
+	"aws.macie.member.invitedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieMember).GetInvitedAt()).ToDataRes(types.Time)
+	},
+	"aws.macie.member.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieMember).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.macie.member.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieMember).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.macie.invitation.invitationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieInvitation).GetInvitationId()).ToDataRes(types.String)
+	},
+	"aws.macie.invitation.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieInvitation).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.macie.invitation.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieInvitation).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.macie.invitation.relationshipStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieInvitation).GetRelationshipStatus()).ToDataRes(types.String)
+	},
+	"aws.macie.invitation.invitedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieInvitation).GetInvitedAt()).ToDataRes(types.Time)
+	},
+	"aws.macie.administrator.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAdministrator).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.macie.administrator.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAdministrator).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.macie.administrator.invitationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAdministrator).GetInvitationId()).ToDataRes(types.String)
+	},
+	"aws.macie.administrator.invitedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAdministrator).GetInvitedAt()).ToDataRes(types.Time)
+	},
+	"aws.macie.administrator.relationshipStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAdministrator).GetRelationshipStatus()).ToDataRes(types.String)
+	},
+	"aws.macie.automatedDiscoveryConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.macie.automatedDiscoveryConfiguration.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.macie.automatedDiscoveryConfiguration.autoEnableOrganizationMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).GetAutoEnableOrganizationMembers()).ToDataRes(types.String)
+	},
+	"aws.macie.automatedDiscoveryConfiguration.classificationScopeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).GetClassificationScopeId()).ToDataRes(types.String)
+	},
+	"aws.macie.automatedDiscoveryConfiguration.sensitivityInspectionTemplateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).GetSensitivityInspectionTemplateId()).ToDataRes(types.String)
+	},
+	"aws.macie.automatedDiscoveryConfiguration.firstEnabledAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).GetFirstEnabledAt()).ToDataRes(types.Time)
+	},
+	"aws.macie.automatedDiscoveryConfiguration.disabledAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).GetDisabledAt()).ToDataRes(types.Time)
+	},
+	"aws.macie.automatedDiscoveryConfiguration.lastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).GetLastUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.macie.classificationExportConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieClassificationExportConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.macie.classificationExportConfiguration.s3BucketName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieClassificationExportConfiguration).GetS3BucketName()).ToDataRes(types.String)
+	},
+	"aws.macie.classificationExportConfiguration.s3KeyPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieClassificationExportConfiguration).GetS3KeyPrefix()).ToDataRes(types.String)
+	},
+	"aws.macie.classificationExportConfiguration.expectedBucketOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieClassificationExportConfiguration).GetExpectedBucketOwner()).ToDataRes(types.String)
+	},
+	"aws.macie.classificationExportConfiguration.kmsKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieClassificationExportConfiguration).GetKmsKeyArn()).ToDataRes(types.String)
+	},
+	"aws.macie.classificationExportConfiguration.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieClassificationExportConfiguration).GetBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.macie.classificationExportConfiguration.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieClassificationExportConfiguration).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.detective.graphs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDetective).GetGraphs()).ToDataRes(types.Array(types.Resource("aws.detective.graph")))
@@ -12832,6 +13160,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.ownershipControls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetOwnershipControls()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.macieCoverage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetMacieCoverage()).ToDataRes(types.Resource("aws.macie.bucket"))
 	},
 	"aws.s3.bucket.grant.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketGrant).GetId()).ToDataRes(types.String)
@@ -35276,6 +35607,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMacie).CustomDataIdentifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.macie.buckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacie).Buckets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacie).AllowLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.findingsFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacie).FindingsFilters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacie).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.invitations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacie).Invitations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.administrators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacie).Administrators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.automatedDiscoveryConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacie).AutomatedDiscoveryConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.classificationExportConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacie).ClassificationExportConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.macie.session.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieSession).__id, ok = v.Value.(string)
 		return
@@ -35306,6 +35669,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.macie.session.serviceRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieSession).ServiceRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.session.serviceRoleIamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieSession).ServiceRoleIamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
 	"aws.macie.session.s3BucketCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35354,6 +35721,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.macie.classificationJob.bucketDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieClassificationJob).BucketDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.classificationJob.buckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieClassificationJob).Buckets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.macie.classificationJob.scheduleFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35432,6 +35803,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMacieFinding).ResourcesAffected, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.macie.finding.bucketName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFinding).BucketName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.finding.bucketArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFinding).BucketArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.finding.objectKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFinding).ObjectKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.finding.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFinding).Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
 	"aws.macie.customDataIdentifier.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieCustomDataIdentifier).__id, ok = v.Value.(string)
 		return
@@ -35466,6 +35853,366 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.macie.customDataIdentifier.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieCustomDataIdentifier).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.macie.bucket.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.bucketCreatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).BucketCreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.lastAutomatedDiscoveryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).LastAutomatedDiscoveryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.classifiableObjectCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ClassifiableObjectCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.classifiableSizeInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ClassifiableSizeInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.objectCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ObjectCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.sizeInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).SizeInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.sizeInBytesCompressed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).SizeInBytesCompressed, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.sensitivityScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).SensitivityScore, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.sharedAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).SharedAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.publicAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).PublicAccess, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.serverSideEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ServerSideEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.versioning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).Versioning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.allowsUnencryptedObjectUploads": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).AllowsUnencryptedObjectUploads, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.automatedDiscoveryMonitoringStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).AutomatedDiscoveryMonitoringStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.jobDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).JobDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.replicationDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ReplicationDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.objectCountByEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ObjectCountByEncryptionType, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.unclassifiableObjectCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).UnclassifiableObjectCount, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.unclassifiableObjectSizeInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).UnclassifiableObjectSizeInBytes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.errorCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ErrorCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.errorMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ErrorMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.macie.allowList.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.statusDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).StatusDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.criteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).Criteria, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.allowList.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAllowList).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.findingsFilter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFindingsFilter).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.macie.findingsFilter.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFindingsFilter).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.findingsFilter.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFindingsFilter).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.findingsFilter.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFindingsFilter).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.findingsFilter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFindingsFilter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.findingsFilter.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFindingsFilter).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.findingsFilter.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFindingsFilter).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.findingsFilter.position": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFindingsFilter).Position, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.macie.findingsFilter.findingCriteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFindingsFilter).FindingCriteria, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.findingsFilter.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieFindingsFilter).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieMember).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.macie.member.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieMember).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.member.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieMember).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.member.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieMember).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.member.administratorAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieMember).AdministratorAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.member.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieMember).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.member.relationshipStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieMember).RelationshipStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.member.invitedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieMember).InvitedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.member.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieMember).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.member.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieMember).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.invitation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieInvitation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.macie.invitation.invitationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieInvitation).InvitationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.invitation.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieInvitation).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.invitation.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieInvitation).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.invitation.relationshipStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieInvitation).RelationshipStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.invitation.invitedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieInvitation).InvitedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.administrator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAdministrator).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.macie.administrator.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAdministrator).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.administrator.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAdministrator).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.administrator.invitationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAdministrator).InvitationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.administrator.invitedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAdministrator).InvitedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.administrator.relationshipStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAdministrator).RelationshipStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.automatedDiscoveryConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.macie.automatedDiscoveryConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.automatedDiscoveryConfiguration.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.automatedDiscoveryConfiguration.autoEnableOrganizationMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).AutoEnableOrganizationMembers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.automatedDiscoveryConfiguration.classificationScopeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).ClassificationScopeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.automatedDiscoveryConfiguration.sensitivityInspectionTemplateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).SensitivityInspectionTemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.automatedDiscoveryConfiguration.firstEnabledAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).FirstEnabledAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.automatedDiscoveryConfiguration.disabledAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).DisabledAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.automatedDiscoveryConfiguration.lastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieAutomatedDiscoveryConfiguration).LastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.macie.classificationExportConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieClassificationExportConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.macie.classificationExportConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieClassificationExportConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.classificationExportConfiguration.s3BucketName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieClassificationExportConfiguration).S3BucketName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.classificationExportConfiguration.s3KeyPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieClassificationExportConfiguration).S3KeyPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.classificationExportConfiguration.expectedBucketOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieClassificationExportConfiguration).ExpectedBucketOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.classificationExportConfiguration.kmsKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieClassificationExportConfiguration).KmsKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.classificationExportConfiguration.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieClassificationExportConfiguration).Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.macie.classificationExportConfiguration.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieClassificationExportConfiguration).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.detective.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39754,6 +40501,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.s3.bucket.ownershipControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).OwnershipControls, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.macieCoverage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).MacieCoverage, ok = plugin.RawToTValue[*mqlAwsMacieBucket](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83160,10 +83911,18 @@ type mqlAwsMacie struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsMacieInternal it will be used here
-	Sessions              plugin.TValue[[]any]
-	ClassificationJobs    plugin.TValue[[]any]
-	Findings              plugin.TValue[[]any]
-	CustomDataIdentifiers plugin.TValue[[]any]
+	Sessions                           plugin.TValue[[]any]
+	ClassificationJobs                 plugin.TValue[[]any]
+	Findings                           plugin.TValue[[]any]
+	CustomDataIdentifiers              plugin.TValue[[]any]
+	Buckets                            plugin.TValue[[]any]
+	AllowLists                         plugin.TValue[[]any]
+	FindingsFilters                    plugin.TValue[[]any]
+	Members                            plugin.TValue[[]any]
+	Invitations                        plugin.TValue[[]any]
+	Administrators                     plugin.TValue[[]any]
+	AutomatedDiscoveryConfigurations   plugin.TValue[[]any]
+	ClassificationExportConfigurations plugin.TValue[[]any]
 }
 
 // createAwsMacie creates a new instance of this resource
@@ -83267,6 +84026,134 @@ func (c *mqlAwsMacie) GetCustomDataIdentifiers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsMacie) GetBuckets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Buckets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie", c.__id, "buckets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.buckets()
+	})
+}
+
+func (c *mqlAwsMacie) GetAllowLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie", c.__id, "allowLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allowLists()
+	})
+}
+
+func (c *mqlAwsMacie) GetFindingsFilters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FindingsFilters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie", c.__id, "findingsFilters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.findingsFilters()
+	})
+}
+
+func (c *mqlAwsMacie) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+func (c *mqlAwsMacie) GetInvitations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Invitations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie", c.__id, "invitations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.invitations()
+	})
+}
+
+func (c *mqlAwsMacie) GetAdministrators() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Administrators, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie", c.__id, "administrators")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.administrators()
+	})
+}
+
+func (c *mqlAwsMacie) GetAutomatedDiscoveryConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AutomatedDiscoveryConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie", c.__id, "automatedDiscoveryConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.automatedDiscoveryConfigurations()
+	})
+}
+
+func (c *mqlAwsMacie) GetClassificationExportConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClassificationExportConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie", c.__id, "classificationExportConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.classificationExportConfigurations()
+	})
+}
+
 // mqlAwsMacieSession for the aws.macie.session resource
 type mqlAwsMacieSession struct {
 	MqlRuntime *plugin.Runtime
@@ -83279,6 +84166,7 @@ type mqlAwsMacieSession struct {
 	UpdatedAt                  plugin.TValue[*time.Time]
 	FindingPublishingFrequency plugin.TValue[string]
 	ServiceRole                plugin.TValue[string]
+	ServiceRoleIamRole         plugin.TValue[*mqlAwsIamRole]
 	S3BucketCount              plugin.TValue[int64]
 }
 
@@ -83351,6 +84239,22 @@ func (c *mqlAwsMacieSession) GetServiceRole() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsMacieSession) GetServiceRoleIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.ServiceRoleIamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.session", c.__id, "serviceRoleIamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.serviceRoleIamRole()
+	})
+}
+
 func (c *mqlAwsMacieSession) GetS3BucketCount() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.S3BucketCount, func() (int64, error) {
 		return c.s3BucketCount()
@@ -83372,6 +84276,7 @@ type mqlAwsMacieClassificationJob struct {
 	LastRunTime        plugin.TValue[*time.Time]
 	SamplingPercentage plugin.TValue[int64]
 	BucketDefinitions  plugin.TValue[[]any]
+	Buckets            plugin.TValue[[]any]
 	ScheduleFrequency  plugin.TValue[any]
 	Statistics         plugin.TValue[any]
 	Tags               plugin.TValue[map[string]any]
@@ -83460,6 +84365,22 @@ func (c *mqlAwsMacieClassificationJob) GetBucketDefinitions() *plugin.TValue[[]a
 	})
 }
 
+func (c *mqlAwsMacieClassificationJob) GetBuckets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Buckets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.classificationJob", c.__id, "buckets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.buckets()
+	})
+}
+
 func (c *mqlAwsMacieClassificationJob) GetScheduleFrequency() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.ScheduleFrequency, func() (any, error) {
 		return c.scheduleFrequency()
@@ -83498,6 +84419,10 @@ type mqlAwsMacieFinding struct {
 	Description           plugin.TValue[string]
 	ClassificationDetails plugin.TValue[any]
 	ResourcesAffected     plugin.TValue[any]
+	BucketName            plugin.TValue[string]
+	BucketArn             plugin.TValue[string]
+	ObjectKey             plugin.TValue[string]
+	Bucket                plugin.TValue[*mqlAwsS3Bucket]
 }
 
 // createAwsMacieFinding creates a new instance of this resource
@@ -83601,6 +84526,34 @@ func (c *mqlAwsMacieFinding) GetResourcesAffected() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsMacieFinding) GetBucketName() *plugin.TValue[string] {
+	return &c.BucketName
+}
+
+func (c *mqlAwsMacieFinding) GetBucketArn() *plugin.TValue[string] {
+	return &c.BucketArn
+}
+
+func (c *mqlAwsMacieFinding) GetObjectKey() *plugin.TValue[string] {
+	return &c.ObjectKey
+}
+
+func (c *mqlAwsMacieFinding) GetBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.finding", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
+}
+
 // mqlAwsMacieCustomDataIdentifier for the aws.macie.customDataIdentifier resource
 type mqlAwsMacieCustomDataIdentifier struct {
 	MqlRuntime *plugin.Runtime
@@ -83690,6 +84643,820 @@ func (c *mqlAwsMacieCustomDataIdentifier) GetCreatedAt() *plugin.TValue[*time.Ti
 func (c *mqlAwsMacieCustomDataIdentifier) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
+	})
+}
+
+// mqlAwsMacieBucket for the aws.macie.bucket resource
+type mqlAwsMacieBucket struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMacieBucketInternal it will be used here
+	Arn                                plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	Region                             plugin.TValue[string]
+	AccountId                          plugin.TValue[string]
+	Bucket                             plugin.TValue[*mqlAwsS3Bucket]
+	BucketCreatedAt                    plugin.TValue[*time.Time]
+	LastUpdated                        plugin.TValue[*time.Time]
+	LastAutomatedDiscoveryTime         plugin.TValue[*time.Time]
+	ClassifiableObjectCount            plugin.TValue[int64]
+	ClassifiableSizeInBytes            plugin.TValue[int64]
+	ObjectCount                        plugin.TValue[int64]
+	SizeInBytes                        plugin.TValue[int64]
+	SizeInBytesCompressed              plugin.TValue[int64]
+	SensitivityScore                   plugin.TValue[int64]
+	SharedAccess                       plugin.TValue[string]
+	PublicAccess                       plugin.TValue[any]
+	ServerSideEncryption               plugin.TValue[any]
+	Versioning                         plugin.TValue[bool]
+	AllowsUnencryptedObjectUploads     plugin.TValue[string]
+	AutomatedDiscoveryMonitoringStatus plugin.TValue[string]
+	JobDetails                         plugin.TValue[any]
+	ReplicationDetails                 plugin.TValue[any]
+	ObjectCountByEncryptionType        plugin.TValue[any]
+	UnclassifiableObjectCount          plugin.TValue[any]
+	UnclassifiableObjectSizeInBytes    plugin.TValue[any]
+	ErrorCode                          plugin.TValue[string]
+	ErrorMessage                       plugin.TValue[string]
+	Tags                               plugin.TValue[map[string]any]
+}
+
+// createAwsMacieBucket creates a new instance of this resource
+func createAwsMacieBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMacieBucket{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.macie.bucket", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMacieBucket) MqlName() string {
+	return "aws.macie.bucket"
+}
+
+func (c *mqlAwsMacieBucket) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMacieBucket) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsMacieBucket) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsMacieBucket) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMacieBucket) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsMacieBucket) GetBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.bucket", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
+}
+
+func (c *mqlAwsMacieBucket) GetBucketCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.BucketCreatedAt
+}
+
+func (c *mqlAwsMacieBucket) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
+}
+
+func (c *mqlAwsMacieBucket) GetLastAutomatedDiscoveryTime() *plugin.TValue[*time.Time] {
+	return &c.LastAutomatedDiscoveryTime
+}
+
+func (c *mqlAwsMacieBucket) GetClassifiableObjectCount() *plugin.TValue[int64] {
+	return &c.ClassifiableObjectCount
+}
+
+func (c *mqlAwsMacieBucket) GetClassifiableSizeInBytes() *plugin.TValue[int64] {
+	return &c.ClassifiableSizeInBytes
+}
+
+func (c *mqlAwsMacieBucket) GetObjectCount() *plugin.TValue[int64] {
+	return &c.ObjectCount
+}
+
+func (c *mqlAwsMacieBucket) GetSizeInBytes() *plugin.TValue[int64] {
+	return &c.SizeInBytes
+}
+
+func (c *mqlAwsMacieBucket) GetSizeInBytesCompressed() *plugin.TValue[int64] {
+	return &c.SizeInBytesCompressed
+}
+
+func (c *mqlAwsMacieBucket) GetSensitivityScore() *plugin.TValue[int64] {
+	return &c.SensitivityScore
+}
+
+func (c *mqlAwsMacieBucket) GetSharedAccess() *plugin.TValue[string] {
+	return &c.SharedAccess
+}
+
+func (c *mqlAwsMacieBucket) GetPublicAccess() *plugin.TValue[any] {
+	return &c.PublicAccess
+}
+
+func (c *mqlAwsMacieBucket) GetServerSideEncryption() *plugin.TValue[any] {
+	return &c.ServerSideEncryption
+}
+
+func (c *mqlAwsMacieBucket) GetVersioning() *plugin.TValue[bool] {
+	return &c.Versioning
+}
+
+func (c *mqlAwsMacieBucket) GetAllowsUnencryptedObjectUploads() *plugin.TValue[string] {
+	return &c.AllowsUnencryptedObjectUploads
+}
+
+func (c *mqlAwsMacieBucket) GetAutomatedDiscoveryMonitoringStatus() *plugin.TValue[string] {
+	return &c.AutomatedDiscoveryMonitoringStatus
+}
+
+func (c *mqlAwsMacieBucket) GetJobDetails() *plugin.TValue[any] {
+	return &c.JobDetails
+}
+
+func (c *mqlAwsMacieBucket) GetReplicationDetails() *plugin.TValue[any] {
+	return &c.ReplicationDetails
+}
+
+func (c *mqlAwsMacieBucket) GetObjectCountByEncryptionType() *plugin.TValue[any] {
+	return &c.ObjectCountByEncryptionType
+}
+
+func (c *mqlAwsMacieBucket) GetUnclassifiableObjectCount() *plugin.TValue[any] {
+	return &c.UnclassifiableObjectCount
+}
+
+func (c *mqlAwsMacieBucket) GetUnclassifiableObjectSizeInBytes() *plugin.TValue[any] {
+	return &c.UnclassifiableObjectSizeInBytes
+}
+
+func (c *mqlAwsMacieBucket) GetErrorCode() *plugin.TValue[string] {
+	return &c.ErrorCode
+}
+
+func (c *mqlAwsMacieBucket) GetErrorMessage() *plugin.TValue[string] {
+	return &c.ErrorMessage
+}
+
+func (c *mqlAwsMacieBucket) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsMacieAllowList for the aws.macie.allowList resource
+type mqlAwsMacieAllowList struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMacieAllowListInternal
+	Id                plugin.TValue[string]
+	Arn               plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	Status            plugin.TValue[string]
+	StatusDescription plugin.TValue[string]
+	Criteria          plugin.TValue[any]
+	CreatedAt         plugin.TValue[*time.Time]
+	UpdatedAt         plugin.TValue[*time.Time]
+	Tags              plugin.TValue[map[string]any]
+}
+
+// createAwsMacieAllowList creates a new instance of this resource
+func createAwsMacieAllowList(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMacieAllowList{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.macie.allowList", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMacieAllowList) MqlName() string {
+	return "aws.macie.allowList"
+}
+
+func (c *mqlAwsMacieAllowList) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMacieAllowList) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsMacieAllowList) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsMacieAllowList) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMacieAllowList) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsMacieAllowList) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsMacieAllowList) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlAwsMacieAllowList) GetStatusDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.StatusDescription, func() (string, error) {
+		return c.statusDescription()
+	})
+}
+
+func (c *mqlAwsMacieAllowList) GetCriteria() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Criteria, func() (any, error) {
+		return c.criteria()
+	})
+}
+
+func (c *mqlAwsMacieAllowList) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsMacieAllowList) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsMacieAllowList) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsMacieFindingsFilter for the aws.macie.findingsFilter resource
+type mqlAwsMacieFindingsFilter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMacieFindingsFilterInternal
+	Id              plugin.TValue[string]
+	Arn             plugin.TValue[string]
+	Region          plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Action          plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Position        plugin.TValue[int64]
+	FindingCriteria plugin.TValue[any]
+	Tags            plugin.TValue[map[string]any]
+}
+
+// createAwsMacieFindingsFilter creates a new instance of this resource
+func createAwsMacieFindingsFilter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMacieFindingsFilter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.macie.findingsFilter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMacieFindingsFilter) MqlName() string {
+	return "aws.macie.findingsFilter"
+}
+
+func (c *mqlAwsMacieFindingsFilter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMacieFindingsFilter) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsMacieFindingsFilter) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsMacieFindingsFilter) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMacieFindingsFilter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsMacieFindingsFilter) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAwsMacieFindingsFilter) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsMacieFindingsFilter) GetPosition() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Position, func() (int64, error) {
+		return c.position()
+	})
+}
+
+func (c *mqlAwsMacieFindingsFilter) GetFindingCriteria() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.FindingCriteria, func() (any, error) {
+		return c.findingCriteria()
+	})
+}
+
+func (c *mqlAwsMacieFindingsFilter) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsMacieMember for the aws.macie.member resource
+type mqlAwsMacieMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMacieMemberInternal it will be used here
+	AccountId              plugin.TValue[string]
+	Arn                    plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	AdministratorAccountId plugin.TValue[string]
+	Email                  plugin.TValue[string]
+	RelationshipStatus     plugin.TValue[string]
+	InvitedAt              plugin.TValue[*time.Time]
+	UpdatedAt              plugin.TValue[*time.Time]
+	Tags                   plugin.TValue[map[string]any]
+}
+
+// createAwsMacieMember creates a new instance of this resource
+func createAwsMacieMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMacieMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.macie.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMacieMember) MqlName() string {
+	return "aws.macie.member"
+}
+
+func (c *mqlAwsMacieMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMacieMember) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsMacieMember) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsMacieMember) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMacieMember) GetAdministratorAccountId() *plugin.TValue[string] {
+	return &c.AdministratorAccountId
+}
+
+func (c *mqlAwsMacieMember) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlAwsMacieMember) GetRelationshipStatus() *plugin.TValue[string] {
+	return &c.RelationshipStatus
+}
+
+func (c *mqlAwsMacieMember) GetInvitedAt() *plugin.TValue[*time.Time] {
+	return &c.InvitedAt
+}
+
+func (c *mqlAwsMacieMember) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlAwsMacieMember) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsMacieInvitation for the aws.macie.invitation resource
+type mqlAwsMacieInvitation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMacieInvitationInternal it will be used here
+	InvitationId       plugin.TValue[string]
+	AccountId          plugin.TValue[string]
+	Region             plugin.TValue[string]
+	RelationshipStatus plugin.TValue[string]
+	InvitedAt          plugin.TValue[*time.Time]
+}
+
+// createAwsMacieInvitation creates a new instance of this resource
+func createAwsMacieInvitation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMacieInvitation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.macie.invitation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMacieInvitation) MqlName() string {
+	return "aws.macie.invitation"
+}
+
+func (c *mqlAwsMacieInvitation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMacieInvitation) GetInvitationId() *plugin.TValue[string] {
+	return &c.InvitationId
+}
+
+func (c *mqlAwsMacieInvitation) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsMacieInvitation) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMacieInvitation) GetRelationshipStatus() *plugin.TValue[string] {
+	return &c.RelationshipStatus
+}
+
+func (c *mqlAwsMacieInvitation) GetInvitedAt() *plugin.TValue[*time.Time] {
+	return &c.InvitedAt
+}
+
+// mqlAwsMacieAdministrator for the aws.macie.administrator resource
+type mqlAwsMacieAdministrator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMacieAdministratorInternal it will be used here
+	AccountId          plugin.TValue[string]
+	Region             plugin.TValue[string]
+	InvitationId       plugin.TValue[string]
+	InvitedAt          plugin.TValue[*time.Time]
+	RelationshipStatus plugin.TValue[string]
+}
+
+// createAwsMacieAdministrator creates a new instance of this resource
+func createAwsMacieAdministrator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMacieAdministrator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.macie.administrator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMacieAdministrator) MqlName() string {
+	return "aws.macie.administrator"
+}
+
+func (c *mqlAwsMacieAdministrator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMacieAdministrator) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsMacieAdministrator) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMacieAdministrator) GetInvitationId() *plugin.TValue[string] {
+	return &c.InvitationId
+}
+
+func (c *mqlAwsMacieAdministrator) GetInvitedAt() *plugin.TValue[*time.Time] {
+	return &c.InvitedAt
+}
+
+func (c *mqlAwsMacieAdministrator) GetRelationshipStatus() *plugin.TValue[string] {
+	return &c.RelationshipStatus
+}
+
+// mqlAwsMacieAutomatedDiscoveryConfiguration for the aws.macie.automatedDiscoveryConfiguration resource
+type mqlAwsMacieAutomatedDiscoveryConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMacieAutomatedDiscoveryConfigurationInternal it will be used here
+	Region                          plugin.TValue[string]
+	Status                          plugin.TValue[string]
+	AutoEnableOrganizationMembers   plugin.TValue[string]
+	ClassificationScopeId           plugin.TValue[string]
+	SensitivityInspectionTemplateId plugin.TValue[string]
+	FirstEnabledAt                  plugin.TValue[*time.Time]
+	DisabledAt                      plugin.TValue[*time.Time]
+	LastUpdatedAt                   plugin.TValue[*time.Time]
+}
+
+// createAwsMacieAutomatedDiscoveryConfiguration creates a new instance of this resource
+func createAwsMacieAutomatedDiscoveryConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMacieAutomatedDiscoveryConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.macie.automatedDiscoveryConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMacieAutomatedDiscoveryConfiguration) MqlName() string {
+	return "aws.macie.automatedDiscoveryConfiguration"
+}
+
+func (c *mqlAwsMacieAutomatedDiscoveryConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMacieAutomatedDiscoveryConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMacieAutomatedDiscoveryConfiguration) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsMacieAutomatedDiscoveryConfiguration) GetAutoEnableOrganizationMembers() *plugin.TValue[string] {
+	return &c.AutoEnableOrganizationMembers
+}
+
+func (c *mqlAwsMacieAutomatedDiscoveryConfiguration) GetClassificationScopeId() *plugin.TValue[string] {
+	return &c.ClassificationScopeId
+}
+
+func (c *mqlAwsMacieAutomatedDiscoveryConfiguration) GetSensitivityInspectionTemplateId() *plugin.TValue[string] {
+	return &c.SensitivityInspectionTemplateId
+}
+
+func (c *mqlAwsMacieAutomatedDiscoveryConfiguration) GetFirstEnabledAt() *plugin.TValue[*time.Time] {
+	return &c.FirstEnabledAt
+}
+
+func (c *mqlAwsMacieAutomatedDiscoveryConfiguration) GetDisabledAt() *plugin.TValue[*time.Time] {
+	return &c.DisabledAt
+}
+
+func (c *mqlAwsMacieAutomatedDiscoveryConfiguration) GetLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedAt
+}
+
+// mqlAwsMacieClassificationExportConfiguration for the aws.macie.classificationExportConfiguration resource
+type mqlAwsMacieClassificationExportConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMacieClassificationExportConfigurationInternal it will be used here
+	Region              plugin.TValue[string]
+	S3BucketName        plugin.TValue[string]
+	S3KeyPrefix         plugin.TValue[string]
+	ExpectedBucketOwner plugin.TValue[string]
+	KmsKeyArn           plugin.TValue[string]
+	Bucket              plugin.TValue[*mqlAwsS3Bucket]
+	KmsKey              plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsMacieClassificationExportConfiguration creates a new instance of this resource
+func createAwsMacieClassificationExportConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMacieClassificationExportConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.macie.classificationExportConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMacieClassificationExportConfiguration) MqlName() string {
+	return "aws.macie.classificationExportConfiguration"
+}
+
+func (c *mqlAwsMacieClassificationExportConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMacieClassificationExportConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMacieClassificationExportConfiguration) GetS3BucketName() *plugin.TValue[string] {
+	return &c.S3BucketName
+}
+
+func (c *mqlAwsMacieClassificationExportConfiguration) GetS3KeyPrefix() *plugin.TValue[string] {
+	return &c.S3KeyPrefix
+}
+
+func (c *mqlAwsMacieClassificationExportConfiguration) GetExpectedBucketOwner() *plugin.TValue[string] {
+	return &c.ExpectedBucketOwner
+}
+
+func (c *mqlAwsMacieClassificationExportConfiguration) GetKmsKeyArn() *plugin.TValue[string] {
+	return &c.KmsKeyArn
+}
+
+func (c *mqlAwsMacieClassificationExportConfiguration) GetBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.classificationExportConfiguration", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
+}
+
+func (c *mqlAwsMacieClassificationExportConfiguration) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.classificationExportConfiguration", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
 	})
 }
 
@@ -96121,6 +97888,7 @@ type mqlAwsS3Bucket struct {
 	LifecycleRules            plugin.TValue[[]any]
 	NotificationConfiguration plugin.TValue[any]
 	OwnershipControls         plugin.TValue[string]
+	MacieCoverage             plugin.TValue[*mqlAwsMacieBucket]
 }
 
 // createAwsS3Bucket creates a new instance of this resource
@@ -96385,6 +98153,22 @@ func (c *mqlAwsS3Bucket) GetNotificationConfiguration() *plugin.TValue[any] {
 func (c *mqlAwsS3Bucket) GetOwnershipControls() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.OwnershipControls, func() (string, error) {
 		return c.ownershipControls()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetMacieCoverage() *plugin.TValue[*mqlAwsMacieBucket] {
+	return plugin.GetOrCompute[*mqlAwsMacieBucket](&c.MacieCoverage, func() (*mqlAwsMacieBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "macieCoverage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsMacieBucket), nil
+			}
+		}
+
+		return c.macieCoverage()
 	})
 }
 
