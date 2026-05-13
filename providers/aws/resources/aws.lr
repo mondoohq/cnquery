@@ -6592,7 +6592,18 @@ private aws.emr.cluster.bootstrapAction @defaults("name scriptPath") {
   args []string
 }
 
-// Amazon EMR Studio (managed Jupyter / IDE environment for EMR)
+// Amazon EMR Studio
+//
+// Examine an EMR Studio — the managed web-based Jupyter / IDE
+// environment that data engineers use to author and run notebooks
+// against EMR clusters and serverless applications. Surfaces the
+// `authMode` (SSO or IAM) and identity-provider URL when SSO is used,
+// the `defaultS3Location` that backs Studio workspace files, the
+// `encryptionKey()` reference (audit whether a customer-managed KMS
+// key encrypts the workspace files, not the default AWS-managed key),
+// the VPC and subnets the Studio is deployed across, the service and
+// user IAM roles, and the workspace / engine security groups that
+// guard Studio notebook and compute traffic.
 private aws.emr.studio @defaults("studioId name region") {
   // Studio ID
   studioId string
@@ -16515,7 +16526,18 @@ private aws.glue.workflow @defaults("name region") {
   tags() map[string]string
 }
 
-// AWS Glue connection (data store connection definition stored in the Data Catalog)
+// AWS Glue connection
+//
+// Examine a Data Catalog connection definition that Glue jobs and
+// crawlers use to reach a backing data store. Surfaces the
+// `connectionType` (JDBC, KAFKA, MONGODB, NETWORK, MARKETPLACE, CUSTOM,
+// SFTP, VIEW_VALIDATION_REDSHIFT, VIEW_VALIDATION_ATHENA),
+// `connectionProperties` keys (audit `PASSWORD` vs `SECRET_ID` to flag
+// inline credentials versus Secrets Manager references — values for
+// sensitive keys are redacted, see the field comment),
+// `matchCriteria`, and the optional `physicalConnectionRequirements`
+// (subnet, security groups, availability zone) for connections that
+// run inside a customer VPC.
 private aws.glue.connection @defaults("name connectionType region") {
   // Name of the connection
   name string
@@ -16525,7 +16547,7 @@ private aws.glue.connection @defaults("name connectionType region") {
   description string
   // Connection type: JDBC, KAFKA, MONGODB, NETWORK, MARKETPLACE, CUSTOM, SFTP, VIEW_VALIDATION_REDSHIFT, VIEW_VALIDATION_ATHENA
   connectionType string
-  // Connection properties (key/value pairs). For JDBC the key set includes JDBC_CONNECTION_URL, USERNAME, PASSWORD, SECRET_ID, JDBC_ENFORCE_SSL; prefer SECRET_ID over PASSWORD so credentials live in Secrets Manager
+  // Connection properties (key/value pairs). For JDBC the key set includes JDBC_CONNECTION_URL, USERNAME, PASSWORD, SECRET_ID, JDBC_ENFORCE_SSL; prefer SECRET_ID over PASSWORD so credentials live in Secrets Manager. The Glue API returns plaintext credentials for inline-credential connections — to avoid leaking secrets through query results, values for known-sensitive keys (PASSWORD, ENCRYPTED_PASSWORD, KAFKA_*_PASSWORD, KAFKA_CLIENT_KEYSTORE, KAFKA_SASL_GSSAPI_KEYTAB, KAFKA_SASL_GSSAPI_KRB5_CONF) are replaced with "<redacted>"; the key is preserved so audits can still flag the misconfiguration.
   connectionProperties map[string]string
   // List of criteria the connection's data store must match (e.g. enforced source identity)
   matchCriteria []string

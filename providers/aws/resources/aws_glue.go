@@ -739,7 +739,7 @@ func (a *mqlAwsGlue) getConnections(conn *connection.AwsConnection) []*jobpool.J
 							"region":                         llx.StringData(region),
 							"description":                    llx.StringDataPtr(c.Description),
 							"connectionType":                 llx.StringData(string(c.ConnectionType)),
-							"connectionProperties":           llx.MapData(toInterfaceMapStringEnum(c.ConnectionProperties), types.String),
+							"connectionProperties":           llx.MapData(redactedGlueConnectionProperties(c.ConnectionProperties), types.String),
 							"matchCriteria":                  llx.ArrayData(convert.SliceAnyToInterface(c.MatchCriteria), types.String),
 							"physicalConnectionRequirements": llx.DictData(physical),
 							"createdAt":                      llx.TimeDataPtr(c.CreationTime),
@@ -758,11 +758,31 @@ func (a *mqlAwsGlue) getConnections(conn *connection.AwsConnection) []*jobpool.J
 	return tasks
 }
 
-// toInterfaceMapStringEnum converts AWS SDK maps keyed by string-enum types to plain map[string]any.
-func toInterfaceMapStringEnum[K ~string](m map[K]string) map[string]any {
+// sensitiveGlueConnectionPropertyKeys lists Glue ConnectionProperty names whose
+// values the API returns in plaintext. The keys are preserved (so audits can
+// still flag misconfigurations like inline PASSWORD vs SECRET_ID), but the
+// values are replaced with a sentinel so the secret never reaches MQL output.
+var sensitiveGlueConnectionPropertyKeys = map[string]struct{}{
+	"PASSWORD":                       {},
+	"ENCRYPTED_PASSWORD":             {},
+	"KAFKA_CLIENT_KEYSTORE_PASSWORD": {},
+	"KAFKA_CLIENT_KEY_PASSWORD":      {},
+	"KAFKA_TRUSTSTORE_PASSWORD":      {},
+	"KAFKA_SASL_SCRAM_PASSWORD":      {},
+	"KAFKA_CLIENT_KEYSTORE":          {},
+	"KAFKA_SASL_GSSAPI_KEYTAB":       {},
+	"KAFKA_SASL_GSSAPI_KRB5_CONF":    {},
+}
+
+func redactedGlueConnectionProperties[K ~string](m map[K]string) map[string]any {
 	out := make(map[string]any, len(m))
 	for k, v := range m {
-		out[string(k)] = v
+		key := string(k)
+		if _, sensitive := sensitiveGlueConnectionPropertyKeys[key]; sensitive && v != "" {
+			out[key] = "<redacted>"
+			continue
+		}
+		out[key] = v
 	}
 	return out
 }
