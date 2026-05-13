@@ -12559,10 +12559,16 @@ private aws.ec2.securitygroup.ippermission @defaults("id toPort fromPort ipProto
   ipProtocol string
   // IPv4 address ranges
   ipRanges []string
+  // IPv4 address ranges with per-range descriptions (each entry: {cidr, description})
+  ipRangeDetails []dict
   // IPv6 address ranges
   ipv6Ranges []string
+  // IPv6 address ranges with per-range descriptions (each entry: {cidr, description})
+  ipv6RangeDetails []dict
   // List of prefix IDs
   prefixListIds []dict
+  // Managed prefix lists this rule targets
+  prefixLists() []aws.ec2.managedPrefixList
   // List of user ID group pairs
   userIdGroupPairs []dict
 }

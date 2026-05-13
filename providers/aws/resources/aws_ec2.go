@@ -555,23 +555,41 @@ func (a *mqlAwsEc2Securitygroup) vpc() (*mqlAwsVpc, error) {
 	return nil, nil
 }
 
+type mqlAwsEc2SecuritygroupIppermissionInternal struct {
+	cachePrefixListIds []ec2types.PrefixListId
+	cacheRegion        string
+	cacheAccountId     string
+}
+
 func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	accountId := conn.AccountId()
 	mqlIpPermissions := []any{}
 	for p, permission := range a.cacheIpPerms {
 		ipRanges := []any{}
+		ipRangeDetails := []any{}
 		for r := range permission.IpRanges {
 			iprange := permission.IpRanges[r]
 			if iprange.CidrIp != nil {
 				ipRanges = append(ipRanges, *iprange.CidrIp)
 			}
+			ipRangeDetails = append(ipRangeDetails, map[string]any{
+				"cidr":        convert.ToValue(iprange.CidrIp),
+				"description": convert.ToValue(iprange.Description),
+			})
 		}
 
 		ipv6Ranges := []any{}
+		ipv6RangeDetails := []any{}
 		for r := range permission.Ipv6Ranges {
 			iprange := permission.Ipv6Ranges[r]
 			if iprange.CidrIpv6 != nil {
 				ipv6Ranges = append(ipv6Ranges, *iprange.CidrIpv6)
 			}
+			ipv6RangeDetails = append(ipv6RangeDetails, map[string]any{
+				"cidr":        convert.ToValue(iprange.CidrIpv6),
+				"description": convert.ToValue(iprange.Description),
+			})
 		}
 		prefixListIds, err := convert.JsonToDictSlice(permission.PrefixListIds)
 		if err != nil {
@@ -588,13 +606,19 @@ func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]any, error) {
 				"toPort":           llx.IntDataDefault(permission.ToPort, -1),
 				"ipProtocol":       llx.StringDataPtr(permission.IpProtocol),
 				"ipRanges":         llx.ArrayData(ipRanges, types.Any),
+				"ipRangeDetails":   llx.ArrayData(ipRangeDetails, types.Any),
 				"ipv6Ranges":       llx.ArrayData(ipv6Ranges, types.Any),
+				"ipv6RangeDetails": llx.ArrayData(ipv6RangeDetails, types.Any),
 				"prefixListIds":    llx.ArrayData(prefixListIds, types.Any),
 				"userIdGroupPairs": llx.ArrayData(userIdGroupPairs, types.Any),
 			})
 		if err != nil {
 			return nil, err
 		}
+		mqlPerm := mqlSecurityGroupIpPermission.(*mqlAwsEc2SecuritygroupIppermission)
+		mqlPerm.cachePrefixListIds = permission.PrefixListIds
+		mqlPerm.cacheRegion = a.region
+		mqlPerm.cacheAccountId = accountId
 
 		mqlIpPermissions = append(mqlIpPermissions, mqlSecurityGroupIpPermission)
 	}
@@ -602,24 +626,36 @@ func (a *mqlAwsEc2Securitygroup) ipPermissions() ([]any, error) {
 }
 
 func (a *mqlAwsEc2Securitygroup) ipPermissionsEgress() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	accountId := conn.AccountId()
 	mqlIpPermissionsEgress := []any{}
 	for p := range a.cacheIpPermsEgress {
 		permission := a.cacheIpPermsEgress[p]
 
 		ipRanges := []any{}
+		ipRangeDetails := []any{}
 		for r := range permission.IpRanges {
 			iprange := permission.IpRanges[r]
 			if iprange.CidrIp != nil {
 				ipRanges = append(ipRanges, *iprange.CidrIp)
 			}
+			ipRangeDetails = append(ipRangeDetails, map[string]any{
+				"cidr":        convert.ToValue(iprange.CidrIp),
+				"description": convert.ToValue(iprange.Description),
+			})
 		}
 
 		ipv6Ranges := []any{}
+		ipv6RangeDetails := []any{}
 		for r := range permission.Ipv6Ranges {
 			iprange := permission.Ipv6Ranges[r]
 			if iprange.CidrIpv6 != nil {
 				ipv6Ranges = append(ipv6Ranges, *iprange.CidrIpv6)
 			}
+			ipv6RangeDetails = append(ipv6RangeDetails, map[string]any{
+				"cidr":        convert.ToValue(iprange.CidrIpv6),
+				"description": convert.ToValue(iprange.Description),
+			})
 		}
 		prefixListIds, err := convert.JsonToDictSlice(permission.PrefixListIds)
 		if err != nil {
@@ -636,17 +672,40 @@ func (a *mqlAwsEc2Securitygroup) ipPermissionsEgress() ([]any, error) {
 				"toPort":           llx.IntDataDefault(permission.ToPort, -1),
 				"ipProtocol":       llx.StringDataPtr(permission.IpProtocol),
 				"ipRanges":         llx.ArrayData(ipRanges, types.Any),
+				"ipRangeDetails":   llx.ArrayData(ipRangeDetails, types.Any),
 				"ipv6Ranges":       llx.ArrayData(ipv6Ranges, types.Any),
+				"ipv6RangeDetails": llx.ArrayData(ipv6RangeDetails, types.Any),
 				"prefixListIds":    llx.ArrayData(prefixListIds, types.Any),
 				"userIdGroupPairs": llx.ArrayData(userIdGroupPairs, types.Any),
 			})
 		if err != nil {
 			return nil, err
 		}
+		mqlPerm := mqlSecurityGroupIpPermission.(*mqlAwsEc2SecuritygroupIppermission)
+		mqlPerm.cachePrefixListIds = permission.PrefixListIds
+		mqlPerm.cacheRegion = a.region
+		mqlPerm.cacheAccountId = accountId
 
 		mqlIpPermissionsEgress = append(mqlIpPermissionsEgress, mqlSecurityGroupIpPermission)
 	}
 	return mqlIpPermissionsEgress, nil
+}
+
+func (a *mqlAwsEc2SecuritygroupIppermission) prefixLists() ([]any, error) {
+	res := []any{}
+	for _, pl := range a.cachePrefixListIds {
+		if pl.PrefixListId == nil {
+			continue
+		}
+		plArn := fmt.Sprintf("arn:aws:ec2:%s:%s:prefix-list/%s", a.cacheRegion, a.cacheAccountId, *pl.PrefixListId)
+		mqlPL, err := NewResource(a.MqlRuntime, ResourceAwsEc2ManagedPrefixList,
+			map[string]*llx.RawData{"arn": llx.StringData(plArn)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlPL)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsEc2) keypairs() ([]any, error) {

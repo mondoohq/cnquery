@@ -6,10 +6,12 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
@@ -26,6 +28,69 @@ func (a *mqlAwsEc2ManagedPrefixListEntry) id() (string, error) {
 
 type mqlAwsEc2ManagedPrefixListInternal struct {
 	region string
+}
+
+func initAwsEc2ManagedPrefixList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	arnRaw, hasArn := args["arn"]
+	if !hasArn || arnRaw == nil || arnRaw.Value == nil {
+		return args, nil, nil
+	}
+	arnVal, ok := arnRaw.Value.(string)
+	if !ok || arnVal == "" {
+		return args, nil, nil
+	}
+
+	region, err := GetRegionFromArn(arnVal)
+	if err != nil {
+		return args, nil, nil
+	}
+	parts := strings.Split(arnVal, "/")
+	if len(parts) < 2 {
+		return args, nil, nil
+	}
+	plId := parts[len(parts)-1]
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Ec2(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeManagedPrefixLists(ctx, &ec2.DescribeManagedPrefixListsInput{
+		PrefixListIds: []string{plId},
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if len(resp.PrefixLists) == 0 {
+		return args, nil, nil
+	}
+	pl := resp.PrefixLists[0]
+
+	var version int64
+	if pl.Version != nil {
+		version = *pl.Version
+	}
+	var maxEntries int64
+	if pl.MaxEntries != nil {
+		maxEntries = int64(*pl.MaxEntries)
+	}
+
+	args["id"] = llx.StringData(convert.ToValue(pl.PrefixListId))
+	args["arn"] = llx.StringData(arnVal)
+	args["name"] = llx.StringData(convert.ToValue(pl.PrefixListName))
+	args["region"] = llx.StringData(region)
+	args["state"] = llx.StringData(string(pl.State))
+	args["addressFamily"] = llx.StringData(convert.ToValue(pl.AddressFamily))
+	args["maxEntries"] = llx.IntData(maxEntries)
+	args["version"] = llx.IntData(version)
+	args["ownerId"] = llx.StringData(convert.ToValue(pl.OwnerId))
+	args["tags"] = llx.MapData(toInterfaceMap(ec2TagsToMap(pl.Tags)), types.String)
+	return args, nil, nil
 }
 
 func (a *mqlAwsEc2) managedPrefixLists() ([]any, error) {
@@ -112,7 +177,7 @@ func (a *mqlAwsEc2) getManagedPrefixLists(conn *connection.AwsConnection) []*job
 
 func (a *mqlAwsEc2ManagedPrefixList) entries() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Ec2(a.region)
+	svc := conn.Ec2(a.Region.Data)
 	ctx := context.Background()
 
 	plId := a.Id.Data

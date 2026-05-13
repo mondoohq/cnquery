@@ -2463,9 +2463,12 @@ aws.ec2.securitygroup.ippermission 11.15.2
 aws.ec2.securitygroup.ippermission.fromPort 11.15.2
 aws.ec2.securitygroup.ippermission.id 11.15.2
 aws.ec2.securitygroup.ippermission.ipProtocol 11.15.2
+aws.ec2.securitygroup.ippermission.ipRangeDetails 13.23.2
 aws.ec2.securitygroup.ippermission.ipRanges 11.15.2
+aws.ec2.securitygroup.ippermission.ipv6RangeDetails 13.23.2
 aws.ec2.securitygroup.ippermission.ipv6Ranges 11.15.2
 aws.ec2.securitygroup.ippermission.prefixListIds 11.15.2
+aws.ec2.securitygroup.ippermission.prefixLists 13.23.2
 aws.ec2.securitygroup.ippermission.toPort 11.15.2
 aws.ec2.securitygroup.ippermission.userIdGroupPairs 11.15.2
 aws.ec2.securitygroup.isAttachedToNetworkInterface 11.15.2
