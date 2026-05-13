@@ -389,7 +389,17 @@ func (g *mqlGcpProjectDlpService) storedInfoTypes() ([]any, error) {
 // Helpers shared by new accessors
 // ---------------------------------------------------------------
 
+// dlpDataProfilesLocation is the location that data profile listings
+// (project / table / column / file-store) aggregate to. The DLP API
+// supports "global" for project-scope data profile listings.
 const dlpDataProfilesLocation = "global"
+
+// dlpRegionalListLocations is the set of locations the DLP API supports
+// for resources that cannot live in "global" at project scope —
+// DiscoveryConfig and Connection. We query the three multi-regions and
+// skip per-location errors so a project that has resources in only one
+// of them still returns useful data.
+var dlpRegionalListLocations = []string{"us", "eu", "asia"}
 
 func dlpProtoSliceToDict[T proto.Message](items []T) ([]any, error) {
 	res := make([]any, 0, len(items))
@@ -520,55 +530,56 @@ func (g *mqlGcpProjectDlpService) discoveryConfigs() ([]any, error) {
 	}
 	defer client.Close()
 
-	it := client.ListDiscoveryConfigs(ctx, &dlppb.ListDiscoveryConfigsRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, dlpDataProfilesLocation),
-	})
-
 	var res []any
-	for {
-		dc, err := it.Next()
-		if errors.Is(err, iterator.Done) {
-			break
-		}
-		if err != nil {
-			if isGRPCSkippable(err) {
-				log.Warn().Err(err).Msg("could not list DLP discovery configs")
-				return nil, nil
-			}
-			return nil, err
-		}
-
-		targets, err := dlpProtoSliceToDict(dc.Targets)
-		if err != nil {
-			return nil, err
-		}
-		errs, err := dlpProtoSliceToDict(dc.Errors)
-		if err != nil {
-			return nil, err
-		}
-		actions, err := dlpProtoSliceToDict(dc.Actions)
-		if err != nil {
-			return nil, err
-		}
-		orgConfig, _ := protoToDict(dc.OrgConfig)
-
-		mqlDc, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.discoveryConfig", map[string]*llx.RawData{
-			"name":             llx.StringData(dc.Name),
-			"displayName":      llx.StringData(dc.DisplayName),
-			"status":           llx.StringData(dc.Status.String()),
-			"targets":          llx.ArrayData(targets, types.Dict),
-			"errors":           llx.ArrayData(errs, types.Dict),
-			"inspectTemplates": llx.ArrayData(stringsToAnySlice(dc.InspectTemplates), types.String),
-			"actions":          llx.ArrayData(actions, types.Dict),
-			"orgConfig":        llx.DictData(orgConfig),
-			"lastRunTime":      llx.TimeDataPtr(timestampAsTimePtr(dc.LastRunTime)),
-			"created":          llx.TimeDataPtr(timestampAsTimePtr(dc.CreateTime)),
-			"updated":          llx.TimeDataPtr(timestampAsTimePtr(dc.UpdateTime)),
+	for _, loc := range dlpRegionalListLocations {
+		it := client.ListDiscoveryConfigs(ctx, &dlppb.ListDiscoveryConfigsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, loc),
 		})
-		if err != nil {
-			return nil, err
+		for {
+			dc, err := it.Next()
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+			if err != nil {
+				if isGRPCSkippable(err) {
+					log.Warn().Err(err).Str("location", loc).Msg("could not list DLP discovery configs")
+					break
+				}
+				return nil, err
+			}
+
+			targets, err := dlpProtoSliceToDict(dc.Targets)
+			if err != nil {
+				return nil, err
+			}
+			errs, err := dlpProtoSliceToDict(dc.Errors)
+			if err != nil {
+				return nil, err
+			}
+			actions, err := dlpProtoSliceToDict(dc.Actions)
+			if err != nil {
+				return nil, err
+			}
+			orgConfig, _ := protoToDict(dc.OrgConfig)
+
+			mqlDc, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.discoveryConfig", map[string]*llx.RawData{
+				"name":             llx.StringData(dc.Name),
+				"displayName":      llx.StringData(dc.DisplayName),
+				"status":           llx.StringData(dc.Status.String()),
+				"targets":          llx.ArrayData(targets, types.Dict),
+				"errors":           llx.ArrayData(errs, types.Dict),
+				"inspectTemplates": llx.ArrayData(stringsToAnySlice(dc.InspectTemplates), types.String),
+				"actions":          llx.ArrayData(actions, types.Dict),
+				"orgConfig":        llx.DictData(orgConfig),
+				"lastRunTime":      llx.TimeDataPtr(timestampAsTimePtr(dc.LastRunTime)),
+				"created":          llx.TimeDataPtr(timestampAsTimePtr(dc.CreateTime)),
+				"updated":          llx.TimeDataPtr(timestampAsTimePtr(dc.UpdateTime)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDc)
 		}
-		res = append(res, mqlDc)
 	}
 
 	return res, nil
@@ -612,45 +623,46 @@ func (g *mqlGcpProjectDlpService) connections() ([]any, error) {
 	}
 	defer client.Close()
 
-	it := client.ListConnections(ctx, &dlppb.ListConnectionsRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, dlpDataProfilesLocation),
-	})
-
 	var res []any
-	for {
-		c, err := it.Next()
-		if errors.Is(err, iterator.Done) {
-			break
-		}
-		if err != nil {
-			if isGRPCSkippable(err) {
-				log.Warn().Err(err).Msg("could not list DLP connections")
-				return nil, nil
-			}
-			return nil, err
-		}
-
-		errs, err := dlpProtoSliceToDict(c.Errors)
-		if err != nil {
-			return nil, err
-		}
-		var properties any
-		switch p := c.Properties.(type) {
-		case *dlppb.Connection_CloudSql:
-			d, _ := protoToDict(p.CloudSql)
-			properties = map[string]any{"cloudSql": d}
-		}
-
-		mqlConn, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.connection", map[string]*llx.RawData{
-			"name":       llx.StringData(c.Name),
-			"state":      llx.StringData(c.State.String()),
-			"errors":     llx.ArrayData(errs, types.Dict),
-			"properties": llx.DictData(properties),
+	for _, loc := range dlpRegionalListLocations {
+		it := client.ListConnections(ctx, &dlppb.ListConnectionsRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, loc),
 		})
-		if err != nil {
-			return nil, err
+		for {
+			c, err := it.Next()
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+			if err != nil {
+				if isGRPCSkippable(err) {
+					log.Warn().Err(err).Str("location", loc).Msg("could not list DLP connections")
+					break
+				}
+				return nil, err
+			}
+
+			errs, err := dlpProtoSliceToDict(c.Errors)
+			if err != nil {
+				return nil, err
+			}
+			var properties any
+			switch p := c.Properties.(type) {
+			case *dlppb.Connection_CloudSql:
+				d, _ := protoToDict(p.CloudSql)
+				properties = map[string]any{"cloudSql": d}
+			}
+
+			mqlConn, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.connection", map[string]*llx.RawData{
+				"name":       llx.StringData(c.Name),
+				"state":      llx.StringData(c.State.String()),
+				"errors":     llx.ArrayData(errs, types.Dict),
+				"properties": llx.DictData(properties),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlConn)
 		}
-		res = append(res, mqlConn)
 	}
 
 	return res, nil
@@ -880,52 +892,74 @@ func (g *mqlGcpProjectDlpService) columnDataProfiles() ([]any, error) {
 	}
 	defer client.Close()
 
-	it := client.ListColumnDataProfiles(ctx, &dlppb.ListColumnDataProfilesRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, dlpDataProfilesLocation),
-	})
+	// ListColumnDataProfiles requires a filter with project_id, dataset_id,
+	// and table_id; there is no project-wide list. Iterate the project's
+	// table data profiles first and gather column profiles per-table.
+	parent := fmt.Sprintf("projects/%s/locations/%s", projectId, dlpDataProfilesLocation)
+	tableIt := client.ListTableDataProfiles(ctx, &dlppb.ListTableDataProfilesRequest{Parent: parent})
 
 	var res []any
 	for {
-		c, err := it.Next()
+		t, err := tableIt.Next()
 		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
 			if isGRPCSkippable(err) {
-				log.Warn().Err(err).Msg("could not list DLP column data profiles")
+				log.Warn().Err(err).Msg("could not list DLP table data profiles for column profile enumeration")
 				return nil, nil
 			}
 			return nil, err
 		}
 
-		sensitivity, _ := protoToDict(c.SensitivityScore)
-		riskLevel, _ := protoToDict(c.DataRiskLevel)
-		columnInfoType, _ := protoToDict(c.ColumnInfoType)
-		otherMatches, err := dlpProtoSliceToDict(c.OtherMatches)
-		if err != nil {
-			return nil, err
-		}
-
-		mqlC, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.columnDataProfile", map[string]*llx.RawData{
-			"name":                 llx.StringData(c.Name),
-			"column":               llx.StringData(c.Column),
-			"datasetId":            llx.StringData(c.DatasetId),
-			"tableId":              llx.StringData(c.TableId),
-			"tableFullResource":    llx.StringData(c.TableFullResource),
-			"state":                llx.StringData(c.State.String()),
-			"sensitivityScore":     llx.DictData(sensitivity),
-			"dataRiskLevel":        llx.DictData(riskLevel),
-			"columnInfoType":       llx.DictData(columnInfoType),
-			"otherMatches":         llx.ArrayData(otherMatches, types.Dict),
-			"freeTextScore":        llx.FloatData(c.FreeTextScore),
-			"columnType":           llx.StringData(c.ColumnType.String()),
-			"policyState":          llx.StringData(c.PolicyState.String()),
-			"profileLastGenerated": llx.TimeDataPtr(timestampAsTimePtr(c.ProfileLastGenerated)),
+		filter := fmt.Sprintf("table_id=\"%s\" AND dataset_id=\"%s\" AND project_id=\"%s\"",
+			t.TableId, t.DatasetId, t.DatasetProjectId)
+		colIt := client.ListColumnDataProfiles(ctx, &dlppb.ListColumnDataProfilesRequest{
+			Parent: parent,
+			Filter: filter,
 		})
-		if err != nil {
-			return nil, err
+		for {
+			c, err := colIt.Next()
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+			if err != nil {
+				if isGRPCSkippable(err) {
+					log.Warn().Err(err).Str("table", t.TableId).Msg("could not list DLP column data profiles")
+					break
+				}
+				return nil, err
+			}
+
+			sensitivity, _ := protoToDict(c.SensitivityScore)
+			riskLevel, _ := protoToDict(c.DataRiskLevel)
+			columnInfoType, _ := protoToDict(c.ColumnInfoType)
+			otherMatches, err := dlpProtoSliceToDict(c.OtherMatches)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlC, err := CreateResource(g.MqlRuntime, "gcp.project.dlpService.columnDataProfile", map[string]*llx.RawData{
+				"name":                 llx.StringData(c.Name),
+				"column":               llx.StringData(c.Column),
+				"datasetId":            llx.StringData(c.DatasetId),
+				"tableId":              llx.StringData(c.TableId),
+				"tableFullResource":    llx.StringData(c.TableFullResource),
+				"state":                llx.StringData(c.State.String()),
+				"sensitivityScore":     llx.DictData(sensitivity),
+				"dataRiskLevel":        llx.DictData(riskLevel),
+				"columnInfoType":       llx.DictData(columnInfoType),
+				"otherMatches":         llx.ArrayData(otherMatches, types.Dict),
+				"freeTextScore":        llx.FloatData(c.FreeTextScore),
+				"columnType":           llx.StringData(c.ColumnType.String()),
+				"policyState":          llx.StringData(c.PolicyState.String()),
+				"profileLastGenerated": llx.TimeDataPtr(timestampAsTimePtr(c.ProfileLastGenerated)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlC)
 		}
-		res = append(res, mqlC)
 	}
 
 	return res, nil
