@@ -122,6 +122,7 @@
     "Microsoft.OperationalInsights/workspaces/read",
     "Microsoft.OperationalInsights/workspaces/savedSearches/read",
     "Microsoft.OperationalInsights/workspaces/tables/read",
+    "Microsoft.Purview/accounts/read",
     "Microsoft.RecoveryServices/Vaults/backupPolicies/read",
     "Microsoft.RecoveryServices/Vaults/backupProtectedItems/read",
     "Microsoft.RecoveryServices/Vaults/backupconfig/read",
@@ -831,7 +832,7 @@
     {
       "permission": "Microsoft.Network/privateLinkServices/read",
       "service": "Microsoft.Network",
-      "action": "NewListBySubscriptionPager",
+      "action": "NewListPrivateEndpointConnectionsPager",
       "source_file": "network.go"
     },
     {
@@ -909,7 +910,7 @@
     {
       "permission": "Microsoft.OperationalInsights/workspaces/read",
       "service": "Microsoft.OperationalInsights",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "loganalytics.go"
     },
     {
@@ -923,6 +924,12 @@
       "service": "Microsoft.OperationalInsights",
       "action": "NewListByWorkspacePager",
       "source_file": "loganalytics.go"
+    },
+    {
+      "permission": "Microsoft.Purview/accounts/read",
+      "service": "Microsoft.Purview",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "purview.go"
     },
     {
       "permission": "Microsoft.RecoveryServices/Vaults/backupPolicies/read",

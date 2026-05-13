@@ -121,6 +121,8 @@ azure.subscription @defaults ("name") {
   eventGrid() azure.subscription.eventGridService
   // API Management resources in the subscription
   apiManagement() azure.subscription.apiManagementService
+  // Microsoft Purview resources in the subscription — the data-governance and sensitive-data-discovery service (the Azure analog of AWS Macie / GCP Cloud DLP)
+  purview() azure.subscription.purviewService
 }
 
 // Azure function
@@ -8484,4 +8486,71 @@ azure.subscription.apiManagementService.service @defaults("name location skuName
   publicIpAddress() azure.subscription.networkService.ipAddress
   // Service creation time
   createdAt time
+}
+
+// Microsoft Purview
+//
+// Use the Purview namespace to enumerate the Microsoft Purview accounts
+// in the subscription. Each account is a tenant-scoped data-governance
+// and sensitive-data-discovery hub that catalogs data assets across
+// Azure (Storage, SQL, Synapse, Cosmos DB, Power BI) and external clouds.
+// Iterate `accounts()` for the per-region Purview accounts and inspect
+// their public-network-access posture, managed-resource-group bindings,
+// SKU, and public endpoints.
+private azure.subscription.purviewService {
+  // Subscription identifier
+  subscriptionId string
+  // Microsoft Purview accounts in the subscription
+  accounts() []azure.subscription.purviewService.account
+}
+
+// Microsoft Purview account
+//
+// Examine a single Purview account — the tenant-scoped governance hub
+// that hosts the data catalog, scanning, classification, and lineage
+// surfaces. Use `publicNetworkAccess` to confirm whether the account is
+// reachable from the public internet; `managedResourceGroupName` and
+// `managedResources` to find the Purview-managed Storage and Event Hub
+// resources backing the account; `endpoints` for the catalog/scan/guardian
+// URIs; and `privateEndpointConnections` for the approved private-link
+// bindings.
+private azure.subscription.purviewService.account @defaults("name location publicNetworkAccess provisioningState") {
+  // Full resource ID
+  id string
+  // Name of the Purview account
+  name string
+  // Location of the account
+  location string
+  // Resource type
+  type string
+  // Tags on the account
+  tags map[string]string
+  // Account SKU (name, capacity)
+  sku dict
+  // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
+  identity dict
+  // Friendly display name for the account
+  friendlyName string
+  // Provisioning state: Succeeded, Failed, Creating, Deleting, Moving, Unknown
+  provisioningState string
+  // Whether the account is reachable from the public internet: Enabled, NotConfigured, or Disabled
+  publicNetworkAccess string
+  // Name of the Purview-managed resource group that backs this account
+  managedResourceGroupName string
+  // Resource identifiers of the managed resources (storage account, event hub namespace, resource group ID)
+  managedResources dict
+  // Public endpoints of the account, with keys `catalog`, `guardian`, `scan`
+  endpoints dict
+  // Approved private-endpoint connections for the account
+  privateEndpointConnections []dict
+  // Cloud connectors for external (AWS) scanning, with the externally surfaced AWS external ID
+  cloudConnectors dict
+  // When the account was created
+  createdAt time
+  // Object ID of the principal that created the account
+  createdByObjectId string
+  // Principal name that created the account
+  createdBy string
+  // Unmodeled raw properties returned by the Azure API
+  properties dict
 }

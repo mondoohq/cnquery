@@ -405,3 +405,13 @@ func (a *mqlAzureSubscription) apiManagement() (*mqlAzureSubscriptionApiManageme
 	}
 	return svc.(*mqlAzureSubscriptionApiManagementService), nil
 }
+
+func (a *mqlAzureSubscription) purview() (*mqlAzureSubscriptionPurviewService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.purviewService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionPurviewService), nil
+}
