@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.13.3",
-  "generated_at": "2026-05-09T21:46:56-07:00",
+  "version": "13.14.1",
+  "generated_at": "2026-05-12T22:06:10+01:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -121,9 +121,11 @@
     "datastream.routes.list",
     "datastream.streams.list",
     "dlp.deidentifyTemplates.list",
+    "dlp.fileStoreDataProfiles.list",
     "dlp.inspectTemplates.list",
     "dlp.jobTriggers.list",
     "dlp.storedInfoTypes.list",
+    "dlp.tableDataProfiles.list",
     "dns.managedZones.getIamPolicy",
     "dns.managedZones.list",
     "dns.policies.list",
@@ -932,6 +934,12 @@
       "source_file": "dlp.go"
     },
     {
+      "permission": "dlp.fileStoreDataProfiles.list",
+      "service": "dlp",
+      "action": "ListFileStoreDataProfiles",
+      "source_file": "dlp.go"
+    },
+    {
       "permission": "dlp.inspectTemplates.list",
       "service": "dlp",
       "action": "ListInspectTemplates",
@@ -947,6 +955,12 @@
       "permission": "dlp.storedInfoTypes.list",
       "service": "dlp",
       "action": "ListStoredInfoTypes",
+      "source_file": "dlp.go"
+    },
+    {
+      "permission": "dlp.tableDataProfiles.list",
+      "service": "dlp",
+      "action": "ListTableDataProfiles",
       "source_file": "dlp.go"
     },
     {
@@ -1281,7 +1295,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.Search",
+      "action": "Projects.List",
       "source_file": "project.go",
       "scope": "org"
     },

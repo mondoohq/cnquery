@@ -1704,6 +1704,8 @@ private gcp.project.storageService.bucket @defaults("id") {
   defaultObjectAcl() []dict
   // Whether the bucket is publicly accessible via any mechanism (IAM policy, bucket ACL, or default object ACL); returns false when iamConfiguration.publicAccessPrevention is "enforced"
   public() bool
+  // Cloud DLP file-store data profile for this bucket — sensitivity score, risk level, and detected infoTypes. Null when discovery has not profiled this bucket or DLP is not enabled in the project
+  dlpDataProfile() gcp.project.dlpService.fileStoreDataProfile
 }
 
 // Google Cloud bucket's lifecycle configuration
@@ -2289,6 +2291,8 @@ private gcp.project.bigqueryService.table @defaults("id") {
   timePartitioning dict
   // Table schema
   schema []dict
+  // Cloud DLP table data profile for this table — sensitivity score, risk level, and predicted infoTypes. Null when discovery has not profiled this table
+  dlpDataProfile() gcp.project.dlpService.tableDataProfile
 }
 
 // Google Cloud (GCP) BigQuery ML model
@@ -8023,6 +8027,277 @@ private gcp.project.dlpService {
   jobTriggers() []gcp.project.dlpService.jobTrigger
   // Stored info types
   storedInfoTypes() []gcp.project.dlpService.storedInfoType
+  // Inspect and risk-analysis jobs (current and historical) — `INSPECT_JOB` runs sensitive-data scans against BigQuery, Cloud Storage, or Datastore; `RISK_ANALYSIS_JOB` analyzes re-identification risk
+  dlpJobs() []gcp.project.dlpService.dlpJob
+  // Discovery configurations — schedules that auto-profile BigQuery datasets and Cloud Storage buckets and emit `tableDataProfile` and `fileStoreDataProfile` records
+  discoveryConfigs() []gcp.project.dlpService.discoveryConfig
+  // Connections to data sources used by discovery (Cloud SQL, AlloyDB)
+  connections() []gcp.project.dlpService.connection
+  // Project-level data sensitivity profiles produced by discovery — one per profiled project, with sensitivity and risk scores
+  projectDataProfiles() []gcp.project.dlpService.projectDataProfile
+  // Table-level data sensitivity profiles for BigQuery tables — sensitivity score, predicted infoTypes, encryption status, and resource visibility
+  tableDataProfiles() []gcp.project.dlpService.tableDataProfile
+  // Column-level data sensitivity profiles for BigQuery columns — detected infoType, free-text status, and column data type
+  columnDataProfiles() []gcp.project.dlpService.columnDataProfile
+  // File-store sensitivity profiles for Cloud Storage buckets — sensitivity score, risk level, infoType summaries, and visibility (the GCS analog of AWS Macie bucket coverage)
+  fileStoreDataProfiles() []gcp.project.dlpService.fileStoreDataProfile
+}
+
+// Google Cloud (GCP) Cloud DLP job
+//
+// Examine a single Cloud DLP inspect or risk-analysis job. `type` distinguishes
+// INSPECT_JOB (a scan that detects sensitive data in BigQuery, Cloud Storage,
+// or Datastore) from RISK_ANALYSIS_JOB (re-identification analysis). `state`
+// reflects lifecycle (PENDING, RUNNING, DONE, CANCELED, FAILED, ACTIVE);
+// `details` contains the scan configuration and result counts as a dict whose
+// shape varies by `type`.
+private gcp.project.dlpService.dlpJob @defaults("name type state") {
+  // Full resource name (`projects/{project}/locations/{location}/dlpJobs/{job-id}`)
+  name string
+  // Job type: INSPECT_JOB or RISK_ANALYSIS_JOB
+  type string
+  // Job state: PENDING, RUNNING, DONE, CANCELED, FAILED, or ACTIVE
+  state string
+  // Resource name of the job trigger that created this job, empty for ad-hoc jobs
+  jobTrigger string
+  // Job-type-specific configuration and result details. Keys depend on `type`: INSPECT_JOB has `requestedOptions`, `result`, `inspectDetails`; RISK_ANALYSIS_JOB has `requestedSourceTable`, `requestedPrivacyMetric`, `riskDetails`
+  details dict
+  // Errors encountered while running the job
+  errors []dict
+  // Post-job actions (publish to Pub/Sub, save findings to BigQuery, publish to Security Command Center, etc.)
+  actionDetails []dict
+  // Time when the job was created
+  created time
+  // Time when the job started
+  started time
+  // Time when the job finished
+  ended time
+  // Time when the job was last modified by the system
+  lastModified time
+}
+
+// Google Cloud (GCP) Cloud DLP discovery configuration
+//
+// Examine a discovery configuration — a schedule that auto-discovers and
+// profiles BigQuery and Cloud Storage resources. Inspect `status` for the
+// run state (RUNNING, PAUSED), `targets` for the resource selection rules,
+// and `inspectTemplates` for the inspection templates the discovery applies
+// to scanned data.
+private gcp.project.dlpService.discoveryConfig @defaults("name displayName status") {
+  // Full resource name
+  name string
+  // Human-readable display name
+  displayName string
+  // Run state: RUNNING or PAUSED
+  status string
+  // Resource discovery targets. Keys depend on the target type: BigQuery has `bigQueryTarget` (filter + conditions), Cloud Storage has `cloudStorageTarget`, Cloud SQL has `cloudSqlTarget`
+  targets []dict
+  // Errors encountered during recent discovery runs
+  errors []dict
+  // Inspection templates the discovery applies to scanned data, by their resource name
+  inspectTemplates []string
+  // Post-discovery actions (publish to SCC, export to BigQuery, Pub/Sub, etc.)
+  actions []dict
+  // Org owner / project owner that issued the discovery config
+  orgConfig dict
+  // Last time the discovery config was run
+  lastRunTime time
+  // Time when the config was created
+  created time
+  // Time when the config was last updated
+  updated time
+}
+
+// Google Cloud (GCP) Cloud DLP connection to a data source
+//
+// Examine a Cloud DLP connection to a data source used during discovery
+// (Cloud SQL or AlloyDB). `state` reports connectivity health; `properties`
+// holds the connection details whose shape varies by the configured data
+// source: `cloudSql` (instance + db name + credential), etc.
+private gcp.project.dlpService.connection @defaults("name state") {
+  // Full resource name
+  name string
+  // Connection state: MISSING_CREDENTIALS, AVAILABLE, or ERROR
+  state string
+  // Connection errors if state is ERROR
+  errors []dict
+  // Connection properties
+  properties dict
+}
+
+// Google Cloud (GCP) Cloud DLP project data profile
+//
+// Examine the project-level sensitivity profile produced by Cloud DLP discovery.
+// `sensitivityScore` and `dataRiskLevel` summarize the project's data risk;
+// `tableDataProfileCount` and `fileStoreDataProfileCount` indicate how many
+// per-resource profiles back this aggregate.
+private gcp.project.dlpService.projectDataProfile @defaults("projectId sensitivityScore dataRiskLevel") {
+  // Full resource name of the profile
+  name string
+  // Project ID this profile describes
+  projectId string
+  // Sensitivity score, with keys `score` (HIGH/MEDIUM_LOW) and numeric breakdowns
+  sensitivityScore dict
+  // Data risk level, with key `score` (HIGH/MEDIUM/LOW)
+  dataRiskLevel dict
+  // Status of the last profile-generation attempt
+  profileStatus dict
+  // Number of table data profiles backing this aggregate
+  tableDataProfileCount int
+  // Number of file-store data profiles backing this aggregate
+  fileStoreDataProfileCount int
+  // Time when this profile was most recently generated
+  profileLastGenerated time
+}
+
+// Google Cloud (GCP) Cloud DLP table data profile
+//
+// Examine the sensitivity profile of a single BigQuery table. Inspect
+// `sensitivityScore` and `dataRiskLevel` for the aggregate scores;
+// `predictedInfoTypes` and `otherInfoTypes` for the detected infoTypes;
+// `encryptionStatus` and `resourceVisibility` for posture; and `bigqueryTable`
+// to traverse to the BigQuery table resource.
+private gcp.project.dlpService.tableDataProfile @defaults("tableId datasetId sensitivityScore dataRiskLevel") {
+  // Full resource name of the profile
+  name string
+  // GCP project ID that owns the BigQuery dataset
+  datasetProjectId string
+  // BigQuery dataset location
+  datasetLocation string
+  // BigQuery dataset ID
+  datasetId string
+  // BigQuery table ID
+  tableId string
+  // Full resource name of the profiled table
+  fullResource string
+  // State of the profile: PROFILE_STATE_UNSPECIFIED, RUNNING, or DONE
+  state string
+  // Sensitivity score, with keys `score` (HIGH/MEDIUM_LOW) and numeric breakdowns
+  sensitivityScore dict
+  // Data risk level, with key `score` (HIGH/MEDIUM/LOW)
+  dataRiskLevel dict
+  // Status of the last profile-generation attempt
+  profileStatus dict
+  // InfoTypes predicted from the table's data, with each entry having `infoType` and `estimatedPrevalence`
+  predictedInfoTypes []dict
+  // Other infoTypes found in the table that were not predicted, with each entry having `infoType`, `estimatedPrevalence`, and `excludedFromAnalysis`
+  otherInfoTypes []dict
+  // Encryption status: ENCRYPTION_GOOGLE_MANAGED or ENCRYPTION_CUSTOMER_MANAGED
+  encryptionStatus string
+  // How broadly the table is shared: PUBLIC, RESTRICTED, or RESOURCE_VISIBILITY_UNSPECIFIED
+  resourceVisibility string
+  // Number of columns successfully profiled
+  scannedColumnCount int
+  // Number of columns that failed profiling
+  failedColumnCount int
+  // Size of the table in bytes when the profile was generated
+  tableSizeBytes int
+  // Row count of the table when the profile was generated
+  rowCount int
+  // Labels applied to the table at profile-generation time
+  resourceLabels map[string]string
+  // Time when this profile was most recently generated
+  profileLastGenerated time
+  // Time the table was last modified
+  lastModifiedTime time
+  // Time at which the table expires
+  expirationTime time
+  // Time at which the table was created
+  created time
+  // BigQuery table this profile describes
+  bigqueryTable() gcp.project.bigqueryService.table
+}
+
+// Google Cloud (GCP) Cloud DLP column data profile
+//
+// Examine the sensitivity profile of a single BigQuery column. `columnInfoType`
+// names the detected infoType; `freeTextScore` indicates how likely the column
+// holds free-form text that could contain sensitive data; `columnType` and
+// `policyState` describe BigQuery column metadata captured at profile time.
+private gcp.project.dlpService.columnDataProfile @defaults("column tableId sensitivityScore") {
+  // Full resource name of the profile
+  name string
+  // BigQuery column name
+  column string
+  // BigQuery dataset ID
+  datasetId string
+  // BigQuery table ID
+  tableId string
+  // Full resource name of the profiled table
+  tableFullResource string
+  // State of the profile: PROFILE_STATE_UNSPECIFIED, RUNNING, or DONE
+  state string
+  // Column-level sensitivity score
+  sensitivityScore dict
+  // Column-level data risk level
+  dataRiskLevel dict
+  // InfoType detected for this column, with keys `infoType` and `estimatedPrevalence`
+  columnInfoType dict
+  // Other infoTypes also detected for this column
+  otherMatches []dict
+  // Free-text likelihood score (higher means more likely to hold free-form text)
+  freeTextScore float
+  // BigQuery column type (INTEGER, STRING, RECORD, etc.)
+  columnType string
+  // BigQuery policy tag state for the column
+  policyState string
+  // Time when this profile was most recently generated
+  profileLastGenerated time
+}
+
+// Google Cloud (GCP) Cloud DLP file-store data profile
+//
+// Examine the sensitivity profile of a single Cloud Storage bucket — the GCS
+// analog of AWS Macie bucket coverage. `sensitivityScore` and `dataRiskLevel`
+// aggregate the bucket's sensitivity; `fileStoreInfoTypeSummaries` lists the
+// infoTypes detected across the bucket's files; `resourceVisibility` reports
+// public/restricted access; `bucket` traverses to the underlying Cloud Storage
+// bucket resource for owner-side queries (IAM, lifecycle, encryption).
+private gcp.project.dlpService.fileStoreDataProfile @defaults("fileStorePath sensitivityScore dataRiskLevel") {
+  // Full resource name of the profile
+  name string
+  // GCP project ID that owns the bucket
+  projectId string
+  // Resource type that was profiled, e.g. `google.cloudstorage.bucket`
+  dataSourceType string
+  // Location of the bucket (region or multi-region)
+  fileStoreLocation string
+  // For multi-region buckets, the individual storage locations
+  dataStorageLocations []string
+  // Location type: region, dual-region, or multi-region
+  locationType string
+  // File-store path (`gs://{bucket}` for Cloud Storage)
+  fileStorePath string
+  // Full resource name of the profiled resource
+  fullResource string
+  // Status of the last profile-generation attempt
+  profileStatus dict
+  // State of the profile: PROFILE_STATE_UNSPECIFIED, RUNNING, or DONE
+  state string
+  // How broadly the bucket is shared: PUBLIC, RESTRICTED, or RESOURCE_VISIBILITY_UNSPECIFIED
+  resourceVisibility string
+  // Sensitivity score, with keys `score` (HIGH/MEDIUM_LOW) and numeric breakdowns
+  sensitivityScore dict
+  // Data risk level, with key `score` (HIGH/MEDIUM/LOW)
+  dataRiskLevel dict
+  // Per-cluster summaries (clusters group files by type: documents, images, etc.)
+  fileClusterSummaries []dict
+  // Resource attributes captured by the profile, e.g. `customer_managed_encryption` boolean
+  resourceAttributes dict
+  // Labels on the bucket at profile-generation time
+  resourceLabels map[string]string
+  // Detected infoType summaries across the bucket's files
+  fileStoreInfoTypeSummaries []dict
+  // Whether the bucket contains no files
+  fileStoreIsEmpty bool
+  // Time when this profile was most recently generated
+  profileLastGenerated time
+  // Time when the bucket was created
+  created time
+  // Time when the bucket was last modified
+  lastModifiedTime time
+  // Cloud Storage bucket this profile describes
+  bucket() gcp.project.storageService.bucket
 }
 
 // Google Cloud (GCP) Cloud DLP inspect template

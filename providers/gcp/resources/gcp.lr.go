@@ -323,6 +323,13 @@ const (
 	ResourceGcpProjectEventarcServiceTriggerEventFilter                                string = "gcp.project.eventarcService.trigger.eventFilter"
 	ResourceGcpProjectEventarcServiceChannel                                           string = "gcp.project.eventarcService.channel"
 	ResourceGcpProjectDlpService                                                       string = "gcp.project.dlpService"
+	ResourceGcpProjectDlpServiceDlpJob                                                 string = "gcp.project.dlpService.dlpJob"
+	ResourceGcpProjectDlpServiceDiscoveryConfig                                        string = "gcp.project.dlpService.discoveryConfig"
+	ResourceGcpProjectDlpServiceConnection                                             string = "gcp.project.dlpService.connection"
+	ResourceGcpProjectDlpServiceProjectDataProfile                                     string = "gcp.project.dlpService.projectDataProfile"
+	ResourceGcpProjectDlpServiceTableDataProfile                                       string = "gcp.project.dlpService.tableDataProfile"
+	ResourceGcpProjectDlpServiceColumnDataProfile                                      string = "gcp.project.dlpService.columnDataProfile"
+	ResourceGcpProjectDlpServiceFileStoreDataProfile                                   string = "gcp.project.dlpService.fileStoreDataProfile"
 	ResourceGcpProjectDlpServiceInspectTemplate                                        string = "gcp.project.dlpService.inspectTemplate"
 	ResourceGcpProjectDlpServiceDeidentifyTemplate                                     string = "gcp.project.dlpService.deidentifyTemplate"
 	ResourceGcpProjectDlpServiceJobTrigger                                             string = "gcp.project.dlpService.jobTrigger"
@@ -1602,6 +1609,34 @@ func init() {
 		"gcp.project.dlpService": {
 			Init:   initGcpProjectDlpService,
 			Create: createGcpProjectDlpService,
+		},
+		"gcp.project.dlpService.dlpJob": {
+			// to override args, implement: initGcpProjectDlpServiceDlpJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceDlpJob,
+		},
+		"gcp.project.dlpService.discoveryConfig": {
+			// to override args, implement: initGcpProjectDlpServiceDiscoveryConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceDiscoveryConfig,
+		},
+		"gcp.project.dlpService.connection": {
+			// to override args, implement: initGcpProjectDlpServiceConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceConnection,
+		},
+		"gcp.project.dlpService.projectDataProfile": {
+			// to override args, implement: initGcpProjectDlpServiceProjectDataProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceProjectDataProfile,
+		},
+		"gcp.project.dlpService.tableDataProfile": {
+			// to override args, implement: initGcpProjectDlpServiceTableDataProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceTableDataProfile,
+		},
+		"gcp.project.dlpService.columnDataProfile": {
+			// to override args, implement: initGcpProjectDlpServiceColumnDataProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceColumnDataProfile,
+		},
+		"gcp.project.dlpService.fileStoreDataProfile": {
+			// to override args, implement: initGcpProjectDlpServiceFileStoreDataProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectDlpServiceFileStoreDataProfile,
 		},
 		"gcp.project.dlpService.inspectTemplate": {
 			// to override args, implement: initGcpProjectDlpServiceInspectTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3997,6 +4032,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.public": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetPublic()).ToDataRes(types.Bool)
 	},
+	"gcp.project.storageService.bucket.dlpDataProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetDlpDataProfile()).ToDataRes(types.Resource("gcp.project.dlpService.fileStoreDataProfile"))
+	},
 	"gcp.project.storageService.bucket.lifecycleRule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).GetAction()).ToDataRes(types.Resource("gcp.project.storageService.bucket.lifecycleRuleAction"))
 	},
@@ -4707,6 +4745,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.bigqueryService.table.schema": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceTable).GetSchema()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.bigqueryService.table.dlpDataProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceTable).GetDlpDataProfile()).ToDataRes(types.Resource("gcp.project.dlpService.tableDataProfile"))
 	},
 	"gcp.project.bigqueryService.model.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceModel).GetId()).ToDataRes(types.String)
@@ -11671,6 +11712,309 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.dlpService.storedInfoTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpService).GetStoredInfoTypes()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.storedInfoType")))
 	},
+	"gcp.project.dlpService.dlpJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpService).GetDlpJobs()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.dlpJob")))
+	},
+	"gcp.project.dlpService.discoveryConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpService).GetDiscoveryConfigs()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.discoveryConfig")))
+	},
+	"gcp.project.dlpService.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpService).GetConnections()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.connection")))
+	},
+	"gcp.project.dlpService.projectDataProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpService).GetProjectDataProfiles()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.projectDataProfile")))
+	},
+	"gcp.project.dlpService.tableDataProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpService).GetTableDataProfiles()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.tableDataProfile")))
+	},
+	"gcp.project.dlpService.columnDataProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpService).GetColumnDataProfiles()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.columnDataProfile")))
+	},
+	"gcp.project.dlpService.fileStoreDataProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpService).GetFileStoreDataProfiles()).ToDataRes(types.Array(types.Resource("gcp.project.dlpService.fileStoreDataProfile")))
+	},
+	"gcp.project.dlpService.dlpJob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.dlpJob.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.dlpJob.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.dlpJob.jobTrigger": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetJobTrigger()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.dlpJob.details": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetDetails()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.dlpJob.errors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetErrors()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.dlpJob.actionDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetActionDetails()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.dlpJob.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.dlpJob.started": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetStarted()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.dlpJob.ended": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetEnded()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.dlpJob.lastModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDlpJob).GetLastModified()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.discoveryConfig.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.discoveryConfig.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.discoveryConfig.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.discoveryConfig.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetTargets()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.discoveryConfig.errors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetErrors()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.discoveryConfig.inspectTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetInspectTemplates()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.dlpService.discoveryConfig.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetActions()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.discoveryConfig.orgConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetOrgConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.discoveryConfig.lastRunTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetLastRunTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.discoveryConfig.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.discoveryConfig.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceDiscoveryConfig).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceConnection).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.connection.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceConnection).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.connection.errors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceConnection).GetErrors()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.connection.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceConnection).GetProperties()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.projectDataProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.projectDataProfile.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.projectDataProfile.sensitivityScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetSensitivityScore()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.projectDataProfile.dataRiskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetDataRiskLevel()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.projectDataProfile.profileStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetProfileStatus()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.projectDataProfile.tableDataProfileCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetTableDataProfileCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.dlpService.projectDataProfile.fileStoreDataProfileCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetFileStoreDataProfileCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.dlpService.projectDataProfile.profileLastGenerated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceProjectDataProfile).GetProfileLastGenerated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.tableDataProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.tableDataProfile.datasetProjectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetDatasetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.tableDataProfile.datasetLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetDatasetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.tableDataProfile.datasetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetDatasetId()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.tableDataProfile.tableId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetTableId()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.tableDataProfile.fullResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetFullResource()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.tableDataProfile.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.tableDataProfile.sensitivityScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetSensitivityScore()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.tableDataProfile.dataRiskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetDataRiskLevel()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.tableDataProfile.profileStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetProfileStatus()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.tableDataProfile.predictedInfoTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetPredictedInfoTypes()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.tableDataProfile.otherInfoTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetOtherInfoTypes()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.tableDataProfile.encryptionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetEncryptionStatus()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.tableDataProfile.resourceVisibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetResourceVisibility()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.tableDataProfile.scannedColumnCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetScannedColumnCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.dlpService.tableDataProfile.failedColumnCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetFailedColumnCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.dlpService.tableDataProfile.tableSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetTableSizeBytes()).ToDataRes(types.Int)
+	},
+	"gcp.project.dlpService.tableDataProfile.rowCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetRowCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.dlpService.tableDataProfile.resourceLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetResourceLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.dlpService.tableDataProfile.profileLastGenerated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetProfileLastGenerated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.tableDataProfile.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.tableDataProfile.expirationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetExpirationTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.tableDataProfile.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.tableDataProfile.bigqueryTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceTableDataProfile).GetBigqueryTable()).ToDataRes(types.Resource("gcp.project.bigqueryService.table"))
+	},
+	"gcp.project.dlpService.columnDataProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.columnDataProfile.column": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetColumn()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.columnDataProfile.datasetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetDatasetId()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.columnDataProfile.tableId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetTableId()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.columnDataProfile.tableFullResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetTableFullResource()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.columnDataProfile.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.columnDataProfile.sensitivityScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetSensitivityScore()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.columnDataProfile.dataRiskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetDataRiskLevel()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.columnDataProfile.columnInfoType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetColumnInfoType()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.columnDataProfile.otherMatches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetOtherMatches()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.columnDataProfile.freeTextScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetFreeTextScore()).ToDataRes(types.Float)
+	},
+	"gcp.project.dlpService.columnDataProfile.columnType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetColumnType()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.columnDataProfile.policyState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetPolicyState()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.columnDataProfile.profileLastGenerated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceColumnDataProfile).GetProfileLastGenerated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.dataSourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetDataSourceType()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fileStoreLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetFileStoreLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.dataStorageLocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetDataStorageLocations()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.locationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetLocationType()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fileStorePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetFileStorePath()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fullResource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetFullResource()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.profileStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetProfileStatus()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.resourceVisibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetResourceVisibility()).ToDataRes(types.String)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.sensitivityScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetSensitivityScore()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.dataRiskLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetDataRiskLevel()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fileClusterSummaries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetFileClusterSummaries()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.resourceAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetResourceAttributes()).ToDataRes(types.Dict)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.resourceLabels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetResourceLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fileStoreInfoTypeSummaries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetFileStoreInfoTypeSummaries()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fileStoreIsEmpty": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetFileStoreIsEmpty()).ToDataRes(types.Bool)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.profileLastGenerated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetProfileLastGenerated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).GetBucket()).ToDataRes(types.Resource("gcp.project.storageService.bucket"))
+	},
 	"gcp.project.dlpService.inspectTemplate.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectDlpServiceInspectTemplate).GetName()).ToDataRes(types.String)
 	},
@@ -15781,6 +16125,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectStorageServiceBucket).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.storageService.bucket.dlpDataProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).DlpDataProfile, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceFileStoreDataProfile](v.Value, v.Error)
+		return
+	},
 	"gcp.project.storageService.bucket.lifecycleRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).__id, ok = v.Value.(string)
 		return
@@ -16811,6 +17159,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.bigqueryService.table.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceTable).Schema, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.table.dlpDataProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceTable).DlpDataProfile, ok = plugin.RawToTValue[*mqlGcpProjectDlpServiceTableDataProfile](v.Value, v.Error)
 		return
 	},
 	"gcp.project.bigqueryService.model.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27069,6 +27421,438 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectDlpService).StoredInfoTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.dlpService.dlpJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpService).DlpJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpService).DiscoveryConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpService).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.projectDataProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpService).ProjectDataProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpService).TableDataProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpService).ColumnDataProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpService).FileStoreDataProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.jobTrigger": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).JobTrigger, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.details": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).Details, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.errors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.actionDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).ActionDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.started": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).Started, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.ended": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).Ended, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.dlpJob.lastModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDlpJob).LastModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.errors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.inspectTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).InspectTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.orgConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).OrgConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.lastRunTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).LastRunTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.discoveryConfig.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceDiscoveryConfig).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.connection.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceConnection).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.connection.errors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceConnection).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.connection.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceConnection).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.projectDataProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.projectDataProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.projectDataProfile.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.projectDataProfile.sensitivityScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).SensitivityScore, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.projectDataProfile.dataRiskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).DataRiskLevel, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.projectDataProfile.profileStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).ProfileStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.projectDataProfile.tableDataProfileCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).TableDataProfileCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.projectDataProfile.fileStoreDataProfileCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).FileStoreDataProfileCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.projectDataProfile.profileLastGenerated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceProjectDataProfile).ProfileLastGenerated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.datasetProjectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).DatasetProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.datasetLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).DatasetLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.datasetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).DatasetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.tableId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).TableId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.fullResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).FullResource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.sensitivityScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).SensitivityScore, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.dataRiskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).DataRiskLevel, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.profileStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).ProfileStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.predictedInfoTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).PredictedInfoTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.otherInfoTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).OtherInfoTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.encryptionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).EncryptionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.resourceVisibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).ResourceVisibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.scannedColumnCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).ScannedColumnCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.failedColumnCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).FailedColumnCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.tableSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).TableSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.rowCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).RowCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.resourceLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).ResourceLabels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.profileLastGenerated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).ProfileLastGenerated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.expirationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).ExpirationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.tableDataProfile.bigqueryTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceTableDataProfile).BigqueryTable, ok = plugin.RawToTValue[*mqlGcpProjectBigqueryServiceTable](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.column": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).Column, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.datasetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).DatasetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.tableId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).TableId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.tableFullResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).TableFullResource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.sensitivityScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).SensitivityScore, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.dataRiskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).DataRiskLevel, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.columnInfoType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).ColumnInfoType, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.otherMatches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).OtherMatches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.freeTextScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).FreeTextScore, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.columnType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).ColumnType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.policyState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).PolicyState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.columnDataProfile.profileLastGenerated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceColumnDataProfile).ProfileLastGenerated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.dataSourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).DataSourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fileStoreLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).FileStoreLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.dataStorageLocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).DataStorageLocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.locationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).LocationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fileStorePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).FileStorePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fullResource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).FullResource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.profileStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).ProfileStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.resourceVisibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).ResourceVisibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.sensitivityScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).SensitivityScore, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.dataRiskLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).DataRiskLevel, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fileClusterSummaries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).FileClusterSummaries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.resourceAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).ResourceAttributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.resourceLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).ResourceLabels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fileStoreInfoTypeSummaries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).FileStoreInfoTypeSummaries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.fileStoreIsEmpty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).FileStoreIsEmpty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.profileLastGenerated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).ProfileLastGenerated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.dlpService.fileStoreDataProfile.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectDlpServiceFileStoreDataProfile).Bucket, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucket](v.Value, v.Error)
+		return
+	},
 	"gcp.project.dlpService.inspectTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectDlpServiceInspectTemplate).__id, ok = v.Value.(string)
 		return
@@ -35829,6 +36613,7 @@ type mqlGcpProjectStorageServiceBucket struct {
 	Acl                             plugin.TValue[[]any]
 	DefaultObjectAcl                plugin.TValue[[]any]
 	Public                          plugin.TValue[bool]
+	DlpDataProfile                  plugin.TValue[*mqlGcpProjectDlpServiceFileStoreDataProfile]
 }
 
 // createGcpProjectStorageServiceBucket creates a new instance of this resource
@@ -36031,6 +36816,22 @@ func (c *mqlGcpProjectStorageServiceBucket) GetDefaultObjectAcl() *plugin.TValue
 func (c *mqlGcpProjectStorageServiceBucket) GetPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
 		return c.public()
+	})
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetDlpDataProfile() *plugin.TValue[*mqlGcpProjectDlpServiceFileStoreDataProfile] {
+	return plugin.GetOrCompute[*mqlGcpProjectDlpServiceFileStoreDataProfile](&c.DlpDataProfile, func() (*mqlGcpProjectDlpServiceFileStoreDataProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.storageService.bucket", c.__id, "dlpDataProfile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDlpServiceFileStoreDataProfile), nil
+			}
+		}
+
+		return c.dlpDataProfile()
 	})
 }
 
@@ -38179,6 +38980,7 @@ type mqlGcpProjectBigqueryServiceTable struct {
 	RangePartitioning      plugin.TValue[any]
 	TimePartitioning       plugin.TValue[any]
 	Schema                 plugin.TValue[[]any]
+	DlpDataProfile         plugin.TValue[*mqlGcpProjectDlpServiceTableDataProfile]
 }
 
 // createGcpProjectBigqueryServiceTable creates a new instance of this resource
@@ -38332,6 +39134,22 @@ func (c *mqlGcpProjectBigqueryServiceTable) GetTimePartitioning() *plugin.TValue
 
 func (c *mqlGcpProjectBigqueryServiceTable) GetSchema() *plugin.TValue[[]any] {
 	return &c.Schema
+}
+
+func (c *mqlGcpProjectBigqueryServiceTable) GetDlpDataProfile() *plugin.TValue[*mqlGcpProjectDlpServiceTableDataProfile] {
+	return plugin.GetOrCompute[*mqlGcpProjectDlpServiceTableDataProfile](&c.DlpDataProfile, func() (*mqlGcpProjectDlpServiceTableDataProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigqueryService.table", c.__id, "dlpDataProfile")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectDlpServiceTableDataProfile), nil
+			}
+		}
+
+		return c.dlpDataProfile()
+	})
 }
 
 // mqlGcpProjectBigqueryServiceModel for the gcp.project.bigqueryService.model resource
@@ -62519,11 +63337,18 @@ type mqlGcpProjectDlpService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectDlpServiceInternal
-	ProjectId           plugin.TValue[string]
-	InspectTemplates    plugin.TValue[[]any]
-	DeidentifyTemplates plugin.TValue[[]any]
-	JobTriggers         plugin.TValue[[]any]
-	StoredInfoTypes     plugin.TValue[[]any]
+	ProjectId             plugin.TValue[string]
+	InspectTemplates      plugin.TValue[[]any]
+	DeidentifyTemplates   plugin.TValue[[]any]
+	JobTriggers           plugin.TValue[[]any]
+	StoredInfoTypes       plugin.TValue[[]any]
+	DlpJobs               plugin.TValue[[]any]
+	DiscoveryConfigs      plugin.TValue[[]any]
+	Connections           plugin.TValue[[]any]
+	ProjectDataProfiles   plugin.TValue[[]any]
+	TableDataProfiles     plugin.TValue[[]any]
+	ColumnDataProfiles    plugin.TValue[[]any]
+	FileStoreDataProfiles plugin.TValue[[]any]
 }
 
 // createGcpProjectDlpService creates a new instance of this resource
@@ -62628,6 +63453,920 @@ func (c *mqlGcpProjectDlpService) GetStoredInfoTypes() *plugin.TValue[[]any] {
 		}
 
 		return c.storedInfoTypes()
+	})
+}
+
+func (c *mqlGcpProjectDlpService) GetDlpJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DlpJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService", c.__id, "dlpJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.dlpJobs()
+	})
+}
+
+func (c *mqlGcpProjectDlpService) GetDiscoveryConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DiscoveryConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService", c.__id, "discoveryConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.discoveryConfigs()
+	})
+}
+
+func (c *mqlGcpProjectDlpService) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
+func (c *mqlGcpProjectDlpService) GetProjectDataProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProjectDataProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService", c.__id, "projectDataProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projectDataProfiles()
+	})
+}
+
+func (c *mqlGcpProjectDlpService) GetTableDataProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TableDataProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService", c.__id, "tableDataProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tableDataProfiles()
+	})
+}
+
+func (c *mqlGcpProjectDlpService) GetColumnDataProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ColumnDataProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService", c.__id, "columnDataProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.columnDataProfiles()
+	})
+}
+
+func (c *mqlGcpProjectDlpService) GetFileStoreDataProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FileStoreDataProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService", c.__id, "fileStoreDataProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fileStoreDataProfiles()
+	})
+}
+
+// mqlGcpProjectDlpServiceDlpJob for the gcp.project.dlpService.dlpJob resource
+type mqlGcpProjectDlpServiceDlpJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceDlpJobInternal it will be used here
+	Name          plugin.TValue[string]
+	Type          plugin.TValue[string]
+	State         plugin.TValue[string]
+	JobTrigger    plugin.TValue[string]
+	Details       plugin.TValue[any]
+	Errors        plugin.TValue[[]any]
+	ActionDetails plugin.TValue[[]any]
+	Created       plugin.TValue[*time.Time]
+	Started       plugin.TValue[*time.Time]
+	Ended         plugin.TValue[*time.Time]
+	LastModified  plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDlpServiceDlpJob creates a new instance of this resource
+func createGcpProjectDlpServiceDlpJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceDlpJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.dlpJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) MqlName() string {
+	return "gcp.project.dlpService.dlpJob"
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetJobTrigger() *plugin.TValue[string] {
+	return &c.JobTrigger
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetDetails() *plugin.TValue[any] {
+	return &c.Details
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetErrors() *plugin.TValue[[]any] {
+	return &c.Errors
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetActionDetails() *plugin.TValue[[]any] {
+	return &c.ActionDetails
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetStarted() *plugin.TValue[*time.Time] {
+	return &c.Started
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetEnded() *plugin.TValue[*time.Time] {
+	return &c.Ended
+}
+
+func (c *mqlGcpProjectDlpServiceDlpJob) GetLastModified() *plugin.TValue[*time.Time] {
+	return &c.LastModified
+}
+
+// mqlGcpProjectDlpServiceDiscoveryConfig for the gcp.project.dlpService.discoveryConfig resource
+type mqlGcpProjectDlpServiceDiscoveryConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceDiscoveryConfigInternal it will be used here
+	Name             plugin.TValue[string]
+	DisplayName      plugin.TValue[string]
+	Status           plugin.TValue[string]
+	Targets          plugin.TValue[[]any]
+	Errors           plugin.TValue[[]any]
+	InspectTemplates plugin.TValue[[]any]
+	Actions          plugin.TValue[[]any]
+	OrgConfig        plugin.TValue[any]
+	LastRunTime      plugin.TValue[*time.Time]
+	Created          plugin.TValue[*time.Time]
+	Updated          plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDlpServiceDiscoveryConfig creates a new instance of this resource
+func createGcpProjectDlpServiceDiscoveryConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceDiscoveryConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.discoveryConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) MqlName() string {
+	return "gcp.project.dlpService.discoveryConfig"
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetTargets() *plugin.TValue[[]any] {
+	return &c.Targets
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetErrors() *plugin.TValue[[]any] {
+	return &c.Errors
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetInspectTemplates() *plugin.TValue[[]any] {
+	return &c.InspectTemplates
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetOrgConfig() *plugin.TValue[any] {
+	return &c.OrgConfig
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetLastRunTime() *plugin.TValue[*time.Time] {
+	return &c.LastRunTime
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectDlpServiceDiscoveryConfig) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpProjectDlpServiceConnection for the gcp.project.dlpService.connection resource
+type mqlGcpProjectDlpServiceConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceConnectionInternal it will be used here
+	Name       plugin.TValue[string]
+	State      plugin.TValue[string]
+	Errors     plugin.TValue[[]any]
+	Properties plugin.TValue[any]
+}
+
+// createGcpProjectDlpServiceConnection creates a new instance of this resource
+func createGcpProjectDlpServiceConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceConnection) MqlName() string {
+	return "gcp.project.dlpService.connection"
+}
+
+func (c *mqlGcpProjectDlpServiceConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDlpServiceConnection) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDlpServiceConnection) GetErrors() *plugin.TValue[[]any] {
+	return &c.Errors
+}
+
+func (c *mqlGcpProjectDlpServiceConnection) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+// mqlGcpProjectDlpServiceProjectDataProfile for the gcp.project.dlpService.projectDataProfile resource
+type mqlGcpProjectDlpServiceProjectDataProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceProjectDataProfileInternal it will be used here
+	Name                      plugin.TValue[string]
+	ProjectId                 plugin.TValue[string]
+	SensitivityScore          plugin.TValue[any]
+	DataRiskLevel             plugin.TValue[any]
+	ProfileStatus             plugin.TValue[any]
+	TableDataProfileCount     plugin.TValue[int64]
+	FileStoreDataProfileCount plugin.TValue[int64]
+	ProfileLastGenerated      plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDlpServiceProjectDataProfile creates a new instance of this resource
+func createGcpProjectDlpServiceProjectDataProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceProjectDataProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.projectDataProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) MqlName() string {
+	return "gcp.project.dlpService.projectDataProfile"
+}
+
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetSensitivityScore() *plugin.TValue[any] {
+	return &c.SensitivityScore
+}
+
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetDataRiskLevel() *plugin.TValue[any] {
+	return &c.DataRiskLevel
+}
+
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetProfileStatus() *plugin.TValue[any] {
+	return &c.ProfileStatus
+}
+
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetTableDataProfileCount() *plugin.TValue[int64] {
+	return &c.TableDataProfileCount
+}
+
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetFileStoreDataProfileCount() *plugin.TValue[int64] {
+	return &c.FileStoreDataProfileCount
+}
+
+func (c *mqlGcpProjectDlpServiceProjectDataProfile) GetProfileLastGenerated() *plugin.TValue[*time.Time] {
+	return &c.ProfileLastGenerated
+}
+
+// mqlGcpProjectDlpServiceTableDataProfile for the gcp.project.dlpService.tableDataProfile resource
+type mqlGcpProjectDlpServiceTableDataProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceTableDataProfileInternal it will be used here
+	Name                 plugin.TValue[string]
+	DatasetProjectId     plugin.TValue[string]
+	DatasetLocation      plugin.TValue[string]
+	DatasetId            plugin.TValue[string]
+	TableId              plugin.TValue[string]
+	FullResource         plugin.TValue[string]
+	State                plugin.TValue[string]
+	SensitivityScore     plugin.TValue[any]
+	DataRiskLevel        plugin.TValue[any]
+	ProfileStatus        plugin.TValue[any]
+	PredictedInfoTypes   plugin.TValue[[]any]
+	OtherInfoTypes       plugin.TValue[[]any]
+	EncryptionStatus     plugin.TValue[string]
+	ResourceVisibility   plugin.TValue[string]
+	ScannedColumnCount   plugin.TValue[int64]
+	FailedColumnCount    plugin.TValue[int64]
+	TableSizeBytes       plugin.TValue[int64]
+	RowCount             plugin.TValue[int64]
+	ResourceLabels       plugin.TValue[map[string]any]
+	ProfileLastGenerated plugin.TValue[*time.Time]
+	LastModifiedTime     plugin.TValue[*time.Time]
+	ExpirationTime       plugin.TValue[*time.Time]
+	Created              plugin.TValue[*time.Time]
+	BigqueryTable        plugin.TValue[*mqlGcpProjectBigqueryServiceTable]
+}
+
+// createGcpProjectDlpServiceTableDataProfile creates a new instance of this resource
+func createGcpProjectDlpServiceTableDataProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceTableDataProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.tableDataProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) MqlName() string {
+	return "gcp.project.dlpService.tableDataProfile"
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetDatasetProjectId() *plugin.TValue[string] {
+	return &c.DatasetProjectId
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetDatasetLocation() *plugin.TValue[string] {
+	return &c.DatasetLocation
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetDatasetId() *plugin.TValue[string] {
+	return &c.DatasetId
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetTableId() *plugin.TValue[string] {
+	return &c.TableId
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetFullResource() *plugin.TValue[string] {
+	return &c.FullResource
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetSensitivityScore() *plugin.TValue[any] {
+	return &c.SensitivityScore
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetDataRiskLevel() *plugin.TValue[any] {
+	return &c.DataRiskLevel
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetProfileStatus() *plugin.TValue[any] {
+	return &c.ProfileStatus
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetPredictedInfoTypes() *plugin.TValue[[]any] {
+	return &c.PredictedInfoTypes
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetOtherInfoTypes() *plugin.TValue[[]any] {
+	return &c.OtherInfoTypes
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetEncryptionStatus() *plugin.TValue[string] {
+	return &c.EncryptionStatus
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetResourceVisibility() *plugin.TValue[string] {
+	return &c.ResourceVisibility
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetScannedColumnCount() *plugin.TValue[int64] {
+	return &c.ScannedColumnCount
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetFailedColumnCount() *plugin.TValue[int64] {
+	return &c.FailedColumnCount
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetTableSizeBytes() *plugin.TValue[int64] {
+	return &c.TableSizeBytes
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetRowCount() *plugin.TValue[int64] {
+	return &c.RowCount
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetResourceLabels() *plugin.TValue[map[string]any] {
+	return &c.ResourceLabels
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetProfileLastGenerated() *plugin.TValue[*time.Time] {
+	return &c.ProfileLastGenerated
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetExpirationTime() *plugin.TValue[*time.Time] {
+	return &c.ExpirationTime
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectDlpServiceTableDataProfile) GetBigqueryTable() *plugin.TValue[*mqlGcpProjectBigqueryServiceTable] {
+	return plugin.GetOrCompute[*mqlGcpProjectBigqueryServiceTable](&c.BigqueryTable, func() (*mqlGcpProjectBigqueryServiceTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService.tableDataProfile", c.__id, "bigqueryTable")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectBigqueryServiceTable), nil
+			}
+		}
+
+		return c.bigqueryTable()
+	})
+}
+
+// mqlGcpProjectDlpServiceColumnDataProfile for the gcp.project.dlpService.columnDataProfile resource
+type mqlGcpProjectDlpServiceColumnDataProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceColumnDataProfileInternal it will be used here
+	Name                 plugin.TValue[string]
+	Column               plugin.TValue[string]
+	DatasetId            plugin.TValue[string]
+	TableId              plugin.TValue[string]
+	TableFullResource    plugin.TValue[string]
+	State                plugin.TValue[string]
+	SensitivityScore     plugin.TValue[any]
+	DataRiskLevel        plugin.TValue[any]
+	ColumnInfoType       plugin.TValue[any]
+	OtherMatches         plugin.TValue[[]any]
+	FreeTextScore        plugin.TValue[float64]
+	ColumnType           plugin.TValue[string]
+	PolicyState          plugin.TValue[string]
+	ProfileLastGenerated plugin.TValue[*time.Time]
+}
+
+// createGcpProjectDlpServiceColumnDataProfile creates a new instance of this resource
+func createGcpProjectDlpServiceColumnDataProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceColumnDataProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.columnDataProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) MqlName() string {
+	return "gcp.project.dlpService.columnDataProfile"
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetColumn() *plugin.TValue[string] {
+	return &c.Column
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetDatasetId() *plugin.TValue[string] {
+	return &c.DatasetId
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetTableId() *plugin.TValue[string] {
+	return &c.TableId
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetTableFullResource() *plugin.TValue[string] {
+	return &c.TableFullResource
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetSensitivityScore() *plugin.TValue[any] {
+	return &c.SensitivityScore
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetDataRiskLevel() *plugin.TValue[any] {
+	return &c.DataRiskLevel
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetColumnInfoType() *plugin.TValue[any] {
+	return &c.ColumnInfoType
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetOtherMatches() *plugin.TValue[[]any] {
+	return &c.OtherMatches
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetFreeTextScore() *plugin.TValue[float64] {
+	return &c.FreeTextScore
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetColumnType() *plugin.TValue[string] {
+	return &c.ColumnType
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetPolicyState() *plugin.TValue[string] {
+	return &c.PolicyState
+}
+
+func (c *mqlGcpProjectDlpServiceColumnDataProfile) GetProfileLastGenerated() *plugin.TValue[*time.Time] {
+	return &c.ProfileLastGenerated
+}
+
+// mqlGcpProjectDlpServiceFileStoreDataProfile for the gcp.project.dlpService.fileStoreDataProfile resource
+type mqlGcpProjectDlpServiceFileStoreDataProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectDlpServiceFileStoreDataProfileInternal it will be used here
+	Name                       plugin.TValue[string]
+	ProjectId                  plugin.TValue[string]
+	DataSourceType             plugin.TValue[string]
+	FileStoreLocation          plugin.TValue[string]
+	DataStorageLocations       plugin.TValue[[]any]
+	LocationType               plugin.TValue[string]
+	FileStorePath              plugin.TValue[string]
+	FullResource               plugin.TValue[string]
+	ProfileStatus              plugin.TValue[any]
+	State                      plugin.TValue[string]
+	ResourceVisibility         plugin.TValue[string]
+	SensitivityScore           plugin.TValue[any]
+	DataRiskLevel              plugin.TValue[any]
+	FileClusterSummaries       plugin.TValue[[]any]
+	ResourceAttributes         plugin.TValue[any]
+	ResourceLabels             plugin.TValue[map[string]any]
+	FileStoreInfoTypeSummaries plugin.TValue[[]any]
+	FileStoreIsEmpty           plugin.TValue[bool]
+	ProfileLastGenerated       plugin.TValue[*time.Time]
+	Created                    plugin.TValue[*time.Time]
+	LastModifiedTime           plugin.TValue[*time.Time]
+	Bucket                     plugin.TValue[*mqlGcpProjectStorageServiceBucket]
+}
+
+// createGcpProjectDlpServiceFileStoreDataProfile creates a new instance of this resource
+func createGcpProjectDlpServiceFileStoreDataProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectDlpServiceFileStoreDataProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.dlpService.fileStoreDataProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) MqlName() string {
+	return "gcp.project.dlpService.fileStoreDataProfile"
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetDataSourceType() *plugin.TValue[string] {
+	return &c.DataSourceType
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetFileStoreLocation() *plugin.TValue[string] {
+	return &c.FileStoreLocation
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetDataStorageLocations() *plugin.TValue[[]any] {
+	return &c.DataStorageLocations
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetLocationType() *plugin.TValue[string] {
+	return &c.LocationType
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetFileStorePath() *plugin.TValue[string] {
+	return &c.FileStorePath
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetFullResource() *plugin.TValue[string] {
+	return &c.FullResource
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetProfileStatus() *plugin.TValue[any] {
+	return &c.ProfileStatus
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetResourceVisibility() *plugin.TValue[string] {
+	return &c.ResourceVisibility
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetSensitivityScore() *plugin.TValue[any] {
+	return &c.SensitivityScore
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetDataRiskLevel() *plugin.TValue[any] {
+	return &c.DataRiskLevel
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetFileClusterSummaries() *plugin.TValue[[]any] {
+	return &c.FileClusterSummaries
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetResourceAttributes() *plugin.TValue[any] {
+	return &c.ResourceAttributes
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetResourceLabels() *plugin.TValue[map[string]any] {
+	return &c.ResourceLabels
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetFileStoreInfoTypeSummaries() *plugin.TValue[[]any] {
+	return &c.FileStoreInfoTypeSummaries
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetFileStoreIsEmpty() *plugin.TValue[bool] {
+	return &c.FileStoreIsEmpty
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetProfileLastGenerated() *plugin.TValue[*time.Time] {
+	return &c.ProfileLastGenerated
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlGcpProjectDlpServiceFileStoreDataProfile) GetBucket() *plugin.TValue[*mqlGcpProjectStorageServiceBucket] {
+	return plugin.GetOrCompute[*mqlGcpProjectStorageServiceBucket](&c.Bucket, func() (*mqlGcpProjectStorageServiceBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.dlpService.fileStoreDataProfile", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectStorageServiceBucket), nil
+			}
+		}
+
+		return c.bucket()
 	})
 }
 
