@@ -391,15 +391,6 @@ func (g *mqlGcpProjectDlpService) storedInfoTypes() ([]any, error) {
 
 const dlpDataProfilesLocation = "global"
 
-func (g *mqlGcpProjectDlpService) newDlpClient(ctx context.Context) (*dlp.Client, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	creds, err := conn.Credentials(dlp.DefaultAuthScopes()...)
-	if err != nil {
-		return nil, err
-	}
-	return dlp.NewClient(ctx, option.WithCredentials(creds))
-}
-
 func dlpProtoSliceToDict[T proto.Message](items []T) ([]any, error) {
 	res := make([]any, 0, len(items))
 	for _, it := range items {
@@ -429,8 +420,14 @@ func (g *mqlGcpProjectDlpService) dlpJobs() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(dlp.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := context.Background()
-	client, err := g.newDlpClient(ctx)
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
@@ -510,8 +507,14 @@ func (g *mqlGcpProjectDlpService) discoveryConfigs() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(dlp.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := context.Background()
-	client, err := g.newDlpClient(ctx)
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
@@ -596,8 +599,14 @@ func (g *mqlGcpProjectDlpService) connections() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(dlp.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := context.Background()
-	client, err := g.newDlpClient(ctx)
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
@@ -664,8 +673,14 @@ func (g *mqlGcpProjectDlpService) projectDataProfiles() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(dlp.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := context.Background()
-	client, err := g.newDlpClient(ctx)
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
@@ -729,8 +744,14 @@ func (g *mqlGcpProjectDlpService) tableDataProfiles() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(dlp.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := context.Background()
-	client, err := g.newDlpClient(ctx)
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
@@ -846,8 +867,14 @@ func (g *mqlGcpProjectDlpService) columnDataProfiles() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(dlp.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := context.Background()
-	client, err := g.newDlpClient(ctx)
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
@@ -921,8 +948,14 @@ func (g *mqlGcpProjectDlpService) fileStoreDataProfiles() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(dlp.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := context.Background()
-	client, err := g.newDlpClient(ctx)
+	client, err := dlp.NewClient(ctx, option.WithCredentials(creds))
 	if err != nil {
 		return nil, err
 	}

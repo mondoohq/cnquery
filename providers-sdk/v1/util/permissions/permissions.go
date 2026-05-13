@@ -1019,6 +1019,10 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		"GetConnectionProfile": "datastream.connectionProfiles.get",
 		"GetPrivateConnection": "datastream.privateConnections.get",
 	},
+	"dlp": {
+		// The DLP API exposes jobs under a `jobs` permission, not `dlpJobs`.
+		"ListDlpJobs": "dlp.jobs.list",
+	},
 	"memorystore": {
 		"GetInstance":         "memorystore.instances.get",
 		"GetBackupCollection": "memorystore.backupCollections.get",

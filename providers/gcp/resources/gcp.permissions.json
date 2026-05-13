@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.14.1",
-  "generated_at": "2026-05-12T22:06:10+01:00",
+  "generated_at": "2026-05-13T05:55:34+01:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -120,10 +120,15 @@
     "datastream.privateConnections.list",
     "datastream.routes.list",
     "datastream.streams.list",
+    "dlp.columnDataProfiles.list",
+    "dlp.connections.list",
     "dlp.deidentifyTemplates.list",
+    "dlp.discoveryConfigs.list",
     "dlp.fileStoreDataProfiles.list",
     "dlp.inspectTemplates.list",
     "dlp.jobTriggers.list",
+    "dlp.jobs.list",
+    "dlp.projectDataProfiles.list",
     "dlp.storedInfoTypes.list",
     "dlp.tableDataProfiles.list",
     "dns.managedZones.getIamPolicy",
@@ -928,9 +933,27 @@
       "source_file": "datastream.go"
     },
     {
+      "permission": "dlp.columnDataProfiles.list",
+      "service": "dlp",
+      "action": "ListColumnDataProfiles",
+      "source_file": "dlp.go"
+    },
+    {
+      "permission": "dlp.connections.list",
+      "service": "dlp",
+      "action": "ListConnections",
+      "source_file": "dlp.go"
+    },
+    {
       "permission": "dlp.deidentifyTemplates.list",
       "service": "dlp",
       "action": "ListDeidentifyTemplates",
+      "source_file": "dlp.go"
+    },
+    {
+      "permission": "dlp.discoveryConfigs.list",
+      "service": "dlp",
+      "action": "ListDiscoveryConfigs",
       "source_file": "dlp.go"
     },
     {
@@ -949,6 +972,18 @@
       "permission": "dlp.jobTriggers.list",
       "service": "dlp",
       "action": "ListJobTriggers",
+      "source_file": "dlp.go"
+    },
+    {
+      "permission": "dlp.jobs.list",
+      "service": "dlp",
+      "action": "ListDlpJobs",
+      "source_file": "dlp.go"
+    },
+    {
+      "permission": "dlp.projectDataProfiles.list",
+      "service": "dlp",
+      "action": "ListProjectDataProfiles",
       "source_file": "dlp.go"
     },
     {
