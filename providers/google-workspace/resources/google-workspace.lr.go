@@ -32,6 +32,8 @@ const (
 	ResourceGoogleworkspaceReportActivity       string = "googleworkspace.report.activity"
 	ResourceGoogleworkspaceReportUsers          string = "googleworkspace.report.users"
 	ResourceGoogleworkspaceReportUsage          string = "googleworkspace.report.usage"
+	ResourceGoogleworkspaceEndpoint             string = "googleworkspace.endpoint"
+	ResourceGoogleworkspaceEndpointUser         string = "googleworkspace.endpoint.user"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -101,6 +103,14 @@ func init() {
 		"googleworkspace.report.usage": {
 			// to override args, implement: initGoogleworkspaceReportUsage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoogleworkspaceReportUsage,
+		},
+		"googleworkspace.endpoint": {
+			// to override args, implement: initGoogleworkspaceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceEndpoint,
+		},
+		"googleworkspace.endpoint.user": {
+			// to override args, implement: initGoogleworkspaceEndpointUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceEndpointUser,
 		},
 	}
 }
@@ -193,6 +203,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.calendars": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspace).GetCalendars()).ToDataRes(types.Array(types.Resource("googleworkspace.calendar")))
+	},
+	"googleworkspace.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspace).GetEndpoints()).ToDataRes(types.Array(types.Resource("googleworkspace.endpoint")))
 	},
 	"googleworkspace.calendar.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceCalendar).GetId()).ToDataRes(types.String)
@@ -518,6 +531,135 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.report.usage.appUsage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceReportUsage).GetAppUsage()).ToDataRes(types.Dict)
 	},
+	"googleworkspace.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.deviceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetDeviceType()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.ownerType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetOwnerType()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.managementState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetManagementState()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.compromisedState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetCompromisedState()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.encryptionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetEncryptionState()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetManufacturer()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.brand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetBrand()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.model": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetModel()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.assetTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetAssetTag()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetHostname()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.osVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetOsVersion()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.releaseVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetReleaseVersion()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.buildNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetBuildNumber()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.kernelVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetKernelVersion()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.basebandVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetBasebandVersion()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.bootloaderVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetBootloaderVersion()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.imei": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetImei()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.meid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetMeid()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.wifiMacAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetWifiMacAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"googleworkspace.endpoint.networkOperator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetNetworkOperator()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.enabledDeveloperOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetEnabledDeveloperOptions()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.endpoint.enabledUsbDebugging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetEnabledUsbDebugging()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.endpoint.otherAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetOtherAccounts()).ToDataRes(types.Array(types.String))
+	},
+	"googleworkspace.endpoint.unifiedDeviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetUnifiedDeviceId()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.securityPatchTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetSecurityPatchTime()).ToDataRes(types.Time)
+	},
+	"googleworkspace.endpoint.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"googleworkspace.endpoint.lastSyncTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetLastSyncTime()).ToDataRes(types.Time)
+	},
+	"googleworkspace.endpoint.androidAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetAndroidAttributes()).ToDataRes(types.Dict)
+	},
+	"googleworkspace.endpoint.endpointVerificationAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetEndpointVerificationAttributes()).ToDataRes(types.Dict)
+	},
+	"googleworkspace.endpoint.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetUsers()).ToDataRes(types.Array(types.Resource("googleworkspace.endpoint.user")))
+	},
+	"googleworkspace.endpoint.user.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpointUser).GetId()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.user.userEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpointUser).GetUserEmail()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.user.managementState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpointUser).GetManagementState()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.user.compromisedState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpointUser).GetCompromisedState()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.user.passwordState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpointUser).GetPasswordState()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.user.languageCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpointUser).GetLanguageCode()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.user.userAgent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpointUser).GetUserAgent()).ToDataRes(types.String)
+	},
+	"googleworkspace.endpoint.user.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpointUser).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"googleworkspace.endpoint.user.firstSyncTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpointUser).GetFirstSyncTime()).ToDataRes(types.Time)
+	},
+	"googleworkspace.endpoint.user.lastSyncTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpointUser).GetLastSyncTime()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -560,6 +702,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.calendars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspace).Calendars, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspace).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.calendar.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1054,6 +1200,186 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspaceReportUsage).AppUsage, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"googleworkspace.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.endpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.deviceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).DeviceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.ownerType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).OwnerType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.managementState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).ManagementState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.compromisedState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).CompromisedState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.encryptionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).EncryptionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.brand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).Brand, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.model": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).Model, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.assetTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).AssetTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.osVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).OsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.releaseVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).ReleaseVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.buildNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).BuildNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.kernelVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).KernelVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.basebandVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).BasebandVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.bootloaderVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).BootloaderVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.imei": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).Imei, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.meid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).Meid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.wifiMacAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).WifiMacAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.networkOperator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).NetworkOperator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.enabledDeveloperOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).EnabledDeveloperOptions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.enabledUsbDebugging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).EnabledUsbDebugging, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.otherAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).OtherAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.unifiedDeviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).UnifiedDeviceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.securityPatchTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).SecurityPatchTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.lastSyncTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).LastSyncTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.androidAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).AndroidAttributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.endpointVerificationAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).EndpointVerificationAttributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).Users, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.endpoint.user.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.user.userEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).UserEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.user.managementState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).ManagementState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.user.compromisedState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).CompromisedState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.user.passwordState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).PasswordState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.user.languageCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).LanguageCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.user.userAgent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).UserAgent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.user.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.user.firstSyncTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).FirstSyncTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.user.lastSyncTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpointUser).LastSyncTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1090,6 +1416,7 @@ type mqlGoogleworkspace struct {
 	Roles         plugin.TValue[[]any]
 	ConnectedApps plugin.TValue[[]any]
 	Calendars     plugin.TValue[[]any]
+	Endpoints     plugin.TValue[[]any]
 }
 
 // createGoogleworkspace creates a new instance of this resource
@@ -1238,6 +1565,22 @@ func (c *mqlGoogleworkspace) GetCalendars() *plugin.TValue[[]any] {
 		}
 
 		return c.calendars()
+	})
+}
+
+func (c *mqlGoogleworkspace) GetEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace", c.__id, "endpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpoints()
 	})
 }
 
@@ -2530,4 +2873,319 @@ func (c *mqlGoogleworkspaceReportUsage) GetAppUsage() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.AppUsage, func() (any, error) {
 		return c.appUsage()
 	})
+}
+
+// mqlGoogleworkspaceEndpoint for the googleworkspace.endpoint resource
+type mqlGoogleworkspaceEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceEndpointInternal it will be used here
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	DeviceType                     plugin.TValue[string]
+	OwnerType                      plugin.TValue[string]
+	ManagementState                plugin.TValue[string]
+	CompromisedState               plugin.TValue[string]
+	EncryptionState                plugin.TValue[string]
+	Manufacturer                   plugin.TValue[string]
+	Brand                          plugin.TValue[string]
+	Model                          plugin.TValue[string]
+	SerialNumber                   plugin.TValue[string]
+	AssetTag                       plugin.TValue[string]
+	Hostname                       plugin.TValue[string]
+	OsVersion                      plugin.TValue[string]
+	ReleaseVersion                 plugin.TValue[string]
+	BuildNumber                    plugin.TValue[string]
+	KernelVersion                  plugin.TValue[string]
+	BasebandVersion                plugin.TValue[string]
+	BootloaderVersion              plugin.TValue[string]
+	Imei                           plugin.TValue[string]
+	Meid                           plugin.TValue[string]
+	WifiMacAddresses               plugin.TValue[[]any]
+	NetworkOperator                plugin.TValue[string]
+	EnabledDeveloperOptions        plugin.TValue[bool]
+	EnabledUsbDebugging            plugin.TValue[bool]
+	OtherAccounts                  plugin.TValue[[]any]
+	UnifiedDeviceId                plugin.TValue[string]
+	SecurityPatchTime              plugin.TValue[*time.Time]
+	CreateTime                     plugin.TValue[*time.Time]
+	LastSyncTime                   plugin.TValue[*time.Time]
+	AndroidAttributes              plugin.TValue[any]
+	EndpointVerificationAttributes plugin.TValue[any]
+	Users                          plugin.TValue[[]any]
+}
+
+// createGoogleworkspaceEndpoint creates a new instance of this resource
+func createGoogleworkspaceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.endpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceEndpoint) MqlName() string {
+	return "googleworkspace.endpoint"
+}
+
+func (c *mqlGoogleworkspaceEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetDeviceType() *plugin.TValue[string] {
+	return &c.DeviceType
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetOwnerType() *plugin.TValue[string] {
+	return &c.OwnerType
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetManagementState() *plugin.TValue[string] {
+	return &c.ManagementState
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetCompromisedState() *plugin.TValue[string] {
+	return &c.CompromisedState
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetEncryptionState() *plugin.TValue[string] {
+	return &c.EncryptionState
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetBrand() *plugin.TValue[string] {
+	return &c.Brand
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetModel() *plugin.TValue[string] {
+	return &c.Model
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetAssetTag() *plugin.TValue[string] {
+	return &c.AssetTag
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetHostname() *plugin.TValue[string] {
+	return &c.Hostname
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetOsVersion() *plugin.TValue[string] {
+	return &c.OsVersion
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetReleaseVersion() *plugin.TValue[string] {
+	return &c.ReleaseVersion
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetBuildNumber() *plugin.TValue[string] {
+	return &c.BuildNumber
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetKernelVersion() *plugin.TValue[string] {
+	return &c.KernelVersion
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetBasebandVersion() *plugin.TValue[string] {
+	return &c.BasebandVersion
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetBootloaderVersion() *plugin.TValue[string] {
+	return &c.BootloaderVersion
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetImei() *plugin.TValue[string] {
+	return &c.Imei
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetMeid() *plugin.TValue[string] {
+	return &c.Meid
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetWifiMacAddresses() *plugin.TValue[[]any] {
+	return &c.WifiMacAddresses
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetNetworkOperator() *plugin.TValue[string] {
+	return &c.NetworkOperator
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetEnabledDeveloperOptions() *plugin.TValue[bool] {
+	return &c.EnabledDeveloperOptions
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetEnabledUsbDebugging() *plugin.TValue[bool] {
+	return &c.EnabledUsbDebugging
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetOtherAccounts() *plugin.TValue[[]any] {
+	return &c.OtherAccounts
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetUnifiedDeviceId() *plugin.TValue[string] {
+	return &c.UnifiedDeviceId
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetSecurityPatchTime() *plugin.TValue[*time.Time] {
+	return &c.SecurityPatchTime
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetLastSyncTime() *plugin.TValue[*time.Time] {
+	return &c.LastSyncTime
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetAndroidAttributes() *plugin.TValue[any] {
+	return &c.AndroidAttributes
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetEndpointVerificationAttributes() *plugin.TValue[any] {
+	return &c.EndpointVerificationAttributes
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Users, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("googleworkspace.endpoint", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+// mqlGoogleworkspaceEndpointUser for the googleworkspace.endpoint.user resource
+type mqlGoogleworkspaceEndpointUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceEndpointUserInternal it will be used here
+	Id               plugin.TValue[string]
+	UserEmail        plugin.TValue[string]
+	ManagementState  plugin.TValue[string]
+	CompromisedState plugin.TValue[string]
+	PasswordState    plugin.TValue[string]
+	LanguageCode     plugin.TValue[string]
+	UserAgent        plugin.TValue[string]
+	CreateTime       plugin.TValue[*time.Time]
+	FirstSyncTime    plugin.TValue[*time.Time]
+	LastSyncTime     plugin.TValue[*time.Time]
+}
+
+// createGoogleworkspaceEndpointUser creates a new instance of this resource
+func createGoogleworkspaceEndpointUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceEndpointUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.endpoint.user", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) MqlName() string {
+	return "googleworkspace.endpoint.user"
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) GetUserEmail() *plugin.TValue[string] {
+	return &c.UserEmail
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) GetManagementState() *plugin.TValue[string] {
+	return &c.ManagementState
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) GetCompromisedState() *plugin.TValue[string] {
+	return &c.CompromisedState
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) GetPasswordState() *plugin.TValue[string] {
+	return &c.PasswordState
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) GetLanguageCode() *plugin.TValue[string] {
+	return &c.LanguageCode
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) GetUserAgent() *plugin.TValue[string] {
+	return &c.UserAgent
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) GetFirstSyncTime() *plugin.TValue[*time.Time] {
+	return &c.FirstSyncTime
+}
+
+func (c *mqlGoogleworkspaceEndpointUser) GetLastSyncTime() *plugin.TValue[*time.Time] {
+	return &c.LastSyncTime
 }

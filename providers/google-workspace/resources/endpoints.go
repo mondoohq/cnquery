@@ -1,0 +1,190 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"time"
+
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/google-workspace/connection"
+	"go.mondoo.com/mql/v13/types"
+
+	cloudidentity "google.golang.org/api/cloudidentity/v1"
+)
+
+func (g *mqlGoogleworkspace) endpoints() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
+	service, err := cloudIdentityService(conn, cloudidentity.CloudIdentityDevicesReadonlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	customer := "customers/" + conn.CustomerID()
+	seen := map[string]struct{}{}
+	res := []any{}
+
+	// Query both views to cover company-imported devices and user-assigned
+	// devices (Endpoint Verification, GCPW, BYOD mobile). The API does not
+	// return both in a single call; we dedupe by Name.
+	for _, view := range []string{"COMPANY_INVENTORY", "USER_ASSIGNED_DEVICES"} {
+		pageToken := ""
+		for {
+			call := service.Devices.List().Customer(customer).View(view).PageSize(100)
+			if pageToken != "" {
+				call = call.PageToken(pageToken)
+			}
+			resp, err := call.Do()
+			if err != nil {
+				return nil, err
+			}
+			for _, d := range resp.Devices {
+				if _, dup := seen[d.Name]; dup {
+					continue
+				}
+				seen[d.Name] = struct{}{}
+				r, err := newMqlGoogleWorkspaceEndpoint(g.MqlRuntime, d)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, r)
+			}
+			if resp.NextPageToken == "" {
+				break
+			}
+			pageToken = resp.NextPageToken
+		}
+	}
+
+	return res, nil
+}
+
+func newMqlGoogleWorkspaceEndpoint(runtime *plugin.Runtime, entry *cloudidentity.GoogleAppsCloudidentityDevicesV1Device) (any, error) {
+	androidAttrs, err := convert.JsonToDict(entry.AndroidSpecificAttributes)
+	if err != nil {
+		return nil, err
+	}
+	endpointVerificationAttrs, err := convert.JsonToDict(entry.EndpointVerificationSpecificAttributes)
+	if err != nil {
+		return nil, err
+	}
+
+	return CreateResource(runtime, "googleworkspace.endpoint", map[string]*llx.RawData{
+		"id":                             llx.StringData(entry.DeviceId),
+		"name":                           llx.StringData(entry.Name),
+		"deviceType":                     llx.StringData(entry.DeviceType),
+		"ownerType":                      llx.StringData(entry.OwnerType),
+		"managementState":                llx.StringData(entry.ManagementState),
+		"compromisedState":               llx.StringData(entry.CompromisedState),
+		"encryptionState":                llx.StringData(entry.EncryptionState),
+		"manufacturer":                   llx.StringData(entry.Manufacturer),
+		"brand":                          llx.StringData(entry.Brand),
+		"model":                          llx.StringData(entry.Model),
+		"serialNumber":                   llx.StringData(entry.SerialNumber),
+		"assetTag":                       llx.StringData(entry.AssetTag),
+		"hostname":                       llx.StringData(entry.Hostname),
+		"osVersion":                      llx.StringData(entry.OsVersion),
+		"releaseVersion":                 llx.StringData(entry.ReleaseVersion),
+		"buildNumber":                    llx.StringData(entry.BuildNumber),
+		"kernelVersion":                  llx.StringData(entry.KernelVersion),
+		"basebandVersion":                llx.StringData(entry.BasebandVersion),
+		"bootloaderVersion":              llx.StringData(entry.BootloaderVersion),
+		"imei":                           llx.StringData(entry.Imei),
+		"meid":                           llx.StringData(entry.Meid),
+		"wifiMacAddresses":               llx.ArrayData(convert.SliceAnyToInterface[string](entry.WifiMacAddresses), types.String),
+		"networkOperator":                llx.StringData(entry.NetworkOperator),
+		"enabledDeveloperOptions":        llx.BoolData(entry.EnabledDeveloperOptions),
+		"enabledUsbDebugging":            llx.BoolData(entry.EnabledUsbDebugging),
+		"otherAccounts":                  llx.ArrayData(convert.SliceAnyToInterface[string](entry.OtherAccounts), types.String),
+		"unifiedDeviceId":                llx.StringData(entry.UnifiedDeviceId),
+		"securityPatchTime":              llx.TimeDataPtr(parseRFC3339(entry.SecurityPatchTime)),
+		"createTime":                     llx.TimeDataPtr(parseRFC3339(entry.CreateTime)),
+		"lastSyncTime":                   llx.TimeDataPtr(parseRFC3339(entry.LastSyncTime)),
+		"androidAttributes":              llx.DictData(androidAttrs),
+		"endpointVerificationAttributes": llx.DictData(endpointVerificationAttrs),
+	})
+}
+
+func parseRFC3339(s string) *time.Time {
+	if s == "" {
+		return nil
+	}
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		return nil
+	}
+	return &t
+}
+
+func (g *mqlGoogleworkspaceEndpoint) id() (string, error) {
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return "googleworkspace.endpoint/" + g.Id.Data, nil
+}
+
+func (g *mqlGoogleworkspaceEndpoint) users() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
+	service, err := cloudIdentityService(conn, cloudidentity.CloudIdentityDevicesReadonlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	parent := g.Name.Data
+	if parent == "" {
+		return []any{}, nil
+	}
+
+	customer := "customers/" + conn.CustomerID()
+	res := []any{}
+	pageToken := ""
+	for {
+		call := service.Devices.DeviceUsers.List(parent).Customer(customer).PageSize(20)
+		if pageToken != "" {
+			call = call.PageToken(pageToken)
+		}
+		resp, err := call.Do()
+		if err != nil {
+			return nil, err
+		}
+		for _, du := range resp.DeviceUsers {
+			r, err := newMqlGoogleWorkspaceEndpointUser(g.MqlRuntime, du)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, r)
+		}
+		if resp.NextPageToken == "" {
+			break
+		}
+		pageToken = resp.NextPageToken
+	}
+	return res, nil
+}
+
+func newMqlGoogleWorkspaceEndpointUser(runtime *plugin.Runtime, entry *cloudidentity.GoogleAppsCloudidentityDevicesV1DeviceUser) (any, error) {
+	return CreateResource(runtime, "googleworkspace.endpoint.user", map[string]*llx.RawData{
+		"id":               llx.StringData(entry.Name),
+		"userEmail":        llx.StringData(entry.UserEmail),
+		"managementState":  llx.StringData(entry.ManagementState),
+		"compromisedState": llx.StringData(entry.CompromisedState),
+		"passwordState":    llx.StringData(entry.PasswordState),
+		"languageCode":     llx.StringData(entry.LanguageCode),
+		"userAgent":        llx.StringData(entry.UserAgent),
+		"createTime":       llx.TimeDataPtr(parseRFC3339(entry.CreateTime)),
+		"firstSyncTime":    llx.TimeDataPtr(parseRFC3339(entry.FirstSyncTime)),
+		"lastSyncTime":     llx.TimeDataPtr(parseRFC3339(entry.LastSyncTime)),
+	})
+}
+
+func (g *mqlGoogleworkspaceEndpointUser) id() (string, error) {
+	if g.Id.Error != nil {
+		return "", g.Id.Error
+	}
+	return "googleworkspace.endpoint.user/" + g.Id.Data, nil
+}

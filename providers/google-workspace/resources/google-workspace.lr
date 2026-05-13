@@ -11,9 +11,12 @@ option go_package = "go.mondoo.com/mql/v13/providers/google-workspace/resources"
 // scopes, the groups (with members and security settings), the
 // registered domains and their verification state, the admin roles
 // and their privileges, the third-party OAuth-connected apps with
-// aggregated scopes, and the user calendars together with their ACL
-// rules — the surface auditors use for identity hygiene, sharing
-// reviews, and 2-step-verification enforcement checks.
+// aggregated scopes, the user calendars together with their ACL
+// rules, and the managed endpoints (Chrome OS, Android, iOS, Windows,
+// macOS, Linux) reported through Google endpoint management and
+// endpoint verification — the surface auditors use for identity
+// hygiene, sharing reviews, 2-step-verification enforcement checks,
+// and device-compliance audits.
 googleworkspace {
   // Organizational units in the account hierarchy
   orgUnits() []googleworkspace.orgUnit
@@ -29,6 +32,8 @@ googleworkspace {
   connectedApps() []googleworkspace.connectedApp
   // User calendars
   calendars() []googleworkspace.calendar
+  // Managed endpoints reported by Google endpoint management and endpoint verification
+  endpoints() []googleworkspace.endpoint
 }
 
 // Google Workspace calendar
@@ -299,4 +304,114 @@ private googleworkspace.report.usage {
   security() dict
   // App Usage
   appUsage() dict
+}
+
+// Managed endpoint device
+//
+// Examine a single device enrolled in Google endpoint management or reported
+// through endpoint verification — Chrome OS, Android, iOS, Windows, macOS,
+// Linux, and Google Sync clients all surface through the same record. Fields
+// cover platform identity (`deviceType`, `manufacturer`, `model`, `osVersion`),
+// hardware identifiers (`serialNumber`, `imei`, `meid`, `wifiMacAddresses`),
+// posture signals (`compromisedState`, `encryptionState`, `enabledDeveloperOptions`,
+// `enabledUsbDebugging`), enrollment status (`managementState`, `ownerType`),
+// and the set of users registered on the device through `users`. The `id`
+// field is the stable Cloud Identity device id and selects the record — for
+// example `googleworkspace.endpoints.where(deviceType == "WINDOWS" && encryptionState != "ENCRYPTED")`.
+private googleworkspace.endpoint @defaults("deviceType model serialNumber managementState") {
+  // Stable Cloud Identity device identifier
+  id string
+  // Full resource name in the format devices/{device}
+  name string
+  // Platform of the device. Possible values: ANDROID, IOS, GOOGLE_SYNC, WINDOWS, MAC_OS, LINUX, CHROME_OS, DEVICE_TYPE_UNSPECIFIED
+  deviceType string
+  // Ownership of the device. Possible values: COMPANY, BYOD, DEVICE_OWNERSHIP_UNSPECIFIED
+  ownerType string
+  // Enrollment state of the device. Possible values: APPROVED, BLOCKED, PENDING, UNPROVISIONED, WIPING, WIPED, MANAGEMENT_STATE_UNSPECIFIED
+  managementState string
+  // Whether the device is compromised (currently surfaces Android root status). Possible values: COMPROMISED, UNCOMPROMISED, COMPROMISED_STATE_UNSPECIFIED
+  compromisedState string
+  // Disk encryption state. Possible values: ENCRYPTED, NOT_ENCRYPTED, UNSUPPORTED_BY_DEVICE, ENCRYPTION_STATE_UNSPECIFIED
+  encryptionState string
+  // Device manufacturer (for example Motorola)
+  manufacturer string
+  // Device brand (for example Samsung)
+  brand string
+  // Model name of the device (for example Pixel 3)
+  model string
+  // Serial number of the device
+  serialNumber string
+  // Asset tag set by the administrator
+  assetTag string
+  // Hostname of the device
+  hostname string
+  // OS version (for example Android 8.1.0)
+  osVersion string
+  // OS release version (for example 6.0)
+  releaseVersion string
+  // Build number of the device
+  buildNumber string
+  // Kernel version of the device
+  kernelVersion string
+  // Baseband version of the device
+  basebandVersion string
+  // Bootloader version of the device
+  bootloaderVersion string
+  // IMEI of the device if it is a GSM device
+  imei string
+  // MEID of the device if it is a CDMA device
+  meid string
+  // Wi-Fi MAC addresses of the device
+  wifiMacAddresses []string
+  // Mobile or network operator of the device
+  networkOperator string
+  // Whether developer options are enabled on the device
+  enabledDeveloperOptions bool
+  // Whether USB debugging is enabled on the device
+  enabledUsbDebugging bool
+  // Domain names for other (non-Google) accounts on the device
+  otherAccounts []string
+  // Unified device identifier
+  unifiedDeviceId string
+  // OS security patch level reported by the device
+  securityPatchTime time
+  // When a company-owned device was imported (empty for BYOD)
+  createTime time
+  // Most recent time the device synced with Google
+  lastSyncTime time
+  // Android-only signals (work-profile, owner-profile, unknown-sources). Null on non-Android platforms
+  androidAttributes dict
+  // Endpoint Verification signals — certificate inventory, browser inventory, and additional signals (hotfixes, AV, firewall, secure boot)
+  endpointVerificationAttributes dict
+  // Users registered on the device (BYOD devices may have multiple)
+  users() []googleworkspace.endpoint.user
+}
+
+// Registered user of a managed endpoint
+//
+// Examine a single user's binding to a device — the per-user management state,
+// password presence, and sync history reported by Google endpoint management.
+// One device may have multiple `googleworkspace.endpoint.user` rows on BYOD
+// hardware.
+private googleworkspace.endpoint.user @defaults("userEmail managementState") {
+  // Full resource name in the format devices/{device}/deviceUsers/{deviceUser}
+  id string
+  // Email address of the user registered on the device
+  userEmail string
+  // Per-user enrollment state. Possible values: APPROVED, BLOCKED, PENDING_APPROVAL, WIPING, WIPED, UNENROLLED, MANAGEMENT_STATE_UNSPECIFIED
+  managementState string
+  // Whether the user account on the device is compromised. Possible values: COMPROMISED, NOT_COMPROMISED, COMPROMISED_STATE_UNSPECIFIED
+  compromisedState string
+  // Whether the user has a password set on the device. Possible values: PASSWORD_SET, PASSWORD_NOT_SET, PASSWORD_STATE_UNSPECIFIED
+  passwordState string
+  // Default locale used on the device in IETF BCP-47 format
+  languageCode string
+  // User-agent reported by the device for this user
+  userAgent string
+  // When the user first signed in to the device
+  createTime time
+  // Most recent time the user registered with this service
+  firstSyncTime time
+  // Last time the user synced with policies
+  lastSyncTime time
 }
