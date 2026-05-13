@@ -73,6 +73,7 @@ broadwell
 bumpable
 bwawxf
 BXdl
+BYOD
 bytematchstatement
 cafd
 cavium
@@ -81,6 +82,7 @@ cce
 ccf
 CCN
 cdc
+CDMA
 cdn
 cdroms
 ceph
@@ -246,6 +248,7 @@ gpo
 gpu
 grafana
 groupname
+GSM
 gvnic
 GZRS
 hadoop
@@ -695,6 +698,7 @@ webauthn
 webide
 WEBSERVERS
 Webstore
+wifi
 Wjki
 wordpress
 workdir
