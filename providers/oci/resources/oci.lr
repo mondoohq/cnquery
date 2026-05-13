@@ -2250,7 +2250,7 @@ private oci.dataSafe.configuration @defaults("region isEnabled lifecycleState") 
 //
 // Examine a single registered target database. `infrastructureType`
 // distinguishes Oracle DB systems on Exadata, Autonomous DB, base DB,
-// or external/on-premise. `databaseType` reflects the deployment model
+// or external/on-premises. `databaseType` reflects the deployment model
 // (Autonomous Database, DB system, installed DB). `associatedResourceIds`
 // lists the connected resources (database, private endpoint).
 private oci.dataSafe.targetDatabase @defaults("displayName databaseType lifecycleState region") {

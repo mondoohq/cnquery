@@ -32,6 +32,7 @@ armoperationalinsights
 arp
 artifactregistry
 asdk
+ashburn
 aspnet
 atapi
 atlassian
@@ -185,6 +186,7 @@ evc
 eventarc
 eventhubs
 evs
+EXACC
 Exadata
 exo
 faa
