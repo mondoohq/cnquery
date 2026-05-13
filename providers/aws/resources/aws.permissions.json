@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.21.3",
-  "generated_at": "2026-05-11T07:51:38+01:00",
+  "version": "13.23.1",
+  "generated_at": "2026-05-12T22:06:10+01:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -303,6 +303,16 @@
     "firehose:DescribeDeliveryStream",
     "firehose:ListDeliveryStreams",
     "firehose:ListTagsForDeliveryStream",
+    "fms:GetAdminAccount",
+    "fms:GetNotificationChannel",
+    "fms:GetPolicy",
+    "fms:GetResourceSet",
+    "fms:ListAdminAccountsForOrganization",
+    "fms:ListAppsLists",
+    "fms:ListComplianceStatus",
+    "fms:ListPolicies",
+    "fms:ListProtocolsLists",
+    "fms:ListResourceSets",
     "fsx:DescribeBackups",
     "fsx:DescribeFileCaches",
     "fsx:DescribeFileSystems",
@@ -2579,6 +2589,66 @@
       "service": "firehose",
       "action": "ListTagsForDeliveryStream",
       "source_file": "aws_kinesis.go"
+    },
+    {
+      "permission": "fms:GetAdminAccount",
+      "service": "fms",
+      "action": "GetAdminAccount",
+      "source_file": "aws_fms.go"
+    },
+    {
+      "permission": "fms:GetNotificationChannel",
+      "service": "fms",
+      "action": "GetNotificationChannel",
+      "source_file": "aws_fms.go"
+    },
+    {
+      "permission": "fms:GetPolicy",
+      "service": "fms",
+      "action": "GetPolicy",
+      "source_file": "aws_fms.go"
+    },
+    {
+      "permission": "fms:GetResourceSet",
+      "service": "fms",
+      "action": "GetResourceSet",
+      "source_file": "aws_fms.go"
+    },
+    {
+      "permission": "fms:ListAdminAccountsForOrganization",
+      "service": "fms",
+      "action": "ListAdminAccountsForOrganization",
+      "source_file": "aws_fms.go"
+    },
+    {
+      "permission": "fms:ListAppsLists",
+      "service": "fms",
+      "action": "ListAppsLists",
+      "source_file": "aws_fms.go"
+    },
+    {
+      "permission": "fms:ListComplianceStatus",
+      "service": "fms",
+      "action": "ListComplianceStatus",
+      "source_file": "aws_fms.go"
+    },
+    {
+      "permission": "fms:ListPolicies",
+      "service": "fms",
+      "action": "ListPolicies",
+      "source_file": "aws_fms.go"
+    },
+    {
+      "permission": "fms:ListProtocolsLists",
+      "service": "fms",
+      "action": "ListProtocolsLists",
+      "source_file": "aws_fms.go"
+    },
+    {
+      "permission": "fms:ListResourceSets",
+      "service": "fms",
+      "action": "ListResourceSets",
+      "source_file": "aws_fms.go"
     },
     {
       "permission": "fsx:DescribeBackups",

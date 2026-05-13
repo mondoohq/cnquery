@@ -19109,3 +19109,137 @@ private aws.stepfunctions.stateMachine.loggingConfiguration @defaults("level") {
   // CloudWatch Logs log group destinations
   destinations []dict
 }
+
+// AWS Firewall Manager
+//
+// Examine the organization-wide Firewall Manager configuration that
+// centrally enforces WAF, Shield Advanced, security group, Network
+// Firewall, DNS Firewall, and third-party firewall policies across member
+// accounts. Read `defaultAdminAccount` and `adminAccounts()` to see who
+// administers Firewall Manager, `policies()` for the policies in effect
+// (including per-account compliance status), `notificationChannel` for the
+// SNS topic that receives activity events, and `appsLists()`,
+// `protocolsLists()`, and `resourceSets()` for the reusable building
+// blocks referenced by policies. Firewall Manager administration runs
+// against `us-east-1`; this namespace surfaces data only when the scanned
+// account is the organization's Firewall Manager administrator.
+aws.fms @defaults("defaultAdminAccount") {
+  // ID of the account configured as the Firewall Manager default administrator
+  defaultAdminAccount() string
+  // Onboarding/role status of the default administrator (READY, CREATING, PENDING_DELETION, DELETING, or UNKNOWN if access is denied)
+  defaultAdminRoleStatus() string
+  // List of Firewall Manager administrator accounts in the organization
+  adminAccounts() []aws.fms.adminAccount
+  // List of Firewall Manager policies
+  policies() []aws.fms.policy
+  // SNS notification channel that receives Firewall Manager activity events
+  notificationChannel() aws.fms.notificationChannel
+  // List of applications lists used by content audit security group policies
+  appsLists() []aws.fms.appsList
+  // List of protocols lists used by network ACL or content audit security group policies
+  protocolsLists() []aws.fms.protocolsList
+  // List of resource sets that group resources for policy application
+  resourceSets() []aws.fms.resourceSet
+}
+
+// AWS Firewall Manager administrator account
+private aws.fms.adminAccount @defaults("accountId defaultAdmin status") {
+  // ID of the administrator account
+  accountId string
+  // Whether this is the default Firewall Manager administrator. The default administrator can manage third-party firewalls and has full administrative scope; there is only one per organization.
+  defaultAdmin bool
+  // Onboarding status: ONBOARDING, ONBOARDING_COMPLETE, OFFBOARDING, or OFFBOARDING_COMPLETE
+  status string
+}
+
+// AWS Firewall Manager policy
+private aws.fms.policy @defaults("name resourceType securityServiceType") {
+  // ARN of the policy
+  arn string
+  // ID of the policy
+  id string
+  // Name of the policy
+  name string
+  // Description of the policy
+  description string
+  // Status of the policy in the administrator's scope: ACTIVE or OUT_OF_ADMIN_SCOPE
+  status string
+  // Whether Firewall Manager applies the policy to new resources automatically
+  remediationEnabled bool
+  // Whether Firewall Manager removes managed protections from resources that leave policy scope and cleans up managed resources when accounts leave scope
+  deleteUnusedFMManagedResources bool
+  // Type of resource the policy protects (e.g., AWS::EC2::SecurityGroup, AWS::ElasticLoadBalancingV2::LoadBalancer, AWS::EC2::VPC); set to ResourceTypeList when the policy applies to multiple types
+  resourceType string
+  // List of resource types when the policy applies to more than one
+  resourceTypeList []string
+  // Tags that define the policy's resource scope, keyed by tag name with the tag value as the value
+  resourceTags map[string]string
+  // Whether resources with the specified `resourceTags` are excluded from the policy scope (true) or are the only resources in scope (false)
+  excludeResourceTags bool
+  // Logical operator (AND or OR) used to combine `resourceTags`
+  resourceTagLogicalOperator string
+  // Security service backing the policy: WAF, WAFV2, SHIELD_ADVANCED, SECURITY_GROUPS_COMMON, SECURITY_GROUPS_CONTENT_AUDIT, SECURITY_GROUPS_USAGE_AUDIT, NETWORK_FIREWALL, DNS_FIREWALL, IMPORT_NETWORK_FIREWALL, NETWORK_ACL_COMMON, or THIRD_PARTY_FIREWALL
+  securityServiceType string
+  // Service-specific managed configuration (parsed from the SDK's ManagedServiceData JSON string)
+  securityServiceManagedServiceData dict
+  // Accounts and organizational units the policy applies to, keyed by ACCOUNT or ORG_UNIT
+  includeMap map[string][]string
+  // Accounts and organizational units the policy excludes, keyed by ACCOUNT or ORG_UNIT
+  excludeMap map[string][]string
+  // IDs of resource sets referenced by the policy
+  resourceSetIds []string
+  // Per-member-account compliance evaluations, each with `memberAccount`, `status`, `violatorCount`, `evaluationLimitExceeded`, `issueInfoMap`, and `lastUpdated`
+  complianceStatuses() []dict
+}
+
+// AWS Firewall Manager notification channel
+private aws.fms.notificationChannel @defaults("snsTopicArn snsRoleName") {
+  // ARN of the SNS topic that records Firewall Manager activity
+  snsTopicArn string
+  // Name of the IAM role that grants Firewall Manager permission to publish to the SNS topic
+  snsRoleName string
+  // SNS topic that records Firewall Manager activity
+  snsTopic() aws.sns.topic
+}
+
+// AWS Firewall Manager applications list
+private aws.fms.appsList @defaults("name id") {
+  // ARN of the applications list
+  arn string
+  // ID of the applications list
+  id string
+  // Name of the applications list
+  name string
+  // Applications in the list, each with `appName`, `protocol`, and `port`
+  apps []dict
+}
+
+// AWS Firewall Manager protocols list
+private aws.fms.protocolsList @defaults("name id") {
+  // ARN of the protocols list
+  arn string
+  // ID of the protocols list
+  id string
+  // Name of the protocols list
+  name string
+  // Protocol names included in the list (tcp, udp, icmp, or numeric IP protocol numbers)
+  protocols []string
+}
+
+// AWS Firewall Manager resource set
+private aws.fms.resourceSet @defaults("name id status") {
+  // ARN of the resource set
+  arn string
+  // ID of the resource set
+  id string
+  // Name of the resource set
+  name string
+  // Description of the resource set
+  description string
+  // Resource types contained in the set
+  resourceTypeList []string
+  // Status in the administrator's scope: ACTIVE or OUT_OF_ADMIN_SCOPE
+  status string
+  // Time the resource set was last modified
+  lastUpdateTime time
+}

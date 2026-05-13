@@ -54,6 +54,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
+	"github.com/aws/aws-sdk-go-v2/service/fms"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
@@ -1645,6 +1646,30 @@ func (t *AwsConnection) Shield(region string) *shield.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := shield.NewFromConfig(cfg)
+
+	// cache it
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *AwsConnection) Fms(region string) *fms.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.cfg.Region
+	}
+	cacheVal := "_fms_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached fms client")
+		return c.Data.(*fms.Client)
+	}
+
+	// create the client
+	cfg := t.cfg.Copy()
+	cfg.Region = region
+	client := fms.NewFromConfig(cfg)
 
 	// cache it
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})

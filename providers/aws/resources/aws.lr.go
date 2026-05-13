@@ -770,6 +770,13 @@ const (
 	ResourceAwsStepfunctions                                                    string = "aws.stepfunctions"
 	ResourceAwsStepfunctionsStateMachine                                        string = "aws.stepfunctions.stateMachine"
 	ResourceAwsStepfunctionsStateMachineLoggingConfiguration                    string = "aws.stepfunctions.stateMachine.loggingConfiguration"
+	ResourceAwsFms                                                              string = "aws.fms"
+	ResourceAwsFmsAdminAccount                                                  string = "aws.fms.adminAccount"
+	ResourceAwsFmsPolicy                                                        string = "aws.fms.policy"
+	ResourceAwsFmsNotificationChannel                                           string = "aws.fms.notificationChannel"
+	ResourceAwsFmsAppsList                                                      string = "aws.fms.appsList"
+	ResourceAwsFmsProtocolsList                                                 string = "aws.fms.protocolsList"
+	ResourceAwsFmsResourceSet                                                   string = "aws.fms.resourceSet"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -3791,6 +3798,34 @@ func init() {
 		"aws.stepfunctions.stateMachine.loggingConfiguration": {
 			// to override args, implement: initAwsStepfunctionsStateMachineLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsStepfunctionsStateMachineLoggingConfiguration,
+		},
+		"aws.fms": {
+			// to override args, implement: initAwsFms(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsFms,
+		},
+		"aws.fms.adminAccount": {
+			// to override args, implement: initAwsFmsAdminAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsFmsAdminAccount,
+		},
+		"aws.fms.policy": {
+			// to override args, implement: initAwsFmsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsFmsPolicy,
+		},
+		"aws.fms.notificationChannel": {
+			// to override args, implement: initAwsFmsNotificationChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsFmsNotificationChannel,
+		},
+		"aws.fms.appsList": {
+			// to override args, implement: initAwsFmsAppsList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsFmsAppsList,
+		},
+		"aws.fms.protocolsList": {
+			// to override args, implement: initAwsFmsProtocolsList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsFmsProtocolsList,
+		},
+		"aws.fms.resourceSet": {
+			// to override args, implement: initAwsFmsResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsFmsResourceSet,
 		},
 	}
 }
@@ -26419,6 +26454,147 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.stepfunctions.stateMachine.loggingConfiguration.destinations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsStepfunctionsStateMachineLoggingConfiguration).GetDestinations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.fms.defaultAdminAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFms).GetDefaultAdminAccount()).ToDataRes(types.String)
+	},
+	"aws.fms.defaultAdminRoleStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFms).GetDefaultAdminRoleStatus()).ToDataRes(types.String)
+	},
+	"aws.fms.adminAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFms).GetAdminAccounts()).ToDataRes(types.Array(types.Resource("aws.fms.adminAccount")))
+	},
+	"aws.fms.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFms).GetPolicies()).ToDataRes(types.Array(types.Resource("aws.fms.policy")))
+	},
+	"aws.fms.notificationChannel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFms).GetNotificationChannel()).ToDataRes(types.Resource("aws.fms.notificationChannel"))
+	},
+	"aws.fms.appsLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFms).GetAppsLists()).ToDataRes(types.Array(types.Resource("aws.fms.appsList")))
+	},
+	"aws.fms.protocolsLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFms).GetProtocolsLists()).ToDataRes(types.Array(types.Resource("aws.fms.protocolsList")))
+	},
+	"aws.fms.resourceSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFms).GetResourceSets()).ToDataRes(types.Array(types.Resource("aws.fms.resourceSet")))
+	},
+	"aws.fms.adminAccount.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsAdminAccount).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.fms.adminAccount.defaultAdmin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsAdminAccount).GetDefaultAdmin()).ToDataRes(types.Bool)
+	},
+	"aws.fms.adminAccount.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsAdminAccount).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.fms.policy.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetArn()).ToDataRes(types.String)
+	},
+	"aws.fms.policy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.fms.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.fms.policy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.fms.policy.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.fms.policy.remediationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetRemediationEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.fms.policy.deleteUnusedFMManagedResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetDeleteUnusedFMManagedResources()).ToDataRes(types.Bool)
+	},
+	"aws.fms.policy.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.fms.policy.resourceTypeList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetResourceTypeList()).ToDataRes(types.Array(types.String))
+	},
+	"aws.fms.policy.resourceTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetResourceTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.fms.policy.excludeResourceTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetExcludeResourceTags()).ToDataRes(types.Bool)
+	},
+	"aws.fms.policy.resourceTagLogicalOperator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetResourceTagLogicalOperator()).ToDataRes(types.String)
+	},
+	"aws.fms.policy.securityServiceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetSecurityServiceType()).ToDataRes(types.String)
+	},
+	"aws.fms.policy.securityServiceManagedServiceData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetSecurityServiceManagedServiceData()).ToDataRes(types.Dict)
+	},
+	"aws.fms.policy.includeMap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetIncludeMap()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"aws.fms.policy.excludeMap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetExcludeMap()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"aws.fms.policy.resourceSetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetResourceSetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.fms.policy.complianceStatuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetComplianceStatuses()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.fms.notificationChannel.snsTopicArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsNotificationChannel).GetSnsTopicArn()).ToDataRes(types.String)
+	},
+	"aws.fms.notificationChannel.snsRoleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsNotificationChannel).GetSnsRoleName()).ToDataRes(types.String)
+	},
+	"aws.fms.notificationChannel.snsTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsNotificationChannel).GetSnsTopic()).ToDataRes(types.Resource("aws.sns.topic"))
+	},
+	"aws.fms.appsList.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsAppsList).GetArn()).ToDataRes(types.String)
+	},
+	"aws.fms.appsList.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsAppsList).GetId()).ToDataRes(types.String)
+	},
+	"aws.fms.appsList.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsAppsList).GetName()).ToDataRes(types.String)
+	},
+	"aws.fms.appsList.apps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsAppsList).GetApps()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.fms.protocolsList.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsProtocolsList).GetArn()).ToDataRes(types.String)
+	},
+	"aws.fms.protocolsList.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsProtocolsList).GetId()).ToDataRes(types.String)
+	},
+	"aws.fms.protocolsList.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsProtocolsList).GetName()).ToDataRes(types.String)
+	},
+	"aws.fms.protocolsList.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsProtocolsList).GetProtocols()).ToDataRes(types.Array(types.String))
+	},
+	"aws.fms.resourceSet.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsResourceSet).GetArn()).ToDataRes(types.String)
+	},
+	"aws.fms.resourceSet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsResourceSet).GetId()).ToDataRes(types.String)
+	},
+	"aws.fms.resourceSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsResourceSet).GetName()).ToDataRes(types.String)
+	},
+	"aws.fms.resourceSet.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsResourceSet).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.fms.resourceSet.resourceTypeList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsResourceSet).GetResourceTypeList()).ToDataRes(types.Array(types.String))
+	},
+	"aws.fms.resourceSet.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsResourceSet).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.fms.resourceSet.lastUpdateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsResourceSet).GetLastUpdateTime()).ToDataRes(types.Time)
 	},
 }
 
@@ -59522,6 +59698,222 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.stepfunctions.stateMachine.loggingConfiguration.destinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsStepfunctionsStateMachineLoggingConfiguration).Destinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFms).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fms.defaultAdminAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFms).DefaultAdminAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.defaultAdminRoleStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFms).DefaultAdminRoleStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.adminAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFms).AdminAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFms).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.notificationChannel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFms).NotificationChannel, ok = plugin.RawToTValue[*mqlAwsFmsNotificationChannel](v.Value, v.Error)
+		return
+	},
+	"aws.fms.appsLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFms).AppsLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.protocolsLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFms).ProtocolsLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.resourceSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFms).ResourceSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.adminAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsAdminAccount).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fms.adminAccount.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsAdminAccount).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.adminAccount.defaultAdmin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsAdminAccount).DefaultAdmin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.fms.adminAccount.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsAdminAccount).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fms.policy.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.remediationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).RemediationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.deleteUnusedFMManagedResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).DeleteUnusedFMManagedResources, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.resourceTypeList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).ResourceTypeList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.resourceTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).ResourceTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.excludeResourceTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).ExcludeResourceTags, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.resourceTagLogicalOperator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).ResourceTagLogicalOperator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.securityServiceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).SecurityServiceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.securityServiceManagedServiceData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).SecurityServiceManagedServiceData, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.includeMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).IncludeMap, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.excludeMap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).ExcludeMap, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.resourceSetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).ResourceSetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.complianceStatuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).ComplianceStatuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.notificationChannel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsNotificationChannel).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fms.notificationChannel.snsTopicArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsNotificationChannel).SnsTopicArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.notificationChannel.snsRoleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsNotificationChannel).SnsRoleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.notificationChannel.snsTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsNotificationChannel).SnsTopic, ok = plugin.RawToTValue[*mqlAwsSnsTopic](v.Value, v.Error)
+		return
+	},
+	"aws.fms.appsList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsAppsList).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fms.appsList.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsAppsList).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.appsList.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsAppsList).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.appsList.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsAppsList).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.appsList.apps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsAppsList).Apps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.protocolsList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsProtocolsList).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fms.protocolsList.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsProtocolsList).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.protocolsList.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsProtocolsList).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.protocolsList.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsProtocolsList).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.protocolsList.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsProtocolsList).Protocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.resourceSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsResourceSet).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.fms.resourceSet.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsResourceSet).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.resourceSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsResourceSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.resourceSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsResourceSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.resourceSet.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsResourceSet).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.resourceSet.resourceTypeList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsResourceSet).ResourceTypeList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.resourceSet.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsResourceSet).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.fms.resourceSet.lastUpdateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsResourceSet).LastUpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 }
@@ -145688,4 +146080,637 @@ func (c *mqlAwsStepfunctionsStateMachineLoggingConfiguration) GetIncludeExecutio
 
 func (c *mqlAwsStepfunctionsStateMachineLoggingConfiguration) GetDestinations() *plugin.TValue[[]any] {
 	return &c.Destinations
+}
+
+// mqlAwsFms for the aws.fms resource
+type mqlAwsFms struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFmsInternal it will be used here
+	DefaultAdminAccount    plugin.TValue[string]
+	DefaultAdminRoleStatus plugin.TValue[string]
+	AdminAccounts          plugin.TValue[[]any]
+	Policies               plugin.TValue[[]any]
+	NotificationChannel    plugin.TValue[*mqlAwsFmsNotificationChannel]
+	AppsLists              plugin.TValue[[]any]
+	ProtocolsLists         plugin.TValue[[]any]
+	ResourceSets           plugin.TValue[[]any]
+}
+
+// createAwsFms creates a new instance of this resource
+func createAwsFms(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFms{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fms", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFms) MqlName() string {
+	return "aws.fms"
+}
+
+func (c *mqlAwsFms) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFms) GetDefaultAdminAccount() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultAdminAccount, func() (string, error) {
+		return c.defaultAdminAccount()
+	})
+}
+
+func (c *mqlAwsFms) GetDefaultAdminRoleStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DefaultAdminRoleStatus, func() (string, error) {
+		return c.defaultAdminRoleStatus()
+	})
+}
+
+func (c *mqlAwsFms) GetAdminAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AdminAccounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fms", c.__id, "adminAccounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.adminAccounts()
+	})
+}
+
+func (c *mqlAwsFms) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fms", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlAwsFms) GetNotificationChannel() *plugin.TValue[*mqlAwsFmsNotificationChannel] {
+	return plugin.GetOrCompute[*mqlAwsFmsNotificationChannel](&c.NotificationChannel, func() (*mqlAwsFmsNotificationChannel, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fms", c.__id, "notificationChannel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsFmsNotificationChannel), nil
+			}
+		}
+
+		return c.notificationChannel()
+	})
+}
+
+func (c *mqlAwsFms) GetAppsLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AppsLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fms", c.__id, "appsLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.appsLists()
+	})
+}
+
+func (c *mqlAwsFms) GetProtocolsLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProtocolsLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fms", c.__id, "protocolsLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.protocolsLists()
+	})
+}
+
+func (c *mqlAwsFms) GetResourceSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fms", c.__id, "resourceSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceSets()
+	})
+}
+
+// mqlAwsFmsAdminAccount for the aws.fms.adminAccount resource
+type mqlAwsFmsAdminAccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFmsAdminAccountInternal it will be used here
+	AccountId    plugin.TValue[string]
+	DefaultAdmin plugin.TValue[bool]
+	Status       plugin.TValue[string]
+}
+
+// createAwsFmsAdminAccount creates a new instance of this resource
+func createAwsFmsAdminAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFmsAdminAccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fms.adminAccount", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFmsAdminAccount) MqlName() string {
+	return "aws.fms.adminAccount"
+}
+
+func (c *mqlAwsFmsAdminAccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFmsAdminAccount) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsFmsAdminAccount) GetDefaultAdmin() *plugin.TValue[bool] {
+	return &c.DefaultAdmin
+}
+
+func (c *mqlAwsFmsAdminAccount) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+// mqlAwsFmsPolicy for the aws.fms.policy resource
+type mqlAwsFmsPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFmsPolicyInternal it will be used here
+	Arn                               plugin.TValue[string]
+	Id                                plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	Description                       plugin.TValue[string]
+	Status                            plugin.TValue[string]
+	RemediationEnabled                plugin.TValue[bool]
+	DeleteUnusedFMManagedResources    plugin.TValue[bool]
+	ResourceType                      plugin.TValue[string]
+	ResourceTypeList                  plugin.TValue[[]any]
+	ResourceTags                      plugin.TValue[map[string]any]
+	ExcludeResourceTags               plugin.TValue[bool]
+	ResourceTagLogicalOperator        plugin.TValue[string]
+	SecurityServiceType               plugin.TValue[string]
+	SecurityServiceManagedServiceData plugin.TValue[any]
+	IncludeMap                        plugin.TValue[map[string]any]
+	ExcludeMap                        plugin.TValue[map[string]any]
+	ResourceSetIds                    plugin.TValue[[]any]
+	ComplianceStatuses                plugin.TValue[[]any]
+}
+
+// createAwsFmsPolicy creates a new instance of this resource
+func createAwsFmsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFmsPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fms.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFmsPolicy) MqlName() string {
+	return "aws.fms.policy"
+}
+
+func (c *mqlAwsFmsPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFmsPolicy) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsFmsPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsFmsPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsFmsPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsFmsPolicy) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsFmsPolicy) GetRemediationEnabled() *plugin.TValue[bool] {
+	return &c.RemediationEnabled
+}
+
+func (c *mqlAwsFmsPolicy) GetDeleteUnusedFMManagedResources() *plugin.TValue[bool] {
+	return &c.DeleteUnusedFMManagedResources
+}
+
+func (c *mqlAwsFmsPolicy) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAwsFmsPolicy) GetResourceTypeList() *plugin.TValue[[]any] {
+	return &c.ResourceTypeList
+}
+
+func (c *mqlAwsFmsPolicy) GetResourceTags() *plugin.TValue[map[string]any] {
+	return &c.ResourceTags
+}
+
+func (c *mqlAwsFmsPolicy) GetExcludeResourceTags() *plugin.TValue[bool] {
+	return &c.ExcludeResourceTags
+}
+
+func (c *mqlAwsFmsPolicy) GetResourceTagLogicalOperator() *plugin.TValue[string] {
+	return &c.ResourceTagLogicalOperator
+}
+
+func (c *mqlAwsFmsPolicy) GetSecurityServiceType() *plugin.TValue[string] {
+	return &c.SecurityServiceType
+}
+
+func (c *mqlAwsFmsPolicy) GetSecurityServiceManagedServiceData() *plugin.TValue[any] {
+	return &c.SecurityServiceManagedServiceData
+}
+
+func (c *mqlAwsFmsPolicy) GetIncludeMap() *plugin.TValue[map[string]any] {
+	return &c.IncludeMap
+}
+
+func (c *mqlAwsFmsPolicy) GetExcludeMap() *plugin.TValue[map[string]any] {
+	return &c.ExcludeMap
+}
+
+func (c *mqlAwsFmsPolicy) GetResourceSetIds() *plugin.TValue[[]any] {
+	return &c.ResourceSetIds
+}
+
+func (c *mqlAwsFmsPolicy) GetComplianceStatuses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ComplianceStatuses, func() ([]any, error) {
+		return c.complianceStatuses()
+	})
+}
+
+// mqlAwsFmsNotificationChannel for the aws.fms.notificationChannel resource
+type mqlAwsFmsNotificationChannel struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFmsNotificationChannelInternal it will be used here
+	SnsTopicArn plugin.TValue[string]
+	SnsRoleName plugin.TValue[string]
+	SnsTopic    plugin.TValue[*mqlAwsSnsTopic]
+}
+
+// createAwsFmsNotificationChannel creates a new instance of this resource
+func createAwsFmsNotificationChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFmsNotificationChannel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fms.notificationChannel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFmsNotificationChannel) MqlName() string {
+	return "aws.fms.notificationChannel"
+}
+
+func (c *mqlAwsFmsNotificationChannel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFmsNotificationChannel) GetSnsTopicArn() *plugin.TValue[string] {
+	return &c.SnsTopicArn
+}
+
+func (c *mqlAwsFmsNotificationChannel) GetSnsRoleName() *plugin.TValue[string] {
+	return &c.SnsRoleName
+}
+
+func (c *mqlAwsFmsNotificationChannel) GetSnsTopic() *plugin.TValue[*mqlAwsSnsTopic] {
+	return plugin.GetOrCompute[*mqlAwsSnsTopic](&c.SnsTopic, func() (*mqlAwsSnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fms.notificationChannel", c.__id, "snsTopic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSnsTopic), nil
+			}
+		}
+
+		return c.snsTopic()
+	})
+}
+
+// mqlAwsFmsAppsList for the aws.fms.appsList resource
+type mqlAwsFmsAppsList struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFmsAppsListInternal it will be used here
+	Arn  plugin.TValue[string]
+	Id   plugin.TValue[string]
+	Name plugin.TValue[string]
+	Apps plugin.TValue[[]any]
+}
+
+// createAwsFmsAppsList creates a new instance of this resource
+func createAwsFmsAppsList(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFmsAppsList{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fms.appsList", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFmsAppsList) MqlName() string {
+	return "aws.fms.appsList"
+}
+
+func (c *mqlAwsFmsAppsList) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFmsAppsList) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsFmsAppsList) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsFmsAppsList) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsFmsAppsList) GetApps() *plugin.TValue[[]any] {
+	return &c.Apps
+}
+
+// mqlAwsFmsProtocolsList for the aws.fms.protocolsList resource
+type mqlAwsFmsProtocolsList struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFmsProtocolsListInternal it will be used here
+	Arn       plugin.TValue[string]
+	Id        plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Protocols plugin.TValue[[]any]
+}
+
+// createAwsFmsProtocolsList creates a new instance of this resource
+func createAwsFmsProtocolsList(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFmsProtocolsList{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fms.protocolsList", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFmsProtocolsList) MqlName() string {
+	return "aws.fms.protocolsList"
+}
+
+func (c *mqlAwsFmsProtocolsList) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFmsProtocolsList) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsFmsProtocolsList) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsFmsProtocolsList) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsFmsProtocolsList) GetProtocols() *plugin.TValue[[]any] {
+	return &c.Protocols
+}
+
+// mqlAwsFmsResourceSet for the aws.fms.resourceSet resource
+type mqlAwsFmsResourceSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsFmsResourceSetInternal it will be used here
+	Arn              plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	ResourceTypeList plugin.TValue[[]any]
+	Status           plugin.TValue[string]
+	LastUpdateTime   plugin.TValue[*time.Time]
+}
+
+// createAwsFmsResourceSet creates a new instance of this resource
+func createAwsFmsResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsFmsResourceSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.fms.resourceSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsFmsResourceSet) MqlName() string {
+	return "aws.fms.resourceSet"
+}
+
+func (c *mqlAwsFmsResourceSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsFmsResourceSet) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsFmsResourceSet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsFmsResourceSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsFmsResourceSet) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsFmsResourceSet) GetResourceTypeList() *plugin.TValue[[]any] {
+	return &c.ResourceTypeList
+}
+
+func (c *mqlAwsFmsResourceSet) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsFmsResourceSet) GetLastUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdateTime
 }

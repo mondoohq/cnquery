@@ -512,6 +512,7 @@ func awsConnectionMethodToService(method string) string {
 		"macie2":                   "macie2",
 		"memorydb":                 "memorydb",
 		"mq":                       "mq",
+		"fms":                      "fms",
 		"networkfirewall":          "networkfirewall",
 		"appstream":                "appstream",
 		"applicationautoscaling":   "applicationautoscaling",

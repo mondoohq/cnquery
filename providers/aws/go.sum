@@ -261,6 +261,8 @@ github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.25 h1:9PZbyFSCN/E0TnqXqnv
 github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.25/go.mod h1:ZJ1LBykgykfLqmsP2pBUesSd24sL6SebSEeXzzJ2hhE=
 github.com/aws/aws-sdk-go-v2/service/firehose v1.42.16 h1:nSg1UAENCjuryTr9JMPMOPXkYOkcpVwQjrrp5rkHUus=
 github.com/aws/aws-sdk-go-v2/service/firehose v1.42.16/go.mod h1:8atLs+8lOWcDaxiD+suvyvt63IuwLbT8zlU6Ti9qZiY=
+github.com/aws/aws-sdk-go-v2/service/fms v1.44.24 h1:9HVojSt6nLVX/Ao55d7PGVg3zzg6XbNzT6RIiLnKEmM=
+github.com/aws/aws-sdk-go-v2/service/fms v1.44.24/go.mod h1:cIz6sTAJzcJceQM5chsHkKq5agNHWtLCm5r20teGur8=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.65.10 h1:Hbq4SjVDCTnJ4leFO35t3xkUWriD8EwIpydTMV8WxEo=
 github.com/aws/aws-sdk-go-v2/service/fsx v1.65.10/go.mod h1:ZhrGF6EmakQJR9N5lGxh7LdkVG+v+Iaa1+PKU9eehWQ=
 github.com/aws/aws-sdk-go-v2/service/glue v1.141.0 h1:QeZdzcEB+eB76YvIHqZyxsmxH+f9f2kKDdz48UC4HCM=

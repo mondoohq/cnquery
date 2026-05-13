@@ -57,6 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emr v1.59.2
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.25
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.16
+	github.com/aws/aws-sdk-go-v2/service/fms v1.44.24
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.10
 	github.com/aws/aws-sdk-go-v2/service/glue v1.141.0
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.75.4
