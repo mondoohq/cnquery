@@ -7,6 +7,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/fms"
 	fmstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
@@ -16,6 +18,17 @@ import (
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
 )
+
+// mqlAwsFmsInternal caches the GetAdminAccount response so the two computed
+// methods that draw from it (defaultAdminAccount, defaultAdminRoleStatus)
+// share a single API call. Double-checked locked so concurrent field reads
+// don't fire the same API twice.
+type mqlAwsFmsInternal struct {
+	adminFetched bool
+	adminAccount string
+	adminStatus  string
+	adminLock    sync.Mutex
+}
 
 // FMS administration is anchored in us-east-1 — the Firewall Manager admin
 // account must operate from that region regardless of where individual
@@ -27,21 +40,34 @@ func (a *mqlAwsFms) id() (string, error) {
 }
 
 func (a *mqlAwsFms) defaultAdminAccount() (string, error) {
-	account, _, err := getFmsAdminAccount(a.MqlRuntime)
+	account, _, err := a.fetchAdminAccount()
 	return account, err
 }
 
 func (a *mqlAwsFms) defaultAdminRoleStatus() (string, error) {
-	_, status, err := getFmsAdminAccount(a.MqlRuntime)
+	_, status, err := a.fetchAdminAccount()
 	return status, err
 }
 
-func getFmsAdminAccount(runtime *plugin.Runtime) (string, string, error) {
-	conn := runtime.Connection.(*connection.AwsConnection)
+// fetchAdminAccount calls GetAdminAccount at most once per mqlAwsFms
+// instance and caches the (account, status) tuple under adminLock so the
+// two computed methods above share the result.
+func (a *mqlAwsFms) fetchAdminAccount() (string, string, error) {
+	if a.adminFetched {
+		return a.adminAccount, a.adminStatus, nil
+	}
+	a.adminLock.Lock()
+	defer a.adminLock.Unlock()
+	if a.adminFetched {
+		return a.adminAccount, a.adminStatus, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	svc := conn.Fms(fmsRegion)
 	resp, err := svc.GetAdminAccount(context.Background(), &fms.GetAdminAccountInput{})
 	if err != nil {
 		if Is400AccessDeniedError(err) || isFmsNotAdminError(err) {
+			a.adminFetched = true
+			a.adminStatus = "UNKNOWN"
 			return "", "UNKNOWN", nil
 		}
 		return "", "", err
@@ -50,7 +76,10 @@ func getFmsAdminAccount(runtime *plugin.Runtime) (string, string, error) {
 	if resp.AdminAccount != nil {
 		account = *resp.AdminAccount
 	}
-	return account, string(resp.RoleStatus), nil
+	a.adminAccount = account
+	a.adminStatus = string(resp.RoleStatus)
+	a.adminFetched = true
+	return a.adminAccount, a.adminStatus, nil
 }
 
 func isFmsNotAdminError(err error) bool {
@@ -506,13 +535,93 @@ func (a *mqlAwsFms) resourceSets() ([]any, error) {
 }
 
 func (a *mqlAwsFmsResourceSet) id() (string, error) {
-	if a.Arn.Error != nil {
-		return "", a.Arn.Error
-	}
-	if a.Arn.Data != "" {
-		return a.Arn.Data, nil
-	}
+	// __id is keyed by the resource-set id (not arn) so cache lookups from
+	// both `aws.fms.resourceSets()` and `aws.fms.policy.resourceSets()` land
+	// on the same entry.
 	return "aws.fms.resourceSet/" + a.Id.Data, a.Id.Error
+}
+
+// initAwsFmsResourceSet fetches a single resource set by id. Used when a
+// caller materializes a resource set by id (e.g. through a policy's
+// resourceSets() accessor) without having listed `aws.fms.resourceSets()`
+// first. When the list has already populated the cache, NewResource hits
+// the cache and skips this fetch.
+func initAwsFmsResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	idArg, ok := args["id"]
+	if !ok || idArg == nil {
+		return args, nil, nil
+	}
+	id, ok := idArg.Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Fms(fmsRegion)
+	resp, err := svc.GetResourceSet(context.Background(), &fms.GetResourceSetInput{Identifier: &id})
+	if err != nil {
+		if Is400AccessDeniedError(err) || isFmsNotAdminError(err) {
+			return args, nil, nil
+		}
+		var notFound *fmstypes.ResourceNotFoundException
+		if errors.As(err, &notFound) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	var (
+		name             *string
+		description      *string
+		resourceTypeList []string
+		status           string
+		lastUpdateTime   *time.Time
+	)
+	if resp.ResourceSet != nil {
+		name = resp.ResourceSet.Name
+		description = resp.ResourceSet.Description
+		resourceTypeList = resp.ResourceSet.ResourceTypeList
+		status = string(resp.ResourceSet.ResourceSetStatus)
+		lastUpdateTime = resp.ResourceSet.LastUpdateTime
+	}
+	res, err := CreateResource(runtime, "aws.fms.resourceSet",
+		map[string]*llx.RawData{
+			"arn":              llx.StringDataPtr(resp.ResourceSetArn),
+			"id":               llx.StringData(id),
+			"name":             llx.StringDataPtr(name),
+			"description":      llx.StringDataPtr(description),
+			"resourceTypeList": llx.ArrayData(llx.TArr2Raw(resourceTypeList), types.String),
+			"status":           llx.StringData(status),
+			"lastUpdateTime":   llx.TimeDataPtr(lastUpdateTime),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+	return nil, res, nil
+}
+
+// resourceSets resolves the policy's ResourceSetIds into typed
+// aws.fms.resourceSet records. When `aws.fms.resourceSets()` has already
+// been called, this hits the runtime cache and avoids any extra API
+// traffic; otherwise it falls through to initAwsFmsResourceSet which
+// fetches the set on demand.
+func (a *mqlAwsFmsPolicy) resourceSets() ([]any, error) {
+	if a.ResourceSetIds.Error != nil {
+		return nil, a.ResourceSetIds.Error
+	}
+	ids := a.ResourceSetIds.Data
+	out := make([]any, 0, len(ids))
+	for _, raw := range ids {
+		id, ok := raw.(string)
+		if !ok || id == "" {
+			continue
+		}
+		res, err := NewResource(a.MqlRuntime, "aws.fms.resourceSet",
+			map[string]*llx.RawData{"id": llx.StringData(id)})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
 }
 
 func intPtr32(v int32) *int32 {

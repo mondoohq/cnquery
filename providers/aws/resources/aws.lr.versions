@@ -3814,6 +3814,7 @@ aws.fms.policy.includeMap 13.23.2
 aws.fms.policy.name 13.23.2
 aws.fms.policy.remediationEnabled 13.23.2
 aws.fms.policy.resourceSetIds 13.23.2
+aws.fms.policy.resourceSets 13.23.2
 aws.fms.policy.resourceTagLogicalOperator 13.23.2
 aws.fms.policy.resourceTags 13.23.2
 aws.fms.policy.resourceType 13.23.2

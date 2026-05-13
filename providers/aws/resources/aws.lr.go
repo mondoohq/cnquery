@@ -3824,7 +3824,7 @@ func init() {
 			Create: createAwsFmsProtocolsList,
 		},
 		"aws.fms.resourceSet": {
-			// to override args, implement: initAwsFmsResourceSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAwsFmsResourceSet,
 			Create: createAwsFmsResourceSet,
 		},
 	}
@@ -26538,6 +26538,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.fms.policy.resourceSetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFmsPolicy).GetResourceSetIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.fms.policy.resourceSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsFmsPolicy).GetResourceSets()).ToDataRes(types.Array(types.Resource("aws.fms.resourceSet")))
 	},
 	"aws.fms.policy.complianceStatuses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsFmsPolicy).GetComplianceStatuses()).ToDataRes(types.Array(types.Dict))
@@ -59822,6 +59825,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.fms.policy.resourceSetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsFmsPolicy).ResourceSetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.fms.policy.resourceSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsFmsPolicy).ResourceSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.fms.policy.complianceStatuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -146086,7 +146093,7 @@ func (c *mqlAwsStepfunctionsStateMachineLoggingConfiguration) GetDestinations() 
 type mqlAwsFms struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsFmsInternal it will be used here
+	mqlAwsFmsInternal
 	DefaultAdminAccount    plugin.TValue[string]
 	DefaultAdminRoleStatus plugin.TValue[string]
 	AdminAccounts          plugin.TValue[[]any]
@@ -146323,6 +146330,7 @@ type mqlAwsFmsPolicy struct {
 	IncludeMap                        plugin.TValue[map[string]any]
 	ExcludeMap                        plugin.TValue[map[string]any]
 	ResourceSetIds                    plugin.TValue[[]any]
+	ResourceSets                      plugin.TValue[[]any]
 	ComplianceStatuses                plugin.TValue[[]any]
 }
 
@@ -146429,6 +146437,22 @@ func (c *mqlAwsFmsPolicy) GetExcludeMap() *plugin.TValue[map[string]any] {
 
 func (c *mqlAwsFmsPolicy) GetResourceSetIds() *plugin.TValue[[]any] {
 	return &c.ResourceSetIds
+}
+
+func (c *mqlAwsFmsPolicy) GetResourceSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ResourceSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.fms.policy", c.__id, "resourceSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.resourceSets()
+	})
 }
 
 func (c *mqlAwsFmsPolicy) GetComplianceStatuses() *plugin.TValue[[]any] {

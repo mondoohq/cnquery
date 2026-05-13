@@ -669,6 +669,7 @@ vulns
 VVOL
 vxlan
 vztmpl
+WAFV
 Wasi
 webauthn
 webide

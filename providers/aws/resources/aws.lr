@@ -19188,6 +19188,8 @@ private aws.fms.policy @defaults("name resourceType securityServiceType") {
   excludeMap map[string][]string
   // IDs of resource sets referenced by the policy
   resourceSetIds []string
+  // Resource sets referenced by the policy
+  resourceSets() []aws.fms.resourceSet
   // Per-member-account compliance evaluations, each with `memberAccount`, `status`, `violatorCount`, `evaluationLimitExceeded`, `issueInfoMap`, and `lastUpdated`
   complianceStatuses() []dict
 }
@@ -19228,6 +19230,7 @@ private aws.fms.protocolsList @defaults("name id") {
 
 // AWS Firewall Manager resource set
 private aws.fms.resourceSet @defaults("name id status") {
+  init(id? string)
   // ARN of the resource set
   arn string
   // ID of the resource set
