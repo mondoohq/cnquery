@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -274,6 +275,40 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 	for _, r := range g.cacheRules {
 		match, _ := convert.JsonToDict(r.Match)
 
+		var srcIpRanges, destIpRanges, srcAddressGroups, destAddressGroups, srcFqdns, srcRegionCodes []any
+		var layer4Configs []any
+		srcSecureTags := map[string]any{}
+		if r.Match != nil {
+			srcIpRanges = convert.SliceAnyToInterface(r.Match.SrcIpRanges)
+			destIpRanges = convert.SliceAnyToInterface(r.Match.DestIpRanges)
+			srcAddressGroups = convert.SliceAnyToInterface(r.Match.SrcAddressGroups)
+			destAddressGroups = convert.SliceAnyToInterface(r.Match.DestAddressGroups)
+			srcFqdns = convert.SliceAnyToInterface(r.Match.SrcFqdns)
+			srcRegionCodes = convert.SliceAnyToInterface(r.Match.SrcRegionCodes)
+			for _, l4 := range r.Match.Layer4Configs {
+				if l4 == nil {
+					continue
+				}
+				layer4Configs = append(layer4Configs, map[string]any{
+					"ipProtocol": l4.IpProtocol,
+					"ports":      convert.SliceAnyToInterface(l4.Ports),
+				})
+			}
+			for _, t := range r.Match.SrcSecureTags {
+				if t == nil || t.Name == "" {
+					continue
+				}
+				srcSecureTags[t.Name] = t.State
+			}
+		}
+		targetSecureTags := map[string]any{}
+		for _, t := range r.TargetSecureTags {
+			if t == nil || t.Name == "" {
+				continue
+			}
+			targetSecureTags[t.Name] = t.State
+		}
+
 		mqlRule, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.firewallPolicy.rule", map[string]*llx.RawData{
 			"id":                    llx.StringData(fmt.Sprintf("%s/rule/%d", policyId, r.Priority)),
 			"priority":              llx.IntData(int64(r.Priority)),
@@ -287,6 +322,15 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 			"targetServiceAccounts": llx.ArrayData(convert.SliceAnyToInterface(r.TargetServiceAccounts), types.String),
 			"ruleName":              llx.StringData(r.RuleName),
 			"securityProfileGroup":  llx.StringData(r.SecurityProfileGroup),
+			"srcIpRanges":           llx.ArrayData(srcIpRanges, types.String),
+			"destIpRanges":          llx.ArrayData(destIpRanges, types.String),
+			"layer4Configs":         llx.ArrayData(layer4Configs, types.Any),
+			"srcSecureTags":         llx.MapData(srcSecureTags, types.String),
+			"srcAddressGroups":      llx.ArrayData(srcAddressGroups, types.String),
+			"destAddressGroups":     llx.ArrayData(destAddressGroups, types.String),
+			"srcFqdns":              llx.ArrayData(srcFqdns, types.String),
+			"srcRegionCodes":        llx.ArrayData(srcRegionCodes, types.String),
+			"targetSecureTags":      llx.MapData(targetSecureTags, types.String),
 		})
 		if err != nil {
 			return nil, err
@@ -294,6 +338,139 @@ func (g *mqlGcpProjectComputeServiceFirewallPolicy) rules() ([]any, error) {
 		res = append(res, mqlRule)
 	}
 	return res, nil
+}
+
+func (g *mqlGcpProjectComputeServiceFirewallPolicyRule) openToInternet() (bool, error) {
+	return g.evaluateOpenToInternet(nil)
+}
+
+func (g *mqlGcpProjectComputeServiceFirewallPolicyRule) allowsSshFromInternet() (bool, error) {
+	return g.evaluateOpenToInternet(&firewallPortCheck{protocol: "tcp", port: 22})
+}
+
+func (g *mqlGcpProjectComputeServiceFirewallPolicyRule) allowsRdpFromInternet() (bool, error) {
+	return g.evaluateOpenToInternet(&firewallPortCheck{protocol: "tcp", port: 3389})
+}
+
+type firewallPortCheck struct {
+	protocol string
+	port     int
+}
+
+func (g *mqlGcpProjectComputeServiceFirewallPolicyRule) evaluateOpenToInternet(portCheck *firewallPortCheck) (bool, error) {
+	if g.Disabled.Error != nil {
+		return false, g.Disabled.Error
+	}
+	if g.Disabled.Data {
+		return false, nil
+	}
+	if g.Direction.Error != nil {
+		return false, g.Direction.Error
+	}
+	if !strings.EqualFold(g.Direction.Data, "INGRESS") {
+		return false, nil
+	}
+	if g.Action.Error != nil {
+		return false, g.Action.Error
+	}
+	if !strings.EqualFold(g.Action.Data, "allow") {
+		return false, nil
+	}
+	// Any non-empty narrowing source predicate prevents the rule from being
+	// open to the internet — the rule only applies to the narrower set.
+	if g.SrcSecureTags.Error != nil {
+		return false, g.SrcSecureTags.Error
+	}
+	if len(g.SrcSecureTags.Data) > 0 {
+		return false, nil
+	}
+	if g.SrcAddressGroups.Error != nil {
+		return false, g.SrcAddressGroups.Error
+	}
+	if len(g.SrcAddressGroups.Data) > 0 {
+		return false, nil
+	}
+	if g.SrcFqdns.Error != nil {
+		return false, g.SrcFqdns.Error
+	}
+	if len(g.SrcFqdns.Data) > 0 {
+		return false, nil
+	}
+	if g.SrcRegionCodes.Error != nil {
+		return false, g.SrcRegionCodes.Error
+	}
+	if len(g.SrcRegionCodes.Data) > 0 {
+		return false, nil
+	}
+	if g.SrcIpRanges.Error != nil {
+		return false, g.SrcIpRanges.Error
+	}
+	hasInternetSource := false
+	for _, raw := range g.SrcIpRanges.Data {
+		s, ok := raw.(string)
+		if !ok {
+			continue
+		}
+		if s == "0.0.0.0/0" || s == "::/0" {
+			hasInternetSource = true
+			break
+		}
+	}
+	if !hasInternetSource {
+		return false, nil
+	}
+	if portCheck == nil {
+		return true, nil
+	}
+	if g.Layer4Configs.Error != nil {
+		return false, g.Layer4Configs.Error
+	}
+	return layer4ConfigsAllowPort(g.Layer4Configs.Data, portCheck), nil
+}
+
+func layer4ConfigsAllowPort(configs []any, check *firewallPortCheck) bool {
+	for _, raw := range configs {
+		cfg, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		proto, _ := cfg["ipProtocol"].(string)
+		if !strings.EqualFold(proto, check.protocol) && proto != "all" {
+			continue
+		}
+		ports, _ := cfg["ports"].([]any)
+		if len(ports) == 0 {
+			return true
+		}
+		for _, p := range ports {
+			ps, ok := p.(string)
+			if !ok {
+				continue
+			}
+			if portSpecMatches(ps, check.port) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func portSpecMatches(spec string, port int) bool {
+	if spec == strconv.Itoa(port) {
+		return true
+	}
+	// Handle ranges like "20-25"
+	for i := 0; i < len(spec); i++ {
+		if spec[i] == '-' {
+			lo, errLo := strconv.Atoi(spec[:i])
+			hi, errHi := strconv.Atoi(spec[i+1:])
+			if errLo == nil && errHi == nil && port >= lo && port <= hi {
+				return true
+			}
+			return false
+		}
+	}
+	return false
 }
 
 func (g *mqlGcpProjectComputeServiceFirewallPolicyRule) id() (string, error) {

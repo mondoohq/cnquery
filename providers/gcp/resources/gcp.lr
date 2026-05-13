@@ -6211,6 +6211,30 @@ private gcp.project.computeService.firewallPolicy.rule @defaults("priority actio
   ruleName string
   // Security profile group URL
   securityProfileGroup string
+  // Source IPv4/IPv6 CIDR ranges the rule matches
+  srcIpRanges []string
+  // Destination IPv4/IPv6 CIDR ranges the rule matches
+  destIpRanges []string
+  // Protocol/port combinations the rule matches (each entry: {ipProtocol, ports[]})
+  layer4Configs []dict
+  // Source secure tag values the rule matches (tag name -> state, e.g. EFFECTIVE / INEFFECTIVE)
+  srcSecureTags map[string]string
+  // Source address groups the rule matches
+  srcAddressGroups []string
+  // Destination address groups the rule matches
+  destAddressGroups []string
+  // Source FQDNs the rule matches
+  srcFqdns []string
+  // Source region codes (ISO 3166-1 alpha-2) the rule matches
+  srcRegionCodes []string
+  // Target secure tag values (tag name -> state); the modern replacement for instance targetTags on hierarchical policies
+  targetSecureTags map[string]string
+  // Whether this rule allows ingress traffic from the public internet (action allow, INGRESS, enabled, srcIpRanges contains 0.0.0.0/0 or ::/0, with no narrowing source predicates set)
+  openToInternet() bool
+  // Whether this rule permits SSH (tcp/22) from the public internet — narrower form of openToInternet for the SSH-specific port check
+  allowsSshFromInternet() bool
+  // Whether this rule permits RDP (tcp/3389) from the public internet — narrower form of openToInternet for the RDP-specific port check
+  allowsRdpFromInternet() bool
 }
 
 // Google Cloud (GCP) retry configuration (shared across Cloud Tasks and Cloud Scheduler)

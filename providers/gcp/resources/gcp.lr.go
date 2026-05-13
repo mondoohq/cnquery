@@ -9474,6 +9474,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.firewallPolicy.rule.securityProfileGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSecurityProfileGroup()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.firewallPolicy.rule.srcIpRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSrcIpRanges()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.destIpRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetDestIpRanges()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.layer4Configs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetLayer4Configs()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.srcSecureTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSrcSecureTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.srcAddressGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSrcAddressGroups()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.destAddressGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetDestAddressGroups()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.srcFqdns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSrcFqdns()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.srcRegionCodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetSrcRegionCodes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.targetSecureTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetTargetSecureTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.computeService.firewallPolicy.rule.openToInternet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetOpenToInternet()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.allowsSshFromInternet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetAllowsSshFromInternet()).ToDataRes(types.Bool)
+	},
+	"gcp.project.computeService.firewallPolicy.rule.allowsRdpFromInternet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).GetAllowsRdpFromInternet()).ToDataRes(types.Bool)
+	},
 	"gcp.retryConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpRetryConfig).GetId()).ToDataRes(types.String)
 	},
@@ -24119,6 +24155,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.firewallPolicy.rule.securityProfileGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).SecurityProfileGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.srcIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).SrcIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.destIpRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).DestIpRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.layer4Configs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).Layer4Configs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.srcSecureTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).SrcSecureTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.srcAddressGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).SrcAddressGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.destAddressGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).DestAddressGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.srcFqdns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).SrcFqdns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.srcRegionCodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).SrcRegionCodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.targetSecureTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).TargetSecureTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.openToInternet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).OpenToInternet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.allowsSshFromInternet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).AllowsSshFromInternet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.rule.allowsRdpFromInternet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicyRule).AllowsRdpFromInternet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.retryConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55580,6 +55664,18 @@ type mqlGcpProjectComputeServiceFirewallPolicyRule struct {
 	TargetServiceAccounts plugin.TValue[[]any]
 	RuleName              plugin.TValue[string]
 	SecurityProfileGroup  plugin.TValue[string]
+	SrcIpRanges           plugin.TValue[[]any]
+	DestIpRanges          plugin.TValue[[]any]
+	Layer4Configs         plugin.TValue[[]any]
+	SrcSecureTags         plugin.TValue[map[string]any]
+	SrcAddressGroups      plugin.TValue[[]any]
+	DestAddressGroups     plugin.TValue[[]any]
+	SrcFqdns              plugin.TValue[[]any]
+	SrcRegionCodes        plugin.TValue[[]any]
+	TargetSecureTags      plugin.TValue[map[string]any]
+	OpenToInternet        plugin.TValue[bool]
+	AllowsSshFromInternet plugin.TValue[bool]
+	AllowsRdpFromInternet plugin.TValue[bool]
 }
 
 // createGcpProjectComputeServiceFirewallPolicyRule creates a new instance of this resource
@@ -55665,6 +55761,60 @@ func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetRuleName() *plugin.TV
 
 func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSecurityProfileGroup() *plugin.TValue[string] {
 	return &c.SecurityProfileGroup
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSrcIpRanges() *plugin.TValue[[]any] {
+	return &c.SrcIpRanges
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetDestIpRanges() *plugin.TValue[[]any] {
+	return &c.DestIpRanges
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetLayer4Configs() *plugin.TValue[[]any] {
+	return &c.Layer4Configs
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSrcSecureTags() *plugin.TValue[map[string]any] {
+	return &c.SrcSecureTags
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSrcAddressGroups() *plugin.TValue[[]any] {
+	return &c.SrcAddressGroups
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetDestAddressGroups() *plugin.TValue[[]any] {
+	return &c.DestAddressGroups
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSrcFqdns() *plugin.TValue[[]any] {
+	return &c.SrcFqdns
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetSrcRegionCodes() *plugin.TValue[[]any] {
+	return &c.SrcRegionCodes
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetTargetSecureTags() *plugin.TValue[map[string]any] {
+	return &c.TargetSecureTags
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetOpenToInternet() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OpenToInternet, func() (bool, error) {
+		return c.openToInternet()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetAllowsSshFromInternet() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsSshFromInternet, func() (bool, error) {
+		return c.allowsSshFromInternet()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicyRule) GetAllowsRdpFromInternet() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsRdpFromInternet, func() (bool, error) {
+		return c.allowsRdpFromInternet()
+	})
 }
 
 // mqlGcpRetryConfig for the gcp.retryConfig resource
