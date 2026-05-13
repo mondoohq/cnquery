@@ -2553,6 +2553,8 @@ private azure.subscription.storageService.account @defaults("id name location") 
   objectReplicationPolicies() []azure.subscription.storageService.account.objectReplicationPolicy
   // Blob inventory policy configured on the storage account, if any
   blobInventoryPolicy() azure.subscription.storageService.account.blobInventoryPolicy
+  // Microsoft Defender for Storage configuration for this account — including the Microsoft Purview-backed Sensitive Data Discovery feature that classifies blob containers for sensitive data (credit cards, credentials, etc.) and surfaces findings as security alerts
+  defenderForStorage() azure.subscription.storageService.account.defenderForStorageSetting
 }
 
 // Azure Storage account queue
@@ -2949,6 +2951,35 @@ private azure.subscription.storageService.account.blobInventoryPolicy @defaults(
   lastModifiedTime time
   // Inventory rules. Each entry has {name, enabled, destination, definition: {format, schedule, objectType, schemaFields, filters}}.
   rules []dict
+}
+
+// Microsoft Defender for Storage configuration for a single storage account
+//
+// Examine the per-account Defender for Storage settings. `isEnabled` reports
+// whether Defender for Storage is on for this account, and
+// `sensitiveDataDiscoveryEnabled` reflects whether the Microsoft Purview-backed
+// sensitive data classification engine scans blob containers and surfaces
+// findings as security alerts. `overrideSubscriptionLevelSettings` distinguishes
+// account-level overrides from inherited subscription-level configuration.
+private azure.subscription.storageService.account.defenderForStorageSetting @defaults("isEnabled sensitiveDataDiscoveryEnabled malwareScanningOnUploadEnabled") {
+  // ARM resource ID of the Defender for Storage setting (`.../storageAccounts/{name}/providers/Microsoft.Security/defenderForStorageSettings/current`)
+  id string
+  // Whether Defender for Storage is enabled on this storage account
+  isEnabled bool
+  // Whether the per-account configuration overrides the subscription-level Defender for Storage settings
+  overrideSubscriptionLevelSettings bool
+  // Whether the Microsoft Purview-backed Sensitive Data Discovery sub-feature is enabled — scans blob containers for sensitive data (credit cards, credentials, etc.) and emits security alerts
+  sensitiveDataDiscoveryEnabled bool
+  // Status of the most recent Sensitive Data Discovery enable/disable operation, with keys `code` and `message` (populated only on failure or partial success)
+  sensitiveDataDiscoveryStatus dict
+  // Whether on-upload malware scanning is enabled — every new blob is scanned for malware before becoming readable
+  malwareScanningOnUploadEnabled bool
+  // Monthly per-storage-account cap on the GB scanned for on-upload malware scanning. Negative values mean no cap
+  malwareScanningCapGBPerMonth int
+  // Resource ID of the Event Grid Topic that receives malware scan results, empty when no topic is configured
+  malwareScanningResultsEventGridTopicId string
+  // Status of the most recent Malware Scanning enable/disable operation, with keys `code` and `message` (populated only on failure or partial success)
+  malwareScanningStatus dict
 }
 
 // Azure Web

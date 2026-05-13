@@ -3153,6 +3153,17 @@ azure.subscription.storageService.account.dataProtection.containerRetentionDays 
 azure.subscription.storageService.account.dataProtection.containerSoftDeletionEnabled 9.0.1
 azure.subscription.storageService.account.dataProtection.storageAccountId 9.0.1
 azure.subscription.storageService.account.defaultToOAuthAuthentication 11.6.2
+azure.subscription.storageService.account.defenderForStorage 13.11.2
+azure.subscription.storageService.account.defenderForStorageSetting 13.11.2
+azure.subscription.storageService.account.defenderForStorageSetting.id 13.11.2
+azure.subscription.storageService.account.defenderForStorageSetting.isEnabled 13.11.2
+azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningCapGBPerMonth 13.11.2
+azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningOnUploadEnabled 13.11.2
+azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningResultsEventGridTopicId 13.11.2
+azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningStatus 13.11.2
+azure.subscription.storageService.account.defenderForStorageSetting.overrideSubscriptionLevelSettings 13.11.2
+azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryEnabled 13.11.2
+azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryStatus 13.11.2
 azure.subscription.storageService.account.enableHttpsTrafficOnly 11.4.28
 azure.subscription.storageService.account.enableNfsV3 11.6.2
 azure.subscription.storageService.account.encryptionKey 13.1.8

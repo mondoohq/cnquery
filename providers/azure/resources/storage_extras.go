@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 	storage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -399,6 +400,97 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) blobInventoryPolicy() (*mqlA
 		return nil, err
 	}
 	return mqlPol.(*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy), nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+
+	resourceId := a.Id.Data
+	client, err := armsecurity.NewDefenderForStorageClient(conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Get(ctx, resourceId, armsecurity.SettingNameCurrent, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		isEnabled                              bool
+		overrideSubscriptionLevelSettings      bool
+		sensitiveDataDiscoveryEnabled          bool
+		malwareScanningOnUploadEnabled         bool
+		malwareScanningCapGBPerMonth           int64
+		malwareScanningResultsEventGridTopicId string
+	)
+	var sensitiveDataDiscoveryStatus, malwareScanningStatus map[string]any
+
+	malwareScanningCapGBPerMonth = -1
+
+	if p := resp.Properties; p != nil {
+		if p.IsEnabled != nil {
+			isEnabled = *p.IsEnabled
+		}
+		if p.OverrideSubscriptionLevelSettings != nil {
+			overrideSubscriptionLevelSettings = *p.OverrideSubscriptionLevelSettings
+		}
+		if p.SensitiveDataDiscovery != nil {
+			if p.SensitiveDataDiscovery.IsEnabled != nil {
+				sensitiveDataDiscoveryEnabled = *p.SensitiveDataDiscovery.IsEnabled
+			}
+			if d, _ := convert.JsonToDict(p.SensitiveDataDiscovery.OperationStatus); d != nil {
+				sensitiveDataDiscoveryStatus = d
+			}
+		}
+		if p.MalwareScanning != nil {
+			if p.MalwareScanning.OnUpload != nil {
+				if p.MalwareScanning.OnUpload.IsEnabled != nil {
+					malwareScanningOnUploadEnabled = *p.MalwareScanning.OnUpload.IsEnabled
+				}
+				if p.MalwareScanning.OnUpload.CapGBPerMonth != nil {
+					malwareScanningCapGBPerMonth = int64(*p.MalwareScanning.OnUpload.CapGBPerMonth)
+				}
+			}
+			if p.MalwareScanning.ScanResultsEventGridTopicResourceID != nil {
+				malwareScanningResultsEventGridTopicId = *p.MalwareScanning.ScanResultsEventGridTopicResourceID
+			}
+			if d, _ := convert.JsonToDict(p.MalwareScanning.OperationStatus); d != nil {
+				malwareScanningStatus = d
+			}
+		}
+	}
+
+	settingId := ""
+	if resp.ID != nil {
+		settingId = *resp.ID
+	}
+	if settingId == "" {
+		settingId = resourceId + "/providers/Microsoft.Security/defenderForStorageSettings/current"
+	}
+
+	mqlSetting, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.defenderForStorageSetting",
+		map[string]*llx.RawData{
+			"id":                                     llx.StringData(settingId),
+			"isEnabled":                              llx.BoolData(isEnabled),
+			"overrideSubscriptionLevelSettings":      llx.BoolData(overrideSubscriptionLevelSettings),
+			"sensitiveDataDiscoveryEnabled":          llx.BoolData(sensitiveDataDiscoveryEnabled),
+			"sensitiveDataDiscoveryStatus":           llx.DictData(sensitiveDataDiscoveryStatus),
+			"malwareScanningOnUploadEnabled":         llx.BoolData(malwareScanningOnUploadEnabled),
+			"malwareScanningCapGBPerMonth":           llx.IntData(malwareScanningCapGBPerMonth),
+			"malwareScanningResultsEventGridTopicId": llx.StringData(malwareScanningResultsEventGridTopicId),
+			"malwareScanningStatus":                  llx.DictData(malwareScanningStatus),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlSetting.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting), nil
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) id() (string, error) {
+	return a.Id.Data, nil
 }
 
 func inventoryRulesToDicts(rules []*storage.BlobInventoryPolicyRule) []any {

@@ -113,6 +113,7 @@ const (
 	ResourceAzureSubscriptionStorageServiceAccountPrivateEndpointConnection                      string = "azure.subscription.storageService.account.privateEndpointConnection"
 	ResourceAzureSubscriptionStorageServiceAccountObjectReplicationPolicy                        string = "azure.subscription.storageService.account.objectReplicationPolicy"
 	ResourceAzureSubscriptionStorageServiceAccountBlobInventoryPolicy                            string = "azure.subscription.storageService.account.blobInventoryPolicy"
+	ResourceAzureSubscriptionStorageServiceAccountDefenderForStorageSetting                      string = "azure.subscription.storageService.account.defenderForStorageSetting"
 	ResourceAzureSubscriptionWebService                                                          string = "azure.subscription.webService"
 	ResourceAzureSubscriptionWebServiceAppRuntimeStack                                           string = "azure.subscription.webService.appRuntimeStack"
 	ResourceAzureSubscriptionWebServiceAppsite                                                   string = "azure.subscription.webService.appsite"
@@ -726,6 +727,10 @@ func init() {
 		"azure.subscription.storageService.account.blobInventoryPolicy": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountBlobInventoryPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionStorageServiceAccountBlobInventoryPolicy,
+		},
+		"azure.subscription.storageService.account.defenderForStorageSetting": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountDefenderForStorageSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountDefenderForStorageSetting,
 		},
 		"azure.subscription.webService": {
 			Init:   initAzureSubscriptionWebService,
@@ -4627,6 +4632,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.blobInventoryPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetBlobInventoryPolicy()).ToDataRes(types.Resource("azure.subscription.storageService.account.blobInventoryPolicy"))
 	},
+	"azure.subscription.storageService.account.defenderForStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetDefenderForStorage()).ToDataRes(types.Resource("azure.subscription.storageService.account.defenderForStorageSetting"))
+	},
 	"azure.subscription.storageService.account.queue.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetId()).ToDataRes(types.String)
 	},
@@ -5064,6 +5072,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.blobInventoryPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.overrideSubscriptionLevelSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetOverrideSubscriptionLevelSettings()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetSensitiveDataDiscoveryEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetSensitiveDataDiscoveryStatus()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningOnUploadEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetMalwareScanningOnUploadEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningCapGBPerMonth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetMalwareScanningCapGBPerMonth()).ToDataRes(types.Int)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningResultsEventGridTopicId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetMalwareScanningResultsEventGridTopicId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetMalwareScanningStatus()).ToDataRes(types.Dict)
 	},
 	"azure.subscription.webService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebService).GetSubscriptionId()).ToDataRes(types.String)
@@ -15871,6 +15906,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccount).BlobInventoryPolicy, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.defenderForStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).DefenderForStorage, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.queue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).__id, ok = v.Value.(string)
 		return
@@ -16537,6 +16576,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.blobInventoryPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.overrideSubscriptionLevelSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).OverrideSubscriptionLevelSettings, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).SensitiveDataDiscoveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).SensitiveDataDiscoveryStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningOnUploadEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).MalwareScanningOnUploadEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningCapGBPerMonth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).MalwareScanningCapGBPerMonth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningResultsEventGridTopicId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).MalwareScanningResultsEventGridTopicId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).MalwareScanningStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35758,6 +35837,7 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	PrivateEndpointConnections                       plugin.TValue[[]any]
 	ObjectReplicationPolicies                        plugin.TValue[[]any]
 	BlobInventoryPolicy                              plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy]
+	DefenderForStorage                               plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting]
 }
 
 // createAzureSubscriptionStorageServiceAccount creates a new instance of this resource
@@ -36240,6 +36320,22 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetBlobInventoryPolicy() *pl
 		}
 
 		return c.blobInventoryPolicy()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetDefenderForStorage() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting](&c.DefenderForStorage, func() (*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account", c.__id, "defenderForStorage")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting), nil
+			}
+		}
+
+		return c.defenderForStorage()
 	})
 }
 
@@ -37877,6 +37973,95 @@ func (c *mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy) GetLastMo
 
 func (c *mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
+}
+
+// mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting for the azure.subscription.storageService.account.defenderForStorageSetting resource
+type mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSettingInternal it will be used here
+	Id                                     plugin.TValue[string]
+	IsEnabled                              plugin.TValue[bool]
+	OverrideSubscriptionLevelSettings      plugin.TValue[bool]
+	SensitiveDataDiscoveryEnabled          plugin.TValue[bool]
+	SensitiveDataDiscoveryStatus           plugin.TValue[any]
+	MalwareScanningOnUploadEnabled         plugin.TValue[bool]
+	MalwareScanningCapGBPerMonth           plugin.TValue[int64]
+	MalwareScanningResultsEventGridTopicId plugin.TValue[string]
+	MalwareScanningStatus                  plugin.TValue[any]
+}
+
+// createAzureSubscriptionStorageServiceAccountDefenderForStorageSetting creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountDefenderForStorageSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.defenderForStorageSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) MqlName() string {
+	return "azure.subscription.storageService.account.defenderForStorageSetting"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetOverrideSubscriptionLevelSettings() *plugin.TValue[bool] {
+	return &c.OverrideSubscriptionLevelSettings
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetSensitiveDataDiscoveryEnabled() *plugin.TValue[bool] {
+	return &c.SensitiveDataDiscoveryEnabled
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetSensitiveDataDiscoveryStatus() *plugin.TValue[any] {
+	return &c.SensitiveDataDiscoveryStatus
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetMalwareScanningOnUploadEnabled() *plugin.TValue[bool] {
+	return &c.MalwareScanningOnUploadEnabled
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetMalwareScanningCapGBPerMonth() *plugin.TValue[int64] {
+	return &c.MalwareScanningCapGBPerMonth
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetMalwareScanningResultsEventGridTopicId() *plugin.TValue[string] {
+	return &c.MalwareScanningResultsEventGridTopicId
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetMalwareScanningStatus() *plugin.TValue[any] {
+	return &c.MalwareScanningStatus
 }
 
 // mqlAzureSubscriptionWebService for the azure.subscription.webService resource
