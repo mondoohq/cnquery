@@ -456,6 +456,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"iru": {
+		Provider: &plugin.Provider{
+			Name:            "iru",
+			ID:              "go.mondoo.com/mql/providers/iru",
+			ConnectionTypes: []string{"iru"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "iru",
+					Use:   "iru",
+					Short: "an Iru tenant",
+				},
+			},
+		},
+	},
+
 	"jamf": {
 		Provider: &plugin.Provider{
 			Name:            "jamf",

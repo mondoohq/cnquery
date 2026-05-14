@@ -1,0 +1,352 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/iru"
+option go_package = "go.mondoo.com/mql/v13/providers/iru/resources"
+
+// Iru (formerly Kandji)
+//
+// Examine an Iru tenant — the device fleet (hardware, OS, security
+// posture, enrollment state, installed apps and configuration profiles),
+// configuration blueprints, the library item catalog (App Store apps,
+// custom apps, custom profiles, scripts, MDM restrictions, and other
+// policy items), the directory of end-users, and tenant-level settings.
+// Sub-resources are populated from the Iru API and respect the
+// permissions granted to the bearer token used to connect.
+iru {
+  // List every device enrolled in the Iru tenant
+  devices() []iru.device
+
+  // List every configuration blueprint defined in the tenant
+  blueprints() []iru.blueprint
+
+  // List every entry in the library catalog (apps, profiles, scripts, MDM restrictions, …)
+  libraryItems() []iru.libraryItem
+
+  // List every end-user in the Iru directory
+  users() []iru.user
+
+  // Tenant-level settings (organization name, region, agent rollout versions)
+  tenant() iru.tenant
+}
+
+// Iru device lookup by ID
+//
+// Examine a single device identified by its Iru device ID. The `id`
+// field selects the device, for example
+// `iru.device(id: "abc123") { osVersion filevaultEnabled }`. Use
+// `iru.devices` when iterating the full fleet.
+iru.device @defaults("name serialNumber osVersion platform") {
+  // Initialize the resource by Iru device ID
+  init(id string)
+
+  // Unique Iru device ID
+  id string
+
+  // Device display name as shown in the Iru admin console
+  name string
+
+  // Hardware serial number
+  serialNumber string
+
+  // Device UDID (Apple-assigned unique device identifier)
+  udid string
+
+  // Asset tag assigned in the Iru admin console
+  assetTag string
+
+  // Hardware model — for example "MacBook Pro" or "iPhone 15 Pro"
+  model string
+
+  // Apple model identifier — for example "MacBookPro18,1"
+  modelIdentifier() string
+
+  // Device platform — one of `Mac`, `iPad`, `iPhone`, `AppleTV`, `Vision`
+  platform string
+
+  // Operating system version installed on the device
+  osVersion string
+
+  // Processor name reported by the device
+  processor() string
+
+  // Number of CPU cores reported by the device
+  coreCount() int
+
+  // Total installed memory in bytes
+  memory() int
+
+  // Whether the device runs on Apple silicon
+  appleSilicon() bool
+
+  // Battery cycle count (Mac/iOS battery health indicator); 0 if unreported
+  batteryCycleCount() int
+
+  // Last time the device checked in with Iru
+  lastCheckIn time
+
+  // Most recent enrollment timestamp
+  lastEnrollment() time
+
+  // Whether the device is in Apple's supervised state
+  supervised() bool
+
+  // Whether the MDM payload is currently installed and active
+  mdmEnabled bool
+
+  // Whether the user approved MDM enrollment (required for many payloads on macOS)
+  userApprovedMdm() bool
+
+  // Whether the device was enrolled via Apple Automated Device Enrollment (DEP/ABM)
+  dep() bool
+
+  // Whether a bootstrap token has been escrowed to Apple's MDM servers
+  bootstrapTokenEscrowed() bool
+
+  // Whether Activation Lock is currently enabled on the device
+  activationLockEnabled() bool
+
+  // Whether an Activation Lock bypass code is escrowed in Iru
+  activationLockBypassCodePresent() bool
+
+  // Whether FileVault full-disk encryption is enabled
+  filevaultEnabled() bool
+
+  // Whether the FileVault personal recovery key has been escrowed to Iru
+  filevaultRecoveryKeyEscrowed() bool
+
+  // Type of FileVault recovery key in use — typically `personal` or `institutional`
+  filevaultRecoveryKeyType() string
+
+  // Whether macOS Gatekeeper is enabled
+  gatekeeperEnabled() bool
+
+  // Whether macOS System Integrity Protection (SIP) is enabled
+  sipEnabled() bool
+
+  // Whether the application firewall is enabled
+  firewallEnabled() bool
+
+  // Whether the application firewall is configured in stealth mode
+  firewallStealthMode() bool
+
+  // Whether macOS automatic security updates are enabled
+  autoUpdateEnabled() bool
+
+  // Whether Remote Desktop (ARD) is enabled
+  remoteDesktopEnabled() bool
+
+  // Whether a screen-saver lock is required
+  screensaverLockEnabled() bool
+
+  // Whether Find My is enabled on the device
+  findMyEnabled() bool
+
+  // Apple secure boot level reported by the device
+  secureBootLevel() string
+
+  // XProtect definition version installed on the device
+  xprotectVersion() string
+
+  // Malware Removal Tool (MRT) version installed on the device
+  mrtVersion() string
+
+  // Whether the Iru agent is installed on the device
+  agentInstalled bool
+
+  // Iru agent version installed on the device
+  agentVersion string
+
+  // Most recent IP address recorded for the device
+  ipAddress() string
+
+  // Public IP address reported on the device's last check-in
+  publicIpAddress() string
+
+  // Wi-Fi MAC address
+  wifiMac() string
+
+  // Ethernet MAC address
+  ethernetMac() string
+
+  // Bluetooth MAC address
+  bluetoothMac() string
+
+  // Tags applied to the device in the Iru admin console
+  tags []string
+
+  // Storage volumes reported by the device — each entry includes `name`, `identifier`, `size_bytes`, `free_bytes`, `encrypted`, and `boot_volume`
+  volumes() []dict
+
+  // Blueprint assigned to the device
+  blueprint() iru.blueprint
+
+  // End-user assigned to the device, if any
+  user() iru.user
+
+  // Installed applications reported by the device
+  apps() []iru.app
+
+  // Installed configuration profiles reported by the device
+  profiles() []iru.profile
+}
+
+// Installed application on an Iru-managed device
+private iru.app @defaults("name version bundleId") {
+  // Application name as reported by the device
+  name string
+
+  // Application bundle identifier (e.g. `com.apple.Safari`)
+  bundleId string
+
+  // CFBundleVersion reported by the application
+  version string
+
+  // CFBundleShortVersionString reported by the application
+  shortVersion string
+
+  // Absolute filesystem path to the application bundle
+  path string
+
+  // Codesign team identifier (TID) extracted from the application signature
+  teamIdentifier string
+
+  // Whether the application is an Apple-signed first-party application
+  isAppleApp bool
+}
+
+// Configuration profile installed on an Iru-managed device
+private iru.profile @defaults("displayName identifier") {
+  // Profile identifier (typically a reverse-DNS string)
+  identifier string
+
+  // Human-readable display name for the profile
+  displayName string
+
+  // Organization listed on the profile
+  organization string
+
+  // Profile UUID
+  uuid string
+
+  // Source that installed the profile (`MDM`, the user, or another mechanism)
+  installedBy string
+
+  // Whether the profile can be removed by the end-user
+  removable bool
+
+  // Whether the profile is signed/encrypted
+  encrypted bool
+}
+
+// Iru blueprint — bundle of library items assigned to devices
+private iru.blueprint @defaults("name") {
+  // Blueprint identifier
+  id string
+
+  // Blueprint name
+  name string
+
+  // Free-form description set in the Iru admin console
+  description string
+
+  // Enrollment code (used during ADE/manual enrollment to assign the blueprint)
+  enrollmentCode string
+
+  // Number of devices currently assigned to the blueprint
+  devicesCount int
+
+  // When the blueprint was created
+  created time
+
+  // When the blueprint was last modified
+  updatedAt time
+
+  // Library items assigned to the blueprint
+  libraryItems() []iru.libraryItem
+}
+
+// Iru library item — a single entry in the Iru policy/app/profile catalog
+//
+// Examine one library item — apps, configuration profiles, custom apps,
+// custom profiles, scripts, MDM restrictions, FileVault, Gatekeeper, and
+// other policy items live in the same catalog. The `kind` field
+// discriminates the entry type (for example
+// `iru.libraryItems.where(kind == "script")`) and `payload` carries the
+// kind-specific configuration: scripts expose `script` / `run_on` /
+// `run_frequency`; App Store apps expose `app_id` / `bundle_id` /
+// `version`; custom profiles expose the profile metadata.
+private iru.libraryItem @defaults("name kind active") {
+  // Library item identifier
+  id string
+
+  // Library item name
+  name string
+
+  // Library item kind — values include `app-store-app`, `custom-app`, `custom-profile`, `profile`, `script`, `mdm-restrictions`, `filevault`, `gatekeeper`, and other policy types
+  kind string
+
+  // Whether the item is currently active in the tenant
+  active bool
+
+  // Per-status assignment counts (`installed`, `pending`, `failed`, …) keyed by status name
+  counts map[string]int
+
+  // Kind-specific configuration — shape varies by `kind`
+  payload dict
+
+  // Blueprints that reference this library item
+  blueprints() []iru.blueprint
+
+  // When the library item was created
+  created time
+
+  // When the library item was last modified
+  updatedAt time
+}
+
+// Iru end-user record
+private iru.user @defaults("name email") {
+  // User identifier
+  id string
+
+  // Display name for the user
+  name string
+
+  // Email address recorded for the user
+  email string
+
+  // Username (login name) recorded for the user
+  username string
+
+  // Department recorded for the user
+  department string
+
+  // Job title recorded for the user
+  jobTitle string
+
+  // Whether the user is archived (no longer active in the directory)
+  archived bool
+}
+
+// Iru tenant settings
+//
+// Examine tenant-level metadata — the tenant subdomain, organization
+// name, region, and the minimum and latest Iru agent versions advertised
+// to managed devices.
+private iru.tenant @defaults("organizationName subdomain region") {
+  // Tenant subdomain (the prefix of the `*.api.kandji.io` hostname)
+  subdomain string
+
+  // Organization name as configured in the Iru admin console
+  organizationName string
+
+  // Region the tenant runs in
+  region string
+
+  // Minimum Iru agent version configured for the tenant
+  agentMinimumVersion string
+
+  // Latest Iru agent version advertised by the tenant
+  agentLatestVersion string
+}
