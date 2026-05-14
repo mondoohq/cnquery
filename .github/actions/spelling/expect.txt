@@ -185,6 +185,7 @@ eula
 evc
 eventarc
 eventhubs
+Eventstream
 evs
 EXACC
 Exadata
@@ -687,6 +688,7 @@ Webstore
 Wjki
 wordpress
 workdir
+Workflowapp
 WORKSPACESUSER
 workspacesweb
 writeback
