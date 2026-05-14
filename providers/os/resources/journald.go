@@ -12,8 +12,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/spf13/afero"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 	"go.mondoo.com/mql/v13/providers/os/resources/parsers"
 	"go.mondoo.com/mql/v13/types"
 	"go.mondoo.com/mql/v13/utils/multierr"
@@ -46,6 +48,12 @@ func initJournaldConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 
 const defaultJournaldConfig = "/etc/systemd/journald.conf"
 
+type journaldConfigSection struct {
+	name       string
+	params     map[string]string
+	paramOrder []string
+}
+
 func (s *mqlJournaldConfig) id() (string, error) {
 	file := s.GetFile()
 	if file.Error != nil {
@@ -74,20 +82,9 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 		return errors.New("no base journald config file to read")
 	}
 
-	content, err := fileRequiredContent(file)
+	files, err := s.configFiles(file)
 	if err != nil {
 		return err
-	}
-
-	unit, err := parsers.ParseUnit(content)
-	if err != nil {
-		return fmt.Errorf("failed to parse journald config: %w", err)
-	}
-
-	if len(unit.Sections) == 0 {
-		s.Sections.Data = []any{}
-		s.Sections.State = plugin.StateIsSet
-		return nil
 	}
 
 	filePath := file.GetPath()
@@ -95,27 +92,40 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 		return filePath.Error
 	}
 
+	sections := map[string]*journaldConfigSection{}
+	sectionOrder := []string{}
+
+	for _, configFile := range files {
+		content, err := fileRequiredContent(configFile)
+		if err != nil {
+			return err
+		}
+
+		unit, err := parsers.ParseUnit(content)
+		if err != nil {
+			return fmt.Errorf("failed to parse journald config: %w", err)
+		}
+
+		mergeJournaldConfig(unit, sections, &sectionOrder)
+	}
+
 	var errs multierr.Errors
 	sectionResources := []any{}
 
-	for i, unitSection := range unit.Sections {
-		sectionID := fmt.Sprintf("%s/%s/%d", filePath.Data, unitSection.Name, i)
+	for i, sectionName := range sectionOrder {
+		sectionData := sections[sectionName]
+		sectionID := fmt.Sprintf("%s/%s/%d", filePath.Data, sectionData.name, i)
 		paramResources := []any{}
 
-		for j, unitParam := range unitSection.Params {
-			val := unitParam.Value
-			if slices.Contains(journaldDowncaseKeywords, unitParam.Name) {
-				val = strings.ToLower(val)
-			}
-
-			paramID := fmt.Sprintf("%s/%s/%d", sectionID, unitParam.Name, j)
+		for j, paramName := range sectionData.paramOrder {
+			paramID := fmt.Sprintf("%s/%s/%d", sectionID, paramName, j)
 			param, err := CreateResource(s.MqlRuntime, ResourceJournaldConfigSectionParam, map[string]*llx.RawData{
 				"__id":  llx.StringData(paramID),
-				"name":  llx.StringData(unitParam.Name),
-				"value": llx.StringData(val),
+				"name":  llx.StringData(paramName),
+				"value": llx.StringData(sectionData.params[paramName]),
 			})
 			if err != nil {
-				errs.Add(fmt.Errorf("failed to create param resource for '%s' in section '%s': %w", unitParam.Name, unitSection.Name, err))
+				errs.Add(fmt.Errorf("failed to create param resource for '%s' in section '%s': %w", paramName, sectionData.name, err))
 				continue
 			}
 			paramResources = append(paramResources, param)
@@ -123,11 +133,11 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 
 		section, err := CreateResource(s.MqlRuntime, ResourceJournaldConfigSection, map[string]*llx.RawData{
 			"__id":   llx.StringData(sectionID),
-			"name":   llx.StringData(unitSection.Name),
+			"name":   llx.StringData(sectionData.name),
 			"params": llx.ArrayData(paramResources, types.Resource(ResourceJournaldConfigSectionParam)),
 		})
 		if err != nil {
-			errs.Add(fmt.Errorf("failed to create section resource for '%s': %w", unitSection.Name, err))
+			errs.Add(fmt.Errorf("failed to create section resource for '%s': %w", sectionData.name, err))
 			continue
 		}
 
@@ -138,6 +148,60 @@ func (s *mqlJournaldConfig) parse(file *mqlFile) error {
 	s.Sections.State = plugin.StateIsSet
 	s.Sections.Error = errs.Deduplicate()
 	return s.Sections.Error
+}
+
+func (s *mqlJournaldConfig) configFiles(file *mqlFile) ([]*mqlFile, error) {
+	filePath := file.GetPath()
+	if filePath.Error != nil {
+		return nil, filePath.Error
+	}
+
+	files := []*mqlFile{file}
+	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return files, nil
+	}
+
+	matches, err := afero.Glob(conn.FileSystem(), filePath.Data+".d/*.conf")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, match := range matches {
+		dropinFile, err := newFile(s.MqlRuntime, match)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, dropinFile)
+	}
+
+	return files, nil
+}
+
+func mergeJournaldConfig(unit *parsers.Unit, sections map[string]*journaldConfigSection, sectionOrder *[]string) {
+	for _, unitSection := range unit.Sections {
+		sectionData, ok := sections[unitSection.Name]
+		if !ok {
+			sectionData = &journaldConfigSection{
+				name:   unitSection.Name,
+				params: map[string]string{},
+			}
+			sections[unitSection.Name] = sectionData
+			*sectionOrder = append(*sectionOrder, unitSection.Name)
+		}
+
+		for _, unitParam := range unitSection.Params {
+			val := unitParam.Value
+			if slices.Contains(journaldDowncaseKeywords, unitParam.Name) {
+				val = strings.ToLower(val)
+			}
+
+			if _, ok := sectionData.params[unitParam.Name]; !ok {
+				sectionData.paramOrder = append(sectionData.paramOrder, unitParam.Name)
+			}
+			sectionData.params[unitParam.Name] = val
+		}
+	}
 }
 
 // returns the sections of the journald config, eg [Journal], [Upload], etc
