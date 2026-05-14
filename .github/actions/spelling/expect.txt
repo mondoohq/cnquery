@@ -145,6 +145,7 @@ dedupratio
 defc
 deliverychannel
 depsdev
+detectedapp
 dfw
 dhcpcd
 dhcpv
@@ -377,6 +378,7 @@ mlag
 mls
 Mnfz
 mno
+mobileapp
 modelarmor
 mongodb
 Mpim
@@ -431,7 +433,7 @@ OAI
 objectstorage
 ocr
 octavia
-OData
+odata
 Odr
 oem
 oid
