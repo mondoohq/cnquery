@@ -1,0 +1,203 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+
+	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/ms365/connection"
+)
+
+func (m *mqlMicrosoftDevicemanagementIntent) id() (string, error) {
+	return m.Id.Data, nil
+}
+
+func (m *mqlMicrosoftDevicemanagementIntentSetting) id() (string, error) {
+	return m.Id.Data, nil
+}
+
+// intents returns all endpoint security intents in the tenant. Each intent
+// is created from a template (antivirus, disk encryption, etc.); we fetch
+// templates once and resolve template display names inline so callers get
+// human-readable names without an extra query.
+func (a *mqlMicrosoftDevicemanagement) intents() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	templatesResp, err := graphClient.DeviceManagement().Templates().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+	templateNames := map[string]string{}
+	for _, t := range templatesResp.GetValue() {
+		if t.GetId() == nil {
+			continue
+		}
+		if name := t.GetDisplayName(); name != nil {
+			templateNames[*t.GetId()] = *name
+		}
+	}
+
+	intentsResp, err := graphClient.DeviceManagement().Intents().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	res := []any{}
+	for _, intent := range intentsResp.GetValue() {
+		r, err := newIntentResource(a.MqlRuntime, intent, templateNames)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+func newIntentResource(runtime *plugin.Runtime, intent betamodels.DeviceManagementIntentable, templateNames map[string]string) (any, error) {
+	templateId := ""
+	if v := intent.GetTemplateId(); v != nil {
+		templateId = *v
+	}
+	return CreateResource(runtime, "microsoft.devicemanagement.intent",
+		map[string]*llx.RawData{
+			"__id":                 llx.StringDataPtr(intent.GetId()),
+			"id":                   llx.StringDataPtr(intent.GetId()),
+			"displayName":          llx.StringDataPtr(intent.GetDisplayName()),
+			"description":          llx.StringDataPtr(intent.GetDescription()),
+			"templateId":           llx.StringData(templateId),
+			"templateDisplayName":  llx.StringData(templateNames[templateId]),
+			"isAssigned":           llx.BoolDataPtr(intent.GetIsAssigned()),
+			"createdDateTime":      llx.TimeDataPtr(nil),
+			"lastModifiedDateTime": llx.TimeDataPtr(intent.GetLastModifiedDateTime()),
+			"lastModifiedBy":       llx.StringData(""),
+		})
+}
+
+func (a *mqlMicrosoftDevicemanagementIntent) settings() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.DeviceManagement().Intents().ByDeviceManagementIntentId(a.Id.Data).Settings().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	res := []any{}
+	for _, s := range resp.GetValue() {
+		id := ""
+		if v := s.GetId(); v != nil {
+			id = *v
+		}
+		definitionId := ""
+		if v := s.GetDefinitionId(); v != nil {
+			definitionId = *v
+		}
+		valueJson := ""
+		if v := s.GetValueJson(); v != nil {
+			valueJson = *v
+		}
+		valueType := ""
+		if v := s.GetOdataType(); v != nil {
+			valueType = trimOdataType(*v)
+		}
+		r, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.intent.setting",
+			map[string]*llx.RawData{
+				"__id":         llx.StringData(a.Id.Data + "/" + id),
+				"id":           llx.StringData(id),
+				"definitionId": llx.StringData(definitionId),
+				"valueJson":    llx.StringData(valueJson),
+				"valueType":    llx.StringData(valueType),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+func (a *mqlMicrosoftDevicemanagementIntent) assignments() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.DeviceManagement().Intents().ByDeviceManagementIntentId(a.Id.Data).Assignments().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	res := []any{}
+	for _, assignment := range resp.GetValue() {
+		id := ""
+		if v := assignment.GetId(); v != nil {
+			id = *v
+		}
+		r, err := newBetaPolicyAssignmentResource(a.MqlRuntime, a.Id.Data+"/"+id, assignment.GetTarget())
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+// newBetaPolicyAssignmentResource mirrors newPolicyAssignmentResource for the
+// beta SDK's parallel target type. The schema is identical to the v1 path.
+func newBetaPolicyAssignmentResource(runtime *plugin.Runtime, id string, target betamodels.DeviceAndAppManagementAssignmentTargetable) (any, error) {
+	targetType, groupId, excluded, filterType, filterId := betaAssignmentTargetInfo(target)
+	return CreateResource(runtime, "microsoft.devicemanagement.policyAssignment",
+		map[string]*llx.RawData{
+			"__id":       llx.StringData(id),
+			"id":         llx.StringData(id),
+			"targetType": llx.StringData(targetType),
+			"groupId":    llx.StringData(groupId),
+			"excluded":   llx.BoolData(excluded),
+			"filterType": llx.StringData(filterType),
+			"filterId":   llx.StringData(filterId),
+		})
+}
+
+func betaAssignmentTargetInfo(target betamodels.DeviceAndAppManagementAssignmentTargetable) (targetType, groupId string, excluded bool, filterType, filterId string) {
+	if target == nil {
+		return "", "", false, "", ""
+	}
+	if t := target.GetOdataType(); t != nil {
+		targetType = trimOdataType(*t)
+	}
+	switch concrete := target.(type) {
+	case *betamodels.GroupAssignmentTarget:
+		if g := concrete.GetGroupId(); g != nil {
+			groupId = *g
+		}
+	case *betamodels.ExclusionGroupAssignmentTarget:
+		excluded = true
+		if g := concrete.GetGroupId(); g != nil {
+			groupId = *g
+		}
+	}
+	add := target.GetAdditionalData()
+	if v, ok := add["deviceAndAppManagementAssignmentFilterType"].(string); ok {
+		filterType = v
+	}
+	if v, ok := add["deviceAndAppManagementAssignmentFilterId"].(string); ok {
+		filterId = v
+	}
+	return targetType, groupId, excluded, filterType, filterId
+}

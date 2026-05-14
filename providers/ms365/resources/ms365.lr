@@ -1790,6 +1790,20 @@ microsoft.devicemanagement {
   deviceCompliancePolicies() []microsoft.devicemanagement.devicecompliancepolicy
   // Device Enrollment Configuration
   deviceEnrollmentConfigurations() []microsoft.devicemanagement.deviceEnrollmentConfiguration
+  // Endpoint security intents (antivirus, disk encryption, firewall, EDR, account protection, attack surface reduction)
+  intents() []microsoft.devicemanagement.intent
+  // Apps published to the Intune tenant
+  mobileApps() []microsoft.devicemanagement.mobileapp
+  // Apps detected as installed on managed devices, aggregated across the tenant
+  detectedApps() []microsoft.devicemanagement.detectedapp
+  // Windows Autopilot deployment profiles
+  windowsAutopilotDeploymentProfiles() []microsoft.devicemanagement.windowsAutopilotDeploymentProfile
+  // Intune RBAC role definitions
+  roleDefinitions() []microsoft.devicemanagement.roleDefinition
+  // Intune RBAC role assignments
+  roleAssignments() []microsoft.devicemanagement.roleAssignment
+  // Intune RBAC role scope tags
+  roleScopeTags() []microsoft.devicemanagement.roleScopeTag
 }
 
 // Microsoft Device Enrollment Configuration
@@ -1896,6 +1910,12 @@ private microsoft.devicemanagement.manageddevice {
   complianceGracePeriodExpirationDateTime time
   // Management certificate expiration date
   managementCertificateExpirationDate time
+  // Compliance policy evaluation states, one entry per policy that has been evaluated against this device
+  compliancePolicyStates() []microsoft.devicemanagement.manageddevice.policyState
+  // Configuration profile evaluation states, one entry per profile that has been evaluated against this device
+  configurationStates() []microsoft.devicemanagement.manageddevice.policyState
+  // Apps detected as installed on this device
+  detectedApps() []microsoft.devicemanagement.detectedapp
 }
 
 // Microsoft device configuration
@@ -1914,6 +1934,8 @@ private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName
   version int
   // DEPRECATED: kept for backwards compatibility
   properties @maturity("deprecated") dict
+  // Assignments targeting this configuration profile
+  policyAssignments() []microsoft.devicemanagement.policyAssignment
 }
 
 // Microsoft device compliance policy
@@ -1934,6 +1956,257 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   assignments []dict
   // DEPRECATED: kept for backwards compatibility
   properties @maturity("deprecated") dict
+  // Assignments targeting this compliance policy, with each target resolved to its kind, group, and any assignment filter
+  policyAssignments []microsoft.devicemanagement.policyAssignment
+}
+
+// Assignment of an Intune device management policy
+//
+// Examine which groups, devices, or licensed users an Intune policy targets,
+// and whether each assignment is an include or an exclude. `policyAssignment`
+// is used by compliance policies, configuration profiles, endpoint security
+// intents, and mobile apps. `targetType` identifies the kind of target
+// (`groupAssignmentTarget`, `exclusionGroupAssignmentTarget`,
+// `allDevicesAssignmentTarget`, `allLicensedUsersAssignmentTarget`); `groupId`
+// is populated only when the target is a group.
+private microsoft.devicemanagement.policyAssignment @defaults("id targetType groupId") {
+  // Assignment ID
+  id string
+  // Target kind (groupAssignmentTarget, exclusionGroupAssignmentTarget, allDevicesAssignmentTarget, allLicensedUsersAssignmentTarget)
+  targetType string
+  // Group ID when the target is a group, empty otherwise
+  groupId string
+  // Whether the assignment excludes the target rather than including it
+  excluded bool
+  // Assignment filter type (none, include, exclude)
+  filterType string
+  // Assignment filter ID when a filter is applied, empty otherwise
+  filterId string
+}
+
+// Evaluation state of a single Intune policy on a managed device
+//
+// Examine compliance and configuration evaluation results for a managed
+// device, one entry per policy. The `state` field gives the aggregate result
+// (`compliant`, `nonCompliant`, `conflict`, `error`, `notApplicable`,
+// `inGracePeriod`), and `settingStates` lists per-setting outcomes that
+// rolled up into it. `sourceType` distinguishes compliance from configuration
+// evaluations (`deviceCompliancePolicyState`, `deviceConfigurationState`).
+private microsoft.devicemanagement.manageddevice.policyState @defaults("displayName state") {
+  // State ID, composed of the parent device and policy IDs
+  id string
+  // Policy or profile display name
+  displayName string
+  // Aggregate evaluation state (compliant, nonCompliant, conflict, error, notApplicable, inGracePeriod)
+  state string
+  // Per-setting evaluation states with the setting definition ID and outcome
+  settingStates []dict
+  // Source of the evaluation (deviceCompliancePolicyState, deviceConfigurationState)
+  sourceType string
+  // Platform the policy targets (windows10AndLater, iOS, android, etc.)
+  platformType string
+  // Setting count
+  settingCount int
+  // Version of the policy that produced this state
+  version int
+}
+
+// Endpoint security intent
+//
+// Examine endpoint security policies created from Intune templates: antivirus,
+// disk encryption, firewall, endpoint detection and response, account
+// protection, and attack surface reduction. `templateId` and
+// `templateDisplayName` identify which template the intent was created from;
+// `settings()` returns the configured settings; `assignments()` returns the
+// groups and devices it targets.
+private microsoft.devicemanagement.intent @defaults("id displayName templateDisplayName") {
+  // Intent ID
+  id string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Template ID this intent was created from
+  templateId string
+  // Display name of the source template
+  templateDisplayName string
+  // Whether the intent has at least one assignment
+  isAssigned bool
+  // Creation date
+  createdDateTime time
+  // Last modification date
+  lastModifiedDateTime time
+  // Email or UPN of the user who last modified the intent
+  lastModifiedBy string
+  // Settings configured on this intent
+  settings() []microsoft.devicemanagement.intent.setting
+  // Assignments targeting this intent
+  assignments() []microsoft.devicemanagement.policyAssignment
+}
+
+// Setting configured on an endpoint security intent
+private microsoft.devicemanagement.intent.setting @defaults("definitionId valueJson") {
+  // Setting ID
+  id string
+  // Setting definition ID, such as deviceConfiguration--windows10EndpointProtectionConfiguration_defenderRequireRealTimeMonitoring
+  definitionId string
+  // Configured value, serialized as JSON
+  valueJson string
+  // Setting value type, the @odata.type of the value wrapper
+  valueType string
+}
+
+// Mobile app published to the Intune tenant
+//
+// Examine apps published to Intune for deployment to managed devices. Apps
+// include store apps, line-of-business apps, web apps, and managed Google Play
+// apps. `properties` holds subtype-specific fields keyed by `@odata.type`
+// (for example `bundleId`, `productCode`, `appStoreUrl`, `installCommandLine`),
+// `publishingState` indicates whether the app is ready for deployment, and
+// `assignments()` returns the groups it targets.
+private microsoft.devicemanagement.mobileapp @defaults("id displayName publisher") {
+  // Mobile app ID
+  id string
+  // App display name
+  displayName string
+  // App description
+  description string
+  // Publisher
+  publisher string
+  // Whether the app is featured in the Company Portal
+  isFeatured bool
+  // Privacy information URL
+  privacyInformationUrl string
+  // Information URL
+  informationUrl string
+  // Publishing state (notPublished, processing, published)
+  publishingState string
+  // Creation date
+  createdDateTime time
+  // Last modification date
+  lastModifiedDateTime time
+  // Subtype-discriminated fields keyed by @odata.type — bundleId / productCode for store apps, appStoreUrl, packageId, installCommandLine, and similar
+  properties dict
+  // Assignments targeting this app
+  assignments() []microsoft.devicemanagement.policyAssignment
+}
+
+// App detected as installed on managed devices
+//
+// Examine the application inventory that Intune builds from managed-device
+// reporting. `deviceCount` is the number of devices in the tenant on which
+// Intune has detected this app at the given `version`.
+private microsoft.devicemanagement.detectedapp @defaults("displayName version deviceCount") {
+  // Detected app ID
+  id string
+  // App display name
+  displayName string
+  // App version
+  version string
+  // App size in bytes
+  sizeInByte int
+  // Number of managed devices with this app installed
+  deviceCount int
+  // Platform the app was detected on (windows, iOS, android, macOS, unknown)
+  platform string
+  // Publisher
+  publisher string
+}
+
+// Windows Autopilot deployment profile
+//
+// Examine Windows Autopilot deployment profiles that drive zero-touch
+// provisioning. The profile sets language, locale, device-name template, and
+// the out-of-box experience that end users see during first sign-in;
+// `deploymentProfileType` distinguishes Azure AD joined, Hybrid Azure AD
+// joined, and self-deploying flows.
+private microsoft.devicemanagement.windowsAutopilotDeploymentProfile @defaults("id displayName deploymentProfileType") {
+  // Deployment profile ID
+  id string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Language tag applied during provisioning
+  language string
+  // Locale tag applied during provisioning
+  locale string
+  // Device name template, with substitutable tokens such as %SERIAL%
+  deviceNameTemplate string
+  // Deployment profile kind (azureADJoinedDeploymentProfile, activeDirectoryWindowsAutopilotDeploymentProfile, etc.)
+  deploymentProfileType string
+  // Whether hardware hashes are collected during provisioning
+  extractHardwareHash bool
+  // Whether the white-glove (pre-provisioning) flow is enabled
+  enableWhiteGlove bool
+  // Out-of-box experience settings such as user-type, hide-EULA, hide-privacy-settings, and skip-keyboard-selection
+  outOfBoxExperienceSettings dict
+  // Number of devices currently assigned to this profile
+  assignedDeviceCount int
+  // Creation date
+  createdDateTime time
+  // Last modification date
+  lastModifiedDateTime time
+}
+
+// Intune RBAC role definition
+//
+// Examine the Intune role-based access control catalog: built-in Microsoft
+// roles plus any custom roles defined in the tenant. `rolePermissions` lists
+// the Intune resource actions the role grants; `roleScopeTagIds` lists the
+// scope tags the role is allowed to operate against.
+private microsoft.devicemanagement.roleDefinition @defaults("id displayName isBuiltIn") {
+  // Role definition ID
+  id string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Whether the role is built-in (managed by Microsoft) rather than custom
+  isBuiltIn bool
+  // Permission grants, each entry listing allowed Intune resource actions
+  rolePermissions []dict
+  // Scope tag IDs this role is constrained to
+  roleScopeTagIds []string
+}
+
+// Assignment of an Intune RBAC role to members
+//
+// Examine which security groups receive which Intune roles, and which scope
+// tags constrain where they can act. `members` are the groups that receive
+// the role; `scopeMembers` are the groups whose objects the role applies to;
+// `resourceScopes` is the set of scope-tag IDs the assignment is limited to.
+private microsoft.devicemanagement.roleAssignment @defaults("id displayName roleDefinitionId") {
+  // Role assignment ID
+  id string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // ID of the role definition this assignment grants
+  roleDefinitionId string
+  // Group IDs that receive the role
+  members []string
+  // Group IDs whose objects the role applies to
+  scopeMembers []string
+  // Scope tag IDs the assignment is limited to
+  resourceScopes []string
+}
+
+// Intune RBAC role scope tag
+//
+// Examine the scope tags used to partition Intune resources by team or
+// region. Tags are attached to managed devices, policies, and apps, and
+// constrain which administrators can see and modify which objects.
+private microsoft.devicemanagement.roleScopeTag @defaults("id displayName isBuiltIn") {
+  // Scope tag ID
+  id string
+  // Display name
+  displayName string
+  // Description
+  description string
+  // Whether the scope tag is built-in (the "Default" tag with ID "0")
+  isBuiltIn bool
 }
 
 // Microsoft 365 Exchange Online

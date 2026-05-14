@@ -258,6 +258,18 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]any, error)
 		if err != nil {
 			return nil, err
 		}
+		policyAssignments := []any{}
+		for _, assignment := range compliancePolicy.GetAssignments() {
+			id := ""
+			if v := assignment.GetId(); v != nil {
+				id = *v
+			}
+			assignmentResource, err := newPolicyAssignmentResource(a.MqlRuntime, id, assignment.GetTarget())
+			if err != nil {
+				return nil, err
+			}
+			policyAssignments = append(policyAssignments, assignmentResource)
+		}
 		properties := getComplianceProperties(compliancePolicy)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.devicecompliancepolicy",
 			map[string]*llx.RawData{
@@ -268,6 +280,7 @@ func (a *mqlMicrosoftDevicemanagement) deviceCompliancePolicies() ([]any, error)
 				"lastModifiedDateTime": llx.TimeDataPtr(compliancePolicy.GetLastModifiedDateTime()),
 				"version":              llx.IntDataDefault(compliancePolicy.GetVersion(), 0),
 				"assignments":          llx.ArrayData(assignments, types.Any),
+				"policyAssignments":    llx.ArrayData(policyAssignments, types.Resource("microsoft.devicemanagement.policyAssignment")),
 				"properties":           llx.DictData(properties),
 			})
 		if err != nil {

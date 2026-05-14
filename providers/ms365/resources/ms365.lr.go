@@ -116,6 +116,16 @@ const (
 	ResourceMicrosoftDevicemanagementManageddevice                                                       string = "microsoft.devicemanagement.manageddevice"
 	ResourceMicrosoftDevicemanagementDeviceconfiguration                                                 string = "microsoft.devicemanagement.deviceconfiguration"
 	ResourceMicrosoftDevicemanagementDevicecompliancepolicy                                              string = "microsoft.devicemanagement.devicecompliancepolicy"
+	ResourceMicrosoftDevicemanagementPolicyAssignment                                                    string = "microsoft.devicemanagement.policyAssignment"
+	ResourceMicrosoftDevicemanagementManageddevicePolicyState                                            string = "microsoft.devicemanagement.manageddevice.policyState"
+	ResourceMicrosoftDevicemanagementIntent                                                              string = "microsoft.devicemanagement.intent"
+	ResourceMicrosoftDevicemanagementIntentSetting                                                       string = "microsoft.devicemanagement.intent.setting"
+	ResourceMicrosoftDevicemanagementMobileapp                                                           string = "microsoft.devicemanagement.mobileapp"
+	ResourceMicrosoftDevicemanagementDetectedapp                                                         string = "microsoft.devicemanagement.detectedapp"
+	ResourceMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile                                   string = "microsoft.devicemanagement.windowsAutopilotDeploymentProfile"
+	ResourceMicrosoftDevicemanagementRoleDefinition                                                      string = "microsoft.devicemanagement.roleDefinition"
+	ResourceMicrosoftDevicemanagementRoleAssignment                                                      string = "microsoft.devicemanagement.roleAssignment"
+	ResourceMicrosoftDevicemanagementRoleScopeTag                                                        string = "microsoft.devicemanagement.roleScopeTag"
 	ResourceMs365Exchangeonline                                                                          string = "ms365.exchangeonline"
 	ResourceMs365ExchangeonlineMailboxAuditBypassAssociation                                             string = "ms365.exchangeonlineMailboxAuditBypassAssociation"
 	ResourceMs365ExchangeonlineSecurityAndCompliance                                                     string = "ms365.exchangeonline.securityAndCompliance"
@@ -538,6 +548,46 @@ func init() {
 		"microsoft.devicemanagement.devicecompliancepolicy": {
 			// to override args, implement: initMicrosoftDevicemanagementDevicecompliancepolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDevicemanagementDevicecompliancepolicy,
+		},
+		"microsoft.devicemanagement.policyAssignment": {
+			// to override args, implement: initMicrosoftDevicemanagementPolicyAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementPolicyAssignment,
+		},
+		"microsoft.devicemanagement.manageddevice.policyState": {
+			// to override args, implement: initMicrosoftDevicemanagementManageddevicePolicyState(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementManageddevicePolicyState,
+		},
+		"microsoft.devicemanagement.intent": {
+			// to override args, implement: initMicrosoftDevicemanagementIntent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementIntent,
+		},
+		"microsoft.devicemanagement.intent.setting": {
+			// to override args, implement: initMicrosoftDevicemanagementIntentSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementIntentSetting,
+		},
+		"microsoft.devicemanagement.mobileapp": {
+			// to override args, implement: initMicrosoftDevicemanagementMobileapp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementMobileapp,
+		},
+		"microsoft.devicemanagement.detectedapp": {
+			// to override args, implement: initMicrosoftDevicemanagementDetectedapp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementDetectedapp,
+		},
+		"microsoft.devicemanagement.windowsAutopilotDeploymentProfile": {
+			// to override args, implement: initMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile,
+		},
+		"microsoft.devicemanagement.roleDefinition": {
+			// to override args, implement: initMicrosoftDevicemanagementRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementRoleDefinition,
+		},
+		"microsoft.devicemanagement.roleAssignment": {
+			// to override args, implement: initMicrosoftDevicemanagementRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementRoleAssignment,
+		},
+		"microsoft.devicemanagement.roleScopeTag": {
+			// to override args, implement: initMicrosoftDevicemanagementRoleScopeTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDevicemanagementRoleScopeTag,
 		},
 		"ms365.exchangeonline": {
 			// to override args, implement: initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2514,6 +2564,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.devicemanagement.deviceEnrollmentConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagement).GetDeviceEnrollmentConfigurations()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.deviceEnrollmentConfiguration")))
 	},
+	"microsoft.devicemanagement.intents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetIntents()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.intent")))
+	},
+	"microsoft.devicemanagement.mobileApps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetMobileApps()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.mobileapp")))
+	},
+	"microsoft.devicemanagement.detectedApps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetDetectedApps()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.detectedapp")))
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetWindowsAutopilotDeploymentProfiles()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.windowsAutopilotDeploymentProfile")))
+	},
+	"microsoft.devicemanagement.roleDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetRoleDefinitions()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.roleDefinition")))
+	},
+	"microsoft.devicemanagement.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.roleAssignment")))
+	},
+	"microsoft.devicemanagement.roleScopeTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagement).GetRoleScopeTags()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.roleScopeTag")))
+	},
 	"microsoft.devicemanagement.deviceEnrollmentConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).GetId()).ToDataRes(types.String)
 	},
@@ -2661,6 +2732,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.devicemanagement.manageddevice.managementCertificateExpirationDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetManagementCertificateExpirationDate()).ToDataRes(types.Time)
 	},
+	"microsoft.devicemanagement.manageddevice.compliancePolicyStates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetCompliancePolicyStates()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.manageddevice.policyState")))
+	},
+	"microsoft.devicemanagement.manageddevice.configurationStates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetConfigurationStates()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.manageddevice.policyState")))
+	},
+	"microsoft.devicemanagement.manageddevice.detectedApps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevice).GetDetectedApps()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.detectedapp")))
+	},
 	"microsoft.devicemanagement.deviceconfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetId()).ToDataRes(types.String)
 	},
@@ -2681,6 +2761,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.deviceconfiguration.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetProperties()).ToDataRes(types.Dict)
+	},
+	"microsoft.devicemanagement.deviceconfiguration.policyAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).GetPolicyAssignments()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.policyAssignment")))
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetId()).ToDataRes(types.String)
@@ -2705,6 +2788,243 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetProperties()).ToDataRes(types.Dict)
+	},
+	"microsoft.devicemanagement.devicecompliancepolicy.policyAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).GetPolicyAssignments()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.policyAssignment")))
+	},
+	"microsoft.devicemanagement.policyAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.policyAssignment.targetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GetTargetType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.policyAssignment.groupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GetGroupId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.policyAssignment.excluded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GetExcluded()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.policyAssignment.filterType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GetFilterType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.policyAssignment.filterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GetFilterId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).GetState()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.settingStates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).GetSettingStates()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).GetSourceType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.platformType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).GetPlatformType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.settingCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).GetSettingCount()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).GetVersion()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.intent.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.intent.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.intent.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.intent.templateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetTemplateId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.intent.templateDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetTemplateDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.intent.isAssigned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetIsAssigned()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.intent.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.intent.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.intent.lastModifiedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetLastModifiedBy()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.intent.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetSettings()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.intent.setting")))
+	},
+	"microsoft.devicemanagement.intent.assignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntent).GetAssignments()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.policyAssignment")))
+	},
+	"microsoft.devicemanagement.intent.setting.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntentSetting).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.intent.setting.definitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntentSetting).GetDefinitionId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.intent.setting.valueJson": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntentSetting).GetValueJson()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.intent.setting.valueType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementIntentSetting).GetValueType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.mobileapp.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.mobileapp.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.mobileapp.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.mobileapp.publisher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetPublisher()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.mobileapp.isFeatured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetIsFeatured()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.mobileapp.privacyInformationUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetPrivacyInformationUrl()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.mobileapp.informationUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetInformationUrl()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.mobileapp.publishingState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetPublishingState()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.mobileapp.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.mobileapp.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.mobileapp.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetProperties()).ToDataRes(types.Dict)
+	},
+	"microsoft.devicemanagement.mobileapp.assignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementMobileapp).GetAssignments()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.policyAssignment")))
+	},
+	"microsoft.devicemanagement.detectedapp.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDetectedapp).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.detectedapp.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDetectedapp).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.detectedapp.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDetectedapp).GetVersion()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.detectedapp.sizeInByte": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDetectedapp).GetSizeInByte()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.detectedapp.deviceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDetectedapp).GetDeviceCount()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.detectedapp.platform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDetectedapp).GetPlatform()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.detectedapp.publisher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementDetectedapp).GetPublisher()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.language": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetLanguage()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.locale": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetLocale()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.deviceNameTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetDeviceNameTemplate()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.deploymentProfileType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetDeploymentProfileType()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.extractHardwareHash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetExtractHardwareHash()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.enableWhiteGlove": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetEnableWhiteGlove()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.outOfBoxExperienceSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetOutOfBoxExperienceSettings()).ToDataRes(types.Dict)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.assignedDeviceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetAssignedDeviceCount()).ToDataRes(types.Int)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).GetLastModifiedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.devicemanagement.roleDefinition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleDefinition).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.roleDefinition.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleDefinition).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.roleDefinition.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleDefinition).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.roleDefinition.isBuiltIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleDefinition).GetIsBuiltIn()).ToDataRes(types.Bool)
+	},
+	"microsoft.devicemanagement.roleDefinition.rolePermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleDefinition).GetRolePermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.devicemanagement.roleDefinition.roleScopeTagIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleDefinition).GetRoleScopeTagIds()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.devicemanagement.roleAssignment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleAssignment).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.roleAssignment.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleAssignment).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.roleAssignment.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleAssignment).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.roleAssignment.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleAssignment).GetRoleDefinitionId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.roleAssignment.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleAssignment).GetMembers()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.devicemanagement.roleAssignment.scopeMembers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleAssignment).GetScopeMembers()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.devicemanagement.roleAssignment.resourceScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleAssignment).GetResourceScopes()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.devicemanagement.roleScopeTag.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleScopeTag).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.roleScopeTag.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleScopeTag).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.roleScopeTag.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleScopeTag).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.devicemanagement.roleScopeTag.isBuiltIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevicemanagementRoleScopeTag).GetIsBuiltIn()).ToDataRes(types.Bool)
 	},
 	"ms365.exchangeonline.malwareFilterPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMalwareFilterPolicy()).ToDataRes(types.Array(types.Dict))
@@ -5892,6 +6212,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftDevicemanagement).DeviceEnrollmentConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.devicemanagement.intents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).Intents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileApps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).MobileApps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.detectedApps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).DetectedApps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).WindowsAutopilotDeploymentProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).RoleDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).RoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleScopeTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagement).RoleScopeTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.devicemanagement.deviceEnrollmentConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDeviceEnrollmentConfiguration).__id, ok = v.Value.(string)
 		return
@@ -6096,6 +6444,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftDevicemanagementManageddevice).ManagementCertificateExpirationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"microsoft.devicemanagement.manageddevice.compliancePolicyStates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).CompliancePolicyStates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.configurationStates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).ConfigurationStates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.detectedApps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevice).DetectedApps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.devicemanagement.deviceconfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).__id, ok = v.Value.(string)
 		return
@@ -6126,6 +6486,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.deviceconfiguration.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.deviceconfiguration.policyAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDeviceconfiguration).PolicyAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6162,6 +6526,362 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.devicemanagement.devicecompliancepolicy.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.devicecompliancepolicy.policyAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDevicecompliancepolicy).PolicyAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.policyAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementPolicyAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.policyAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementPolicyAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.policyAssignment.targetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementPolicyAssignment).TargetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.policyAssignment.groupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementPolicyAssignment).GroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.policyAssignment.excluded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementPolicyAssignment).Excluded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.policyAssignment.filterType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementPolicyAssignment).FilterType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.policyAssignment.filterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementPolicyAssignment).FilterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.settingStates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).SettingStates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.platformType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).PlatformType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.settingCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).SettingCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.manageddevice.policyState.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementManageddevicePolicyState).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.intent.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.templateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).TemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.templateDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).TemplateDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.isAssigned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).IsAssigned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.lastModifiedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).LastModifiedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).Settings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.assignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntent).Assignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.setting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntentSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.intent.setting.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntentSetting).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.setting.definitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntentSetting).DefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.setting.valueJson": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntentSetting).ValueJson, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.intent.setting.valueType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementIntentSetting).ValueType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.publisher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).Publisher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.isFeatured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).IsFeatured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.privacyInformationUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).PrivacyInformationUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.informationUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).InformationUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.publishingState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).PublishingState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.mobileapp.assignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementMobileapp).Assignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.detectedapp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDetectedapp).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.detectedapp.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDetectedapp).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.detectedapp.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDetectedapp).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.detectedapp.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDetectedapp).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.detectedapp.sizeInByte": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDetectedapp).SizeInByte, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.detectedapp.deviceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDetectedapp).DeviceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.detectedapp.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDetectedapp).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.detectedapp.publisher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementDetectedapp).Publisher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.language": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).Language, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.locale": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).Locale, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.deviceNameTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).DeviceNameTemplate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.deploymentProfileType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).DeploymentProfileType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.extractHardwareHash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).ExtractHardwareHash, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.enableWhiteGlove": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).EnableWhiteGlove, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.outOfBoxExperienceSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).OutOfBoxExperienceSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.assignedDeviceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).AssignedDeviceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.windowsAutopilotDeploymentProfile.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.roleDefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleDefinition.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleDefinition).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleDefinition.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleDefinition).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleDefinition.isBuiltIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleDefinition).IsBuiltIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleDefinition.rolePermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleDefinition).RolePermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleDefinition.roleScopeTagIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleDefinition).RoleScopeTagIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.roleAssignment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleAssignment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleAssignment.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleAssignment).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleAssignment.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleAssignment).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleAssignment.roleDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleAssignment).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleAssignment.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleAssignment).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleAssignment.scopeMembers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleAssignment).ScopeMembers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleAssignment.resourceScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleAssignment).ResourceScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleScopeTag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleScopeTag).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.devicemanagement.roleScopeTag.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleScopeTag).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleScopeTag.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleScopeTag).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleScopeTag.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleScopeTag).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.devicemanagement.roleScopeTag.isBuiltIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevicemanagementRoleScopeTag).IsBuiltIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14467,10 +15187,17 @@ type mqlMicrosoftDevicemanagement struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftDevicemanagementInternal it will be used here
-	ManagedDevices                 plugin.TValue[[]any]
-	DeviceConfigurations           plugin.TValue[[]any]
-	DeviceCompliancePolicies       plugin.TValue[[]any]
-	DeviceEnrollmentConfigurations plugin.TValue[[]any]
+	ManagedDevices                     plugin.TValue[[]any]
+	DeviceConfigurations               plugin.TValue[[]any]
+	DeviceCompliancePolicies           plugin.TValue[[]any]
+	DeviceEnrollmentConfigurations     plugin.TValue[[]any]
+	Intents                            plugin.TValue[[]any]
+	MobileApps                         plugin.TValue[[]any]
+	DetectedApps                       plugin.TValue[[]any]
+	WindowsAutopilotDeploymentProfiles plugin.TValue[[]any]
+	RoleDefinitions                    plugin.TValue[[]any]
+	RoleAssignments                    plugin.TValue[[]any]
+	RoleScopeTags                      plugin.TValue[[]any]
 }
 
 // createMicrosoftDevicemanagement creates a new instance of this resource
@@ -14566,6 +15293,118 @@ func (c *mqlMicrosoftDevicemanagement) GetDeviceEnrollmentConfigurations() *plug
 		}
 
 		return c.deviceEnrollmentConfigurations()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetIntents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Intents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "intents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.intents()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetMobileApps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MobileApps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "mobileApps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mobileApps()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetDetectedApps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DetectedApps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "detectedApps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.detectedApps()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetWindowsAutopilotDeploymentProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WindowsAutopilotDeploymentProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "windowsAutopilotDeploymentProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.windowsAutopilotDeploymentProfiles()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetRoleDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "roleDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleDefinitions()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "roleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleAssignments()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagement) GetRoleScopeTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleScopeTags, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement", c.__id, "roleScopeTags")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleScopeTags()
 	})
 }
 
@@ -14690,6 +15529,9 @@ type mqlMicrosoftDevicemanagementManageddevice struct {
 	SubscriberCarrier                       plugin.TValue[string]
 	ComplianceGracePeriodExpirationDateTime plugin.TValue[*time.Time]
 	ManagementCertificateExpirationDate     plugin.TValue[*time.Time]
+	CompliancePolicyStates                  plugin.TValue[[]any]
+	ConfigurationStates                     plugin.TValue[[]any]
+	DetectedApps                            plugin.TValue[[]any]
 }
 
 // createMicrosoftDevicemanagementManageddevice creates a new instance of this resource
@@ -14892,6 +15734,54 @@ func (c *mqlMicrosoftDevicemanagementManageddevice) GetManagementCertificateExpi
 	return &c.ManagementCertificateExpirationDate
 }
 
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetCompliancePolicyStates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CompliancePolicyStates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.manageddevice", c.__id, "compliancePolicyStates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.compliancePolicyStates()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetConfigurationStates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConfigurationStates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.manageddevice", c.__id, "configurationStates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.configurationStates()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevice) GetDetectedApps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DetectedApps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.manageddevice", c.__id, "detectedApps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.detectedApps()
+	})
+}
+
 // mqlMicrosoftDevicemanagementDeviceconfiguration for the microsoft.devicemanagement.deviceconfiguration resource
 type mqlMicrosoftDevicemanagementDeviceconfiguration struct {
 	MqlRuntime *plugin.Runtime
@@ -14904,6 +15794,7 @@ type mqlMicrosoftDevicemanagementDeviceconfiguration struct {
 	DisplayName          plugin.TValue[string]
 	Version              plugin.TValue[int64]
 	Properties           plugin.TValue[any]
+	PolicyAssignments    plugin.TValue[[]any]
 }
 
 // createMicrosoftDevicemanagementDeviceconfiguration creates a new instance of this resource
@@ -14971,6 +15862,22 @@ func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetProperties() *plugi
 	return &c.Properties
 }
 
+func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetPolicyAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.deviceconfiguration", c.__id, "policyAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyAssignments()
+	})
+}
+
 // mqlMicrosoftDevicemanagementDevicecompliancepolicy for the microsoft.devicemanagement.devicecompliancepolicy resource
 type mqlMicrosoftDevicemanagementDevicecompliancepolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -14984,6 +15891,7 @@ type mqlMicrosoftDevicemanagementDevicecompliancepolicy struct {
 	Version              plugin.TValue[int64]
 	Assignments          plugin.TValue[[]any]
 	Properties           plugin.TValue[any]
+	PolicyAssignments    plugin.TValue[[]any]
 }
 
 // createMicrosoftDevicemanagementDevicecompliancepolicy creates a new instance of this resource
@@ -15053,6 +15961,876 @@ func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetAssignments() *p
 
 func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlMicrosoftDevicemanagementDevicecompliancepolicy) GetPolicyAssignments() *plugin.TValue[[]any] {
+	return &c.PolicyAssignments
+}
+
+// mqlMicrosoftDevicemanagementPolicyAssignment for the microsoft.devicemanagement.policyAssignment resource
+type mqlMicrosoftDevicemanagementPolicyAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementPolicyAssignmentInternal it will be used here
+	Id         plugin.TValue[string]
+	TargetType plugin.TValue[string]
+	GroupId    plugin.TValue[string]
+	Excluded   plugin.TValue[bool]
+	FilterType plugin.TValue[string]
+	FilterId   plugin.TValue[string]
+}
+
+// createMicrosoftDevicemanagementPolicyAssignment creates a new instance of this resource
+func createMicrosoftDevicemanagementPolicyAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementPolicyAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.policyAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementPolicyAssignment) MqlName() string {
+	return "microsoft.devicemanagement.policyAssignment"
+}
+
+func (c *mqlMicrosoftDevicemanagementPolicyAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementPolicyAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementPolicyAssignment) GetTargetType() *plugin.TValue[string] {
+	return &c.TargetType
+}
+
+func (c *mqlMicrosoftDevicemanagementPolicyAssignment) GetGroupId() *plugin.TValue[string] {
+	return &c.GroupId
+}
+
+func (c *mqlMicrosoftDevicemanagementPolicyAssignment) GetExcluded() *plugin.TValue[bool] {
+	return &c.Excluded
+}
+
+func (c *mqlMicrosoftDevicemanagementPolicyAssignment) GetFilterType() *plugin.TValue[string] {
+	return &c.FilterType
+}
+
+func (c *mqlMicrosoftDevicemanagementPolicyAssignment) GetFilterId() *plugin.TValue[string] {
+	return &c.FilterId
+}
+
+// mqlMicrosoftDevicemanagementManageddevicePolicyState for the microsoft.devicemanagement.manageddevice.policyState resource
+type mqlMicrosoftDevicemanagementManageddevicePolicyState struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementManageddevicePolicyStateInternal it will be used here
+	Id            plugin.TValue[string]
+	DisplayName   plugin.TValue[string]
+	State         plugin.TValue[string]
+	SettingStates plugin.TValue[[]any]
+	SourceType    plugin.TValue[string]
+	PlatformType  plugin.TValue[string]
+	SettingCount  plugin.TValue[int64]
+	Version       plugin.TValue[int64]
+}
+
+// createMicrosoftDevicemanagementManageddevicePolicyState creates a new instance of this resource
+func createMicrosoftDevicemanagementManageddevicePolicyState(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementManageddevicePolicyState{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.manageddevice.policyState", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevicePolicyState) MqlName() string {
+	return "microsoft.devicemanagement.manageddevice.policyState"
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevicePolicyState) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevicePolicyState) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevicePolicyState) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevicePolicyState) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevicePolicyState) GetSettingStates() *plugin.TValue[[]any] {
+	return &c.SettingStates
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevicePolicyState) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevicePolicyState) GetPlatformType() *plugin.TValue[string] {
+	return &c.PlatformType
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevicePolicyState) GetSettingCount() *plugin.TValue[int64] {
+	return &c.SettingCount
+}
+
+func (c *mqlMicrosoftDevicemanagementManageddevicePolicyState) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+// mqlMicrosoftDevicemanagementIntent for the microsoft.devicemanagement.intent resource
+type mqlMicrosoftDevicemanagementIntent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementIntentInternal it will be used here
+	Id                   plugin.TValue[string]
+	DisplayName          plugin.TValue[string]
+	Description          plugin.TValue[string]
+	TemplateId           plugin.TValue[string]
+	TemplateDisplayName  plugin.TValue[string]
+	IsAssigned           plugin.TValue[bool]
+	CreatedDateTime      plugin.TValue[*time.Time]
+	LastModifiedDateTime plugin.TValue[*time.Time]
+	LastModifiedBy       plugin.TValue[string]
+	Settings             plugin.TValue[[]any]
+	Assignments          plugin.TValue[[]any]
+}
+
+// createMicrosoftDevicemanagementIntent creates a new instance of this resource
+func createMicrosoftDevicemanagementIntent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementIntent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.intent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) MqlName() string {
+	return "microsoft.devicemanagement.intent"
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetTemplateId() *plugin.TValue[string] {
+	return &c.TemplateId
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetTemplateDisplayName() *plugin.TValue[string] {
+	return &c.TemplateDisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetIsAssigned() *plugin.TValue[bool] {
+	return &c.IsAssigned
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetLastModifiedBy() *plugin.TValue[string] {
+	return &c.LastModifiedBy
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Settings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.intent", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.settings()
+	})
+}
+
+func (c *mqlMicrosoftDevicemanagementIntent) GetAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Assignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.intent", c.__id, "assignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.assignments()
+	})
+}
+
+// mqlMicrosoftDevicemanagementIntentSetting for the microsoft.devicemanagement.intent.setting resource
+type mqlMicrosoftDevicemanagementIntentSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementIntentSettingInternal it will be used here
+	Id           plugin.TValue[string]
+	DefinitionId plugin.TValue[string]
+	ValueJson    plugin.TValue[string]
+	ValueType    plugin.TValue[string]
+}
+
+// createMicrosoftDevicemanagementIntentSetting creates a new instance of this resource
+func createMicrosoftDevicemanagementIntentSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementIntentSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.intent.setting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementIntentSetting) MqlName() string {
+	return "microsoft.devicemanagement.intent.setting"
+}
+
+func (c *mqlMicrosoftDevicemanagementIntentSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementIntentSetting) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementIntentSetting) GetDefinitionId() *plugin.TValue[string] {
+	return &c.DefinitionId
+}
+
+func (c *mqlMicrosoftDevicemanagementIntentSetting) GetValueJson() *plugin.TValue[string] {
+	return &c.ValueJson
+}
+
+func (c *mqlMicrosoftDevicemanagementIntentSetting) GetValueType() *plugin.TValue[string] {
+	return &c.ValueType
+}
+
+// mqlMicrosoftDevicemanagementMobileapp for the microsoft.devicemanagement.mobileapp resource
+type mqlMicrosoftDevicemanagementMobileapp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementMobileappInternal it will be used here
+	Id                    plugin.TValue[string]
+	DisplayName           plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Publisher             plugin.TValue[string]
+	IsFeatured            plugin.TValue[bool]
+	PrivacyInformationUrl plugin.TValue[string]
+	InformationUrl        plugin.TValue[string]
+	PublishingState       plugin.TValue[string]
+	CreatedDateTime       plugin.TValue[*time.Time]
+	LastModifiedDateTime  plugin.TValue[*time.Time]
+	Properties            plugin.TValue[any]
+	Assignments           plugin.TValue[[]any]
+}
+
+// createMicrosoftDevicemanagementMobileapp creates a new instance of this resource
+func createMicrosoftDevicemanagementMobileapp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementMobileapp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.mobileapp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) MqlName() string {
+	return "microsoft.devicemanagement.mobileapp"
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetPublisher() *plugin.TValue[string] {
+	return &c.Publisher
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetIsFeatured() *plugin.TValue[bool] {
+	return &c.IsFeatured
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetPrivacyInformationUrl() *plugin.TValue[string] {
+	return &c.PrivacyInformationUrl
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetInformationUrl() *plugin.TValue[string] {
+	return &c.InformationUrl
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetPublishingState() *plugin.TValue[string] {
+	return &c.PublishingState
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlMicrosoftDevicemanagementMobileapp) GetAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Assignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.mobileapp", c.__id, "assignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.assignments()
+	})
+}
+
+// mqlMicrosoftDevicemanagementDetectedapp for the microsoft.devicemanagement.detectedapp resource
+type mqlMicrosoftDevicemanagementDetectedapp struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementDetectedappInternal it will be used here
+	Id          plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Version     plugin.TValue[string]
+	SizeInByte  plugin.TValue[int64]
+	DeviceCount plugin.TValue[int64]
+	Platform    plugin.TValue[string]
+	Publisher   plugin.TValue[string]
+}
+
+// createMicrosoftDevicemanagementDetectedapp creates a new instance of this resource
+func createMicrosoftDevicemanagementDetectedapp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementDetectedapp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.detectedapp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementDetectedapp) MqlName() string {
+	return "microsoft.devicemanagement.detectedapp"
+}
+
+func (c *mqlMicrosoftDevicemanagementDetectedapp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementDetectedapp) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementDetectedapp) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementDetectedapp) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMicrosoftDevicemanagementDetectedapp) GetSizeInByte() *plugin.TValue[int64] {
+	return &c.SizeInByte
+}
+
+func (c *mqlMicrosoftDevicemanagementDetectedapp) GetDeviceCount() *plugin.TValue[int64] {
+	return &c.DeviceCount
+}
+
+func (c *mqlMicrosoftDevicemanagementDetectedapp) GetPlatform() *plugin.TValue[string] {
+	return &c.Platform
+}
+
+func (c *mqlMicrosoftDevicemanagementDetectedapp) GetPublisher() *plugin.TValue[string] {
+	return &c.Publisher
+}
+
+// mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile for the microsoft.devicemanagement.windowsAutopilotDeploymentProfile resource
+type mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfileInternal it will be used here
+	Id                         plugin.TValue[string]
+	DisplayName                plugin.TValue[string]
+	Description                plugin.TValue[string]
+	Language                   plugin.TValue[string]
+	Locale                     plugin.TValue[string]
+	DeviceNameTemplate         plugin.TValue[string]
+	DeploymentProfileType      plugin.TValue[string]
+	ExtractHardwareHash        plugin.TValue[bool]
+	EnableWhiteGlove           plugin.TValue[bool]
+	OutOfBoxExperienceSettings plugin.TValue[any]
+	AssignedDeviceCount        plugin.TValue[int64]
+	CreatedDateTime            plugin.TValue[*time.Time]
+	LastModifiedDateTime       plugin.TValue[*time.Time]
+}
+
+// createMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile creates a new instance of this resource
+func createMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.windowsAutopilotDeploymentProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) MqlName() string {
+	return "microsoft.devicemanagement.windowsAutopilotDeploymentProfile"
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetLanguage() *plugin.TValue[string] {
+	return &c.Language
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetLocale() *plugin.TValue[string] {
+	return &c.Locale
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetDeviceNameTemplate() *plugin.TValue[string] {
+	return &c.DeviceNameTemplate
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetDeploymentProfileType() *plugin.TValue[string] {
+	return &c.DeploymentProfileType
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetExtractHardwareHash() *plugin.TValue[bool] {
+	return &c.ExtractHardwareHash
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetEnableWhiteGlove() *plugin.TValue[bool] {
+	return &c.EnableWhiteGlove
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetOutOfBoxExperienceSettings() *plugin.TValue[any] {
+	return &c.OutOfBoxExperienceSettings
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetAssignedDeviceCount() *plugin.TValue[int64] {
+	return &c.AssignedDeviceCount
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftDevicemanagementWindowsAutopilotDeploymentProfile) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDateTime
+}
+
+// mqlMicrosoftDevicemanagementRoleDefinition for the microsoft.devicemanagement.roleDefinition resource
+type mqlMicrosoftDevicemanagementRoleDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementRoleDefinitionInternal it will be used here
+	Id              plugin.TValue[string]
+	DisplayName     plugin.TValue[string]
+	Description     plugin.TValue[string]
+	IsBuiltIn       plugin.TValue[bool]
+	RolePermissions plugin.TValue[[]any]
+	RoleScopeTagIds plugin.TValue[[]any]
+}
+
+// createMicrosoftDevicemanagementRoleDefinition creates a new instance of this resource
+func createMicrosoftDevicemanagementRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementRoleDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.roleDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleDefinition) MqlName() string {
+	return "microsoft.devicemanagement.roleDefinition"
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleDefinition) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleDefinition) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleDefinition) GetIsBuiltIn() *plugin.TValue[bool] {
+	return &c.IsBuiltIn
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleDefinition) GetRolePermissions() *plugin.TValue[[]any] {
+	return &c.RolePermissions
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleDefinition) GetRoleScopeTagIds() *plugin.TValue[[]any] {
+	return &c.RoleScopeTagIds
+}
+
+// mqlMicrosoftDevicemanagementRoleAssignment for the microsoft.devicemanagement.roleAssignment resource
+type mqlMicrosoftDevicemanagementRoleAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementRoleAssignmentInternal it will be used here
+	Id               plugin.TValue[string]
+	DisplayName      plugin.TValue[string]
+	Description      plugin.TValue[string]
+	RoleDefinitionId plugin.TValue[string]
+	Members          plugin.TValue[[]any]
+	ScopeMembers     plugin.TValue[[]any]
+	ResourceScopes   plugin.TValue[[]any]
+}
+
+// createMicrosoftDevicemanagementRoleAssignment creates a new instance of this resource
+func createMicrosoftDevicemanagementRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementRoleAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.roleAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleAssignment) MqlName() string {
+	return "microsoft.devicemanagement.roleAssignment"
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleAssignment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleAssignment) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleAssignment) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleAssignment) GetRoleDefinitionId() *plugin.TValue[string] {
+	return &c.RoleDefinitionId
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleAssignment) GetMembers() *plugin.TValue[[]any] {
+	return &c.Members
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleAssignment) GetScopeMembers() *plugin.TValue[[]any] {
+	return &c.ScopeMembers
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleAssignment) GetResourceScopes() *plugin.TValue[[]any] {
+	return &c.ResourceScopes
+}
+
+// mqlMicrosoftDevicemanagementRoleScopeTag for the microsoft.devicemanagement.roleScopeTag resource
+type mqlMicrosoftDevicemanagementRoleScopeTag struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDevicemanagementRoleScopeTagInternal it will be used here
+	Id          plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	IsBuiltIn   plugin.TValue[bool]
+}
+
+// createMicrosoftDevicemanagementRoleScopeTag creates a new instance of this resource
+func createMicrosoftDevicemanagementRoleScopeTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDevicemanagementRoleScopeTag{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.devicemanagement.roleScopeTag", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleScopeTag) MqlName() string {
+	return "microsoft.devicemanagement.roleScopeTag"
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleScopeTag) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleScopeTag) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleScopeTag) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleScopeTag) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDevicemanagementRoleScopeTag) GetIsBuiltIn() *plugin.TValue[bool] {
+	return &c.IsBuiltIn
 }
 
 // mqlMs365Exchangeonline for the ms365.exchangeonline resource

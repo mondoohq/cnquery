@@ -1,0 +1,241 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/ms365/connection"
+	"go.mondoo.com/mql/v13/types"
+)
+
+func (m *mqlMicrosoftDevicemanagementPolicyAssignment) id() (string, error) {
+	return m.Id.Data, nil
+}
+
+func (m *mqlMicrosoftDevicemanagementManageddevicePolicyState) id() (string, error) {
+	return m.Id.Data, nil
+}
+
+// policyAssignments on deviceconfiguration fetches assignments from
+// /deviceManagement/deviceConfigurations/{id}/assignments and converts each
+// target into a typed policyAssignment resource.
+func (a *mqlMicrosoftDevicemanagementDeviceconfiguration) policyAssignments() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.DeviceManagement().DeviceConfigurations().ByDeviceConfigurationId(a.Id.Data).Assignments().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	res := []any{}
+	for _, assignment := range resp.GetValue() {
+		id := ""
+		if v := assignment.GetId(); v != nil {
+			id = *v
+		}
+		r, err := newPolicyAssignmentResource(a.MqlRuntime, id, assignment.GetTarget())
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+func (a *mqlMicrosoftDevicemanagementManageddevice) compliancePolicyStates() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.DeviceManagement().ManagedDevices().ByManagedDeviceId(a.Id.Data).DeviceCompliancePolicyStates().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	res := []any{}
+	for _, state := range resp.GetValue() {
+		r, err := newCompliancePolicyState(a.MqlRuntime, a.Id.Data, state)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+func (a *mqlMicrosoftDevicemanagementManageddevice) configurationStates() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	resp, err := graphClient.DeviceManagement().ManagedDevices().ByManagedDeviceId(a.Id.Data).DeviceConfigurationStates().Get(ctx, nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	res := []any{}
+	for _, state := range resp.GetValue() {
+		r, err := newConfigurationState(a.MqlRuntime, a.Id.Data, state)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+func newCompliancePolicyState(runtime *plugin.Runtime, deviceId string, state models.DeviceCompliancePolicyStateable) (any, error) {
+	id := deviceId + "/compliance/"
+	if v := state.GetId(); v != nil {
+		id += *v
+	}
+	displayName := ""
+	if v := state.GetDisplayName(); v != nil {
+		displayName = *v
+	}
+	stateStr := ""
+	if v := state.GetState(); v != nil {
+		stateStr = v.String()
+	}
+	platform := ""
+	if v := state.GetPlatformType(); v != nil {
+		platform = v.String()
+	}
+	settingStates, err := complianceSettingStatesToDicts(state.GetSettingStates())
+	if err != nil {
+		return nil, err
+	}
+	settingCount := int64(0)
+	if v := state.GetSettingCount(); v != nil {
+		settingCount = int64(*v)
+	}
+	version := int64(0)
+	if v := state.GetVersion(); v != nil {
+		version = int64(*v)
+	}
+	return CreateResource(runtime, "microsoft.devicemanagement.manageddevice.policyState",
+		map[string]*llx.RawData{
+			"__id":          llx.StringData(id),
+			"id":            llx.StringData(id),
+			"displayName":   llx.StringData(displayName),
+			"state":         llx.StringData(stateStr),
+			"settingStates": llx.ArrayData(settingStates, types.Any),
+			"sourceType":    llx.StringData("deviceCompliancePolicyState"),
+			"platformType":  llx.StringData(platform),
+			"settingCount":  llx.IntData(settingCount),
+			"version":       llx.IntData(version),
+		})
+}
+
+func newConfigurationState(runtime *plugin.Runtime, deviceId string, state models.DeviceConfigurationStateable) (any, error) {
+	id := deviceId + "/configuration/"
+	if v := state.GetId(); v != nil {
+		id += *v
+	}
+	displayName := ""
+	if v := state.GetDisplayName(); v != nil {
+		displayName = *v
+	}
+	stateStr := ""
+	if v := state.GetState(); v != nil {
+		stateStr = v.String()
+	}
+	platform := ""
+	if v := state.GetPlatformType(); v != nil {
+		platform = v.String()
+	}
+	settingStates, err := configurationSettingStatesToDicts(state.GetSettingStates())
+	if err != nil {
+		return nil, err
+	}
+	settingCount := int64(0)
+	if v := state.GetSettingCount(); v != nil {
+		settingCount = int64(*v)
+	}
+	version := int64(0)
+	if v := state.GetVersion(); v != nil {
+		version = int64(*v)
+	}
+	return CreateResource(runtime, "microsoft.devicemanagement.manageddevice.policyState",
+		map[string]*llx.RawData{
+			"__id":          llx.StringData(id),
+			"id":            llx.StringData(id),
+			"displayName":   llx.StringData(displayName),
+			"state":         llx.StringData(stateStr),
+			"settingStates": llx.ArrayData(settingStates, types.Any),
+			"sourceType":    llx.StringData("deviceConfigurationState"),
+			"platformType":  llx.StringData(platform),
+			"settingCount":  llx.IntData(settingCount),
+			"version":       llx.IntData(version),
+		})
+}
+
+func complianceSettingStatesToDicts(states []models.DeviceCompliancePolicySettingStateable) ([]any, error) {
+	res := []any{}
+	for _, s := range states {
+		entry := map[string]any{}
+		if v := s.GetSetting(); v != nil {
+			entry["setting"] = *v
+		}
+		if v := s.GetSettingName(); v != nil {
+			entry["settingName"] = *v
+		}
+		if v := s.GetState(); v != nil {
+			entry["state"] = v.String()
+		}
+		if v := s.GetCurrentValue(); v != nil {
+			entry["currentValue"] = *v
+		}
+		if v := s.GetUserName(); v != nil {
+			entry["userName"] = *v
+		}
+		if v := s.GetUserId(); v != nil {
+			entry["userId"] = *v
+		}
+		res = append(res, entry)
+	}
+	return res, nil
+}
+
+func configurationSettingStatesToDicts(states []models.DeviceConfigurationSettingStateable) ([]any, error) {
+	res := []any{}
+	for _, s := range states {
+		entry := map[string]any{}
+		if v := s.GetSetting(); v != nil {
+			entry["setting"] = *v
+		}
+		if v := s.GetSettingName(); v != nil {
+			entry["settingName"] = *v
+		}
+		if v := s.GetState(); v != nil {
+			entry["state"] = v.String()
+		}
+		if v := s.GetCurrentValue(); v != nil {
+			entry["currentValue"] = *v
+		}
+		if v := s.GetUserName(); v != nil {
+			entry["userName"] = *v
+		}
+		if v := s.GetUserId(); v != nil {
+			entry["userId"] = *v
+		}
+		res = append(res, entry)
+	}
+	return res, nil
+}
