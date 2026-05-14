@@ -46,6 +46,15 @@ type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentInternal struct {
 	certificatesLock    sync.Mutex
 	certificatesFetched atomic.Bool
 	certificatesCache   []any
+	peLock              sync.Mutex
+	peFetched           atomic.Bool
+	peCache             []any
+	routesLock          sync.Mutex
+	routesFetched       atomic.Bool
+	routesCache         []any
+	maintenanceLock     sync.Mutex
+	maintenanceFetched  atomic.Bool
+	maintenanceCache    []any
 }
 
 func (a *mqlAzureSubscriptionContainerAppService) id() (string, error) {
@@ -1149,6 +1158,15 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 // ----------------- managed environment sub-resources (v4) -----------------
 
 func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) privateEndpointConnections() ([]any, error) {
+	if a.peFetched.Load() {
+		return a.peCache, nil
+	}
+	a.peLock.Lock()
+	defer a.peLock.Unlock()
+	if a.peFetched.Load() {
+		return a.peCache, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	subId := conn.SubId()
@@ -1217,10 +1235,22 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) privateEndpo
 			res = append(res, mqlPE)
 		}
 	}
+
+	a.peCache = res
+	a.peFetched.Store(true)
 	return res, nil
 }
 
 func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) httpRouteConfigs() ([]any, error) {
+	if a.routesFetched.Load() {
+		return a.routesCache, nil
+	}
+	a.routesLock.Lock()
+	defer a.routesLock.Unlock()
+	if a.routesFetched.Load() {
+		return a.routesCache, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	subId := conn.SubId()
@@ -1294,10 +1324,22 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) httpRouteCon
 			res = append(res, mqlRoute)
 		}
 	}
+
+	a.routesCache = res
+	a.routesFetched.Store(true)
 	return res, nil
 }
 
 func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) maintenanceConfigurations() ([]any, error) {
+	if a.maintenanceFetched.Load() {
+		return a.maintenanceCache, nil
+	}
+	a.maintenanceLock.Lock()
+	defer a.maintenanceLock.Unlock()
+	if a.maintenanceFetched.Load() {
+		return a.maintenanceCache, nil
+	}
+
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
 	subId := conn.SubId()
@@ -1341,5 +1383,8 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) maintenanceC
 			res = append(res, mqlMaint)
 		}
 	}
+
+	a.maintenanceCache = res
+	a.maintenanceFetched.Store(true)
 	return res, nil
 }
