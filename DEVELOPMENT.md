@@ -221,6 +221,7 @@ use (
    ./mql/providers/huggingface
    ./mql/providers/ipinfo
    ./mql/providers/ipmi
+   ./mql/providers/iru
    ./mql/providers/k8s
    ./mql/providers/mikrotik
    ./mql/providers/mistral
