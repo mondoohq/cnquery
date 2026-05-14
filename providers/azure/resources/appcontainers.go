@@ -14,7 +14,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	apps "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3"
+	apps "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v4"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -81,6 +81,18 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerAppAuthConfig) id() (st
 }
 
 func (a *mqlAzureSubscriptionContainerAppServiceJob) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironmentPrivateEndpointConnection) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironmentHttpRouteConfig) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironmentMaintenanceConfiguration) id() (string, error) {
 	return a.Id.Data, nil
 }
 
@@ -157,7 +169,7 @@ func (a *mqlAzureSubscriptionContainerAppService) managedEnvironments() ([]any, 
 func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvironment) (plugin.Resource, error) {
 	props := entry.Properties
 
-	var staticIp, defaultDomain, provisioningState, kind string
+	var staticIp, defaultDomain, provisioningState, kind, publicNetworkAccess, deploymentErrors string
 	var zoneRedundant *bool
 	// Default to false rather than leaving the pointer nil. An env without
 	// a VnetConfiguration has no internal LB by definition; returning null
@@ -168,6 +180,7 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 	peerAuth := map[string]any{}
 	peerTraffic := map[string]any{}
 	customDomain := map[string]any{}
+	ingressConfig := map[string]any{}
 	var logDest, logCustomerId string
 
 	if entry.Kind != nil {
@@ -183,6 +196,19 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 		}
 		if props.ProvisioningState != nil {
 			provisioningState = string(*props.ProvisioningState)
+		}
+		if props.PublicNetworkAccess != nil {
+			publicNetworkAccess = string(*props.PublicNetworkAccess)
+		}
+		if props.DeploymentErrors != nil {
+			deploymentErrors = *props.DeploymentErrors
+		}
+		if props.IngressConfiguration != nil {
+			d, err := convert.JsonToDict(props.IngressConfiguration)
+			if err != nil {
+				return nil, err
+			}
+			ingressConfig = d
 		}
 		zoneRedundant = props.ZoneRedundant
 
@@ -254,6 +280,9 @@ func acaManagedEnvironmentToMQL(runtime *plugin.Runtime, entry *apps.ManagedEnvi
 			"customDomainConfiguration":   llx.DictData(customDomain),
 			"logAnalyticsDestination":     llx.StringData(logDest),
 			"logAnalyticsCustomerId":      llx.StringData(logCustomerId),
+			"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
+			"deploymentErrors":            llx.StringData(deploymentErrors),
+			"ingressConfiguration":        llx.DictData(ingressConfig),
 		})
 	if err != nil {
 		return nil, err
@@ -298,7 +327,7 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) daprComponen
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			var componentType, version string
+			var componentType, version, provisioningState, deploymentErrors string
 			var ignoreErrors *bool
 			secretNames := []any{}
 			scopes := []any{}
@@ -309,6 +338,12 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) daprComponen
 				}
 				if entry.Properties.Version != nil {
 					version = *entry.Properties.Version
+				}
+				if entry.Properties.ProvisioningState != nil {
+					provisioningState = string(*entry.Properties.ProvisioningState)
+				}
+				if entry.Properties.DeploymentErrors != nil {
+					deploymentErrors = *entry.Properties.DeploymentErrors
 				}
 				ignoreErrors = entry.Properties.IgnoreErrors
 				for _, sec := range entry.Properties.Secrets {
@@ -334,6 +369,8 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) daprComponen
 					"secretNames":       llx.ArrayData(secretNames, types.String),
 					"scopes":            llx.ArrayData(scopes, types.String),
 					"ignoreErrors":      llx.BoolDataPtr(ignoreErrors),
+					"provisioningState": llx.StringData(provisioningState),
+					"deploymentErrors":  llx.StringData(deploymentErrors),
 				})
 			if err != nil {
 				return nil, err
@@ -379,9 +416,10 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) certificates
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			var subject, thumbprint, provisioningState string
+			var subject, thumbprint, provisioningState, deploymentErrors, issuer, publicKeyHash string
 			var issueDate, notAfter *time.Time
 			var validPtr *bool
+			sans := []any{}
 			if entry.Properties != nil {
 				p := entry.Properties
 				if p.SubjectName != nil {
@@ -392,6 +430,20 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) certificates
 				}
 				if p.ProvisioningState != nil {
 					provisioningState = string(*p.ProvisioningState)
+				}
+				if p.DeploymentErrors != nil {
+					deploymentErrors = *p.DeploymentErrors
+				}
+				if p.Issuer != nil {
+					issuer = *p.Issuer
+				}
+				if p.PublicKeyHash != nil {
+					publicKeyHash = *p.PublicKeyHash
+				}
+				for _, s := range p.SubjectAlternativeNames {
+					if s != nil {
+						sans = append(sans, *s)
+					}
 				}
 				issueDate = p.IssueDate
 				notAfter = p.ExpirationDate
@@ -406,14 +458,18 @@ func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) certificates
 
 			mqlCert, err := CreateResource(a.MqlRuntime, "azure.subscription.containerAppService.managedEnvironment.certificate",
 				map[string]*llx.RawData{
-					"id":                llx.StringDataPtr(entry.ID),
-					"name":              llx.StringDataPtr(entry.Name),
-					"subjectName":       llx.StringData(subject),
-					"thumbprint":        llx.StringData(thumbprint),
-					"issueDate":         llx.TimeDataPtr(issueDate),
-					"notAfter":          llx.TimeDataPtr(notAfter),
-					"valid":             llx.BoolData(valid),
-					"provisioningState": llx.StringData(provisioningState),
+					"id":                      llx.StringDataPtr(entry.ID),
+					"name":                    llx.StringDataPtr(entry.Name),
+					"subjectName":             llx.StringData(subject),
+					"thumbprint":              llx.StringData(thumbprint),
+					"issueDate":               llx.TimeDataPtr(issueDate),
+					"notAfter":                llx.TimeDataPtr(notAfter),
+					"valid":                   llx.BoolData(valid),
+					"provisioningState":       llx.StringData(provisioningState),
+					"deploymentErrors":        llx.StringData(deploymentErrors),
+					"issuer":                  llx.StringData(issuer),
+					"publicKeyHash":           llx.StringData(publicKeyHash),
+					"subjectAlternativeNames": llx.ArrayData(sans, types.String),
 				})
 			if err != nil {
 				return nil, err
@@ -460,7 +516,8 @@ func (a *mqlAzureSubscriptionContainerAppService) containerApps() ([]any, error)
 func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (plugin.Resource, error) {
 	props := entry.Properties
 
-	var managedEnvironmentId, provisioningState, latestRevName, latestRevFqdn, revisionMode, workloadProfile string
+	var managedEnvironmentId, provisioningState, runningStatus, kind, eventStreamEndpoint, latestRevName, latestRevFqdn, revisionMode, workloadProfile string
+	outboundIPs := []any{}
 	var ingressEnabled bool
 	var ingressExternal *bool
 	var targetPort *int32
@@ -486,6 +543,17 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 		}
 		if props.ProvisioningState != nil {
 			provisioningState = string(*props.ProvisioningState)
+		}
+		if props.RunningStatus != nil {
+			runningStatus = string(*props.RunningStatus)
+		}
+		if props.EventStreamEndpoint != nil {
+			eventStreamEndpoint = *props.EventStreamEndpoint
+		}
+		for _, ip := range props.OutboundIPAddresses {
+			if ip != nil {
+				outboundIPs = append(outboundIPs, *ip)
+			}
 		}
 		if props.LatestRevisionName != nil {
 			latestRevName = *props.LatestRevisionName
@@ -601,6 +669,9 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 		}
 		identity = d
 	}
+	if entry.Kind != nil {
+		kind = string(*entry.Kind)
+	}
 
 	mqlApp, err := CreateResource(runtime, "azure.subscription.containerAppService.containerApp",
 		map[string]*llx.RawData{
@@ -609,6 +680,10 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 			"location":                 llx.StringDataPtr(entry.Location),
 			"tags":                     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 			"provisioningState":        llx.StringData(provisioningState),
+			"runningStatus":            llx.StringData(runningStatus),
+			"kind":                     llx.StringData(kind),
+			"eventStreamEndpoint":      llx.StringData(eventStreamEndpoint),
+			"outboundIpAddresses":      llx.ArrayData(outboundIPs, types.String),
 			"managedEnvironmentId":     llx.StringData(managedEnvironmentId),
 			"revisionMode":             llx.StringData(revisionMode),
 			"latestRevisionName":       llx.StringData(latestRevName),
@@ -781,7 +856,7 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) revisions() ([]any
 		for _, entry := range page.Value {
 			var active *bool
 			var trafficWeight, replicas *int32
-			var provisioningState, healthState string
+			var provisioningState, healthState, runningState, provisioningError string
 			var createdTime, lastActiveTime *time.Time
 			if entry.Properties != nil {
 				p := entry.Properties
@@ -793,6 +868,12 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) revisions() ([]any
 				}
 				if p.HealthState != nil {
 					healthState = string(*p.HealthState)
+				}
+				if p.RunningState != nil {
+					runningState = string(*p.RunningState)
+				}
+				if p.ProvisioningError != nil {
+					provisioningError = *p.ProvisioningError
 				}
 				createdTime = p.CreatedTime
 				lastActiveTime = p.LastActiveTime
@@ -806,6 +887,8 @@ func (a *mqlAzureSubscriptionContainerAppServiceContainerApp) revisions() ([]any
 					"replicas":          llx.IntDataDefault(replicas, 0),
 					"provisioningState": llx.StringData(provisioningState),
 					"healthState":       llx.StringData(healthState),
+					"runningState":      llx.StringData(runningState),
+					"provisioningError": llx.StringData(provisioningError),
 					"createdTime":       llx.TimeDataPtr(createdTime),
 					"lastActiveTime":    llx.TimeDataPtr(lastActiveTime),
 				})
@@ -959,7 +1042,7 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			var managedEnvId, provisioningState, triggerType, cron, workloadProfile string
+			var managedEnvId, provisioningState, triggerType, cron, workloadProfile, eventStreamEndpoint string
 			var replicaTimeout, replicaRetry *int32
 			eventTrigger := map[string]any{}
 			containers := []any{}
@@ -975,6 +1058,9 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 				}
 				if p.ProvisioningState != nil {
 					provisioningState = string(*p.ProvisioningState)
+				}
+				if p.EventStreamEndpoint != nil {
+					eventStreamEndpoint = *p.EventStreamEndpoint
 				}
 				if p.WorkloadProfileName != nil {
 					workloadProfile = *p.WorkloadProfileName
@@ -1038,6 +1124,7 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 					"tags":                     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
 					"managedEnvironmentId":     llx.StringData(managedEnvId),
 					"provisioningState":        llx.StringData(provisioningState),
+					"eventStreamEndpoint":      llx.StringData(eventStreamEndpoint),
 					"triggerType":              llx.StringData(triggerType),
 					"cronExpression":           llx.StringData(cron),
 					"eventTriggerConfig":       llx.DictData(eventTrigger),
@@ -1054,6 +1141,204 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 				return nil, err
 			}
 			res = append(res, mqlJob)
+		}
+	}
+	return res, nil
+}
+
+// ----------------- managed environment sub-resources (v4) -----------------
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) privateEndpointConnections() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	subId := conn.SubId()
+
+	rg, envName := a.cacheRGAndName.resourceGroup, a.cacheRGAndName.name
+	if rg == "" || envName == "" {
+		rg, envName = resourceGroupAndName(a.Id.Data, "managedEnvironments")
+	}
+
+	client, err := apps.NewManagedEnvironmentPrivateEndpointConnectionsClient(subId, conn.Token(), acaClientOptions(conn))
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListPager(rg, envName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			var status, description, actionsRequired, provisioningState, privateEndpointId string
+			groupIds := []any{}
+			if entry.Properties != nil {
+				p := entry.Properties
+				if p.ProvisioningState != nil {
+					provisioningState = string(*p.ProvisioningState)
+				}
+				if p.PrivateEndpoint != nil && p.PrivateEndpoint.ID != nil {
+					privateEndpointId = *p.PrivateEndpoint.ID
+				}
+				if p.PrivateLinkServiceConnectionState != nil {
+					lsc := p.PrivateLinkServiceConnectionState
+					if lsc.Status != nil {
+						status = string(*lsc.Status)
+					}
+					if lsc.Description != nil {
+						description = *lsc.Description
+					}
+					if lsc.ActionsRequired != nil {
+						actionsRequired = *lsc.ActionsRequired
+					}
+				}
+				for _, g := range p.GroupIDs {
+					if g != nil {
+						groupIds = append(groupIds, *g)
+					}
+				}
+			}
+
+			mqlPE, err := CreateResource(a.MqlRuntime, "azure.subscription.containerAppService.managedEnvironment.privateEndpointConnection",
+				map[string]*llx.RawData{
+					"id":                llx.StringDataPtr(entry.ID),
+					"name":              llx.StringDataPtr(entry.Name),
+					"status":            llx.StringData(status),
+					"description":       llx.StringData(description),
+					"actionsRequired":   llx.StringData(actionsRequired),
+					"provisioningState": llx.StringData(provisioningState),
+					"groupIds":          llx.ArrayData(groupIds, types.String),
+					"privateEndpointId": llx.StringData(privateEndpointId),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlPE)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) httpRouteConfigs() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	subId := conn.SubId()
+
+	rg, envName := a.cacheRGAndName.resourceGroup, a.cacheRGAndName.name
+	if rg == "" || envName == "" {
+		rg, envName = resourceGroupAndName(a.Id.Data, "managedEnvironments")
+	}
+
+	client, err := apps.NewHTTPRouteConfigClient(subId, conn.Token(), acaClientOptions(conn))
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListPager(rg, envName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			var fqdn, provisioningState string
+			customDomains := []any{}
+			rules := []any{}
+			provisioningErrors := []any{}
+			if entry.Properties != nil {
+				p := entry.Properties
+				if p.Fqdn != nil {
+					fqdn = *p.Fqdn
+				}
+				if p.ProvisioningState != nil {
+					provisioningState = string(*p.ProvisioningState)
+				}
+				if len(p.CustomDomains) > 0 {
+					d, err := convert.JsonToDictSlice(p.CustomDomains)
+					if err != nil {
+						return nil, err
+					}
+					customDomains = d
+				}
+				if len(p.Rules) > 0 {
+					d, err := convert.JsonToDictSlice(p.Rules)
+					if err != nil {
+						return nil, err
+					}
+					rules = d
+				}
+				if len(p.ProvisioningErrors) > 0 {
+					d, err := convert.JsonToDictSlice(p.ProvisioningErrors)
+					if err != nil {
+						return nil, err
+					}
+					provisioningErrors = d
+				}
+			}
+
+			mqlRoute, err := CreateResource(a.MqlRuntime, "azure.subscription.containerAppService.managedEnvironment.httpRouteConfig",
+				map[string]*llx.RawData{
+					"id":                 llx.StringDataPtr(entry.ID),
+					"name":               llx.StringDataPtr(entry.Name),
+					"fqdn":               llx.StringData(fqdn),
+					"provisioningState":  llx.StringData(provisioningState),
+					"customDomains":      llx.ArrayData(customDomains, types.Dict),
+					"rules":              llx.ArrayData(rules, types.Dict),
+					"provisioningErrors": llx.ArrayData(provisioningErrors, types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRoute)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceManagedEnvironment) maintenanceConfigurations() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	subId := conn.SubId()
+
+	rg, envName := a.cacheRGAndName.resourceGroup, a.cacheRGAndName.name
+	if rg == "" || envName == "" {
+		rg, envName = resourceGroupAndName(a.Id.Data, "managedEnvironments")
+	}
+
+	client, err := apps.NewMaintenanceConfigurationsClient(subId, conn.Token(), acaClientOptions(conn))
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	pager := client.NewListPager(rg, envName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			entries := []any{}
+			if entry.Properties != nil && len(entry.Properties.ScheduledEntries) > 0 {
+				d, err := convert.JsonToDictSlice(entry.Properties.ScheduledEntries)
+				if err != nil {
+					return nil, err
+				}
+				entries = d
+			}
+
+			mqlMaint, err := CreateResource(a.MqlRuntime, "azure.subscription.containerAppService.managedEnvironment.maintenanceConfiguration",
+				map[string]*llx.RawData{
+					"id":               llx.StringDataPtr(entry.ID),
+					"name":             llx.StringDataPtr(entry.Name),
+					"scheduledEntries": llx.ArrayData(entries, types.Dict),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlMaint)
 		}
 	}
 	return res, nil

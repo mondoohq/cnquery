@@ -7987,10 +7987,79 @@ azure.subscription.containerAppService.managedEnvironment @defaults("name locati
   logAnalyticsDestination string
   // Log Analytics workspace customer ID, when destination is "log-analytics"
   logAnalyticsCustomerId string
+  // Whether public network access is enabled ("Enabled", "Disabled", or empty when not set)
+  publicNetworkAccess string
+  // Free-form error string set by ARM when deployment or validation failed
+  deploymentErrors string
+  // Env-wide ingress configuration (workloadProfileName, terminationGracePeriodSeconds, requestIdleTimeout, headerCountLimit)
+  ingressConfiguration dict
   // Dapr components configured at the environment scope
   daprComponents() []azure.subscription.containerAppService.managedEnvironment.daprComponent
   // Certificates uploaded to the environment
   certificates() []azure.subscription.containerAppService.managedEnvironment.certificate
+  // Private endpoint connections approved on this environment
+  privateEndpointConnections() []azure.subscription.containerAppService.managedEnvironment.privateEndpointConnection
+  // Env-scoped HTTP route configs (routing tables that span multiple container apps)
+  httpRouteConfigs() []azure.subscription.containerAppService.managedEnvironment.httpRouteConfig
+  // Env-scoped maintenance window configurations
+  maintenanceConfigurations() []azure.subscription.containerAppService.managedEnvironment.maintenanceConfiguration
+}
+
+// Private endpoint connection on a Container Apps managed environment
+private azure.subscription.containerAppService.managedEnvironment.privateEndpointConnection @defaults("name status provisioningState") {
+  // ARM resource ID
+  id string
+  // Connection name within the environment
+  name string
+  // Approval status ("Approved", "Pending", "Rejected", "Disconnected")
+  status string
+  // Reason / description supplied with the status
+  description string
+  // Actions required by the consumer (e.g., "None")
+  actionsRequired string
+  // Provisioning state ("Succeeded", "Failed", "Canceled", "Creating", "Deleting", "Updating")
+  provisioningState string
+  // Private endpoint group IDs this connection covers
+  groupIds []string
+  // ARM resource ID of the private endpoint on the consumer side
+  privateEndpointId string
+}
+
+// HTTP route config attached to a Container Apps managed environment
+//
+// Examine an env-scoped routing table that fans traffic across multiple
+// container apps by path/prefix. The `name` field selects the route
+// config within an environment.
+private azure.subscription.containerAppService.managedEnvironment.httpRouteConfig @defaults("name fqdn provisioningState") {
+  // ARM resource ID
+  id string
+  // Route config name within the environment
+  name string
+  // FQDN this route config serves
+  fqdn string
+  // Provisioning state ("Succeeded", "Failed", "Canceled", "Pending", "Updating", "Waiting", "Deleting")
+  provisioningState string
+  // Custom domain bindings on this route config
+  customDomains []dict
+  // Routing rules — each entry has `description`, `routes` (match + action), and `targets` (container apps / revisions / labels)
+  rules []dict
+  // Errors encountered while reconciling routes
+  provisioningErrors []dict
+}
+
+// Maintenance configuration on a Container Apps managed environment
+//
+// Examine the maintenance window schedule for a managed environment.
+// Container Apps applies infrastructure-level patches during the listed
+// scheduled entries. The `name` field selects the configuration; a
+// managed environment typically has at most one.
+private azure.subscription.containerAppService.managedEnvironment.maintenanceConfiguration @defaults("name") {
+  // ARM resource ID
+  id string
+  // Configuration name within the environment
+  name string
+  // Scheduled maintenance windows — each entry has `weekDay`, `startHourUtc`, `durationHours`
+  scheduledEntries []dict
 }
 
 // Dapr component configured at the managed environment scope
@@ -8011,6 +8080,10 @@ private azure.subscription.containerAppService.managedEnvironment.daprComponent 
   scopes []string
   // Whether component init failure is silently ignored
   ignoreErrors bool
+  // Provisioning state ("Succeeded", "Failed", "Canceled", "InProgress", "Deleting")
+  provisioningState string
+  // Free-form error string set by ARM when deployment or validation failed
+  deploymentErrors string
 }
 
 // Certificate uploaded to a Container Apps managed environment
@@ -8031,6 +8104,14 @@ private azure.subscription.containerAppService.managedEnvironment.certificate @d
   valid bool
   // Provisioning state
   provisioningState string
+  // Free-form error string set by ARM when deployment or validation failed
+  deploymentErrors string
+  // Certificate issuer (CN of the issuing authority)
+  issuer string
+  // SHA-256 hash of the certificate's public key
+  publicKeyHash string
+  // Subject alternative names declared on the cert
+  subjectAlternativeNames []string
 }
 
 // Azure Container App
@@ -8050,6 +8131,14 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   tags map[string]string
   // Provisioning state ("Succeeded", "Failed", "Canceled", "InProgress", "Deleting")
   provisioningState string
+  // Running status of the container app ("Running", "Stopped", "Progressing", "Suspended", "Ready")
+  runningStatus string
+  // Container app variant ("Functionapp", "Workflowapp", or empty for a plain container app)
+  kind string
+  // Eventstream endpoint URL for log streaming
+  eventStreamEndpoint string
+  // Outbound IP addresses used by the container app
+  outboundIpAddresses []string
   // ARM resource ID of the parent managed environment
   managedEnvironmentId string
   // Active revision mode ("Single" or "Multiple")
@@ -8153,6 +8242,10 @@ private azure.subscription.containerAppService.containerApp.revision @defaults("
   provisioningState string
   // Health state ("Healthy", "Unhealthy", "None")
   healthState string
+  // Running state ("Running", "Processing", "Stopped", "Degraded", "Failed", "Unknown")
+  runningState string
+  // Platform error message (when provisioning failed)
+  provisioningError string
   // Creation time
   createdTime time
   // Last active time
@@ -8200,6 +8293,8 @@ azure.subscription.containerAppService.job @defaults("name location triggerType 
   managedEnvironmentId string
   // Provisioning state
   provisioningState string
+  // Eventstream endpoint URL for log streaming
+  eventStreamEndpoint string
   // Trigger type ("Manual", "Schedule", "Event")
   triggerType string
   // Cron expression (when triggerType == "Schedule")
