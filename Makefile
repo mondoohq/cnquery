@@ -265,6 +265,7 @@ PROVIDERS := \
 	proxmox \
 	redfish \
 	redisdb \
+	rippling \
 	shodan \
 	slack \
 	snowflake \
