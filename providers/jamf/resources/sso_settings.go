@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"github.com/deploymenttheory/go-api-sdk-jamfpro/sdk/jamfpro"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/jamf/connection"
@@ -26,23 +27,31 @@ func (r *mqlJamf) sso() (*mqlJamfSsoSettings, error) {
 		return nil, nil
 	}
 
+	// As of go-api-sdk-jamfpro v1.47.0, the SAML-specific settings moved from
+	// the flat ResourceSsoSettings struct into a nested, optional SamlSettings
+	// struct. It is nil when SSO is disabled or configured for OIDC only.
+	saml := jamfpro.SamlSettings{}
+	if info.SamlSettings != nil {
+		saml = *info.SamlSettings
+	}
+
 	res, err := CreateResource(r.MqlRuntime, "jamf.ssoSettings", map[string]*llx.RawData{
 		"__id":                          llx.StringData("jamf.ssoSettings"),
 		"ssoEnabled":                    llx.BoolData(info.SsoEnabled),
 		"ssoForEnrollmentEnabled":       llx.BoolData(info.SsoForEnrollmentEnabled),
 		"ssoBypassAllowed":              llx.BoolData(info.SsoBypassAllowed),
-		"sessionTimeout":                llx.IntData(info.SessionTimeout),
+		"sessionTimeout":                llx.IntData(saml.SessionTimeout),
 		"ssoForMacOsSelfServiceEnabled": llx.BoolData(info.SsoForMacOsSelfServiceEnabled),
-		"tokenExpirationDisabled":       llx.BoolData(info.TokenExpirationDisabled),
-		"userAttributeEnabled":          llx.BoolData(info.UserAttributeEnabled),
-		"userAttributeName":             llx.StringData(info.UserAttributeName),
-		"userMapping":                   llx.StringData(info.UserMapping),
+		"tokenExpirationDisabled":       llx.BoolData(saml.TokenExpirationDisabled),
+		"userAttributeEnabled":          llx.BoolData(saml.UserAttributeEnabled),
+		"userAttributeName":             llx.StringData(saml.UserAttributeName),
+		"userMapping":                   llx.StringData(saml.UserMapping),
 		"enrollmentSsoForAccountDrivenEnrollmentEnabled": llx.BoolData(info.EnrollmentSsoForAccountDrivenEnrollmentEnabled),
-		"idpUrl":                       llx.StringData(info.IdpUrl),
-		"idpProviderType":              llx.StringData(info.IdpProviderType),
+		"idpUrl":                       llx.StringData(saml.IdpUrl),
+		"idpProviderType":              llx.StringData(saml.IdpProviderType),
 		"groupEnrollmentAccessEnabled": llx.BoolData(info.GroupEnrollmentAccessEnabled),
-		"groupAttributeName":           llx.StringData(info.GroupAttributeName),
-		"entityId":                     llx.StringData(info.EntityId),
+		"groupAttributeName":           llx.StringData(saml.GroupAttributeName),
+		"entityId":                     llx.StringData(saml.EntityId),
 	})
 	if err != nil {
 		return nil, err
