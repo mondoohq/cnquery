@@ -5,6 +5,7 @@ package detector
 
 import (
 	"runtime"
+	"slices"
 
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
@@ -15,6 +16,17 @@ func DetectOS(conn shared.Connection) (*inventory.Platform, bool) {
 	var ok bool
 	if conn.Type() == shared.Type_Local && runtime.GOOS == "windows" {
 		res, ok = WindowsFamily.Resolve(conn)
+		// WindowsFamily.Resolve stops one level short of the OperatingSystems
+		// wrapper, so the Family chain ends at "windows" instead of
+		// ["windows", "os"]. Downstream consumers treat `family` containing
+		// "os" as the "asset has installed software" marker; without this
+		// append, the local-Windows shortcut diverges from the equivalent
+		// OperatingSystems.Resolve path (which the rest of the cases — and
+		// the TestWindows* mocks — go through) and produces a different
+		// Family chain. Append "os" explicitly so the shortcut matches.
+		if ok && res != nil && !slices.Contains(res.Family, OperatingSystems.Name) {
+			res.Family = append(res.Family, OperatingSystems.Name)
+		}
 	} else {
 		res, ok = OperatingSystems.Resolve(conn)
 	}
