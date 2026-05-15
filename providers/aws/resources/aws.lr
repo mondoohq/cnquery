@@ -16119,10 +16119,10 @@ private aws.dsql.cluster.stream @defaults("arn status") {
   format() string
   // Ordering mode of the stream
   ordering() string
-  // ARN of the Kinesis stream the change data is delivered to
-  kinesisStreamArn() string
-  // ARN of the IAM role granting permission to write to the Kinesis stream
-  kinesisRoleArn() string
+  // Kinesis stream the change data is delivered to
+  kinesisStream() aws.kinesis.stream
+  // IAM role granting permission to write to the Kinesis stream
+  kinesisRole() aws.iam.role
   // Tags for the stream
   tags() map[string]string
 }
@@ -19445,8 +19445,8 @@ private aws.bedrock.advancedPromptOptimizationJob @defaults("name status") {
   inputS3Uri() string
   // S3 URI prefix for the output location
   outputS3Uri() string
-  // ARN of the KMS key used to encrypt output data (empty string when none)
-  encryptionKeyArn() string
+  // KMS key used to encrypt output data (null when none)
+  encryptionKey() aws.kms.key
   // Failure message if the job failed (empty string otherwise)
   failureMessage() string
   // Model configurations for the optimization job

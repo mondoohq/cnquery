@@ -879,7 +879,7 @@ aws.bedrock.advancedPromptOptimizationJob 13.25.1
 aws.bedrock.advancedPromptOptimizationJob.arn 13.25.1
 aws.bedrock.advancedPromptOptimizationJob.createdAt 13.25.1
 aws.bedrock.advancedPromptOptimizationJob.description 13.25.1
-aws.bedrock.advancedPromptOptimizationJob.encryptionKeyArn 13.25.1
+aws.bedrock.advancedPromptOptimizationJob.encryptionKey 13.25.1
 aws.bedrock.advancedPromptOptimizationJob.failureMessage 13.25.1
 aws.bedrock.advancedPromptOptimizationJob.inputS3Uri 13.25.1
 aws.bedrock.advancedPromptOptimizationJob.lastModifiedAt 13.25.1
@@ -2036,8 +2036,8 @@ aws.dsql.cluster.stream.arn 13.25.1
 aws.dsql.cluster.stream.clusterIdentifier 13.25.1
 aws.dsql.cluster.stream.createdAt 13.25.1
 aws.dsql.cluster.stream.format 13.25.1
-aws.dsql.cluster.stream.kinesisRoleArn 13.25.1
-aws.dsql.cluster.stream.kinesisStreamArn 13.25.1
+aws.dsql.cluster.stream.kinesisRole 13.25.1
+aws.dsql.cluster.stream.kinesisStream 13.25.1
 aws.dsql.cluster.stream.ordering 13.25.1
 aws.dsql.cluster.stream.region 13.25.1
 aws.dsql.cluster.stream.status 13.25.1

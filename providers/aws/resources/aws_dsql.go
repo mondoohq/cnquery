@@ -294,26 +294,40 @@ func (a *mqlAwsDsqlClusterStream) ordering() (string, error) {
 	return string(detail.Ordering), nil
 }
 
-func (a *mqlAwsDsqlClusterStream) kinesisStreamArn() (string, error) {
+func (a *mqlAwsDsqlClusterStream) kinesisStream() (*mqlAwsKinesisStream, error) {
 	detail, err := a.fetchDetail()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	if kinesis, ok := detail.TargetDefinition.(*dsqltypes.TargetDefinitionMemberKinesis); ok {
-		return convert.ToValue(kinesis.Value.StreamArn), nil
+	kinesis, ok := detail.TargetDefinition.(*dsqltypes.TargetDefinitionMemberKinesis)
+	if !ok || kinesis.Value.StreamArn == nil || *kinesis.Value.StreamArn == "" {
+		a.KinesisStream.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
-	return "", nil
+	res, err := NewResource(a.MqlRuntime, "aws.kinesis.stream",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(kinesis.Value.StreamArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKinesisStream), nil
 }
 
-func (a *mqlAwsDsqlClusterStream) kinesisRoleArn() (string, error) {
+func (a *mqlAwsDsqlClusterStream) kinesisRole() (*mqlAwsIamRole, error) {
 	detail, err := a.fetchDetail()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	if kinesis, ok := detail.TargetDefinition.(*dsqltypes.TargetDefinitionMemberKinesis); ok {
-		return convert.ToValue(kinesis.Value.RoleArn), nil
+	kinesis, ok := detail.TargetDefinition.(*dsqltypes.TargetDefinitionMemberKinesis)
+	if !ok || kinesis.Value.RoleArn == nil || *kinesis.Value.RoleArn == "" {
+		a.KinesisRole.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
 	}
-	return "", nil
+	res, err := NewResource(a.MqlRuntime, "aws.iam.role",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(kinesis.Value.RoleArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsIamRole), nil
 }
 
 func (a *mqlAwsDsqlClusterStream) tags() (map[string]any, error) {

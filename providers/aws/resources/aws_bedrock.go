@@ -707,12 +707,21 @@ func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) outputS3Uri() (string, erro
 	return convert.ToValue(detail.OutputConfig.S3Uri), nil
 }
 
-func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) encryptionKeyArn() (string, error) {
+func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) encryptionKey() (*mqlAwsKmsKey, error) {
 	detail, err := a.fetchDetail()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return convert.ToValue(detail.EncryptionKeyArn), nil
+	if detail.EncryptionKeyArn == nil || *detail.EncryptionKeyArn == "" {
+		a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(detail.EncryptionKeyArn)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) failureMessage() (string, error) {

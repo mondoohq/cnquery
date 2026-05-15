@@ -23016,11 +23016,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dsql.cluster.stream.ordering": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDsqlClusterStream).GetOrdering()).ToDataRes(types.String)
 	},
-	"aws.dsql.cluster.stream.kinesisStreamArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDsqlClusterStream).GetKinesisStreamArn()).ToDataRes(types.String)
+	"aws.dsql.cluster.stream.kinesisStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetKinesisStream()).ToDataRes(types.Resource("aws.kinesis.stream"))
 	},
-	"aws.dsql.cluster.stream.kinesisRoleArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsDsqlClusterStream).GetKinesisRoleArn()).ToDataRes(types.String)
+	"aws.dsql.cluster.stream.kinesisRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetKinesisRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
 	"aws.dsql.cluster.stream.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDsqlClusterStream).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -26904,8 +26904,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.advancedPromptOptimizationJob.outputS3Uri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetOutputS3Uri()).ToDataRes(types.String)
 	},
-	"aws.bedrock.advancedPromptOptimizationJob.encryptionKeyArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetEncryptionKeyArn()).ToDataRes(types.String)
+	"aws.bedrock.advancedPromptOptimizationJob.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetEncryptionKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.bedrock.advancedPromptOptimizationJob.failureMessage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetFailureMessage()).ToDataRes(types.String)
@@ -55188,12 +55188,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDsqlClusterStream).Ordering, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.dsql.cluster.stream.kinesisStreamArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDsqlClusterStream).KinesisStreamArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.dsql.cluster.stream.kinesisStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).KinesisStream, ok = plugin.RawToTValue[*mqlAwsKinesisStream](v.Value, v.Error)
 		return
 	},
-	"aws.dsql.cluster.stream.kinesisRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsDsqlClusterStream).KinesisRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.dsql.cluster.stream.kinesisRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).KinesisRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
 	"aws.dsql.cluster.stream.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -60876,8 +60876,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).OutputS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.bedrock.advancedPromptOptimizationJob.encryptionKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).EncryptionKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.bedrock.advancedPromptOptimizationJob.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).EncryptionKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.advancedPromptOptimizationJob.failureMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -133985,8 +133985,8 @@ type mqlAwsDsqlClusterStream struct {
 	CreatedAt         plugin.TValue[*time.Time]
 	Format            plugin.TValue[string]
 	Ordering          plugin.TValue[string]
-	KinesisStreamArn  plugin.TValue[string]
-	KinesisRoleArn    plugin.TValue[string]
+	KinesisStream     plugin.TValue[*mqlAwsKinesisStream]
+	KinesisRole       plugin.TValue[*mqlAwsIamRole]
 	Tags              plugin.TValue[map[string]any]
 }
 
@@ -134063,15 +134063,35 @@ func (c *mqlAwsDsqlClusterStream) GetOrdering() *plugin.TValue[string] {
 	})
 }
 
-func (c *mqlAwsDsqlClusterStream) GetKinesisStreamArn() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.KinesisStreamArn, func() (string, error) {
-		return c.kinesisStreamArn()
+func (c *mqlAwsDsqlClusterStream) GetKinesisStream() *plugin.TValue[*mqlAwsKinesisStream] {
+	return plugin.GetOrCompute[*mqlAwsKinesisStream](&c.KinesisStream, func() (*mqlAwsKinesisStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dsql.cluster.stream", c.__id, "kinesisStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKinesisStream), nil
+			}
+		}
+
+		return c.kinesisStream()
 	})
 }
 
-func (c *mqlAwsDsqlClusterStream) GetKinesisRoleArn() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.KinesisRoleArn, func() (string, error) {
-		return c.kinesisRoleArn()
+func (c *mqlAwsDsqlClusterStream) GetKinesisRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.KinesisRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dsql.cluster.stream", c.__id, "kinesisRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.kinesisRole()
 	})
 }
 
@@ -148594,7 +148614,7 @@ type mqlAwsBedrockAdvancedPromptOptimizationJob struct {
 	Description         plugin.TValue[string]
 	InputS3Uri          plugin.TValue[string]
 	OutputS3Uri         plugin.TValue[string]
-	EncryptionKeyArn    plugin.TValue[string]
+	EncryptionKey       plugin.TValue[*mqlAwsKmsKey]
 	FailureMessage      plugin.TValue[string]
 	ModelConfigurations plugin.TValue[[]any]
 }
@@ -148678,9 +148698,19 @@ func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetOutputS3Uri() *plugin.TV
 	})
 }
 
-func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetEncryptionKeyArn() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.EncryptionKeyArn, func() (string, error) {
-		return c.encryptionKeyArn()
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetEncryptionKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.EncryptionKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.advancedPromptOptimizationJob", c.__id, "encryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.encryptionKey()
 	})
 }
 
