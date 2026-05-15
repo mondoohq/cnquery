@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/dsql"
+	dsqltypes "github.com/aws/aws-sdk-go-v2/service/dsql/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -203,6 +204,119 @@ func (a *mqlAwsDsqlCluster) witnessRegion() (string, error) {
 }
 
 func (a *mqlAwsDsqlCluster) tags() (map[string]any, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	tags := make(map[string]any, len(detail.Tags))
+	for k, v := range detail.Tags {
+		tags[k] = v
+	}
+	return tags, nil
+}
+
+func (a *mqlAwsDsqlCluster) streams() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Dsql(a.Region.Data)
+	ctx := context.Background()
+	res := []any{}
+
+	clusterIdentifier := a.Identifier.Data
+	paginator := dsql.NewListStreamsPaginator(svc, &dsql.ListStreamsInput{
+		ClusterIdentifier: &clusterIdentifier,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, stream := range page.Streams {
+			mqlStream, err := CreateResource(a.MqlRuntime, "aws.dsql.cluster.stream",
+				map[string]*llx.RawData{
+					"__id":              llx.StringDataPtr(stream.Arn),
+					"arn":               llx.StringDataPtr(stream.Arn),
+					"streamIdentifier":  llx.StringDataPtr(stream.StreamIdentifier),
+					"clusterIdentifier": llx.StringDataPtr(stream.ClusterIdentifier),
+					"region":            llx.StringData(a.Region.Data),
+					"status":            llx.StringData(string(stream.Status)),
+					"createdAt":         llx.TimeDataPtr(stream.CreationTime),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlStream)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsDsqlClusterStream) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+type mqlAwsDsqlClusterStreamInternal struct {
+	detailOnce sync.Once
+	detailErr  error
+	detail     *dsql.GetStreamOutput
+}
+
+func (a *mqlAwsDsqlClusterStream) fetchDetail() (*dsql.GetStreamOutput, error) {
+	a.detailOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Dsql(a.Region.Data)
+		ctx := context.Background()
+		clusterIdentifier := a.ClusterIdentifier.Data
+		streamIdentifier := a.StreamIdentifier.Data
+		a.detail, a.detailErr = svc.GetStream(ctx, &dsql.GetStreamInput{
+			ClusterIdentifier: &clusterIdentifier,
+			StreamIdentifier:  &streamIdentifier,
+		})
+	})
+	return a.detail, a.detailErr
+}
+
+func (a *mqlAwsDsqlClusterStream) format() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return string(detail.Format), nil
+}
+
+func (a *mqlAwsDsqlClusterStream) ordering() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return string(detail.Ordering), nil
+}
+
+func (a *mqlAwsDsqlClusterStream) kinesisStreamArn() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if kinesis, ok := detail.TargetDefinition.(*dsqltypes.TargetDefinitionMemberKinesis); ok {
+		return convert.ToValue(kinesis.Value.StreamArn), nil
+	}
+	return "", nil
+}
+
+func (a *mqlAwsDsqlClusterStream) kinesisRoleArn() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if kinesis, ok := detail.TargetDefinition.(*dsqltypes.TargetDefinitionMemberKinesis); ok {
+		return convert.ToValue(kinesis.Value.RoleArn), nil
+	}
+	return "", nil
+}
+
+func (a *mqlAwsDsqlClusterStream) tags() (map[string]any, error) {
 	detail, err := a.fetchDetail()
 	if err != nil {
 		return nil, err

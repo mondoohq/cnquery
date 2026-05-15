@@ -648,6 +648,7 @@ const (
 	ResourceAwsTimestreamInfluxdbCluster                                        string = "aws.timestream.influxdb.cluster"
 	ResourceAwsDsql                                                             string = "aws.dsql"
 	ResourceAwsDsqlCluster                                                      string = "aws.dsql.cluster"
+	ResourceAwsDsqlClusterStream                                                string = "aws.dsql.cluster.stream"
 	ResourceAwsNeptuneAnalytics                                                 string = "aws.neptuneAnalytics"
 	ResourceAwsNeptuneAnalyticsGraph                                            string = "aws.neptuneAnalytics.graph"
 	ResourceAwsGlue                                                             string = "aws.glue"
@@ -711,6 +712,7 @@ const (
 	ResourceAwsBatchJobDefinitionEksPodProperties                               string = "aws.batch.jobDefinition.eksPodProperties"
 	ResourceAwsBatchJobDefinitionEksContainer                                   string = "aws.batch.jobDefinition.eksContainer"
 	ResourceAwsLightsail                                                        string = "aws.lightsail"
+	ResourceAwsLightsailDistribution                                            string = "aws.lightsail.distribution"
 	ResourceAwsLightsailInstance                                                string = "aws.lightsail.instance"
 	ResourceAwsLightsailDatabase                                                string = "aws.lightsail.database"
 	ResourceAwsLightsailLoadBalancer                                            string = "aws.lightsail.loadBalancer"
@@ -772,6 +774,7 @@ const (
 	ResourceAwsControltowerLandingZone                                          string = "aws.controltower.landingZone"
 	ResourceAwsControltowerEnabledBaseline                                      string = "aws.controltower.enabledBaseline"
 	ResourceAwsBedrock                                                          string = "aws.bedrock"
+	ResourceAwsBedrockAdvancedPromptOptimizationJob                             string = "aws.bedrock.advancedPromptOptimizationJob"
 	ResourceAwsBedrockFoundationModel                                           string = "aws.bedrock.foundationModel"
 	ResourceAwsBedrockCustomModel                                               string = "aws.bedrock.customModel"
 	ResourceAwsBedrockGuardrail                                                 string = "aws.bedrock.guardrail"
@@ -3321,6 +3324,10 @@ func init() {
 			// to override args, implement: initAwsDsqlCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsDsqlCluster,
 		},
+		"aws.dsql.cluster.stream": {
+			// to override args, implement: initAwsDsqlClusterStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsDsqlClusterStream,
+		},
 		"aws.neptuneAnalytics": {
 			// to override args, implement: initAwsNeptuneAnalytics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsNeptuneAnalytics,
@@ -3573,6 +3580,10 @@ func init() {
 			// to override args, implement: initAwsLightsail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsLightsail,
 		},
+		"aws.lightsail.distribution": {
+			// to override args, implement: initAwsLightsailDistribution(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsLightsailDistribution,
+		},
 		"aws.lightsail.instance": {
 			// to override args, implement: initAwsLightsailInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsLightsailInstance,
@@ -3816,6 +3827,10 @@ func init() {
 		"aws.bedrock": {
 			// to override args, implement: initAwsBedrock(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrock,
+		},
+		"aws.bedrock.advancedPromptOptimizationJob": {
+			// to override args, implement: initAwsBedrockAdvancedPromptOptimizationJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAdvancedPromptOptimizationJob,
 		},
 		"aws.bedrock.foundationModel": {
 			// to override args, implement: initAwsBedrockFoundationModel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6669,6 +6684,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.sagemaker.domain.defaultExecutionRole": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerDomain).GetDefaultExecutionRole()).ToDataRes(types.Resource("aws.iam.role"))
 	},
+	"aws.sagemaker.domain.executionRoleSessionNameMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerDomain).GetExecutionRoleSessionNameMode()).ToDataRes(types.String)
+	},
 	"aws.sagemaker.inferenceComponent.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerInferenceComponent).GetArn()).ToDataRes(types.String)
 	},
@@ -6968,6 +6986,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.sagemaker.modelPackageGroup.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModelPackageGroup).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.sagemaker.modelPackageGroup.managedStorageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSagemakerModelPackageGroup).GetManagedStorageType()).ToDataRes(types.String)
 	},
 	"aws.sagemaker.modelPackageGroup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSagemakerModelPackageGroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -8862,6 +8883,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.es.domain.automatedSnapshotStartHour": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetAutomatedSnapshotStartHour()).ToDataRes(types.Int)
 	},
+	"aws.es.domain.automatedSnapshotPauseEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAutomatedSnapshotPauseEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.es.domain.automatedSnapshotPauseState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAutomatedSnapshotPauseState()).ToDataRes(types.String)
+	},
+	"aws.es.domain.automatedSnapshotPauseStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAutomatedSnapshotPauseStartTime()).ToDataRes(types.Time)
+	},
+	"aws.es.domain.automatedSnapshotPauseEndTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEsDomain).GetAutomatedSnapshotPauseEndTime()).ToDataRes(types.Time)
+	},
 	"aws.es.domain.cognitoEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEsDomain).GetCognitoEnabled()).ToDataRes(types.Bool)
 	},
@@ -9068,6 +9101,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.opensearch.domain.offPeakWindowEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetOffPeakWindowEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.automatedSnapshotPauseEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetAutomatedSnapshotPauseEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.opensearch.domain.automatedSnapshotPauseState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetAutomatedSnapshotPauseState()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.automatedSnapshotPauseStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetAutomatedSnapshotPauseStartTime()).ToDataRes(types.Time)
+	},
+	"aws.opensearch.domain.automatedSnapshotPauseEndTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetAutomatedSnapshotPauseEndTime()).ToDataRes(types.Time)
 	},
 	"aws.opensearch.domain.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -12801,6 +12846,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudfront.trustStore.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontTrustStore).GetLastModifiedAt()).ToDataRes(types.Time)
 	},
+	"aws.cloudfront.trustStore.useClientCertificateOcspEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontTrustStore).GetUseClientCertificateOcspEndpoint()).ToDataRes(types.Bool)
+	},
 	"aws.cloudfront.anycastIpList.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontAnycastIpList).GetArn()).ToDataRes(types.String)
 	},
@@ -12884,6 +12932,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudfront.distribution.logging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistribution).GetLogging()).ToDataRes(types.Resource("aws.cloudfront.distribution.loggingConfig"))
+	},
+	"aws.cloudfront.distribution.viewerMtlsMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetViewerMtlsMode()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.viewerMtlsTrustStoreId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistribution).GetViewerMtlsTrustStoreId()).ToDataRes(types.String)
 	},
 	"aws.cloudfront.distribution.loggingConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistributionLoggingConfig).GetEnabled()).ToDataRes(types.Bool)
@@ -22932,8 +22986,44 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.dsql.cluster.witnessRegion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDsqlCluster).GetWitnessRegion()).ToDataRes(types.String)
 	},
+	"aws.dsql.cluster.streams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlCluster).GetStreams()).ToDataRes(types.Array(types.Resource("aws.dsql.cluster.stream")))
+	},
 	"aws.dsql.cluster.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDsqlCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.dsql.cluster.stream.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetArn()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.stream.streamIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetStreamIdentifier()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.stream.clusterIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetClusterIdentifier()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.stream.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.stream.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.stream.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.dsql.cluster.stream.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetFormat()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.stream.ordering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetOrdering()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.stream.kinesisStreamArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetKinesisStreamArn()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.stream.kinesisRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetKinesisRoleArn()).ToDataRes(types.String)
+	},
+	"aws.dsql.cluster.stream.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDsqlClusterStream).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.neptuneAnalytics.graphs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneAnalytics).GetGraphs()).ToDataRes(types.Array(types.Resource("aws.neptuneAnalytics.graph")))
@@ -24888,6 +24978,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lightsail.disks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsail).GetDisks()).ToDataRes(types.Array(types.Resource("aws.lightsail.disk")))
 	},
+	"aws.lightsail.distributions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsail).GetDistributions()).ToDataRes(types.Array(types.Resource("aws.lightsail.distribution")))
+	},
+	"aws.lightsail.distribution.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetName()).ToDataRes(types.String)
+	},
+	"aws.lightsail.distribution.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetArn()).ToDataRes(types.String)
+	},
+	"aws.lightsail.distribution.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.lightsail.distribution.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.lightsail.distribution.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.lightsail.distribution.bundleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetBundleId()).ToDataRes(types.String)
+	},
+	"aws.lightsail.distribution.ableToUpdateBundle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetAbleToUpdateBundle()).ToDataRes(types.Bool)
+	},
+	"aws.lightsail.distribution.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetDomainName()).ToDataRes(types.String)
+	},
+	"aws.lightsail.distribution.alternativeDomainNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetAlternativeDomainNames()).ToDataRes(types.Array(types.String))
+	},
+	"aws.lightsail.distribution.certificateName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetCertificateName()).ToDataRes(types.String)
+	},
+	"aws.lightsail.distribution.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetIpAddressType()).ToDataRes(types.String)
+	},
+	"aws.lightsail.distribution.viewerMinimumTlsProtocolVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetViewerMinimumTlsProtocolVersion()).ToDataRes(types.String)
+	},
+	"aws.lightsail.distribution.origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetOrigin()).ToDataRes(types.Dict)
+	},
+	"aws.lightsail.distribution.defaultCacheBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetDefaultCacheBehavior()).ToDataRes(types.Dict)
+	},
+	"aws.lightsail.distribution.cacheBehaviors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetCacheBehaviors()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.lightsail.distribution.cacheBehaviorSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetCacheBehaviorSettings()).ToDataRes(types.Dict)
+	},
+	"aws.lightsail.distribution.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.lightsail.distribution.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLightsailDistribution).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.lightsail.instance.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLightsailInstance).GetName()).ToDataRes(types.String)
 	},
@@ -26726,6 +26873,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.bedrock.provisionedModelThroughputs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrock).GetProvisionedModelThroughputs()).ToDataRes(types.Array(types.Resource("aws.bedrock.provisionedModelThroughput")))
+	},
+	"aws.bedrock.advancedPromptOptimizationJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetAdvancedPromptOptimizationJobs()).ToDataRes(types.Array(types.Resource("aws.bedrock.advancedPromptOptimizationJob")))
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.inputS3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetInputS3Uri()).ToDataRes(types.String)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.outputS3Uri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetOutputS3Uri()).ToDataRes(types.String)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.encryptionKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetEncryptionKeyArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.failureMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetFailureMessage()).ToDataRes(types.String)
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.modelConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetModelConfigurations()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.bedrock.foundationModel.modelArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockFoundationModel).GetModelArn()).ToDataRes(types.String)
@@ -31094,6 +31280,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSagemakerDomain).DefaultExecutionRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
 		return
 	},
+	"aws.sagemaker.domain.executionRoleSessionNameMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerDomain).ExecutionRoleSessionNameMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.sagemaker.inferenceComponent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerInferenceComponent).__id, ok = v.Value.(string)
 		return
@@ -31528,6 +31718,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.sagemaker.modelPackageGroup.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSagemakerModelPackageGroup).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.sagemaker.modelPackageGroup.managedStorageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSagemakerModelPackageGroup).ManagedStorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sagemaker.modelPackageGroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34330,6 +34524,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEsDomain).AutomatedSnapshotStartHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.es.domain.automatedSnapshotPauseEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AutomatedSnapshotPauseEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.automatedSnapshotPauseState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AutomatedSnapshotPauseState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.automatedSnapshotPauseStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AutomatedSnapshotPauseStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.es.domain.automatedSnapshotPauseEndTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEsDomain).AutomatedSnapshotPauseEndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.es.domain.cognitoEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEsDomain).CognitoEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -34612,6 +34822,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.opensearch.domain.offPeakWindowEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).OffPeakWindowEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.automatedSnapshotPauseEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).AutomatedSnapshotPauseEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.automatedSnapshotPauseState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).AutomatedSnapshotPauseState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.automatedSnapshotPauseStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).AutomatedSnapshotPauseStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.automatedSnapshotPauseEndTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).AutomatedSnapshotPauseEndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.opensearch.domain.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40202,6 +40428,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudfrontTrustStore).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.cloudfront.trustStore.useClientCertificateOcspEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontTrustStore).UseClientCertificateOcspEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.cloudfront.anycastIpList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontAnycastIpList).__id, ok = v.Value.(string)
 		return
@@ -40320,6 +40550,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudfront.distribution.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistribution).Logging, ok = plugin.RawToTValue[*mqlAwsCloudfrontDistributionLoggingConfig](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.viewerMtlsMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).ViewerMtlsMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.viewerMtlsTrustStoreId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistribution).ViewerMtlsTrustStoreId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.distribution.loggingConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54906,8 +55144,60 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDsqlCluster).WitnessRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.dsql.cluster.streams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlCluster).Streams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.dsql.cluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDsqlCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.dsql.cluster.stream.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.streamIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).StreamIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.clusterIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).ClusterIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.ordering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).Ordering, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.kinesisStreamArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).KinesisStreamArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.kinesisRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).KinesisRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.dsql.cluster.stream.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDsqlClusterStream).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.neptuneAnalytics.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -57766,6 +58056,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLightsail).Disks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.lightsail.distributions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsail).Distributions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.lightsail.distribution.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.bundleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).BundleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.ableToUpdateBundle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).AbleToUpdateBundle, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.alternativeDomainNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).AlternativeDomainNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.certificateName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).CertificateName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.viewerMinimumTlsProtocolVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).ViewerMinimumTlsProtocolVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).Origin, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.defaultCacheBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).DefaultCacheBehavior, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.cacheBehaviors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).CacheBehaviors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.cacheBehaviorSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).CacheBehaviorSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.lightsail.distribution.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLightsailDistribution).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.lightsail.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLightsailInstance).__id, ok = v.Value.(string)
 		return
@@ -60460,6 +60830,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.provisionedModelThroughputs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrock).ProvisionedModelThroughputs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).AdvancedPromptOptimizationJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.inputS3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).InputS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.outputS3Uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).OutputS3Uri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.encryptionKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).EncryptionKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.failureMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).FailureMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.advancedPromptOptimizationJob.modelConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).ModelConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.foundationModel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72033,6 +72459,7 @@ type mqlAwsSagemakerDomain struct {
 	FailureReason                  plugin.TValue[string]
 	Subnets                        plugin.TValue[[]any]
 	DefaultExecutionRole           plugin.TValue[*mqlAwsIamRole]
+	ExecutionRoleSessionNameMode   plugin.TValue[string]
 }
 
 // createAwsSagemakerDomain creates a new instance of this resource
@@ -72235,6 +72662,12 @@ func (c *mqlAwsSagemakerDomain) GetDefaultExecutionRole() *plugin.TValue[*mqlAws
 		}
 
 		return c.defaultExecutionRole()
+	})
+}
+
+func (c *mqlAwsSagemakerDomain) GetExecutionRoleSessionNameMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExecutionRoleSessionNameMode, func() (string, error) {
+		return c.executionRoleSessionNameMode()
 	})
 }
 
@@ -73252,13 +73685,14 @@ type mqlAwsSagemakerModelPackageGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSagemakerModelPackageGroupInternal
-	Arn         plugin.TValue[string]
-	Name        plugin.TValue[string]
-	Region      plugin.TValue[string]
-	Status      plugin.TValue[string]
-	CreatedAt   plugin.TValue[*time.Time]
-	Tags        plugin.TValue[map[string]any]
-	Description plugin.TValue[string]
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	Status             plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	ManagedStorageType plugin.TValue[string]
+	Tags               plugin.TValue[map[string]any]
+	Description        plugin.TValue[string]
 }
 
 // createAwsSagemakerModelPackageGroup creates a new instance of this resource
@@ -73316,6 +73750,10 @@ func (c *mqlAwsSagemakerModelPackageGroup) GetStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsSagemakerModelPackageGroup) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsSagemakerModelPackageGroup) GetManagedStorageType() *plugin.TValue[string] {
+	return &c.ManagedStorageType
 }
 
 func (c *mqlAwsSagemakerModelPackageGroup) GetTags() *plugin.TValue[map[string]any] {
@@ -80730,6 +81168,10 @@ type mqlAwsEsDomain struct {
 	InternalUserDatabaseEnabled        plugin.TValue[bool]
 	AnonymousAuthEnabled               plugin.TValue[bool]
 	AutomatedSnapshotStartHour         plugin.TValue[int64]
+	AutomatedSnapshotPauseEnabled      plugin.TValue[bool]
+	AutomatedSnapshotPauseState        plugin.TValue[string]
+	AutomatedSnapshotPauseStartTime    plugin.TValue[*time.Time]
+	AutomatedSnapshotPauseEndTime      plugin.TValue[*time.Time]
 	CognitoEnabled                     plugin.TValue[bool]
 	CognitoUserPoolId                  plugin.TValue[string]
 	CognitoIdentityPoolId              plugin.TValue[string]
@@ -81024,6 +81466,22 @@ func (c *mqlAwsEsDomain) GetAutomatedSnapshotStartHour() *plugin.TValue[int64] {
 	return &c.AutomatedSnapshotStartHour
 }
 
+func (c *mqlAwsEsDomain) GetAutomatedSnapshotPauseEnabled() *plugin.TValue[bool] {
+	return &c.AutomatedSnapshotPauseEnabled
+}
+
+func (c *mqlAwsEsDomain) GetAutomatedSnapshotPauseState() *plugin.TValue[string] {
+	return &c.AutomatedSnapshotPauseState
+}
+
+func (c *mqlAwsEsDomain) GetAutomatedSnapshotPauseStartTime() *plugin.TValue[*time.Time] {
+	return &c.AutomatedSnapshotPauseStartTime
+}
+
+func (c *mqlAwsEsDomain) GetAutomatedSnapshotPauseEndTime() *plugin.TValue[*time.Time] {
+	return &c.AutomatedSnapshotPauseEndTime
+}
+
 func (c *mqlAwsEsDomain) GetCognitoEnabled() *plugin.TValue[bool] {
 	return &c.CognitoEnabled
 }
@@ -81214,58 +81672,62 @@ type mqlAwsOpensearchDomain struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsOpensearchDomainInternal
-	Arn                         plugin.TValue[string]
-	Name                        plugin.TValue[string]
-	DomainId                    plugin.TValue[string]
-	Region                      plugin.TValue[string]
-	EngineVersion               plugin.TValue[string]
-	Endpoint                    plugin.TValue[string]
-	EncryptionAtRestEnabled     plugin.TValue[bool]
-	EncryptionAtRestKmsKeyId    plugin.TValue[string]
-	EncryptionAtRestKmsKey      plugin.TValue[*mqlAwsKmsKey]
-	NodeToNodeEncryptionEnabled plugin.TValue[bool]
-	DedicatedMasterEnabled      plugin.TValue[bool]
-	DedicatedMasterType         plugin.TValue[string]
-	DedicatedMasterCount        plugin.TValue[int64]
-	InstanceType                plugin.TValue[string]
-	InstanceCount               plugin.TValue[int64]
-	ZoneAwarenessEnabled        plugin.TValue[bool]
-	AvailabilityZoneCount       plugin.TValue[int64]
-	WarmEnabled                 plugin.TValue[bool]
-	WarmType                    plugin.TValue[string]
-	WarmCount                   plugin.TValue[int64]
-	ColdStorageEnabled          plugin.TValue[bool]
-	EbsEnabled                  plugin.TValue[bool]
-	EbsVolumeType               plugin.TValue[string]
-	EbsVolumeSize               plugin.TValue[int64]
-	EbsIops                     plugin.TValue[int64]
-	EbsThroughput               plugin.TValue[int64]
-	VpcId                       plugin.TValue[string]
-	Vpc                         plugin.TValue[*mqlAwsVpc]
-	VpcEgressEnabled            plugin.TValue[bool]
-	EnforceHTTPS                plugin.TValue[bool]
-	TlsSecurityPolicy           plugin.TValue[string]
-	CustomEndpointEnabled       plugin.TValue[bool]
-	CustomEndpoint              plugin.TValue[string]
-	CustomEndpointCertificate   plugin.TValue[*mqlAwsAcmCertificate]
-	SamlEnabled                 plugin.TValue[bool]
-	JwtEnabled                  plugin.TValue[bool]
-	JwksUrl                     plugin.TValue[string]
-	AnonymousAuthEnabled        plugin.TValue[bool]
-	InternalUserDatabaseEnabled plugin.TValue[bool]
-	AdvancedSecurityEnabled     plugin.TValue[bool]
-	Processing                  plugin.TValue[bool]
-	UpgradeProcessing           plugin.TValue[bool]
-	CreatedAt                   plugin.TValue[*time.Time]
-	AutoTuneState               plugin.TValue[string]
-	AuditLogEnabled             plugin.TValue[bool]
-	IpAddressType               plugin.TValue[string]
-	ServiceSoftwareNewVersion   plugin.TValue[string]
-	AutoSoftwareUpdateEnabled   plugin.TValue[bool]
-	OffPeakWindowEnabled        plugin.TValue[bool]
-	Tags                        plugin.TValue[map[string]any]
-	SecurityGroups              plugin.TValue[[]any]
-	Subnets                     plugin.TValue[[]any]
+	Arn                             plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	DomainId                        plugin.TValue[string]
+	Region                          plugin.TValue[string]
+	EngineVersion                   plugin.TValue[string]
+	Endpoint                        plugin.TValue[string]
+	EncryptionAtRestEnabled         plugin.TValue[bool]
+	EncryptionAtRestKmsKeyId        plugin.TValue[string]
+	EncryptionAtRestKmsKey          plugin.TValue[*mqlAwsKmsKey]
+	NodeToNodeEncryptionEnabled     plugin.TValue[bool]
+	DedicatedMasterEnabled          plugin.TValue[bool]
+	DedicatedMasterType             plugin.TValue[string]
+	DedicatedMasterCount            plugin.TValue[int64]
+	InstanceType                    plugin.TValue[string]
+	InstanceCount                   plugin.TValue[int64]
+	ZoneAwarenessEnabled            plugin.TValue[bool]
+	AvailabilityZoneCount           plugin.TValue[int64]
+	WarmEnabled                     plugin.TValue[bool]
+	WarmType                        plugin.TValue[string]
+	WarmCount                       plugin.TValue[int64]
+	ColdStorageEnabled              plugin.TValue[bool]
+	EbsEnabled                      plugin.TValue[bool]
+	EbsVolumeType                   plugin.TValue[string]
+	EbsVolumeSize                   plugin.TValue[int64]
+	EbsIops                         plugin.TValue[int64]
+	EbsThroughput                   plugin.TValue[int64]
+	VpcId                           plugin.TValue[string]
+	Vpc                             plugin.TValue[*mqlAwsVpc]
+	VpcEgressEnabled                plugin.TValue[bool]
+	EnforceHTTPS                    plugin.TValue[bool]
+	TlsSecurityPolicy               plugin.TValue[string]
+	CustomEndpointEnabled           plugin.TValue[bool]
+	CustomEndpoint                  plugin.TValue[string]
+	CustomEndpointCertificate       plugin.TValue[*mqlAwsAcmCertificate]
+	SamlEnabled                     plugin.TValue[bool]
+	JwtEnabled                      plugin.TValue[bool]
+	JwksUrl                         plugin.TValue[string]
+	AnonymousAuthEnabled            plugin.TValue[bool]
+	InternalUserDatabaseEnabled     plugin.TValue[bool]
+	AdvancedSecurityEnabled         plugin.TValue[bool]
+	Processing                      plugin.TValue[bool]
+	UpgradeProcessing               plugin.TValue[bool]
+	CreatedAt                       plugin.TValue[*time.Time]
+	AutoTuneState                   plugin.TValue[string]
+	AuditLogEnabled                 plugin.TValue[bool]
+	IpAddressType                   plugin.TValue[string]
+	ServiceSoftwareNewVersion       plugin.TValue[string]
+	AutoSoftwareUpdateEnabled       plugin.TValue[bool]
+	OffPeakWindowEnabled            plugin.TValue[bool]
+	AutomatedSnapshotPauseEnabled   plugin.TValue[bool]
+	AutomatedSnapshotPauseState     plugin.TValue[string]
+	AutomatedSnapshotPauseStartTime plugin.TValue[*time.Time]
+	AutomatedSnapshotPauseEndTime   plugin.TValue[*time.Time]
+	Tags                            plugin.TValue[map[string]any]
+	SecurityGroups                  plugin.TValue[[]any]
+	Subnets                         plugin.TValue[[]any]
 }
 
 // createAwsOpensearchDomain creates a new instance of this resource
@@ -81535,6 +81997,22 @@ func (c *mqlAwsOpensearchDomain) GetAutoSoftwareUpdateEnabled() *plugin.TValue[b
 
 func (c *mqlAwsOpensearchDomain) GetOffPeakWindowEnabled() *plugin.TValue[bool] {
 	return &c.OffPeakWindowEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetAutomatedSnapshotPauseEnabled() *plugin.TValue[bool] {
+	return &c.AutomatedSnapshotPauseEnabled
+}
+
+func (c *mqlAwsOpensearchDomain) GetAutomatedSnapshotPauseState() *plugin.TValue[string] {
+	return &c.AutomatedSnapshotPauseState
+}
+
+func (c *mqlAwsOpensearchDomain) GetAutomatedSnapshotPauseStartTime() *plugin.TValue[*time.Time] {
+	return &c.AutomatedSnapshotPauseStartTime
+}
+
+func (c *mqlAwsOpensearchDomain) GetAutomatedSnapshotPauseEndTime() *plugin.TValue[*time.Time] {
+	return &c.AutomatedSnapshotPauseEndTime
 }
 
 func (c *mqlAwsOpensearchDomain) GetTags() *plugin.TValue[map[string]any] {
@@ -97083,13 +97561,14 @@ type mqlAwsCloudfrontTrustStore struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsCloudfrontTrustStoreInternal it will be used here
-	Id                     plugin.TValue[string]
-	Arn                    plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Status                 plugin.TValue[string]
-	NumberOfCaCertificates plugin.TValue[int64]
-	Reason                 plugin.TValue[string]
-	LastModifiedAt         plugin.TValue[*time.Time]
+	Id                               plugin.TValue[string]
+	Arn                              plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Status                           plugin.TValue[string]
+	NumberOfCaCertificates           plugin.TValue[int64]
+	Reason                           plugin.TValue[string]
+	LastModifiedAt                   plugin.TValue[*time.Time]
+	UseClientCertificateOcspEndpoint plugin.TValue[bool]
 }
 
 // createAwsCloudfrontTrustStore creates a new instance of this resource
@@ -97155,6 +97634,12 @@ func (c *mqlAwsCloudfrontTrustStore) GetReason() *plugin.TValue[string] {
 
 func (c *mqlAwsCloudfrontTrustStore) GetLastModifiedAt() *plugin.TValue[*time.Time] {
 	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsCloudfrontTrustStore) GetUseClientCertificateOcspEndpoint() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UseClientCertificateOcspEndpoint, func() (bool, error) {
+		return c.useClientCertificateOcspEndpoint()
+	})
 }
 
 // mqlAwsCloudfrontAnycastIpList for the aws.cloudfront.anycastIpList resource
@@ -97274,6 +97759,8 @@ type mqlAwsCloudfrontDistribution struct {
 	LastModifiedAt         plugin.TValue[*time.Time]
 	Comment                plugin.TValue[string]
 	Logging                plugin.TValue[*mqlAwsCloudfrontDistributionLoggingConfig]
+	ViewerMtlsMode         plugin.TValue[string]
+	ViewerMtlsTrustStoreId plugin.TValue[string]
 }
 
 // createAwsCloudfrontDistribution creates a new instance of this resource
@@ -97399,6 +97886,14 @@ func (c *mqlAwsCloudfrontDistribution) GetLogging() *plugin.TValue[*mqlAwsCloudf
 
 		return c.logging()
 	})
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetViewerMtlsMode() *plugin.TValue[string] {
+	return &c.ViewerMtlsMode
+}
+
+func (c *mqlAwsCloudfrontDistribution) GetViewerMtlsTrustStoreId() *plugin.TValue[string] {
+	return &c.ViewerMtlsTrustStoreId
 }
 
 // mqlAwsCloudfrontDistributionLoggingConfig for the aws.cloudfront.distribution.loggingConfig resource
@@ -133343,6 +133838,7 @@ type mqlAwsDsqlCluster struct {
 	KmsKey                    plugin.TValue[*mqlAwsKmsKey]
 	MultiRegionPeers          plugin.TValue[[]any]
 	WitnessRegion             plugin.TValue[string]
+	Streams                   plugin.TValue[[]any]
 	Tags                      plugin.TValue[map[string]any]
 }
 
@@ -133454,7 +133950,132 @@ func (c *mqlAwsDsqlCluster) GetWitnessRegion() *plugin.TValue[string] {
 	})
 }
 
+func (c *mqlAwsDsqlCluster) GetStreams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Streams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.dsql.cluster", c.__id, "streams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.streams()
+	})
+}
+
 func (c *mqlAwsDsqlCluster) GetTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
+		return c.tags()
+	})
+}
+
+// mqlAwsDsqlClusterStream for the aws.dsql.cluster.stream resource
+type mqlAwsDsqlClusterStream struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsDsqlClusterStreamInternal
+	Arn               plugin.TValue[string]
+	StreamIdentifier  plugin.TValue[string]
+	ClusterIdentifier plugin.TValue[string]
+	Region            plugin.TValue[string]
+	Status            plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	Format            plugin.TValue[string]
+	Ordering          plugin.TValue[string]
+	KinesisStreamArn  plugin.TValue[string]
+	KinesisRoleArn    plugin.TValue[string]
+	Tags              plugin.TValue[map[string]any]
+}
+
+// createAwsDsqlClusterStream creates a new instance of this resource
+func createAwsDsqlClusterStream(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsDsqlClusterStream{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.dsql.cluster.stream", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsDsqlClusterStream) MqlName() string {
+	return "aws.dsql.cluster.stream"
+}
+
+func (c *mqlAwsDsqlClusterStream) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsDsqlClusterStream) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsDsqlClusterStream) GetStreamIdentifier() *plugin.TValue[string] {
+	return &c.StreamIdentifier
+}
+
+func (c *mqlAwsDsqlClusterStream) GetClusterIdentifier() *plugin.TValue[string] {
+	return &c.ClusterIdentifier
+}
+
+func (c *mqlAwsDsqlClusterStream) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsDsqlClusterStream) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsDsqlClusterStream) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsDsqlClusterStream) GetFormat() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Format, func() (string, error) {
+		return c.format()
+	})
+}
+
+func (c *mqlAwsDsqlClusterStream) GetOrdering() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Ordering, func() (string, error) {
+		return c.ordering()
+	})
+}
+
+func (c *mqlAwsDsqlClusterStream) GetKinesisStreamArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KinesisStreamArn, func() (string, error) {
+		return c.kinesisStreamArn()
+	})
+}
+
+func (c *mqlAwsDsqlClusterStream) GetKinesisRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KinesisRoleArn, func() (string, error) {
+		return c.kinesisRoleArn()
+	})
+}
+
+func (c *mqlAwsDsqlClusterStream) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
@@ -140842,6 +141463,7 @@ type mqlAwsLightsail struct {
 	LoadBalancers plugin.TValue[[]any]
 	Buckets       plugin.TValue[[]any]
 	Disks         plugin.TValue[[]any]
+	Distributions plugin.TValue[[]any]
 }
 
 // createAwsLightsail creates a new instance of this resource
@@ -140959,6 +141581,156 @@ func (c *mqlAwsLightsail) GetDisks() *plugin.TValue[[]any] {
 
 		return c.disks()
 	})
+}
+
+func (c *mqlAwsLightsail) GetDistributions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Distributions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.lightsail", c.__id, "distributions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.distributions()
+	})
+}
+
+// mqlAwsLightsailDistribution for the aws.lightsail.distribution resource
+type mqlAwsLightsailDistribution struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsLightsailDistributionInternal it will be used here
+	Name                            plugin.TValue[string]
+	Arn                             plugin.TValue[string]
+	Region                          plugin.TValue[string]
+	Status                          plugin.TValue[string]
+	IsEnabled                       plugin.TValue[bool]
+	BundleId                        plugin.TValue[string]
+	AbleToUpdateBundle              plugin.TValue[bool]
+	DomainName                      plugin.TValue[string]
+	AlternativeDomainNames          plugin.TValue[[]any]
+	CertificateName                 plugin.TValue[string]
+	IpAddressType                   plugin.TValue[string]
+	ViewerMinimumTlsProtocolVersion plugin.TValue[string]
+	Origin                          plugin.TValue[any]
+	DefaultCacheBehavior            plugin.TValue[any]
+	CacheBehaviors                  plugin.TValue[[]any]
+	CacheBehaviorSettings           plugin.TValue[any]
+	CreatedAt                       plugin.TValue[*time.Time]
+	Tags                            plugin.TValue[map[string]any]
+}
+
+// createAwsLightsailDistribution creates a new instance of this resource
+func createAwsLightsailDistribution(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsLightsailDistribution{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.lightsail.distribution", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsLightsailDistribution) MqlName() string {
+	return "aws.lightsail.distribution"
+}
+
+func (c *mqlAwsLightsailDistribution) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsLightsailDistribution) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsLightsailDistribution) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsLightsailDistribution) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsLightsailDistribution) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsLightsailDistribution) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlAwsLightsailDistribution) GetBundleId() *plugin.TValue[string] {
+	return &c.BundleId
+}
+
+func (c *mqlAwsLightsailDistribution) GetAbleToUpdateBundle() *plugin.TValue[bool] {
+	return &c.AbleToUpdateBundle
+}
+
+func (c *mqlAwsLightsailDistribution) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlAwsLightsailDistribution) GetAlternativeDomainNames() *plugin.TValue[[]any] {
+	return &c.AlternativeDomainNames
+}
+
+func (c *mqlAwsLightsailDistribution) GetCertificateName() *plugin.TValue[string] {
+	return &c.CertificateName
+}
+
+func (c *mqlAwsLightsailDistribution) GetIpAddressType() *plugin.TValue[string] {
+	return &c.IpAddressType
+}
+
+func (c *mqlAwsLightsailDistribution) GetViewerMinimumTlsProtocolVersion() *plugin.TValue[string] {
+	return &c.ViewerMinimumTlsProtocolVersion
+}
+
+func (c *mqlAwsLightsailDistribution) GetOrigin() *plugin.TValue[any] {
+	return &c.Origin
+}
+
+func (c *mqlAwsLightsailDistribution) GetDefaultCacheBehavior() *plugin.TValue[any] {
+	return &c.DefaultCacheBehavior
+}
+
+func (c *mqlAwsLightsailDistribution) GetCacheBehaviors() *plugin.TValue[[]any] {
+	return &c.CacheBehaviors
+}
+
+func (c *mqlAwsLightsailDistribution) GetCacheBehaviorSettings() *plugin.TValue[any] {
+	return &c.CacheBehaviorSettings
+}
+
+func (c *mqlAwsLightsailDistribution) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsLightsailDistribution) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 // mqlAwsLightsailInstance for the aws.lightsail.instance resource
@@ -147672,6 +148444,7 @@ type mqlAwsBedrock struct {
 	Guardrails                           plugin.TValue[[]any]
 	ModelInvocationLoggingConfigurations plugin.TValue[[]any]
 	ProvisionedModelThroughputs          plugin.TValue[[]any]
+	AdvancedPromptOptimizationJobs       plugin.TValue[[]any]
 }
 
 // createAwsBedrock creates a new instance of this resource
@@ -147788,6 +148561,138 @@ func (c *mqlAwsBedrock) GetProvisionedModelThroughputs() *plugin.TValue[[]any] {
 		}
 
 		return c.provisionedModelThroughputs()
+	})
+}
+
+func (c *mqlAwsBedrock) GetAdvancedPromptOptimizationJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AdvancedPromptOptimizationJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "advancedPromptOptimizationJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.advancedPromptOptimizationJobs()
+	})
+}
+
+// mqlAwsBedrockAdvancedPromptOptimizationJob for the aws.bedrock.advancedPromptOptimizationJob resource
+type mqlAwsBedrockAdvancedPromptOptimizationJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockAdvancedPromptOptimizationJobInternal
+	Arn                 plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Region              plugin.TValue[string]
+	Status              plugin.TValue[string]
+	CreatedAt           plugin.TValue[*time.Time]
+	LastModifiedAt      plugin.TValue[*time.Time]
+	Description         plugin.TValue[string]
+	InputS3Uri          plugin.TValue[string]
+	OutputS3Uri         plugin.TValue[string]
+	EncryptionKeyArn    plugin.TValue[string]
+	FailureMessage      plugin.TValue[string]
+	ModelConfigurations plugin.TValue[[]any]
+}
+
+// createAwsBedrockAdvancedPromptOptimizationJob creates a new instance of this resource
+func createAwsBedrockAdvancedPromptOptimizationJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAdvancedPromptOptimizationJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.advancedPromptOptimizationJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) MqlName() string {
+	return "aws.bedrock.advancedPromptOptimizationJob"
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetInputS3Uri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InputS3Uri, func() (string, error) {
+		return c.inputS3Uri()
+	})
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetOutputS3Uri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OutputS3Uri, func() (string, error) {
+		return c.outputS3Uri()
+	})
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetEncryptionKeyArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EncryptionKeyArn, func() (string, error) {
+		return c.encryptionKeyArn()
+	})
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetFailureMessage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FailureMessage, func() (string, error) {
+		return c.failureMessage()
+	})
+}
+
+func (c *mqlAwsBedrockAdvancedPromptOptimizationJob) GetModelConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelConfigurations, func() ([]any, error) {
+		return c.modelConfigurations()
 	})
 }
 

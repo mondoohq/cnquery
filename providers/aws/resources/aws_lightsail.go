@@ -858,3 +858,90 @@ func lightsailTagsToMap(tags []lightsail_types.Tag) map[string]any {
 	}
 	return result
 }
+
+func (a *mqlAwsLightsailDistribution) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsLightsail) distributions() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	// Lightsail distributions are a global resource, managed only through us-east-1.
+	svc := conn.Lightsail("us-east-1")
+	ctx := context.Background()
+	res := []any{}
+
+	var pageToken *string
+	for {
+		resp, err := svc.GetDistributions(ctx, &lightsail.GetDistributionsInput{
+			PageToken: pageToken,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			if IsServiceNotAvailableInRegionError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+
+		for i := range resp.Distributions {
+			d := resp.Distributions[i]
+
+			origin, err := convert.JsonToDict(d.Origin)
+			if err != nil {
+				return nil, err
+			}
+			defaultCacheBehavior, err := convert.JsonToDict(d.DefaultCacheBehavior)
+			if err != nil {
+				return nil, err
+			}
+			cacheBehaviors, err := convert.JsonToDictSlice(d.CacheBehaviors)
+			if err != nil {
+				return nil, err
+			}
+			cacheBehaviorSettings, err := convert.JsonToDict(d.CacheBehaviorSettings)
+			if err != nil {
+				return nil, err
+			}
+
+			alternativeDomainNames := make([]any, len(d.AlternativeDomainNames))
+			for j, name := range d.AlternativeDomainNames {
+				alternativeDomainNames[j] = name
+			}
+
+			mqlDistribution, err := CreateResource(a.MqlRuntime, "aws.lightsail.distribution",
+				map[string]*llx.RawData{
+					"__id":                            llx.StringDataPtr(d.Arn),
+					"name":                            llx.StringDataPtr(d.Name),
+					"arn":                             llx.StringDataPtr(d.Arn),
+					"region":                          llx.StringData("us-east-1"),
+					"status":                          llx.StringDataPtr(d.Status),
+					"isEnabled":                       llx.BoolDataPtr(d.IsEnabled),
+					"bundleId":                        llx.StringDataPtr(d.BundleId),
+					"ableToUpdateBundle":              llx.BoolDataPtr(d.AbleToUpdateBundle),
+					"domainName":                      llx.StringDataPtr(d.DomainName),
+					"alternativeDomainNames":          llx.ArrayData(alternativeDomainNames, types.String),
+					"certificateName":                 llx.StringDataPtr(d.CertificateName),
+					"ipAddressType":                   llx.StringData(string(d.IpAddressType)),
+					"viewerMinimumTlsProtocolVersion": llx.StringDataPtr(d.ViewerMinimumTlsProtocolVersion),
+					"origin":                          llx.MapData(origin, types.Any),
+					"defaultCacheBehavior":            llx.MapData(defaultCacheBehavior, types.Any),
+					"cacheBehaviors":                  llx.ArrayData(cacheBehaviors, types.Any),
+					"cacheBehaviorSettings":           llx.MapData(cacheBehaviorSettings, types.Any),
+					"createdAt":                       llx.TimeDataPtr(d.CreatedAt),
+					"tags":                            llx.MapData(lightsailTagsToMap(d.Tags), types.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDistribution)
+		}
+
+		if resp.NextPageToken == nil {
+			break
+		}
+		pageToken = resp.NextPageToken
+	}
+	return res, nil
+}

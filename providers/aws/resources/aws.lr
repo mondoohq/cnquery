@@ -2359,6 +2359,8 @@ private aws.sagemaker.domain @defaults("arn name status") {
   subnets() []aws.vpc.subnet
   // Default execution role from user settings
   defaultExecutionRole() aws.iam.role
+  // Execution role session name mode from the default Studio settings (USER_IDENTITY, STATIC, or empty when unset)
+  executionRoleSessionNameMode() string
 }
 
 // AWS SageMaker inference component
@@ -2595,6 +2597,8 @@ private aws.sagemaker.modelPackageGroup @defaults("arn name status") {
   status string
   // Time when the group was created
   createdAt time
+  // Managed storage type of the model packages in the group
+  managedStorageType string
   // Tags for the model package group
   tags() map[string]string
   // Description of the model package group
@@ -4147,6 +4151,14 @@ private aws.es.domain @defaults("arn name") {
   anonymousAuthEnabled bool
   // Hour of the day in UTC when automated snapshots are taken
   automatedSnapshotStartHour int
+  // Whether automated snapshot pause is enabled for the domain
+  automatedSnapshotPauseEnabled bool
+  // Current state of the automated snapshot pause (Active, Completed, Scheduled, or Disabled)
+  automatedSnapshotPauseState string
+  // Timestamp at which the automated snapshot pause begins
+  automatedSnapshotPauseStartTime time
+  // Timestamp at which the automated snapshot pause ends
+  automatedSnapshotPauseEndTime time
   // Whether Amazon Cognito authentication for Kibana is enabled
   cognitoEnabled bool
   // Cognito user pool ID for Kibana authentication
@@ -4303,6 +4315,14 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   autoSoftwareUpdateEnabled bool
   // Whether the off-peak maintenance window is enabled
   offPeakWindowEnabled bool
+  // Whether automated snapshot pause is enabled for the domain
+  automatedSnapshotPauseEnabled bool
+  // Current state of the automated snapshot pause (Active, Completed, Scheduled, or Disabled)
+  automatedSnapshotPauseState string
+  // Timestamp at which the automated snapshot pause begins
+  automatedSnapshotPauseStartTime time
+  // Timestamp at which the automated snapshot pause ends
+  automatedSnapshotPauseEndTime time
   // Tags for the domain
   tags() map[string]string
   // Security groups associated with the VPC domain
@@ -7613,6 +7633,8 @@ private aws.cloudfront.trustStore @defaults("name status numberOfCaCertificates"
   reason string
   // Last modified timestamp
   lastModifiedAt time
+  // Whether the trust store uses the CA certificate's OCSP endpoint to check certificate revocation status
+  useClientCertificateOcspEndpoint() bool
 }
 
 // Amazon CloudFront Anycast static IP list
@@ -7677,6 +7699,10 @@ private aws.cloudfront.distribution @defaults("domainName status") {
   comment string
   // Logging configuration for the distribution
   logging() aws.cloudfront.distribution.loggingConfig
+  // Viewer mutual TLS (mTLS) mode (required, optional, or passthrough; empty string when viewer mTLS is not configured)
+  viewerMtlsMode string
+  // ID of the trust store associated with the viewer mTLS configuration (empty string when none)
+  viewerMtlsTrustStoreId string
 }
 
 // Amazon CloudFront distribution logging configuration
@@ -16065,7 +16091,39 @@ private aws.dsql.cluster @defaults("arn identifier status region") {
   multiRegionPeers() []string
   // Region serving as the witness for a multi-Region cluster
   witnessRegion() string
+  // Change data capture (CDC) streams that deliver row-level changes from the cluster
+  streams() []aws.dsql.cluster.stream
   // Tags for the cluster
+  tags() map[string]string
+}
+
+// Amazon Aurora DSQL change data capture (CDC) stream
+//
+// A CDC stream delivers row-level database changes from an Aurora DSQL
+// cluster to an Amazon Kinesis stream. Enumerating streams reveals where
+// row-level data is replicated out of the database.
+private aws.dsql.cluster.stream @defaults("arn status") {
+  // ARN of the stream
+  arn string
+  // Service-generated unique identifier of the stream
+  streamIdentifier string
+  // Identifier of the cluster the stream belongs to
+  clusterIdentifier string
+  // Region of the stream
+  region string
+  // Status of the stream
+  status string
+  // Time the stream was created
+  createdAt time
+  // Format of the stream records
+  format() string
+  // Ordering mode of the stream
+  ordering() string
+  // ARN of the Kinesis stream the change data is delivered to
+  kinesisStreamArn() string
+  // ARN of the IAM role granting permission to write to the Kinesis stream
+  kinesisRoleArn() string
+  // Tags for the stream
   tags() map[string]string
 }
 
@@ -17720,6 +17778,48 @@ aws.lightsail @defaults("instances") {
   buckets() []aws.lightsail.bucket
   // List of Lightsail block storage disks
   disks() []aws.lightsail.disk
+  // List of Lightsail content delivery network (CDN) distributions
+  distributions() []aws.lightsail.distribution
+}
+
+// Amazon Lightsail content delivery network (CDN) distribution
+private aws.lightsail.distribution @defaults("name arn") {
+  // Name of the distribution
+  name string
+  // ARN of the distribution
+  arn string
+  // Region the distribution is managed from
+  region string
+  // Status of the distribution
+  status string
+  // Whether the distribution is enabled
+  isEnabled bool
+  // Bundle ID describing the distribution's monthly data transfer quota and price
+  bundleId string
+  // Whether the distribution's bundle can be changed to another bundle
+  ableToUpdateBundle bool
+  // Domain name of the distribution
+  domainName string
+  // Alternative domain names (CNAMEs) of the distribution
+  alternativeDomainNames []string
+  // Name of the SSL/TLS certificate attached to the distribution (empty string when none)
+  certificateName string
+  // IP address type of the distribution (ipv4, ipv6, or dualstack)
+  ipAddressType string
+  // Minimum TLS protocol version that the distribution accepts for viewer connections
+  viewerMinimumTlsProtocolVersion string
+  // Origin the distribution pulls content from, including its IP address type
+  origin dict
+  // Default cache behavior of the distribution
+  defaultCacheBehavior dict
+  // Per-path cache behaviors of the distribution
+  cacheBehaviors []dict
+  // Cache behavior settings of the distribution
+  cacheBehaviorSettings dict
+  // Date the distribution was created
+  createdAt time
+  // Tags for the distribution
+  tags map[string]string
 }
 
 // Amazon Lightsail instance
@@ -19317,6 +19417,40 @@ aws.bedrock {
   modelInvocationLoggingConfigurations() []aws.bedrock.modelInvocationLoggingConfiguration
   // Provisioned model throughputs
   provisionedModelThroughputs() []aws.bedrock.provisionedModelThroughput
+  // Advanced prompt optimization jobs in the account
+  advancedPromptOptimizationJobs() []aws.bedrock.advancedPromptOptimizationJob
+}
+
+// Amazon Bedrock advanced prompt optimization job
+//
+// An advanced prompt optimization job batch-evaluates model responses and
+// rewrites prompts to improve performance. Each job reads input from and
+// writes results to Amazon S3.
+private aws.bedrock.advancedPromptOptimizationJob @defaults("name status") {
+  // ARN of the advanced prompt optimization job
+  arn string
+  // Name of the job
+  name string
+  // Region where the job exists
+  region string
+  // Status of the job
+  status string
+  // Time the job was created
+  createdAt time
+  // Time the job was last modified
+  lastModifiedAt time
+  // Description of the job
+  description() string
+  // S3 URI of the input JSONL file
+  inputS3Uri() string
+  // S3 URI prefix for the output location
+  outputS3Uri() string
+  // ARN of the KMS key used to encrypt output data (empty string when none)
+  encryptionKeyArn() string
+  // Failure message if the job failed (empty string otherwise)
+  failureMessage() string
+  // Model configurations for the optimization job
+  modelConfigurations() []dict
 }
 
 // Amazon Bedrock foundation model

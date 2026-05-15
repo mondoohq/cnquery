@@ -1,7 +1,7 @@
 {
   "provider": "aws",
-  "version": "13.24.0",
-  "generated_at": "2026-05-13T12:31:17+01:00",
+  "version": "13.25.0",
+  "generated_at": "2026-05-15T19:59:55+01:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -65,6 +65,7 @@
     "batch:DescribeSchedulingPolicies",
     "batch:ListJobs",
     "batch:ListSchedulingPolicies",
+    "bedrock:ListAdvancedPromptOptimizationJobs",
     "bedrock:ListCustomModels",
     "bedrock:ListGuardrails",
     "bedrock:ListProvisionedModelThroughputs",
@@ -73,6 +74,7 @@
     "cloudformation:ListStackSets",
     "cloudfront:GetAnycastIpList",
     "cloudfront:GetDistribution",
+    "cloudfront:GetTrustStore",
     "cloudfront:ListAnycastIpLists",
     "cloudfront:ListDistributions",
     "cloudfront:ListFunctions",
@@ -148,7 +150,9 @@
     "ds:DescribeDirectories",
     "ds:ListTagsForResource",
     "dsql:GetCluster",
+    "dsql:GetStream",
     "dsql:ListClusters",
+    "dsql:ListStreams",
     "dynamodb:DescribeContinuousBackups",
     "dynamodb:DescribeExport",
     "dynamodb:DescribeGlobalTableSettings",
@@ -428,6 +432,7 @@
     "lambda:ListVersionsByFunction",
     "lightsail:GetBuckets",
     "lightsail:GetDisks",
+    "lightsail:GetDistributions",
     "lightsail:GetInstances",
     "lightsail:GetLoadBalancers",
     "lightsail:GetRelationalDatabases",
@@ -1130,6 +1135,12 @@
       "source_file": "aws_batch.go"
     },
     {
+      "permission": "bedrock:ListAdvancedPromptOptimizationJobs",
+      "service": "bedrock",
+      "action": "ListAdvancedPromptOptimizationJobs",
+      "source_file": "aws_bedrock.go"
+    },
+    {
       "permission": "bedrock:ListCustomModels",
       "service": "bedrock",
       "action": "ListCustomModels",
@@ -1175,6 +1186,12 @@
       "permission": "cloudfront:GetDistribution",
       "service": "cloudfront",
       "action": "GetDistribution",
+      "source_file": "aws_cloudfront.go"
+    },
+    {
+      "permission": "cloudfront:GetTrustStore",
+      "service": "cloudfront",
+      "action": "GetTrustStore",
       "source_file": "aws_cloudfront.go"
     },
     {
@@ -1628,9 +1645,21 @@
       "source_file": "aws_dsql.go"
     },
     {
+      "permission": "dsql:GetStream",
+      "service": "dsql",
+      "action": "GetStream",
+      "source_file": "aws_dsql.go"
+    },
+    {
       "permission": "dsql:ListClusters",
       "service": "dsql",
       "action": "ListClusters",
+      "source_file": "aws_dsql.go"
+    },
+    {
+      "permission": "dsql:ListStreams",
+      "service": "dsql",
+      "action": "ListStreams",
       "source_file": "aws_dsql.go"
     },
     {
@@ -3365,6 +3394,12 @@
       "permission": "lightsail:GetDisks",
       "service": "lightsail",
       "action": "GetDisks",
+      "source_file": "aws_lightsail.go"
+    },
+    {
+      "permission": "lightsail:GetDistributions",
+      "service": "lightsail",
+      "action": "GetDistributions",
       "source_file": "aws_lightsail.go"
     },
     {

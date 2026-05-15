@@ -112,6 +112,14 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 				geoRestrictionType = string(distribution.Restrictions.GeoRestriction.RestrictionType)
 			}
 
+			var viewerMtlsMode, viewerMtlsTrustStoreId string
+			if distribution.ViewerMtlsConfig != nil {
+				viewerMtlsMode = string(distribution.ViewerMtlsConfig.Mode)
+				if distribution.ViewerMtlsConfig.TrustStoreConfig != nil {
+					viewerMtlsTrustStoreId = convert.ToValue(distribution.ViewerMtlsConfig.TrustStoreConfig.TrustStoreId)
+				}
+			}
+
 			args := map[string]*llx.RawData{
 				"arn":                    llx.StringDataPtr(distribution.ARN),
 				"cacheBehaviors":         llx.ArrayData(cacheBehaviors, types.Any),
@@ -131,6 +139,8 @@ func (a *mqlAwsCloudfront) distributions() ([]any, error) {
 				"geoRestrictionType":     llx.StringData(geoRestrictionType),
 				"lastModifiedAt":         llx.TimeDataPtr(distribution.LastModifiedTime),
 				"comment":                llx.StringDataPtr(distribution.Comment),
+				"viewerMtlsMode":         llx.StringData(viewerMtlsMode),
+				"viewerMtlsTrustStoreId": llx.StringData(viewerMtlsTrustStoreId),
 			}
 
 			mqlAwsCloudfrontDist, err := CreateResource(a.MqlRuntime, "aws.cloudfront.distribution", args)
@@ -465,6 +475,23 @@ func (a *mqlAwsCloudfrontDistributionOrigin) originMtlsClientCertificate() (*mql
 
 func (a *mqlAwsCloudfrontTrustStore) id() (string, error) {
 	return a.Arn.Data, nil
+}
+
+// useClientCertificateOcspEndpoint is resolved lazily because ListTrustStores
+// only returns summaries; the OCSP setting requires a GetTrustStore call.
+func (a *mqlAwsCloudfrontTrustStore) useClientCertificateOcspEndpoint() (bool, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Cloudfront("") // global service
+	resp, err := svc.GetTrustStore(context.Background(), &cloudfront.GetTrustStoreInput{
+		Identifier: &a.Id.Data,
+	})
+	if err != nil {
+		return false, err
+	}
+	if resp.TrustStore == nil {
+		return false, nil
+	}
+	return convert.ToValue(resp.TrustStore.UseClientCertificateOCSPEndpoint), nil
 }
 
 func (a *mqlAwsCloudfront) trustStores() ([]any, error) {

@@ -332,6 +332,18 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 		offPeakWindowEnabled = convert.ToValue(domain.OffPeakWindowOptions.Enabled)
 	}
 
+	// Automated snapshot pause options
+	var automatedSnapshotPauseEnabled bool
+	var automatedSnapshotPauseState string
+	automatedSnapshotPauseStartTime := llx.NilData
+	automatedSnapshotPauseEndTime := llx.NilData
+	if domain.AutomatedSnapshotPauseOptions != nil {
+		automatedSnapshotPauseEnabled = convert.ToValue(domain.AutomatedSnapshotPauseOptions.Enabled)
+		automatedSnapshotPauseState = string(domain.AutomatedSnapshotPauseOptions.State)
+		automatedSnapshotPauseStartTime = llx.TimeDataPtr(domain.AutomatedSnapshotPauseOptions.StartTime)
+		automatedSnapshotPauseEndTime = llx.TimeDataPtr(domain.AutomatedSnapshotPauseOptions.EndTime)
+	}
+
 	// Created timestamp
 	var createdAt *llx.RawData
 	if domain.Created != nil && *domain.Created {
@@ -343,52 +355,56 @@ func newMqlAwsOpensearchDomain(runtime *plugin.Runtime, region string, accountID
 
 	resource, err := CreateResource(runtime, ResourceAwsOpensearchDomain,
 		map[string]*llx.RawData{
-			"arn":                         llx.StringDataPtr(domain.ARN),
-			"name":                        llx.StringDataPtr(domain.DomainName),
-			"domainId":                    llx.StringDataPtr(domain.DomainId),
-			"region":                      llx.StringData(region),
-			"engineVersion":               llx.StringDataPtr(domain.EngineVersion),
-			"endpoint":                    llx.StringData(endpoint),
-			"encryptionAtRestEnabled":     llx.BoolData(encryptionAtRestEnabled),
-			"encryptionAtRestKmsKeyId":    llx.StringData(encryptionAtRestKmsKeyId),
-			"nodeToNodeEncryptionEnabled": llx.BoolData(nodeToNodeEncryptionEnabled),
-			"dedicatedMasterEnabled":      llx.BoolData(dedicatedMasterEnabled),
-			"dedicatedMasterType":         llx.StringData(dedicatedMasterType),
-			"dedicatedMasterCount":        llx.IntData(dedicatedMasterCount),
-			"instanceType":                llx.StringData(instanceType),
-			"instanceCount":               llx.IntData(instanceCount),
-			"zoneAwarenessEnabled":        llx.BoolData(zoneAwarenessEnabled),
-			"availabilityZoneCount":       llx.IntData(availabilityZoneCount),
-			"warmEnabled":                 llx.BoolData(warmEnabled),
-			"warmType":                    llx.StringData(warmType),
-			"warmCount":                   llx.IntData(warmCount),
-			"coldStorageEnabled":          llx.BoolData(coldStorageEnabled),
-			"ebsEnabled":                  llx.BoolData(ebsEnabled),
-			"ebsVolumeType":               llx.StringData(ebsVolumeType),
-			"ebsVolumeSize":               llx.IntData(ebsVolumeSize),
-			"ebsIops":                     llx.IntData(ebsIops),
-			"ebsThroughput":               llx.IntData(ebsThroughput),
-			"vpcId":                       llx.StringData(vpcId),
-			"vpcEgressEnabled":            llx.BoolData(vpcEgressEnabled),
-			"enforceHTTPS":                llx.BoolData(enforceHTTPS),
-			"tlsSecurityPolicy":           llx.StringData(tlsSecurityPolicy),
-			"customEndpointEnabled":       llx.BoolData(customEndpointEnabled),
-			"customEndpoint":              llx.StringData(customEndpoint),
-			"samlEnabled":                 llx.BoolData(samlEnabled),
-			"jwtEnabled":                  llx.BoolData(jwtEnabled),
-			"jwksUrl":                     llx.StringData(jwksUrl),
-			"anonymousAuthEnabled":        llx.BoolData(anonymousAuthEnabled),
-			"internalUserDatabaseEnabled": llx.BoolData(internalUserDatabaseEnabled),
-			"advancedSecurityEnabled":     llx.BoolData(advancedSecurityEnabled),
-			"processing":                  llx.BoolDataPtr(domain.Processing),
-			"upgradeProcessing":           llx.BoolDataPtr(domain.UpgradeProcessing),
-			"createdAt":                   createdAt,
-			"autoTuneState":               llx.StringData(autoTuneState),
-			"auditLogEnabled":             llx.BoolData(auditLogEnabled),
-			"ipAddressType":               llx.StringData(string(domain.IPAddressType)),
-			"serviceSoftwareNewVersion":   llx.StringData(serviceSoftwareNewVersion),
-			"autoSoftwareUpdateEnabled":   llx.BoolData(autoSoftwareUpdateEnabled),
-			"offPeakWindowEnabled":        llx.BoolData(offPeakWindowEnabled),
+			"arn":                             llx.StringDataPtr(domain.ARN),
+			"name":                            llx.StringDataPtr(domain.DomainName),
+			"domainId":                        llx.StringDataPtr(domain.DomainId),
+			"region":                          llx.StringData(region),
+			"engineVersion":                   llx.StringDataPtr(domain.EngineVersion),
+			"endpoint":                        llx.StringData(endpoint),
+			"encryptionAtRestEnabled":         llx.BoolData(encryptionAtRestEnabled),
+			"encryptionAtRestKmsKeyId":        llx.StringData(encryptionAtRestKmsKeyId),
+			"nodeToNodeEncryptionEnabled":     llx.BoolData(nodeToNodeEncryptionEnabled),
+			"dedicatedMasterEnabled":          llx.BoolData(dedicatedMasterEnabled),
+			"dedicatedMasterType":             llx.StringData(dedicatedMasterType),
+			"dedicatedMasterCount":            llx.IntData(dedicatedMasterCount),
+			"instanceType":                    llx.StringData(instanceType),
+			"instanceCount":                   llx.IntData(instanceCount),
+			"zoneAwarenessEnabled":            llx.BoolData(zoneAwarenessEnabled),
+			"availabilityZoneCount":           llx.IntData(availabilityZoneCount),
+			"warmEnabled":                     llx.BoolData(warmEnabled),
+			"warmType":                        llx.StringData(warmType),
+			"warmCount":                       llx.IntData(warmCount),
+			"coldStorageEnabled":              llx.BoolData(coldStorageEnabled),
+			"ebsEnabled":                      llx.BoolData(ebsEnabled),
+			"ebsVolumeType":                   llx.StringData(ebsVolumeType),
+			"ebsVolumeSize":                   llx.IntData(ebsVolumeSize),
+			"ebsIops":                         llx.IntData(ebsIops),
+			"ebsThroughput":                   llx.IntData(ebsThroughput),
+			"vpcId":                           llx.StringData(vpcId),
+			"vpcEgressEnabled":                llx.BoolData(vpcEgressEnabled),
+			"enforceHTTPS":                    llx.BoolData(enforceHTTPS),
+			"tlsSecurityPolicy":               llx.StringData(tlsSecurityPolicy),
+			"customEndpointEnabled":           llx.BoolData(customEndpointEnabled),
+			"customEndpoint":                  llx.StringData(customEndpoint),
+			"samlEnabled":                     llx.BoolData(samlEnabled),
+			"jwtEnabled":                      llx.BoolData(jwtEnabled),
+			"jwksUrl":                         llx.StringData(jwksUrl),
+			"anonymousAuthEnabled":            llx.BoolData(anonymousAuthEnabled),
+			"internalUserDatabaseEnabled":     llx.BoolData(internalUserDatabaseEnabled),
+			"advancedSecurityEnabled":         llx.BoolData(advancedSecurityEnabled),
+			"processing":                      llx.BoolDataPtr(domain.Processing),
+			"upgradeProcessing":               llx.BoolDataPtr(domain.UpgradeProcessing),
+			"createdAt":                       createdAt,
+			"autoTuneState":                   llx.StringData(autoTuneState),
+			"auditLogEnabled":                 llx.BoolData(auditLogEnabled),
+			"ipAddressType":                   llx.StringData(string(domain.IPAddressType)),
+			"serviceSoftwareNewVersion":       llx.StringData(serviceSoftwareNewVersion),
+			"autoSoftwareUpdateEnabled":       llx.BoolData(autoSoftwareUpdateEnabled),
+			"offPeakWindowEnabled":            llx.BoolData(offPeakWindowEnabled),
+			"automatedSnapshotPauseEnabled":   llx.BoolData(automatedSnapshotPauseEnabled),
+			"automatedSnapshotPauseState":     llx.StringData(automatedSnapshotPauseState),
+			"automatedSnapshotPauseStartTime": automatedSnapshotPauseStartTime,
+			"automatedSnapshotPauseEndTime":   automatedSnapshotPauseEndTime,
 		})
 	if err != nil {
 		return nil, err

@@ -228,6 +228,18 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		automatedSnapshotStartHour = int64(convert.ToValue(status.SnapshotOptions.AutomatedSnapshotStartHour))
 	}
 
+	// automated snapshot pause
+	var automatedSnapshotPauseEnabled bool
+	var automatedSnapshotPauseState string
+	automatedSnapshotPauseStartTime := llx.NilData
+	automatedSnapshotPauseEndTime := llx.NilData
+	if status.AutomatedSnapshotPauseOptions != nil {
+		automatedSnapshotPauseEnabled = convert.ToValue(status.AutomatedSnapshotPauseOptions.Enabled)
+		automatedSnapshotPauseState = string(status.AutomatedSnapshotPauseOptions.State)
+		automatedSnapshotPauseStartTime = llx.TimeDataPtr(status.AutomatedSnapshotPauseOptions.StartTime)
+		automatedSnapshotPauseEndTime = llx.TimeDataPtr(status.AutomatedSnapshotPauseOptions.EndTime)
+	}
+
 	// Cognito
 	var cognitoEnabled bool
 	var cognitoUserPoolId, cognitoIdentityPoolId, cognitoRoleArn string
@@ -310,6 +322,10 @@ func newMqlAwsEsDomain(runtime *plugin.Runtime, region, accountID string, svc *e
 		"internalUserDatabaseEnabled":        llx.BoolData(internalUserDatabaseEnabled),
 		"anonymousAuthEnabled":               llx.BoolData(anonymousAuthEnabled),
 		"automatedSnapshotStartHour":         llx.IntData(automatedSnapshotStartHour),
+		"automatedSnapshotPauseEnabled":      llx.BoolData(automatedSnapshotPauseEnabled),
+		"automatedSnapshotPauseState":        llx.StringData(automatedSnapshotPauseState),
+		"automatedSnapshotPauseStartTime":    automatedSnapshotPauseStartTime,
+		"automatedSnapshotPauseEndTime":      automatedSnapshotPauseEndTime,
 		"cognitoEnabled":                     llx.BoolData(cognitoEnabled),
 		"cognitoUserPoolId":                  llx.StringData(cognitoUserPoolId),
 		"cognitoIdentityPoolId":              llx.StringData(cognitoIdentityPoolId),

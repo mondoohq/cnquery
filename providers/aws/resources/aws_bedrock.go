@@ -584,3 +584,149 @@ func (a *mqlAwsBedrockProvisionedModelThroughput) foundationModel() (*mqlAwsBedr
 	}
 	return res.(*mqlAwsBedrockFoundationModel), nil
 }
+
+func (a *mqlAwsBedrock) advancedPromptOptimizationJobs() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getAdvancedPromptOptimizationJobs(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsBedrock) getAdvancedPromptOptimizationJobs(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.Bedrock(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := bedrock.NewListAdvancedPromptOptimizationJobsPaginator(svc, &bedrock.ListAdvancedPromptOptimizationJobsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					if IsServiceNotAvailableInRegionError(err) {
+						log.Debug().Str("region", region).Msg("bedrock is not available in region")
+						return res, nil
+					}
+					return nil, err
+				}
+
+				for _, j := range page.JobSummaries {
+					mqlJob, err := CreateResource(a.MqlRuntime, "aws.bedrock.advancedPromptOptimizationJob",
+						map[string]*llx.RawData{
+							"__id":           llx.StringDataPtr(j.JobArn),
+							"arn":            llx.StringDataPtr(j.JobArn),
+							"name":           llx.StringDataPtr(j.JobName),
+							"region":         llx.StringData(region),
+							"status":         llx.StringData(string(j.JobStatus)),
+							"createdAt":      llx.TimeDataPtr(j.CreationTime),
+							"lastModifiedAt": llx.TimeDataPtr(j.LastModifiedTime),
+						})
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlJob)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+type mqlAwsBedrockAdvancedPromptOptimizationJobInternal struct {
+	detailOnce sync.Once
+	detailErr  error
+	detail     *bedrock.GetAdvancedPromptOptimizationJobOutput
+}
+
+func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) fetchDetail() (*bedrock.GetAdvancedPromptOptimizationJobOutput, error) {
+	a.detailOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Bedrock(a.Region.Data)
+		ctx := context.Background()
+		jobIdentifier := a.Arn.Data
+		a.detail, a.detailErr = svc.GetAdvancedPromptOptimizationJob(ctx, &bedrock.GetAdvancedPromptOptimizationJobInput{
+			JobIdentifier: &jobIdentifier,
+		})
+	})
+	return a.detail, a.detailErr
+}
+
+func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) description() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(detail.JobDescription), nil
+}
+
+func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) inputS3Uri() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.InputConfig == nil {
+		return "", nil
+	}
+	return convert.ToValue(detail.InputConfig.S3Uri), nil
+}
+
+func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) outputS3Uri() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.OutputConfig == nil {
+		return "", nil
+	}
+	return convert.ToValue(detail.OutputConfig.S3Uri), nil
+}
+
+func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) encryptionKeyArn() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(detail.EncryptionKeyArn), nil
+}
+
+func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) failureMessage() (string, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	return convert.ToValue(detail.FailureMessage), nil
+}
+
+func (a *mqlAwsBedrockAdvancedPromptOptimizationJob) modelConfigurations() ([]any, error) {
+	detail, err := a.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(detail.ModelConfigurations)
+}

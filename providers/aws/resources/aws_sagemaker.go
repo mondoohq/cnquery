@@ -1885,6 +1885,7 @@ type mqlAwsSagemakerDomainInternal struct {
 	cacheHomeEfsId            *string
 	cacheDefaultUserSettings  any
 	cacheDefaultExecutionRole *string
+	cacheExecRoleSessionMode  string
 	cacheSGForBoundary        *string
 	cacheAppSGMgmt            string
 	cacheTagPropagation       string
@@ -1931,6 +1932,9 @@ func (a *mqlAwsSagemakerDomain) fetchDetails() error {
 	a.cacheDefaultUserSettings, _ = convert.JsonToDict(resp.DefaultUserSettings)
 	if resp.DefaultUserSettings != nil {
 		a.cacheDefaultExecutionRole = resp.DefaultUserSettings.ExecutionRole
+		if resp.DefaultUserSettings.StudioWebPortalSettings != nil {
+			a.cacheExecRoleSessionMode = string(resp.DefaultUserSettings.StudioWebPortalSettings.ExecutionRoleSessionNameMode)
+		}
 	}
 	a.cacheSGForBoundary = resp.SecurityGroupIdForDomainBoundary
 	a.cacheAppSGMgmt = string(resp.AppSecurityGroupManagement)
@@ -2028,6 +2032,13 @@ func (a *mqlAwsSagemakerDomain) appSecurityGroupManagement() (string, error) {
 		return "", err
 	}
 	return a.cacheAppSGMgmt, nil
+}
+
+func (a *mqlAwsSagemakerDomain) executionRoleSessionNameMode() (string, error) {
+	if err := a.fetchDetails(); err != nil {
+		return "", err
+	}
+	return a.cacheExecRoleSessionMode, nil
 }
 
 func (a *mqlAwsSagemakerDomain) tagPropagation() (string, error) {
@@ -3205,13 +3216,19 @@ func (a *mqlAwsSagemaker) getModelPackageGroups(conn *connection.AwsConnection) 
 						eagerTags = tags
 					}
 
+					var managedStorageType string
+					if mpg.ManagedConfiguration != nil {
+						managedStorageType = string(mpg.ManagedConfiguration.ManagedStorageType)
+					}
+
 					mqlMPG, err := CreateResource(a.MqlRuntime, ResourceAwsSagemakerModelPackageGroup,
 						map[string]*llx.RawData{
-							"arn":       llx.StringDataPtr(mpg.ModelPackageGroupArn),
-							"name":      llx.StringDataPtr(mpg.ModelPackageGroupName),
-							"region":    llx.StringData(region),
-							"status":    llx.StringData(string(mpg.ModelPackageGroupStatus)),
-							"createdAt": llx.TimeDataPtr(mpg.CreationTime),
+							"arn":                llx.StringDataPtr(mpg.ModelPackageGroupArn),
+							"name":               llx.StringDataPtr(mpg.ModelPackageGroupName),
+							"region":             llx.StringData(region),
+							"status":             llx.StringData(string(mpg.ModelPackageGroupStatus)),
+							"createdAt":          llx.TimeDataPtr(mpg.CreationTime),
+							"managedStorageType": llx.StringData(managedStorageType),
 						})
 					if err != nil {
 						return nil, err
