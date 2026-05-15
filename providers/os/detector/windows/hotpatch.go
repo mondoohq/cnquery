@@ -47,18 +47,26 @@ func ParseWinRegistryClientHotpatch(r io.Reader) (bool, error) {
 	return hotpatch.AllowRebootlessUpdates == "1" && hotpatch.EnableVirtualizationBasedSecurity == "1", nil
 }
 
-// hotpatchSupported checks whether the given platform meets the minimum build
-// requirements for hotpatching:
+// hotpatchSupported checks whether the given platform meets the prerequisites
+// for hotpatching:
 //   - Windows Server 2022+ (build 20348+, product-type "2" or "3")
-//   - Windows 11 Enterprise 24H2+ (product-type "1"):
+//   - Windows 11 Enterprise / Education 24H2+ (product-type "1"):
 //   - x64 (AMD64/Intel): build 26100.2033+
 //   - arm64: build 26100.4929+
 //
-// Windows 11 client hotpatch requires architecture-specific minimum UBR
-// (Update Build Revision) values on build 26100. Without this check, devices
-// with AllowRebootlessUpdates set via policy but below the prerequisite build
-// would be falsely detected as hotpatch-enrolled.
-// See https://learn.microsoft.com/en-us/windows/client-management/hotpatch
+// Client hotpatch is license-gated, not just build-gated: the eligible SKUs
+// (Windows 11 Enterprise E3/E5, Education A3/A5, M365 F3, M365 Business Premium,
+// Windows 365 Enterprise) all activate Windows 11 Enterprise or Education on
+// the device. A Pro / Home / Pro Education box can never receive hotpatches
+// even when AllowRebootlessUpdates + VBS are set in the registry — a config
+// that can leak in via a misapplied GPO/Intune policy. Without the edition
+// guard we falsely tag those assets `hotpatch=true` and hotpatch-only KBs
+// surface as findings (real example: KB5089466 on a Win11 Pro AMD64 box).
+//
+// References:
+//   - https://learn.microsoft.com/en-us/intune/device-updates/windows/hotpatch (eligible license list, 2026-04-29)
+//   - https://learn.microsoft.com/en-us/windows/deployment/windows-autopatch/manage/windows-autopatch-hotpatch-updates (Autopatch eligibility, 2026-03-06)
+//   - https://learn.microsoft.com/en-us/windows/client-management/hotpatch (technical preconditions: build, UBR, VBS, ARM64 CHPE)
 func hotpatchSupported(pf *inventory.Platform) bool {
 	buildNumber, err := strconv.Atoi(pf.Version)
 	if err != nil {
@@ -70,6 +78,10 @@ func hotpatchSupported(pf *inventory.Platform) bool {
 	productType := pf.Labels["windows.mondoo.com/product-type"]
 	switch productType {
 	case "1": // Workstation (Windows client)
+		if !isHotpatchEligibleClientEdition(pf.Title) {
+			log.Debug().Str("title", pf.Title).Msg("windows client edition is not hotpatch-eligible")
+			return false
+		}
 		if buildNumber > 26100 {
 			return true
 		}
@@ -92,6 +104,29 @@ func hotpatchSupported(pf *inventory.Platform) bool {
 	default:
 		return false
 	}
+}
+
+// isHotpatchEligibleClientEdition reports whether `title` (the human-readable
+// Windows edition string from platform detection, e.g. "Windows 11 Enterprise"
+// or "Windows 11 Pro") corresponds to a SKU that can receive client hotpatches.
+//
+// Eligibility is license-gated per Microsoft Intune docs (2026-04-29) but every
+// eligible license activates Enterprise or Education on the device. The edition
+// string is the closest runtime signal we can read without inspecting tenant
+// licensing. Empty Title → refuse, since we can't tell what's running and
+// hotpatch is the failure-mode-with-false-positives direction.
+//
+// "Pro Education" is a distinct SKU in the Pro family (not Education A3/A5) so
+// it's rejected explicitly before the broader "education" substring match.
+func isHotpatchEligibleClientEdition(title string) bool {
+	t := strings.ToLower(title)
+	if t == "" {
+		return false
+	}
+	if strings.Contains(t, "pro education") {
+		return false
+	}
+	return strings.Contains(t, "enterprise") || strings.Contains(t, "education")
 }
 
 type WindowsHotpatch struct {
