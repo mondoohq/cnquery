@@ -129,20 +129,21 @@ func (o *mqlOciIdentity) getUsers(conn *connection.OciConnection) []*jobpool.Job
 				}
 
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.user", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(user.Id),
-					"name":          llx.StringDataPtr(user.Name),
-					"description":   llx.StringDataPtr(user.Description),
-					"created":       llx.TimeDataPtr(created),
-					"state":         llx.StringData(string(user.LifecycleState)),
-					"mfaActivated":  llx.BoolData(boolValue(user.IsMfaActivated)),
-					"compartmentID": llx.StringDataPtr(user.CompartmentId),
-					"email":         llx.StringDataPtr(user.Email),
-					"emailVerified": llx.BoolData(boolValue(user.EmailVerified)),
-					"capabilities":  llx.MapData(capabilities, types.Bool),
-					"lastLogin":     llx.TimeDataPtr(lastLogin),
-					"previousLogin": llx.TimeDataPtr(previousLogin),
-					"freeformTags":  llx.MapData(freeformTags, types.String),
-					"definedTags":   llx.MapData(definedTags, types.Any),
+					"id":                 llx.StringDataPtr(user.Id),
+					"name":               llx.StringDataPtr(user.Name),
+					"description":        llx.StringDataPtr(user.Description),
+					"created":            llx.TimeDataPtr(created),
+					"state":              llx.StringData(string(user.LifecycleState)),
+					"mfaActivated":       llx.BoolData(boolValue(user.IsMfaActivated)),
+					"compartmentID":      llx.StringDataPtr(user.CompartmentId),
+					"email":              llx.StringDataPtr(user.Email),
+					"emailVerified":      llx.BoolData(boolValue(user.EmailVerified)),
+					"externalIdentifier": llx.StringDataPtr(user.ExternalIdentifier),
+					"capabilities":       llx.MapData(capabilities, types.Bool),
+					"lastLogin":          llx.TimeDataPtr(lastLogin),
+					"previousLogin":      llx.TimeDataPtr(previousLogin),
+					"freeformTags":       llx.MapData(freeformTags, types.String),
+					"definedTags":        llx.MapData(definedTags, types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -804,4 +805,431 @@ func (o *mqlOciIdentityGroup) members() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+func (o *mqlOciIdentityUser) dbCredentials() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	client, err := conn.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	res := []any{}
+	var page *string
+	for {
+		resp, err := client.ListDbCredentials(ctx, identity.ListDbCredentialsRequest{
+			UserId: common.String(o.Id.Data),
+			Page:   page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for i := range resp.Items {
+			cred := resp.Items[i]
+
+			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.dbCredential", map[string]*llx.RawData{
+				"id":          llx.StringDataPtr(cred.Id),
+				"description": llx.StringDataPtr(cred.Description),
+				"created":     sdkTimeData(cred.TimeCreated),
+				"expires":     sdkTimeData(cred.TimeExpires),
+				"state":       llx.StringData(string(cred.LifecycleState)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlInstance)
+		}
+		if resp.OpcNextPage == nil {
+			break
+		}
+		page = resp.OpcNextPage
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciIdentityDbCredential) id() (string, error) {
+	return "oci.identity.dbCredential/" + o.Id.Data, nil
+}
+
+func (o *mqlOciIdentityUser) smtpCredentials() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	client, err := conn.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+
+	// ListSmtpCredentials returns the full set in a single response.
+	resp, err := client.ListSmtpCredentials(context.Background(), identity.ListSmtpCredentialsRequest{
+		UserId: common.String(o.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(resp.Items))
+	for i := range resp.Items {
+		cred := resp.Items[i]
+
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.smtpCredential", map[string]*llx.RawData{
+			"id":          llx.StringDataPtr(cred.Id),
+			"username":    llx.StringDataPtr(cred.Username),
+			"description": llx.StringDataPtr(cred.Description),
+			"created":     sdkTimeData(cred.TimeCreated),
+			"expires":     sdkTimeData(cred.TimeExpires),
+			"state":       llx.StringData(string(cred.LifecycleState)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInstance)
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciIdentitySmtpCredential) id() (string, error) {
+	return "oci.identity.smtpCredential/" + o.Id.Data, nil
+}
+
+// ociOauthScope is the dict shape for an OAuth 2.0 client credential scope.
+type ociOauthScope struct {
+	Audience string `json:"audience"`
+	Scope    string `json:"scope"`
+}
+
+func (o *mqlOciIdentityUser) oauth2ClientCredentials() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	client, err := conn.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	res := []any{}
+	var page *string
+	for {
+		resp, err := client.ListOAuthClientCredentials(ctx, identity.ListOAuthClientCredentialsRequest{
+			UserId: common.String(o.Id.Data),
+			Page:   page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for i := range resp.Items {
+			cred := resp.Items[i]
+
+			scopes := make([]ociOauthScope, 0, len(cred.Scopes))
+			for j := range cred.Scopes {
+				s := cred.Scopes[j]
+				scopes = append(scopes, ociOauthScope{
+					Audience: stringValue(s.Audience),
+					Scope:    stringValue(s.Scope),
+				})
+			}
+			scopesDict, err := convert.JsonToDictSlice(scopes)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.oauth2ClientCredential", map[string]*llx.RawData{
+				"id":            llx.StringDataPtr(cred.Id),
+				"name":          llx.StringDataPtr(cred.Name),
+				"description":   llx.StringDataPtr(cred.Description),
+				"compartmentID": llx.StringDataPtr(cred.CompartmentId),
+				"scopes":        llx.DictData(scopesDict),
+				"created":       sdkTimeData(cred.TimeCreated),
+				"expires":       sdkTimeData(cred.ExpiresOn),
+				"state":         llx.StringData(string(cred.LifecycleState)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlInstance)
+		}
+		if resp.OpcNextPage == nil {
+			break
+		}
+		page = resp.OpcNextPage
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciIdentityOauth2ClientCredential) id() (string, error) {
+	return "oci.identity.oauth2ClientCredential/" + o.Id.Data, nil
+}
+
+func (o *mqlOciIdentity) dynamicGroups() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	client, err := conn.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	res := []any{}
+	var page *string
+	for {
+		resp, err := client.ListDynamicGroups(ctx, identity.ListDynamicGroupsRequest{
+			CompartmentId: common.String(conn.TenantID()),
+			Page:          page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for i := range resp.Items {
+			dg := resp.Items[i]
+
+			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.dynamicGroup", map[string]*llx.RawData{
+				"id":            llx.StringDataPtr(dg.Id),
+				"compartmentID": llx.StringDataPtr(dg.CompartmentId),
+				"name":          llx.StringDataPtr(dg.Name),
+				"description":   llx.StringDataPtr(dg.Description),
+				"matchingRule":  llx.StringDataPtr(dg.MatchingRule),
+				"created":       sdkTimeData(dg.TimeCreated),
+				"state":         llx.StringData(string(dg.LifecycleState)),
+				"freeformTags":  llx.MapData(strMapToAny(dg.FreeformTags), types.String),
+				"definedTags":   llx.MapData(definedTagsToAny(dg.DefinedTags), types.Any),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlInstance)
+		}
+		if resp.OpcNextPage == nil {
+			break
+		}
+		page = resp.OpcNextPage
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciIdentityDynamicGroup) id() (string, error) {
+	return "oci.identity.dynamicGroup/" + o.Id.Data, nil
+}
+
+func (o *mqlOciIdentity) identityProviders() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	client, err := conn.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	res := []any{}
+	var page *string
+	for {
+		// SAML2 is the only federation protocol the ListIdentityProviders API accepts.
+		resp, err := client.ListIdentityProviders(ctx, identity.ListIdentityProvidersRequest{
+			Protocol:      identity.ListIdentityProvidersProtocolSaml2,
+			CompartmentId: common.String(conn.TenantID()),
+			Page:          page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for i := range resp.Items {
+			idp := resp.Items[i]
+
+			args := map[string]*llx.RawData{
+				"id":                 llx.StringDataPtr(idp.GetId()),
+				"compartmentID":      llx.StringDataPtr(idp.GetCompartmentId()),
+				"name":               llx.StringDataPtr(idp.GetName()),
+				"description":        llx.StringDataPtr(idp.GetDescription()),
+				"productType":        llx.StringDataPtr(idp.GetProductType()),
+				"created":            sdkTimeData(idp.GetTimeCreated()),
+				"state":              llx.StringData(string(idp.GetLifecycleState())),
+				"freeformTags":       llx.MapData(strMapToAny(idp.GetFreeformTags()), types.String),
+				"definedTags":        llx.MapData(definedTagsToAny(idp.GetDefinedTags()), types.Any),
+				"protocol":           llx.StringData(""),
+				"metadataUrl":        llx.StringData(""),
+				"signingCertificate": llx.StringData(""),
+				"redirectUrl":        llx.StringData(""),
+			}
+			if saml, ok := idp.(identity.Saml2IdentityProvider); ok {
+				args["protocol"] = llx.StringData("SAML2")
+				args["metadataUrl"] = llx.StringDataPtr(saml.MetadataUrl)
+				args["signingCertificate"] = llx.StringDataPtr(saml.SigningCertificate)
+				args["redirectUrl"] = llx.StringDataPtr(saml.RedirectUrl)
+			}
+
+			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.identityProvider", args)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlInstance)
+		}
+		if resp.OpcNextPage == nil {
+			break
+		}
+		page = resp.OpcNextPage
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciIdentityIdentityProvider) id() (string, error) {
+	return "oci.identity.identityProvider/" + o.Id.Data, nil
+}
+
+// ociNetworkVirtualSource is the dict shape for a network source's
+// virtual-source allowlist entry.
+type ociNetworkVirtualSource struct {
+	VcnId    string   `json:"vcnId"`
+	IpRanges []string `json:"ipRanges"`
+}
+
+func (o *mqlOciIdentity) networkSources() ([]any, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	client, err := conn.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	res := []any{}
+	var page *string
+	for {
+		resp, err := client.ListNetworkSources(ctx, identity.ListNetworkSourcesRequest{
+			CompartmentId: common.String(conn.TenantID()),
+			Page:          page,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for i := range resp.Items {
+			ns := resp.Items[i]
+
+			virtual := make([]ociNetworkVirtualSource, 0, len(ns.VirtualSourceList))
+			for j := range ns.VirtualSourceList {
+				v := ns.VirtualSourceList[j]
+				virtual = append(virtual, ociNetworkVirtualSource{
+					VcnId:    stringValue(v.VcnId),
+					IpRanges: v.IpRanges,
+				})
+			}
+			virtualDict, err := convert.JsonToDictSlice(virtual)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.networkSource", map[string]*llx.RawData{
+				"id":                llx.StringDataPtr(ns.Id),
+				"compartmentID":     llx.StringDataPtr(ns.CompartmentId),
+				"name":              llx.StringDataPtr(ns.Name),
+				"description":       llx.StringDataPtr(ns.Description),
+				"publicSourceList":  llx.ArrayData(stringsToAny(ns.PublicSourceList), types.String),
+				"virtualSourceList": llx.DictData(virtualDict),
+				"services":          llx.ArrayData(stringsToAny(ns.Services), types.String),
+				"created":           sdkTimeData(ns.TimeCreated),
+				"state":             llx.StringData(string(ns.LifecycleState)),
+				"freeformTags":      llx.MapData(strMapToAny(ns.FreeformTags), types.String),
+				"definedTags":       llx.MapData(definedTagsToAny(ns.DefinedTags), types.Any),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlInstance)
+		}
+		if resp.OpcNextPage == nil {
+			break
+		}
+		page = resp.OpcNextPage
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciIdentityNetworkSource) id() (string, error) {
+	return "oci.identity.networkSource/" + o.Id.Data, nil
+}
+
+// ociAuthenticationPolicyArgs fetches the tenancy authentication policy and
+// returns it as MQL resource arguments. The OCI API always returns a policy
+// for a tenancy, defaulting any unset password or network rule.
+func ociAuthenticationPolicyArgs(client identity.IdentityClient, tenantID string) (map[string]*llx.RawData, error) {
+	resp, err := client.GetAuthenticationPolicy(context.Background(), identity.GetAuthenticationPolicyRequest{
+		CompartmentId: common.String(tenantID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	args := map[string]*llx.RawData{
+		"compartmentID":                      llx.StringData(tenantID),
+		"minimumPasswordLength":              llx.IntData(0),
+		"passwordRequiresUppercase":          llx.BoolData(false),
+		"passwordRequiresLowercase":          llx.BoolData(false),
+		"passwordRequiresNumeric":            llx.BoolData(false),
+		"passwordRequiresSpecial":            llx.BoolData(false),
+		"passwordUsernameContainmentAllowed": llx.BoolData(false),
+		"networkSourceIds":                   llx.ArrayData([]any{}, types.String),
+	}
+	if pp := resp.PasswordPolicy; pp != nil {
+		args["minimumPasswordLength"] = llx.IntData(intValue(pp.MinimumPasswordLength))
+		args["passwordRequiresUppercase"] = llx.BoolData(boolValue(pp.IsUppercaseCharactersRequired))
+		args["passwordRequiresLowercase"] = llx.BoolData(boolValue(pp.IsLowercaseCharactersRequired))
+		args["passwordRequiresNumeric"] = llx.BoolData(boolValue(pp.IsNumericCharactersRequired))
+		args["passwordRequiresSpecial"] = llx.BoolData(boolValue(pp.IsSpecialCharactersRequired))
+		args["passwordUsernameContainmentAllowed"] = llx.BoolData(boolValue(pp.IsUsernameContainmentAllowed))
+	}
+	if np := resp.NetworkPolicy; np != nil {
+		args["networkSourceIds"] = llx.ArrayData(stringsToAny(np.NetworkSourceIds), types.String)
+	}
+	return args, nil
+}
+
+func (o *mqlOciIdentity) authenticationPolicy() (*mqlOciIdentityAuthenticationPolicy, error) {
+	conn := o.MqlRuntime.Connection.(*connection.OciConnection)
+
+	client, err := conn.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+
+	args, err := ociAuthenticationPolicyArgs(client, conn.TenantID())
+	if err != nil {
+		return nil, err
+	}
+
+	resource, err := CreateResource(o.MqlRuntime, "oci.identity.authenticationPolicy", args)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlOciIdentityAuthenticationPolicy), nil
+}
+
+// initOciIdentityAuthenticationPolicy resolves the tenancy authentication
+// policy when it is queried directly as `oci.identity.authenticationPolicy`
+// (the resource name and the field path collide, so MQL instantiates the
+// resource rather than reading the `oci.identity` accessor).
+func initOciIdentityAuthenticationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	conn := runtime.Connection.(*connection.OciConnection)
+	client, err := conn.IdentityClient()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	policyArgs, err := ociAuthenticationPolicyArgs(client, conn.TenantID())
+	if err != nil {
+		return nil, nil, err
+	}
+	return policyArgs, nil, nil
+}
+
+func (o *mqlOciIdentityAuthenticationPolicy) id() (string, error) {
+	return "oci.identity.authenticationPolicy/" + o.CompartmentID.Data, nil
 }

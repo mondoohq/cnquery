@@ -72,7 +72,12 @@ private oci.compartment @defaults("id name") {
 // customer secret keys, auth tokens, MFA devices, and group
 // memberships), `groups()` for IAM groups and their members, and
 // `policies()` for the policy statements that grant groups access to
-// compartments and resources.
+// compartments and resources. `dynamicGroups()` lists the rule-matched
+// groups that grant access to compute and service principals,
+// `identityProviders()` lists the federated SAML2 providers,
+// `networkSources()` lists the IP and VCN allowlists that constrain
+// where requests may originate, and `authenticationPolicy()` exposes
+// the tenancy's password-strength and network-restriction rules.
 oci.identity {
   // IAM users
   users() []oci.identity.user
@@ -80,6 +85,14 @@ oci.identity {
   groups() []oci.identity.group
   // IAM policies
   policies() []oci.identity.policy
+  // Dynamic groups that grant access to matching compute and service principals
+  dynamicGroups() []oci.identity.dynamicGroup
+  // Federated SAML2 identity providers
+  identityProviders() []oci.identity.identityProvider
+  // Network sources that restrict where console and API requests may originate
+  networkSources() []oci.identity.networkSource
+  // Tenancy authentication policy (password strength and network restrictions)
+  authenticationPolicy() oci.identity.authenticationPolicy
 }
 
 // Oracle Cloud Infrastructure (OCI) IAM user
@@ -102,6 +115,8 @@ private oci.identity.user @defaults("name") {
   email string
   // Whether the email address has been verified
   emailVerified bool
+  // Identifier of this user in a federated identity provider, empty for local users
+  externalIdentifier string
   // Authentication capabilities (e.g., can_use_api_keys, can_use_auth_tokens)
   capabilities map[string]bool
   // Most recent successful login time
@@ -122,6 +137,12 @@ private oci.identity.user @defaults("name") {
   groups() []oci.identity.group
   // MFA TOTP devices
   mfaDevices() []oci.identity.mfaDevice
+  // Database password credentials for OCI database connections
+  dbCredentials() []oci.identity.dbCredential
+  // SMTP credentials for the Email Delivery service
+  smtpCredentials() []oci.identity.smtpCredential
+  // OAuth 2.0 client credentials for token-based API access
+  oauth2ClientCredentials() []oci.identity.oauth2ClientCredential
 }
 
 // Oracle Cloud Infrastructure (OCI) MFA TOTP device
@@ -224,6 +245,154 @@ private oci.identity.policy @defaults("name description") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) database password credential for a user
+private oci.identity.dbCredential @defaults("description") {
+  // Database credential OCID
+  id string
+  // Credential description
+  description string
+  // Credential creation time
+  created time
+  // Credential expiration time
+  expires time
+  // Credential lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
+  state string
+}
+
+// Oracle Cloud Infrastructure (OCI) SMTP credential for the Email Delivery service
+private oci.identity.smtpCredential @defaults("username") {
+  // SMTP credential OCID
+  id string
+  // SMTP user name used to authenticate against the Email Delivery endpoint
+  username string
+  // Credential description
+  description string
+  // Credential creation time
+  created time
+  // Credential expiration time
+  expires time
+  // Credential lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
+  state string
+}
+
+// Oracle Cloud Infrastructure (OCI) OAuth 2.0 client credential for a user
+private oci.identity.oauth2ClientCredential @defaults("name") {
+  // OAuth 2.0 client credential OCID
+  id string
+  // Credential name
+  name string
+  // Credential description
+  description string
+  // Compartment OCID containing the credential
+  compartmentID string
+  // Allowed scopes, each with an `audience` and a `scope`
+  scopes []dict
+  // Credential creation time
+  created time
+  // Credential expiration time, empty when the credential never expires
+  expires time
+  // Credential lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
+  state string
+}
+
+// Oracle Cloud Infrastructure (OCI) IAM dynamic group
+private oci.identity.dynamicGroup @defaults("name") {
+  // Dynamic group OCID
+  id string
+  // Compartment OCID containing the dynamic group
+  compartmentID string
+  // Dynamic group name
+  name string
+  // Dynamic group description
+  description string
+  // Rule that selects the compute instances and service resources in the group
+  matchingRule string
+  // Dynamic group creation time
+  created time
+  // Dynamic group lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
+  state string
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) federated identity provider
+private oci.identity.identityProvider @defaults("name") {
+  // Identity provider OCID
+  id string
+  // Compartment OCID containing the identity provider
+  compartmentID string
+  // Identity provider name
+  name string
+  // Identity provider description
+  description string
+  // Federation protocol (SAML2)
+  protocol string
+  // Identity provider product, e.g., IDCS or ADFS
+  productType string
+  // URL of the provider's SAML2 metadata document
+  metadataUrl string
+  // Provider's signing certificate in PEM format
+  signingCertificate string
+  // URL the tenancy redirects to for federated sign-in
+  redirectUrl string
+  // Identity provider creation time
+  created time
+  // Identity provider lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
+  state string
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) network source
+private oci.identity.networkSource @defaults("name") {
+  // Network source OCID
+  id string
+  // Compartment OCID containing the network source
+  compartmentID string
+  // Network source name
+  name string
+  // Network source description
+  description string
+  // Public IP addresses and CIDR blocks allowed by this network source
+  publicSourceList []string
+  // Allowed virtual sources, each with a `vcnId` and its `ipRanges`
+  virtualSourceList []dict
+  // OCI services this network source applies to (e.g., `all`)
+  services []string
+  // Network source creation time
+  created time
+  // Network source lifecycle state (CREATING, ACTIVE, INACTIVE, DELETING, DELETED)
+  state string
+  // Free-form tags for resource management
+  freeformTags map[string]string
+  // Defined tags for governance and cost tracking
+  definedTags map[string]map[string]string
+}
+
+// Oracle Cloud Infrastructure (OCI) tenancy authentication policy
+private oci.identity.authenticationPolicy @defaults("minimumPasswordLength") {
+  // Compartment (tenancy) OCID the policy applies to
+  compartmentID string
+  // Minimum number of characters required in a console password
+  minimumPasswordLength int
+  // Whether a console password must contain an uppercase character
+  passwordRequiresUppercase bool
+  // Whether a console password must contain a lowercase character
+  passwordRequiresLowercase bool
+  // Whether a console password must contain a numeric character
+  passwordRequiresNumeric bool
+  // Whether a console password must contain a special character
+  passwordRequiresSpecial bool
+  // Whether a console password is allowed to contain the user name
+  passwordUsernameContainmentAllowed bool
+  // OCIDs of the network sources that restrict where console and API requests may originate
+  networkSourceIds []string
 }
 
 // Oracle Cloud Infrastructure (OCI) Compute
