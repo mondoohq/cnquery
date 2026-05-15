@@ -1059,6 +1059,11 @@ func (o *mqlOciIdentity) identityProviders() ([]any, error) {
 				args["metadataUrl"] = llx.StringDataPtr(saml.MetadataUrl)
 				args["signingCertificate"] = llx.StringDataPtr(saml.SigningCertificate)
 				args["redirectUrl"] = llx.StringDataPtr(saml.RedirectUrl)
+			} else {
+				// SAML2 is the only protocol ListIdentityProviders accepts today;
+				// warn if OCI ever returns another so the gap is noticed.
+				log.Warn().Str("id", stringValue(idp.GetId())).
+					Msgf("oci.identity.identityProvider: unexpected provider type %T, SAML2-specific fields left empty", idp)
 			}
 
 			mqlInstance, err := CreateResource(o.MqlRuntime, "oci.identity.identityProvider", args)
@@ -1213,7 +1218,9 @@ func (o *mqlOciIdentity) authenticationPolicy() (*mqlOciIdentityAuthenticationPo
 // (the resource name and the field path collide, so MQL instantiates the
 // resource rather than reading the `oci.identity` accessor).
 func initOciIdentityAuthenticationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
+	// The `oci.identity` accessor already passes the full policy; only fetch
+	// when the resource is instantiated bare (by name, with just `__id`).
+	if _, ok := args["minimumPasswordLength"]; ok {
 		return args, nil, nil
 	}
 

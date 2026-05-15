@@ -13,7 +13,6 @@ afero
 AHB
 AJD
 aki
-Akismet
 alamofire
 alloydb
 alpm
@@ -264,6 +263,7 @@ iana
 iap
 IBgt
 iccid
+IDCS
 identitycenter
 identitysource
 idps
@@ -303,8 +303,6 @@ KEDA
 kerberoastable
 KEYSTORE
 keymanager
-keymap
-keyspace
 KEYTAB
 kilocode
 kiro
@@ -449,7 +447,6 @@ OSGi
 ospf
 ovmf
 ovn
-OVS
 owpjy
 Paa
 pacman
@@ -547,7 +544,6 @@ secureboot
 selfservice
 sentinelone
 serde
-SInstall
 serviceconnection
 servicedesk
 serviceprincipals
