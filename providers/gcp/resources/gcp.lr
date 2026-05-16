@@ -6581,7 +6581,7 @@ private gcp.project.appEngineService.version @defaults("id servingStatus") {
 // GCP API Gateway
 //
 // Use this resource as the entry point for API Gateway in the project. It
-// hosts the managed `apis` (with their API configs) and the deployed
+// hosts the managed APIs (with their API configs) and the deployed
 // `gateways` — exposing managed-service names, deployment state, and the
 // hostnames clients use to reach backend services.
 private gcp.project.apiGatewayService {
@@ -6811,6 +6811,12 @@ private gcp.project.composerService {
 }
 
 // Google Cloud (GCP) Cloud Composer environment
+//
+// Examine a managed Apache Airflow environment running on Cloud Composer:
+// its lifecycle state, the Composer image version it runs, user-defined
+// labels, creation and update timestamps, and the full environment
+// configuration covering node config, software config, encryption config,
+// and web server access control.
 private gcp.project.composerService.environment @defaults("name state imageVersion") {
   // Project ID
   projectId string
