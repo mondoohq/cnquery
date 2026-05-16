@@ -415,3 +415,33 @@ func (a *mqlAzureSubscription) purview() (*mqlAzureSubscriptionPurviewService, e
 	}
 	return svc.(*mqlAzureSubscriptionPurviewService), nil
 }
+
+func (a *mqlAzureSubscription) search() (*mqlAzureSubscriptionSearchService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.searchService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionSearchService), nil
+}
+
+func (a *mqlAzureSubscription) appConfiguration() (*mqlAzureSubscriptionAppConfigurationService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.appConfigurationService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionAppConfigurationService), nil
+}
+
+func (a *mqlAzureSubscription) cognitiveServices() (*mqlAzureSubscriptionCognitiveServicesService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.cognitiveServicesService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionCognitiveServicesService), nil
+}

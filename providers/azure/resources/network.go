@@ -4100,6 +4100,45 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) virt
 	return res.(*mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway), nil
 }
 
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnectionIpsecPolicy) id() (string, error) {
+	return a.Id.Data, nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGatewayConnection) ipsecPolicies() ([]any, error) {
+	res := []any{}
+	if a.cacheProperties == nil {
+		return res, nil
+	}
+	for i, policy := range a.cacheProperties.IPSecPolicies {
+		if policy == nil {
+			continue
+		}
+		var saLifeTimeSeconds, saDataSizeKilobytes int64
+		if policy.SaLifeTimeSeconds != nil {
+			saLifeTimeSeconds = int64(*policy.SaLifeTimeSeconds)
+		}
+		if policy.SaDataSizeKilobytes != nil {
+			saDataSizeKilobytes = int64(*policy.SaDataSizeKilobytes)
+		}
+		mqlPolicy, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy", map[string]*llx.RawData{
+			"id":                  llx.StringData(fmt.Sprintf("%s/ipsecPolicies/%d", a.Id.Data, i)),
+			"ikeEncryption":       llx.StringDataPtr((*string)(policy.IkeEncryption)),
+			"ikeIntegrity":        llx.StringDataPtr((*string)(policy.IkeIntegrity)),
+			"ipsecEncryption":     llx.StringDataPtr((*string)(policy.IPSecEncryption)),
+			"ipsecIntegrity":      llx.StringDataPtr((*string)(policy.IPSecIntegrity)),
+			"dhGroup":             llx.StringDataPtr((*string)(policy.DhGroup)),
+			"pfsGroup":            llx.StringDataPtr((*string)(policy.PfsGroup)),
+			"saLifeTimeSeconds":   llx.IntData(saLifeTimeSeconds),
+			"saDataSizeKilobytes": llx.IntData(saDataSizeKilobytes),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlPolicy)
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceVirtualNetworkGateway) gatewayDefaultSite() (*mqlAzureSubscriptionNetworkServiceLocalNetworkGateway, error) {
 	if a.cacheProperties == nil || a.cacheProperties.GatewayDefaultSite == nil || a.cacheProperties.GatewayDefaultSite.ID == nil {
 		a.GatewayDefaultSite.State = plugin.StateIsSet | plugin.StateIsNull

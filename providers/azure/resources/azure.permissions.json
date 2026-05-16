@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.11.2",
-  "generated_at": "2026-05-14T11:23:55+01:00",
+  "generated_at": "2026-05-15T19:59:55+01:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -15,6 +15,7 @@
     "Microsoft.App/maintenanceConfigurations/read",
     "Microsoft.App/managedEnvironmentPrivateEndpointConnections/read",
     "Microsoft.App/managedEnvironments/read",
+    "Microsoft.Appconfiguration/configurationStores/read",
     "Microsoft.Authorization/classicAdministrators/read",
     "Microsoft.Authorization/denyAssignments/read",
     "Microsoft.Authorization/roleAssignments/read",
@@ -29,6 +30,7 @@
     "Microsoft.Cdn/profiles/origingroups/origins/read",
     "Microsoft.Cdn/profiles/origingroups/read",
     "Microsoft.Cdn/profiles/read",
+    "Microsoft.Cognitiveservices/accounts/read",
     "Microsoft.Compute/dedicatedHostGroups/read",
     "Microsoft.Compute/dedicatedHosts/read",
     "Microsoft.Compute/diskAccesses/read",
@@ -133,6 +135,7 @@
     "Microsoft.Resources/resources/read",
     "Microsoft.Resources/subscriptions/read",
     "Microsoft.Resources/subscriptions/resourceGroups/read",
+    "Microsoft.Search/services/read",
     "Microsoft.Security/autoProvisioningSettings/read",
     "Microsoft.Security/defenderForStorage/read",
     "Microsoft.ServiceBus/namespaces/queues/read",
@@ -264,6 +267,12 @@
       "source_file": "appcontainers.go"
     },
     {
+      "permission": "Microsoft.Appconfiguration/configurationStores/read",
+      "service": "Microsoft.Appconfiguration",
+      "action": "NewListPager",
+      "source_file": "appconfiguration.go"
+    },
+    {
       "permission": "Microsoft.Authorization/classicAdministrators/read",
       "service": "Microsoft.Authorization",
       "action": "NewListPager",
@@ -348,6 +357,12 @@
       "source_file": "frontdoor.go"
     },
     {
+      "permission": "Microsoft.Cognitiveservices/accounts/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices.go"
+    },
+    {
       "permission": "Microsoft.Compute/dedicatedHostGroups/read",
       "service": "Microsoft.Compute",
       "action": "NewListBySubscriptionPager",
@@ -374,7 +389,7 @@
     {
       "permission": "Microsoft.Compute/disks/read",
       "service": "Microsoft.Compute",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "compute.go"
     },
     {
@@ -500,7 +515,7 @@
     {
       "permission": "Microsoft.DBforMySQL/servers/configurations/read",
       "service": "Microsoft.DBforMySQL",
-      "action": "Get",
+      "action": "NewListByServerPager",
       "source_file": "mysql.go"
     },
     {
@@ -620,7 +635,7 @@
     {
       "permission": "Microsoft.DocumentDB/sQLResources/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListSQLDatabasesPager",
+      "action": "NewListSQLContainersPager",
       "source_file": "cosmosdb_extras.go"
     },
     {
@@ -722,7 +737,7 @@
     {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
-      "action": "NewListAllPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -788,13 +803,13 @@
     {
       "permission": "Microsoft.Network/localNetworkGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "network.go"
     },
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -854,7 +869,7 @@
     {
       "permission": "Microsoft.Network/privateLinkServices/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListBySubscriptionPager",
       "source_file": "network.go"
     },
     {
@@ -1006,6 +1021,12 @@
       "service": "Microsoft.Resources",
       "action": "NewListPager",
       "source_file": "resource_groups.go"
+    },
+    {
+      "permission": "Microsoft.Search/services/read",
+      "service": "Microsoft.Search",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "search.go"
     },
     {
       "permission": "Microsoft.Security/autoProvisioningSettings/read",

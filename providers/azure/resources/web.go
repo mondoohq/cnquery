@@ -670,9 +670,14 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 
 func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscriptionWebServiceAppsiteconfig, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return webAppSiteConfigToMql(a.MqlRuntime, conn, a.Id.Data)
+}
+
+// webAppSiteConfigToMql fetches the site configuration for an App Service site
+// (regular web app or function app) and maps it to an appsiteconfig resource.
+func webAppSiteConfigToMql(runtime *plugin.Runtime, conn *connection.AzureConnection, id string) (*mqlAzureSubscriptionWebServiceAppsiteconfig, error) {
 	ctx := context.Background()
 	token := conn.Token()
-	id := a.Id.Data
 
 	resourceID, err := ParseResourceID(id)
 	if err != nil {
@@ -728,7 +733,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscr
 		}
 	}
 
-	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionWebServiceAppsiteconfig, args)
+	res, err := CreateResource(runtime, ResourceAzureSubscriptionWebServiceAppsiteconfig, args)
 	if err != nil {
 		return nil, err
 	}

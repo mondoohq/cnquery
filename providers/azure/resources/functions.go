@@ -78,6 +78,7 @@ func (a *mqlAzureSubscriptionFunctionsService) functionApps() ([]any, error) {
 			}
 
 			var state, defaultHostName, clientCertMode, managedServiceIdentityId string
+			var keyVaultReferenceIdentity string
 			var httpsOnly, clientCertEnabled bool
 			if site.Properties != nil {
 				if site.Properties.State != nil {
@@ -95,24 +96,28 @@ func (a *mqlAzureSubscriptionFunctionsService) functionApps() ([]any, error) {
 				if site.Properties.ClientCertMode != nil {
 					clientCertMode = string(*site.Properties.ClientCertMode)
 				}
+				if site.Properties.KeyVaultReferenceIdentity != nil {
+					keyVaultReferenceIdentity = *site.Properties.KeyVaultReferenceIdentity
+				}
 			}
 			if site.Identity != nil && site.Identity.PrincipalID != nil {
 				managedServiceIdentityId = *site.Identity.PrincipalID
 			}
 
 			mqlApp, err := CreateResource(a.MqlRuntime, "azure.subscription.functionsService.functionApp", map[string]*llx.RawData{
-				"id":                       llx.StringDataPtr(site.ID),
-				"name":                     llx.StringDataPtr(site.Name),
-				"location":                 llx.StringDataPtr(site.Location),
-				"tags":                     llx.MapData(convert.PtrMapStrToInterface(site.Tags), types.String),
-				"kind":                     llx.StringDataPtr(site.Kind),
-				"state":                    llx.StringData(state),
-				"defaultHostName":          llx.StringData(defaultHostName),
-				"httpsOnly":                llx.BoolData(httpsOnly),
-				"clientCertEnabled":        llx.BoolData(clientCertEnabled),
-				"clientCertMode":           llx.StringData(clientCertMode),
-				"managedServiceIdentityId": llx.StringData(managedServiceIdentityId),
-				"properties":               llx.DictData(properties),
+				"id":                        llx.StringDataPtr(site.ID),
+				"name":                      llx.StringDataPtr(site.Name),
+				"location":                  llx.StringDataPtr(site.Location),
+				"tags":                      llx.MapData(convert.PtrMapStrToInterface(site.Tags), types.String),
+				"kind":                      llx.StringDataPtr(site.Kind),
+				"state":                     llx.StringData(state),
+				"defaultHostName":           llx.StringData(defaultHostName),
+				"httpsOnly":                 llx.BoolData(httpsOnly),
+				"clientCertEnabled":         llx.BoolData(clientCertEnabled),
+				"clientCertMode":            llx.StringData(clientCertMode),
+				"managedServiceIdentityId":  llx.StringData(managedServiceIdentityId),
+				"keyVaultReferenceIdentity": llx.StringData(keyVaultReferenceIdentity),
+				"properties":                llx.DictData(properties),
 			})
 			if err != nil {
 				return nil, err
@@ -188,4 +193,12 @@ func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) functions() ([]any, er
 	}
 
 	return res, nil
+}
+
+// configuration returns the function app's site configuration (minimum TLS
+// version, FTPS state, HTTP/2, always-on, IP restrictions). Function apps are
+// App Service sites, so this reuses the appsiteconfig resource.
+func (a *mqlAzureSubscriptionFunctionsServiceFunctionApp) configuration() (*mqlAzureSubscriptionWebServiceAppsiteconfig, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	return webAppSiteConfigToMql(a.MqlRuntime, conn, a.Id.Data)
 }
