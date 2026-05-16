@@ -167,6 +167,7 @@ DVR
 eas
 ecc
 Ecmp
+ECP
 efa
 efi
 eip
@@ -219,6 +220,7 @@ functionapp
 FWaa
 gcfs
 gclb
+GCMAES
 gcs
 gelf
 GENEVE
@@ -461,6 +463,8 @@ pcnet
 pdp
 persistentvolume
 persistentvolumeclaim
+pfs
+PFSMM
 pgp
 phpunit
 Pids

@@ -1631,7 +1631,7 @@ private azure.subscription.networkService.virtualNetworkGateway.connection @defa
 // (`saLifeTimeSeconds`) and payload size (`saDataSizeKilobytes`). Use it to
 // assert that site-to-site tunnels negotiate strong cryptographic parameters.
 private azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy @defaults("ikeEncryption ipsecEncryption dhGroup pfsGroup") {
-  // Policy ID (connection ID + index)
+  // Policy ID (connection ID + positional index; not stable if policy ordering changes server-side)
   id string
   // IKE encryption algorithm for IKE Phase 1 (one of: "DES", "DES3", "AES128", "AES192", "AES256", "GCMAES128", "GCMAES256")
   ikeEncryption string

@@ -56,6 +56,8 @@ func (a *mqlAzureSubscriptionSearchService) services() ([]any, error) {
 		return nil, err
 	}
 
+	// NewListBySubscriptionPager takes two optional params: *SearchManagementRequestOptions
+	// and *ServicesClientListBySubscriptionOptions. Both are left as default (nil).
 	pager := client.NewListBySubscriptionPager(nil, nil)
 	res := []any{}
 	for pager.More() {
