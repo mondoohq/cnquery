@@ -4,13 +4,24 @@
 option provider = "go.mondoo.com/mql/v13/providers/snowflake"
 option go_package = "go.mondoo.com/mql/v13/providers/snowflake/resources"
 
-// Snowflake Data Cloud — entry point for inspecting accounts, users, roles, grants, databases, warehouses, shares, and network/password/session policies
+// Snowflake Data Cloud
+//
+// Use this namespace to access all Snowflake resources. Query `snowflake.account`
+// for users, roles, security integrations, password and network policies, warehouses,
+// databases, stages, shares, API integrations, tags, failover groups, and grants.
+// `currentRole` returns the role active for the current session.
 snowflake {
   // Current role
   currentRole() string
 }
 
 // Snowflake Account
+//
+// Examine the Snowflake account and enumerate all top-level objects. Query `users`,
+// `roles`, `databases`, `warehouses`, `stages`, `shares`, `apiIntegrations`, `tags`,
+// `failoverGroups`, and `grants` (account-level privileges). Security controls are
+// accessible through `securityIntegrations`, `passwordPolicies`, `networkPolicies`,
+// and `sessionPolicies`. `accountAdmins` lists users that hold the ACCOUNTADMIN role.
 snowflake.account {
   // Account ID
   accountId() string
@@ -55,6 +66,14 @@ snowflake.account {
 }
 
 // Snowflake User
+//
+// Examine a Snowflake user account. Fields cover identity (`name`, `email`,
+// `displayName`), authentication state (`hasPassword`, `hasRsaPublicKey`,
+// `extAuthnDuo`), access controls (`disabled`, `mustChangePassword`, `defaultRole`,
+// `defaultWarehouse`), and activity timestamps (`lastSuccessLogin`, `createdAt`,
+// `expiresAt`, `lockedUntil`). `daysSinceLastLogin` is a derived integer (-1 if
+// the user has never logged in). `grants` returns all privileges granted directly
+// to this user. `parameters` lists user-level parameter overrides.
 snowflake.user @defaults("name") {
   // User name
   name string
@@ -105,6 +124,12 @@ snowflake.user @defaults("name") {
 }
 
 // Snowflake Role
+//
+// Examine a Snowflake role and its privilege graph. Fields include `name`, `owner`,
+// `comment`, and counts for `assignedToUsers`, `grantedToRoles`, and `grantedRoles`
+// (the depth of the role hierarchy). `grants` returns all privileges granted to
+// this role (SHOW GRANTS TO ROLE), and `grantees` returns the users and roles this
+// role has been granted to (SHOW GRANTS OF ROLE).
 snowflake.role @defaults("name") {
   // Role name
   name string
@@ -131,6 +156,13 @@ snowflake.role @defaults("name") {
 }
 
 // Snowflake Security Integration
+//
+// Examine a Snowflake security integration for external authentication or identity
+// federation. Fields include `name`, `type` (e.g., SAML2, OAUTH), `category`,
+// `enabled`, `comment`, and `createdAt`. `properties` returns the full
+// DESCRIBE SECURITY INTEGRATION output as a key/value map. SAML2-specific
+// properties are surfaced as typed fields: `saml2X509Cert`, `saml2Issuer`,
+// `saml2Provider`, `saml2SsoUrl`, `saml2SignRequest`, and `saml2ForceAuthn`.
 snowflake.securityIntegration @defaults("name") {
   // Name of the security integration
   name string
@@ -161,6 +193,14 @@ snowflake.securityIntegration @defaults("name") {
 }
 
 // Snowflake Password Policy
+//
+// Examine a Snowflake password policy that governs password complexity and rotation
+// for users in the account. Fields include `name`, `databaseName`, `schemaName`,
+// `owner`, `kind`, `comment`, and `createdAt`. Complexity requirements are exposed
+// as computed integers: `passwordMinLength`, `passwordMaxLength`,
+// `passwordMinUpperCaseChars`, `passwordMinLowerCaseChars`, `passwordMinNumericChars`,
+// `passwordMinSpecialChars`, `passwordMinAgeDays`, `passwordMaxAgeDays`,
+// `passwordMaxRetries`, `passwordLockoutTimeMins`, and `passwordHistory`.
 snowflake.passwordPolicy @defaults("name") {
   // Name of the password policy
   name string
@@ -201,6 +241,13 @@ snowflake.passwordPolicy @defaults("name") {
 }
 
 // Snowflake Network Policy
+//
+// Examine a Snowflake network policy that restricts account or user access by IP
+// address and network rules. Fields include `name`, `comment`, `createdAt`, and
+// summary counts for `entriesInAllowedIpList`, `entriesInBlockedIpList`,
+// `entriesInAllowedNetworkRules`, and `entriesInBlockedNetworkRules`. The actual
+// lists are available via `allowedIpList`, `blockedIpList`, `allowedNetworkRules`,
+// and `blockedNetworkRules`.
 snowflake.networkPolicy @defaults("name") {
   // Name of the network policy
     name string
@@ -227,6 +274,12 @@ snowflake.networkPolicy @defaults("name") {
 }
 
 // Snowflake Procedure
+//
+// Examine a Snowflake stored procedure or built-in system procedure. Fields include
+// `name`, `description`, `schemaName`, `catalogName`, `arguments`, and boolean
+// classifiers `isBuiltin`, `isAggregate`, `isAnsi`, `isTableFunction`,
+// `validForClustering`, and `isSecure`. Argument arity is captured in
+// `minNumberOfArguments` and `maxNumberOfArguments`.
 snowflake.procedure @defaults("name") {
   // Name of the procedure
   name string
@@ -257,6 +310,10 @@ snowflake.procedure @defaults("name") {
 }
 
 // Snowflake Parameter
+//
+// Examine a single Snowflake configuration parameter. Fields include `key` (parameter
+// name), `value` (the effective value), `defaultValue`, `description`, and `level`
+// (the scope at which the value was set — SYSTEM, ACCOUNT, USER, SESSION, or OBJECT).
 snowflake.parameter @defaults("key"){
   // Name of the parameter
   key string
@@ -271,6 +328,13 @@ snowflake.parameter @defaults("key"){
 }
 
 // Snowflake Stage
+//
+// Examine a Snowflake stage used for loading and unloading data. Fields include
+// `name`, `databaseName`, `schemaName`, `owner`, `ownerRoleType`, `type`
+// (INTERNAL or EXTERNAL), `cloud`, `url`, `endpoint`, `storeIntegration`,
+// `comment`, and `createdAt`. Security attributes `hasCredentials` and
+// `hasEncryptionKey` indicate whether credentials or an encryption key are
+// configured. `directoryEnabled` shows whether a directory table is active.
 snowflake.stage @defaults("name") {
   // Name of the stage
   name string
@@ -305,6 +369,11 @@ snowflake.stage @defaults("name") {
 }
 
 // Snowflake Database
+//
+// Examine a Snowflake database. Fields include `name`, `owner`, `origin`, `options`,
+// `retentionTime`, `resourceGroup`, `comment`, `transient`, and timestamps
+// `createdAt` and `droppedAt`. `isDefault` and `isCurrent` reflect session state.
+// `roles` returns database-scoped roles defined within the database.
 snowflake.database @defaults("name") {
   // Name of the database
   name string
@@ -335,6 +404,16 @@ snowflake.database @defaults("name") {
 }
 
 // Snowflake Warehouse
+//
+// Examine a Snowflake virtual warehouse that provides compute resources for query
+// execution. Fields include `name`, `state`, `type`, `size`, `owner`, `comment`,
+// and `createdAt`. Cluster configuration is captured in `minClusterCount`,
+// `maxClusterCount`, `startedClusterCount`, `running`, and `queued`. Utilization
+// percentages are in `available`, `provisioning`, `quiescing`, and `other`.
+// Auto-management is controlled by `autoSuspend` (seconds), `autoResume`, and
+// `scalingPolicy`. Query acceleration is exposed through `enableQueryAcceleration`
+// and `queryAccelerationMaxScaleFactor`. `resourceMonitor` names the monitor
+// governing credit usage.
 snowflake.warehouse @defaults("name") {
   // Name of the warehouse
   name string
@@ -392,8 +471,14 @@ snowflake.warehouse @defaults("name") {
   updatedAt time
 }
 
-// Snowflake Grant. Represents a single privilege granted on an object to a role,
-// user, or share. Modeled from SHOW GRANTS in Snowflake.
+// Snowflake Grant
+//
+// Examine a single privilege granted on a Snowflake object to a role, user, or
+// share, as returned by SHOW GRANTS. Fields include `privilege` (e.g., USAGE,
+// SELECT, OWNERSHIP), `grantedOn` (object type such as DATABASE or TABLE), `name`
+// (fully qualified object name), `grantedTo` (grantee type: ROLE, USER, SHARE, or
+// DATABASE_ROLE), `granteeName`, `grantOption` (whether the grantee may re-grant),
+// `grantedBy`, and `createdAt`.
 snowflake.grant @defaults("privilege grantedOn name granteeName") {
   // Privilege granted (e.g., USAGE, SELECT, OWNERSHIP, MODIFY)
   privilege string
@@ -413,8 +498,14 @@ snowflake.grant @defaults("privilege grantedOn name granteeName") {
   createdAt time
 }
 
-// Snowflake Session Policy. Controls session timeouts and idle behavior.
-// See https://docs.snowflake.com/en/sql-reference/sql/create-session-policy
+// Snowflake Session Policy
+//
+// Examine a Snowflake session policy that controls how long sessions may remain
+// idle before termination. Fields include `name`, `databaseName`, `schemaName`,
+// `kind`, `owner`, `ownerRoleType`, `comment`, and `options`. Timeout values are
+// computed integers: `sessionIdleTimeoutMins` (Snowflake default 240) applies to
+// all session types, while `sessionUiIdleTimeoutMins` applies specifically to
+// Snowsight browser sessions.
 snowflake.sessionPolicy @defaults("name sessionIdleTimeoutMins") {
   // Name of the session policy
   name string
@@ -438,8 +529,13 @@ snowflake.sessionPolicy @defaults("name sessionIdleTimeoutMins") {
   sessionUiIdleTimeoutMins() int
 }
 
-// Snowflake Share. Represents a data share, either provided to other accounts (OUTBOUND)
-// or consumed from another account (INBOUND).
+// Snowflake Share
+//
+// Examine a Snowflake data share, either outbound (shared to other accounts) or
+// inbound (consumed from another account). Fields include `name` (fully qualified
+// for INBOUND, share name for OUTBOUND), `kind` (INBOUND or OUTBOUND),
+// `databaseName`, `owner`, `comment`, `createdAt`, and `to` (the list of target
+// accounts for OUTBOUND shares).
 snowflake.share @defaults("name kind") {
   // Fully qualified share name (account.share for INBOUND, share name for OUTBOUND)
   name string
@@ -457,8 +553,16 @@ snowflake.share @defaults("name kind") {
   createdAt time
 }
 
-// Snowflake API Integration. Provides authentication context for external functions and Git integrations.
-// See https://docs.snowflake.com/en/sql-reference/sql/create-api-integration
+// Snowflake API Integration
+//
+// Examine a Snowflake API integration that provides authentication context for
+// external functions and Git repository integrations. Fields include `name`, `type`
+// (e.g., aws_api_gateway, azure_api_management, google_api_gateway), `category`,
+// `enabled`, `comment`, and `createdAt`. `properties` returns the full
+// DESCRIBE API INTEGRATION output as a key/value map. URL access lists are in
+// `apiAllowedPrefixes` and `apiBlockedPrefixes`. AWS-specific fields include
+// `apiAwsRoleArn` and `apiAwsExternalId`; Azure-specific fields include
+// `azureTenantId` and `azureAdApplicationId`.
 snowflake.apiIntegration @defaults("name type enabled") {
   // Name of the API integration
   name string
@@ -488,8 +592,12 @@ snowflake.apiIntegration @defaults("name type enabled") {
   azureAdApplicationId() string
 }
 
-// Snowflake Tag. Used for governance, data classification, and policy attachment.
-// See https://docs.snowflake.com/en/sql-reference/sql/create-tag
+// Snowflake Tag
+//
+// Examine a Snowflake tag used for governance, data classification, and policy
+// attachment. Fields include `name`, `databaseName`, `schemaName`, `owner`,
+// `ownerRoleType`, `comment`, `createdAt`, and `allowedValues` (the list of
+// permitted string values; empty when the tag is unrestricted).
 snowflake.tag @defaults("name databaseName schemaName") {
   // Tag name (object name, not database-qualified)
   name string
@@ -509,9 +617,17 @@ snowflake.tag @defaults("name databaseName schemaName") {
   createdAt time
 }
 
-// Snowflake Failover/Replication Group. Used to replicate account objects (databases,
-// shares, integrations, etc.) to one or more secondary accounts for disaster recovery.
-// See https://docs.snowflake.com/en/sql-reference/sql/create-failover-group
+// Snowflake Failover Group
+//
+// Examine a Snowflake failover or replication group that replicates account objects
+// to secondary accounts for disaster recovery. Fields include `name`, `type`
+// (ACCOUNT or BUSINESS_CONTINUITY), `isPrimary`, `primary` (fully-qualified primary
+// group identifier), `owner`, `comment`, and `createdAt`. `objectTypes` and
+// `allowedIntegrationTypes` list what is replicated. `allowedAccounts` names target
+// accounts. `replicationSchedule` holds the cron expression (empty for manual
+// refresh). `secondaryState` and `nextScheduledRefresh` reflect the replica's refresh
+// status. Geography fields include `regionGroup` and `snowflakeRegion`. `databases`
+// and `shares` list the objects currently included in the group.
 snowflake.failoverGroup @defaults("name type isPrimary secondaryState") {
   // Group name
   name string
@@ -549,9 +665,13 @@ snowflake.failoverGroup @defaults("name type isPrimary secondaryState") {
   shares() []string
 }
 
-// Snowflake Database-Scoped Role. Like a regular role but scoped to a single database;
-// used for least-privilege access patterns within a database.
-// See https://docs.snowflake.com/en/sql-reference/sql/create-database-role
+// Snowflake Database Role
+//
+// Examine a Snowflake database-scoped role that grants least-privilege access
+// within a single database. Fields include `name`, `databaseName`, `owner`,
+// `ownerRoleType`, `comment`, and `createdAt`. Session state is reflected in
+// `isCurrent` and `isInherited`. Hierarchy depth is captured in
+// `grantedToRoles`, `grantedToDatabaseRoles`, and `grantedDatabaseRoles`.
 snowflake.databaseRole @defaults("databaseName name owner") {
   // Role name (not database-qualified)
   name string
@@ -578,6 +698,12 @@ snowflake.databaseRole @defaults("databaseName name owner") {
 }
 
 // Snowflake View
+//
+// Examine a Snowflake view or materialized view. Fields include `name`, `kind`,
+// `databaseName`, `schemaName`, `owner`, `ownerRoleType`, `comment`, `text` (the
+// view definition SQL), and `changeTracking`. Security and materialization state
+// are captured in `isSecure` and `isMaterialized`. `reserved` reflects any
+// reserved flag set by Snowflake.
 snowflake.view @defaults("name") {
   // Name of the view
   name string

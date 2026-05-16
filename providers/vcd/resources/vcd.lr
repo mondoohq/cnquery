@@ -5,6 +5,11 @@ option provider = "go.mondoo.com/cnquery/v9/providers/vcd"
 option go_package = "go.mondoo.com/mql/v13/providers/vcd/resources"
 
 // VMware Cloud Director
+//
+// Use the VCD namespace to access organizations, provider VDCs, network pools,
+// external networks, and vCenter server instances connected to this VMware Cloud
+// Director deployment. Navigate into `vcd.organization` for tenant-level resources
+// including VMs, VDCs, roles, and LDAP configuration.
 vcd {
   // VMware Cloud Director organization resources
   organizations() []vcd.organization
@@ -18,7 +23,12 @@ vcd {
   serverInstances() []vcd.serverInstance
 }
 
-// VMware Cloud Director organization resource
+// VMware Cloud Director Organization
+//
+// Examine a VCD organization including its identity, status, and tenant resources.
+// Key fields include `id`, `name`, `fullName`, `isEnabled`, and `description`.
+// Computed fields surface `vms`, `vdcs`, `vdcGroups`, `roles`, `rights`, `settings`,
+// and the `ldapConfiguration` for directory-service integration.
 vcd.organization @defaults("name") {
   // Organization ID
   id string
@@ -46,7 +56,11 @@ vcd.organization @defaults("name") {
   ldapConfiguration() vcd.organization.ldapSettings
 }
 
-// VMware Cloud Director LDAP setting
+// VMware Cloud Director Organization LDAP Settings
+//
+// Examine the LDAP directory-service configuration attached to a VCD organization.
+// Fields include `orgLdapMode` (the connection mode), `hostname`, `username`, `realm`,
+// and `customUsersOu` for the organizational-unit attribute used when provisioning users.
 vcd.organization.ldapSettings {
   // URI of the entity
   id string
@@ -62,7 +76,15 @@ vcd.organization.ldapSettings {
   realm string
 }
 
-// VMware Cloud Director provider VDC
+// VMware Cloud Director Provider VDC
+//
+// Examine a provider virtual datacenter and its capacity allocation. Fields cover
+// operational state (`status`, `isEnabled`, `isBusy`, `isDeleted`), CPU allocation
+// (`cpuAllocationMhz`, `cpuLimitMhz`, `cpuUsedMhz`, `cpuOverheadMhz`), memory
+// allocation (`memoryAllocationMB`, `memoryLimitMB`, `memoryUsedMB`, `memoryOverheadMB`),
+// storage allocation (`storageAllocationMB`, `storageLimitMB`, `storageUsedMB`,
+// `storageOverheadMB`), and counts of datastores, storage profiles, and VDCs.
+// The `metadata` field exposes key-value pairs attached to the provider VDC.
 private vcd.vdcProvider @defaults("name") {
   // Name of the provider VDC
   name string
@@ -108,7 +130,11 @@ private vcd.vdcProvider @defaults("name") {
   metadata() map[string]string
 }
 
-// VMware Cloud Director network pools
+// VMware Cloud Director Network Pool
+//
+// Examine a network pool used to back organization VDC networks. Fields include
+// `name`, `isBusy`, and `networkPoolType` (0 = VLAN-backed, 1 = vNI-backed,
+// 2 = portgroup-backed).
 vcd.networkPool {
   // Network pool name
   name string
@@ -118,7 +144,11 @@ vcd.networkPool {
   networkPoolType int
 }
 
-// VMware Cloud Director external network
+// VMware Cloud Director External Network
+//
+// Examine an external network that bridges the VCD deployment to an upstream network.
+// Fields include `name`, `urn`, `description`, and `configuration` (a dict with
+// gateway, netmask, and IP-range details).
 private vcd.externalNetwork @defaults("name") {
   // Unique name for the network
   name string
@@ -130,7 +160,17 @@ private vcd.externalNetwork @defaults("name") {
   configuration() dict
 }
 
-// VMware Cloud Director VM resource
+// VMware Cloud Director Virtual Machine
+//
+// Examine a standalone VM running inside a VCD organization VDC. Identity fields
+// include `id`, `name`, `containerName`, `containerID`, `ownerId`, and `ownerName`.
+// Hardware fields cover `numberOfCpus`, `memoryMB`, `hardwareVersion`,
+// `totalStorageAllocatedMb`, and `storageProfileName`. Runtime state is reflected
+// in `status`, `isDeployed`, `isBusy`, `isDeleted`, `isExpired`,
+// `isInMaintenanceMode`, `isComputePolicyCompliant`, and `encrypted`.
+// Network access is via `networkName` and `ipAddress`. Guest details include
+// `guestOs`, `vmToolsStatus`, `gcStatus`, `hostName`, `catalogName`,
+// and `isPublished`.
 private vcd.vm @defaults("name") {
   // ID for the standalone VM in the VDC
   id string
@@ -190,7 +230,12 @@ private vcd.vm @defaults("name") {
   hostName string
 }
 
-// vCenter server attached to VCD
+// VMware vCenter Server Instance
+//
+// Examine a vCenter server registered with VMware Cloud Director. Fields include
+// `name`, `uuid`, `vcVersion`, `userName`, `vsmIP`, `listenerState`, `status`,
+// `isEnabled`, `isBusy`, and `isSupported`. Use these to audit vCenter connectivity
+// and version compliance for VCD-attached compute infrastructure.
 vcd.serverInstance {
   // Name of vCenter server
   name string
@@ -214,7 +259,12 @@ vcd.serverInstance {
   vsmIP string
 }
 
-// VMware Cloud Director available rights
+// VMware Cloud Director Right
+//
+// Examine a granular permission right available in the VCD RBAC system. Fields
+// include `id`, `name`, `description`, `category`, `bundleKey`, `serviceNamespace`,
+// and `rightType`. Rights are assigned to roles and govern what actions tenants
+// may perform within an organization.
 vcd.right {
   // Right ID
   id string
@@ -232,7 +282,11 @@ vcd.right {
   rightType string
 }
 
-// VMware Cloud Director role
+// VMware Cloud Director Role
+//
+// Examine a role defined within a VCD organization. Fields include `id`, `name`,
+// and `description`. Roles collect rights and are assigned to users or groups to
+// control access within the organization.
 vcd.role @defaults("name") {
   // ID of the role
   id string
@@ -242,7 +296,13 @@ vcd.role @defaults("name") {
   description string
 }
 
-// VMware Cloud Director organization VDC resource
+// VMware Cloud Director Organization VDC
+//
+// Examine a virtual datacenter provisioned within a VCD organization. Fields
+// include `id`, `name`, `status` (-1 = error, 0 = creating, 1 = ready),
+// `description`, `allocationModel`, `isEnabled`, `vmQuota`, `nicQuota`,
+// `networkQuota`, and `usedNetworkCount`. Use these to audit VDC capacity
+// limits, provisioning state, and network usage.
 vcd.vdc {
   // ID of the VDC
   id string
@@ -266,7 +326,13 @@ vcd.vdc {
   isEnabled bool
 }
 
-// VMware Cloud Director NSX-T VDC groups
+// VMware Cloud Director VDC Group
+//
+// Examine an NSX-T-backed VDC group that spans multiple organization VDCs.
+// Fields include `name`, `description`, `status`, `type` (LOCAL or UNIVERSAL),
+// `localEgress`, `universalNetworkingEnabled`, and `dfwEnabled`. Use these to
+// audit distributed-firewall enablement and cross-VDC network topology for
+// NSX-T universal routing deployments.
 vcd.vdcGroup {
   // Name of VDC group
   name string

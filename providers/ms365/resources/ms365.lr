@@ -6,7 +6,12 @@ option go_package = "go.mondoo.com/mql/v13/providers/ms365/resources"
 
 alias microsoft.organization = microsoft.tenant
 
-// Microsoft 365 services and resources
+// Microsoft 365
+//
+// Use this namespace to access Microsoft 365 services and resources including
+// users, groups, domains, applications, service principals, roles, and identity
+// and access policies. Serves as the top-level entry point for querying
+// tenant-wide Microsoft Entra ID and Microsoft 365 configuration.
 microsoft {
   // DEPRECATED: use `microsoft.tenant` instead
   organizations() @maturity("deprecated") []microsoft.tenant
@@ -38,7 +43,13 @@ microsoft {
   accessReviews() microsoft.identityAndAccess.accessReviews
 }
 
-// A filterable list of access review definitions
+// Microsoft Entra ID Access Review Definitions
+//
+// Iterate over recurring access review schedules defined in the tenant. Supports
+// an optional `filter` parameter using OData syntax to narrow results — for
+// example, filtering by scope to find reviews targeting group membership. Each
+// entry exposes the review's `displayName`, `status`, `scope`, `reviewers`,
+// and `settings` describing the recurrence and decision-handling configuration.
 microsoft.identityAndAccess.accessReviews {
   []microsoft.identityAndAccess.accessReviewDefinition
   init(filter? string)
@@ -97,14 +108,24 @@ private microsoft.identityAndAccess.accessReviewDefinition.accessReviewScheduleS
   recurrence dict
 }
 
-// Microsoft groups
+// Microsoft Entra ID Groups
+//
+// Iterate over all Microsoft Entra ID (formerly Azure AD) groups in the tenant.
+// Each entry is a `microsoft.group` exposing `displayName`, `securityEnabled`,
+// `mailEnabled`, `groupTypes`, membership rules, expiration settings, and
+// on-premises sync status. Use `length` to count the total number of groups.
 microsoft.groups {
   []microsoft.group
   // Total number of Microsoft groups
   length() int
 }
 
-// Microsoft 365 group setting
+// Microsoft 365 Group Setting
+//
+// Examine a single Microsoft 365 group setting applied to the tenant. Each
+// setting is identified by a `templateId` and a `displayName`, and contains
+// a list of `values` (as `microsoft.settingValue` entries) that control
+// group behavior such as guest access or naming policies.
 microsoft.setting  @defaults("displayName values") {
   // Display name of the setting
   displayName string
@@ -114,7 +135,11 @@ microsoft.setting  @defaults("displayName values") {
   values []microsoft.settingValue
 }
 
-// Microsoft 365 group setting value
+// Microsoft 365 Group Setting Value
+//
+// Examine a single name/value pair within a `microsoft.setting`. The `name`
+// identifies the specific setting key (for example, `AllowGuestsToBeGroupOwner`)
+// and `value` holds its current string representation.
 microsoft.settingValue  @defaults("name value") {
   // Name of the setting value
   name string
@@ -122,14 +147,26 @@ microsoft.settingValue  @defaults("name value") {
   value string
 }
 
-// List of Microsoft Entra ID application registrations
+// Microsoft Entra ID Application Registrations
+//
+// Iterate over all application registrations in the tenant. Each entry is a
+// `microsoft.application` exposing identity details (`id`, `appId`, `name`),
+// credential health (`hasExpiredCredentials`, `secrets`, `certificates`),
+// sign-in audience, and linked service principal. Use `length` to count
+// the total number of registered applications.
 microsoft.applications {
   []microsoft.application
   // Total number of application registrations
   length() int
 }
 
-// Microsoft Entra tenant
+// Microsoft Entra Tenant
+//
+// Examine configuration of the connected Microsoft Entra ID (Azure AD) tenant.
+// Exposes the tenant's `name`, `id`, `type`, verified domains, provisioned
+// plans, on-premises sync status, privacy profile, technical notification
+// contacts, and security compliance notification addresses. Related resources
+// include `settings`, `formsSettings`, `realm`, and `branding`.
 microsoft.tenant @defaults("name") {
   // Organization ID
   id string
@@ -225,7 +262,13 @@ private microsoft.tenantFormsSettings @defaults("isExternalSendFormEnabled isBin
   isInOrgFormsPhishingScanEnabled bool
 }
 
-// List of Microsoft Entra users with optional filters
+// Microsoft Entra ID Users
+//
+// Iterate over Microsoft Entra ID (formerly Azure AD) users in the tenant.
+// Supports optional `filter` (OData property filter) and `search` (keyword
+// search) parameters to narrow results. Each entry is a `microsoft.user`
+// exposing account status, contact details, job information, MFA state,
+// assigned licenses, sign-in history, and authentication method registration.
 microsoft.users {
   []microsoft.user
 
@@ -236,7 +279,13 @@ microsoft.users {
   search string
 }
 
-// A container resource for identity and access policies that can be filtered
+// Microsoft Entra Identity and Access Policies
+//
+// Iterate over PIM role management policies defined in the tenant. Supports
+// an optional `filter` parameter (for example, scoped to `scopeId eq '/' and
+// scopeType eq 'Directory'`) to narrow results. Exposes
+// `roleEligibilityScheduleInstances` for active PIM role eligibilities and
+// `identityAndSignIn` for identity and sign-in configuration.
 microsoft.identityAndAccess {
   []microsoft.identityAndAccess.policy
   init(filter? string)
@@ -316,13 +365,21 @@ private microsoft.identityAndAccess.policy.ruleTarget @defaults("caller level") 
   operations []string
 }
 
-// Container for identity and sign-in policies
+// Microsoft Entra Identity and Sign-In Policies
+//
+// Use this namespace to access identity and sign-in policy configuration.
+// Currently exposes `policies`, which provides access to specific policy
+// objects such as the identity security defaults enforcement policy.
 microsoft.identityAndAccess.identityAndSignIn {
   // Identity and sign-in policies
   policies() microsoft.identityAndAccess.identityAndSignIn.policies
 }
 
-// Container for various identity and sign-in policies
+// Microsoft Entra Identity and Sign-In Policy Collection
+//
+// Use this namespace to access individual sign-in policy objects. Currently
+// exposes `identitySecurityDefaultsEnforcementPolicy`, which controls whether
+// Microsoft Entra ID security defaults are enabled for the tenant.
 microsoft.identityAndAccess.identityAndSignIn.policies {
   // Identity security defaults enforcement policy
   identitySecurityDefaultsEnforcementPolicy() microsoft.identityAndAccess.identityAndSignIn.policies.identitySecurityDefaultsEnforcementPolicy
@@ -373,7 +430,12 @@ private microsoft.user.licenseDetail.servicePlanInfo @defaults("appliesTo provis
   servicePlanName string
 }
 
-// Microsoft Entra Conditional Access Policies
+// Microsoft Entra Conditional Access
+//
+// Use this namespace to access conditional access configuration for the tenant.
+// Exposes `policies` (the list of conditional access policies), `namedLocations`
+// (IP-based and country-based location conditions), and
+// `authenticationMethodsPolicy` (tenant-wide allowed authentication methods).
 microsoft.conditionalAccess {
   // Named locations container
   namedLocations microsoft.conditionalAccess.namedLocations
@@ -407,7 +469,13 @@ private microsoft.conditionalAccess.authenticationMethodConfiguration @defaults(
   state string
 }
 
-// Container for Microsoft Entra Conditional Access Named Locations
+// Microsoft Entra Conditional Access Named Locations
+//
+// Use this namespace to access named location definitions used in conditional
+// access policy conditions. Exposes `ipLocations` (IP range-based named
+// locations as `microsoft.conditionalAccess.ipNamedLocation`) and
+// `countryLocations` (country-based named locations as
+// `microsoft.conditionalAccess.countryNamedLocation`).
 microsoft.conditionalAccess.namedLocations {
   // IP-based named locations
   ipLocations() []microsoft.conditionalAccess.ipNamedLocation
@@ -415,7 +483,16 @@ microsoft.conditionalAccess.namedLocations {
   countryLocations() []microsoft.conditionalAccess.countryNamedLocation
 }
 
-// A Microsoft Entra Conditional Access policy. Conditional access policies are custom rules that define an access scenario.
+// Microsoft Entra Conditional Access Policy
+//
+// Examine a single conditional access policy defined in the tenant. Each
+// policy has a `displayName`, `state` (enabled, disabled, or
+// enabledForReportingButNotEnforced), and timestamps for creation and
+// modification. The policy's `conditions` specify which users, applications,
+// platforms, and locations are in scope; `grantControls` define what the
+// user must satisfy (MFA, compliant device, etc.); and `sessionControls`
+// enforce post-authentication restrictions such as sign-in frequency and
+// persistent browser behavior.
 microsoft.conditionalAccess.policy @defaults("id displayName state") {
   // Specifies the identifier of a conditionalAccessPolicy object
   id string
@@ -609,7 +686,12 @@ private microsoft.conditionalAccess.policy.sessionControls @defaults("id") {
   secureSignInSession dict
 }
 
-// Microsoft Entra Conditional Access IP named location
+// Microsoft Entra Conditional Access IP Named Location
+//
+// Examine an IP address range-based named location used in conditional access
+// policy conditions. Exposes the `name`, whether the location is marked as
+// `trusted`, its creation and modification timestamps, and the `id` used to
+// reference it in policy include/exclude location lists.
 microsoft.conditionalAccess.ipNamedLocation @defaults("id name trusted") {
   // Named location ID
   id string
@@ -623,7 +705,11 @@ microsoft.conditionalAccess.ipNamedLocation @defaults("id name trusted") {
   modifiedDateTime time
 }
 
-// Microsoft Entra Conditional Access Country named location
+// Microsoft Entra Conditional Access Country Named Location
+//
+// Examine a country or region-based named location used in conditional access
+// policy conditions. Exposes the `name` and `lookupMethod` that determines
+// how the country is resolved (by IP address or GPS coordinates).
 microsoft.conditionalAccess.countryNamedLocation @defaults("name lookupMethod") {
   // Named location name
   name string
@@ -923,7 +1009,13 @@ private microsoft.groupLifecyclePolicy @defaults("groupLifetimeInDays managedGro
   alternateNotificationEmails string
 }
 
-// List of Microsoft Entra devices
+// Microsoft Entra ID Devices
+//
+// Iterate over devices registered in Microsoft Entra ID. Supports optional
+// `filter` (OData property filter) and `search` (keyword search) parameters.
+// Each entry is a `microsoft.device` exposing compliance state, management
+// status, operating system details, enrollment type, trust type, and
+// on-premises sync information.
 microsoft.devices {
   []microsoft.device
 
@@ -1030,7 +1122,15 @@ private microsoft.domaindnsrecord @defaults("id label") {
   properties @maturity("deprecated") dict
 }
 
-// Microsoft Entra ID application registration
+// Microsoft Entra ID Application Registration
+//
+// Examine a single application registration in Microsoft Entra ID. Exposes
+// identity fields (`id`, `appId`, `name`, `signInAudience`), credential health
+// via `hasExpiredCredentials`, `secrets` (password credentials), and
+// `certificates` (key credentials). Also provides access to `appRoles`,
+// `permissions` granted to the linked service principal, and configuration
+// for web, SPA, and public client scenarios. Can be selected by `name` or
+// `id` — for example `microsoft.application(name: "MyApp")`.
 microsoft.application @defaults("id name hasExpiredCredentials") {
   init(name string, id string)
   // Object ID
@@ -1159,7 +1259,15 @@ private microsoft.passwordCredential @defaults("description expires keyId") {
   startDateTime time
 }
 
-// Microsoft service principal (Enterprise application)
+// Microsoft Entra Service Principal
+//
+// Examine a service principal (enterprise application) registered in the
+// tenant. Exposes the `name`, `type`, `appId`, sign-in audience, homepage
+// and reply URLs, assignment requirement, visibility to users, and whether
+// the account is enabled. Also provides `assignments` (users and groups
+// granted access), `appRoles`, and `permissions` (API delegated and
+// application grants). Use `isFirstParty` to identify Microsoft-owned
+// service principals.
 microsoft.serviceprincipal @defaults("name") {
   // Service principal Object ID
   id string
@@ -1254,6 +1362,12 @@ private microsoft.application.permission @defaults("appName name type status") {
 }
 
 // Microsoft Security
+//
+// Use this namespace to access Microsoft 365 security resources. Exposes
+// `secureScores` and `latestSecureScores` for tenant security posture,
+// `riskyUsers` for Microsoft Entra ID Protection risk signals, `exchange`
+// for Exchange Online security settings, and `informationProtection` for
+// sensitivity label configuration.
 microsoft.security {
   // List of security scores
   secureScores() []microsoft.security.securityscore
@@ -1293,7 +1407,13 @@ private microsoft.security.securityscore @defaults("id azureTenantId") {
   vendorInformation dict
 }
 
-// Microsoft Entra users who are at risk
+// Microsoft Entra ID Risky User
+//
+// Examine a Microsoft Entra ID Protection risky user entry. Exposes the
+// `principalName`, `riskLevel` (low, medium, high, hidden, none), `riskState`
+// (none, confirmedSafe, remediated, dismissed, atRisk, confirmedCompromised),
+// `riskDetail`, `lastUpdatedAt`, and whether the account `isDeleted` or
+// `isProcessing`. Use `user` to navigate to the full `microsoft.user` record.
 microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUpdatedAt"){
   // Risky user ID
   id string
@@ -1317,19 +1437,32 @@ microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUp
   isProcessing bool
 }
 
-// Microsoft Security Exchange
+// Microsoft Security Exchange Settings
+//
+// Use this namespace to access Exchange Online security configuration.
+// Currently exposes `antispam`, which provides access to hosted connection
+// filter policy settings.
 microsoft.security.exchange {
   // Exchange antispam settings
   antispam() microsoft.security.exchange.antispam
 }
 
-// Microsoft Security Exchange Antispam
+// Microsoft Security Exchange Antispam Settings
+//
+// Use this namespace to access Exchange Online antispam configuration.
+// Exposes `hostedConnectionFilterPolicy`, which controls IP allow and block
+// lists and safe-list behavior for inbound connections.
 microsoft.security.exchange.antispam {
   // Hosted connection filter policy
   hostedConnectionFilterPolicy() microsoft.security.exchange.antispam.hostedConnectionFilterPolicy
 }
 
-// Microsoft Security Exchange Antispam Hosted Connection Filter Policy
+// Microsoft Exchange Antispam Hosted Connection Filter Policy
+//
+// Examine the hosted connection filter policy that controls which external IP
+// addresses are always allowed or always blocked for inbound email. Exposes
+// `ipAllowList`, `ipBlockList`, `enableSafeList` (whether Microsoft's
+// curated safe sender list is consulted), and the policy `identity`.
 microsoft.security.exchange.antispam.hostedConnectionFilterPolicy @defaults("identity enableSafeList") {
   // Policy identity
   identity string
@@ -1343,13 +1476,24 @@ microsoft.security.exchange.antispam.hostedConnectionFilterPolicy @defaults("ide
   enableSafeList bool
 }
 
-// Microsoft Information Protection
+// Microsoft Purview Information Protection
+//
+// Use this namespace to access Microsoft Purview Information Protection
+// configuration. Exposes `sensitivityLabels`, the list of sensitivity labels
+// defined in the tenant for classifying and protecting content.
 microsoft.security.informationProtection {
   // List of sensitivity labels
   sensitivityLabels() []microsoft.security.informationProtection.sensitivityLabel
 }
 
-// Microsoft Information Protection Sensitivity Label
+// Microsoft Purview Sensitivity Label
+//
+// Examine a sensitivity label defined in Microsoft Purview Information
+// Protection. Exposes the `name`, `description`, `color`, supported
+// `contentFormats` (file, email, teamwork, etc.), protection state
+// (`hasProtection`), applicability (`isAppliable`, `isActive`), and
+// `sensitivity` level (lower number means less sensitive). Hierarchical
+// labels reference a `parent` label.
 microsoft.security.informationProtection.sensitivityLabel @defaults("id name") {
   // Unique identifier for the sensitivity label
   id string
@@ -1375,7 +1519,13 @@ microsoft.security.informationProtection.sensitivityLabel @defaults("id name") {
   parent microsoft.security.informationProtection.sensitivityLabel
 }
 
-// Microsoft policies
+// Microsoft Entra ID Policies
+//
+// Use this namespace to access tenant-wide Microsoft Entra ID policy
+// configuration. Exposes `authorizationPolicy`, `identitySecurityDefaultsEnforcementPolicy`,
+// `adminConsentRequestPolicy`, `permissionGrantPolicies`, `consentPolicySettings`,
+// `authenticationMethodsPolicy`, `activityBasedTimeoutPolicies`,
+// `externalIdentitiesPolicy`, and `crossTenantAccessPolicy`.
 microsoft.policies {
   // Authorization policy
   authorizationPolicy() dict
@@ -1410,7 +1560,12 @@ private microsoft.externalIdentitiesPolicy @defaults("displayName allowExternalI
   allowExternalIdentitiesToLeave bool
 }
 
-// Activity-based timeout policy
+// Microsoft Entra Activity-Based Timeout Policy
+//
+// Examine an activity-based timeout policy that automatically signs out
+// users after a period of inactivity in web sessions. Exposes the `displayName`,
+// `definition` (JSON-encoded policy rules), and `isOrganizationDefault` to
+// identify which policy is active as the tenant-wide default.
 microsoft.policies.activityBasedTimeoutPolicy @defaults("displayName isOrganizationDefault") {
   // Policy ID
   id string
@@ -1559,7 +1714,13 @@ private microsoft.crossTenantAccessPolicyDefault.invitationRedemptionIdentityPro
   primaryIdentityProviderPrecedenceOrder []string
 }
 
-// List of Microsoft Entra role definitions with optional filters
+// Microsoft Entra ID Role Definitions
+//
+// Iterate over role definitions available in the tenant. Supports optional
+// `filter` and `search` parameters to narrow results. Each entry is a
+// `microsoft.rolemanagement.roledefinition` exposing the role's `displayName`,
+// `description`, `isBuiltIn`, `isEnabled`, `rolePermissions`, and current
+// `assignments`.
 microsoft.roles {
   []microsoft.rolemanagement.roledefinition
 
@@ -1571,6 +1732,10 @@ microsoft.roles {
 }
 
 // DEPRECATED: use `microsoft.roles` instead
+//
+// DEPRECATED: use `microsoft.roles` instead. This namespace previously
+// exposed role definitions and assignments; use `microsoft.roles` for
+// role definitions going forward.
 microsoft.rolemanagement @maturity("deprecated") {
   // DEPRECATED: use `microsoft.roles` instead
   roleDefinitions() @maturity("deprecated") microsoft.roles
@@ -1610,7 +1775,13 @@ private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
   principal dict
 }
 
-// Microsoft device management
+// Microsoft Intune Device Management
+//
+// Use this namespace to access Microsoft Intune device management
+// configuration and inventory. Exposes `managedDevices` (enrolled devices
+// with compliance state, OS details, and encryption status),
+// `deviceConfigurations`, `deviceCompliancePolicies`, and
+// `deviceEnrollmentConfigurations`.
 microsoft.devicemanagement {
   managedDevices() []microsoft.devicemanagement.manageddevice
   // List of device configurations
@@ -1766,6 +1937,14 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
 }
 
 // Microsoft 365 Exchange Online
+//
+// Use this namespace to access Exchange Online configuration and security
+// settings. Exposes mail filtering policies (`malwareFilterPolicy`,
+// `hostedContentFilterPolicy`, `antiPhishPolicy`, `hostedOutboundSpamFilterPolicy`),
+// transport rules, safe links and attachment policies, DKIM signing configuration,
+// authentication policies, OWA mailbox policies, mailbox audit settings,
+// quarantine policies, retention policies, journal rules, report submission
+// policies, Teams protection policies, and organization-wide configuration.
 ms365.exchangeonline {
   // List of malware filter policies
   malwareFilterPolicy() []dict
@@ -1950,6 +2129,12 @@ private ms365.exchangeonline.mailbox @defaults("identity displayName auditEnable
 }
 
 // Microsoft 365 SharePoint Online
+//
+// Use this namespace to access SharePoint Online tenant configuration and
+// site inventory. Exposes `spoTenant` (tenant-wide settings), `spoTenantSyncClientRestriction`
+// (sync client access controls), `spoSites` (list of site collections with
+// their URL and custom script permissions), and `defaultLinkPermission`
+// (the default sharing link permission level for the tenant).
 ms365.sharepointonline {
   // SharePoint Online tenant
   spoTenant() dict
@@ -1970,6 +2155,12 @@ private ms365.sharepointonline.site {
 }
 
 // Microsoft 365 Teams
+//
+// Use this namespace to access Microsoft Teams configuration for the tenant.
+// Exposes `csTeamsClientConfiguration` (client feature controls),
+// `csTenantFederationConfiguration` (external access and federation settings),
+// `csTeamsMeetingPolicy` (meeting lobby, recording, and participant controls),
+// and `csTeamsMessagingPolicy` (messaging and security reporting controls).
 ms365.teams {
   // Teams client configuration
   csTeamsClientConfiguration() dict

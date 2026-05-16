@@ -4,7 +4,12 @@
 option provider = "go.mondoo.com/mql/v13/providers/cloudflare"
 option go_package = "go.mondoo.com/mql/v13/providers/cloudflare/resources"
 
-// Cloudflare provider
+// Cloudflare
+//
+// Use this resource to access Cloudflare zones, accounts, API tokens, and
+// account-level services. Query `zones` to enumerate DNS zones, `accounts`
+// for account-level configuration, and `apiTokens` for token inventory and
+// policy audits.
 cloudflare {
 	// List all zones
 	zones() []cloudflare.zone
@@ -16,7 +21,15 @@ cloudflare {
 	apiTokens() []cloudflare.apiToken
 }
 
-// Cloudflare DNS zone
+// Cloudflare DNS Zone
+//
+// Examine the configuration and security posture of a single Cloudflare DNS
+// zone. A zone corresponds to a registered domain managed through Cloudflare.
+// Query `settings` for TLS, WAF, and HSTS enforcement; `dns` for DNS records;
+// `rulesets` and `wafRules` for firewall policy; `certificatePacks` and
+// `customCertificates` for TLS certificates; `dnssec` for DNSSEC configuration;
+// `botManagement` for bot-mitigation settings; `emailRouting` for SPF/DKIM/DMARC
+// status; and `logpushJobs` for data-export configuration.
 private cloudflare.zone @defaults("name account.name") {
 	// Zone identifier
 	id string
@@ -229,7 +242,11 @@ private cloudflare.zone.certificatePack @defaults("id status") {
 	certificateAuthority string
 }
 
-// Cloudflare DNS
+// Cloudflare DNS namespace
+//
+// Use this resource to iterate over DNS records for a zone. Access it via
+// `cloudflare.zone.dns` and query `records` to enumerate all DNS record types
+// (A, AAAA, CNAME, MX, TXT, and others) with their content, TTL, and proxy status.
 private cloudflare.dns {
 	// List all DNS records
 	records() []cloudflare.dns.record
@@ -267,7 +284,12 @@ private cloudflare.dns.record @defaults("type content name") {
 	modifiedOn time
 }
 
-// Cloudflare account
+// Cloudflare Account
+//
+// Examine a Cloudflare account and its sub-resources. Query `settings` for
+// account-level preferences such as two-factor enforcement; `roles` for the
+// set of named roles defined in the account; `liveInputs` and `videos` for
+// Stream assets scoped to the account.
 private cloudflare.account @defaults("name") {
 	// Cloudflare account identifier
 	id string
@@ -294,7 +316,12 @@ private cloudflare.account @defaults("name") {
 	roles() []cloudflare.account.role
 }
 
-// Cloudflare API token (user-scoped)
+// Cloudflare API Token
+//
+// Examine a user-scoped Cloudflare API token. Query `status` to verify the
+// token is active (not disabled or expired), `expiresOn` and `notBefore` for
+// validity windows, `ipIn` and `ipNotIn` for IP-allowlist/blocklist enforcement,
+// and `policies` for the effect, resources, and permission groups the token grants.
 private cloudflare.apiToken @defaults("name status expiresOn") {
 	// Token identifier
 	id string
@@ -324,7 +351,11 @@ private cloudflare.account.settings {
 	enforceTwoFactor bool
 }
 
-// Cloudflare Stream namespace (live inputs and videos)
+// Cloudflare Stream namespace
+//
+// Use this resource to access Cloudflare Stream assets. Query `liveInputs`
+// to enumerate live-streaming inputs and `videos` to enumerate uploaded or
+// recorded video assets.
 private cloudflare.streams {}
 
 // Cloudflare live input (stream)
@@ -399,7 +430,11 @@ private cloudflare.streams.video @defaults("name id") {
 	uploaded time
 }
 
-// Cloudflare R2
+// Cloudflare R2 namespace
+//
+// Use this resource to access Cloudflare R2 object-storage resources for an
+// account. Query `buckets` to enumerate R2 buckets and inspect each bucket's
+// `name`, `location`, `createdOn`, `publicAccessEnabled`, and `publicAccessDomain`.
 private cloudflare.r2 @defaults("name location") {
 	// R2 buckets in the account
 	buckets() []cloudflare.r2.bucket
@@ -419,7 +454,14 @@ private cloudflare.r2.bucket {
   publicAccessDomain() string
 }
 
-// Cloudflare workers
+// Cloudflare Workers namespace
+//
+// Use this resource to access Cloudflare Workers deployments and Pages projects.
+// Query `workers` for script metadata (size, placement mode, LogPush status),
+// `pages` for Pages deployment details (environment, URL, aliases), `secrets`
+// for the inventory of secrets bound to worker scripts (metadata only — values
+// are never exposed), and `pageEnvVars` for the inventory of environment variables
+// across Pages project environments.
 private cloudflare.workers {
 	// List all workers
 	workers() []cloudflare.workers.worker
@@ -486,7 +528,17 @@ private cloudflare.workers.page @defaults("shortId") {
 	modifiedOn time
 }
 
-// Cloudflare One
+// Cloudflare One (Zero Trust) namespace
+//
+// Use this resource to audit Cloudflare Zero Trust configuration for an account.
+// Query `apps` for Access application settings (allowed IdPs, session duration,
+// cookie security); `identityProviders` for configured IdPs and SAML/SCIM settings;
+// `accessPolicies` and `accessGroups` for reusable policy components; `serviceTokens`
+// for machine-to-machine token inventory; `organization` for org-wide settings such
+// as auth domain and WARP session duration; `gatewayRules` for DNS/HTTP/L4 traffic
+// policies; `lists`, `locations`, and `dlpProfiles` for Gateway data sources;
+// `devices` for enrolled device inventory; and `devicePostureRules` and
+// `devicePostureIntegrations` for posture-check configuration.
 private cloudflare.one {
 	// Cloudflare Zero Trust applications
 	apps() []cloudflare.one.app

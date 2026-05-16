@@ -4,7 +4,13 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/okta"
 option go_package = "go.mondoo.com/mql/v13/providers/okta/resources"
 
-// Okta organization: users, groups, applications, policies, and access logs
+// Okta
+//
+// Use the Okta namespace to access users, groups, applications, policies,
+// trusted origins, network zones, authenticators, API tokens, and custom
+// roles configured in your Okta organization. Query `okta.organization`
+// for tenant-level settings such as billing contacts, threat insight
+// configuration, and security notification preferences.
 okta {
   // Okta users
   users() []okta.user
@@ -28,7 +34,14 @@ okta {
   apiTokens() []okta.api.token
 }
 
-// Okta organization
+// Okta Organization
+//
+// Examine tenant-level settings for your Okta organization. Covers identity
+// information such as `companyName`, `subdomain`, address, and contact
+// details, as well as operational fields like `status`, `created`, and
+// `expiresAt`. Computed methods expose the `billingContact`,
+// `technicalContact`, `securityNotificationEmails`, and
+// `threatInsightSettings` for the organization.
 okta.organization @defaults("companyName") {
   // ID of organization
   id string
@@ -76,7 +89,12 @@ okta.organization @defaults("companyName") {
   threatInsightSettings() okta.threatsConfiguration
 }
 
-// Okta policy
+// Okta Policies
+//
+// Iterate the policy collections available in your Okta organization. Provides
+// access to `password`, `mfaEnroll`, `signOn`, `oauthAuthorizationPolicy`,
+// `idpDiscovery`, `accessPolicy`, and `profileEnrollment` policy lists, each
+// returning `okta.policy` records with their associated rules.
 okta.policies {
   // Password policies
   password() []okta.policy
@@ -94,7 +112,13 @@ okta.policies {
   profileEnrollment() []okta.policy
 }
 
-// Okta user
+// Okta User
+//
+// Examine an individual Okta user account. Covers identity and lifecycle
+// fields such as `id`, `status`, `activated`, `created`, `lastLogin`, and
+// `passwordChanged`, plus the `profile` dict containing attributes like
+// email and login name. Computed methods expose the `roles` assigned to
+// the user and the MFA `factors` enrolled for the account.
 private okta.user @defaults("profile['email']" ){
   // Unique key for user
   id string
@@ -153,7 +177,14 @@ private okta.userFactor @defaults("factorType status") {
   profile dict
 }
 
-// Okta authenticator (admin-defined MFA factor catalog entry)
+// Okta Authenticator
+//
+// Examine an admin-defined MFA factor catalog entry in Okta. Covers identity
+// fields such as `id`, `key`, `name`, `type`, and `status`, along with
+// `settings` for the authenticator. Computed methods expose `providerType`,
+// `providerConfiguration`, `allowedFor` (the policy scope), and
+// `tokenLifetimeInMinutes` or `userVerification` for applicable authenticator
+// types.
 private okta.authenticator @defaults("name key status") {
   // Unique identifier of the authenticator
   id string
@@ -183,7 +214,12 @@ private okta.authenticator @defaults("name key status") {
   lastUpdated time
 }
 
-// Okta API token (used to authenticate to the Okta REST API)
+// Okta API Token
+//
+// Examine an API token used to authenticate to the Okta REST API. Covers
+// `id`, `name`, `clientName`, lifecycle timestamps (`created`, `expiresAt`,
+// `lastUpdated`), and `tokenWindow` (lifetime in ISO 8601 duration format).
+// The `user` method resolves the Okta user the token belongs to.
 private okta.api.token @defaults("name") {
   // Unique identifier of the API token
   id string
@@ -203,7 +239,11 @@ private okta.api.token @defaults("name") {
   user() okta.user
 }
 
-// Okta role
+// Okta Role
+//
+// Examine a role assigned to an Okta user or group. Covers `id`, `label`,
+// `type`, `assignmentType`, `status`, and lifecycle timestamps `created`
+// and `lastUpdated`.
 private okta.role @defaults("label status") {
   // The identifier of the role
   id string
@@ -221,7 +261,12 @@ private okta.role @defaults("label status") {
   type string
 }
 
-// Okta group
+// Okta Group
+//
+// Examine an Okta group. Covers `id`, `name`, `description`, `type`,
+// `profile`, and lifecycle timestamps `created`, `lastUpdated`, and
+// `lastMembershipUpdated`. Computed methods expose `members` (the list of
+// `okta.user` accounts in the group) and `roles` assigned to the group.
 private okta.group @defaults("name") {
   // Unique key for the group
   id string
@@ -245,7 +290,10 @@ private okta.group @defaults("name") {
   roles() []okta.role
 }
 
-// Okta group rule
+// Okta Group Rule
+//
+// Examine an Okta group rule that automatically assigns users to groups based
+// on conditions. Covers `id`, `name`, `status`, and `type`.
 private okta.groupRule @defaults("name") {
   // Unique key for the group rule
   id string
@@ -257,7 +305,13 @@ private okta.groupRule @defaults("name") {
 	type string
 }
 
-// Okta application
+// Okta Application
+//
+// Examine an Okta application integration. Covers `id`, `name`, `label`,
+// `signOnMode`, `status`, `features`, `credentials`, `settings`, `profile`,
+// `licensing`, `visibility`, and lifecycle timestamps. The `signingKeys`
+// method returns the `okta.application.key` records (SAML/OIDC signing
+// certificates) published for the application.
 private okta.application @defaults("name") {
   // Unique key for the application
   id string
@@ -323,7 +377,12 @@ private okta.application.key @defaults("kid status expiresAt") {
   e string
 }
 
-// Okta domain
+// Okta Domain
+//
+// Examine a custom domain configured for an Okta organization. Covers `id`,
+// `domain` name, `validationStatus` (NOT_STARTED, IN_PROGRESS, VERIFIED, or
+// COMPLETED), `dnsRecords` required for domain verification, and
+// `publicCertificate` metadata for the domain's TLS certificate.
 private okta.domain @defaults("domain") {
   // Domain ID
   id string
@@ -337,7 +396,13 @@ private okta.domain @defaults("domain") {
   publicCertificate dict
 }
 
-// Okta policy
+// Okta Policy
+//
+// Examine an Okta policy controlling authentication and access behavior.
+// Covers `id`, `name`, `description`, `type`, `status`, `priority`,
+// `system` (whether admin-editable), `conditions`, `settings`, and lifecycle
+// timestamps. The `rules` method returns the ordered list of `okta.policyRule`
+// records attached to the policy.
 private okta.policy @defaults("name") {
   // Identifier of the policy
   id string
@@ -389,7 +454,11 @@ private okta.policyRule @defaults("name") {
   lastUpdated time
 }
 
-// Okta trusted origin
+// Okta Trusted Origin
+//
+// Examine a trusted origin configured in an Okta organization. Covers `id`,
+// `name`, `origin` URL, `status`, `scopes` (the list of scope types for which
+// the origin is trusted), and audit fields `createdBy` and `lastUpdatedBy`.
 private okta.trustedOrigin @defaults("name") {
   // Unique identifier for the trusted origin
   id string
@@ -411,7 +480,13 @@ private okta.trustedOrigin @defaults("name") {
   status string
 }
 
-// Okta network zone
+// Okta Network Zone
+//
+// Examine an Okta network zone used to allow or block access based on
+// IP address, ASN, or geolocation. Covers `id`, `name`, `type`, `status`,
+// `usage` (POLICY or BLOCKLIST), `system`, `proxyType`, `asns`, `gateways`,
+// `proxies`, and `locations`. Use network zones in policy conditions to
+// restrict sign-on to known corporate networks.
 private okta.network @defaults("name type") {
   // Unique identifier for the network zone
   id string
@@ -441,7 +516,12 @@ private okta.network @defaults("name type") {
   gateways []dict
 }
 
-// Okta ThreatInsight settings
+// Okta ThreatInsight Configuration
+//
+// Examine the ThreatInsight settings for an Okta organization. Covers the
+// `action` taken on suspicious IPs (audit or block), the `excludeZones`
+// list of `okta.network` zones exempt from ThreatInsight evaluation, and
+// lifecycle timestamps `created` and `lastUpdated`.
 private okta.threatsConfiguration @defaults("action") {
   // Action
   action string
@@ -454,7 +534,11 @@ private okta.threatsConfiguration @defaults("action") {
 
 }
 
-// Okta custom role
+// Okta Custom Role
+//
+// Examine a custom administrator role defined in an Okta organization. Covers
+// `id`, `label`, `description`, and `permissions` (the list of permission
+// strings granted by the role).
 private okta.customRole @defaults("label") {
   // Identifier for the custom role
   id string

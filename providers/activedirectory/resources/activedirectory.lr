@@ -311,7 +311,13 @@ activedirectory.group @defaults("sAMAccountName groupType") {
   ouPath string
 }
 
-// Active Directory group member (can be user, group, or computer)
+// Active Directory group member
+//
+// Examine a single member entry returned by `activedirectory.group.members()`.
+// Each entry records the sAMAccountName or common name in `name`, the full
+// distinguished name, the object SID, and the `type` discriminator —
+// `user`, `group`, or `computer` — so policy can filter by member category
+// without resolving the full object.
 activedirectory.groupMember @defaults("name type") {
   // sAMAccountName or name
   name string
@@ -446,6 +452,12 @@ activedirectory.gpo @defaults("displayName") {
 }
 
 // Active Directory GPO link
+//
+// Examine a single link record associating a GPO with an OU, domain, or
+// site. The `target` field is the distinguished name of the container the
+// policy is applied to. `order` is the link precedence within that container
+// (1 is highest, applied last). `enforced` indicates the link cannot be
+// blocked by child OUs, and `enabled` controls whether the link is active.
 activedirectory.gpoLink @defaults("target") {
   // Target DN or site this link applies to
   target string

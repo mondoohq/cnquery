@@ -4,7 +4,15 @@
 option provider = "go.mondoo.com/mql/v13/providers/proxmox"
 option go_package = "go.mondoo.com/mql/v13/providers/proxmox/resources"
 
-// Proxmox VE cluster root resource
+// Proxmox VE
+//
+// Use this resource to access the top-level Proxmox Virtual Environment
+// cluster. Query version and system information via `about`, enumerate
+// all virtual machines with `vms`, list cluster nodes with `nodes`,
+// inspect storage pools via `storages`, manage resource pools with
+// `pools`, and audit users and roles through `users` and `roles`.
+// Cluster-level HA, quorum, and firewall configuration is available
+// through `cluster`.
 proxmox {
   // Version and system information
   about() dict
@@ -24,7 +32,13 @@ proxmox {
   roles() []proxmox.role
 }
 
-// Proxmox VE cluster information
+// Proxmox VE cluster
+//
+// Examine cluster-level configuration and health. Includes the cluster
+// `name`, `version`, quorum status via `quorate`, and `nodeCount`.
+// High-availability resources are listed through `haResources`,
+// cluster-wide firewall rules through `firewallRules`, and global
+// cluster options through `options`.
 proxmox.cluster @defaults("name quorate") {
   // Cluster name
   name string
@@ -42,7 +56,13 @@ proxmox.cluster @defaults("name quorate") {
   options() dict
 }
 
-// High-availability resource managed by the cluster
+// Proxmox VE cluster HA resource
+//
+// Examine a high-availability resource managed by the cluster. Each
+// entry is identified by `id` (e.g. `vm:100`) and `type` (vm or ct),
+// and reports its current `status`, assigned `node`, desired `state`
+// (started, stopped, disabled), HA `group`, and the maximum number of
+// restart and relocate attempts via `maxRestart` and `maxRelocate`.
 proxmox.cluster.haResource @defaults("id type status") {
   // Resource ID (e.g. vm:100)
   id string
@@ -62,7 +82,19 @@ proxmox.cluster.haResource @defaults("id type status") {
   group string
 }
 
-// Proxmox VE cluster node (equivalent to ESXi host)
+// Proxmox VE node
+//
+// Examine a physical or virtual host in the Proxmox cluster, identified
+// by `name`. Reports hardware details including CPU model, socket and
+// core counts, memory and swap totals, as well as current utilization
+// via `cpuUsage`, `memUsed`, and `memFree`. System information covers
+// the running `kernelVersion`, `pveVersion`, and `uptime`. Network
+// interfaces are available through `networks`, DNS configuration
+// through `dns`, and systemd service states through `services`.
+// Security-relevant data includes TLS `certificates`, APT
+// `repositories`, available `updates`, and node-level `firewallRules`.
+// VMs running on the node are listed via `vms`, and subscription
+// status is available through `subscription`.
 proxmox.node @defaults("name status") {
   // Node hostname
   name string
@@ -142,7 +174,12 @@ proxmox.node @defaults("name status") {
   vms() []proxmox.vm
 }
 
-// Package update available on a Proxmox node
+// Proxmox VE node package update
+//
+// Examine an available package update on a Proxmox node. Reports the
+// `package` name, `installedVersion`, and available `newVersion`.
+// The `severity` field indicates urgency (important, recommended,
+// optional), enabling audits for outstanding security patches.
 proxmox.node.update @defaults("package newVersion severity") {
   // Package name
   package string
@@ -154,7 +191,19 @@ proxmox.node.update @defaults("package newVersion severity") {
   severity string
 }
 
-// Proxmox VE virtual machine (QEMU)
+// Proxmox VE virtual machine
+//
+// Examine a QEMU virtual machine in the cluster, identified by numeric
+// `id` and display `name`. Reports current `status` (running, stopped,
+// paused), the `node` it runs on, and resource usage including `cpu`,
+// `mem`, `disk`, `netin`, and `netout`. Configuration details — OS
+// type, machine type, BIOS, boot order, guest agent state, protection,
+// description, and tags — are available as computed fields. Network
+// interfaces are listed through `networks`, storage devices through
+// `disks`, and point-in-time `snapshots` through the snapshots field.
+// VM-level firewall rules are accessible via `firewallRules`, and
+// installed packages with available updates via `updates` (requires
+// the QEMU guest agent).
 proxmox.vm @defaults("id name status") {
   // VMID
   id int
@@ -230,7 +279,12 @@ proxmox.vm @defaults("id name status") {
   updates() []proxmox.vm.update
 }
 
-// Network interface attached to a VM
+// Proxmox VE VM network interface
+//
+// Examine a network interface attached to a virtual machine. The `id`
+// field identifies the slot (e.g. `net0`, `net1`). Reports the NIC
+// `model` (virtio, e1000, etc.), `macAddress`, connected `bridge`,
+// VLAN `tag`, and whether the per-NIC `firewall` is enabled.
 proxmox.vm.network @defaults("id model bridge") {
   // Interface ID (net0, net1, ...)
   id string
@@ -246,7 +300,13 @@ proxmox.vm.network @defaults("id model bridge") {
   firewall bool
 }
 
-// Disk device attached to a VM
+// Proxmox VE VM disk
+//
+// Examine a disk device attached to a virtual machine. The `id` field
+// identifies the controller slot (e.g. `scsi0`, `virtio0`, `ide0`).
+// Reports the `storage` pool name, disk `size` in bytes, `format`
+// (qcow2, raw, vmdk), cache `cache` mode, and whether `iothread` and
+// `backup` are enabled for this disk.
 proxmox.vm.disk @defaults("id storage size") {
   // Disk ID (scsi0, virtio0, ide0, ...)
   id string
@@ -264,7 +324,12 @@ proxmox.vm.disk @defaults("id storage size") {
   backup bool
 }
 
-// VM snapshot
+// Proxmox VE VM snapshot
+//
+// Examine a point-in-time snapshot of a virtual machine. Reports the
+// snapshot `name`, `description`, `parent` snapshot name, creation
+// time via `snaptime` (Unix timestamp), and whether VM RAM state is
+// captured in `vmstate`.
 proxmox.vm.snapshot @defaults("name snaptime") {
   // Snapshot name
   name string
@@ -278,7 +343,13 @@ proxmox.vm.snapshot @defaults("name snaptime") {
   vmstate bool
 }
 
-// Software update information for a VM (via QEMU Guest Agent)
+// Proxmox VE VM package update
+//
+// Examine an installed package and its update status on a virtual
+// machine, retrieved via the QEMU guest agent. Reports the package
+// `name`, `installedVersion`, available `newVersion`, whether an
+// update is available via `upgradable`, and `severity`
+// (security, enhancement).
 proxmox.vm.update @defaults("name severity upgradable") {
   // Package name
   name string
@@ -293,6 +364,13 @@ proxmox.vm.update @defaults("name severity upgradable") {
 }
 
 // Proxmox VE storage pool
+//
+// Examine a storage pool configured in the cluster, identified by
+// `id`. Reports the storage `type` (dir, lvm, lvmthin, nfs, cifs,
+// zfspool, ceph, etc.), allowed `content` types, filesystem `path`
+// for local types, and whether the pool is `enabled` and `shared`
+// across nodes. Capacity data is available via `total`, `used`,
+// `available`, and `usagePercent`.
 proxmox.storage @defaults("id type enabled") {
   // Storage ID
   id string
@@ -316,7 +394,11 @@ proxmox.storage @defaults("id type enabled") {
   usagePercent float
 }
 
-// Resource pool
+// Proxmox VE resource pool
+//
+// Examine a resource pool in the cluster, identified by `id`. Pools
+// group VMs and storage for access-control purposes. The `comment`
+// field holds the pool description.
 proxmox.pool @defaults("id") {
   // Pool ID
   id string
@@ -324,7 +406,15 @@ proxmox.pool @defaults("id") {
   comment string
 }
 
-// Network interface on a node (bridge, bond, physical, VLAN)
+// Proxmox VE node network interface
+//
+// Examine a network interface on a Proxmox node, identified by `iface`
+// (e.g. `vmbr0`, `eth0`). Reports the interface `type` (bridge, bond,
+// eth, vlan, OVSBridge, etc.), whether it is `active` and `autostart`
+// enabled, the address assignment `method` (static, dhcp, manual),
+// and addressing details including `address`, `netmask`, `gateway`,
+// and `cidr`. Bridge interfaces list their member ports in
+// `bridgePorts`.
 proxmox.network @defaults("iface type active") {
   // Interface name (e.g. vmbr0, eth0)
   iface string
@@ -350,7 +440,11 @@ proxmox.network @defaults("iface type active") {
   comments string
 }
 
-// DNS configuration on a node
+// Proxmox VE node DNS configuration
+//
+// Examine the DNS resolver configuration on a Proxmox node. Reports
+// the `search` domain and up to three nameservers via `dns1`, `dns2`,
+// and `dns3`.
 proxmox.dns @defaults("search dns1") {
   // DNS search domain
   search string
@@ -362,7 +456,13 @@ proxmox.dns @defaults("search dns1") {
   dns3 string
 }
 
-// systemd service on a node
+// Proxmox VE node systemd service
+//
+// Examine a systemd service on a Proxmox node, identified by `name`.
+// Reports the current runtime `state` (running, dead, etc.), service
+// `description`, and `unitFileState` (enabled, disabled, static,
+// masked). Useful for auditing whether critical Proxmox services such
+// as `pve-cluster`, `pveproxy`, or `corosync` are active.
 proxmox.service @defaults("name state") {
   // Service unit name
   name string
@@ -374,7 +474,14 @@ proxmox.service @defaults("name state") {
   unitFileState string
 }
 
-// TLS/SSL certificate on a node
+// Proxmox VE node TLS certificate
+//
+// Examine a TLS/SSL certificate installed on a Proxmox node. Reports
+// the certificate `subject`, `issuer`, `fingerprint`, validity window
+// via `notBefore` and `notAfter`, Subject Alternative Names in `san`,
+// and the public key details `publicKeyType` and `publicKeyBits`.
+// The `filename` field identifies which certificate file this entry
+// represents.
 proxmox.certificate @defaults("subject notAfter") {
   // Certificate filename
   filename string
@@ -396,7 +503,13 @@ proxmox.certificate @defaults("subject notAfter") {
   subject string
 }
 
-// Proxmox subscription information
+// Proxmox VE subscription
+//
+// Examine the Proxmox support subscription for a node. Reports
+// `status` (active, notfound, invalid), subscription `level` (basic,
+// standard, premium), `productName`, `key`, `serverId`, registration
+// date via `regDate`, and the next renewal date via `nextDueDate`.
+// Useful for compliance checks that require an active subscription.
 proxmox.subscription @defaults("status level") {
   // Subscription status (active, notfound, invalid)
   status string
@@ -414,7 +527,14 @@ proxmox.subscription @defaults("status level") {
   key string
 }
 
-// APT repository configured on a node
+// Proxmox VE node APT repository
+//
+// Examine an APT repository configured on a Proxmox node, identified
+// by `id`. Reports the repository `name`, whether it is `enabled`,
+// declared `types` (deb, deb-src), `uris`, `suites` (e.g. bookworm,
+// stable), `components` (main, contrib, etc.), and `fileType`
+// (sources.list or sources.list.d entry). Useful for verifying that
+// only official Proxmox repositories are active.
 proxmox.repository @defaults("name enabled") {
   // Repository identifier
   id string
@@ -434,7 +554,14 @@ proxmox.repository @defaults("name enabled") {
   fileType string
 }
 
-// Firewall rule
+// Proxmox VE firewall rule
+//
+// Examine a firewall rule applied at the cluster, node, or VM level.
+// Rules are ordered by `pos` and specify a `type` (in, out, group),
+// `action` (ACCEPT, DROP, REJECT), `proto`, source (`source`,
+// `sport`), and destination (`dest`, `dport`). Additional fields
+// include `iface`, security `macro`, `log` level, `comment`, and
+// whether the rule is `enable`d.
 proxmox.firewall.rule @defaults("pos action") {
   // Rule position
   pos int
@@ -464,7 +591,13 @@ proxmox.firewall.rule @defaults("pos action") {
   sport string
 }
 
-// Proxmox VE user account
+// Proxmox VE user
+//
+// Examine a user account in the Proxmox cluster, identified by `id`
+// in the form `user@realm`. Reports whether the account is `enable`d,
+// its `email`, `firstname`, `lastname`, `realm` (pam, pve, ldap, ad),
+// `groups` membership, and `expire` time (Unix timestamp, 0 = never).
+// API tokens belonging to the user are listed through `tokens`.
 proxmox.user @defaults("id enable") {
   // User ID (user@realm)
   id string
@@ -486,7 +619,14 @@ proxmox.user @defaults("id enable") {
   tokens() []proxmox.token
 }
 
-// API token for a user
+// Proxmox VE API token
+//
+// Examine an API token belonging to a Proxmox user, identified by
+// `id` in the form `user@realm!tokenid`. Reports the token `comment`,
+// `expire` time (Unix timestamp, 0 = never), and whether privilege
+// separation is active via `privsep`. When `privsep` is true the
+// token's permissions are limited to a subset of the owner's
+// privileges.
 proxmox.token @defaults("id privsep") {
   // Token ID (user@realm!tokenid)
   id string
@@ -498,7 +638,13 @@ proxmox.token @defaults("id privsep") {
   privsep bool
 }
 
-// Access control role
+// Proxmox VE access control role
+//
+// Examine a role defined in the Proxmox cluster, identified by `id`.
+// Reports the list of `privs` (privileges) assigned to the role and
+// whether it is a built-in role via `special`. Roles are assigned to
+// users and groups on paths to implement Proxmox's path-based
+// access-control model.
 proxmox.role @defaults("id") {
   // Role ID
   id string

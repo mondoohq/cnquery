@@ -212,6 +212,10 @@ private audit.cve {
 machine {}
 
 // SMBIOS BIOS information
+//
+// Examine the firmware vendor, version string, and release date as reported
+// by SMBIOS Type 1 tables. Used to inventory BIOS versions across a fleet
+// and to flag hosts that have not applied vendor firmware updates.
 machine.bios {
   // BIOS vendor
   vendor string
@@ -222,6 +226,10 @@ machine.bios {
 }
 
 // SMBIOS system information
+//
+// Examine the manufacturer, product name, version, serial number, UUID,
+// SKU number, and family string as reported in SMBIOS Type 1 tables.
+// Useful for asset inventory, warranty lookups, and supply-chain reviews.
 machine.system {
   // System manufacturer name (SMBIOS Type 1)
   manufacturer string
@@ -240,6 +248,10 @@ machine.system {
 }
 
 // SMBIOS baseboard (or module) information
+//
+// Examine the baseboard manufacturer, product name, version, serial number,
+// and asset tag as reported in SMBIOS Type 2 tables. Used for hardware
+// inventory and to correlate physical boards with asset tracking systems.
 machine.baseboard {
   // Baseboard manufacturer name (SMBIOS Type 2)
   manufacturer string
@@ -254,6 +266,10 @@ machine.baseboard {
 }
 
 // SMBIOS system enclosure or chassis
+//
+// Examine the chassis manufacturer, version, serial number, and asset tag
+// as reported in SMBIOS Type 3 tables. Useful for physical-hardware audits
+// and correlating enclosures with asset-tracking records.
 machine.chassis {
   // Manufacturer
   manufacturer string
@@ -266,6 +282,11 @@ machine.chassis {
 }
 
 // CPU information
+//
+// Examine the CPU manufacturer, model name, number of physical processor
+// packages (sockets), and total physical core count as reported by the
+// system. Used for capacity planning, licensing audits, and
+// hardware-baseline policies.
 machine.cpu @defaults("manufacturer model processorCount coreCount") {
   // CPU manufacturer
   manufacturer string
@@ -277,7 +298,13 @@ machine.cpu @defaults("manufacturer model processorCount coreCount") {
   coreCount int
 }
 
-// Secure Boot status (Linux only, reads from EFI variables)
+// Secure Boot status
+//
+// Examine whether the system booted in EFI/UEFI mode (`efi`), whether
+// Secure Boot is currently enabled (`enabled`), and whether it is in setup
+// mode (`setupMode`, meaning keys can be modified without authentication).
+// Read from EFI variables on Linux. Used to assert that Secure Boot is
+// enforced and that setup mode is not active.
 machine.secureboot @defaults("enabled") {
   // Whether the system is booted in EFI/UEFI mode
   efi() bool
@@ -322,6 +349,10 @@ os {
 }
 
 // Operating system date and timezone information
+//
+// Examine the current system clock time and the configured timezone string
+// (e.g., "America/New_York", "UTC"). Used to verify that clocks are
+// synchronized and that the correct timezone is set.
 os.date @defaults("time timezone") {
   // Current system time
   time() time
@@ -330,6 +361,11 @@ os.date @defaults("time timezone") {
 }
 
 // Operating system update information
+//
+// Examine a single pending OS update: its name, category, severity,
+// whether it requires a restart, and the package format it belongs to.
+// Iterated from `os.updates()` to audit patch state and prioritize
+// outstanding updates by severity.
 os.update @defaults("name")  {
   // Name of the update
   name string
@@ -562,7 +598,13 @@ private file.permissions @defaults("string") {
 // locate files on the asset rather than enumerating known paths.
 files {}
 
-// Find files on the system
+// File search results
+//
+// Examine files discovered by a recursive filesystem walk starting at
+// `from`. Narrow results with `type` (file, directory, device, etc.),
+// `regex` (name pattern), `permissions` (octal mode), `name` (exact name),
+// `depth` (traversal depth), and `xdev` (stay on one device). Returns the
+// matching `[]file` list for content or permission audits.
 files.find {
   []file
   // Sets the starting point for the search operation
@@ -763,6 +805,12 @@ authorizedkeys {
 }
 
 // SSH authorized key
+//
+// Examine a single entry from an `authorized_keys` file: the source line
+// number, key type, key material, label, and any SSH options such as
+// `command=`, `from=`, or `no-port-forwarding`. Used to audit which keys
+// grant SSH access to a user and to flag entries that lack source or
+// command restrictions.
 authorizedkeys.entry @defaults("key") {
   // Line of the key
   line int
@@ -1202,7 +1250,12 @@ journald.config {
   sections(file) []journald.config.section
 }
 
-// A section in journald configuration
+// journald configuration section
+//
+// Examine a single named section (e.g., "Journal", "Upload") from the
+// journald configuration, including its `params` list of key-value pairs.
+// Used together with `journald.config` to audit individual journald settings
+// within a specific section.
 journald.config.section @defaults("name") {
   // Name of the section (e.g., "Journal", "Upload")
   name string
@@ -1210,7 +1263,12 @@ journald.config.section @defaults("name") {
   params []journald.config.section.param
 }
 
-// A key-value parameter inside a journald configuration section
+// journald configuration parameter
+//
+// Examine a single key-value directive within a journald configuration
+// section: the parameter `name` (e.g., "Storage", "Compress") and its
+// `value`. Iterated from `journald.config.section.params` to assert
+// specific journald settings.
 journald.config.section.param @defaults("name value") {
   // Configuration parameter name
   name string
@@ -1331,6 +1389,11 @@ kernel @defaults("info") {
 }
 
 // System kernel module information
+//
+// Examine a single kernel module: its `name`, in-memory `size`, and
+// whether it is currently `loaded`. Initialize by name (e.g.,
+// `kernel.module(name: "nf_conntrack")`) to check a specific module,
+// or iterate from `kernel.modules()` to audit the full loaded-module list.
 kernel.module @defaults("name loaded") {
   init(name string)
 
@@ -1636,7 +1699,13 @@ private iptables.chain @defaults("table name policy") {
   rules []iptables.entry
 }
 
-// Individual iptables entry
+// Individual iptables rule entry
+//
+// Examine a single iptables rule: packet and byte counters, target action,
+// protocol, input/output interfaces, source and destination addresses,
+// IP options, and the chain/table identifier used as the resource ID.
+// Iterated from `iptables.input()`, `iptables.output()`, or
+// `iptables.forward()` to audit individual packet-filter rules.
 iptables.entry {
   // Line number of statistic, which is used to create the ID
   lineNumber int
@@ -2024,7 +2093,12 @@ auditpol {
   []auditpol.entry
 }
 
-// Windows audit policy
+// Windows audit policy entry
+//
+// Examine a single Windows audit-policy entry: the machine name, policy
+// target, subcategory name and GUID, inclusion setting, and exclusion
+// setting. Iterated from `auditpol` to assert that specific subcategories
+// (e.g., Logon, Account Management) have the expected audit settings.
 auditpol.entry  @defaults("subcategory inclusionsetting exclusionsetting") {
   // Machine name
   machinename string
@@ -2208,6 +2282,11 @@ lsblk {
 }
 
 // Unix block device
+//
+// Examine a single block device reported by `lsblk`: its device `name`,
+// filesystem type (`fstype`), `label`, UUID, and `mountpoints` list. Iterated
+// from `lsblk` to audit disk layout, filesystem labels, and mount
+// configurations.
 lsblk.entry {
   // Device name
   name string
@@ -2392,6 +2471,11 @@ mount {
 }
 
 // Unix mount point
+//
+// Examine a single mounted filesystem: the backing `device`, the `path`
+// where it is attached, the `fstype`, mount `options`, whether it is
+// currently `mounted`, and the total, used, and available bytes. Initialize
+// by path (e.g., `mount.point(path: "/var")`) or iterate from `mount`.
 mount.point @defaults("device path fstype") {
   init(path string)
   // Block device or filesystem source backing the mount (e.g., /dev/sda1)
@@ -2420,6 +2504,12 @@ shadow {
 }
 
 // Shadowed password file entry
+//
+// Examine a single line from `/etc/shadow`: the username, hashed password
+// field, date of last change, minimum and maximum password age in days,
+// warning period, inactivity period, and account expiry date. Used to
+// audit password aging policy compliance and detect accounts with no
+// expiry or with locked passwords.
 shadow.entry {
   // Username from the /etc/shadow entry
   user string
@@ -2452,6 +2542,12 @@ yum {
 }
 
 // Yum repository resource
+//
+// Examine a single configured Yum/DNF repository: its `id`, human-readable
+// `name`, `status`, `baseurl` list, expiry indicator, configuration `file`,
+// revision, package count, size, mirrors, and whether it is currently
+// `enabled`. Initialize by ID (e.g., `yum.repo(id: "baseos")`) or iterate
+// from `yum.repos()`.
 yum.repo {
   init(id string)
   // Repository ID
@@ -2496,6 +2592,11 @@ registrykey @defaults("path") {
 }
 
 // Windows registry key property
+//
+// Examine a single named value within a registry key: the key `path`, value
+// `name`, whether it `exists`, the registry `type` (e.g., REG_SZ, REG_DWORD),
+// and the parsed `data`. Initialize by path and name to look up a specific
+// value, or iterate from `registrykey.items()`.
 registrykey.property @defaults("path name") {
   init(path string, name string)
   // Registry key path
@@ -2570,6 +2671,11 @@ python {
 }
 
 // Python package information
+//
+// Examine a single installed Python package: name, version, license, author,
+// summary, required Python version, project URLs, package URL (`purl`), CPEs,
+// and the full transitive `dependencies()` list. Used to inventory Python
+// dependencies and correlate them with vulnerability data.
 python.package @defaults("name version") {
   init(path? string)
   // ID is the python.package unique identifier
@@ -2628,6 +2734,11 @@ npm.packages {
 }
 
 // npm package dependency
+//
+// Examine a single npm package: its unique `id`, `name`, `version`,
+// `purl`, CPEs, and the files that contributed it. Iterated from
+// `npm.packages` to audit the full dependency tree or from
+// `npm.packages.directDependencies()` for top-level deps only.
 npm.package @defaults("name version purl") {
   // ID is the npm.package unique identifier
   id string
@@ -2665,6 +2776,10 @@ go.packages {
 }
 
 // Go module dependency
+//
+// Examine a single Go module: its unique `id`, module path as `name`,
+// `version`, `purl`, CPEs, and the files that contributed it. Iterated
+// from `go.packages` or `go.packages.directDependencies()`.
 go.package @defaults("name version purl") {
   // ID is the go.package unique identifier
   id string
@@ -2702,6 +2817,11 @@ java.packages {
 }
 
 // Java package (Maven, Gradle, or JAR archive)
+//
+// Examine a single Java artifact: its unique `id`, `name` in
+// `groupId:artifactId` form, `version`, `purl`, CPEs, and the files that
+// contributed it. Iterated from `java.packages` or
+// `java.packages.directDependencies()`.
 java.package @defaults("name version purl") {
   // ID is the java.package unique identifier
   id string
@@ -2739,6 +2859,10 @@ rust.packages {
 }
 
 // Rust/Cargo crate dependency
+//
+// Examine a single Rust crate: its unique `id`, crate `name`, `version`,
+// `purl`, CPEs, and the files that contributed it. Iterated from
+// `rust.packages` or `rust.packages.directDependencies()`.
 rust.package @defaults("name version purl") {
   // ID is the rust.package unique identifier
   id string
@@ -2776,6 +2900,10 @@ dotnet.packages {
 }
 
 // .NET / NuGet package dependency
+//
+// Examine a single .NET package: its unique `id`, `name`, `version`, `purl`,
+// CPEs, and the files that contributed it. Iterated from `dotnet.packages`
+// or `dotnet.packages.directDependencies()`.
 dotnet.package @defaults("name version purl") {
   // ID is the dotnet.package unique identifier
   id string
@@ -2813,6 +2941,11 @@ php.packages {
 }
 
 // PHP / Composer package dependency
+//
+// Examine a single PHP package: its unique `id`, `name` in
+// `vendor/package` form, `version`, `purl`, CPEs, and the files that
+// contributed it. Iterated from `php.packages` or
+// `php.packages.directDependencies()`.
 php.package @defaults("name version purl") {
   // ID is the php.package unique identifier
   id string
@@ -2844,6 +2977,11 @@ githubactions.packages {
 }
 
 // GitHub Actions action reference
+//
+// Examine a single GitHub Actions action used in workflow files: its unique
+// `id`, `name` in `owner/repo` or `owner/repo/path` form, `version` (tag,
+// branch, or commit SHA), `purl`, and the workflow files that reference it.
+// Iterated from `githubactions.packages`.
 githubactions.package @defaults("name version purl") {
   // ID is the githubactions.package unique identifier
   id string
@@ -2873,6 +3011,10 @@ swift.packages {
 }
 
 // Swift package dependency
+//
+// Examine a single Swift package: its unique `id`, `name`, `version`,
+// `purl`, CPEs, and the files that contributed it. Iterated from
+// `swift.packages`.
 swift.package @defaults("name version purl") {
   // ID is the swift.package unique identifier
   id string
@@ -2907,6 +3049,11 @@ terraform.packages {
 }
 
 // Terraform provider dependency
+//
+// Examine a single Terraform provider pinned in `.terraform.lock.hcl`:
+// its unique `id`, `name` in `namespace/type` form, `version`, `purl`,
+// CPEs, and the lock files that reference it. Iterated from
+// `terraform.packages`.
 terraform.package @defaults("name version purl") {
   // ID is the terraform.package unique identifier
   id string
@@ -3092,6 +3239,10 @@ ruby.packages {
 }
 
 // Ruby gem package
+//
+// Examine a single Ruby gem: its unique `id`, gem `name`, `version`,
+// `purl`, CPEs, and the files that contributed it. Iterated from
+// `ruby.packages` or `ruby.packages.directDependencies()`.
 ruby.package @defaults("name version purl") {
   // ID is the ruby.package unique identifier
   id string
@@ -3129,6 +3280,10 @@ dart.packages {
 }
 
 // Dart/Flutter package dependency
+//
+// Examine a single Dart/Flutter package: its unique `id`, `name`, `version`,
+// `purl`, CPEs, and the files that contributed it. Iterated from
+// `dart.packages` or `dart.packages.directDependencies()`.
 dart.package @defaults("name version purl") {
   // ID is the dart.package unique identifier
   id string
@@ -3160,6 +3315,10 @@ haskell.packages {
 }
 
 // Haskell package dependency
+//
+// Examine a single Haskell package from a Stack or Cabal lock file: its
+// unique `id`, `name`, `version`, `purl`, and the files that contributed it.
+// Iterated from `haskell.packages`.
 haskell.package @defaults("name version purl") {
   // ID is the haskell.package unique identifier
   id string
@@ -3189,6 +3348,10 @@ elixir.packages {
 }
 
 // Elixir Hex package dependency
+//
+// Examine a single Elixir Hex package from a mix.lock file: its unique
+// `id`, `name`, `version`, `purl`, and the files that contributed it.
+// Iterated from `elixir.packages`.
 elixir.package @defaults("name version purl") {
   // ID is the elixir.package unique identifier
   id string
@@ -3218,6 +3381,10 @@ erlang.packages {
 }
 
 // Erlang Hex package dependency
+//
+// Examine a single Erlang Hex package from a rebar.lock file: its unique
+// `id`, `name`, `version`, `purl`, and the files that contributed it.
+// Iterated from `erlang.packages`.
 erlang.package @defaults("name version purl") {
   // ID is the erlang.package unique identifier
   id string
@@ -3247,6 +3414,10 @@ prolog.packages {
 }
 
 // SWI-Prolog pack
+//
+// Examine a single SWI-Prolog pack: its unique `id`, pack `name`,
+// `version`, `purl`, and the files that contributed it. Iterated from
+// `prolog.packages`.
 prolog.package @defaults("name version purl") {
   // ID is the prolog.package unique identifier
   id string
@@ -3751,7 +3922,12 @@ private launchd.job @defaults("label type") {
   content dict
 }
 
-// Windows hotfix resource
+// Windows hotfix
+//
+// Examine a single installed Windows hotfix: its `hotfixId` (e.g., "KB5034441"),
+// hotfix `description` type, knowledge-base `caption` URL, installation
+// date, and the user who installed it. Iterated from `windows.hotfixes()`
+// to audit patch compliance.
 windows.hotfix {
   init(hotfixId string)
   // Hotfix ID
@@ -3811,7 +3987,12 @@ windows.firewall {
 }
 
 // Windows Firewall profile entry
-// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallprofile
+//
+// Examine the per-profile firewall settings for one of the three Windows
+// Firewall profiles (Domain, Private, Public): whether the firewall is
+// enabled, default inbound and outbound actions, local rule merge policies,
+// unicast response behavior, stealth mode for IPsec, and log settings
+// including max log size, allowed/blocked packet logging, and log file name.
 windows.firewall.profile {
   instanceID string
   // Name of the profile
@@ -3851,7 +4032,12 @@ windows.firewall.profile {
 }
 
 // Windows Firewall rule entry
-// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/wfascimprov/msft-netfirewallrule
+//
+// Examine a single Windows Firewall rule: its unique `instanceID`, display
+// name, description, group, enabled state, traffic direction (inbound/
+// outbound), action (allow/block), edge traversal policy, and enforcement
+// status. Iterated from `windows.firewall.rules()` to audit which rules are
+// active and whether they match expected policy.
 windows.firewall.rule {
   // A string that uniquely identifies this instance within the policy store
   instanceID string
@@ -3900,6 +4086,12 @@ windows.bitlocker {
 }
 
 // Windows BitLocker volume
+//
+// Examine a single BitLocker-managed volume: the `deviceID`, `driveLetter`,
+// `conversionStatus` (encryption/decryption progress), `encryptionMethod`
+// (algorithm and key size), `lockStatus` (0 = accessible, 1 = locked),
+// `persistentVolumeID`, `protectionStatus` (0 = off, 1 = on, 2 = unknown),
+// and BitLocker `version`. Iterated from `windows.bitlocker.volumes()`.
 windows.bitlocker.volume {
   // Unique identifier for the volume
   deviceID string
@@ -4388,6 +4580,13 @@ zfs @defaults("pools") {
 }
 
 // ZFS storage pool
+//
+// Examine a single ZFS storage pool: `name`, `guid`, health status,
+// total/allocated/free bytes, fragmentation percentage, space utilization,
+// deduplication ratio, read-only flag, auto-expand/replace/trim settings,
+// the top-level `vdevs()` topology, and the full `properties()` map.
+// Initialize by name (e.g., `zfs.pool(name: "tank")`) or iterate from
+// `zfs.pools()`.
 zfs.pool @defaults("name health sizeBytes") {
   init(name string)
   // Pool name
@@ -4423,6 +4622,12 @@ zfs.pool @defaults("name health sizeBytes") {
 }
 
 // ZFS virtual device (vdev) in a pool's topology
+//
+// Examine a single vdev within a pool: its `name` (e.g., "raidz2-0",
+// "mirror-0"), `type`, `state`, device `path` (for leaf vdevs),
+// read/write/checksum error counts, slow I/O count, number of child
+// devices, and the nested `devices` list. Iterated from
+// `zfs.pool.vdevs()`.
 zfs.pool.vdev @defaults("name type state numDevices") {
   // Vdev name (e.g., "raidz2-0", "mirror-0", "sda")
   name string
@@ -4447,6 +4652,13 @@ zfs.pool.vdev @defaults("name type state numDevices") {
 }
 
 // ZFS dataset (filesystem, volume, snapshot, or bookmark)
+//
+// Examine a single ZFS dataset: full `name`, `type` (filesystem, volume,
+// snapshot, bookmark), used/available/referenced bytes, `mountpoint`,
+// compression algorithm and ratio, `mounted` flag, record size, quota,
+// reservation, `origin` snapshot for clones, creation time, encryption
+// algorithm, full `properties()` map, and `snapshots()` list. Initialize
+// by name or iterate from `zfs.datasets()`.
 zfs.dataset @defaults("name type usedBytes") {
   init(name string)
   // Full dataset name (pool/path or pool/path@snap)

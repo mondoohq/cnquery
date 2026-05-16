@@ -147,7 +147,13 @@ kustomize.resource @defaults("kind name") {
   manifest dict
 }
 
-// A replacement (var-free field substitution)
+// Kustomize replacement
+//
+// Examine a `replacements:` entry that copies one field's value to multiple
+// target fields without using Kustomize vars. Queryable fields include the
+// source resource selector (`sourceKind`, `sourceName`), the `sourcePath`
+// field-path expression that identifies the value to read, and the list of
+// `targets` that receive the substituted value.
 kustomize.replacement @defaults("sourcePath") {
   // Source field path (e.g., ".metadata.name")
   sourcePath string
@@ -159,7 +165,12 @@ kustomize.replacement @defaults("sourcePath") {
   targets() []kustomize.replacementTarget
 }
 
-// A replacement target selector
+// Kustomize replacement target
+//
+// Examine one target within a `replacements:` entry. Each target specifies
+// the `fieldPath` expression where the substituted value is written and the
+// optional `kind` and `name` selectors that narrow which rendered resources
+// are affected.
 kustomize.replacementTarget @defaults("fieldPath") {
   // Target field path to replace
   fieldPath string

@@ -4,7 +4,23 @@
 option provider = "go.mondoo.com/mql/providers/openstack"
 option go_package = "go.mondoo.com/mql/v13/providers/openstack/resources"
 
-// OpenStack project connection
+// OpenStack connection
+//
+// Use the OpenStack provider to query identity, compute, network, storage, and
+// other service resources within a scoped project. The root resource exposes
+// Keystone principals (`projects`, `users`, `roles`, `domains`, `groups`),
+// Nova compute assets (`servers`, `flavors`, `keypairs`, `serverGroups`,
+// `hypervisors`, `computeServices`, `aggregates`, `computeLimits`), Neutron
+// networking (`networks`, `subnets`, `routers`, `ports`, `floatingIps`,
+// `securityGroups`, `subnetPools`, `qosPolicies`, `trunks`), FWaaS v2
+// (`firewallGroups`, `firewallPolicies`, `firewallRules`), Cinder block storage
+// (`volumes`, `snapshots`, `backups`, `volumeTypes`, `blockStorageQuotaSet`),
+// Glance images (`images`), Barbican key management (`secrets`,
+// `secretContainers`, `secretOrders`), Octavia load balancing
+// (`loadBalancers`, `listeners`, `pools`, `healthMonitors`, `l7Policies`),
+// Swift object storage (`objectStorageAccount`, `objectStorageContainers`),
+// and Designate DNS (`dnsZones`). `authUrl`, `projectId`, and `region` identify
+// the connection scope.
 openstack {
   // Keystone auth URL the connection is bound to
   authUrl string

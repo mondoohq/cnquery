@@ -4,8 +4,16 @@
 option provider = "go.mondoo.com/cnquery/v9/providers/gitlab"
 option go_package = "go.mondoo.com/mql/v13/providers/gitlab/resources"
 
-// GitLab instance-level application settings
-// Requires admin access to the GitLab instance.
+// GitLab Instance Application Settings
+//
+// Examine instance-wide security and configuration settings. Requires admin
+// access. Covers authentication controls (`requireTwoFactorAuthentication`,
+// `twoFactorGracePeriod`, `requireAdminTwoFactorAuthentication`,
+// `gitTwoFactorSessionExpiry`), password authentication toggles for web and
+// Git (`passwordAuthenticationEnabledForWeb`,
+// `passwordAuthenticationEnabledForGit`), new-user registration
+// (`signupEnabled`), and default visibility levels for projects and groups
+// (`defaultProjectVisibility`, `defaultGroupVisibility`).
 gitlab.settings @defaults("requireTwoFactorAuthentication") {
   // Settings ID
   id int
@@ -145,7 +153,15 @@ private gitlab.member @defaults("user role") {
   role string
 }
 
-// GitLab namespace
+// GitLab Namespace
+//
+// Examine a GitLab namespace — the container that scopes groups and user
+// projects. The `kind` field distinguishes group namespaces from user
+// namespaces. Subscription fields (`plan`, `trial`, `trialEndsOn`,
+// `maxSeatsUsed`, `seatsInUse`, `billableMembersCount`) reflect the
+// GitLab.com plan attached to the namespace. `membersCountWithDescendants`
+// counts members across the namespace hierarchy. Navigate to the parent
+// namespace via `parentId`.
 gitlab.namespace @defaults("name kind plan") {
   // Namespace ID
   id int
@@ -177,7 +193,17 @@ gitlab.namespace @defaults("name kind plan") {
   seatsInUse int
 }
 
-// GitLab group
+// GitLab Group
+//
+// Examine a GitLab group and its security posture. Core identity fields
+// include `name`, `fullName`, `fullPath`, `visibility`, `webURL`, and
+// `createdAt`. Security controls cover two-factor authentication enforcement
+// (`requireTwoFactorAuthentication`, `twoFactorGracePeriod`),
+// `membershipLock`, `preventForkingOutsideGroup`, and `emailsDisabled`.
+// Computed collections expose `members`, `subgroups`, `projects`, `labels`,
+// `pushRules`, `accessTokens`, `deployTokens`, `protectedBranches`,
+// `samlGroupLinks` (Premium/Ultimate), and `auditEvents` (Premium/Ultimate).
+// The associated `namespace` is available as a typed reference.
 gitlab.group @defaults("name visibility webURL") {
   // Group ID
   id int
@@ -299,7 +325,21 @@ private gitlab.group.auditEvent @defaults("id eventName createdAt") {
   entityProject() gitlab.project
 }
 
-// GitLab project
+// GitLab Project
+//
+// Examine a GitLab project and its security configuration. Core identity
+// fields include `name`, `fullName`, `fullPath`, `visibility`, `webURL`,
+// `defaultBranch`, `archived`, and `mirror`. Feature toggles cover issues,
+// merge requests, wiki, snippets, container registry, Service Desk, packages,
+// Auto DevOps, and requirements. Merge-request governance fields include
+// `onlyAllowMergeIfPipelineSucceeds`,
+// `onlyAllowMergeIfAllDiscussionsAreResolved`,
+// `allowMergeOnSkippedPipeline`, and `mergeMethod`. Computed collections
+// expose `approvalRules`, `approvalSettings`, `protectedBranches`,
+// `projectMembers`, `projectFiles`, `webhooks`, `mergeRequests`, `issues`,
+// `releases`, `variables`, `milestones`, `labels`, `pipelines`, `runners`,
+// `pushRules`, `accessTokens`, `deployKeys`, `deployTokens`, and
+// `securitySettings`.
 gitlab.project @defaults("fullName visibility webURL") {
   // Project ID
   id int
