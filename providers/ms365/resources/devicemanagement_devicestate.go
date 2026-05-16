@@ -33,9 +33,13 @@ func (a *mqlMicrosoftDevicemanagementManageddevice) compliancePolicyStates() ([]
 	if err != nil {
 		return nil, transformError(err)
 	}
+	states, err := iterate[models.DeviceCompliancePolicyStateable](ctx, resp, graphClient.GetAdapter(), models.CreateDeviceCompliancePolicyStateCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, state := range resp.GetValue() {
+	for _, state := range states {
 		r, err := newCompliancePolicyState(a.MqlRuntime, a.Id.Data, state)
 		if err != nil {
 			return nil, err
@@ -57,9 +61,13 @@ func (a *mqlMicrosoftDevicemanagementManageddevice) configurationStates() ([]any
 	if err != nil {
 		return nil, transformError(err)
 	}
+	states, err := iterate[models.DeviceConfigurationStateable](ctx, resp, graphClient.GetAdapter(), models.CreateDeviceConfigurationStateCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, state := range resp.GetValue() {
+	for _, state := range states {
 		r, err := newConfigurationState(a.MqlRuntime, a.Id.Data, state)
 		if err != nil {
 			return nil, err

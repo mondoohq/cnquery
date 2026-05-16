@@ -192,9 +192,13 @@ func (a *mqlMicrosoftDevicemanagementMobileapp) assignments() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	assignments, err := iterate[models.MobileAppAssignmentable](ctx, resp, graphClient.GetAdapter(), models.CreateMobileAppAssignmentCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, assignment := range resp.GetValue() {
+	for _, assignment := range assignments {
 		id := ""
 		if v := assignment.GetId(); v != nil {
 			id = *v
