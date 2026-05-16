@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/composer/v1"
+	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
@@ -70,44 +72,59 @@ func (g *mqlGcpProjectComposerService) environments() ([]any, error) {
 		return nil, err
 	}
 
-	var res []any
-	// Cloud Composer environments are regional; "-" lists across all locations.
-	parent := fmt.Sprintf("projects/%s/locations/-", projectId)
-	req := svc.Projects.Locations.Environments.List(parent)
-	if err := req.Pages(ctx, func(page *composer.ListEnvironmentsResponse) error {
-		for _, e := range page.Environments {
-			cfg, err := convert.JsonToDict(e.Config)
-			if err != nil {
-				return err
-			}
-
-			var imageVersion string
-			if e.Config != nil && e.Config.SoftwareConfig != nil {
-				imageVersion = e.Config.SoftwareConfig.ImageVersion
-			}
-
-			mqlEnv, err := CreateResource(g.MqlRuntime, "gcp.project.composerService.environment", map[string]*llx.RawData{
-				"projectId":    llx.StringData(projectId),
-				"name":         llx.StringData(e.Name),
-				"state":        llx.StringData(e.State),
-				"uuid":         llx.StringData(e.Uuid),
-				"createTime":   llx.TimeDataPtr(parseTime(e.CreateTime)),
-				"updateTime":   llx.TimeDataPtr(parseTime(e.UpdateTime)),
-				"labels":       llx.MapData(convert.MapToInterfaceMap(e.Labels), types.String),
-				"imageVersion": llx.StringData(imageVersion),
-				"config":       llx.DictData(cfg),
-			})
-			if err != nil {
-				return err
-			}
-			res = append(res, mqlEnv)
-		}
-		return nil
-	}); err != nil {
-		if composerServiceDisabled(err) {
-			return []any{}, nil
-		}
+	// Cloud Composer environments are regional and the environments.list API
+	// rejects the "-" location wildcard, so enumerate the project's regions
+	// and list environments in each.
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
 		return nil, err
+	}
+	regions, err := computeSvc.Regions.List(projectId).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []any
+	for _, region := range regions.Items {
+		parent := fmt.Sprintf("projects/%s/locations/%s", projectId, region.Name)
+		req := svc.Projects.Locations.Environments.List(parent)
+		if err := req.Pages(ctx, func(page *composer.ListEnvironmentsResponse) error {
+			for _, e := range page.Environments {
+				cfg, err := convert.JsonToDict(e.Config)
+				if err != nil {
+					return err
+				}
+
+				var imageVersion string
+				if e.Config != nil && e.Config.SoftwareConfig != nil {
+					imageVersion = e.Config.SoftwareConfig.ImageVersion
+				}
+
+				mqlEnv, err := CreateResource(g.MqlRuntime, "gcp.project.composerService.environment", map[string]*llx.RawData{
+					"projectId":    llx.StringData(projectId),
+					"name":         llx.StringData(e.Name),
+					"state":        llx.StringData(e.State),
+					"uuid":         llx.StringData(e.Uuid),
+					"createTime":   llx.TimeDataPtr(parseTime(e.CreateTime)),
+					"updateTime":   llx.TimeDataPtr(parseTime(e.UpdateTime)),
+					"labels":       llx.MapData(convert.MapToInterfaceMap(e.Labels), types.String),
+					"imageVersion": llx.StringData(imageVersion),
+					"config":       llx.DictData(cfg),
+				})
+				if err != nil {
+					return err
+				}
+				res = append(res, mqlEnv)
+			}
+			return nil
+		}); err != nil {
+			if composerServiceDisabled(err) {
+				// The Cloud Composer API is not enabled for the project.
+				return []any{}, nil
+			}
+			log.Debug().Err(err).Str("region", region.Name).Msg("gcp: could not list Cloud Composer environments")
+			continue
+		}
 	}
 
 	return res, nil

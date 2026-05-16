@@ -72,25 +72,37 @@ func (g *mqlGcpProjectHealthcareService) datasets() ([]any, error) {
 
 	ctx := context.Background()
 	var res []any
-	parent := fmt.Sprintf("projects/%s/locations/-", projectId)
-	req := svc.Projects.Locations.Datasets.List(parent)
-	if err := req.Pages(ctx, func(page *healthcare.ListDatasetsResponse) error {
-		for _, d := range page.Datasets {
-			encryptionSpec, err := healthcareConvertEncryptionSpec(d.EncryptionSpec)
-			if err != nil {
-				return err
-			}
+	// The datasets.list API rejects the "-" location wildcard, so enumerate
+	// the project's healthcare locations and list datasets in each.
+	if err := svc.Projects.Locations.List("projects/"+projectId).Pages(ctx, func(locPage *healthcare.ListLocationsResponse) error {
+		for _, loc := range locPage.Locations {
+			parent := fmt.Sprintf("projects/%s/locations/%s", projectId, loc.LocationId)
+			listErr := svc.Projects.Locations.Datasets.List(parent).Pages(ctx, func(page *healthcare.ListDatasetsResponse) error {
+				for _, d := range page.Datasets {
+					encryptionSpec, err := healthcareConvertEncryptionSpec(d.EncryptionSpec)
+					if err != nil {
+						return err
+					}
 
-			mqlDataset, err := CreateResource(g.MqlRuntime, "gcp.project.healthcareService.dataset", map[string]*llx.RawData{
-				"projectId":      llx.StringData(projectId),
-				"name":           llx.StringData(d.Name),
-				"timeZone":       llx.StringData(d.TimeZone),
-				"encryptionSpec": llx.DictData(encryptionSpec),
+					mqlDataset, err := CreateResource(g.MqlRuntime, "gcp.project.healthcareService.dataset", map[string]*llx.RawData{
+						"projectId":      llx.StringData(projectId),
+						"name":           llx.StringData(d.Name),
+						"timeZone":       llx.StringData(d.TimeZone),
+						"encryptionSpec": llx.DictData(encryptionSpec),
+					})
+					if err != nil {
+						return err
+					}
+					res = append(res, mqlDataset)
+				}
+				return nil
 			})
-			if err != nil {
-				return err
+			if listErr != nil {
+				if healthcareServiceUnavailable(listErr) {
+					continue
+				}
+				return listErr
 			}
-			res = append(res, mqlDataset)
 		}
 		return nil
 	}); err != nil {

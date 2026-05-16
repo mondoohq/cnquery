@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.15.0",
-  "generated_at": "2026-05-16T09:49:14-07:00",
+  "generated_at": "2026-05-16T11:29:47-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -717,6 +717,12 @@
       "service": "compute",
       "action": "Regions.List",
       "source_file": "cloudrun.go"
+    },
+    {
+      "permission": "compute.regions.list",
+      "service": "compute",
+      "action": "Regions.List",
+      "source_file": "composer.go"
     },
     {
       "permission": "compute.regions.list",

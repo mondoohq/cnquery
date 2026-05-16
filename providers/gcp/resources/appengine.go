@@ -151,7 +151,9 @@ func (g *mqlGcpProjectAppEngineServiceService) versions() ([]any, error) {
 
 	ctx := context.Background()
 	var res []any
-	req := svc.Apps.Services.Versions.List(projectId, serviceId)
+	// The FULL view is required for the response to include handlers,
+	// libraries, and other detail omitted by the default BASIC view.
+	req := svc.Apps.Services.Versions.List(projectId, serviceId).View("FULL")
 	if err := req.Pages(ctx, func(page *appengine.ListVersionsResponse) error {
 		for _, v := range page.Versions {
 			vpcConnector, err := appEngineConvertVpcConnector(v.VpcAccessConnector)
