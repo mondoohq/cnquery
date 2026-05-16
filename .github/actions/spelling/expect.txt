@@ -25,6 +25,7 @@ apparmor
 appsettings
 appslot
 ari
+arity
 armcontainerregistry
 armcontainerregistrytasks
 armoperationalinsights
@@ -109,6 +110,7 @@ colo
 colocation
 compressratio
 computeagent
+conntrack
 containeranalysis
 continuedev
 corosync
@@ -429,6 +431,7 @@ OAI
 objectstorage
 ocr
 octavia
+OData
 Odr
 oem
 oid
@@ -491,6 +494,7 @@ pubspec
 pushconfig
 pve
 PVEAPI
+pveproxy
 pyspark
 pzi
 pzs
