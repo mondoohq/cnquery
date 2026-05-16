@@ -73,6 +73,7 @@ var validatedGCPPermissions = []string{
 	"cloudsql.sslCerts.list",
 	"cloudsql.users.list",
 	"cloudtasks.queues.list",
+	"composer.environments.list",
 	"compute.addresses.list",
 	"compute.backendBuckets.list",
 	"compute.backendServices.list",

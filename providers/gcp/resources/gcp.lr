@@ -6457,7 +6457,13 @@ private gcp.project.composerService {
   environments() []gcp.project.composerService.environment
 }
 
-// Google Cloud (GCP) Cloud Composer environment
+// Cloud Composer environment
+//
+// Examine a managed Apache Airflow environment running on Cloud Composer:
+// its lifecycle state, the Composer image version it runs, user-defined
+// labels, creation and update timestamps, and the full environment
+// configuration covering node config, software config, encryption config,
+// and web server access control.
 private gcp.project.composerService.environment @defaults("name state imageVersion") {
   // Project ID
   projectId string

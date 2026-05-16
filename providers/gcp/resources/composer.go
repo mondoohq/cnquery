@@ -17,26 +17,19 @@ import (
 	"google.golang.org/api/option"
 )
 
-func newComposerService(conn *connection.GcpConnection) (*composer.Service, error) {
-	client, err := conn.Client(composer.CloudPlatformScope)
-	if err != nil {
-		return nil, err
-	}
-	return composer.NewService(context.Background(), option.WithHTTPClient(client))
-}
-
 // composerServiceDisabled reports whether the error indicates the Cloud
-// Composer API is not enabled or not accessible for the project.
+// Composer API is not enabled for the project. A genuine permission denial
+// (HTTP 403 without a "not enabled" message) is deliberately not treated as
+// disabled so it surfaces to the caller instead of being swallowed.
 func composerServiceDisabled(err error) bool {
-	if gerr, ok := err.(*googleapi.Error); ok {
-		if gerr.Code == 403 || gerr.Code == 404 {
-			return true
-		}
-		if strings.Contains(gerr.Message, "not enabled") || strings.Contains(gerr.Message, "has not been used") {
-			return true
-		}
+	gerr, ok := err.(*googleapi.Error)
+	if !ok {
+		return false
 	}
-	return false
+	if strings.Contains(gerr.Message, "not enabled") || strings.Contains(gerr.Message, "has not been used") {
+		return true
+	}
+	return gerr.Code == 404
 }
 
 func (g *mqlGcpProject) composer() (*mqlGcpProjectComposerService, error) {
@@ -66,12 +59,17 @@ func (g *mqlGcpProjectComposerService) environments() ([]any, error) {
 	projectId := g.ProjectId.Data
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	svc, err := newComposerService(conn)
+	client, err := conn.Client(composer.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
+	svc, err := composer.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
 	var res []any
 	// Cloud Composer environments are regional; "-" lists across all locations.
 	parent := fmt.Sprintf("projects/%s/locations/-", projectId)
