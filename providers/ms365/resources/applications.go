@@ -126,6 +126,9 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 	parentalControlSettings, err := convert.JsonToDict(newParentalControlSettings(app.GetParentalControlSettings()))
 	publicClient, err := convert.JsonToDict(newPublicClientApplication(app.GetPublicClient()))
 	requiredResourceAccess, err := convert.JsonToDictSlice(newRequiredResourceAccessList(app.GetRequiredResourceAccess()))
+	if err != nil {
+		return nil, err
+	}
 
 	var nativeAuthenticationApisEnabled *string
 	if app.GetNativeAuthenticationApisEnabled() != nil {
