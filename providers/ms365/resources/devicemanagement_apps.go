@@ -33,9 +33,13 @@ func (a *mqlMicrosoftDevicemanagement) detectedApps() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	apps, err := iterate[models.DetectedAppable](ctx, resp, graphClient.GetAdapter(), models.CreateDetectedAppCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, app := range resp.GetValue() {
+	for _, app := range apps {
 		r, err := newDetectedAppResource(a.MqlRuntime, app)
 		if err != nil {
 			return nil, err
@@ -59,9 +63,13 @@ func (a *mqlMicrosoftDevicemanagementManageddevice) detectedApps() ([]any, error
 	if err != nil {
 		return nil, transformError(err)
 	}
+	apps, err := iterate[betamodels.DetectedAppable](ctx, resp, graphClient.GetAdapter(), betamodels.CreateDetectedAppCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, app := range resp.GetValue() {
+	for _, app := range apps {
 		r, err := newBetaDetectedAppResource(a.MqlRuntime, app)
 		if err != nil {
 			return nil, err
@@ -127,9 +135,13 @@ func (a *mqlMicrosoftDevicemanagement) mobileApps() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	apps, err := iterate[models.MobileAppable](ctx, resp, graphClient.GetAdapter(), models.CreateMobileAppCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, app := range resp.GetValue() {
+	for _, app := range apps {
 		r, err := newMobileAppResource(a.MqlRuntime, app)
 		if err != nil {
 			return nil, err

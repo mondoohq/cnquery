@@ -37,8 +37,12 @@ func (a *mqlMicrosoftDevicemanagement) intents() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	templates, err := iterate[betamodels.DeviceManagementTemplateable](ctx, templatesResp, graphClient.GetAdapter(), betamodels.CreateDeviceManagementTemplateCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 	templateNames := map[string]string{}
-	for _, t := range templatesResp.GetValue() {
+	for _, t := range templates {
 		if t.GetId() == nil {
 			continue
 		}
@@ -51,9 +55,13 @@ func (a *mqlMicrosoftDevicemanagement) intents() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	intents, err := iterate[betamodels.DeviceManagementIntentable](ctx, intentsResp, graphClient.GetAdapter(), betamodels.CreateDeviceManagementIntentCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, intent := range intentsResp.GetValue() {
+	for _, intent := range intents {
 		r, err := newIntentResource(a.MqlRuntime, intent, templateNames)
 		if err != nil {
 			return nil, err
@@ -77,9 +85,7 @@ func newIntentResource(runtime *plugin.Runtime, intent betamodels.DeviceManageme
 			"templateId":           llx.StringData(templateId),
 			"templateDisplayName":  llx.StringData(templateNames[templateId]),
 			"isAssigned":           llx.BoolDataPtr(intent.GetIsAssigned()),
-			"createdDateTime":      llx.TimeDataPtr(nil),
 			"lastModifiedDateTime": llx.TimeDataPtr(intent.GetLastModifiedDateTime()),
-			"lastModifiedBy":       llx.StringData(""),
 		})
 }
 

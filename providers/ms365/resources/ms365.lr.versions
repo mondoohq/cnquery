@@ -261,12 +261,10 @@ microsoft.devicemanagement.deviceconfiguration.properties 9.0.0
 microsoft.devicemanagement.deviceconfiguration.version 9.0.0
 microsoft.devicemanagement.intent 13.0.12
 microsoft.devicemanagement.intent.assignments 13.0.12
-microsoft.devicemanagement.intent.createdDateTime 13.0.12
 microsoft.devicemanagement.intent.description 13.0.12
 microsoft.devicemanagement.intent.displayName 13.0.12
 microsoft.devicemanagement.intent.id 13.0.12
 microsoft.devicemanagement.intent.isAssigned 13.0.12
-microsoft.devicemanagement.intent.lastModifiedBy 13.0.12
 microsoft.devicemanagement.intent.lastModifiedDateTime 13.0.12
 microsoft.devicemanagement.intent.setting 13.0.12
 microsoft.devicemanagement.intent.setting.definitionId 13.0.12

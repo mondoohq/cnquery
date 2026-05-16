@@ -27,9 +27,13 @@ func (a *mqlMicrosoftDevicemanagement) windowsAutopilotDeploymentProfiles() ([]a
 	if err != nil {
 		return nil, transformError(err)
 	}
+	profiles, err := iterate[betamodels.WindowsAutopilotDeploymentProfileable](ctx, resp, graphClient.GetAdapter(), betamodels.CreateWindowsAutopilotDeploymentProfileCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, profile := range resp.GetValue() {
+	for _, profile := range profiles {
 		oobeSettings := autopilotOobeToDict(profile.GetOutOfBoxExperienceSettings())
 		profileType := ""
 		if v := profile.GetOdataType(); v != nil {

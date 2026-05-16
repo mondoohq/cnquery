@@ -1934,8 +1934,8 @@ private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName
   version int
   // DEPRECATED: kept for backwards compatibility
   properties @maturity("deprecated") dict
-  // Assignments targeting this configuration profile
-  policyAssignments() []microsoft.devicemanagement.policyAssignment
+  // Assignments targeting this configuration profile, with each target resolved to its kind, group, and any assignment filter
+  policyAssignments []microsoft.devicemanagement.policyAssignment
 }
 
 // Microsoft device compliance policy
@@ -2032,12 +2032,8 @@ private microsoft.devicemanagement.intent @defaults("id displayName templateDisp
   templateDisplayName string
   // Whether the intent has at least one assignment
   isAssigned bool
-  // Creation date
-  createdDateTime time
   // Last modification date
   lastModifiedDateTime time
-  // Email or UPN of the user who last modified the intent
-  lastModifiedBy string
   // Settings configured on this intent
   settings() []microsoft.devicemanagement.intent.setting
   // Assignments targeting this intent

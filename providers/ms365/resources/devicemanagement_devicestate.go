@@ -21,37 +21,6 @@ func (m *mqlMicrosoftDevicemanagementManageddevicePolicyState) id() (string, err
 	return m.Id.Data, nil
 }
 
-// policyAssignments on deviceconfiguration fetches assignments from
-// /deviceManagement/deviceConfigurations/{id}/assignments and converts each
-// target into a typed policyAssignment resource.
-func (a *mqlMicrosoftDevicemanagementDeviceconfiguration) policyAssignments() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	resp, err := graphClient.DeviceManagement().DeviceConfigurations().ByDeviceConfigurationId(a.Id.Data).Assignments().Get(ctx, nil)
-	if err != nil {
-		return nil, transformError(err)
-	}
-
-	res := []any{}
-	for _, assignment := range resp.GetValue() {
-		id := ""
-		if v := assignment.GetId(); v != nil {
-			id = *v
-		}
-		r, err := newPolicyAssignmentResource(a.MqlRuntime, id, assignment.GetTarget())
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, r)
-	}
-	return res, nil
-}
-
 func (a *mqlMicrosoftDevicemanagementManageddevice) compliancePolicyStates() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()

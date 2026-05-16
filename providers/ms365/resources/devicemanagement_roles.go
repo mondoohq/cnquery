@@ -36,9 +36,13 @@ func (a *mqlMicrosoftDevicemanagement) roleDefinitions() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	definitions, err := iterate[betamodels.RoleDefinitionable](ctx, resp, graphClient.GetAdapter(), betamodels.CreateRoleDefinitionCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, def := range resp.GetValue() {
+	for _, def := range definitions {
 		permissions := rolePermissionsToDicts(def.GetRolePermissions())
 		scopeTagIds := def.GetRoleScopeTagIds()
 		if scopeTagIds == nil {
@@ -99,14 +103,21 @@ func (a *mqlMicrosoftDevicemanagement) roleAssignments() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	assignments, err := iterate[betamodels.DeviceAndAppManagementRoleAssignmentable](ctx, resp, graphClient.GetAdapter(), betamodels.CreateDeviceAndAppManagementRoleAssignmentCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, ra := range resp.GetValue() {
+	for _, ra := range assignments {
 		members := ra.GetMembers()
 		if members == nil {
 			members = []string{}
 		}
-		scopeMembers := []string{}
+		scopeMembers := ra.GetScopeMembers()
+		if scopeMembers == nil {
+			scopeMembers = []string{}
+		}
 		resourceScopes := ra.GetResourceScopes()
 		if resourceScopes == nil {
 			resourceScopes = []string{}
@@ -148,9 +159,13 @@ func (a *mqlMicrosoftDevicemanagement) roleScopeTags() ([]any, error) {
 	if err != nil {
 		return nil, transformError(err)
 	}
+	tags, err := iterate[betamodels.RoleScopeTagable](ctx, resp, graphClient.GetAdapter(), betamodels.CreateRoleScopeTagCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
 
 	res := []any{}
-	for _, tag := range resp.GetValue() {
+	for _, tag := range tags {
 		r, err := CreateResource(a.MqlRuntime, "microsoft.devicemanagement.roleScopeTag",
 			map[string]*llx.RawData{
 				"__id":        llx.StringDataPtr(tag.GetId()),

@@ -2852,14 +2852,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.devicemanagement.intent.isAssigned": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementIntent).GetIsAssigned()).ToDataRes(types.Bool)
 	},
-	"microsoft.devicemanagement.intent.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftDevicemanagementIntent).GetCreatedDateTime()).ToDataRes(types.Time)
-	},
 	"microsoft.devicemanagement.intent.lastModifiedDateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementIntent).GetLastModifiedDateTime()).ToDataRes(types.Time)
-	},
-	"microsoft.devicemanagement.intent.lastModifiedBy": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftDevicemanagementIntent).GetLastModifiedBy()).ToDataRes(types.String)
 	},
 	"microsoft.devicemanagement.intent.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevicemanagementIntent).GetSettings()).ToDataRes(types.Array(types.Resource("microsoft.devicemanagement.intent.setting")))
@@ -6624,16 +6618,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftDevicemanagementIntent).IsAssigned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"microsoft.devicemanagement.intent.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftDevicemanagementIntent).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
 	"microsoft.devicemanagement.intent.lastModifiedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDevicemanagementIntent).LastModifiedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
-		return
-	},
-	"microsoft.devicemanagement.intent.lastModifiedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftDevicemanagementIntent).LastModifiedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"microsoft.devicemanagement.intent.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15863,19 +15849,7 @@ func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetProperties() *plugi
 }
 
 func (c *mqlMicrosoftDevicemanagementDeviceconfiguration) GetPolicyAssignments() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.PolicyAssignments, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.devicemanagement.deviceconfiguration", c.__id, "policyAssignments")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.policyAssignments()
-	})
+	return &c.PolicyAssignments
 }
 
 // mqlMicrosoftDevicemanagementDevicecompliancepolicy for the microsoft.devicemanagement.devicecompliancepolicy resource
@@ -16136,9 +16110,7 @@ type mqlMicrosoftDevicemanagementIntent struct {
 	TemplateId           plugin.TValue[string]
 	TemplateDisplayName  plugin.TValue[string]
 	IsAssigned           plugin.TValue[bool]
-	CreatedDateTime      plugin.TValue[*time.Time]
 	LastModifiedDateTime plugin.TValue[*time.Time]
-	LastModifiedBy       plugin.TValue[string]
 	Settings             plugin.TValue[[]any]
 	Assignments          plugin.TValue[[]any]
 }
@@ -16204,16 +16176,8 @@ func (c *mqlMicrosoftDevicemanagementIntent) GetIsAssigned() *plugin.TValue[bool
 	return &c.IsAssigned
 }
 
-func (c *mqlMicrosoftDevicemanagementIntent) GetCreatedDateTime() *plugin.TValue[*time.Time] {
-	return &c.CreatedDateTime
-}
-
 func (c *mqlMicrosoftDevicemanagementIntent) GetLastModifiedDateTime() *plugin.TValue[*time.Time] {
 	return &c.LastModifiedDateTime
-}
-
-func (c *mqlMicrosoftDevicemanagementIntent) GetLastModifiedBy() *plugin.TValue[string] {
-	return &c.LastModifiedBy
 }
 
 func (c *mqlMicrosoftDevicemanagementIntent) GetSettings() *plugin.TValue[[]any] {
