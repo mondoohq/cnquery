@@ -601,6 +601,8 @@ gcp.project @defaults("name number") {
   datastream() gcp.project.datastreamService
   // GCP Memorystore (unified Valkey/Redis) resources
   memorystore() gcp.project.memorystoreService
+  // GCP Cloud Composer resources
+  composer() gcp.project.composerService
 }
 
 // Google Cloud service API
@@ -6445,6 +6447,36 @@ private gcp.project.appEngineService.version @defaults("id servingStatus") {
   runtimeApiVersion string
   // VPC access connector configuration
   vpcAccessConnector dict
+}
+
+// Google Cloud (GCP) Cloud Composer service
+private gcp.project.composerService {
+  // Project ID
+  projectId string
+  // List of Cloud Composer environments
+  environments() []gcp.project.composerService.environment
+}
+
+// Google Cloud (GCP) Cloud Composer environment
+private gcp.project.composerService.environment @defaults("name state imageVersion") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/environments/{environment})
+  name string
+  // Current state of the environment (CREATING, RUNNING, UPDATING, DELETING, ERROR)
+  state string
+  // UUID associated with the environment
+  uuid string
+  // The time the environment was created
+  createTime time
+  // The time the environment was last modified
+  updateTime time
+  // User-defined labels for the environment
+  labels map[string]string
+  // Composer image version running in the environment
+  imageVersion string
+  // Environment configuration (node config, software config, encryption config, web server access control)
+  config dict
 }
 
 // Google Cloud (GCP) Compute health check

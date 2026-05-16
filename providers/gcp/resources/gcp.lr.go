@@ -257,6 +257,8 @@ const (
 	ResourceGcpProjectAppEngineServiceApplication                                      string = "gcp.project.appEngineService.application"
 	ResourceGcpProjectAppEngineServiceService                                          string = "gcp.project.appEngineService.service"
 	ResourceGcpProjectAppEngineServiceVersion                                          string = "gcp.project.appEngineService.version"
+	ResourceGcpProjectComposerService                                                  string = "gcp.project.composerService"
+	ResourceGcpProjectComposerServiceEnvironment                                       string = "gcp.project.composerService.environment"
 	ResourceGcpProjectComputeServiceHealthCheck                                        string = "gcp.project.computeService.healthCheck"
 	ResourceGcpProjectComputeServiceUrlMap                                             string = "gcp.project.computeService.urlMap"
 	ResourceGcpProjectComputeServiceTargetHttpProxy                                    string = "gcp.project.computeService.targetHttpProxy"
@@ -1345,6 +1347,14 @@ func init() {
 		"gcp.project.appEngineService.version": {
 			// to override args, implement: initGcpProjectAppEngineServiceVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectAppEngineServiceVersion,
+		},
+		"gcp.project.composerService": {
+			// to override args, implement: initGcpProjectComposerService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComposerService,
+		},
+		"gcp.project.composerService.environment": {
+			// to override args, implement: initGcpProjectComposerServiceEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComposerServiceEnvironment,
 		},
 		"gcp.project.computeService.healthCheck": {
 			// to override args, implement: initGcpProjectComputeServiceHealthCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2603,6 +2613,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.memorystore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetMemorystore()).ToDataRes(types.Resource("gcp.project.memorystoreService"))
+	},
+	"gcp.project.composer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetComposer()).ToDataRes(types.Resource("gcp.project.composerService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -9747,6 +9760,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.appEngineService.version.vpcAccessConnector": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAppEngineServiceVersion).GetVpcAccessConnector()).ToDataRes(types.Dict)
 	},
+	"gcp.project.composerService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.composerService.environments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerService).GetEnvironments()).ToDataRes(types.Array(types.Resource("gcp.project.composerService.environment")))
+	},
+	"gcp.project.composerService.environment.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.composerService.environment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.composerService.environment.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.composerService.environment.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetUuid()).ToDataRes(types.String)
+	},
+	"gcp.project.composerService.environment.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.composerService.environment.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.composerService.environment.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.composerService.environment.imageVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetImageVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.composerService.environment.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComposerServiceEnvironment).GetConfig()).ToDataRes(types.Dict)
+	},
 	"gcp.project.computeService.healthCheck.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetId()).ToDataRes(types.String)
 	},
@@ -14136,6 +14182,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.memorystore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).Memorystore, ok = plugin.RawToTValue[*mqlGcpProjectMemorystoreService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).Composer, ok = plugin.RawToTValue[*mqlGcpProjectComposerService](v.Value, v.Error)
 		return
 	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24558,6 +24608,58 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectAppEngineServiceVersion).VpcAccessConnector, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.composerService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.composerService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerService).Environments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.composerService.environment.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.imageVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).ImageVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.composerService.environment.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComposerServiceEnvironment).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.healthCheck.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceHealthCheck).__id, ok = v.Value.(string)
 		return
@@ -31456,6 +31558,7 @@ type mqlGcpProject struct {
 	Memcache                 plugin.TValue[*mqlGcpProjectMemcacheService]
 	Datastream               plugin.TValue[*mqlGcpProjectDatastreamService]
 	Memorystore              plugin.TValue[*mqlGcpProjectMemorystoreService]
+	Composer                 plugin.TValue[*mqlGcpProjectComposerService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -32468,6 +32571,22 @@ func (c *mqlGcpProject) GetMemorystore() *plugin.TValue[*mqlGcpProjectMemorystor
 		}
 
 		return c.memorystore()
+	})
+}
+
+func (c *mqlGcpProject) GetComposer() *plugin.TValue[*mqlGcpProjectComposerService] {
+	return plugin.GetOrCompute[*mqlGcpProjectComposerService](&c.Composer, func() (*mqlGcpProjectComposerService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "composer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComposerService), nil
+			}
+		}
+
+		return c.composer()
 	})
 }
 
@@ -56813,6 +56932,161 @@ func (c *mqlGcpProjectAppEngineServiceVersion) GetRuntimeApiVersion() *plugin.TV
 
 func (c *mqlGcpProjectAppEngineServiceVersion) GetVpcAccessConnector() *plugin.TValue[any] {
 	return &c.VpcAccessConnector
+}
+
+// mqlGcpProjectComposerService for the gcp.project.composerService resource
+type mqlGcpProjectComposerService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComposerServiceInternal it will be used here
+	ProjectId    plugin.TValue[string]
+	Environments plugin.TValue[[]any]
+}
+
+// createGcpProjectComposerService creates a new instance of this resource
+func createGcpProjectComposerService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComposerService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.composerService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComposerService) MqlName() string {
+	return "gcp.project.composerService"
+}
+
+func (c *mqlGcpProjectComposerService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComposerService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComposerService) GetEnvironments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Environments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.composerService", c.__id, "environments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.environments()
+	})
+}
+
+// mqlGcpProjectComposerServiceEnvironment for the gcp.project.composerService.environment resource
+type mqlGcpProjectComposerServiceEnvironment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComposerServiceEnvironmentInternal it will be used here
+	ProjectId    plugin.TValue[string]
+	Name         plugin.TValue[string]
+	State        plugin.TValue[string]
+	Uuid         plugin.TValue[string]
+	CreateTime   plugin.TValue[*time.Time]
+	UpdateTime   plugin.TValue[*time.Time]
+	Labels       plugin.TValue[map[string]any]
+	ImageVersion plugin.TValue[string]
+	Config       plugin.TValue[any]
+}
+
+// createGcpProjectComposerServiceEnvironment creates a new instance of this resource
+func createGcpProjectComposerServiceEnvironment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComposerServiceEnvironment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.composerService.environment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) MqlName() string {
+	return "gcp.project.composerService.environment"
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetImageVersion() *plugin.TValue[string] {
+	return &c.ImageVersion
+}
+
+func (c *mqlGcpProjectComposerServiceEnvironment) GetConfig() *plugin.TValue[any] {
+	return &c.Config
 }
 
 // mqlGcpProjectComputeServiceHealthCheck for the gcp.project.computeService.healthCheck resource
