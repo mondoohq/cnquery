@@ -106,8 +106,11 @@ cost table and the total.
 
 `terraform apply -auto-approve` per cloud — run them in parallel in the
 background; some resources are slow (see cloud-notes). Re-apply on transient
-failures. If a resource genuinely cannot be created, remove it from the stack,
-note it, and continue — one bad resource must not block the rest.
+failures, but cap it at **2–3 attempts** — a failure that survives that many
+re-applies is not transient. Treat it as a blocker or an environment
+limitation and stop retrying. If a resource genuinely cannot be created,
+remove it from the stack, note it, and continue — one bad resource must not
+block the rest.
 
 ### 7. Verify with `mql run`
 
@@ -134,7 +137,7 @@ exercised. If even that is impossible, verify the accessor resolves cleanly
 ### 8. Triage bugs
 
 A bug is any verification failure caused by **provider code**, including
-pre-existing bugs in code outside the PRs under test. For each:
+preexisting bugs in code outside the PRs under test. For each:
 
 - **Has a clear, verifiable fix**: fix it (see step 9).
 - **No confident fix** (e.g. an SDK lagging a new API): do **not** guess a fix.

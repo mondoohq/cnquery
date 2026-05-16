@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shlex
 import subprocess
 import sys
 from collections import defaultdict
@@ -47,20 +48,39 @@ FIELD_RE = re.compile(r"^([a-zA-Z]\w*)(\(\))?\s+\S")
 
 
 def run(cmd: list[str]) -> str:
-    """Run a command and return stdout, exiting with its stderr on failure."""
+    """Run a command and return stdout, raising RuntimeError on failure."""
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        sys.exit(f"command failed: {' '.join(cmd)}\n{result.stderr.strip()}")
+        raise RuntimeError(
+            f"command failed: {shlex.join(cmd)}\n{result.stderr.strip()}"
+        )
     return result.stdout
 
 
 def get_diff(prs: list[str], commit_range: str | None) -> str:
-    """Collect the combined unified diff for the given PRs and/or range."""
+    """Collect the combined unified diff for the given PRs and/or range.
+
+    A failure on one input (a missing PR, say) is reported to stderr and the
+    remaining inputs are still processed — verifying three PRs should not be
+    aborted by a typo in the fourth. The run only aborts if *nothing* was
+    retrieved.
+    """
     chunks: list[str] = []
-    for pr in prs:
-        chunks.append(run(["gh", "pr", "diff", pr, "--repo", "mondoohq/mql"]))
+    failures: list[str] = []
+    sources = [(["gh", "pr", "diff", pr, "--repo", "mondoohq/mql"], f"PR {pr}")
+               for pr in prs]
     if commit_range:
-        chunks.append(run(["git", "diff", commit_range]))
+        sources.append((["git", "diff", commit_range], f"range {commit_range}"))
+
+    for cmd, label in sources:
+        try:
+            chunks.append(run(cmd))
+        except RuntimeError as err:
+            failures.append(f"{label}: {err}")
+            print(f"warning: skipping {label} — {err}", file=sys.stderr)
+
+    if not chunks:
+        sys.exit("no diffs could be retrieved:\n" + "\n".join(failures))
     return "\n".join(chunks)
 
 
@@ -117,8 +137,15 @@ def parse(diff: str) -> dict:
             current_resource = ctx.group(1) if ctx else None
             continue
 
-        # Only added lines (new schema). Skip the "+++" file marker.
-        if not line.startswith("+") or line.startswith("+++"):
+        # Consider added lines ("+", new schema) and unchanged context lines
+        # (" "). Context lines never record a field, but their resource
+        # headers update the current resource: when a hunk adds fields right
+        # after an existing resource's "{" line, that header is unchanged
+        # context, and the stale "@@" context would otherwise misattribute the
+        # fields to the *previous* resource.
+        added = line.startswith("+") and not line.startswith("+++")
+        context = line.startswith(" ")
+        if not (added or context):
             continue
         body = line[1:].strip()
         if not body or body.startswith("//") or body in ("{", "}"):
@@ -127,10 +154,13 @@ def parse(diff: str) -> dict:
         res = RESOURCE_RE.match(body)
         if res:
             current_resource = res.group(1)
-            # Record the resource even if no new fields follow (new resource).
-            out[provider]["resources"].setdefault(current_resource, [])
+            if added:
+                # A new resource block - record it even if no fields follow.
+                out[provider]["resources"].setdefault(current_resource, [])
             continue
 
+        if not added:
+            continue  # context lines only reposition current_resource
         field = FIELD_RE.match(body)
         if field and current_resource:
             name = field.group(1) + (field.group(2) or "")

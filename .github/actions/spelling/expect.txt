@@ -633,6 +633,7 @@ transitives
 truststore
 TValue
 Twt
+uami
 udid
 uefi
 UNAVAIL
@@ -696,6 +697,7 @@ workdir
 Workflowapp
 WORKSPACESUSER
 workspacesweb
+worktree
 writeback
 Xff
 xlarge
