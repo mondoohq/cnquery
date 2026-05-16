@@ -27,7 +27,7 @@ var deviceSelectFields = []string{
 	"isCompliant", "isManaged", "manufacturer", "isRooted", "mdmAppId", "model", "operatingSystem",
 	"operatingSystemVersion", "physicalIds", "registrationDateTime", "systemLabels", "trustType",
 	"accountEnabled", "deletedDateTime", "onPremisesSyncEnabled", "onPremisesLastSyncDateTime",
-	"profileType",
+	"profileType", "approximateLastSignInDateTime", "deviceOwnership", "complianceExpirationDateTime",
 }
 
 func initMicrosoftDevices(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

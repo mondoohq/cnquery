@@ -1196,3 +1196,68 @@ func newWindowsDeviceMalwareState(m models.WindowsDeviceMalwareStateable) *Windo
 
 	return result
 }
+
+type ResourceAccess struct {
+	Id          *string `json:"id"`
+	TypeEscaped *string `json:"type"`
+}
+
+func newResourceAccess(s models.ResourceAccessable) *ResourceAccess {
+	if s == nil {
+		return nil
+	}
+	return &ResourceAccess{
+		Id:          newUuidString(s.GetId()),
+		TypeEscaped: s.GetTypeEscaped(),
+	}
+}
+
+type RequiredResourceAccess struct {
+	ResourceAppId  *string           `json:"resourceAppId"`
+	ResourceAccess []*ResourceAccess `json:"resourceAccess"`
+}
+
+func newRequiredResourceAccess(s models.RequiredResourceAccessable) *RequiredResourceAccess {
+	if s == nil {
+		return nil
+	}
+	access := []*ResourceAccess{}
+	for _, ra := range s.GetResourceAccess() {
+		access = append(access, newResourceAccess(ra))
+	}
+	return &RequiredResourceAccess{
+		ResourceAppId:  s.GetResourceAppId(),
+		ResourceAccess: access,
+	}
+}
+
+func newRequiredResourceAccessList(input []models.RequiredResourceAccessable) []*RequiredResourceAccess {
+	res := []*RequiredResourceAccess{}
+	for i := range input {
+		res = append(res, newRequiredResourceAccess(input[i]))
+	}
+	return res
+}
+
+type SignInActivity struct {
+	LastSignInDateTime                *time.Time `json:"lastSignInDateTime"`
+	LastSignInRequestId               *string    `json:"lastSignInRequestId"`
+	LastNonInteractiveSignInDateTime  *time.Time `json:"lastNonInteractiveSignInDateTime"`
+	LastNonInteractiveSignInRequestId *string    `json:"lastNonInteractiveSignInRequestId"`
+	LastSuccessfulSignInDateTime      *time.Time `json:"lastSuccessfulSignInDateTime"`
+	LastSuccessfulSignInRequestId     *string    `json:"lastSuccessfulSignInRequestId"`
+}
+
+func newSignInActivity(s models.SignInActivityable) *SignInActivity {
+	if s == nil {
+		return nil
+	}
+	return &SignInActivity{
+		LastSignInDateTime:                s.GetLastSignInDateTime(),
+		LastSignInRequestId:               s.GetLastSignInRequestId(),
+		LastNonInteractiveSignInDateTime:  s.GetLastNonInteractiveSignInDateTime(),
+		LastNonInteractiveSignInRequestId: s.GetLastNonInteractiveSignInRequestId(),
+		LastSuccessfulSignInDateTime:      s.GetLastSuccessfulSignInDateTime(),
+		LastSuccessfulSignInRequestId:     s.GetLastSuccessfulSignInRequestId(),
+	}
+}

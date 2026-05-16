@@ -45,6 +45,7 @@ microsoft.application.permission.type 11.0.30
 microsoft.application.publicClient 9.0.0
 microsoft.application.publisherDomain 9.0.0
 microsoft.application.requestSignatureVerification 9.0.0
+microsoft.application.requiredResourceAccess 13.0.12
 microsoft.application.role 11.0.29
 microsoft.application.role.allowedMemberTypes 11.0.29
 microsoft.application.role.description 11.0.29
@@ -197,9 +198,12 @@ microsoft.crossTenantAccessPolicyDefault.isServiceDefault 11.1.99
 microsoft.crossTenantAccessPolicyDefault.tenantRestrictions 11.1.99
 microsoft.device 11.1.21
 microsoft.device.accountEnabled 11.2.1
+microsoft.device.approximateLastSignInDateTime 13.0.12
+microsoft.device.complianceExpirationDateTime 13.0.12
 microsoft.device.deletedDateTime 11.2.1
 microsoft.device.deviceCategory 11.1.21
 microsoft.device.deviceId 11.1.21
+microsoft.device.deviceOwnership 13.0.12
 microsoft.device.displayName 11.1.21
 microsoft.device.enrollmentProfileName 11.1.21
 microsoft.device.enrollmentType 11.1.21
@@ -655,11 +659,14 @@ microsoft.serviceprincipal.enabled 9.0.0
 microsoft.serviceprincipal.homepageUrl 9.0.0
 microsoft.serviceprincipal.id 9.0.0
 microsoft.serviceprincipal.isFirstParty 9.0.0
+microsoft.serviceprincipal.keyCredentials 13.0.12
 microsoft.serviceprincipal.loginUrl 9.0.0
 microsoft.serviceprincipal.logoutUrl 9.0.0
 microsoft.serviceprincipal.name 9.0.0
 microsoft.serviceprincipal.notes 9.0.0
 microsoft.serviceprincipal.notificationEmailAddresses 9.0.0
+microsoft.serviceprincipal.oauth2PermissionScopes 13.0.12
+microsoft.serviceprincipal.passwordCredentials 13.0.12
 microsoft.serviceprincipal.permissions 9.0.0
 microsoft.serviceprincipal.preferredSingleSignOnMode 9.0.0
 microsoft.serviceprincipal.replyUrls 9.0.0
@@ -811,9 +818,11 @@ microsoft.user.onPremisesLastSyncDateTime 11.2.1
 microsoft.user.onPremisesSamAccountName 11.2.1
 microsoft.user.onPremisesSyncEnabled 11.2.1
 microsoft.user.otherMails 9.0.0
+microsoft.user.passwordPolicies 13.0.12
 microsoft.user.postalCode 9.0.0
 microsoft.user.preferredLanguage 11.2.1
 microsoft.user.settings 9.0.0
+microsoft.user.signInActivity 13.0.12
 microsoft.user.signin 11.1.0
 microsoft.user.signin.appDisplayName 11.1.0
 microsoft.user.signin.appId 11.1.102

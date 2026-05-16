@@ -125,6 +125,7 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 	requestSignatureVerification, err := convert.JsonToDict(newRequestSignatureVerification(app.GetRequestSignatureVerification()))
 	parentalControlSettings, err := convert.JsonToDict(newParentalControlSettings(app.GetParentalControlSettings()))
 	publicClient, err := convert.JsonToDict(newPublicClientApplication(app.GetPublicClient()))
+	requiredResourceAccess, err := convert.JsonToDictSlice(newRequiredResourceAccessList(app.GetRequiredResourceAccess()))
 
 	var nativeAuthenticationApisEnabled *string
 	if app.GetNativeAuthenticationApisEnabled() != nil {
@@ -195,6 +196,7 @@ func newMqlMicrosoftApplication(runtime *plugin.Runtime, app models.Applicationa
 			"parentalControlSettings":           llx.DictData(parentalControlSettings),
 			"publicClient":                      llx.DictData(publicClient),
 			"appRoles":                          llx.ArrayData(mqlAppRoleList, types.Resource("microsoft.application.role")),
+			"requiredResourceAccess":            llx.ArrayData(requiredResourceAccess, types.Dict),
 		})
 	if err != nil {
 		return nil, err

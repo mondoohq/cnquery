@@ -1505,6 +1505,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.user.externalUserState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUser).GetExternalUserState()).ToDataRes(types.String)
 	},
+	"microsoft.user.passwordPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetPasswordPolicies()).ToDataRes(types.String)
+	},
+	"microsoft.user.signInActivity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftUser).GetSignInActivity()).ToDataRes(types.Dict)
+	},
 	"microsoft.user.authenticationRequirements.perUserMfaState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftUserAuthenticationRequirements).GetPerUserMfaState()).ToDataRes(types.String)
 	},
@@ -1835,6 +1841,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.device.profileType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDevice).GetProfileType()).ToDataRes(types.String)
 	},
+	"microsoft.device.approximateLastSignInDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetApproximateLastSignInDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.device.deviceOwnership": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetDeviceOwnership()).ToDataRes(types.String)
+	},
+	"microsoft.device.complianceExpirationDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDevice).GetComplianceExpirationDateTime()).ToDataRes(types.Time)
+	},
 	"microsoft.domain.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDomain).GetId()).ToDataRes(types.String)
 	},
@@ -2000,6 +2015,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.application.appRoles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplication).GetAppRoles()).ToDataRes(types.Array(types.Resource("microsoft.application.role")))
 	},
+	"microsoft.application.requiredResourceAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftApplication).GetRequiredResourceAccess()).ToDataRes(types.Array(types.Dict))
+	},
 	"microsoft.application.role.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplicationRole).GetId()).ToDataRes(types.String)
 	},
@@ -2152,6 +2170,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.serviceprincipal.disabledByMicrosoftStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipal).GetDisabledByMicrosoftStatus()).ToDataRes(types.String)
+	},
+	"microsoft.serviceprincipal.keyCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetKeyCredentials()).ToDataRes(types.Array(types.Resource("microsoft.keyCredential")))
+	},
+	"microsoft.serviceprincipal.passwordCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetPasswordCredentials()).ToDataRes(types.Array(types.Resource("microsoft.passwordCredential")))
+	},
+	"microsoft.serviceprincipal.oauth2PermissionScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftServiceprincipal).GetOauth2PermissionScopes()).ToDataRes(types.Array(types.Dict))
 	},
 	"microsoft.serviceprincipal.assignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftServiceprincipalAssignment).GetId()).ToDataRes(types.String)
@@ -4602,6 +4629,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftUser).ExternalUserState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.user.passwordPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).PasswordPolicies, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.user.signInActivity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftUser).SignInActivity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"microsoft.user.authenticationRequirements.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftUserAuthenticationRequirements).__id, ok = v.Value.(string)
 		return
@@ -5086,6 +5121,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftDevice).ProfileType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.device.approximateLastSignInDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).ApproximateLastSignInDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.deviceOwnership": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).DeviceOwnership, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.device.complianceExpirationDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDevice).ComplianceExpirationDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"microsoft.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDomain).__id, ok = v.Value.(string)
 		return
@@ -5318,6 +5365,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftApplication).AppRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.application.requiredResourceAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftApplication).RequiredResourceAccess, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"microsoft.application.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftApplicationRole).__id, ok = v.Value.(string)
 		return
@@ -5536,6 +5587,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.serviceprincipal.disabledByMicrosoftStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftServiceprincipal).DisabledByMicrosoftStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.keyCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).KeyCredentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.passwordCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).PasswordCredentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.serviceprincipal.oauth2PermissionScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftServiceprincipal).Oauth2PermissionScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.serviceprincipal.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10783,6 +10846,8 @@ type mqlMicrosoftUser struct {
 	PreferredLanguage          plugin.TValue[string]
 	UsageLocation              plugin.TValue[string]
 	ExternalUserState          plugin.TValue[string]
+	PasswordPolicies           plugin.TValue[string]
+	SignInActivity             plugin.TValue[any]
 }
 
 // createMicrosoftUser creates a new instance of this resource
@@ -11039,6 +11104,16 @@ func (c *mqlMicrosoftUser) GetUsageLocation() *plugin.TValue[string] {
 
 func (c *mqlMicrosoftUser) GetExternalUserState() *plugin.TValue[string] {
 	return &c.ExternalUserState
+}
+
+func (c *mqlMicrosoftUser) GetPasswordPolicies() *plugin.TValue[string] {
+	return &c.PasswordPolicies
+}
+
+func (c *mqlMicrosoftUser) GetSignInActivity() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SignInActivity, func() (any, error) {
+		return c.signInActivity()
+	})
 }
 
 // mqlMicrosoftUserAuthenticationRequirements for the microsoft.user.authenticationRequirements resource
@@ -11984,29 +12059,32 @@ type mqlMicrosoftDevice struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlMicrosoftDeviceInternal it will be used here
-	Id                         plugin.TValue[string]
-	DisplayName                plugin.TValue[string]
-	DeviceId                   plugin.TValue[string]
-	DeviceCategory             plugin.TValue[string]
-	EnrollmentProfileName      plugin.TValue[string]
-	EnrollmentType             plugin.TValue[string]
-	IsCompliant                plugin.TValue[bool]
-	IsManaged                  plugin.TValue[bool]
-	Manufacturer               plugin.TValue[string]
-	IsRooted                   plugin.TValue[bool]
-	MdmAppId                   plugin.TValue[string]
-	Model                      plugin.TValue[string]
-	OperatingSystem            plugin.TValue[string]
-	OperatingSystemVersion     plugin.TValue[string]
-	PhysicalIds                plugin.TValue[[]any]
-	RegistrationDateTime       plugin.TValue[*time.Time]
-	SystemLabels               plugin.TValue[[]any]
-	TrustType                  plugin.TValue[string]
-	AccountEnabled             plugin.TValue[bool]
-	DeletedDateTime            plugin.TValue[*time.Time]
-	OnPremisesSyncEnabled      plugin.TValue[bool]
-	OnPremisesLastSyncDateTime plugin.TValue[*time.Time]
-	ProfileType                plugin.TValue[string]
+	Id                            plugin.TValue[string]
+	DisplayName                   plugin.TValue[string]
+	DeviceId                      plugin.TValue[string]
+	DeviceCategory                plugin.TValue[string]
+	EnrollmentProfileName         plugin.TValue[string]
+	EnrollmentType                plugin.TValue[string]
+	IsCompliant                   plugin.TValue[bool]
+	IsManaged                     plugin.TValue[bool]
+	Manufacturer                  plugin.TValue[string]
+	IsRooted                      plugin.TValue[bool]
+	MdmAppId                      plugin.TValue[string]
+	Model                         plugin.TValue[string]
+	OperatingSystem               plugin.TValue[string]
+	OperatingSystemVersion        plugin.TValue[string]
+	PhysicalIds                   plugin.TValue[[]any]
+	RegistrationDateTime          plugin.TValue[*time.Time]
+	SystemLabels                  plugin.TValue[[]any]
+	TrustType                     plugin.TValue[string]
+	AccountEnabled                plugin.TValue[bool]
+	DeletedDateTime               plugin.TValue[*time.Time]
+	OnPremisesSyncEnabled         plugin.TValue[bool]
+	OnPremisesLastSyncDateTime    plugin.TValue[*time.Time]
+	ProfileType                   plugin.TValue[string]
+	ApproximateLastSignInDateTime plugin.TValue[*time.Time]
+	DeviceOwnership               plugin.TValue[string]
+	ComplianceExpirationDateTime  plugin.TValue[*time.Time]
 }
 
 // createMicrosoftDevice creates a new instance of this resource
@@ -12131,6 +12209,18 @@ func (c *mqlMicrosoftDevice) GetOnPremisesLastSyncDateTime() *plugin.TValue[*tim
 
 func (c *mqlMicrosoftDevice) GetProfileType() *plugin.TValue[string] {
 	return &c.ProfileType
+}
+
+func (c *mqlMicrosoftDevice) GetApproximateLastSignInDateTime() *plugin.TValue[*time.Time] {
+	return &c.ApproximateLastSignInDateTime
+}
+
+func (c *mqlMicrosoftDevice) GetDeviceOwnership() *plugin.TValue[string] {
+	return &c.DeviceOwnership
+}
+
+func (c *mqlMicrosoftDevice) GetComplianceExpirationDateTime() *plugin.TValue[*time.Time] {
+	return &c.ComplianceExpirationDateTime
 }
 
 // mqlMicrosoftDomain for the microsoft.domain resource
@@ -12369,6 +12459,7 @@ type mqlMicrosoftApplication struct {
 	ParentalControlSettings           plugin.TValue[any]
 	PublicClient                      plugin.TValue[any]
 	AppRoles                          plugin.TValue[[]any]
+	RequiredResourceAccess            plugin.TValue[[]any]
 }
 
 // createMicrosoftApplication creates a new instance of this resource
@@ -12571,6 +12662,10 @@ func (c *mqlMicrosoftApplication) GetPublicClient() *plugin.TValue[any] {
 
 func (c *mqlMicrosoftApplication) GetAppRoles() *plugin.TValue[[]any] {
 	return &c.AppRoles
+}
+
+func (c *mqlMicrosoftApplication) GetRequiredResourceAccess() *plugin.TValue[[]any] {
+	return &c.RequiredResourceAccess
 }
 
 // mqlMicrosoftApplicationRole for the microsoft.application.role resource
@@ -12826,6 +12921,9 @@ type mqlMicrosoftServiceprincipal struct {
 	AlternativeNames           plugin.TValue[[]any]
 	AppDescription             plugin.TValue[string]
 	DisabledByMicrosoftStatus  plugin.TValue[string]
+	KeyCredentials             plugin.TValue[[]any]
+	PasswordCredentials        plugin.TValue[[]any]
+	Oauth2PermissionScopes     plugin.TValue[[]any]
 }
 
 // createMicrosoftServiceprincipal creates a new instance of this resource
@@ -13001,6 +13099,18 @@ func (c *mqlMicrosoftServiceprincipal) GetAppDescription() *plugin.TValue[string
 
 func (c *mqlMicrosoftServiceprincipal) GetDisabledByMicrosoftStatus() *plugin.TValue[string] {
 	return &c.DisabledByMicrosoftStatus
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetKeyCredentials() *plugin.TValue[[]any] {
+	return &c.KeyCredentials
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetPasswordCredentials() *plugin.TValue[[]any] {
+	return &c.PasswordCredentials
+}
+
+func (c *mqlMicrosoftServiceprincipal) GetOauth2PermissionScopes() *plugin.TValue[[]any] {
+	return &c.Oauth2PermissionScopes
 }
 
 // mqlMicrosoftServiceprincipalAssignment for the microsoft.serviceprincipal.assignment resource

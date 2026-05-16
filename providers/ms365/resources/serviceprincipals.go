@@ -189,6 +189,8 @@ var servicePrincipalFields = []string{
 	"alternativeNames",
 	"appDescription",
 	"disabledByMicrosoftStatus",
+	"keyCredentials",
+	"passwordCredentials",
 }
 
 func (m *mqlMicrosoftServiceprincipal) id() (string, error) {
@@ -332,6 +334,29 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 
 	verifiedPublisher, _ := convert.JsonToDict(newVerifiedPublisher(sp.GetVerifiedPublisher()))
 
+	oauth2PermissionScopes, err := convert.JsonToDictSlice(newPermissionScopableList(sp.GetOauth2PermissionScopes()))
+	if err != nil {
+		return nil, err
+	}
+
+	certificates := []any{}
+	for _, keyCredential := range sp.GetKeyCredentials() {
+		cert, err := newMqlMicrosoftKeyCredential(runtime, keyCredential)
+		if err != nil {
+			return nil, err
+		}
+		certificates = append(certificates, cert)
+	}
+
+	secrets := []any{}
+	for _, passwordCredential := range sp.GetPasswordCredentials() {
+		secret, err := newMqlMicrosoftPasswordCredential(runtime, passwordCredential)
+		if err != nil {
+			return nil, err
+		}
+		secrets = append(secrets, secret)
+	}
+
 	mqlAppRoleList := []any{}
 	appRoles := sp.GetAppRoles()
 	for i := range appRoles {
@@ -388,6 +413,9 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 		"alternativeNames":           llx.ArrayData(convert.SliceAnyToInterface(sp.GetAlternativeNames()), types.String),
 		"appDescription":             llx.StringDataPtr(sp.GetAppDescription()),
 		"disabledByMicrosoftStatus":  llx.StringDataPtr(sp.GetDisabledByMicrosoftStatus()),
+		"keyCredentials":             llx.ArrayData(certificates, types.Resource("microsoft.keyCredential")),
+		"passwordCredentials":        llx.ArrayData(secrets, types.Resource("microsoft.passwordCredential")),
+		"oauth2PermissionScopes":     llx.ArrayData(oauth2PermissionScopes, types.Dict),
 	}
 	info := sp.GetInfo()
 	if info != nil {

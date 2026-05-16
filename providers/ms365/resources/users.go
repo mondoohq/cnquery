@@ -31,7 +31,7 @@ var userSelectFields = []string{
 	"assignedLicenses", "employeeType", "employeeHireDate",
 	"lastPasswordChangeDateTime", "onPremisesSyncEnabled", "onPremisesLastSyncDateTime",
 	"onPremisesDomainName", "onPremisesSamAccountName", "preferredLanguage",
-	"usageLocation", "externalUserState",
+	"usageLocation", "externalUserState", "passwordPolicies",
 }
 
 func (a *mqlMicrosoft) users() (*mqlMicrosoftUsers, error) {
@@ -321,6 +321,7 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 			"preferredLanguage":          llx.StringDataPtr(u.GetPreferredLanguage()),
 			"usageLocation":              llx.StringDataPtr(u.GetUsageLocation()),
 			"externalUserState":          llx.StringDataPtr(u.GetExternalUserState()),
+			"passwordPolicies":           llx.StringDataPtr(u.GetPasswordPolicies()),
 		})
 	if err != nil {
 		return nil, err
@@ -593,6 +594,28 @@ func (a *mqlMicrosoftUser) settings() (any, error) {
 	}
 
 	return convert.JsonToDict(newUserSettings(userSettings))
+}
+
+// signInActivity returns the user's last interactive and non-interactive sign-in
+// timestamps. The signInActivity property requires the AuditLog.Read.All permission,
+// so it is fetched per-user on demand rather than included in the bulk user select.
+func (a *mqlMicrosoftUser) signInActivity() (any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	user, err := graphClient.Users().ByUserId(a.Id.Data).Get(ctx, &users.UserItemRequestBuilderGetRequestConfiguration{
+		QueryParameters: &users.UserItemRequestBuilderGetQueryParameters{
+			Select: []string{"signInActivity"},
+		},
+	})
+	if err != nil {
+		return nil, transformError(err)
+	}
+
+	return convert.JsonToDict(newSignInActivity(user.GetSignInActivity()))
 }
 
 type authMethod struct {

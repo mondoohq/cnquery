@@ -803,6 +803,10 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   usageLocation string
   // The state of an external user's invitation (PendingAcceptance, Accepted, etc.)
   externalUserState string
+  // Password policies applied to the user (e.g., DisablePasswordExpiration, DisableStrongPassword)
+  passwordPolicies string
+  // The user's last interactive and non-interactive sign-in timestamps and request IDs
+  signInActivity() dict
 }
 
 // Microsoft user authentication method states
@@ -1074,6 +1078,12 @@ private microsoft.device @defaults("id displayName") {
   onPremisesLastSyncDateTime time
   // The profile type of the device (e.g., RegisteredDevice)
   profileType string
+  // Date and time the device most recently signed in
+  approximateLastSignInDateTime time
+  // Ownership of the device (company or personal)
+  deviceOwnership string
+  // Date and time when the device's compliance status expires
+  complianceExpirationDateTime time
 }
 
 // Microsoft domain
@@ -1205,6 +1215,8 @@ microsoft.application @defaults("id name hasExpiredCredentials") {
   publicClient dict
   // Application roles
   appRoles []microsoft.application.role
+  // API permissions the application requests, grouped by resource API — the configured permissions, distinct from what has actually been consented on the service principal
+  requiredResourceAccess []dict
 }
 
 // Microsoft Entra ID app roles are custom roles to assign permissions to users or apps
@@ -1331,6 +1343,12 @@ microsoft.serviceprincipal @defaults("name") {
   appDescription string
   // Whether Microsoft has disabled the service principal
   disabledByMicrosoftStatus string
+  // X.509 key credentials registered on the service principal for authentication
+  keyCredentials []microsoft.keyCredential
+  // Client secrets registered on the service principal for authentication
+  passwordCredentials []microsoft.passwordCredential
+  // Delegated permission scopes that this service principal exposes to client applications
+  oauth2PermissionScopes []dict
 }
 
 // Microsoft Service Principal Assignment
