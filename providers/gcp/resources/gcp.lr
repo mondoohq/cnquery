@@ -2534,7 +2534,7 @@ private gcp.project.dnsService.policy @defaults("name") {
   networks() []gcp.project.computeService.network
 }
 
-// Google Cloud (GCP) Kubernetes Engine (GKE)
+// Google Kubernetes Engine (GKE)
 //
 // Use this resource as the entry point for GKE in the project. It hosts
 // the project's `clusters` — each exposing its node pools, network and
