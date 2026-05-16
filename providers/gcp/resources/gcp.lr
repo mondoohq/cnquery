@@ -93,7 +93,7 @@ private gcp.folders {
   children() []gcp.folder
 }
 
-// GCP Memorystore for Redis
+// Google Cloud (GCP) Memorystore for Redis
 //
 // Use this resource as the entry point for Memorystore for Redis in the
 // project. It hosts the managed-Redis `instances` and the newer `clusters`
@@ -692,7 +692,7 @@ private gcp.resourcemanager.binding {
   role string
 }
 
-// GCP Compute Engine
+// Google Cloud (GCP) Compute Engine
 //
 // Use this resource as the entry point for Compute Engine in the project.
 // It hosts the compute surface (`instances`, `disks`, `snapshots`,
@@ -1660,7 +1660,7 @@ private gcp.project.computeService.backendService.cdnPolicy {
   signedUrlKeyNames []string
 }
 
-// GCP Cloud Storage
+// Google Cloud (GCP) Cloud Storage
 //
 // Use this resource as the entry point for Cloud Storage in the project.
 // It hosts the project's `buckets`, each exposing its IAM policy, uniform
@@ -1817,7 +1817,7 @@ private gcp.project.storageService.bucket.lifecycleRuleCondition @defaults("age 
   numNewerVersions int
 }
 
-// GCP Cloud SQL
+// Google Cloud (GCP) Cloud SQL
 //
 // Use this resource as the entry point for Cloud SQL in the project. It
 // hosts the managed-database `instances` — each exposing its database
@@ -2445,7 +2445,7 @@ private gcp.project.bigqueryService.reservation @defaults("name slotCapacity edi
   updated time
 }
 
-// GCP Cloud DNS
+// Google Cloud (GCP) Cloud DNS
 //
 // Use this resource as the entry point for Cloud DNS in the project. It
 // hosts the `managedZones` (public and private DNS zones, including their
@@ -2534,7 +2534,7 @@ private gcp.project.dnsService.policy @defaults("name") {
   networks() []gcp.project.computeService.network
 }
 
-// Google Kubernetes Engine (GKE)
+// Google Cloud (GCP) Kubernetes Engine (GKE)
 //
 // Use this resource as the entry point for GKE in the project. It hosts
 // the project's `clusters` — each exposing its node pools, network and
@@ -3095,7 +3095,7 @@ private gcp.project.gkeService.cluster.nodepool.config.confidentialNodes @defaul
   enabled bool
 }
 
-// GCP Pub/Sub
+// Google Cloud (GCP) Pub/Sub
 //
 // Use this resource as the entry point for Pub/Sub in the project. It
 // hosts the messaging surface: `topics` and their `subscriptions`,
@@ -3226,7 +3226,7 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   retryPolicy dict
 }
 
-// GCP Pub/Sub configuration for subscriptions that operate in push mode
+// Google Cloud (GCP) Pub/Sub configuration for subscriptions that operate in push mode
 private gcp.project.pubsubService.subscription.config.pushconfig @defaults("attributes") {
   // Parent configuration ID
   configId string
@@ -3264,7 +3264,7 @@ private gcp.project.pubsubService.schema @defaults("name type") {
   revisionCreateTime time
 }
 
-// GCP Cloud Key Management Service (KMS)
+// Google Cloud (GCP) Cloud Key Management Service (KMS)
 //
 // Use this resource as the entry point for Cloud KMS in the project. It
 // hosts the `keyrings` and, through them, the crypto keys and key versions
@@ -3370,7 +3370,7 @@ private gcp.project.kmsService.keyring.cryptokey.version @defaults("name state")
   reimportEligible bool
 }
 
-// GCP KMS crypto key version attestation
+// Google Cloud (GCP) KMS crypto key version attestation
 private gcp.project.kmsService.keyring.cryptokey.version.attestation {
   // Crypto key version name
   cryptoKeyVersionName string
@@ -3570,7 +3570,7 @@ private gcp.project.loggingservice.metric @defaults("description filter") {
   alertPolicies() []gcp.project.monitoringService.alertPolicy
 }
 
-// GCP Logging sink
+// Google Cloud (GCP) Logging sink
 private gcp.project.loggingservice.sink @defaults("destination") {
   // Sink ID
   id string
@@ -3604,7 +3604,7 @@ private gcp.project.loggingservice.exclusion @defaults("name disabled") {
   updated time
 }
 
-// GCP Identity and Access Management (IAM)
+// Google Cloud (GCP) Identity and Access Management (IAM)
 //
 // Use this resource to enumerate the project's IAM building blocks: the
 // `serviceAccounts` and their service-account keys, custom `roles` defined in
@@ -3690,7 +3690,7 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   disabled bool
 }
 
-// GCP Workload Identity Federation pool
+// Google Cloud (GCP) Workload Identity Federation pool
 //
 // Examine pool lifecycle (`state`, `disabled`, `expireTime`) and the external
 // identity providers attached to it via `providers`. A pool is the namespace
@@ -3722,7 +3722,7 @@ private gcp.project.iamService.workloadIdentityPool @defaults("displayName name 
   providers() []gcp.project.iamService.workloadIdentityPool.provider
 }
 
-// GCP Workload Identity Federation pool provider
+// Google Cloud (GCP) Workload Identity Federation pool provider
 //
 // Examine which external identity provider (AWS account, OIDC issuer, SAML
 // IdP, or X.509 trust store) is allowed to mint tokens that federate into the
@@ -3771,7 +3771,7 @@ private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayN
   samlIdpMetadataXml string
 }
 
-// GCP cloud function
+// Google Cloud (GCP) Cloud Function
 private gcp.project.cloudFunction @defaults("name") {
   // Project ID
   projectId string
@@ -3957,7 +3957,7 @@ private gcp.project.cloudFunctionV2.eventTrigger @defaults("eventType") {
   channel string
 }
 
-// GCP Dataproc
+// Google Cloud (GCP) Dataproc
 //
 // Use this resource as the entry point for Dataproc in the project. It
 // hosts the managed Spark and Hadoop surface: `clusters`, submitted
@@ -4231,7 +4231,7 @@ private gcp.project.dataprocService.autoscalingPolicy @defaults("name") {
   basicAlgorithm dict
 }
 
-// GCP Cloud Run
+// Google Cloud (GCP) Cloud Run
 //
 // Use this resource as the entry point for Cloud Run in the project. It
 // hosts the deployed `services` and `jobs` — each exposing its container
@@ -4546,7 +4546,7 @@ private gcp.accessApprovalSettings {
   invalidKeyVersion bool
 }
 
-// GCP Cloud Monitoring
+// Google Cloud (GCP) Cloud Monitoring
 //
 // Use this resource as the entry point for Cloud Monitoring in the
 // project. It hosts the observability surface: `alertPolicies`,
@@ -4775,7 +4775,7 @@ private gcp.project.binaryAuthorizationControl.attestor @defaults("name") {
   updated time
 }
 
-// GCP Binary Authorization attestor public key
+// Google Cloud (GCP) Binary Authorization attestor public key
 //
 // Examine a public key trusted to verify signed attestations for the parent
 // attestor. The discriminator is `type`: `pgp` indicates an ASCII-armored
@@ -4800,7 +4800,7 @@ private gcp.project.binaryAuthorizationControl.attestor.publicKey @defaults("id 
   pkixSignatureAlgorithm string
 }
 
-// GCP Secret Manager
+// Google Cloud (GCP) Secret Manager
 //
 // Use this resource as the entry point for Secret Manager in the project.
 // It hosts the project's `secrets` — each exposing its replication policy,
@@ -4879,7 +4879,7 @@ private gcp.project.secretmanagerService.secret.version @defaults("name state") 
   customerManagedEncryption dict
 }
 
-// GCP Firestore
+// Google Cloud (GCP) Firestore
 //
 // Use this resource as the entry point for Firestore in the project. It
 // hosts the project's `databases` — each exposing its database type
@@ -4962,7 +4962,7 @@ private gcp.project.firestoreService.database.backupSchedule @defaults("name") {
   updated time
 }
 
-// GCP Spanner
+// Google Cloud (GCP) Spanner
 //
 // Use this resource as the entry point for Spanner in the project. It
 // hosts the project's `instances` (with their databases and backups) and
@@ -5205,7 +5205,7 @@ private gcp.project.spannerService.instance.instancePartition @defaults("name") 
   updatedAt time
 }
 
-// GCP Bigtable
+// Google Cloud (GCP) Bigtable
 //
 // Use this resource as the entry point for Bigtable in the project. It
 // hosts the project's `instances` — each exposing its clusters, app
@@ -5334,7 +5334,7 @@ private gcp.project.bigtableService.backup @defaults("name") {
   encryptionInfo dict
 }
 
-// GCP AlloyDB for PostgreSQL
+// Google Cloud (GCP) AlloyDB for PostgreSQL
 //
 // Use this resource as the entry point for AlloyDB in the project. It
 // hosts the project's `clusters` — each exposing its primary and
@@ -5785,7 +5785,7 @@ private gcp.project.computeService.router.nat @defaults("name") {
   udpIdleTimeoutSec int
 }
 
-// GCP Certificate Authority Service
+// Google Cloud (GCP) Certificate Authority Service
 //
 // Use this resource as the entry point for the Private CA Service in the
 // project. It hosts the `caPools` and, through them, the certificate
@@ -5899,7 +5899,7 @@ private gcp.project.certificateAuthorityService.certificate @defaults("name") {
   updatedAt time
 }
 
-// GCP Certificate Manager
+// Google Cloud (GCP) Certificate Manager
 //
 // Use this resource as the entry point for the Certificate Manager service in
 // the project. It hosts the load-balancer-facing TLS certificate surface:
@@ -5926,7 +5926,7 @@ private gcp.project.certificateManagerService {
   trustConfigs() []gcp.project.certificateManagerService.trustConfig
 }
 
-// GCP Certificate Manager certificate
+// Google Cloud (GCP) Certificate Manager certificate
 //
 // Examine a single TLS certificate served by Google Cloud Load Balancing.
 // `type` is the discriminator: `managed` certificates are issued by Google
@@ -5982,7 +5982,7 @@ private gcp.project.certificateManagerService.certificate @defaults("name type m
   managedAuthorizationAttemptInfo []dict
 }
 
-// GCP Certificate Manager certificate map
+// Google Cloud (GCP) Certificate Manager certificate map
 //
 // Examine a certificate map — the host-to-certificate routing table attached
 // to one or more Google Cloud Load Balancing target proxies. `gclbTargets`
@@ -6013,7 +6013,7 @@ private gcp.project.certificateManagerService.certificateMap @defaults("name") {
   entries() []gcp.project.certificateManagerService.certificateMapEntry
 }
 
-// GCP Certificate Manager certificate map entry
+// Google Cloud (GCP) Certificate Manager certificate map entry
 //
 // Examine a single host-to-certificate binding within a certificate map.
 // Exactly one of `hostname` (a literal SNI hostname) or `matcher` (currently
@@ -6051,7 +6051,7 @@ private gcp.project.certificateManagerService.certificateMapEntry @defaults("nam
   state string
 }
 
-// GCP Certificate Manager DNS authorization
+// Google Cloud (GCP) Certificate Manager DNS authorization
 //
 // Examine a DNS authorization used to prove domain ownership when issuing
 // Google-managed certificates. Each authorization covers a single `domain`
@@ -6086,7 +6086,7 @@ private gcp.project.certificateManagerService.dnsAuthorization @defaults("name d
   dnsResourceRecord dict
 }
 
-// GCP Certificate Manager certificate issuance config
+// Google Cloud (GCP) Certificate Manager certificate issuance config
 //
 // Examine an issuance config — the binding between Certificate Manager and
 // a private CA pool that mints managed certificates. `certificateAuthorityConfig`
@@ -6122,7 +6122,7 @@ private gcp.project.certificateManagerService.certificateIssuanceConfig @default
   keyAlgorithm string
 }
 
-// GCP Certificate Manager trust config
+// Google Cloud (GCP) Certificate Manager trust config
 //
 // Examine a trust config — the mTLS trust anchor set used by Google Cloud
 // Load Balancing to authenticate client certificates. `trustStores` lists
@@ -6356,7 +6356,7 @@ private gcp.retryConfig @defaults("maxAttempts maxDoublings") {
   maxRetryDuration string
 }
 
-// GCP Filestore
+// Google Cloud (GCP) Filestore
 //
 // Use this resource as the entry point for Filestore in the project. It
 // hosts the project's `instances` — each exposing its service tier, file
@@ -6426,7 +6426,7 @@ private gcp.project.filestoreService.instance.network @defaults("network ipAddre
   connectMode string
 }
 
-// GCP Cloud Tasks
+// Google Cloud (GCP) Cloud Tasks
 //
 // Use this resource as the entry point for Cloud Tasks in the project. It
 // hosts the project's `queues` — each exposing its rate limits, retry
@@ -6454,7 +6454,7 @@ private gcp.project.cloudTasksService.queue @defaults("name state") {
   appEngineRoutingOverride dict
 }
 
-// GCP Cloud Scheduler
+// Google Cloud (GCP) Cloud Scheduler
 //
 // Use this resource as the entry point for Cloud Scheduler in the project.
 // It hosts the project's `jobs` — each exposing its cron schedule, target
@@ -6492,7 +6492,7 @@ private gcp.project.cloudSchedulerService.job @defaults("name state schedule") {
   targetType string
 }
 
-// GCP App Engine
+// Google Cloud (GCP) App Engine
 //
 // Use this resource as the entry point for App Engine in the project. It
 // hosts the singleton `application` (with its location, serving status,
@@ -6578,7 +6578,7 @@ private gcp.project.appEngineService.version @defaults("id servingStatus") {
   handlers []dict
 }
 
-// GCP API Gateway
+// Google Cloud (GCP) API Gateway
 //
 // Use this resource as the entry point for API Gateway in the project. It
 // hosts the managed APIs (with their API configs) and the deployed
@@ -6661,7 +6661,7 @@ private gcp.project.apiGatewayService.gateway @defaults("name state") {
   labels map[string]string
 }
 
-// GCP Cloud Workstations
+// Google Cloud (GCP) Cloud Workstations
 //
 // Use this resource as the entry point for Cloud Workstations in the
 // project. It hosts the workstation `clusters` — each exposing its network
@@ -6706,7 +6706,7 @@ private gcp.project.workstationsService.cluster @defaults("name displayName degr
   privateClusterConfig dict
 }
 
-// GCP Vertex AI Workbench
+// Google Cloud (GCP) Vertex AI Workbench
 //
 // Use this resource as the entry point for Vertex AI Workbench in the
 // project. It hosts the managed notebook `instances` — each exposing its
@@ -6751,7 +6751,7 @@ private gcp.project.workbenchService.instance @defaults("name state healthState"
   updateTime time
 }
 
-// GCP Notebooks
+// Google Cloud (GCP) Notebooks
 //
 // Use this resource as the entry point for the legacy Notebooks service in
 // the project. It hosts the user-managed notebook `instances` — each
@@ -6796,7 +6796,7 @@ private gcp.project.notebooksService.instance @defaults("name state noPublicIp")
   updateTime time
 }
 
-// GCP Cloud Composer
+// Google Cloud (GCP) Cloud Composer
 //
 // Use this resource as the entry point for Cloud Composer in the project.
 // It hosts the managed Apache Airflow `environments` — each exposing its
@@ -6838,7 +6838,7 @@ private gcp.project.composerService.environment @defaults("name state imageVersi
   config dict
 }
 
-// GCP Cloud Healthcare API
+// Google Cloud (GCP) Cloud Healthcare API
 //
 // Use this resource as the entry point for the Cloud Healthcare API in the
 // project. It hosts the `datasets` and, through them, the DICOM, FHIR, and
@@ -7503,7 +7503,7 @@ private gcp.project.computeService.instanceTemplate @defaults("name description"
   creationTimestamp time
 }
 
-// GCP Cloud Deploy
+// Google Cloud (GCP) Cloud Deploy
 //
 // Use this resource as the entry point for Cloud Deploy in the project. It
 // hosts the `deliveryPipelines` (the promotion sequences for releases) and
@@ -7606,7 +7606,7 @@ private gcp.project.cloudDeployService.release @defaults("name") {
   condition dict
 }
 
-// GCP Dataflow
+// Google Cloud (GCP) Dataflow
 //
 // Use this resource as the entry point for Dataflow in the project. It
 // hosts the project's `jobs` — each exposing its pipeline type, current
@@ -7645,7 +7645,7 @@ private gcp.project.dataflowService.job @defaults("name currentState") {
   currentStateTime time
 }
 
-// GCP Artifact Registry
+// Google Cloud (GCP) Artifact Registry
 //
 // Use this resource as the entry point for Artifact Registry in the
 // project. It hosts the project's `repositories` — each exposing its
@@ -7796,7 +7796,7 @@ private gcp.project.artifactRegistryService.repository.upstreamPolicy @defaults(
   priority int
 }
 
-// GCP Backup and DR Service
+// Google Cloud (GCP) Backup and DR Service
 //
 // Use this resource as the entry point for the Backup and DR Service in
 // the project. It hosts the `managementServers`, the `backupVaults` that
@@ -7929,7 +7929,7 @@ private gcp.project.backupdrService.backupPlan @defaults("name state") {
   updatedAt time
 }
 
-// GCP Vertex AI
+// Google Cloud (GCP) Vertex AI
 //
 // Use this resource as the entry point for Vertex AI in the project. It
 // hosts the machine-learning surface: `models`, `endpoints`, `datasets`,
@@ -8418,7 +8418,7 @@ private gcp.accesscontextmanager.servicePerimeter.config {
   egressPolicies []dict
 }
 
-// GCP Model Armor
+// Google Cloud (GCP) Model Armor
 //
 // Use this resource as the entry point for Model Armor in the project. It
 // hosts the safety-filter `templates` and the project `floorSetting` — the
@@ -8472,7 +8472,7 @@ private gcp.project.modelArmorService.floorSetting @defaults("name") {
 // Eventarc
 // ============================================================
 
-// GCP Eventarc
+// Google Cloud (GCP) Eventarc
 //
 // Use this resource as the entry point for Eventarc in the project. It
 // hosts the `triggers` that route events to destinations and the
@@ -8550,7 +8550,7 @@ private gcp.project.eventarcService.channel @defaults("name state") {
 // Cloud DLP
 // ============================================================
 
-// GCP Sensitive Data Protection (Cloud DLP)
+// Google Cloud (GCP) Sensitive Data Protection (Cloud DLP)
 //
 // Use this resource as the entry point for Sensitive Data Protection in
 // the project. It hosts the configuration surface (`inspectTemplates`,
@@ -8911,7 +8911,7 @@ private gcp.project.dlpService.storedInfoType @defaults("name") {
 // Batch
 // ============================================================
 
-// GCP Batch
+// Google Cloud (GCP) Batch
 //
 // Use this resource as the entry point for Batch in the project. It hosts
 // the project's `jobs` — each exposing its task groups, compute and
@@ -8972,7 +8972,7 @@ private gcp.project.batchService.job.taskGroup @defaults("name taskCount") {
 // Cloud IDS
 // ============================================================
 
-// GCP Cloud IDS
+// Google Cloud (GCP) Cloud IDS
 //
 // Use this resource as the entry point for Cloud IDS in the project. It
 // hosts the IDS `endpoints` — each exposing its severity threshold,
@@ -9017,7 +9017,7 @@ private gcp.project.idsService.endpoint @defaults("name severity state") {
 // GKE Backup
 // ============================================================
 
-// GCP Backup for GKE
+// Google Cloud (GCP) Backup for GKE
 //
 // Use this resource as the entry point for Backup for GKE in the project.
 // It hosts the `backupPlans` that schedule cluster backups and the
@@ -9099,7 +9099,7 @@ private gcp.project.gkeBackupService.restorePlan @defaults("name") {
 // Container Analysis
 // ============================================================
 
-// GCP Container Analysis
+// Google Cloud (GCP) Container Analysis
 //
 // Use this resource as the entry point for Container Analysis in the
 // project. It hosts the vulnerability `occurrences` — the scan findings
@@ -9147,7 +9147,7 @@ private gcp.project.containerAnalysisService.occurrence @defaults("name kind") {
 // Cloud Build
 // ============================================================
 
-// GCP Cloud Build
+// Google Cloud (GCP) Cloud Build
 //
 // Use this resource as the entry point for Cloud Build in the project. It
 // hosts the build `triggers` (with their source repositories and build
@@ -9301,7 +9301,7 @@ private gcp.project.cloudBuildService.workerPool.networkConfig @defaults("egress
 // Identity-Aware Proxy (IAP)
 // ============================================================
 
-// GCP Identity-Aware Proxy (IAP)
+// Google Cloud (GCP) Identity-Aware Proxy (IAP)
 //
 // Use this resource as the entry point for Identity-Aware Proxy in the
 // project. It hosts the OAuth `brands` (and their OAuth clients) and the
@@ -9345,7 +9345,7 @@ private gcp.project.iapService.tunnelDestGroup @defaults("name") {
 // Cloud Source Repositories
 // ============================================================
 
-// GCP Cloud Source Repositories
+// Google Cloud (GCP) Cloud Source Repositories
 //
 // Use this resource as the entry point for Cloud Source Repositories in
 // the project. It hosts the project's `repos` — each exposing its size,
@@ -9383,7 +9383,7 @@ private gcp.project.sourceRepositoriesService.repo.mirrorConfig @defaults("url")
   webhookId string
 }
 
-// GCP Memorystore for Memcached
+// Google Cloud (GCP) Memorystore for Memcached
 //
 // Use this resource as the entry point for Memorystore for Memcached in
 // the project. It hosts the project's `instances` — each exposing its node
@@ -9486,7 +9486,7 @@ private gcp.project.memcacheService.instance.node.parameters @defaults("id") {
   params map[string]string
 }
 
-// GCP Datastream
+// Google Cloud (GCP) Datastream
 //
 // Use this resource as the entry point for Datastream in the project. It
 // hosts the change-data-capture surface: `streams`, the source and
@@ -9637,7 +9637,7 @@ private gcp.project.datastreamService.route @defaults("name destinationAddress")
   updateTime time
 }
 
-// GCP Memorystore
+// Google Cloud (GCP) Memorystore
 //
 // Use this resource as the entry point for the unified Memorystore service
 // (Valkey and Redis) in the project. It hosts the project's `instances`
