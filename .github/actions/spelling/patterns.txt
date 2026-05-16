@@ -149,3 +149,6 @@ Ip\..*
 # to use "APIs".
 \bapis\(\)
 "apis"
+# `apis` as a literal segment of a GCP resource name path, e.g.
+# projects/{project}/locations/global/apis/{api}.
+/apis/

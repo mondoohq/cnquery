@@ -145,7 +145,7 @@ func (g *mqlGcpProjectWorkbenchService) instances() ([]any, error) {
 	}); err != nil {
 		if isNotebooksSkippable(err) {
 			log.Debug().Str("project", projectId).Msg("vertex ai workbench api is not enabled, skipping")
-			return nil, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func (g *mqlGcpProjectNotebooksService) instances() ([]any, error) {
 	}); err != nil {
 		if isNotebooksSkippable(err) {
 			log.Debug().Str("project", projectId).Msg("notebooks api is not enabled, skipping")
-			return nil, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}

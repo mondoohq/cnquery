@@ -129,6 +129,7 @@ dast
 databricks
 datadog
 datapath
+dataplex
 datasource
 datastream
 DATAUSER
@@ -145,6 +146,7 @@ depsdev
 dfw
 dhcpcd
 dhcpv
+dicom
 directoryservice
 discriminants
 diskread
@@ -161,6 +163,7 @@ draid
 DRdf
 dscp
 dsse
+DSTU
 Duf
 DVR
 eas
@@ -197,6 +200,7 @@ fargate
 fce
 fdfhash
 FEBLx
+fhir
 filestore
 filesz
 filevault
@@ -586,6 +590,7 @@ stdlib
 stepfunctions
 streamable
 stringx
+stu
 Stus
 stv
 subfolders

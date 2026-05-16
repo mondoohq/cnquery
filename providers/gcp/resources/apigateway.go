@@ -96,7 +96,7 @@ func (g *mqlGcpProjectApiGatewayService) apis() ([]any, error) {
 		return nil
 	}); err != nil {
 		if apiGatewayServiceDisabled(err) {
-			return nil, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (g *mqlGcpProjectApiGatewayService) gateways() ([]any, error) {
 		return nil
 	}); err != nil {
 		if apiGatewayServiceDisabled(err) {
-			return nil, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (g *mqlGcpProjectApiGatewayServiceApi) configs() ([]any, error) {
 		return nil
 	}); err != nil {
 		if apiGatewayServiceDisabled(err) {
-			return nil, nil
+			return []any{}, nil
 		}
 		return nil, err
 	}

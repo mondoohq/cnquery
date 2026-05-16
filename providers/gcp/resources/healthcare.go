@@ -28,16 +28,14 @@ func newHealthcareService(conn *connection.GcpConnection) (*healthcare.Service, 
 // healthcareServiceUnavailable reports whether an API error should be treated
 // as graceful degradation (API not enabled or resource not found).
 func healthcareServiceUnavailable(err error) bool {
-	if err == nil {
+	gerr, ok := err.(*googleapi.Error)
+	if !ok {
 		return false
 	}
-	if gerr, ok := err.(*googleapi.Error); ok {
-		if gerr.Code == 403 || gerr.Code == 404 {
-			return true
-		}
+	if gerr.Code == 403 || gerr.Code == 404 {
+		return true
 	}
-	msg := err.Error()
-	return strings.Contains(msg, "not enabled") || strings.Contains(msg, "has not been used")
+	return strings.Contains(gerr.Message, "not enabled") || strings.Contains(gerr.Message, "has not been used")
 }
 
 func (g *mqlGcpProject) healthcare() (*mqlGcpProjectHealthcareService, error) {
