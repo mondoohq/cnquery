@@ -601,8 +601,18 @@ gcp.project @defaults("name number") {
   datastream() gcp.project.datastreamService
   // GCP Memorystore (unified Valkey/Redis) resources
   memorystore() gcp.project.memorystoreService
+  // GCP API Gateway resources
+  apiGateway() gcp.project.apiGatewayService
+  // GCP Cloud Workstations resources
+  workstations() gcp.project.workstationsService
+  // GCP Vertex AI Workbench resources
+  workbench() gcp.project.workbenchService
+  // GCP legacy Notebooks resources
+  notebooks() gcp.project.notebooksService
   // GCP Cloud Composer resources
   composer() gcp.project.composerService
+  // GCP Cloud Healthcare resources
+  healthcare() gcp.project.healthcareService
 }
 
 // Google Cloud service API
@@ -6447,6 +6457,206 @@ private gcp.project.appEngineService.version @defaults("id servingStatus") {
   runtimeApiVersion string
   // VPC access connector configuration
   vpcAccessConnector dict
+  // URL handlers, each with its HTTPS enforcement (securityLevel) and login requirement
+  handlers []dict
+}
+
+// Google Cloud (GCP) API Gateway service
+private gcp.project.apiGatewayService {
+  // Project ID
+  projectId string
+  // List of API Gateway APIs
+  apis() []gcp.project.apiGatewayService.api
+  // List of API Gateway gateways
+  gateways() []gcp.project.apiGatewayService.gateway
+}
+
+// Google Cloud (GCP) API Gateway API
+private gcp.project.apiGatewayService.api @defaults("name state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/global/apis/{api})
+  name string
+  // Display name
+  displayName string
+  // Name of the Google managed service backing this API
+  managedService string
+  // State of the API (CREATING, ACTIVE, FAILED, DELETING, UPDATING)
+  state string
+  // The time the API was created
+  createTime time
+  // The time the API was last updated
+  updateTime time
+  // Resource labels
+  labels map[string]string
+  // API configurations for this API
+  configs() []gcp.project.apiGatewayService.apiConfig
+}
+
+// Google Cloud (GCP) API Gateway API config
+private gcp.project.apiGatewayService.apiConfig @defaults("name state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/global/apis/{api}/configs/{config})
+  name string
+  // Display name
+  displayName string
+  // State of the API config (CREATING, ACTIVE, FAILED, DELETING, UPDATING, ACTIVATING)
+  state string
+  // ID of the associated service config
+  serviceConfigId string
+  // IAM service account that gateways serving this config use to authenticate to other services
+  gatewayServiceAccount string
+  // The time the API config was created
+  createTime time
+  // The time the API config was last updated
+  updateTime time
+  // Resource labels
+  labels map[string]string
+  // OpenAPI specification documents describing the API
+  openapiDocuments []dict
+}
+
+// Google Cloud (GCP) API Gateway gateway
+private gcp.project.apiGatewayService.gateway @defaults("name state") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/gateways/{gateway})
+  name string
+  // Display name
+  displayName string
+  // Resource name of the API config served by this gateway
+  apiConfig string
+  // State of the gateway (CREATING, ACTIVE, FAILED, DELETING, UPDATING)
+  state string
+  // Default API Gateway host name serving this gateway
+  defaultHostname string
+  // The time the gateway was created
+  createTime time
+  // The time the gateway was last updated
+  updateTime time
+  // Resource labels
+  labels map[string]string
+}
+
+// Google Cloud (GCP) Cloud Workstations service
+private gcp.project.workstationsService {
+  // Project ID
+  projectId string
+  // List of Cloud Workstations clusters
+  clusters() []gcp.project.workstationsService.cluster
+}
+
+// Google Cloud (GCP) Cloud Workstations cluster
+private gcp.project.workstationsService.cluster @defaults("name displayName degraded") {
+  // Project ID
+  projectId string
+  // Full resource name of the workstation cluster
+  name string
+  // Human-readable name for this workstation cluster
+  displayName string
+  // System-assigned unique identifier for this workstation cluster
+  uid string
+  // URL of the Compute Engine network for instances in this cluster
+  network string
+  // URL of the Compute Engine subnetwork for instances in this cluster
+  subnetwork string
+  // Private IP address of the control plane for this workstation cluster
+  controlPlaneIp string
+  // Whether this workstation cluster is in degraded mode
+  degraded bool
+  // Whether this workstation cluster is currently being updated to match its intended state
+  reconciling bool
+  // Time when this workstation cluster was created
+  createTime time
+  // Time when this workstation cluster was most recently updated
+  updateTime time
+  // Resource labels
+  labels map[string]string
+  // Client-specified annotations
+  annotations map[string]string
+  // Configuration for a private workstation cluster (enablePrivateEndpoint, clusterHostname, serviceAttachmentUri, allowedProjects)
+  privateClusterConfig dict
+}
+
+// Google Cloud (GCP) Vertex AI Workbench service
+private gcp.project.workbenchService {
+  // Project ID
+  projectId string
+  // List of Vertex AI Workbench instances
+  instances() []gcp.project.workbenchService.instance
+}
+
+// Google Cloud (GCP) Vertex AI Workbench instance
+private gcp.project.workbenchService.instance @defaults("name state healthState") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/instances/{instance})
+  name string
+  // State of the instance (ACTIVE, STOPPED, PROVISIONING, etc.)
+  state string
+  // Instance health state (HEALTHY, UNHEALTHY, AGENT_NOT_INSTALLED, etc.)
+  healthState string
+  // Proxy endpoint used to access the Jupyter notebook
+  proxyUri string
+  // Email address of the entity that created the instance
+  creator string
+  // Owners of this instance
+  instanceOwners []string
+  // Whether the instance is registered with the notebook proxy
+  disableProxyAccess bool
+  // Whether deletion protection is enabled for this instance
+  enableDeletionProtection bool
+  // Whether third party identity provider access is enabled
+  enableThirdPartyIdentity bool
+  // Resource labels
+  labels map[string]string
+  // Compute Engine setup for the notebook, including disablePublicIp and network interfaces
+  gceSetup dict
+  // Instance creation time
+  createTime time
+  // Instance last update time
+  updateTime time
+}
+
+// Google Cloud (GCP) legacy Notebooks service
+private gcp.project.notebooksService {
+  // Project ID
+  projectId string
+  // List of legacy User-Managed Notebooks instances
+  instances() []gcp.project.notebooksService.instance
+}
+
+// Google Cloud (GCP) legacy Notebooks instance
+private gcp.project.notebooksService.instance @defaults("name state noPublicIp") {
+  // Project ID
+  projectId string
+  // Full resource name (projects/{project}/locations/{location}/instances/{instance})
+  name string
+  // State of the instance (ACTIVE, STOPPED, PROVISIONING, etc.)
+  state string
+  // Compute Engine machine type of this instance
+  machineType string
+  // Whether no external IP is assigned to this instance
+  noPublicIp bool
+  // Whether the instance is registered with the notebook proxy
+  noProxyAccess bool
+  // Name of the VPC that this instance is in
+  network string
+  // Name of the subnet that this instance is in
+  subnet string
+  // Service account on this instance
+  serviceAccount string
+  // Proxy endpoint used to access the Jupyter notebook
+  proxyUri string
+  // Email address of the entity that created the instance
+  creator string
+  // Resource labels
+  labels map[string]string
+  // Instance creation time
+  createTime time
+  // Instance last update time
+  updateTime time
 }
 
 // Google Cloud (GCP) Cloud Composer service
@@ -6457,13 +6667,7 @@ private gcp.project.composerService {
   environments() []gcp.project.composerService.environment
 }
 
-// Cloud Composer environment
-//
-// Examine a managed Apache Airflow environment running on Cloud Composer:
-// its lifecycle state, the Composer image version it runs, user-defined
-// labels, creation and update timestamps, and the full environment
-// configuration covering node config, software config, encryption config,
-// and web server access control.
+// Google Cloud (GCP) Cloud Composer environment
 private gcp.project.composerService.environment @defaults("name state imageVersion") {
   // Project ID
   projectId string
@@ -6483,6 +6687,78 @@ private gcp.project.composerService.environment @defaults("name state imageVersi
   imageVersion string
   // Environment configuration (node config, software config, encryption config, web server access control)
   config dict
+}
+
+// Google Cloud (GCP) Cloud Healthcare service
+private gcp.project.healthcareService {
+  // Project ID
+  projectId string
+  // List of Cloud Healthcare datasets
+  datasets() []gcp.project.healthcareService.dataset
+}
+
+// Google Cloud (GCP) Cloud Healthcare dataset
+private gcp.project.healthcareService.dataset @defaults("name timeZone") {
+  // Project ID
+  projectId string
+  // Full resource name of the dataset
+  name string
+  // Default IANA time zone used by the dataset (e.g. "America/New_York")
+  timeZone string
+  // Customer-managed encryption key configuration (includes kmsKeyName)
+  encryptionSpec dict
+  // DICOM stores in this dataset
+  dicomStores() []gcp.project.healthcareService.dicomStore
+  // FHIR stores in this dataset
+  fhirStores() []gcp.project.healthcareService.fhirStore
+  // HL7v2 stores in this dataset
+  hl7v2Stores() []gcp.project.healthcareService.hl7v2Store
+}
+
+// Google Cloud (GCP) Cloud Healthcare DICOM store
+private gcp.project.healthcareService.dicomStore @defaults("name") {
+  // Project ID
+  projectId string
+  // Full resource name of the DICOM store
+  name string
+  // Resource labels
+  labels map[string]string
+  // Pub/Sub notification destination for new DICOM instances
+  notificationConfig dict
+}
+
+// Google Cloud (GCP) Cloud Healthcare FHIR store
+private gcp.project.healthcareService.fhirStore @defaults("name version") {
+  // Project ID
+  projectId string
+  // Full resource name of the FHIR store
+  name string
+  // Resource labels
+  labels map[string]string
+  // FHIR specification version (DSTU2, STU3, R4, R5)
+  version string
+  // Whether referential integrity is disabled
+  disableReferentialIntegrity bool
+  // Whether the store has the updateCreate capability
+  enableUpdateCreate bool
+  // Whether references in complex data types are parsed (ENABLED, DISABLED, COMPLEX_DATA_TYPE_REFERENCE_PARSING_UNSPECIFIED)
+  complexDataTypeReferenceParsing string
+  // Whether search uses strict handling for unrecognized parameters
+  defaultSearchHandlingStrict bool
+}
+
+// Google Cloud (GCP) Cloud Healthcare HL7v2 store
+private gcp.project.healthcareService.hl7v2Store @defaults("name") {
+  // Project ID
+  projectId string
+  // Full resource name of the HL7v2 store
+  name string
+  // Resource labels
+  labels map[string]string
+  // Configuration for how the server parses messages
+  parserConfig dict
+  // Whether duplicate messages are rejected
+  rejectDuplicateMessage bool
 }
 
 // Google Cloud (GCP) Compute health check
@@ -7501,6 +7777,26 @@ private gcp.project.vertexaiService {
   indexes() []gcp.project.vertexaiService.index
   // Vector search index endpoints
   indexEndpoints() []gcp.project.vertexaiService.indexEndpoint
+  // Metadata stores
+  metadataStores() []gcp.project.vertexaiService.metadataStore
+}
+
+// Google Cloud (GCP) Vertex AI metadata store
+private gcp.project.vertexaiService.metadataStore @defaults("name state") {
+  // Full resource name
+  name string
+  // Human-readable description of the resource
+  description string
+  // State information of the metadata store
+  state dict
+  // Encryption spec
+  encryptionSpec dict
+  // Dataplex integration config
+  dataplexConfig dict
+  // Creation time
+  created time
+  // Last update time
+  updated time
 }
 
 // Google Cloud (GCP) Vertex AI model

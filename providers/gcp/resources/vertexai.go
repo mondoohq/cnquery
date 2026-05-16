@@ -942,3 +942,81 @@ func (g *mqlGcpProjectVertexaiService) indexEndpoints() ([]any, error) {
 		return items, false, nil
 	})
 }
+
+// ---------------------------------------------------------------
+// Metadata Stores
+// ---------------------------------------------------------------
+
+func (g *mqlGcpProjectVertexaiServiceMetadataStore) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectVertexaiService) metadataStores() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	return g.listAcrossRegions(func(ctx context.Context, region string) ([]any, bool, error) {
+		client, err := aiplatform.NewMetadataClient(ctx,
+			option.WithCredentials(creds),
+			option.WithEndpoint(vertexaiEndpoint(region)),
+		)
+		if err != nil {
+			return nil, false, err
+		}
+		defer client.Close()
+
+		it := client.ListMetadataStores(ctx, &aiplatformpb.ListMetadataStoresRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region),
+		})
+
+		var items []any
+		for {
+			store, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if isVertexAIRegionSkippable(err) {
+					return nil, true, nil
+				}
+				return nil, false, err
+			}
+
+			state, err := protoToDict(store.State)
+			if err != nil {
+				return nil, false, err
+			}
+			encryptionSpec, err := protoToDict(store.EncryptionSpec)
+			if err != nil {
+				return nil, false, err
+			}
+			dataplexConfig, err := protoToDict(store.DataplexConfig)
+			if err != nil {
+				return nil, false, err
+			}
+
+			mqlStore, err := CreateResource(g.MqlRuntime, "gcp.project.vertexaiService.metadataStore", map[string]*llx.RawData{
+				"name":           llx.StringData(store.Name),
+				"description":    llx.StringData(store.Description),
+				"state":          llx.DictData(state),
+				"encryptionSpec": llx.DictData(encryptionSpec),
+				"dataplexConfig": llx.DictData(dataplexConfig),
+				"created":        llx.TimeDataPtr(timestampAsTimePtr(store.CreateTime)),
+				"updated":        llx.TimeDataPtr(timestampAsTimePtr(store.UpdateTime)),
+			})
+			if err != nil {
+				return nil, false, err
+			}
+			items = append(items, mqlStore)
+		}
+		return items, false, nil
+	})
+}

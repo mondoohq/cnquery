@@ -1,0 +1,205 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
+	"google.golang.org/api/googleapi"
+	notebooksv1 "google.golang.org/api/notebooks/v1"
+	notebooksv2 "google.golang.org/api/notebooks/v2"
+	"google.golang.org/api/option"
+)
+
+// isNotebooksSkippable returns true for REST errors that indicate the Notebooks
+// API is not enabled or the caller lacks permission.
+func isNotebooksSkippable(err error) bool {
+	gerr, ok := err.(*googleapi.Error)
+	if !ok {
+		return false
+	}
+	if gerr.Code == 403 || gerr.Code == 404 {
+		return true
+	}
+	msg := strings.ToLower(gerr.Message)
+	return strings.Contains(msg, "not enabled") || strings.Contains(msg, "has not been used")
+}
+
+func newWorkbenchService(conn *connection.GcpConnection) (*notebooksv2.Service, error) {
+	client, err := conn.Client(notebooksv2.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+	return notebooksv2.NewService(context.Background(), option.WithHTTPClient(client))
+}
+
+func newNotebooksService(conn *connection.GcpConnection) (*notebooksv1.Service, error) {
+	client, err := conn.Client(notebooksv1.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+	return notebooksv1.NewService(context.Background(), option.WithHTTPClient(client))
+}
+
+func (g *mqlGcpProject) workbench() (*mqlGcpProjectWorkbenchService, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.workbenchService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectWorkbenchService), nil
+}
+
+func (g *mqlGcpProject) notebooks() (*mqlGcpProjectNotebooksService, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.notebooksService", map[string]*llx.RawData{
+		"projectId": llx.StringData(g.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectNotebooksService), nil
+}
+
+func (g *mqlGcpProjectWorkbenchService) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/workbenchService", g.ProjectId.Data), nil
+}
+
+func (g *mqlGcpProjectNotebooksService) id() (string, error) {
+	if g.ProjectId.Error != nil {
+		return "", g.ProjectId.Error
+	}
+	return fmt.Sprintf("gcp.project/%s/notebooksService", g.ProjectId.Data), nil
+}
+
+func (g *mqlGcpProjectWorkbenchServiceInstance) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectNotebooksServiceInstance) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectWorkbenchService) instances() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	svc, err := newWorkbenchService(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	var res []any
+	parent := fmt.Sprintf("projects/%s/locations/-", projectId)
+	req := svc.Projects.Locations.Instances.List(parent)
+	if err := req.Pages(ctx, func(page *notebooksv2.ListInstancesResponse) error {
+		for _, i := range page.Instances {
+			gceSetup, err := convert.JsonToDict(i.GceSetup)
+			if err != nil {
+				return err
+			}
+
+			mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.workbenchService.instance", map[string]*llx.RawData{
+				"projectId":                llx.StringData(projectId),
+				"name":                     llx.StringData(i.Name),
+				"state":                    llx.StringData(i.State),
+				"healthState":              llx.StringData(i.HealthState),
+				"proxyUri":                 llx.StringData(i.ProxyUri),
+				"creator":                  llx.StringData(i.Creator),
+				"instanceOwners":           llx.ArrayData(convert.SliceAnyToInterface(i.InstanceOwners), types.String),
+				"disableProxyAccess":       llx.BoolData(i.DisableProxyAccess),
+				"enableDeletionProtection": llx.BoolData(i.EnableDeletionProtection),
+				"enableThirdPartyIdentity": llx.BoolData(i.EnableThirdPartyIdentity),
+				"labels":                   llx.MapData(convert.MapToInterfaceMap(i.Labels), types.String),
+				"gceSetup":                 llx.DictData(gceSetup),
+				"createTime":               llx.TimeDataPtr(parseTime(i.CreateTime)),
+				"updateTime":               llx.TimeDataPtr(parseTime(i.UpdateTime)),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlInstance)
+		}
+		return nil
+	}); err != nil {
+		if isNotebooksSkippable(err) {
+			log.Debug().Str("project", projectId).Msg("vertex ai workbench api is not enabled, skipping")
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (g *mqlGcpProjectNotebooksService) instances() ([]any, error) {
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	svc, err := newNotebooksService(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	var res []any
+	parent := fmt.Sprintf("projects/%s/locations/-", projectId)
+	req := svc.Projects.Locations.Instances.List(parent)
+	if err := req.Pages(ctx, func(page *notebooksv1.ListInstancesResponse) error {
+		for _, i := range page.Instances {
+			mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.notebooksService.instance", map[string]*llx.RawData{
+				"projectId":      llx.StringData(projectId),
+				"name":           llx.StringData(i.Name),
+				"state":          llx.StringData(i.State),
+				"machineType":    llx.StringData(i.MachineType),
+				"noPublicIp":     llx.BoolData(i.NoPublicIp),
+				"noProxyAccess":  llx.BoolData(i.NoProxyAccess),
+				"network":        llx.StringData(i.Network),
+				"subnet":         llx.StringData(i.Subnet),
+				"serviceAccount": llx.StringData(i.ServiceAccount),
+				"proxyUri":       llx.StringData(i.ProxyUri),
+				"creator":        llx.StringData(i.Creator),
+				"labels":         llx.MapData(convert.MapToInterfaceMap(i.Labels), types.String),
+				"createTime":     llx.TimeDataPtr(parseTime(i.CreateTime)),
+				"updateTime":     llx.TimeDataPtr(parseTime(i.UpdateTime)),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlInstance)
+		}
+		return nil
+	}); err != nil {
+		if isNotebooksSkippable(err) {
+			log.Debug().Str("project", projectId).Msg("notebooks api is not enabled, skipping")
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return res, nil
+}

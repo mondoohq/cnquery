@@ -10,6 +10,7 @@
     "aiplatform.featureOnlineStores.list",
     "aiplatform.indexEndpoints.list",
     "aiplatform.indexes.list",
+    "aiplatform.metadataStores.list",
     "aiplatform.models.list",
     "aiplatform.pipelineJobs.list",
     "aiplatform.tensorboards.list",
@@ -247,6 +248,12 @@
       "permission": "aiplatform.indexes.list",
       "service": "aiplatform",
       "action": "ListIndexes",
+      "source_file": "vertexai.go"
+    },
+    {
+      "permission": "aiplatform.metadataStores.list",
+      "service": "aiplatform",
+      "action": "ListMetadataStores",
       "source_file": "vertexai.go"
     },
     {

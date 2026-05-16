@@ -158,6 +158,10 @@ func (g *mqlGcpProjectAppEngineServiceService) versions() ([]any, error) {
 			if err != nil {
 				return err
 			}
+			handlers, err := appEngineConvertHandlers(v.Handlers)
+			if err != nil {
+				return err
+			}
 
 			mqlVersion, err := CreateResource(g.MqlRuntime, "gcp.project.appEngineService.version", map[string]*llx.RawData{
 				"projectId":          llx.StringData(projectId),
@@ -170,6 +174,7 @@ func (g *mqlGcpProjectAppEngineServiceService) versions() ([]any, error) {
 				"createTime":         llx.TimeDataPtr(parseTime(v.CreateTime)),
 				"runtimeApiVersion":  llx.StringData(v.RuntimeApiVersion),
 				"vpcAccessConnector": llx.DictData(vpcConnector),
+				"handlers":           llx.ArrayData(handlers, types.Dict),
 			})
 			if err != nil {
 				return err
@@ -244,6 +249,21 @@ func appEngineConvertSplit(s *appengine.TrafficSplit) (map[string]any, error) {
 		ShardBy:     s.ShardBy,
 		Allocations: s.Allocations,
 	})
+}
+
+func appEngineConvertHandlers(handlers []*appengine.UrlMap) ([]any, error) {
+	res := make([]any, 0, len(handlers))
+	for _, h := range handlers {
+		if h == nil {
+			continue
+		}
+		d, err := convert.JsonToDict(h)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, d)
+	}
+	return res, nil
 }
 
 func appEngineConvertVpcConnector(vc *appengine.VpcAccessConnector) (map[string]any, error) {
