@@ -1505,7 +1505,7 @@ microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUp
 // represents a single detection — a suspicious or malicious activity — and
 // exposes its `severity`, `status`, `category`, `serviceSource` and
 // `detectionSource` (which Defender workload reported it), the analyst
-// `classification` and `determination` once triaged, the `mitreTechniques`
+// `classification` and `determination` assigned during review, the `mitreTechniques`
 // it maps to, `recommendedActions`, and the activity timeline (`createdDateTime`,
 // `firstActivityDateTime`, `lastActivityDateTime`, `resolvedDateTime`). Related
 // alerts are correlated into an incident — use `incident` to navigate to it.

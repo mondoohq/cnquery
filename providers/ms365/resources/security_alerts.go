@@ -77,9 +77,6 @@ func (a *mqlMicrosoftSecurity) alerts() ([]any, error) {
 }
 
 func newMqlSecurityAlert(runtime *plugin.Runtime, alert securitymodels.Alertable) (*mqlMicrosoftSecurityAlert, error) {
-	if alert == nil {
-		return nil, nil
-	}
 	mqlResource, err := CreateResource(runtime, "microsoft.security.alert", map[string]*llx.RawData{
 		"__id":                  llx.StringDataPtr(alert.GetId()),
 		"id":                    llx.StringDataPtr(alert.GetId()),
@@ -163,9 +160,6 @@ func (a *mqlMicrosoftSecurity) incidents() ([]any, error) {
 }
 
 func newMqlSecurityIncident(runtime *plugin.Runtime, incident securitymodels.Incidentable) (*mqlMicrosoftSecurityIncident, error) {
-	if incident == nil {
-		return nil, nil
-	}
 	mqlResource, err := CreateResource(runtime, "microsoft.security.incident", map[string]*llx.RawData{
 		"__id":               llx.StringDataPtr(incident.GetId()),
 		"id":                 llx.StringDataPtr(incident.GetId()),
