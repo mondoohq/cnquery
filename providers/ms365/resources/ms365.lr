@@ -438,7 +438,7 @@ private microsoft.user.licenseDetail.servicePlanInfo @defaults("appliesTo provis
 // `authenticationMethodsPolicy` (tenant-wide allowed authentication methods).
 microsoft.conditionalAccess {
   // Named locations container
-  namedLocations microsoft.conditionalAccess.namedLocations
+  namedLocations() microsoft.conditionalAccess.namedLocations
   // Policies collection
   policies() []microsoft.conditionalAccess.policy
   // Tenant-wide authentication methods policy

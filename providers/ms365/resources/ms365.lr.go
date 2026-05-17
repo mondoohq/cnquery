@@ -9515,7 +9515,19 @@ func (c *mqlMicrosoftConditionalAccess) MqlID() string {
 }
 
 func (c *mqlMicrosoftConditionalAccess) GetNamedLocations() *plugin.TValue[*mqlMicrosoftConditionalAccessNamedLocations] {
-	return &c.NamedLocations
+	return plugin.GetOrCompute[*mqlMicrosoftConditionalAccessNamedLocations](&c.NamedLocations, func() (*mqlMicrosoftConditionalAccessNamedLocations, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.conditionalAccess", c.__id, "namedLocations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftConditionalAccessNamedLocations), nil
+			}
+		}
+
+		return c.namedLocations()
+	})
 }
 
 func (c *mqlMicrosoftConditionalAccess) GetPolicies() *plugin.TValue[[]any] {

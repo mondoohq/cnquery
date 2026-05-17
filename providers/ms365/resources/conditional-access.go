@@ -15,6 +15,18 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+// namedLocations exposes the tenant's named-location container, which holds
+// the IP-based and country-based named locations.
+func (a *mqlMicrosoftConditionalAccess) namedLocations() (*mqlMicrosoftConditionalAccessNamedLocations, error) {
+	resource, err := CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.namedLocations", map[string]*llx.RawData{
+		"__id": llx.StringData("microsoft.conditionalAccess.namedLocations"),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftConditionalAccessNamedLocations), nil
+}
+
 func (a *mqlMicrosoftConditionalAccessNamedLocations) ipLocations() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
