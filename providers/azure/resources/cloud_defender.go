@@ -1348,7 +1348,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 		}
 		for _, item := range page.Value {
 			var displayName, status, statusCause, statusDescription string
-			var additionalData map[string]any
+			additionalData := map[string]any{}
 
 			if props := item.Properties; props != nil {
 				if props.DisplayName != nil {
@@ -1365,12 +1365,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) 
 						statusDescription = *props.Status.Description
 					}
 				}
-				if len(props.AdditionalData) > 0 {
-					additionalData = map[string]any{}
-					for k, v := range props.AdditionalData {
-						if v != nil {
-							additionalData[k] = *v
-						}
+				for k, v := range props.AdditionalData {
+					if v != nil {
+						additionalData[k] = *v
 					}
 				}
 			}
