@@ -204,6 +204,8 @@ const (
 	ResourceAzureSubscriptionCloudDefenderServiceSecureScoreControl                              string = "azure.subscription.cloudDefenderService.secureScoreControl"
 	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard                    string = "azure.subscription.cloudDefenderService.regulatoryComplianceStandard"
 	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl                     string = "azure.subscription.cloudDefenderService.regulatoryComplianceControl"
+	ResourceAzureSubscriptionCloudDefenderServiceAssessment                                      string = "azure.subscription.cloudDefenderService.assessment"
+	ResourceAzureSubscriptionCloudDefenderServiceAlert                                           string = "azure.subscription.cloudDefenderService.alert"
 	ResourceAzureSubscriptionCloudDefenderServiceSettings                                        string = "azure.subscription.cloudDefenderService.settings"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForApis                                 string = "azure.subscription.cloudDefenderService.defenderForApis"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                                    string = "azure.subscription.cloudDefenderService.defenderCSPM"
@@ -1101,6 +1103,14 @@ func init() {
 		"azure.subscription.cloudDefenderService.regulatoryComplianceControl": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl,
+		},
+		"azure.subscription.cloudDefenderService.assessment": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceAssessment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceAssessment,
+		},
+		"azure.subscription.cloudDefenderService.alert": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceAlert,
 		},
 		"azure.subscription.cloudDefenderService.settings": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7835,6 +7845,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.regulatoryComplianceStandards": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetRegulatoryComplianceStandards()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.regulatoryComplianceStandard")))
 	},
+	"azure.subscription.cloudDefenderService.assessments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetAssessments()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.assessment")))
+	},
+	"azure.subscription.cloudDefenderService.alerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetAlerts()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.alert")))
+	},
 	"azure.subscription.cloudDefenderService.secureScore.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).GetId()).ToDataRes(types.String)
 	},
@@ -7930,6 +7946,78 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.skippedAssessments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).GetSkippedAssessments()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.assessment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.statusCause": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetStatusCause()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.statusDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetStatusDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetSeverity()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.assessment.additionalData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).GetAdditionalData()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.alert.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alert.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alert.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alert.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetSeverity()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alert.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alert.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alert.alertType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetAlertType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alert.intent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetIntent()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alert.vendorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetVendorName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alert.compromisedEntity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetCompromisedEntity()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.alert.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetStartTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.alert.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetEndTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.alert.timeGenerated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetTimeGenerated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cloudDefenderService.alert.remediationSteps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetRemediationSteps()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cloudDefenderService.alert.resourceIdentifiers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).GetResourceIdentifiers()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.cloudDefenderService.settings.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSettings).GetId()).ToDataRes(types.String)
@@ -20913,6 +21001,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCloudDefenderService).RegulatoryComplianceStandards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cloudDefenderService.assessments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).Assessments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).Alerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cloudDefenderService.secureScore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).__id, ok = v.Value.(string)
 		return
@@ -21055,6 +21151,110 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.regulatoryComplianceControl.skippedAssessments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl).SkippedAssessments, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.statusCause": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).StatusCause, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.statusDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).StatusDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.assessment.additionalData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAssessment).AdditionalData, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.alertType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).AlertType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.intent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).Intent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.vendorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).VendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.compromisedEntity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).CompromisedEntity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.timeGenerated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).TimeGenerated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.remediationSteps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).RemediationSteps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.alert.resourceIdentifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceAlert).ResourceIdentifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48515,6 +48715,8 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	SecureScores                    plugin.TValue[[]any]
 	SecureScoreControls             plugin.TValue[[]any]
 	RegulatoryComplianceStandards   plugin.TValue[[]any]
+	Assessments                     plugin.TValue[[]any]
+	Alerts                          plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCloudDefenderService creates a new instance of this resource
@@ -48928,6 +49130,38 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetRegulatoryComplianceStanda
 	})
 }
 
+func (c *mqlAzureSubscriptionCloudDefenderService) GetAssessments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Assessments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "assessments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.assessments()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetAlerts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Alerts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "alerts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.alerts()
+	})
+}
+
 // mqlAzureSubscriptionCloudDefenderServiceSecureScore for the azure.subscription.cloudDefenderService.secureScore resource
 type mqlAzureSubscriptionCloudDefenderServiceSecureScore struct {
 	MqlRuntime *plugin.Runtime
@@ -49274,6 +49508,214 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) Ge
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceControl) GetSkippedAssessments() *plugin.TValue[int64] {
 	return &c.SkippedAssessments
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceAssessment for the azure.subscription.cloudDefenderService.assessment resource
+type mqlAzureSubscriptionCloudDefenderServiceAssessment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceAssessmentInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	Status            plugin.TValue[string]
+	StatusCause       plugin.TValue[string]
+	StatusDescription plugin.TValue[string]
+	Severity          plugin.TValue[string]
+	ResourceId        plugin.TValue[string]
+	AdditionalData    plugin.TValue[any]
+}
+
+// createAzureSubscriptionCloudDefenderServiceAssessment creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceAssessment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceAssessment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.assessment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) MqlName() string {
+	return "azure.subscription.cloudDefenderService.assessment"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetStatusCause() *plugin.TValue[string] {
+	return &c.StatusCause
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetStatusDescription() *plugin.TValue[string] {
+	return &c.StatusDescription
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAssessment) GetAdditionalData() *plugin.TValue[any] {
+	return &c.AdditionalData
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceAlert for the azure.subscription.cloudDefenderService.alert resource
+type mqlAzureSubscriptionCloudDefenderServiceAlert struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceAlertInternal it will be used here
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	DisplayName         plugin.TValue[string]
+	Severity            plugin.TValue[string]
+	Status              plugin.TValue[string]
+	Description         plugin.TValue[string]
+	AlertType           plugin.TValue[string]
+	Intent              plugin.TValue[string]
+	VendorName          plugin.TValue[string]
+	CompromisedEntity   plugin.TValue[string]
+	StartTime           plugin.TValue[*time.Time]
+	EndTime             plugin.TValue[*time.Time]
+	TimeGenerated       plugin.TValue[*time.Time]
+	RemediationSteps    plugin.TValue[[]any]
+	ResourceIdentifiers plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCloudDefenderServiceAlert creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceAlert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.alert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) MqlName() string {
+	return "azure.subscription.cloudDefenderService.alert"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetAlertType() *plugin.TValue[string] {
+	return &c.AlertType
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetIntent() *plugin.TValue[string] {
+	return &c.Intent
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetVendorName() *plugin.TValue[string] {
+	return &c.VendorName
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetCompromisedEntity() *plugin.TValue[string] {
+	return &c.CompromisedEntity
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetTimeGenerated() *plugin.TValue[*time.Time] {
+	return &c.TimeGenerated
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetRemediationSteps() *plugin.TValue[[]any] {
+	return &c.RemediationSteps
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceAlert) GetResourceIdentifiers() *plugin.TValue[[]any] {
+	return &c.ResourceIdentifiers
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceSettings for the azure.subscription.cloudDefenderService.settings resource

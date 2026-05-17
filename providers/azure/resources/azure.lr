@@ -5195,6 +5195,10 @@ private azure.subscription.cloudDefenderService @defaults("defenderForServers.en
   secureScoreControls() []azure.subscription.cloudDefenderService.secureScoreControl
   // Regulatory compliance standards
   regulatoryComplianceStandards() []azure.subscription.cloudDefenderService.regulatoryComplianceStandard
+  // Security assessments (recommendations) and their health status
+  assessments() []azure.subscription.cloudDefenderService.assessment
+  // Active security alerts raised by Microsoft Defender for Cloud
+  alerts() []azure.subscription.cloudDefenderService.alert
 }
 
 // Microsoft Defender secure score
@@ -5275,6 +5279,62 @@ private azure.subscription.cloudDefenderService.regulatoryComplianceControl @def
   failedAssessments int
   // Number of skipped assessments
   skippedAssessments int
+}
+
+// Microsoft Defender for Cloud security assessment
+private azure.subscription.cloudDefenderService.assessment @defaults("displayName status severity") {
+  // Assessment resource ID
+  id string
+  // Assessment name (a globally unique identifier)
+  name string
+  // Human-readable name of the assessment
+  displayName string
+  // Health status of the assessment (Healthy, Unhealthy, NotApplicable)
+  status string
+  // Programmatic code for the cause of the assessment result
+  statusCause string
+  // Human-readable description of the assessment result
+  statusDescription string
+  // Severity of the assessment (Low, Medium, High)
+  severity string
+  // ARM ID of the resource the assessment was run against
+  resourceId string
+  // Additional data describing the assessment result
+  additionalData dict
+}
+
+// Microsoft Defender for Cloud security alert
+private azure.subscription.cloudDefenderService.alert @defaults("displayName severity status") {
+  // Alert resource ID
+  id string
+  // Alert name (a globally unique identifier)
+  name string
+  // Human-readable name of the alert
+  displayName string
+  // Severity of the alert (Informational, Low, Medium, High)
+  severity string
+  // Status of the alert (Active, InProgress, Resolved, Dismissed)
+  status string
+  // Description of the alert
+  description string
+  // Type identifier of the alert
+  alertType string
+  // Kill-chain intent behind the alert (e.g. Execution, Exfiltration)
+  intent string
+  // Name of the vendor that raised the alert
+  vendorName string
+  // Display name of the resource most related to the alert
+  compromisedEntity string
+  // Time the alert activity started
+  startTime time
+  // Time the alert activity ended
+  endTime time
+  // Time the alert was generated
+  timeGenerated time
+  // Manual action steps to remediate the alert
+  remediationSteps []string
+  // Identifiers of the resources the alert is related to
+  resourceIdentifiers []dict
 }
 
 // Microsoft Defender for Cloud security settings

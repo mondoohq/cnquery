@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -1262,6 +1263,246 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) c
 					"passedAssessments":  llx.IntData(passedAssessments),
 					"failedAssessments":  llx.IntData(failedAssessments),
 					"skippedAssessments": llx.IntData(skippedAssessments),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlResource)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceAssessment) id() (string, error) {
+	return a.__id, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceAlert) id() (string, error) {
+	return a.__id, nil
+}
+
+// assessmentSeverityByName returns a map of assessment name to its severity.
+// Assessment list responses don't carry severity, so it is joined in from the
+// metadata catalog: built-in definitions come from the global list, custom ones
+// from the subscription-scoped list.
+func assessmentSeverityByName(ctx context.Context, clientFactory *armsecurity.ClientFactory) map[string]string {
+	severities := map[string]string{}
+	metadataClient := clientFactory.NewAssessmentsMetadataClient()
+
+	collect := func(items []*armsecurity.AssessmentMetadataResponse) {
+		for _, item := range items {
+			if item.Name == nil || item.Properties == nil || item.Properties.Severity == nil {
+				continue
+			}
+			severities[*item.Name] = string(*item.Properties.Severity)
+		}
+	}
+
+	builtinPager := metadataClient.NewListPager(nil)
+	for builtinPager.More() {
+		page, err := builtinPager.NextPage(ctx)
+		if err != nil {
+			log.Debug().Err(err).Msg("could not list built-in assessment metadata for severities")
+			break
+		}
+		collect(page.Value)
+	}
+
+	subPager := metadataClient.NewListBySubscriptionPager(nil)
+	for subPager.More() {
+		page, err := subPager.NextPage(ctx)
+		if err != nil {
+			log.Debug().Err(err).Msg("could not list subscription assessment metadata for severities")
+			break
+		}
+		collect(page.Value)
+	}
+
+	return severities
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) assessments() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	severities := assessmentSeverityByName(ctx, clientFactory)
+
+	pager := clientFactory.NewAssessmentsClient().NewListPager("/subscriptions/"+subId, nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list security assessments due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, item := range page.Value {
+			var displayName, status, statusCause, statusDescription string
+			var additionalData map[string]any
+
+			if props := item.Properties; props != nil {
+				if props.DisplayName != nil {
+					displayName = *props.DisplayName
+				}
+				if props.Status != nil {
+					if props.Status.Code != nil {
+						status = string(*props.Status.Code)
+					}
+					if props.Status.Cause != nil {
+						statusCause = *props.Status.Cause
+					}
+					if props.Status.Description != nil {
+						statusDescription = *props.Status.Description
+					}
+				}
+				if len(props.AdditionalData) > 0 {
+					additionalData = map[string]any{}
+					for k, v := range props.AdditionalData {
+						if v != nil {
+							additionalData[k] = *v
+						}
+					}
+				}
+			}
+
+			// The assessed resource is the segment of the assessment ID before the
+			// Microsoft.Security/assessments path; for subscription-wide assessments
+			// that is the subscription itself.
+			id := ""
+			if item.ID != nil {
+				id = *item.ID
+			}
+			resourceId := strings.SplitN(id, "/providers/Microsoft.Security/assessments/", 2)[0]
+			severity := ""
+			if item.Name != nil {
+				severity = severities[*item.Name]
+			}
+
+			mqlResource, err := CreateResource(a.MqlRuntime,
+				"azure.subscription.cloudDefenderService.assessment",
+				map[string]*llx.RawData{
+					"__id":              llx.StringDataPtr(item.ID),
+					"id":                llx.StringDataPtr(item.ID),
+					"name":              llx.StringDataPtr(item.Name),
+					"displayName":       llx.StringData(displayName),
+					"status":            llx.StringData(status),
+					"statusCause":       llx.StringData(statusCause),
+					"statusDescription": llx.StringData(statusDescription),
+					"severity":          llx.StringData(severity),
+					"resourceId":        llx.StringData(resourceId),
+					"additionalData":    llx.DictData(additionalData),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlResource)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) alerts() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	token := conn.Token()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, token, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pager := clientFactory.NewAlertsClient().NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not list security alerts due to access denied")
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, item := range page.Value {
+			var displayName, severity, status, description, alertType string
+			var intent, vendorName, compromisedEntity string
+			var startTime, endTime, timeGenerated *time.Time
+			remediationSteps := []any{}
+			resourceIdentifiers := []any{}
+
+			if props := item.Properties; props != nil {
+				if props.AlertDisplayName != nil {
+					displayName = *props.AlertDisplayName
+				}
+				if props.Severity != nil {
+					severity = string(*props.Severity)
+				}
+				if props.Status != nil {
+					status = string(*props.Status)
+				}
+				if props.Description != nil {
+					description = *props.Description
+				}
+				if props.AlertType != nil {
+					alertType = *props.AlertType
+				}
+				if props.Intent != nil {
+					intent = string(*props.Intent)
+				}
+				if props.VendorName != nil {
+					vendorName = *props.VendorName
+				}
+				if props.CompromisedEntity != nil {
+					compromisedEntity = *props.CompromisedEntity
+				}
+				for _, step := range props.RemediationSteps {
+					if step != nil {
+						remediationSteps = append(remediationSteps, *step)
+					}
+				}
+				for _, ri := range props.ResourceIdentifiers {
+					riDict, err := convert.JsonToDict(ri)
+					if err != nil {
+						log.Debug().Err(err).Msg("unable to convert alert resource identifier to dict")
+						continue
+					}
+					resourceIdentifiers = append(resourceIdentifiers, riDict)
+				}
+				startTime = props.StartTimeUTC
+				endTime = props.EndTimeUTC
+				timeGenerated = props.TimeGeneratedUTC
+			}
+
+			mqlResource, err := CreateResource(a.MqlRuntime,
+				"azure.subscription.cloudDefenderService.alert",
+				map[string]*llx.RawData{
+					"__id":                llx.StringDataPtr(item.ID),
+					"id":                  llx.StringDataPtr(item.ID),
+					"name":                llx.StringDataPtr(item.Name),
+					"displayName":         llx.StringData(displayName),
+					"severity":            llx.StringData(severity),
+					"status":              llx.StringData(status),
+					"description":         llx.StringData(description),
+					"alertType":           llx.StringData(alertType),
+					"intent":              llx.StringData(intent),
+					"vendorName":          llx.StringData(vendorName),
+					"compromisedEntity":   llx.StringData(compromisedEntity),
+					"startTime":           llx.TimeDataPtr(startTime),
+					"endTime":             llx.TimeDataPtr(endTime),
+					"timeGenerated":       llx.TimeDataPtr(timeGenerated),
+					"remediationSteps":    llx.ArrayData(remediationSteps, types.String),
+					"resourceIdentifiers": llx.ArrayData(resourceIdentifiers, types.Dict),
 				})
 			if err != nil {
 				return nil, err
