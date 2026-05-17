@@ -1021,6 +1021,14 @@ private cloudflare.zone.pageRule @defaults("id status") {
 }
 
 // Cloudflare load balancer
+//
+// Examine a Cloudflare load balancer — the traffic director that steers
+// requests for a hostname across one or more origin pools. Surfaces the
+// `steeringPolicy` that selects pools, the `proxied` and `enabled`
+// state, session affinity configuration, the typed `fallbackPool()`,
+// `defaultPools()`, and `pools()` pool references, and the
+// `regionPools`, `popPools`, and `countryPools` geo-steering maps of
+// pool IDs.
 private cloudflare.zone.loadBalancer @defaults("name steeringPolicy enabled") {
 	// Load balancer identifier
 	id string

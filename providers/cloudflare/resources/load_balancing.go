@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"github.com/cloudflare/cloudflare-go"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -75,7 +76,11 @@ func (c *mqlCloudflareZone) loadBalancers() ([]any, error) {
 	// Pools are account-scoped and shared across load balancers; fetch them
 	// once so the typed pool accessors resolve in memory.
 	poolIndex := map[string]cloudflare.LoadBalancerPool{}
-	if acc := c.GetAccount(); acc.Error == nil && acc.Data != nil {
+	if acc := c.GetAccount(); acc.Error != nil || acc.Data == nil {
+		// Without the account ID the pool list cannot be fetched; warn so the
+		// empty pool references are not mistaken for "no pools configured".
+		log.Warn().Msg("cloudflare> could not resolve the zone's account; load balancer pool references will be empty")
+	} else {
 		pools, err := conn.Cf.ListLoadBalancerPools(context.TODO(), &cloudflare.ResourceContainer{
 			Identifier: acc.Data.Id.Data,
 			Level:      cloudflare.AccountRouteLevel,

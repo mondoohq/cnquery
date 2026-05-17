@@ -251,6 +251,7 @@ gpu
 grafana
 groupname
 GSM
+gsuite
 gvnic
 GZRS
 hadoop
@@ -545,10 +546,12 @@ RSession
 rstrip
 rtl
 rtsp
+Rtt
 rulegroup
 rulegroupreferencestatement
 rxtx
 saas
+samesite
 sas
 sasl
 sbfm
@@ -703,6 +706,7 @@ Wasi
 webauthn
 webide
 WEBSERVERS
+websockets
 Webstore
 wifi
 Wjki
