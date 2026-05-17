@@ -4,10 +4,12 @@
 package resources
 
 import (
+	"context"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
 )
 
 // resolveVpcRef resolves a VPC by ID via the parent digitalocean resource so
@@ -73,6 +75,16 @@ func listAllFirewalls(runtime *plugin.Runtime) ([]any, error) {
 
 func (r *mqlDigitaloceanDroplet) vpc() (*mqlDigitaloceanVpc, error) {
 	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.VpcUuid.Data)
+}
+
+// baseImage resolves the droplet's image to a typed digitalocean.image. The
+// godo image is cached from the droplet list response, so no refetch happens.
+func (r *mqlDigitaloceanDroplet) baseImage() (*mqlDigitaloceanImage, error) {
+	if r.image == nil || r.image.ID == 0 {
+		r.BaseImage.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlDigitaloceanImage(r.MqlRuntime, *r.image)
 }
 
 // firewallCoversDroplet reports whether the given firewall covers this droplet
@@ -178,6 +190,20 @@ func (r *mqlDigitaloceanFirewall) droplets() ([]any, error) {
 
 func (r *mqlDigitaloceanDatabase) vpc() (*mqlDigitaloceanVpc, error) {
 	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.PrivateNetworkUuid.Data)
+}
+
+// evictionPolicy returns the key eviction policy for Redis/Valkey clusters.
+// Other engines have no eviction policy, so an empty string is returned.
+func (r *mqlDigitaloceanDatabase) evictionPolicy() (string, error) {
+	if engine := r.Engine.Data; engine != "redis" && engine != "valkey" {
+		return "", nil
+	}
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	policy, _, err := conn.Client().Databases.GetEvictionPolicy(context.Background(), r.Id.Data)
+	if err != nil {
+		return "", err
+	}
+	return policy, nil
 }
 
 // --- LoadBalancer typed refs ---

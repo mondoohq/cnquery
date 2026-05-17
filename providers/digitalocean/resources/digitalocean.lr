@@ -9,11 +9,13 @@ option go_package = "go.mondoo.com/mql/v13/providers/digitalocean/resources"
 // Use the DigitalOcean namespace as the account-wide entry point for
 // the DigitalOcean provider. Iterate `droplets()` for VMs,
 // `firewalls()` for cloud-firewall rule sets, `databases()` for
-// managed databases, `volumes()` for block storage, `domains()` for
-// DigitalOcean-managed DNS, `loadBalancers()` for L4/L7 LBs,
-// `vpcs()` and `vpcPeerings()` for the network plane,
-// `kubernetesClusters()` for DOKS, `apps()` for App Platform
-// deployments, `cdnEndpoints()` for the CDN, `registryRepositories()`
+// managed databases, `volumes()` for block storage, `images()` for
+// system and custom images, `snapshots()` for droplet and volume
+// snapshots, `domains()` for DigitalOcean-managed DNS,
+// `loadBalancers()` for L4/L7 LBs, `vpcs()` and `vpcPeerings()` for
+// the network plane, `kubernetesClusters()` for DOKS, `apps()` for App
+// Platform deployments, `functionNamespaces()` for serverless
+// Functions, `cdnEndpoints()` for the CDN, `registryRepositories()`
 // for the container registry, `projects()` for the project grouping,
 // `sshKeys()`, `certificates()`, `reservedIPs()`, `tags()`,
 // `spacesKeys()`, `alertPolicies()`, and `uptimeChecks()`.
@@ -28,6 +30,12 @@ digitalocean {
   domains() []digitalocean.domain
   // Block storage volumes
   volumes() []digitalocean.volume
+  // System and custom images
+  images() []digitalocean.image
+  // Droplet and volume snapshots
+  snapshots() []digitalocean.snapshot
+  // Functions namespaces
+  functionNamespaces() []digitalocean.function.namespace
   // Load balancers
   loadBalancers() []digitalocean.loadBalancer
   // VPCs
@@ -90,12 +98,12 @@ digitalocean.account @defaults("email status") {
 //
 // Examine a DigitalOcean Droplet — the provider's cloud VM offering.
 // Surfaces the droplet `id`, region and size slug, allocated memory,
-// vCPUs and disk, the public/private IPv4 addresses, image details,
-// applied tags, attached `vpc()`, the enabled features list (e.g.,
-// monitoring, backups), backup and monitoring flags, the firewalls
-// covering the droplet (resolved by id or tag), and the
-// `missingFirewall()` predicate that flags droplets with no attached
-// firewall.
+// vCPUs and disk, the public/private IPv4 and public IPv6 addresses,
+// the `baseImage()` the droplet runs, applied tags, attached `vpc()`,
+// the enabled features list (e.g., monitoring, backups), backup and
+// monitoring flags, the `locked` flag, the firewalls covering the
+// droplet (resolved by id or tag), and the `missingFirewall()`
+// predicate that flags droplets with no attached firewall.
 digitalocean.droplet @defaults("id name status") {
   // Droplet ID
   id int
@@ -113,12 +121,16 @@ digitalocean.droplet @defaults("id name status") {
   size string
   // Status (new, active, off, archive)
   status string
+  // Whether the droplet is locked while an action is in progress
+  locked bool
   // Time the resource was created
   createdAt time
   // Public IPv4 address
   publicIpv4 string
   // Private IPv4 address
   privateIpv4 string
+  // Public IPv6 address
+  publicIpv6 string
   // Tags applied to the droplet
   tags []string
   // DEPRECATED: use vpc() instead. VPC UUID
@@ -131,8 +143,10 @@ digitalocean.droplet @defaults("id name status") {
   backupsEnabled bool
   // Monitoring enabled
   monitoringEnabled bool
-  // Image details (id, name, distribution, slug, type, public, regions)
-  image dict
+  // DEPRECATED: use baseImage instead. Image details (id, name, distribution, slug)
+  image @maturity("deprecated") dict
+  // Base image the droplet runs
+  baseImage() digitalocean.image
   // Firewalls covering this droplet (by id or matching tag)
   firewalls() []digitalocean.firewall
   // True when no firewall is attached to the droplet (by id or tag); does not check inbound rule restrictiveness — for that, query `firewalls`
@@ -172,9 +186,11 @@ digitalocean.firewall @defaults("id name status") {
 //
 // Examine a DigitalOcean managed database. Surfaces the engine (pg,
 // mysql, redis, mongodb, kafka, opensearch) and version, the cluster
-// size and node count, region, status, the
-// `privateNetworkUuid` and resolved `vpc()`, the public connection
-// host and port, the `firewallRules()` controlling trusted sources,
+// size and node count, region, status, the allocated `storageSizeMib`
+// and the logical `dbNames` hosted on the cluster, the owning
+// `projectId`, the `privateNetworkUuid` and resolved `vpc()`, the
+// public and private connection host and port, the `firewallRules()`
+// controlling trusted sources, the `evictionPolicy()` (Redis/Valkey),
 // the maintenance window, and the typed children `users()`,
 // `replicas()`, and `pools()`.
 digitalocean.database @defaults("id name engine") {
@@ -194,8 +210,14 @@ digitalocean.database @defaults("id name engine") {
   region string
   // Status (creating, online, resizing, migrating, forking)
   status string
+  // Allocated storage size, in mebibytes
+  storageSizeMib int
+  // Names of the logical databases hosted on the cluster
+  dbNames []string
   // Time the resource was created
   createdAt time
+  // ID of the project the cluster belongs to
+  projectId string
   // Private network UUID
   privateNetworkUuid string
   // VPC the cluster is attached to (resolved from privateNetworkUuid)
@@ -208,6 +230,12 @@ digitalocean.database @defaults("id name engine") {
   connectionHost string
   // Public connection port
   connectionPort int
+  // Private connection host (reachable within the VPC)
+  privateConnectionHost string
+  // Private connection port (reachable within the VPC)
+  privateConnectionPort int
+  // Key eviction policy for Redis/Valkey clusters (noeviction, allkeys_lru, allkeys_random, volatile_lru, volatile_random, volatile_ttl); empty for other engines
+  evictionPolicy() string
   // Maintenance window configuration (day, hour, pending status)
   maintenanceWindow dict
   // Database users
@@ -755,4 +783,126 @@ digitalocean.spacesKey @defaults("name accessKey") {
   grants []dict
   // Time the resource was created
   createdAt time
+}
+
+// DigitalOcean image
+//
+// Examine a DigitalOcean image — the bootable disk template a droplet
+// is created from. Surfaces the image `type` (distribution,
+// application, snapshot, backup, custom, admin), the `distribution`
+// and `slug`, the `public` flag (whether the image is shared with
+// every DigitalOcean account or kept private to this one), the
+// `regions` the image is available in, the minimum disk size and
+// on-disk size, the processing `status` and any `errorMessage`,
+// applied tags, and the creation timestamp. Select an image by its
+// numeric `id`, for example `digitalocean.images.where(public ==
+// false)`.
+digitalocean.image @defaults("id name distribution") {
+  // Image ID
+  id int
+  // Image name
+  name string
+  // Image type (distribution, application, snapshot, backup, custom, admin)
+  type string
+  // Operating system distribution
+  distribution string
+  // Image slug
+  slug string
+  // Whether the image is public (shared with every DigitalOcean account)
+  public bool
+  // Region slugs the image is available in
+  regions []string
+  // Minimum disk size a droplet must have to use this image, in gigabytes
+  minDiskSize int
+  // Size of the image on disk, in gigabytes
+  sizeGigabytes float
+  // Description
+  description string
+  // Processing status (NEW, available, pending, deleted, retired)
+  status string
+  // Error message set when image processing failed
+  errorMessage string
+  // Tags applied to the image
+  tags []string
+  // Time the resource was created
+  createdAt time
+}
+
+// DigitalOcean snapshot
+//
+// Examine a DigitalOcean snapshot — a point-in-time copy of a droplet
+// or a block-storage volume. Surfaces the `resourceType` (droplet or
+// volume) and the `resourceId` of the source, the `regions` the
+// snapshot is replicated to, the minimum disk size and on-disk size,
+// applied tags, and the creation timestamp. Select a snapshot by its
+// `id`.
+digitalocean.snapshot @defaults("id name resourceType") {
+  // Snapshot ID
+  id string
+  // Snapshot name
+  name string
+  // ID of the source resource the snapshot was taken from
+  resourceId string
+  // Type of the source resource (droplet, volume)
+  resourceType string
+  // Region slugs the snapshot is replicated to
+  regions []string
+  // Minimum disk size a droplet must have to use this snapshot, in gigabytes
+  minDiskSize int
+  // Size of the snapshot on disk, in gigabytes
+  sizeGigabytes float
+  // Tags applied to the snapshot
+  tags []string
+  // Time the resource was created
+  createdAt time
+}
+
+// DigitalOcean Functions namespace
+//
+// Examine a DigitalOcean Functions namespace — the deployment unit
+// that groups serverless functions and their schedules. Surfaces the
+// namespace `label`, the API host serving the functions, the region,
+// the internal namespace identifier, and the `triggers()` that invoke
+// functions on a schedule.
+digitalocean.function.namespace @defaults("uuid label region") {
+  // Namespace UUID
+  uuid string
+  // Internal namespace identifier used in API paths
+  namespace string
+  // Human-readable namespace label
+  label string
+  // Region slug
+  region string
+  // API host serving the namespace's functions
+  apiHost string
+  // Time the resource was created
+  createdAt time
+  // Time the resource was last updated
+  updatedAt time
+  // Scheduled triggers in the namespace
+  triggers() []digitalocean.function.trigger
+}
+
+// DigitalOcean Functions trigger
+private digitalocean.function.trigger @defaults("name function enabled") {
+  // Internal identifier of the parent namespace
+  namespace string
+  // Trigger name
+  name string
+  // Trigger type (e.g., SCHEDULED)
+  type string
+  // Name of the function the trigger invokes
+  function string
+  // Whether the trigger is enabled
+  enabled bool
+  // Cron schedule expression (for scheduled triggers)
+  cron string
+  // Time the resource was created
+  createdAt time
+  // Time the resource was last updated
+  updatedAt time
+  // Time the trigger last fired
+  lastRunAt time
+  // Time the trigger is next scheduled to fire
+  nextRunAt time
 }

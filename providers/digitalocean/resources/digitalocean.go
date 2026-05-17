@@ -67,6 +67,12 @@ func parseDoTime(s string) *time.Time {
 	return &t
 }
 
+type mqlDigitaloceanDropletInternal struct {
+	// image caches the godo image embedded in the droplet list response so the
+	// typed baseImage() accessor can build a digitalocean.image without a refetch.
+	image *godo.Image
+}
+
 func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
@@ -81,6 +87,7 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 		for _, d := range droplets {
 			publicIPv4 := ""
 			privateIPv4 := ""
+			publicIPv6 := ""
 			if d.Networks != nil {
 				for _, v4 := range d.Networks.V4 {
 					if v4.Type == "public" && publicIPv4 == "" {
@@ -88,6 +95,11 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 					}
 					if v4.Type == "private" && privateIPv4 == "" {
 						privateIPv4 = v4.IPAddress
+					}
+				}
+				for _, v6 := range d.Networks.V6 {
+					if v6.Type == "public" && publicIPv6 == "" {
+						publicIPv6 = v6.IPAddress
 					}
 				}
 			}
@@ -139,9 +151,11 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 				"region":            llx.StringData(regionSlug),
 				"size":              llx.StringData(sizeSlug),
 				"status":            llx.StringData(d.Status),
+				"locked":            llx.BoolData(d.Locked),
 				"createdAt":         llx.TimeDataPtr(parseDoTime(d.Created)),
 				"publicIpv4":        llx.StringData(publicIPv4),
 				"privateIpv4":       llx.StringData(privateIPv4),
+				"publicIpv6":        llx.StringData(publicIPv6),
 				"tags":              llx.ArrayData(tags, "\x02"),
 				"vpcUuid":           llx.StringData(d.VPCUUID),
 				"features":          llx.ArrayData(features, "\x02"),
@@ -152,6 +166,8 @@ func (r *mqlDigitalocean) droplets() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+			// Cache the droplet's image for the typed baseImage() accessor.
+			res.(*mqlDigitaloceanDroplet).image = d.Image
 			all = append(all, res)
 		}
 		if resp.Links == nil || resp.Links.IsLastPage() {
@@ -277,8 +293,8 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 				mw["pending"] = db.MaintenanceWindow.Pending
 			}
 
-			// The DigitalOcean API returns a public connection URI that embeds the
-			// admin password, so we deliberately do not surface it on the resource.
+			// The DigitalOcean API returns connection URIs that embed the admin
+			// password, so we deliberately do not surface them on the resource.
 			// Host/port are exposed separately for connectivity checks.
 			connHost := ""
 			connPort := int64(0)
@@ -286,22 +302,38 @@ func (r *mqlDigitalocean) databases() ([]interface{}, error) {
 				connHost = db.Connection.Host
 				connPort = int64(db.Connection.Port)
 			}
+			privConnHost := ""
+			privConnPort := int64(0)
+			if db.PrivateConnection != nil {
+				privConnHost = db.PrivateConnection.Host
+				privConnPort = int64(db.PrivateConnection.Port)
+			}
+
+			dbNames := make([]interface{}, len(db.DBNames))
+			for i, n := range db.DBNames {
+				dbNames[i] = n
+			}
 
 			res, err := CreateResource(r.MqlRuntime, "digitalocean.database", map[string]*llx.RawData{
-				"id":                 llx.StringData(db.ID),
-				"name":               llx.StringData(db.Name),
-				"engine":             llx.StringData(db.EngineSlug),
-				"version":            llx.StringData(db.VersionSlug),
-				"numNodes":           llx.IntData(int64(db.NumNodes)),
-				"size":               llx.StringData(db.SizeSlug),
-				"region":             llx.StringData(db.RegionSlug),
-				"status":             llx.StringData(db.Status),
-				"createdAt":          llx.TimeData(db.CreatedAt),
-				"privateNetworkUuid": llx.StringData(db.PrivateNetworkUUID),
-				"tags":               llx.ArrayData(tags, "\x02"),
-				"maintenanceWindow":  llx.DictData(mw),
-				"connectionHost":     llx.StringData(connHost),
-				"connectionPort":     llx.IntData(connPort),
+				"id":                    llx.StringData(db.ID),
+				"name":                  llx.StringData(db.Name),
+				"engine":                llx.StringData(db.EngineSlug),
+				"version":               llx.StringData(db.VersionSlug),
+				"numNodes":              llx.IntData(int64(db.NumNodes)),
+				"size":                  llx.StringData(db.SizeSlug),
+				"region":                llx.StringData(db.RegionSlug),
+				"status":                llx.StringData(db.Status),
+				"storageSizeMib":        llx.IntData(int64(db.StorageSizeMib)),
+				"dbNames":               llx.ArrayData(dbNames, "\x02"),
+				"createdAt":             llx.TimeData(db.CreatedAt),
+				"projectId":             llx.StringData(db.ProjectID),
+				"privateNetworkUuid":    llx.StringData(db.PrivateNetworkUUID),
+				"tags":                  llx.ArrayData(tags, "\x02"),
+				"maintenanceWindow":     llx.DictData(mw),
+				"connectionHost":        llx.StringData(connHost),
+				"connectionPort":        llx.IntData(connPort),
+				"privateConnectionHost": llx.StringData(privConnHost),
+				"privateConnectionPort": llx.IntData(privConnPort),
 			})
 			if err != nil {
 				return nil, err
