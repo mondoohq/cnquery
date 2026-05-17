@@ -11,7 +11,9 @@ import (
 	"cloud.google.com/go/orgpolicy/apiv2/orgpolicypb"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
@@ -170,6 +172,66 @@ func (g *mqlGcpProject) orgPolicyConstraints() ([]any, error) {
 			"constraintDefault": llx.StringData(c.ConstraintDefault.String()),
 			"listConstraint":    llx.DictData(listConstraint),
 			"booleanConstraint": llx.DictData(booleanConstraint),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlConstraint)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpOrgPolicyCustomConstraint) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpOrganization) customConstraints() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	// orgId is already in "organizations/{id}" format from initGcpOrganization
+	orgId := g.Id.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(orgpolicy.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := orgpolicy.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	var res []any
+	it := client.ListCustomConstraints(ctx, &orgpolicypb.ListCustomConstraintsRequest{
+		Parent: orgId,
+	})
+	for {
+		c, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		methodTypes := make([]any, 0, len(c.MethodTypes))
+		for _, m := range c.MethodTypes {
+			methodTypes = append(methodTypes, m.String())
+		}
+
+		mqlConstraint, err := CreateResource(g.MqlRuntime, "gcp.orgPolicy.customConstraint", map[string]*llx.RawData{
+			"name":          llx.StringData(c.Name),
+			"displayName":   llx.StringData(c.DisplayName),
+			"description":   llx.StringData(c.Description),
+			"resourceTypes": llx.ArrayData(convert.SliceAnyToInterface(c.ResourceTypes), types.String),
+			"methodTypes":   llx.ArrayData(methodTypes, types.String),
+			"condition":     llx.StringData(c.Condition),
+			"actionType":    llx.StringData(c.ActionType.String()),
+			"updated":       llx.TimeDataPtr(timestampAsTimePtr(c.UpdateTime)),
 		})
 		if err != nil {
 			return nil, err

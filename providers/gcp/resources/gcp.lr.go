@@ -146,6 +146,7 @@ const (
 	ResourceGcpProjectIamServiceRole                                                   string = "gcp.project.iamService.role"
 	ResourceGcpProjectIamServiceServiceAccount                                         string = "gcp.project.iamService.serviceAccount"
 	ResourceGcpProjectIamServiceServiceAccountKey                                      string = "gcp.project.iamService.serviceAccount.key"
+	ResourceGcpProjectIamServiceDenyPolicy                                             string = "gcp.project.iamService.denyPolicy"
 	ResourceGcpProjectIamServiceWorkloadIdentityPool                                   string = "gcp.project.iamService.workloadIdentityPool"
 	ResourceGcpProjectIamServiceWorkloadIdentityPoolProvider                           string = "gcp.project.iamService.workloadIdentityPool.provider"
 	ResourceGcpProjectCloudFunction                                                    string = "gcp.project.cloudFunction"
@@ -240,6 +241,7 @@ const (
 	ResourceGcpResourcemanagerAuditConfigLogConfig                                     string = "gcp.resourcemanager.auditConfig.logConfig"
 	ResourceGcpOrgPolicy                                                               string = "gcp.orgPolicy"
 	ResourceGcpOrgPolicyConstraint                                                     string = "gcp.orgPolicy.constraint"
+	ResourceGcpOrgPolicyCustomConstraint                                               string = "gcp.orgPolicy.customConstraint"
 	ResourceGcpProjectComputeServiceInstanceGroup                                      string = "gcp.project.computeService.instanceGroup"
 	ResourceGcpProjectComputeServiceInstanceGroupManager                               string = "gcp.project.computeService.instanceGroupManager"
 	ResourceGcpProjectComputeServiceFirewallPolicy                                     string = "gcp.project.computeService.firewallPolicy"
@@ -920,6 +922,10 @@ func init() {
 			// to override args, implement: initGcpProjectIamServiceServiceAccountKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectIamServiceServiceAccountKey,
 		},
+		"gcp.project.iamService.denyPolicy": {
+			// to override args, implement: initGcpProjectIamServiceDenyPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectIamServiceDenyPolicy,
+		},
 		"gcp.project.iamService.workloadIdentityPool": {
 			// to override args, implement: initGcpProjectIamServiceWorkloadIdentityPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectIamServiceWorkloadIdentityPool,
@@ -1295,6 +1301,10 @@ func init() {
 		"gcp.orgPolicy.constraint": {
 			// to override args, implement: initGcpOrgPolicyConstraint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpOrgPolicyConstraint,
+		},
+		"gcp.orgPolicy.customConstraint": {
+			// to override args, implement: initGcpOrgPolicyCustomConstraint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpOrgPolicyCustomConstraint,
 		},
 		"gcp.project.computeService.instanceGroup": {
 			// to override args, implement: initGcpProjectComputeServiceInstanceGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2039,6 +2049,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.organization.accessPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetAccessPolicies()).ToDataRes(types.Array(types.Resource("gcp.accesscontextmanager.accessPolicy")))
+	},
+	"gcp.organization.customConstraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganization).GetCustomConstraints()).ToDataRes(types.Array(types.Resource("gcp.orgPolicy.customConstraint")))
 	},
 	"gcp.folders.parentId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolders).GetParentId()).ToDataRes(types.String)
@@ -6351,6 +6364,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.iamService.workloadIdentityPools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamService).GetWorkloadIdentityPools()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.workloadIdentityPool")))
 	},
+	"gcp.project.iamService.denyPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamService).GetDenyPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.denyPolicy")))
+	},
 	"gcp.project.iamService.role.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceRole).GetProjectId()).ToDataRes(types.String)
 	},
@@ -6431,6 +6447,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.serviceAccount.key.disabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.iamService.denyPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.denyPolicy.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetUid()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.denyPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.denyPolicy.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.iamService.denyPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.iamService.denyPolicy.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.denyPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.iamService.denyPolicy.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetUpdated()).ToDataRes(types.Time)
 	},
 	"gcp.project.iamService.workloadIdentityPool.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetProjectId()).ToDataRes(types.String)
@@ -9428,6 +9468,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.orgPolicy.constraint.booleanConstraint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrgPolicyConstraint).GetBooleanConstraint()).ToDataRes(types.Dict)
+	},
+	"gcp.orgPolicy.customConstraint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicyCustomConstraint).GetName()).ToDataRes(types.String)
+	},
+	"gcp.orgPolicy.customConstraint.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicyCustomConstraint).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.orgPolicy.customConstraint.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicyCustomConstraint).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.orgPolicy.customConstraint.resourceTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicyCustomConstraint).GetResourceTypes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.orgPolicy.customConstraint.methodTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicyCustomConstraint).GetMethodTypes()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.orgPolicy.customConstraint.condition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicyCustomConstraint).GetCondition()).ToDataRes(types.String)
+	},
+	"gcp.orgPolicy.customConstraint.actionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicyCustomConstraint).GetActionType()).ToDataRes(types.String)
+	},
+	"gcp.orgPolicy.customConstraint.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicyCustomConstraint).GetUpdated()).ToDataRes(types.Time)
 	},
 	"gcp.project.computeService.instanceGroup.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetId()).ToDataRes(types.String)
@@ -13683,6 +13747,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.organization.accessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganization).AccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.customConstraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganization).CustomConstraints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.folders.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19937,6 +20005,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectIamService).WorkloadIdentityPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.iamService.denyPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamService).DenyPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.iamService.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceRole).__id, ok = v.Value.(string)
 		return
@@ -20055,6 +20127,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.serviceAccount.key.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicy).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicy).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicy).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicy).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.workloadIdentityPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24427,6 +24535,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.orgPolicy.constraint.booleanConstraint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrgPolicyConstraint).BooleanConstraint, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.customConstraint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicyCustomConstraint).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.orgPolicy.customConstraint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicyCustomConstraint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.customConstraint.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicyCustomConstraint).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.customConstraint.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicyCustomConstraint).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.customConstraint.resourceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicyCustomConstraint).ResourceTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.customConstraint.methodTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicyCustomConstraint).MethodTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.customConstraint.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicyCustomConstraint).Condition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.customConstraint.actionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicyCustomConstraint).ActionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.customConstraint.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicyCustomConstraint).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instanceGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30645,6 +30789,7 @@ type mqlGcpOrganization struct {
 	SccBigQueryExports      plugin.TValue[[]any]
 	SccOrganizationSettings plugin.TValue[*mqlGcpSccOrganizationSettings]
 	AccessPolicies          plugin.TValue[[]any]
+	CustomConstraints       plugin.TValue[[]any]
 }
 
 // createGcpOrganization creates a new instance of this resource
@@ -30917,6 +31062,22 @@ func (c *mqlGcpOrganization) GetAccessPolicies() *plugin.TValue[[]any] {
 		}
 
 		return c.accessPolicies()
+	})
+}
+
+func (c *mqlGcpOrganization) GetCustomConstraints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomConstraints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.organization", c.__id, "customConstraints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customConstraints()
 	})
 }
 
@@ -46055,6 +46216,7 @@ type mqlGcpProjectIamService struct {
 	ServiceAccounts       plugin.TValue[[]any]
 	Roles                 plugin.TValue[[]any]
 	WorkloadIdentityPools plugin.TValue[[]any]
+	DenyPolicies          plugin.TValue[[]any]
 }
 
 // createGcpProjectIamService creates a new instance of this resource
@@ -46143,6 +46305,22 @@ func (c *mqlGcpProjectIamService) GetWorkloadIdentityPools() *plugin.TValue[[]an
 		}
 
 		return c.workloadIdentityPools()
+	})
+}
+
+func (c *mqlGcpProjectIamService) GetDenyPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DenyPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.iamService", c.__id, "denyPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.denyPolicies()
 	})
 }
 
@@ -46439,6 +46617,90 @@ func (c *mqlGcpProjectIamServiceServiceAccountKey) GetUserManaged() *plugin.TVal
 
 func (c *mqlGcpProjectIamServiceServiceAccountKey) GetDisabled() *plugin.TValue[bool] {
 	return &c.Disabled
+}
+
+// mqlGcpProjectIamServiceDenyPolicy for the gcp.project.iamService.denyPolicy resource
+type mqlGcpProjectIamServiceDenyPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectIamServiceDenyPolicyInternal it will be used here
+	Name        plugin.TValue[string]
+	Uid         plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Annotations plugin.TValue[map[string]any]
+	Rules       plugin.TValue[[]any]
+	Etag        plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	Updated     plugin.TValue[*time.Time]
+}
+
+// createGcpProjectIamServiceDenyPolicy creates a new instance of this resource
+func createGcpProjectIamServiceDenyPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIamServiceDenyPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.iamService.denyPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) MqlName() string {
+	return "gcp.project.iamService.denyPolicy"
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) GetAnnotations() *plugin.TValue[map[string]any] {
+	return &c.Annotations
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
 }
 
 // mqlGcpProjectIamServiceWorkloadIdentityPool for the gcp.project.iamService.workloadIdentityPool resource
@@ -56428,6 +56690,90 @@ func (c *mqlGcpOrgPolicyConstraint) GetListConstraint() *plugin.TValue[any] {
 
 func (c *mqlGcpOrgPolicyConstraint) GetBooleanConstraint() *plugin.TValue[any] {
 	return &c.BooleanConstraint
+}
+
+// mqlGcpOrgPolicyCustomConstraint for the gcp.orgPolicy.customConstraint resource
+type mqlGcpOrgPolicyCustomConstraint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpOrgPolicyCustomConstraintInternal it will be used here
+	Name          plugin.TValue[string]
+	DisplayName   plugin.TValue[string]
+	Description   plugin.TValue[string]
+	ResourceTypes plugin.TValue[[]any]
+	MethodTypes   plugin.TValue[[]any]
+	Condition     plugin.TValue[string]
+	ActionType    plugin.TValue[string]
+	Updated       plugin.TValue[*time.Time]
+}
+
+// createGcpOrgPolicyCustomConstraint creates a new instance of this resource
+func createGcpOrgPolicyCustomConstraint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpOrgPolicyCustomConstraint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.orgPolicy.customConstraint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpOrgPolicyCustomConstraint) MqlName() string {
+	return "gcp.orgPolicy.customConstraint"
+}
+
+func (c *mqlGcpOrgPolicyCustomConstraint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpOrgPolicyCustomConstraint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpOrgPolicyCustomConstraint) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpOrgPolicyCustomConstraint) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpOrgPolicyCustomConstraint) GetResourceTypes() *plugin.TValue[[]any] {
+	return &c.ResourceTypes
+}
+
+func (c *mqlGcpOrgPolicyCustomConstraint) GetMethodTypes() *plugin.TValue[[]any] {
+	return &c.MethodTypes
+}
+
+func (c *mqlGcpOrgPolicyCustomConstraint) GetCondition() *plugin.TValue[string] {
+	return &c.Condition
+}
+
+func (c *mqlGcpOrgPolicyCustomConstraint) GetActionType() *plugin.TValue[string] {
+	return &c.ActionType
+}
+
+func (c *mqlGcpOrgPolicyCustomConstraint) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
 }
 
 // mqlGcpProjectComputeServiceInstanceGroup for the gcp.project.computeService.instanceGroup resource

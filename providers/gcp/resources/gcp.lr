@@ -41,8 +41,10 @@ alias gcp.memorystore = gcp.project.memorystoreService
 // child `folders()` and `projects()`. The Security Command Center
 // accessors (`sccSources`, `sccFindings`, `sccNotificationConfigs`,
 // `sccMuteConfigs`, `sccBigQueryExports`, `sccOrganizationSettings`)
-// expose SCC posture across all sources, and `accessPolicies()` returns
-// the VPC Service Controls access policies bound to the org.
+// expose SCC posture across all sources, `accessPolicies()` returns
+// the VPC Service Controls access policies bound to the org, and
+// `customConstraints()` lists the custom Organization Policy constraints
+// defined on it.
 gcp.organization @defaults("name") {
   // Organization ID
   id string
@@ -82,6 +84,8 @@ gcp.organization @defaults("name") {
   sccOrganizationSettings() gcp.scc.organizationSettings
   // VPC Service Controls access policies
   accessPolicies() []gcp.accesscontextmanager.accessPolicy
+  // Custom Organization Policy constraints defined on the organization
+  customConstraints() []gcp.orgPolicy.customConstraint
 }
 
 // Google Cloud (GCP) folders
@@ -3622,6 +3626,8 @@ private gcp.project.iamService {
   roles() []gcp.project.iamService.role
   // Workload Identity Federation pools defined in the project
   workloadIdentityPools() []gcp.project.iamService.workloadIdentityPool
+  // IAM deny policies attached to the project
+  denyPolicies() []gcp.project.iamService.denyPolicy
 }
 
 // Google Cloud (GCP) IAM custom role
@@ -3688,6 +3694,33 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   userManaged bool
   // Whether the key is disabled
   disabled bool
+}
+
+// Google Cloud (GCP) IAM deny policy
+//
+// Examine the deny rules that block principals from using specific
+// permissions on the project, which take precedence over any allow policy.
+// Each entry in `rules` carries the denied permissions, the principals the
+// denial applies to, any exception principals or permissions excluded from
+// the denial, and an optional CEL condition that gates when the rule fires.
+// Deny policies are selected by their full resource `name`.
+private gcp.project.iamService.denyPolicy @defaults("displayName name") {
+  // Full resource name of the deny policy
+  name string
+  // Globally unique identifier assigned when the policy was created
+  uid string
+  // User-specified display name
+  displayName string
+  // Arbitrary user-supplied metadata attached to the policy
+  annotations map[string]string
+  // Deny rules that make up the policy, each with denied permissions, principals, exceptions, and an optional condition
+  rules []dict
+  // Etag for optimistic concurrency control
+  etag string
+  // Creation timestamp
+  created time
+  // Timestamp when the policy was last updated
+  updated time
 }
 
 // Google Cloud (GCP) Workload Identity Federation pool
@@ -6206,6 +6239,34 @@ private gcp.orgPolicy.constraint @defaults("name") {
   listConstraint dict
   // Boolean constraint details (if this is a boolean constraint)
   booleanConstraint dict
+}
+
+// Google Cloud (GCP) custom Organization Policy constraint
+//
+// Examine a customer-defined constraint that extends Organization Policy
+// beyond Google's predefined constraints. `resourceTypes` and `methodTypes`
+// scope which resources and API operations the constraint governs,
+// `condition` holds the CEL expression evaluated against each resource, and
+// `actionType` decides whether a match is allowed or denied. Custom
+// constraints exist only at the organization level and are selected by
+// their full resource `name`.
+private gcp.orgPolicy.customConstraint @defaults("displayName name") {
+  // Full resource name (e.g., organizations/123/customConstraints/custom.disableGkeAutoUpgrade)
+  name string
+  // One-line display name for the constraint
+  displayName string
+  // Human-readable description of the constraint
+  description string
+  // Resource types the constraint applies to (e.g., compute.googleapis.com/Instance)
+  resourceTypes []string
+  // API operations the constraint is enforced on (CREATE, UPDATE)
+  methodTypes []string
+  // CEL condition expression evaluated against the resource
+  condition string
+  // Action taken when the condition is met (ALLOW, DENY)
+  actionType string
+  // Timestamp when the constraint was last updated
+  updated time
 }
 
 // Google Cloud (GCP) Compute instance group

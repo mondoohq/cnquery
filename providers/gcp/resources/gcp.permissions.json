@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.15.0",
-  "generated_at": "2026-05-16T11:29:47-07:00",
+  "generated_at": "2026-05-16T21:05:57-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -143,6 +143,7 @@
     "file.instances.list",
     "gkebackup.backupPlans.list",
     "gkebackup.restorePlans.list",
+    "iam.policies.list",
     "iam.roles.list",
     "iam.serviceAccountKeys.list",
     "iam.serviceAccounts.list",
@@ -170,6 +171,7 @@
     "monitoring.slos.list",
     "monitoring.uptimeCheckConfigs.list",
     "orgpolicy.constraints.list",
+    "orgpolicy.customConstraints.list",
     "orgpolicy.policies.list",
     "policyanalyzer.serviceAccountLastAuthenticationActivities.query",
     "privateca.caPools.list",
@@ -1079,6 +1081,12 @@
       "source_file": "gke_backup.go"
     },
     {
+      "permission": "iam.policies.list",
+      "service": "iam",
+      "action": "ListPolicies",
+      "source_file": "iam.go"
+    },
+    {
       "permission": "iam.roles.list",
       "service": "iam",
       "action": "ListRolesIter",
@@ -1241,6 +1249,12 @@
       "source_file": "orgpolicy.go"
     },
     {
+      "permission": "orgpolicy.customConstraints.list",
+      "service": "orgpolicy",
+      "action": "ListCustomConstraints",
+      "source_file": "orgpolicy.go"
+    },
+    {
       "permission": "orgpolicy.policies.list",
       "service": "orgpolicy",
       "action": "ListPolicies",
@@ -1350,7 +1364,7 @@
     {
       "permission": "resourcemanager.projects.list",
       "service": "resourcemanager",
-      "action": "Projects.List",
+      "action": "Projects.Search",
       "source_file": "project.go",
       "scope": "org"
     },

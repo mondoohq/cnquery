@@ -13,9 +13,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
+	iamv2 "cloud.google.com/go/iam/apiv2"
+	iamv2pb "cloud.google.com/go/iam/apiv2/iampb"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -418,4 +422,91 @@ func (g *mqlGcpProjectIamServiceServiceAccount) lastAuthenticatedTime() (*time.T
 		return nil, nil
 	}
 	return latest, nil
+}
+
+func (g *mqlGcpProjectIamServiceDenyPolicy) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpProjectIamService) denyPolicies() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(iamv2.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client, err := iamv2.NewPoliciesClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	// IAM v2 ListPolicies wants the URL-encoded resource path of the policy's
+	// attachment point. For a project that point is the Cloud Resource Manager
+	// project resource, whose path separators must be percent-encoded as %2F.
+	// The %% in the format string emits a literal %, so for project "my-project"
+	// this yields: "policies/cloudresourcemanager.googleapis.com%2Fprojects%2Fmy-project/denypolicies".
+	parent := fmt.Sprintf("policies/cloudresourcemanager.googleapis.com%%2Fprojects%%2F%s/denypolicies", projectId)
+
+	var policies []any
+	it := client.ListPolicies(ctx, &iamv2pb.ListPoliciesRequest{Parent: parent})
+	for {
+		p, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		rules := make([]any, 0, len(p.Rules))
+		for _, r := range p.Rules {
+			rule := map[string]any{"description": r.Description}
+			if denyRule := r.GetDenyRule(); denyRule != nil {
+				rule["deniedPrincipals"] = denyRule.DeniedPrincipals
+				rule["exceptionPrincipals"] = denyRule.ExceptionPrincipals
+				rule["deniedPermissions"] = denyRule.DeniedPermissions
+				rule["exceptionPermissions"] = denyRule.ExceptionPermissions
+				if cond := denyRule.DenialCondition; cond != nil {
+					rule["denialCondition"] = map[string]any{
+						"expression":  cond.Expression,
+						"title":       cond.Title,
+						"description": cond.Description,
+						"location":    cond.Location,
+					}
+				}
+			}
+			ruleDict, err := convert.JsonToDict(rule)
+			if err != nil {
+				return nil, err
+			}
+			rules = append(rules, ruleDict)
+		}
+
+		mqlPolicy, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.denyPolicy", map[string]*llx.RawData{
+			"name":        llx.StringData(p.Name),
+			"uid":         llx.StringData(p.Uid),
+			"displayName": llx.StringData(p.DisplayName),
+			"annotations": llx.MapData(convert.MapToInterfaceMap(p.Annotations), types.String),
+			"rules":       llx.ArrayData(rules, types.Dict),
+			"etag":        llx.StringData(p.Etag),
+			"created":     llx.TimeDataPtr(timestampAsTimePtr(p.CreateTime)),
+			"updated":     llx.TimeDataPtr(timestampAsTimePtr(p.UpdateTime)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		policies = append(policies, mqlPolicy)
+	}
+	return policies, nil
 }
