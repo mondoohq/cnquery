@@ -358,6 +358,7 @@ lsp
 lte
 lvm
 lvmthin
+lzpabcdef
 MACSEC
 manageddevice
 managedrulegroupstatement
