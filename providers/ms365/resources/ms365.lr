@@ -29,6 +29,8 @@ microsoft {
   serviceprincipals() []microsoft.serviceprincipal
   // List of enterprise applications
   enterpriseApplications() []microsoft.serviceprincipal
+  // Delegated permission grants consented across the tenant
+  oauth2PermissionGrants() []microsoft.oauth2PermissionGrant
   // List of roles
   roles() microsoft.roles
   // DEPRECATED: use groupSettings instead
@@ -1375,17 +1377,55 @@ private microsoft.application.permission @defaults("appName name type status") {
   description string
   // Type eg. `application` or `delegated`
   type string
-  // Permission grant status (e.g., Granted, ConsentRequired)
+  // Permission grant status (e.g., `granted` for consented permissions, `available` for app roles the application could request but has not been granted)
   status string
+}
+
+// Microsoft Entra ID OAuth2 Permission Grant
+//
+// Examine a delegated permission grant — a record that a client application
+// has been authorized to call an API on behalf of signed-in users. The
+// `consentType` is `AllPrincipals` when an administrator consented for the
+// entire tenant, or `Principal` when an individual user consented, in which
+// case `principal` resolves to that user. `scopes` lists the delegated
+// permissions granted. `client` is the service principal of the application
+// receiving access and `resource` is the service principal of the API being
+// accessed. Use this collection to audit tenant-wide application consent —
+// for example, finding broad admin grants or user-consented access to
+// sensitive APIs.
+microsoft.oauth2PermissionGrant @defaults("clientName resourceName consentType scopes") {
+  // OAuth2 permission grant ID
+  id string
+  // Object ID of the client service principal granted access
+  clientId string
+  // Display name of the client application
+  clientName string
+  // Object ID of the resource (API) service principal access is granted for
+  resourceId string
+  // Display name of the resource (API) the access is granted for
+  resourceName string
+  // Whether consent covers all users (`AllPrincipals`) or a single user (`Principal`)
+  consentType string
+  // Object ID of the user who granted consent, set when consentType is `Principal`
+  principalId string
+  // Delegated permission scopes granted to the client application
+  scopes []string
+  // Client application this grant authorizes
+  client() microsoft.serviceprincipal
+  // API the client application is granted access to
+  resource() microsoft.serviceprincipal
+  // User who granted consent, set when consentType is `Principal`
+  principal() microsoft.user
 }
 
 // Microsoft Security
 //
 // Use this namespace to access Microsoft 365 security resources. Exposes
 // `secureScores` and `latestSecureScores` for tenant security posture,
-// `riskyUsers` for Microsoft Entra ID Protection risk signals, `exchange`
-// for Exchange Online security settings, and `informationProtection` for
-// sensitivity label configuration.
+// `riskyUsers` for Microsoft Entra ID Protection risk signals, `alerts` and
+// `incidents` for Microsoft Defender XDR detections, `exchange` for Exchange
+// Online security settings, and `informationProtection` for sensitivity label
+// configuration.
 microsoft.security {
   // List of security scores
   secureScores() []microsoft.security.securityscore
@@ -1393,6 +1433,10 @@ microsoft.security {
   latestSecureScores() microsoft.security.securityscore
   // List Microsoft Entra users who are at risk
   riskyUsers() []microsoft.security.riskyUser
+  // Microsoft Defender XDR alerts
+  alerts() []microsoft.security.alert
+  // Microsoft Defender XDR incidents
+  incidents() []microsoft.security.incident
   // Exchange security settings
   exchange() microsoft.security.exchange
   // Information protection settings
@@ -1453,6 +1497,121 @@ microsoft.security.riskyUser @defaults("principalName riskLevel riskState lastUp
   isDeleted bool
   // Whether the backend is processing the user's risky state
   isProcessing bool
+}
+
+// Microsoft Defender XDR Alert
+//
+// Examine a security alert raised by Microsoft Defender XDR. An alert
+// represents a single detection — a suspicious or malicious activity — and
+// exposes its `severity`, `status`, `category`, `serviceSource` and
+// `detectionSource` (which Defender workload reported it), the analyst
+// `classification` and `determination` once triaged, the `mitreTechniques`
+// it maps to, `recommendedActions`, and the activity timeline (`createdDateTime`,
+// `firstActivityDateTime`, `lastActivityDateTime`, `resolvedDateTime`). Related
+// alerts are correlated into an incident — use `incident` to navigate to it.
+microsoft.security.alert @defaults("title severity status category") {
+  // Alert ID
+  id string
+  // Alert title
+  title string
+  // Alert description
+  description string
+  // Primary category of the alert
+  category string
+  // All categories the alert is associated with
+  categories []string
+  // Severity (unknown, informational, low, medium, high)
+  severity string
+  // Status (new, inProgress, resolved)
+  status string
+  // Analyst classification (unknown, falsePositive, truePositive, informationalExpectedActivity)
+  classification string
+  // Analyst determination (unknown, apt, malware, securityPersonnel, securityTesting, unwantedSoftware, other, multiStagedAttack, compromisedAccount, phishing, maliciousUserActivity, notMalicious, notEnoughDataToValidate, confirmedActivity, lineOfBusinessApplication)
+  determination string
+  // Defender service that generated the alert (microsoftDefenderForEndpoint, microsoftDefenderForIdentity, microsoftDefenderForCloudApps, microsoftDefenderForOffice365, microsoft365Defender, aadIdentityProtection, microsoftAppGovernance, dataLossPrevention)
+  serviceSource string
+  // Detection technology or sensor that surfaced the alert
+  detectionSource string
+  // Alert ID assigned by the detecting Defender service
+  providerAlertId string
+  // ID of the incident this alert is correlated into
+  incidentId string
+  // Owner the alert is assigned to
+  assignedTo string
+  // Recommended remediation actions
+  recommendedActions string
+  // MITRE ATT&CK techniques the alert maps to
+  mitreTechniques []string
+  // Tags applied by the system
+  systemTags []string
+  // ID of the tenant the alert belongs to
+  tenantId string
+  // Deep link to the alert in the Microsoft Defender portal
+  alertWebUrl string
+  // When the alert was created
+  createdDateTime time
+  // When the alert was last updated
+  lastUpdateDateTime time
+  // When the earliest activity associated with the alert occurred
+  firstActivityDateTime time
+  // When the most recent activity associated with the alert occurred
+  lastActivityDateTime time
+  // When the alert was resolved
+  resolvedDateTime time
+  // Analyst comments recorded on the alert
+  comments []dict
+  // Incident this alert is correlated into
+  incident() microsoft.security.incident
+}
+
+// Microsoft Defender XDR Incident
+//
+// Examine a security incident in Microsoft Defender XDR. An incident is a
+// collection of correlated alerts that together describe an attack story.
+// It exposes the aggregate `severity` and `status`, the analyst
+// `classification` and `determination`, the owner it is `assignedTo`, the
+// `summary`, applied `customTags`, and the full set of correlated `alerts`.
+// When `redirectIncidentId` is set the incident has been merged into another
+// incident. Use `alerts` to drill into the individual detections.
+microsoft.security.incident @defaults("displayName severity status") {
+  // Incident ID
+  id string
+  // Incident display name
+  displayName string
+  // Incident description
+  description string
+  // Incident summary
+  summary string
+  // Severity (unknown, informational, low, medium, high)
+  severity string
+  // Status (active, resolved, inProgress, redirected, awaitingAction)
+  status string
+  // Analyst classification (unknown, falsePositive, truePositive, informationalExpectedActivity)
+  classification string
+  // Analyst determination (unknown, apt, malware, securityPersonnel, securityTesting, unwantedSoftware, other, multiStagedAttack, compromisedAccount, phishing, maliciousUserActivity, notMalicious, notEnoughDataToValidate, confirmedActivity, lineOfBusinessApplication)
+  determination string
+  // Owner the incident is assigned to
+  assignedTo string
+  // Identity that last modified the incident
+  lastModifiedBy string
+  // ID of the incident this incident was merged into
+  redirectIncidentId string
+  // ID of the tenant the incident belongs to
+  tenantId string
+  // Tags applied by analysts
+  customTags []string
+  // Tags applied by the system
+  systemTags []string
+  // Deep link to the incident in the Microsoft Defender portal
+  incidentWebUrl string
+  // When the incident was created
+  createdDateTime time
+  // When the incident was last updated
+  lastUpdateDateTime time
+  // Analyst comments recorded on the incident
+  comments []dict
+  // Alerts correlated into this incident
+  alerts() []microsoft.security.alert
 }
 
 // Microsoft Security Exchange Settings

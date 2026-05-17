@@ -56,6 +56,8 @@ type PermissionIndexer interface {
 type permissionIndexer struct {
 	// permission index key : appId/roleID value: permission
 	idxAppRoles map[string]*roleCache
+	// app roles published by a service principal, keyed by service principal ID
+	idxAppRolesBySp map[string][]*roleCache
 	// permission index key : appId/permission value: permission
 	idxOauthPermissionScopes map[string]*oauth2PermissionScope
 	// index of app names by appId
@@ -65,6 +67,9 @@ type permissionIndexer struct {
 func (idx *permissionIndexer) initAppRoleIndex() {
 	if idx.idxAppRoles == nil {
 		idx.idxAppRoles = make(map[string]*roleCache)
+	}
+	if idx.idxAppRolesBySp == nil {
+		idx.idxAppRolesBySp = make(map[string][]*roleCache)
 	}
 }
 
@@ -115,8 +120,20 @@ func (idx *permissionIndexer) IndexAppRole(spId string, roles ...models.AppRolea
 
 		idx.idxAppRoles[spId+"/"+rCache.id] = rCache
 		idx.idxAppRoles[spId+"/"+rCache.permission] = rCache
+		idx.idxAppRolesBySp[spId] = append(idx.idxAppRolesBySp[spId], rCache)
 	}
 	idxAppRoleMutex.Unlock()
+}
+
+// appRolesForSp returns all app roles published by a service principal
+func (idx *permissionIndexer) appRolesForSp(spId string) []*roleCache {
+	if idx.idxAppRolesBySp == nil {
+		return nil
+	}
+	idxAppRoleMutex.RLock()
+	roles := idx.idxAppRolesBySp[spId]
+	idxAppRoleMutex.RUnlock()
+	return roles
 }
 
 // appRole returns a role by appId and roleID
@@ -461,8 +478,11 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 		return nil, transformError(err)
 	}
 
-	// TODO: also list ungranted app roles
 	list := []any{}
+	// track which app roles are granted, keyed by resourceSpId/roleId, and the
+	// display name of each resource service principal the application touches
+	grantedRoleKeys := map[string]bool{}
+	resourceSpNames := map[string]string{}
 	appRolesAssignments := grantedApplicationRolesResp.GetValue()
 	for _, roleAssignment := range appRolesAssignments {
 		assignmentID := roleAssignment.GetId()
@@ -472,6 +492,8 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 		if assignmentID == nil || spId == nil || roleId == nil {
 			continue
 		}
+		grantedRoleKeys[spId.String()+"/"+roleId.String()] = true
+		resourceSpNames[spId.String()] = convert.ToValue(roleAssignment.GetResourceDisplayName())
 		role, ok := mqlMicrosoftResource.appRole(spId.String(), roleId.String())
 		if !ok {
 			log.Debug().Msgf("role not found in cache: %v", roleId)
@@ -492,6 +514,34 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 			return nil, err
 		}
 		list = append(list, assignment)
+	}
+
+	// surface the app roles published by each resource the application already
+	// has a grant on but has not been assigned, so audits can see the unused
+	// capability the application could request
+	for resourceSpId, resourceName := range resourceSpNames {
+		for _, role := range mqlMicrosoftResource.appRolesForSp(resourceSpId) {
+			key := resourceSpId + "/" + role.id
+			if grantedRoleKeys[key] {
+				continue
+			}
+			grantedRoleKeys[key] = true // also dedupes repeated roles
+
+			assignment, err := CreateResource(a.MqlRuntime, "microsoft.application.permission", map[string]*llx.RawData{
+				"__id":        llx.StringData(key + "/available"),
+				"appId":       llx.StringData(resourceSpId),
+				"appName":     llx.StringData(resourceName),
+				"description": llx.StringData(role.desc),
+				"id":          llx.StringData(role.id),
+				"name":        llx.StringData(role.permission),
+				"type":        llx.StringData("application"),
+				"status":      llx.StringData("available"),
+			})
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, assignment)
+		}
 	}
 
 	oauthResp, err := graphClient.ServicePrincipals().ByServicePrincipalId(servicePrincipalId).Oauth2PermissionGrants().Get(ctx, &serviceprincipals.ItemOauth2PermissionGrantsRequestBuilderGetRequestConfiguration{})

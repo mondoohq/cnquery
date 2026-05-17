@@ -84,9 +84,12 @@ const (
 	ResourceMicrosoftServiceprincipal                                                                    string = "microsoft.serviceprincipal"
 	ResourceMicrosoftServiceprincipalAssignment                                                          string = "microsoft.serviceprincipal.assignment"
 	ResourceMicrosoftApplicationPermission                                                               string = "microsoft.application.permission"
+	ResourceMicrosoftOauth2PermissionGrant                                                               string = "microsoft.oauth2PermissionGrant"
 	ResourceMicrosoftSecurity                                                                            string = "microsoft.security"
 	ResourceMicrosoftSecuritySecurityscore                                                               string = "microsoft.security.securityscore"
 	ResourceMicrosoftSecurityRiskyUser                                                                   string = "microsoft.security.riskyUser"
+	ResourceMicrosoftSecurityAlert                                                                       string = "microsoft.security.alert"
+	ResourceMicrosoftSecurityIncident                                                                    string = "microsoft.security.incident"
 	ResourceMicrosoftSecurityExchange                                                                    string = "microsoft.security.exchange"
 	ResourceMicrosoftSecurityExchangeAntispam                                                            string = "microsoft.security.exchange.antispam"
 	ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy                                string = "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy"
@@ -421,6 +424,10 @@ func init() {
 			// to override args, implement: initMicrosoftApplicationPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftApplicationPermission,
 		},
+		"microsoft.oauth2PermissionGrant": {
+			// to override args, implement: initMicrosoftOauth2PermissionGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftOauth2PermissionGrant,
+		},
 		"microsoft.security": {
 			// to override args, implement: initMicrosoftSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftSecurity,
@@ -432,6 +439,14 @@ func init() {
 		"microsoft.security.riskyUser": {
 			// to override args, implement: initMicrosoftSecurityRiskyUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftSecurityRiskyUser,
+		},
+		"microsoft.security.alert": {
+			// to override args, implement: initMicrosoftSecurityAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSecurityAlert,
+		},
+		"microsoft.security.incident": {
+			Init:   initMicrosoftSecurityIncident,
+			Create: createMicrosoftSecurityIncident,
 		},
 		"microsoft.security.exchange": {
 			// to override args, implement: initMicrosoftSecurityExchange(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -751,6 +766,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.enterpriseApplications": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetEnterpriseApplications()).ToDataRes(types.Array(types.Resource("microsoft.serviceprincipal")))
+	},
+	"microsoft.oauth2PermissionGrants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoft).GetOauth2PermissionGrants()).ToDataRes(types.Array(types.Resource("microsoft.oauth2PermissionGrant")))
 	},
 	"microsoft.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetRoles()).ToDataRes(types.Resource("microsoft.roles"))
@@ -2210,6 +2228,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.application.permission.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftApplicationPermission).GetStatus()).ToDataRes(types.String)
 	},
+	"microsoft.oauth2PermissionGrant.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.oauth2PermissionGrant.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetClientId()).ToDataRes(types.String)
+	},
+	"microsoft.oauth2PermissionGrant.clientName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetClientName()).ToDataRes(types.String)
+	},
+	"microsoft.oauth2PermissionGrant.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetResourceId()).ToDataRes(types.String)
+	},
+	"microsoft.oauth2PermissionGrant.resourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetResourceName()).ToDataRes(types.String)
+	},
+	"microsoft.oauth2PermissionGrant.consentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetConsentType()).ToDataRes(types.String)
+	},
+	"microsoft.oauth2PermissionGrant.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"microsoft.oauth2PermissionGrant.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetScopes()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.oauth2PermissionGrant.client": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetClient()).ToDataRes(types.Resource("microsoft.serviceprincipal"))
+	},
+	"microsoft.oauth2PermissionGrant.resource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetResource()).ToDataRes(types.Resource("microsoft.serviceprincipal"))
+	},
+	"microsoft.oauth2PermissionGrant.principal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftOauth2PermissionGrant).GetPrincipal()).ToDataRes(types.Resource("microsoft.user"))
+	},
 	"microsoft.security.secureScores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurity).GetSecureScores()).ToDataRes(types.Array(types.Resource("microsoft.security.securityscore")))
 	},
@@ -2218,6 +2269,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.security.riskyUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurity).GetRiskyUsers()).ToDataRes(types.Array(types.Resource("microsoft.security.riskyUser")))
+	},
+	"microsoft.security.alerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurity).GetAlerts()).ToDataRes(types.Array(types.Resource("microsoft.security.alert")))
+	},
+	"microsoft.security.incidents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurity).GetIncidents()).ToDataRes(types.Array(types.Resource("microsoft.security.incident")))
 	},
 	"microsoft.security.exchange": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurity).GetExchange()).ToDataRes(types.Resource("microsoft.security.exchange"))
@@ -2287,6 +2344,141 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.security.riskyUser.isProcessing": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityRiskyUser).GetIsProcessing()).ToDataRes(types.Bool)
+	},
+	"microsoft.security.alert.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetTitle()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetCategory()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetCategories()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.security.alert.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetSeverity()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetStatus()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.classification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetClassification()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.determination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetDetermination()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.serviceSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetServiceSource()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.detectionSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetDetectionSource()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.providerAlertId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetProviderAlertId()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.incidentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetIncidentId()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.assignedTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetAssignedTo()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.recommendedActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetRecommendedActions()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.mitreTechniques": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetMitreTechniques()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.security.alert.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetSystemTags()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.security.alert.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetTenantId()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.alertWebUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetAlertWebUrl()).ToDataRes(types.String)
+	},
+	"microsoft.security.alert.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.security.alert.lastUpdateDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetLastUpdateDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.security.alert.firstActivityDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetFirstActivityDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.security.alert.lastActivityDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetLastActivityDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.security.alert.resolvedDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetResolvedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.security.alert.comments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetComments()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.security.alert.incident": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityAlert).GetIncident()).ToDataRes(types.Resource("microsoft.security.incident"))
+	},
+	"microsoft.security.incident.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetSummary()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetSeverity()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetStatus()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.classification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetClassification()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.determination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetDetermination()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.assignedTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetAssignedTo()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.lastModifiedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetLastModifiedBy()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.redirectIncidentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetRedirectIncidentId()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.tenantId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetTenantId()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.customTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetCustomTags()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.security.incident.systemTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetSystemTags()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.security.incident.incidentWebUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetIncidentWebUrl()).ToDataRes(types.String)
+	},
+	"microsoft.security.incident.createdDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetCreatedDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.security.incident.lastUpdateDateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetLastUpdateDateTime()).ToDataRes(types.Time)
+	},
+	"microsoft.security.incident.comments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetComments()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.security.incident.alerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityIncident).GetAlerts()).ToDataRes(types.Array(types.Resource("microsoft.security.alert")))
 	},
 	"microsoft.security.exchange.antispam": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityExchange).GetAntispam()).ToDataRes(types.Resource("microsoft.security.exchange.antispam"))
@@ -3435,6 +3627,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.enterpriseApplications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).EnterpriseApplications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoft).Oauth2PermissionGrants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5649,6 +5845,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftApplicationPermission).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"microsoft.oauth2PermissionGrant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.clientName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).ClientName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.resourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.consentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).ConsentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.client": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).Client, ok = plugin.RawToTValue[*mqlMicrosoftServiceprincipal](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.resource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).Resource, ok = plugin.RawToTValue[*mqlMicrosoftServiceprincipal](v.Value, v.Error)
+		return
+	},
+	"microsoft.oauth2PermissionGrant.principal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftOauth2PermissionGrant).Principal, ok = plugin.RawToTValue[*mqlMicrosoftUser](v.Value, v.Error)
+		return
+	},
 	"microsoft.security.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurity).__id, ok = v.Value.(string)
 		return
@@ -5663,6 +5907,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.security.riskyUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurity).RiskyUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurity).Alerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incidents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurity).Incidents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.security.exchange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5763,6 +6015,194 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.security.riskyUser.isProcessing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurityRiskyUser).IsProcessing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.security.alert.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.classification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Classification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.determination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Determination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.serviceSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).ServiceSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.detectionSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).DetectionSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.providerAlertId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).ProviderAlertId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.incidentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).IncidentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.assignedTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).AssignedTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.recommendedActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).RecommendedActions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.mitreTechniques": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).MitreTechniques, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).SystemTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.alertWebUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).AlertWebUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.lastUpdateDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).LastUpdateDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.firstActivityDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).FirstActivityDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.lastActivityDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).LastActivityDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.resolvedDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).ResolvedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.comments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Comments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.alert.incident": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityAlert).Incident, ok = plugin.RawToTValue[*mqlMicrosoftSecurityIncident](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.security.incident.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.classification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).Classification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.determination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).Determination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.assignedTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).AssignedTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.lastModifiedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).LastModifiedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.redirectIncidentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).RedirectIncidentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.tenantId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).TenantId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.customTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).CustomTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.systemTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).SystemTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.incidentWebUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).IncidentWebUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.createdDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).CreatedDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.lastUpdateDateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).LastUpdateDateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.comments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).Comments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.incident.alerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityIncident).Alerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.security.exchange.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7494,6 +7934,7 @@ type mqlMicrosoft struct {
 	Applications           plugin.TValue[*mqlMicrosoftApplications]
 	Serviceprincipals      plugin.TValue[[]any]
 	EnterpriseApplications plugin.TValue[[]any]
+	Oauth2PermissionGrants plugin.TValue[[]any]
 	Roles                  plugin.TValue[*mqlMicrosoftRoles]
 	Settings               plugin.TValue[any]
 	GroupSettings          plugin.TValue[[]any]
@@ -7659,6 +8100,22 @@ func (c *mqlMicrosoft) GetEnterpriseApplications() *plugin.TValue[[]any] {
 		}
 
 		return c.enterpriseApplications()
+	})
+}
+
+func (c *mqlMicrosoft) GetOauth2PermissionGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Oauth2PermissionGrants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "oauth2PermissionGrants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.oauth2PermissionGrants()
 	})
 }
 
@@ -13246,6 +13703,136 @@ func (c *mqlMicrosoftApplicationPermission) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
+// mqlMicrosoftOauth2PermissionGrant for the microsoft.oauth2PermissionGrant resource
+type mqlMicrosoftOauth2PermissionGrant struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftOauth2PermissionGrantInternal it will be used here
+	Id           plugin.TValue[string]
+	ClientId     plugin.TValue[string]
+	ClientName   plugin.TValue[string]
+	ResourceId   plugin.TValue[string]
+	ResourceName plugin.TValue[string]
+	ConsentType  plugin.TValue[string]
+	PrincipalId  plugin.TValue[string]
+	Scopes       plugin.TValue[[]any]
+	Client       plugin.TValue[*mqlMicrosoftServiceprincipal]
+	Resource     plugin.TValue[*mqlMicrosoftServiceprincipal]
+	Principal    plugin.TValue[*mqlMicrosoftUser]
+}
+
+// createMicrosoftOauth2PermissionGrant creates a new instance of this resource
+func createMicrosoftOauth2PermissionGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftOauth2PermissionGrant{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.oauth2PermissionGrant", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) MqlName() string {
+	return "microsoft.oauth2PermissionGrant"
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetClientName() *plugin.TValue[string] {
+	return &c.ClientName
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetResourceName() *plugin.TValue[string] {
+	return &c.ResourceName
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetConsentType() *plugin.TValue[string] {
+	return &c.ConsentType
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetScopes() *plugin.TValue[[]any] {
+	return &c.Scopes
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetClient() *plugin.TValue[*mqlMicrosoftServiceprincipal] {
+	return plugin.GetOrCompute[*mqlMicrosoftServiceprincipal](&c.Client, func() (*mqlMicrosoftServiceprincipal, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.oauth2PermissionGrant", c.__id, "client")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftServiceprincipal), nil
+			}
+		}
+
+		return c.client()
+	})
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetResource() *plugin.TValue[*mqlMicrosoftServiceprincipal] {
+	return plugin.GetOrCompute[*mqlMicrosoftServiceprincipal](&c.Resource, func() (*mqlMicrosoftServiceprincipal, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.oauth2PermissionGrant", c.__id, "resource")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftServiceprincipal), nil
+			}
+		}
+
+		return c.resource()
+	})
+}
+
+func (c *mqlMicrosoftOauth2PermissionGrant) GetPrincipal() *plugin.TValue[*mqlMicrosoftUser] {
+	return plugin.GetOrCompute[*mqlMicrosoftUser](&c.Principal, func() (*mqlMicrosoftUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.oauth2PermissionGrant", c.__id, "principal")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftUser), nil
+			}
+		}
+
+		return c.principal()
+	})
+}
+
 // mqlMicrosoftSecurity for the microsoft.security resource
 type mqlMicrosoftSecurity struct {
 	MqlRuntime *plugin.Runtime
@@ -13254,6 +13841,8 @@ type mqlMicrosoftSecurity struct {
 	SecureScores          plugin.TValue[[]any]
 	LatestSecureScores    plugin.TValue[*mqlMicrosoftSecuritySecurityscore]
 	RiskyUsers            plugin.TValue[[]any]
+	Alerts                plugin.TValue[[]any]
+	Incidents             plugin.TValue[[]any]
 	Exchange              plugin.TValue[*mqlMicrosoftSecurityExchange]
 	InformationProtection plugin.TValue[*mqlMicrosoftSecurityInformationProtection]
 }
@@ -13335,6 +13924,38 @@ func (c *mqlMicrosoftSecurity) GetRiskyUsers() *plugin.TValue[[]any] {
 		}
 
 		return c.riskyUsers()
+	})
+}
+
+func (c *mqlMicrosoftSecurity) GetAlerts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Alerts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security", c.__id, "alerts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.alerts()
+	})
+}
+
+func (c *mqlMicrosoftSecurity) GetIncidents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Incidents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security", c.__id, "incidents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.incidents()
 	})
 }
 
@@ -13568,6 +14189,333 @@ func (c *mqlMicrosoftSecurityRiskyUser) GetIsDeleted() *plugin.TValue[bool] {
 
 func (c *mqlMicrosoftSecurityRiskyUser) GetIsProcessing() *plugin.TValue[bool] {
 	return &c.IsProcessing
+}
+
+// mqlMicrosoftSecurityAlert for the microsoft.security.alert resource
+type mqlMicrosoftSecurityAlert struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftSecurityAlertInternal it will be used here
+	Id                    plugin.TValue[string]
+	Title                 plugin.TValue[string]
+	Description           plugin.TValue[string]
+	Category              plugin.TValue[string]
+	Categories            plugin.TValue[[]any]
+	Severity              plugin.TValue[string]
+	Status                plugin.TValue[string]
+	Classification        plugin.TValue[string]
+	Determination         plugin.TValue[string]
+	ServiceSource         plugin.TValue[string]
+	DetectionSource       plugin.TValue[string]
+	ProviderAlertId       plugin.TValue[string]
+	IncidentId            plugin.TValue[string]
+	AssignedTo            plugin.TValue[string]
+	RecommendedActions    plugin.TValue[string]
+	MitreTechniques       plugin.TValue[[]any]
+	SystemTags            plugin.TValue[[]any]
+	TenantId              plugin.TValue[string]
+	AlertWebUrl           plugin.TValue[string]
+	CreatedDateTime       plugin.TValue[*time.Time]
+	LastUpdateDateTime    plugin.TValue[*time.Time]
+	FirstActivityDateTime plugin.TValue[*time.Time]
+	LastActivityDateTime  plugin.TValue[*time.Time]
+	ResolvedDateTime      plugin.TValue[*time.Time]
+	Comments              plugin.TValue[[]any]
+	Incident              plugin.TValue[*mqlMicrosoftSecurityIncident]
+}
+
+// createMicrosoftSecurityAlert creates a new instance of this resource
+func createMicrosoftSecurityAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecurityAlert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.alert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecurityAlert) MqlName() string {
+	return "microsoft.security.alert"
+}
+
+func (c *mqlMicrosoftSecurityAlert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetCategories() *plugin.TValue[[]any] {
+	return &c.Categories
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetClassification() *plugin.TValue[string] {
+	return &c.Classification
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetDetermination() *plugin.TValue[string] {
+	return &c.Determination
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetServiceSource() *plugin.TValue[string] {
+	return &c.ServiceSource
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetDetectionSource() *plugin.TValue[string] {
+	return &c.DetectionSource
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetProviderAlertId() *plugin.TValue[string] {
+	return &c.ProviderAlertId
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetIncidentId() *plugin.TValue[string] {
+	return &c.IncidentId
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetAssignedTo() *plugin.TValue[string] {
+	return &c.AssignedTo
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetRecommendedActions() *plugin.TValue[string] {
+	return &c.RecommendedActions
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetMitreTechniques() *plugin.TValue[[]any] {
+	return &c.MitreTechniques
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetSystemTags() *plugin.TValue[[]any] {
+	return &c.SystemTags
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetAlertWebUrl() *plugin.TValue[string] {
+	return &c.AlertWebUrl
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetLastUpdateDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdateDateTime
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetFirstActivityDateTime() *plugin.TValue[*time.Time] {
+	return &c.FirstActivityDateTime
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetLastActivityDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastActivityDateTime
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetResolvedDateTime() *plugin.TValue[*time.Time] {
+	return &c.ResolvedDateTime
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetComments() *plugin.TValue[[]any] {
+	return &c.Comments
+}
+
+func (c *mqlMicrosoftSecurityAlert) GetIncident() *plugin.TValue[*mqlMicrosoftSecurityIncident] {
+	return plugin.GetOrCompute[*mqlMicrosoftSecurityIncident](&c.Incident, func() (*mqlMicrosoftSecurityIncident, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security.alert", c.__id, "incident")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftSecurityIncident), nil
+			}
+		}
+
+		return c.incident()
+	})
+}
+
+// mqlMicrosoftSecurityIncident for the microsoft.security.incident resource
+type mqlMicrosoftSecurityIncident struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftSecurityIncidentInternal it will be used here
+	Id                 plugin.TValue[string]
+	DisplayName        plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Summary            plugin.TValue[string]
+	Severity           plugin.TValue[string]
+	Status             plugin.TValue[string]
+	Classification     plugin.TValue[string]
+	Determination      plugin.TValue[string]
+	AssignedTo         plugin.TValue[string]
+	LastModifiedBy     plugin.TValue[string]
+	RedirectIncidentId plugin.TValue[string]
+	TenantId           plugin.TValue[string]
+	CustomTags         plugin.TValue[[]any]
+	SystemTags         plugin.TValue[[]any]
+	IncidentWebUrl     plugin.TValue[string]
+	CreatedDateTime    plugin.TValue[*time.Time]
+	LastUpdateDateTime plugin.TValue[*time.Time]
+	Comments           plugin.TValue[[]any]
+	Alerts             plugin.TValue[[]any]
+}
+
+// createMicrosoftSecurityIncident creates a new instance of this resource
+func createMicrosoftSecurityIncident(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecurityIncident{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.incident", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecurityIncident) MqlName() string {
+	return "microsoft.security.incident"
+}
+
+func (c *mqlMicrosoftSecurityIncident) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetClassification() *plugin.TValue[string] {
+	return &c.Classification
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetDetermination() *plugin.TValue[string] {
+	return &c.Determination
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetAssignedTo() *plugin.TValue[string] {
+	return &c.AssignedTo
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetLastModifiedBy() *plugin.TValue[string] {
+	return &c.LastModifiedBy
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetRedirectIncidentId() *plugin.TValue[string] {
+	return &c.RedirectIncidentId
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetTenantId() *plugin.TValue[string] {
+	return &c.TenantId
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetCustomTags() *plugin.TValue[[]any] {
+	return &c.CustomTags
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetSystemTags() *plugin.TValue[[]any] {
+	return &c.SystemTags
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetIncidentWebUrl() *plugin.TValue[string] {
+	return &c.IncidentWebUrl
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetCreatedDateTime() *plugin.TValue[*time.Time] {
+	return &c.CreatedDateTime
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetLastUpdateDateTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdateDateTime
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetComments() *plugin.TValue[[]any] {
+	return &c.Comments
+}
+
+func (c *mqlMicrosoftSecurityIncident) GetAlerts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Alerts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security.incident", c.__id, "alerts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.alerts()
+	})
 }
 
 // mqlMicrosoftSecurityExchange for the microsoft.security.exchange resource
