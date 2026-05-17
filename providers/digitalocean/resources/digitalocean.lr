@@ -10,7 +10,7 @@ option go_package = "go.mondoo.com/mql/v13/providers/digitalocean/resources"
 // the DigitalOcean provider. Iterate `droplets()` for VMs,
 // `firewalls()` for cloud-firewall rule sets, `databases()` for
 // managed databases, `volumes()` for block storage, `images()` for
-// system and custom images, `snapshots()` for droplet and volume
+// the account's own images, `snapshots()` for droplet and volume
 // snapshots, `domains()` for DigitalOcean-managed DNS,
 // `loadBalancers()` for L4/L7 LBs, `vpcs()` and `vpcPeerings()` for
 // the network plane, `kubernetesClusters()` for DOKS, `apps()` for App
@@ -30,7 +30,7 @@ digitalocean {
   domains() []digitalocean.domain
   // Block storage volumes
   volumes() []digitalocean.volume
-  // System and custom images
+  // Custom images, snapshots, and backups owned by the account
   images() []digitalocean.image
   // Droplet and volume snapshots
   snapshots() []digitalocean.snapshot
@@ -795,8 +795,9 @@ digitalocean.spacesKey @defaults("name accessKey") {
 // `regions` the image is available in, the minimum disk size and
 // on-disk size, the processing `status` and any `errorMessage`,
 // applied tags, and the creation timestamp. Select an image by its
-// numeric `id`, for example `digitalocean.images.where(public ==
-// false)`.
+// numeric `id`. The `images` collection lists the account's own
+// images — custom uploads, snapshots, and backups — while a droplet's
+// `baseImage` may also reference a public DigitalOcean catalog image.
 digitalocean.image @defaults("id name distribution") {
   // Image ID
   id int

@@ -194,6 +194,10 @@ func (r *mqlDigitaloceanDatabase) vpc() (*mqlDigitaloceanVpc, error) {
 
 // evictionPolicy returns the key eviction policy for Redis/Valkey clusters.
 // Other engines have no eviction policy, so an empty string is returned.
+//
+// This issues one GetEvictionPolicy call per Redis/Valkey cluster — DigitalOcean
+// exposes no batch endpoint — so querying it across many cache clusters results
+// in N serial API calls. Non-cache engines short-circuit before any call.
 func (r *mqlDigitaloceanDatabase) evictionPolicy() (string, error) {
 	if engine := r.Engine.Data; engine != "redis" && engine != "valkey" {
 		return "", nil

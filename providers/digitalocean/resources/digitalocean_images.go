@@ -49,6 +49,10 @@ func newMqlDigitaloceanImage(runtime *plugin.Runtime, img godo.Image) (*mqlDigit
 	return res.(*mqlDigitaloceanImage), nil
 }
 
+// images lists the account's own images — custom uploads, droplet and volume
+// snapshots saved as images, and backups. ListUser is used instead of List so
+// the result excludes the hundreds of public DigitalOcean catalog images
+// (distributions and 1-Click applications), which are not account resources.
 func (r *mqlDigitalocean) images() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
@@ -56,7 +60,7 @@ func (r *mqlDigitalocean) images() ([]interface{}, error) {
 	var all []interface{}
 	opt := &godo.ListOptions{PerPage: 200}
 	for {
-		images, resp, err := client.Images.List(context.Background(), opt)
+		images, resp, err := client.Images.ListUser(context.Background(), opt)
 		if err != nil {
 			return nil, err
 		}
