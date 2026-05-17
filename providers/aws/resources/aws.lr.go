@@ -603,6 +603,9 @@ const (
 	ResourceAwsAppstreamUser                                                    string = "aws.appstream.user"
 	ResourceAwsAppstreamSession                                                 string = "aws.appstream.session"
 	ResourceAwsAppstreamEntitlement                                             string = "aws.appstream.entitlement"
+	ResourceAwsAppsync                                                          string = "aws.appsync"
+	ResourceAwsAppsyncGraphqlApi                                                string = "aws.appsync.graphqlApi"
+	ResourceAwsAppsyncApiKey                                                    string = "aws.appsync.apiKey"
 	ResourceAwsAthena                                                           string = "aws.athena"
 	ResourceAwsAthenaWorkgroup                                                  string = "aws.athena.workgroup"
 	ResourceAwsAthenaDataCatalog                                                string = "aws.athena.dataCatalog"
@@ -3143,6 +3146,18 @@ func init() {
 		"aws.appstream.entitlement": {
 			// to override args, implement: initAwsAppstreamEntitlement(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsAppstreamEntitlement,
+		},
+		"aws.appsync": {
+			// to override args, implement: initAwsAppsync(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppsync,
+		},
+		"aws.appsync.graphqlApi": {
+			Init:   initAwsAppsyncGraphqlApi,
+			Create: createAwsAppsyncGraphqlApi,
+		},
+		"aws.appsync.apiKey": {
+			// to override args, implement: initAwsAppsyncApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsAppsyncApiKey,
 		},
 		"aws.athena": {
 			// to override args, implement: initAwsAthena(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -21641,6 +21656,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.appstream.entitlement.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAppstreamEntitlement).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appsync.apis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsync).GetApis()).ToDataRes(types.Array(types.Resource("aws.appsync.graphqlApi")))
+	},
+	"aws.appsync.graphqlApi.apiId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetApiId()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetArn()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetName()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.authenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetAuthenticationType()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.additionalAuthenticationProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetAdditionalAuthenticationProviders()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.appsync.graphqlApi.logFieldLogLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetLogFieldLogLevel()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.logExcludeVerboseContent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetLogExcludeVerboseContent()).ToDataRes(types.Bool)
+	},
+	"aws.appsync.graphqlApi.logCloudWatchLogsRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetLogCloudWatchLogsRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.appsync.graphqlApi.xrayEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetXrayEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.appsync.graphqlApi.webAcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetWebAcl()).ToDataRes(types.Resource("aws.waf.acl"))
+	},
+	"aws.appsync.graphqlApi.visibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetVisibility()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.apiType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetApiType()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.introspectionConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetIntrospectionConfig()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.queryDepthLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetQueryDepthLimit()).ToDataRes(types.Int)
+	},
+	"aws.appsync.graphqlApi.resolverCountLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetResolverCountLimit()).ToDataRes(types.Int)
+	},
+	"aws.appsync.graphqlApi.uris": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetUris()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.appsync.graphqlApi.ownerContact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetOwnerContact()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.appsync.graphqlApi.apiKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetApiKeys()).ToDataRes(types.Array(types.Resource("aws.appsync.apiKey")))
+	},
+	"aws.appsync.graphqlApi.cacheBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetCacheBehavior()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.cacheType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetCacheType()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.cacheStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetCacheStatus()).ToDataRes(types.String)
+	},
+	"aws.appsync.graphqlApi.cacheTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetCacheTtl()).ToDataRes(types.Int)
+	},
+	"aws.appsync.graphqlApi.cacheAtRestEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetCacheAtRestEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.appsync.graphqlApi.cacheTransitEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncGraphqlApi).GetCacheTransitEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.appsync.apiKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncApiKey).GetId()).ToDataRes(types.String)
+	},
+	"aws.appsync.apiKey.apiId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncApiKey).GetApiId()).ToDataRes(types.String)
+	},
+	"aws.appsync.apiKey.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncApiKey).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.appsync.apiKey.expires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncApiKey).GetExpires()).ToDataRes(types.Time)
+	},
+	"aws.appsync.apiKey.deletes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAppsyncApiKey).GetDeletes()).ToDataRes(types.Time)
 	},
 	"aws.athena.workgroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAthena).GetWorkgroups()).ToDataRes(types.Array(types.Resource("aws.athena.workgroup")))
@@ -53170,6 +53281,146 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.appstream.entitlement.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAppstreamEntitlement).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsync).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appsync.apis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsync).Apis, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appsync.graphqlApi.apiId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).ApiId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.authenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).AuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.additionalAuthenticationProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).AdditionalAuthenticationProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.logFieldLogLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).LogFieldLogLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.logExcludeVerboseContent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).LogExcludeVerboseContent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.logCloudWatchLogsRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).LogCloudWatchLogsRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.xrayEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).XrayEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.webAcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).WebAcl, ok = plugin.RawToTValue[*mqlAwsWafAcl](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).Visibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.apiType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).ApiType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.introspectionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).IntrospectionConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.queryDepthLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).QueryDepthLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.resolverCountLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).ResolverCountLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.uris": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).Uris, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.ownerContact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).OwnerContact, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.apiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).ApiKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.cacheBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).CacheBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.cacheType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).CacheType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.cacheStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).CacheStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.cacheTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).CacheTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.cacheAtRestEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).CacheAtRestEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.graphqlApi.cacheTransitEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncGraphqlApi).CacheTransitEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncApiKey).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.appsync.apiKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncApiKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.apiKey.apiId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncApiKey).ApiId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.apiKey.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncApiKey).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.apiKey.expires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncApiKey).Expires, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.appsync.apiKey.deletes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAppsyncApiKey).Deletes, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.athena.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -128803,6 +129054,358 @@ func (c *mqlAwsAppstreamEntitlement) GetLastModifiedAt() *plugin.TValue[*time.Ti
 
 func (c *mqlAwsAppstreamEntitlement) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+// mqlAwsAppsync for the aws.appsync resource
+type mqlAwsAppsync struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppsyncInternal it will be used here
+	Apis plugin.TValue[[]any]
+}
+
+// createAwsAppsync creates a new instance of this resource
+func createAwsAppsync(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppsync{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appsync", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppsync) MqlName() string {
+	return "aws.appsync"
+}
+
+func (c *mqlAwsAppsync) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppsync) GetApis() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Apis, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appsync", c.__id, "apis")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apis()
+	})
+}
+
+// mqlAwsAppsyncGraphqlApi for the aws.appsync.graphqlApi resource
+type mqlAwsAppsyncGraphqlApi struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsAppsyncGraphqlApiInternal
+	ApiId                             plugin.TValue[string]
+	Arn                               plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	Region                            plugin.TValue[string]
+	AuthenticationType                plugin.TValue[string]
+	AdditionalAuthenticationProviders plugin.TValue[[]any]
+	LogFieldLogLevel                  plugin.TValue[string]
+	LogExcludeVerboseContent          plugin.TValue[bool]
+	LogCloudWatchLogsRole             plugin.TValue[*mqlAwsIamRole]
+	XrayEnabled                       plugin.TValue[bool]
+	WebAcl                            plugin.TValue[*mqlAwsWafAcl]
+	Visibility                        plugin.TValue[string]
+	ApiType                           plugin.TValue[string]
+	IntrospectionConfig               plugin.TValue[string]
+	QueryDepthLimit                   plugin.TValue[int64]
+	ResolverCountLimit                plugin.TValue[int64]
+	Uris                              plugin.TValue[map[string]any]
+	OwnerContact                      plugin.TValue[string]
+	Tags                              plugin.TValue[map[string]any]
+	ApiKeys                           plugin.TValue[[]any]
+	CacheBehavior                     plugin.TValue[string]
+	CacheType                         plugin.TValue[string]
+	CacheStatus                       plugin.TValue[string]
+	CacheTtl                          plugin.TValue[int64]
+	CacheAtRestEncryptionEnabled      plugin.TValue[bool]
+	CacheTransitEncryptionEnabled     plugin.TValue[bool]
+}
+
+// createAwsAppsyncGraphqlApi creates a new instance of this resource
+func createAwsAppsyncGraphqlApi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppsyncGraphqlApi{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appsync.graphqlApi", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) MqlName() string {
+	return "aws.appsync.graphqlApi"
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetApiId() *plugin.TValue[string] {
+	return &c.ApiId
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetAuthenticationType() *plugin.TValue[string] {
+	return &c.AuthenticationType
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetAdditionalAuthenticationProviders() *plugin.TValue[[]any] {
+	return &c.AdditionalAuthenticationProviders
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetLogFieldLogLevel() *plugin.TValue[string] {
+	return &c.LogFieldLogLevel
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetLogExcludeVerboseContent() *plugin.TValue[bool] {
+	return &c.LogExcludeVerboseContent
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetLogCloudWatchLogsRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.LogCloudWatchLogsRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appsync.graphqlApi", c.__id, "logCloudWatchLogsRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.logCloudWatchLogsRole()
+	})
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetXrayEnabled() *plugin.TValue[bool] {
+	return &c.XrayEnabled
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetWebAcl() *plugin.TValue[*mqlAwsWafAcl] {
+	return plugin.GetOrCompute[*mqlAwsWafAcl](&c.WebAcl, func() (*mqlAwsWafAcl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appsync.graphqlApi", c.__id, "webAcl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafAcl), nil
+			}
+		}
+
+		return c.webAcl()
+	})
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetVisibility() *plugin.TValue[string] {
+	return &c.Visibility
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetApiType() *plugin.TValue[string] {
+	return &c.ApiType
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetIntrospectionConfig() *plugin.TValue[string] {
+	return &c.IntrospectionConfig
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetQueryDepthLimit() *plugin.TValue[int64] {
+	return &c.QueryDepthLimit
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetResolverCountLimit() *plugin.TValue[int64] {
+	return &c.ResolverCountLimit
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetUris() *plugin.TValue[map[string]any] {
+	return &c.Uris
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetOwnerContact() *plugin.TValue[string] {
+	return &c.OwnerContact
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetApiKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.appsync.graphqlApi", c.__id, "apiKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiKeys()
+	})
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetCacheBehavior() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CacheBehavior, func() (string, error) {
+		return c.cacheBehavior()
+	})
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetCacheType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CacheType, func() (string, error) {
+		return c.cacheType()
+	})
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetCacheStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CacheStatus, func() (string, error) {
+		return c.cacheStatus()
+	})
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetCacheTtl() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CacheTtl, func() (int64, error) {
+		return c.cacheTtl()
+	})
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetCacheAtRestEncryptionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CacheAtRestEncryptionEnabled, func() (bool, error) {
+		return c.cacheAtRestEncryptionEnabled()
+	})
+}
+
+func (c *mqlAwsAppsyncGraphqlApi) GetCacheTransitEncryptionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CacheTransitEncryptionEnabled, func() (bool, error) {
+		return c.cacheTransitEncryptionEnabled()
+	})
+}
+
+// mqlAwsAppsyncApiKey for the aws.appsync.apiKey resource
+type mqlAwsAppsyncApiKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsAppsyncApiKeyInternal it will be used here
+	Id          plugin.TValue[string]
+	ApiId       plugin.TValue[string]
+	Description plugin.TValue[string]
+	Expires     plugin.TValue[*time.Time]
+	Deletes     plugin.TValue[*time.Time]
+}
+
+// createAwsAppsyncApiKey creates a new instance of this resource
+func createAwsAppsyncApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsAppsyncApiKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.appsync.apiKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsAppsyncApiKey) MqlName() string {
+	return "aws.appsync.apiKey"
+}
+
+func (c *mqlAwsAppsyncApiKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsAppsyncApiKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsAppsyncApiKey) GetApiId() *plugin.TValue[string] {
+	return &c.ApiId
+}
+
+func (c *mqlAwsAppsyncApiKey) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsAppsyncApiKey) GetExpires() *plugin.TValue[*time.Time] {
+	return &c.Expires
+}
+
+func (c *mqlAwsAppsyncApiKey) GetDeletes() *plugin.TValue[*time.Time] {
+	return &c.Deletes
 }
 
 // mqlAwsAthena for the aws.athena resource

@@ -14939,6 +14939,106 @@ private aws.appstream.entitlement @defaults("name stackName appVisibility region
   region string
 }
 
+// AWS AppSync
+//
+// Use the AppSync namespace to enumerate the managed GraphQL APIs in the
+// account. Iterate `apis()` for every GraphQL API across configured
+// regions — each API surfaces its primary and additional authentication
+// configuration, field-level CloudWatch logging level, X-Ray tracing
+// state, the WAF web ACL guarding the endpoint, query-depth and
+// resolver-count limits, the GraphQL introspection setting, public or
+// private visibility, the API keys issued for it, and the encryption
+// state of its server-side response cache.
+aws.appsync @defaults("apis") {
+  // GraphQL APIs across all configured regions
+  apis() []aws.appsync.graphqlApi
+}
+
+// AWS AppSync GraphQL API
+//
+// Examine a managed GraphQL API: how callers authenticate, whether
+// requests are logged and traced, which WAF web ACL filters traffic, and
+// how the response cache is encrypted. Use the apiId field as the
+// selection key — for example
+// `aws.appsync.graphqlApi(apiId: "lzpabcdef5b...")`. The
+// `authenticationType` and `additionalAuthenticationProviders` fields
+// together describe every way the API accepts callers; the `cache*`
+// fields describe the server-side response cache and are null when no
+// cache is provisioned.
+private aws.appsync.graphqlApi @defaults("name authenticationType region") {
+  // API ID
+  apiId string
+  // ARN of the API
+  arn string
+  // Friendly name of the API
+  name string
+  // Region where the API exists
+  region string
+  // Primary authentication type: API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS, OPENID_CONNECT, or AWS_LAMBDA
+  authenticationType string
+  // Additional authentication providers, each with its authenticationType and provider-specific config (openIDConnectConfig, userPoolConfig, lambdaAuthorizerConfig)
+  additionalAuthenticationProviders []dict
+  // Field logging level published to CloudWatch Logs: NONE, ERROR, or ALL
+  logFieldLogLevel string
+  // Whether verbose content (headers, context, evaluated mapping templates) is excluded from logs
+  logExcludeVerboseContent bool
+  // IAM role AppSync assumes to publish logs to CloudWatch
+  logCloudWatchLogsRole() aws.iam.role
+  // Whether X-Ray tracing is enabled for the API
+  xrayEnabled bool
+  // WAF web ACL associated with the API, or null when none is attached
+  webAcl() aws.waf.acl
+  // API visibility: GLOBAL (public) or PRIVATE
+  visibility string
+  // API type: GRAPHQL (standard) or MERGED
+  apiType string
+  // GraphQL introspection setting: ENABLED or DISABLED
+  introspectionConfig string
+  // Maximum query depth allowed in a single request (0 means no limit)
+  queryDepthLimit int
+  // Maximum number of resolvers invoked in a single request (0 applies the default of 10000)
+  resolverCountLimit int
+  // Endpoint URIs published for the API, keyed by type (GRAPHQL, REALTIME)
+  uris map[string]string
+  // Owner contact information recorded for the API
+  ownerContact string
+  // Tags on the API
+  tags map[string]string
+  // API keys issued for the API
+  apiKeys() []aws.appsync.apiKey
+  // Caching behavior of the response cache: FULL_REQUEST_CACHING, PER_RESOLVER_CACHING, or OPERATION_LEVEL_CACHING
+  cacheBehavior() string
+  // Response cache instance type (SMALL, MEDIUM, LARGE, XLARGE, LARGE_2X, ...)
+  cacheType() string
+  // Response cache instance status: AVAILABLE, CREATING, DELETING, MODIFYING, or FAILED
+  cacheStatus() string
+  // Time-to-live in seconds for response cache entries
+  cacheTtl() int
+  // Whether the response cache is encrypted at rest
+  cacheAtRestEncryptionEnabled() bool
+  // Whether connections to the response cache are encrypted in transit
+  cacheTransitEncryptionEnabled() bool
+}
+
+// AWS AppSync API key
+//
+// Examine an API key issued for a GraphQL API — its description and the
+// times it expires and is deleted. API keys are a weak authentication
+// mechanism; check `aws.appsync.graphqlApi.authenticationType` to confirm
+// whether an API depends on them.
+private aws.appsync.apiKey @defaults("id description expires") {
+  // API key ID
+  id string
+  // API ID the key belongs to
+  apiId string
+  // Description of the purpose of the key
+  description string
+  // Time after which the key expires
+  expires time
+  // Time after which the key is deleted
+  deletes time
+}
+
 // Amazon Athena
 //
 // Use the Athena namespace to enumerate the serverless interactive

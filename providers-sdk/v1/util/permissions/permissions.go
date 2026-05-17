@@ -515,6 +515,7 @@ func awsConnectionMethodToService(method string) string {
 		"fms":                      "fms",
 		"networkfirewall":          "networkfirewall",
 		"appstream":                "appstream",
+		"appsync":                  "appsync",
 		"applicationautoscaling":   "applicationautoscaling",
 		"account":                  "account",
 		"sagemaker":                "sagemaker",
