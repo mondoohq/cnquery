@@ -196,6 +196,12 @@ hetzner.server.privateNet.network 13.0.1
 hetzner.server.privateNet.networkId 13.0.1
 hetzner.server.privateNet.serverId 13.0.1
 hetzner.server.protection 13.0.1
+hetzner.server.publicIpv4 13.0.6
+hetzner.server.publicIpv4Blocked 13.0.6
+hetzner.server.publicIpv4DnsPtr 13.0.6
+hetzner.server.publicIpv6 13.0.6
+hetzner.server.publicIpv6Blocked 13.0.6
+hetzner.server.publicIpv6DnsPtr 13.0.6
 hetzner.server.rescueEnabled 13.0.1
 hetzner.server.serverType 13.0.1
 hetzner.server.status 13.0.1

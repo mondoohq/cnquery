@@ -290,6 +290,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.server.primaryIpv6": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetPrimaryIpv6()).ToDataRes(types.Resource("hetzner.primaryIp"))
 	},
+	"hetzner.server.publicIpv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServer).GetPublicIpv4()).ToDataRes(types.String)
+	},
+	"hetzner.server.publicIpv4Blocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServer).GetPublicIpv4Blocked()).ToDataRes(types.Bool)
+	},
+	"hetzner.server.publicIpv4DnsPtr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServer).GetPublicIpv4DnsPtr()).ToDataRes(types.String)
+	},
+	"hetzner.server.publicIpv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServer).GetPublicIpv6()).ToDataRes(types.String)
+	},
+	"hetzner.server.publicIpv6Blocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServer).GetPublicIpv6Blocked()).ToDataRes(types.Bool)
+	},
+	"hetzner.server.publicIpv6DnsPtr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServer).GetPublicIpv6DnsPtr()).ToDataRes(types.Array(types.Dict))
+	},
 	"hetzner.server.firewalls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServer).GetFirewalls()).ToDataRes(types.Array(types.Resource("hetzner.firewall")))
 	},
@@ -1000,6 +1018,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.server.primaryIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerServer).PrimaryIpv6, ok = plugin.RawToTValue[*mqlHetznerPrimaryIp](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.publicIpv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServer).PublicIpv4, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.publicIpv4Blocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServer).PublicIpv4Blocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.publicIpv4DnsPtr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServer).PublicIpv4DnsPtr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.publicIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServer).PublicIpv6, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.publicIpv6Blocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServer).PublicIpv6Blocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.server.publicIpv6DnsPtr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServer).PublicIpv6DnsPtr, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"hetzner.server.firewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2195,31 +2237,37 @@ type mqlHetznerServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlHetznerServerInternal
-	Id              plugin.TValue[int64]
-	Name            plugin.TValue[string]
-	Status          plugin.TValue[string]
-	Created         plugin.TValue[*time.Time]
-	ServerType      plugin.TValue[*mqlHetznerServerType]
-	Datacenter      plugin.TValue[*mqlHetznerDatacenter]
-	Location        plugin.TValue[*mqlHetznerLocation]
-	Image           plugin.TValue[*mqlHetznerImage]
-	PrivateNet      plugin.TValue[[]any]
-	Volumes         plugin.TValue[[]any]
-	FloatingIps     plugin.TValue[[]any]
-	PrimaryIpv4     plugin.TValue[*mqlHetznerPrimaryIp]
-	PrimaryIpv6     plugin.TValue[*mqlHetznerPrimaryIp]
-	Firewalls       plugin.TValue[[]any]
-	LoadBalancers   plugin.TValue[[]any]
-	BackupWindow    plugin.TValue[string]
-	RescueEnabled   plugin.TValue[bool]
-	Locked          plugin.TValue[bool]
-	IncludedTraffic plugin.TValue[int64]
-	OutgoingTraffic plugin.TValue[int64]
-	IngoingTraffic  plugin.TValue[int64]
-	PlacementGroup  plugin.TValue[*mqlHetznerPlacementGroup]
-	Iso             plugin.TValue[*mqlHetznerIso]
-	Labels          plugin.TValue[map[string]any]
-	Protection      plugin.TValue[any]
+	Id                plugin.TValue[int64]
+	Name              plugin.TValue[string]
+	Status            plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	ServerType        plugin.TValue[*mqlHetznerServerType]
+	Datacenter        plugin.TValue[*mqlHetznerDatacenter]
+	Location          plugin.TValue[*mqlHetznerLocation]
+	Image             plugin.TValue[*mqlHetznerImage]
+	PrivateNet        plugin.TValue[[]any]
+	Volumes           plugin.TValue[[]any]
+	FloatingIps       plugin.TValue[[]any]
+	PrimaryIpv4       plugin.TValue[*mqlHetznerPrimaryIp]
+	PrimaryIpv6       plugin.TValue[*mqlHetznerPrimaryIp]
+	PublicIpv4        plugin.TValue[string]
+	PublicIpv4Blocked plugin.TValue[bool]
+	PublicIpv4DnsPtr  plugin.TValue[string]
+	PublicIpv6        plugin.TValue[string]
+	PublicIpv6Blocked plugin.TValue[bool]
+	PublicIpv6DnsPtr  plugin.TValue[[]any]
+	Firewalls         plugin.TValue[[]any]
+	LoadBalancers     plugin.TValue[[]any]
+	BackupWindow      plugin.TValue[string]
+	RescueEnabled     plugin.TValue[bool]
+	Locked            plugin.TValue[bool]
+	IncludedTraffic   plugin.TValue[int64]
+	OutgoingTraffic   plugin.TValue[int64]
+	IngoingTraffic    plugin.TValue[int64]
+	PlacementGroup    plugin.TValue[*mqlHetznerPlacementGroup]
+	Iso               plugin.TValue[*mqlHetznerIso]
+	Labels            plugin.TValue[map[string]any]
+	Protection        plugin.TValue[any]
 }
 
 // createHetznerServer creates a new instance of this resource
@@ -2417,6 +2465,30 @@ func (c *mqlHetznerServer) GetPrimaryIpv6() *plugin.TValue[*mqlHetznerPrimaryIp]
 
 		return c.primaryIpv6()
 	})
+}
+
+func (c *mqlHetznerServer) GetPublicIpv4() *plugin.TValue[string] {
+	return &c.PublicIpv4
+}
+
+func (c *mqlHetznerServer) GetPublicIpv4Blocked() *plugin.TValue[bool] {
+	return &c.PublicIpv4Blocked
+}
+
+func (c *mqlHetznerServer) GetPublicIpv4DnsPtr() *plugin.TValue[string] {
+	return &c.PublicIpv4DnsPtr
+}
+
+func (c *mqlHetznerServer) GetPublicIpv6() *plugin.TValue[string] {
+	return &c.PublicIpv6
+}
+
+func (c *mqlHetznerServer) GetPublicIpv6Blocked() *plugin.TValue[bool] {
+	return &c.PublicIpv6Blocked
+}
+
+func (c *mqlHetznerServer) GetPublicIpv6DnsPtr() *plugin.TValue[[]any] {
+	return &c.PublicIpv6DnsPtr
 }
 
 func (c *mqlHetznerServer) GetFirewalls() *plugin.TValue[[]any] {

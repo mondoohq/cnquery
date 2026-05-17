@@ -81,6 +81,18 @@ private hetzner.server @defaults("id name status") {
   primaryIpv4() hetzner.primaryIp
   // Primary IPv6 address (nullable)
   primaryIpv6() hetzner.primaryIp
+  // Public IPv4 address; empty when the server has no public IPv4
+  publicIpv4 string
+  // Whether the public IPv4 address is blocked by Hetzner abuse handling
+  publicIpv4Blocked bool
+  // Reverse DNS (PTR) record for the public IPv4 address
+  publicIpv4DnsPtr string
+  // Public IPv6 network in CIDR notation; empty when the server has no public IPv6
+  publicIpv6 string
+  // Whether the public IPv6 network is blocked by Hetzner abuse handling
+  publicIpv6Blocked bool
+  // Reverse DNS (PTR) records for addresses in the public IPv6 network (each dict: ip, dnsPtr)
+  publicIpv6DnsPtr []dict
   // Firewalls applied to the server
   firewalls() []hetzner.firewall
   // Load balancers attached to the server

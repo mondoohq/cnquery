@@ -52,20 +52,32 @@ func (h *mqlHetzner) servers() ([]any, error) {
 }
 
 func newMqlHetznerServer(runtime *plugin.Runtime, s *hcloud.Server) (*mqlHetznerServer, error) {
+	// Hetzner assigns a /64 to each server; prefer the network CIDR and fall
+	// back to the bare address when the network is not populated.
+	ipv6 := ipNetString(s.PublicNet.IPv6.Network)
+	if ipv6 == "" {
+		ipv6 = ipString(s.PublicNet.IPv6.IP)
+	}
 	res, err := CreateResource(runtime, "hetzner.server", map[string]*llx.RawData{
-		"__id":            llx.StringData(fmt.Sprintf("hetzner.server/%d", s.ID)),
-		"id":              llx.IntData(s.ID),
-		"name":            llx.StringData(s.Name),
-		"status":          llx.StringData(string(s.Status)),
-		"created":         llx.TimeDataPtr(timePtr(s.Created)),
-		"backupWindow":    llx.StringData(s.BackupWindow),
-		"rescueEnabled":   llx.BoolData(s.RescueEnabled),
-		"locked":          llx.BoolData(s.Locked),
-		"includedTraffic": llx.IntData(int64(s.IncludedTraffic)),
-		"outgoingTraffic": llx.IntData(int64(s.OutgoingTraffic)),
-		"ingoingTraffic":  llx.IntData(int64(s.IngoingTraffic)),
-		"labels":          labelData(s.Labels),
-		"protection":      llx.DictData(protectionDictRebuild(s.Protection.Delete, s.Protection.Rebuild)),
+		"__id":              llx.StringData(fmt.Sprintf("hetzner.server/%d", s.ID)),
+		"id":                llx.IntData(s.ID),
+		"name":              llx.StringData(s.Name),
+		"status":            llx.StringData(string(s.Status)),
+		"created":           llx.TimeDataPtr(timePtr(s.Created)),
+		"publicIpv4":        llx.StringData(ipString(s.PublicNet.IPv4.IP)),
+		"publicIpv4Blocked": llx.BoolData(s.PublicNet.IPv4.Blocked),
+		"publicIpv4DnsPtr":  llx.StringData(s.PublicNet.IPv4.DNSPtr),
+		"publicIpv6":        llx.StringData(ipv6),
+		"publicIpv6Blocked": llx.BoolData(s.PublicNet.IPv6.Blocked),
+		"publicIpv6DnsPtr":  dictArrayData(dnsPtrSliceFromMap(s.PublicNet.IPv6.DNSPtr)),
+		"backupWindow":      llx.StringData(s.BackupWindow),
+		"rescueEnabled":     llx.BoolData(s.RescueEnabled),
+		"locked":            llx.BoolData(s.Locked),
+		"includedTraffic":   llx.IntData(int64(s.IncludedTraffic)),
+		"outgoingTraffic":   llx.IntData(int64(s.OutgoingTraffic)),
+		"ingoingTraffic":    llx.IntData(int64(s.IngoingTraffic)),
+		"labels":            labelData(s.Labels),
+		"protection":        llx.DictData(protectionDictRebuild(s.Protection.Delete, s.Protection.Rebuild)),
 	})
 	if err != nil {
 		return nil, err
