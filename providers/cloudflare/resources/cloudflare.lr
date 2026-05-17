@@ -97,6 +97,8 @@ private cloudflare.zone @defaults("name account.name") {
 	rulesets() []cloudflare.zone.ruleset
 	// Page rules
 	pageRules() []cloudflare.zone.pageRule
+	// Load balancers
+	loadBalancers() []cloudflare.zone.loadBalancer
 
 	// Origin CA certificates
 	originCACertificates() []cloudflare.zone.originCACertificate
@@ -187,6 +189,18 @@ private cloudflare.zone.settings {
 	hotlinkProtection string
 	// Server-side excludes (on, off)
 	serverSideExcludes string
+	// HTTP/3 (QUIC) support (on, off)
+	http3 string
+	// 0-RTT connection resumption (on, off)
+	zeroRtt string
+	// WebSocket connections support (on, off)
+	websockets string
+	// IP geolocation header — adds CF-IPCountry to origin requests (on, off)
+	ipGeolocation string
+	// True-Client-IP header sent to the origin (on, off; Enterprise only)
+	trueClientIpHeader string
+	// Challenge page TTL — how long a visitor's challenge clearance lasts, in seconds
+	challengeTtl int
 
 	// Whether HSTS (Strict-Transport-Security) is enabled for the zone
 	hstsEnabled bool
@@ -603,6 +617,9 @@ private cloudflare.one.app @defaults("name id") {
 	createdAt time
 	// Time the application was last updated
 	updatedAt time
+
+	// Access policies governing the application
+	policies() []cloudflare.one.accessPolicy
 }
 
 // CORS headers
@@ -657,6 +674,12 @@ private cloudflare.one.accessPolicy @defaults("name decision") {
 	createdAt time
 	// Time the policy was last updated
 	updatedAt time
+	// Rules that grant access — the user must satisfy at least one (OR). Each dict is one condition keyed by its rule type (e.g. email, email_domain, ip, ip_list, group, everyone, certificate, gsuite, okta, saml, azureAD, github-organization, service_token, device_posture)
+	include []dict
+	// Rules that must all be satisfied (AND); same dict shape as include
+	require []dict
+	// Rules that deny access when satisfied (NOT); same dict shape as include
+	exclude []dict
 }
 
 // Cloudflare One access group
@@ -995,6 +1018,85 @@ private cloudflare.zone.pageRule @defaults("id status") {
 	createdAt time
 	// Time the page rule was last modified
 	updatedAt time
+}
+
+// Cloudflare load balancer
+private cloudflare.zone.loadBalancer @defaults("name steeringPolicy enabled") {
+	// Load balancer identifier
+	id string
+	// DNS hostname the load balancer answers for
+	name string
+	// Description
+	description string
+	// Whether the load balancer is enabled
+	enabled bool
+	// Whether traffic is proxied through Cloudflare (orange-cloud)
+	proxied bool
+	// DNS record TTL, in seconds (ignored when proxied)
+	ttl int
+	// Pool selection logic (off, geo, dynamic_latency, random, proximity, least_outstanding_requests, least_connections)
+	steeringPolicy string
+	// Pool used when no other pool is healthy
+	fallbackPool() cloudflare.loadBalancerPool
+	// Pools used in the default (non-geo) ordering
+	defaultPools() []cloudflare.loadBalancerPool
+	// Every distinct pool the load balancer references (default, fallback, and geo)
+	pools() []cloudflare.loadBalancerPool
+	// Pool IDs keyed by region code, used under geo steering
+	regionPools dict
+	// Pool IDs keyed by Cloudflare PoP, used under geo steering
+	popPools dict
+	// Pool IDs keyed by country code, used under geo steering
+	countryPools dict
+	// Session affinity mode (none, cookie, ip_cookie, header)
+	sessionAffinity string
+	// Session affinity TTL, in seconds
+	sessionAffinityTtl int
+	// Session affinity cookie attributes (samesite, secure, drain_duration, zero_downtime_failover, headers, require_all_headers)
+	sessionAffinityAttributes dict
+	// Time the load balancer was created
+	createdOn time
+	// Time the load balancer was last modified
+	modifiedOn time
+}
+
+// Cloudflare load balancer pool
+//
+// Examine a load balancer pool — a named group of origin servers that
+// a load balancer steers traffic to. Surfaces the pool's `origins`
+// (each with its backend `address`, weight, and enabled state), the
+// health-check `monitorId` and `checkRegions`, the `minimumOrigins`
+// healthy-origin floor below which the pool is considered down, the
+// `notificationEmail` for health alerts, and the pool's geographic
+// coordinates. Pools are account-scoped and may be shared by several
+// load balancers.
+private cloudflare.loadBalancerPool @defaults("name enabled") {
+	// Pool identifier
+	id string
+	// Pool name
+	name string
+	// Description
+	description string
+	// Whether the pool is enabled
+	enabled bool
+	// Minimum number of healthy origins before the pool is considered healthy
+	minimumOrigins int
+	// ID of the monitor that health-checks the pool's origins
+	monitorId string
+	// Email address notified when the pool's health changes
+	notificationEmail string
+	// Origin servers in the pool (each dict: name, address, enabled, weight, virtualNetworkId)
+	origins []dict
+	// Regions health checks are run from; empty means all regions
+	checkRegions []string
+	// Latitude used for proximity steering
+	latitude float
+	// Longitude used for proximity steering
+	longitude float
+	// Time the pool was created
+	createdOn time
+	// Time the pool was last modified
+	modifiedOn time
 }
 
 // Cloudflare origin CA certificate

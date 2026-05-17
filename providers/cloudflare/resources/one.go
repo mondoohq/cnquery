@@ -56,11 +56,55 @@ func (c *mqlCloudflareZone) one() (*mqlCloudflareOne, error) {
 	return one, nil
 }
 
+type mqlCloudflareOneAppInternal struct {
+	// appPolicies caches the access policies embedded in the application
+	// record so the typed policies() accessor needs no extra API call.
+	appPolicies []cloudflare.AccessPolicy
+}
+
 func (c *mqlCloudflareOneApp) id() (string, error) {
 	if c.Id.Error != nil {
 		return "", c.Id.Error
 	}
 	return c.Id.Data, nil
+}
+
+// accessRules normalizes an Access include/require/exclude rule list (a list of
+// generic condition objects) into a dict-safe slice.
+func accessRules(in []interface{}) []any {
+	if in == nil {
+		return []any{}
+	}
+	return in
+}
+
+// newMqlCloudflareOneAccessPolicy builds an access policy resource, including
+// its include/require/exclude condition rules. It is shared by the account
+// accessPolicies() listing and the per-application policies() accessor.
+func newMqlCloudflareOneAccessPolicy(runtime *plugin.Runtime, p cloudflare.AccessPolicy) (plugin.Resource, error) {
+	return NewResource(runtime, "cloudflare.one.accessPolicy", map[string]*llx.RawData{
+		"id":         llx.StringData(p.ID),
+		"name":       llx.StringData(p.Name),
+		"decision":   llx.StringData(p.Decision),
+		"precedence": llx.IntData(int64(p.Precedence)),
+		"createdAt":  llx.TimeDataPtr(p.CreatedAt),
+		"updatedAt":  llx.TimeDataPtr(p.UpdatedAt),
+		"include":    llx.ArrayData(accessRules(p.Include), types.Dict),
+		"require":    llx.ArrayData(accessRules(p.Require), types.Dict),
+		"exclude":    llx.ArrayData(accessRules(p.Exclude), types.Dict),
+	})
+}
+
+func (c *mqlCloudflareOneApp) policies() ([]any, error) {
+	result := make([]any, 0, len(c.appPolicies))
+	for i := range c.appPolicies {
+		res, err := newMqlCloudflareOneAccessPolicy(c.MqlRuntime, c.appPolicies[i])
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, res)
+	}
+	return result, nil
 }
 
 func (c *mqlCloudflareOne) apps() ([]any, error) {
@@ -138,6 +182,7 @@ func (c *mqlCloudflareOne) apps() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			res.(*mqlCloudflareOneApp).appPolicies = rec.Policies
 
 			result = append(result, res)
 
@@ -179,14 +224,7 @@ func (c *mqlCloudflareOne) accessPolicies() ([]any, error) {
 		for i := range records {
 			rec := records[i]
 
-			res, err := NewResource(c.MqlRuntime, "cloudflare.one.accessPolicy", map[string]*llx.RawData{
-				"id":         llx.StringData(rec.ID),
-				"name":       llx.StringData(rec.Name),
-				"decision":   llx.StringData(rec.Decision),
-				"precedence": llx.IntData(int64(rec.Precedence)),
-				"createdAt":  llx.TimeDataPtr(rec.CreatedAt),
-				"updatedAt":  llx.TimeDataPtr(rec.UpdatedAt),
-			})
+			res, err := newMqlCloudflareOneAccessPolicy(c.MqlRuntime, rec)
 			if err != nil {
 				return nil, err
 			}

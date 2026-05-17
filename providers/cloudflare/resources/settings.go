@@ -32,6 +32,15 @@ func extractSettingValue(settings []cloudflare.ZoneSetting, id string) any {
 	return nil
 }
 
+// extractSettingInt pulls a numeric zone setting. Cloudflare returns these as
+// JSON numbers, which decode to float64.
+func extractSettingInt(settings []cloudflare.ZoneSetting, id string) int64 {
+	if v, ok := extractSettingValue(settings, id).(float64); ok {
+		return int64(v)
+	}
+	return 0
+}
+
 // extractHSTS pulls HSTS subfields from the `security_header` zone setting.
 // The setting value is `{strict_transport_security: {enabled, max_age, include_subdomains, preload, nosniff}}`.
 func extractHSTS(settings []cloudflare.ZoneSetting) (enabled bool, maxAge int64, includeSubdomains bool, preload bool, nosniff bool) {
@@ -88,6 +97,12 @@ func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 		"emailObfuscation":        llx.StringData(extractSettingStr(settings, "email_obfuscation")),
 		"hotlinkProtection":       llx.StringData(extractSettingStr(settings, "hotlink_protection")),
 		"serverSideExcludes":      llx.StringData(extractSettingStr(settings, "server_side_exclude")),
+		"http3":                   llx.StringData(extractSettingStr(settings, "http3")),
+		"zeroRtt":                 llx.StringData(extractSettingStr(settings, "0rtt")),
+		"websockets":              llx.StringData(extractSettingStr(settings, "websockets")),
+		"ipGeolocation":           llx.StringData(extractSettingStr(settings, "ip_geolocation")),
+		"trueClientIpHeader":      llx.StringData(extractSettingStr(settings, "true_client_ip_header")),
+		"challengeTtl":            llx.IntData(extractSettingInt(settings, "challenge_ttl")),
 		"hstsEnabled":             llx.BoolData(hstsEnabled),
 		"hstsMaxAge":              llx.IntData(hstsMaxAge),
 		"hstsIncludeSubdomains":   llx.BoolData(hstsIncludeSubdomains),
