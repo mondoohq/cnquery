@@ -281,24 +281,46 @@ microsoft.users {
   search string
 }
 
-// Microsoft Entra Identity and Access Policies
+// Microsoft Entra identity and access management
+//
+// Container for identity and sign-in policies, PIM role eligibilities and policies,
+// and tenant organization information.
+microsoft.identityAndAccess {
+  []microsoft.identityAndAccess.policy
+  init(filter? string)
+  // DEPRECATED: use `microsoft.identityAndAccess.privilegedIdentityManagement.policies` instead.
+  filter @maturity("deprecated") string
+
+  // Get the instances of role eligibilities
+  roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
+  // Privileged Identity Management resources
+  privilegedIdentityManagement() microsoft.identityAndAccess.privilegedIdentityManagement
+  // Identity and sign-in policies
+  identityAndSignIn() microsoft.identityAndAccess.identityAndSignIn
+  // Tenant organization information
+  organization() microsoft.tenant
+}
+
+// Microsoft Entra Privileged Identity Management
+//
+// Use this namespace to access PIM role management policies for Microsoft Entra
+// ID roles.
+microsoft.identityAndAccess.privilegedIdentityManagement {
+  // PIM role management policies
+  policies() microsoft.identityAndAccess.privilegedIdentityManagement.policies
+}
+
+// PIM role management policies
 //
 // Iterate over PIM role management policies defined in the tenant. Supports
 // an optional `filter` parameter (for example, scoped to `scopeId eq '/' and
-// scopeType eq 'Directory'`) to narrow results. Exposes
-// `roleEligibilityScheduleInstances` for active PIM role eligibilities and
-// `identityAndSignIn` for identity and sign-in configuration.
-microsoft.identityAndAccess {
-  []microsoft.identityAndAccess.policy
+// scopeType eq 'Directory'`) to narrow results.
+microsoft.identityAndAccess.privilegedIdentityManagement.policies {
+  []microsoft.identityAndAccess.privilegedIdentityManagement.policy
   init(filter? string)
   // Filter by scopeId and scopeType
   // e.g., "scopeId eq '/' and scopeType eq 'Directory'"
   filter string
-
-  // Get the instances of role eligibilities
-  roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
-  // Identity and sign-in policies
-  identityAndSignIn() microsoft.identityAndAccess.identityAndSignIn
 }
 
 // Represents an instance of a role eligibility in PIM
@@ -323,8 +345,10 @@ private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("m
   roleEligibilityScheduleId string
 }
 
-// A PIM role management policy for Microsoft Entra ID roles
-private microsoft.identityAndAccess.policy @defaults("id displayName scopeType") {
+// DEPRECATED: use `microsoft.identityAndAccess.privilegedIdentityManagement.policy` instead.
+//
+// PIM role management policy for Microsoft Entra ID roles.
+private microsoft.identityAndAccess.policy @defaults("id displayName scopeType") @maturity("deprecated") {
   // Policy ID
   id string
   // Policy display name
@@ -345,16 +369,64 @@ private microsoft.identityAndAccess.policy @defaults("id displayName scopeType")
   rules() []microsoft.identityAndAccess.policy.rule
 }
 
-// A rule defined for a PIM role management policy
-private microsoft.identityAndAccess.policy.rule @defaults("id") {
+// DEPRECATED: use `microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule` instead.
+//
+// A rule defined for a PIM role management policy.
+private microsoft.identityAndAccess.policy.rule @defaults("id") @maturity("deprecated") {
   // The unique identifier for the rule
   id string
   // Defines details of scope that's targeted by role management policy rule
   target microsoft.identityAndAccess.policy.ruleTarget
 }
 
+// DEPRECATED: use `microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target` instead.
+//
+// Defines details of the scope that's targeted by role management policy rule.
+private microsoft.identityAndAccess.policy.ruleTarget @defaults("caller level") @maturity("deprecated") {
+  // The type of caller that's the target of the policy rule. Allowed values are: None, Admin, EndUser
+  caller string
+  // The list of role settings that are enforced and cannot be overridden by child scopes
+  enforcedSettings []string
+  // The list of role settings that are inherited from the parent scope
+  inheritableSettings []string
+  // The assignment type that's the target of policy rule. Allowed values are: Eligibility, Assignment
+  level string
+  // The list of role management operations that are the target of the policy rule
+  operations []string
+}
+
+// A PIM role management policy for Microsoft Entra ID roles
+private microsoft.identityAndAccess.privilegedIdentityManagement.policy @defaults("id displayName scopeType") {
+  // Policy ID
+  id string
+  // Policy display name
+  displayName string
+  // Policy description
+  description string
+  // True if this policy is the default organization policy
+  isOrganizationDefault bool
+  // The identifier of the scope where the policy is defined
+  scopeId string
+  // The type of the scope where the policy is defined
+  scopeType string
+  // The time when this policy was last modified
+  lastModifiedDateTime time
+  // The identity of the user who last modified the policy
+  lastModifiedBy dict
+  // The collection of rules that are part of the policy
+  rules() []microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule
+}
+
+// A rule defined for a PIM role management policy
+private microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule @defaults("id") {
+  // The unique identifier for the rule
+  id string
+  // Defines details of scope that's targeted by role management policy rule
+  target microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target
+}
+
 // Defines details of the scope that's targeted by role management policy rule
-private microsoft.identityAndAccess.policy.ruleTarget @defaults("caller level") {
+private microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target @defaults("caller level") {
   // The type of caller that's the target of the policy rule. Allowed values are: None, Admin, EndUser
   caller string
   // The list of role settings that are enforced and cannot be overridden by child scopes

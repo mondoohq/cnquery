@@ -10,6 +10,7 @@ import (
 
 	graphidentitygovernance "github.com/microsoftgraph/msgraph-sdk-go/identitygovernance"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
+	"github.com/microsoftgraph/msgraph-sdk-go/organization"
 	graphpolicies "github.com/microsoftgraph/msgraph-sdk-go/policies"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -20,6 +21,9 @@ import (
 
 const (
 	defaultRequestFilterDirectoryRole = "scopeId eq '/' and scopeType eq 'DirectoryRole'"
+
+	identityAndAccessPrivilegedIdentityManagementID         = "microsoft.identityAndAccess/privilegedIdentityManagement"
+	identityAndAccessPrivilegedIdentityManagementPoliciesID = "microsoft.identityAndAccess/privilegedIdentityManagement/policies"
 )
 
 func (a *mqlMicrosoft) identityAndAccess() (*mqlMicrosoftIdentityAndAccess, error) {
@@ -30,24 +34,73 @@ func (a *mqlMicrosoft) identityAndAccess() (*mqlMicrosoftIdentityAndAccess, erro
 	return resource.(*mqlMicrosoftIdentityAndAccess), nil
 }
 
-func initMicrosoftIdentityAndAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if filter, ok := args["filter"]; ok {
-		args["filter"] = filter
+func (a *mqlMicrosoftIdentityAndAccess) privilegedIdentityManagement() (*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement, error) {
+	resource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagement, map[string]*llx.RawData{
+		"__id": llx.StringData(identityAndAccessPrivilegedIdentityManagementID),
+	})
+	if err != nil {
+		return nil, err
 	}
-
-	return args, nil, nil
+	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement), nil
 }
 
-// The data-fetching logic is now in the list() method of the new resource.
-func (a *mqlMicrosoftIdentityAndAccess) list() ([]any, error) {
+func (a *mqlMicrosoftIdentityAndAccess) organization() (*mqlMicrosoftTenant, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
 
-	// Use the Filter field from our struct, which was populated during init.
-	requestFilter := a.Filter.Data
+	tenant, err := graphClient.Organization().ByOrganizationId(conn.TenantId()).Get(context.Background(), &organization.OrganizationItemRequestBuilderGetRequestConfiguration{
+		QueryParameters: &organization.OrganizationItemRequestBuilderGetQueryParameters{
+			Select: tenantFields,
+		},
+	})
+	if err != nil {
+		return nil, transformError(err)
+	}
+	if tenant == nil {
+		return nil, fmt.Errorf("organization not found for tenant %q", conn.TenantId())
+	}
+
+	return newMicrosoftTenant(a.MqlRuntime, tenant)
+}
+
+func (pim *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement) policies() (*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies, error) {
+	resource, err := CreateResource(pim.MqlRuntime, ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies, map[string]*llx.RawData{
+		"__id": llx.StringData(identityAndAccessPrivilegedIdentityManagementPoliciesID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies), nil
+}
+
+func initMicrosoftIdentityAndAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return args, nil, nil
+}
+
+func initMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return args, nil, nil
+}
+
+func (a *mqlMicrosoftIdentityAndAccess) list() ([]any, error) {
+	return listRoleManagementPolicies(a.MqlRuntime, a.Filter.Data, newDeprecatedMqlRoleManagementPolicy)
+}
+
+func (a *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies) list() ([]any, error) {
+	return listRoleManagementPolicies(a.MqlRuntime, a.Filter.Data, newMqlRoleManagementPolicy)
+}
+
+type roleManagementPolicyFactory func(*plugin.Runtime, models.UnifiedRoleManagementPolicyable) (any, error)
+
+func listRoleManagementPolicies(runtime *plugin.Runtime, requestFilter string, createPolicy roleManagementPolicyFactory) ([]any, error) {
+	conn := runtime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+
 	if requestFilter == "" {
 		requestFilter = defaultRequestFilterDirectoryRole
 	}
@@ -86,7 +139,7 @@ func (a *mqlMicrosoftIdentityAndAccess) list() ([]any, error) {
 
 	for _, policy := range policies.GetValue() {
 		if policy.GetId() != nil && policy.GetDisplayName() != nil {
-			policyResource, err := newMqlRoleManagementPolicy(a.MqlRuntime, policy)
+			policyResource, err := createPolicy(runtime, policy)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create MQL resource for policy ID %s: %w", *policy.GetId(), err)
 			}
@@ -97,7 +150,23 @@ func (a *mqlMicrosoftIdentityAndAccess) list() ([]any, error) {
 	return policyResources, nil
 }
 
-func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable) (*mqlMicrosoftIdentityAndAccessPolicy, error) {
+func newDeprecatedMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable) (any, error) {
+	resource, err := newRoleManagementPolicyResource(runtime, u, ResourceMicrosoftIdentityAndAccessPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessPolicy), nil
+}
+
+func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable) (any, error) {
+	resource, err := newRoleManagementPolicyResource(runtime, u, ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy), nil
+}
+
+func newRoleManagementPolicyResource(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable, resourceName string) (plugin.Resource, error) {
 	lastModifiedByDict := map[string]any{}
 	var err error
 
@@ -108,7 +177,7 @@ func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleMan
 		}
 	}
 
-	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.policy",
+	return CreateResource(runtime, resourceName,
 		map[string]*llx.RawData{
 			"__id":                  llx.StringDataPtr(u.GetId()),
 			"id":                    llx.StringDataPtr(u.GetId()),
@@ -120,29 +189,34 @@ func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleMan
 			"lastModifiedDateTime":  llx.TimeDataPtr(u.GetLastModifiedDateTime()),
 			"lastModifiedBy":        llx.DictData(lastModifiedByDict),
 		})
-	if err != nil {
-		return nil, err
-	}
-	return resource.(*mqlMicrosoftIdentityAndAccessPolicy), nil
 }
 
 func (m *mqlMicrosoftIdentityAndAccessPolicy) rules() ([]any, error) {
-	conn := m.MqlRuntime.Connection.(*connection.Ms365Connection)
+	return listRoleManagementPolicyRules(m.MqlRuntime, m.Id.Data, newDeprecatedMqlRoleManagementPolicyRule)
+}
+
+func (m *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) rules() ([]any, error) {
+	return listRoleManagementPolicyRules(m.MqlRuntime, m.Id.Data, newMqlRoleManagementPolicyRule)
+}
+
+type roleManagementPolicyRuleFactory func(*plugin.Runtime, models.UnifiedRoleManagementPolicyRuleable) (any, error)
+
+func listRoleManagementPolicyRules(runtime *plugin.Runtime, policyID string, createRule roleManagementPolicyRuleFactory) ([]any, error) {
+	conn := runtime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
 		return nil, err
 	}
 
-	policyId := m.Id.Data
-	if policyId == "" {
+	if policyID == "" {
 		return nil, fmt.Errorf("policy resource has an empty ID, cannot fetch rules")
 	}
 
 	ctx := context.Background()
 
-	rulesResult, err := graphClient.Policies().RoleManagementPolicies().ByUnifiedRoleManagementPolicyId(policyId).Rules().Get(ctx, nil)
+	rulesResult, err := graphClient.Policies().RoleManagementPolicies().ByUnifiedRoleManagementPolicyId(policyID).Rules().Get(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get rules for policy %s: %w", policyId, err)
+		return nil, fmt.Errorf("failed to get rules for policy %s: %w", policyID, err)
 	}
 
 	var ruleResources []any
@@ -154,7 +228,7 @@ func (m *mqlMicrosoftIdentityAndAccessPolicy) rules() ([]any, error) {
 		if rule.GetId() == nil {
 			continue
 		}
-		ruleResource, err := newMqlRoleManagementPolicyRule(m.MqlRuntime, rule)
+		ruleResource, err := createRule(runtime, rule)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create MQL resource for rule ID %s: %w", *rule.GetId(), err)
 		}
@@ -164,7 +238,33 @@ func (m *mqlMicrosoftIdentityAndAccessPolicy) rules() ([]any, error) {
 	return ruleResources, nil
 }
 
-func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable) (*mqlMicrosoftIdentityAndAccessPolicyRule, error) {
+func newDeprecatedMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable) (any, error) {
+	resource, err := newRoleManagementPolicyRuleResource(
+		runtime,
+		rule,
+		ResourceMicrosoftIdentityAndAccessPolicyRule,
+		ResourceMicrosoftIdentityAndAccessPolicyRuleTarget,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessPolicyRule), nil
+}
+
+func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable) (any, error) {
+	resource, err := newRoleManagementPolicyRuleResource(
+		runtime,
+		rule,
+		ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule,
+		ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule), nil
+}
+
+func newRoleManagementPolicyRuleResource(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable, ruleResourceName string, targetResourceName string) (plugin.Resource, error) {
 	var mqlPolicyRuleTarget plugin.Resource
 	var err error
 
@@ -179,23 +279,18 @@ func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.Unified
 			"operations":          llx.ArrayData(convert.SliceAnyToInterface(convertEnumCollectionToStrings(rule.GetTarget().GetOperations())), types.String),
 		}
 
-		mqlPolicyRuleTarget, err = CreateResource(runtime, "microsoft.identityAndAccess.policy.ruleTarget", targetData)
+		mqlPolicyRuleTarget, err = CreateResource(runtime, targetResourceName, targetData)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.policy.rule",
+	return CreateResource(runtime, ruleResourceName,
 		map[string]*llx.RawData{
 			"__id":   llx.StringDataPtr(rule.GetId()),
 			"id":     llx.StringDataPtr(rule.GetId()),
-			"target": llx.ResourceData(mqlPolicyRuleTarget, "microsoft.identityAndAccess.policy.ruleTarget"),
+			"target": llx.ResourceData(mqlPolicyRuleTarget, targetResourceName),
 		})
-	if err != nil {
-		return nil, err
-	}
-
-	return resource.(*mqlMicrosoftIdentityAndAccessPolicyRule), nil
 }
 
 // Least privileged permissions: RoleEligibilitySchedule.Read.Directory
