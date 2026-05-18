@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/vllm
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.2
+go 1.26.3
 
 require go.mondoo.com/mql/v13 v13.9.0
 

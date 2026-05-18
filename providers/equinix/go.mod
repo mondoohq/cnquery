@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/equinix
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.2
+go 1.26.3
 
 require (
 	github.com/packethost/packngo v0.31.0

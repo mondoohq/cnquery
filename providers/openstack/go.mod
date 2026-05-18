@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/openstack
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.2
+go 1.26.3
 
 require (
 	github.com/gophercloud/gophercloud/v2 v2.12.0

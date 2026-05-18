@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/cloudflare
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.2
+go 1.26.3
 
 require (
 	github.com/cloudflare/cloudflare-go v0.116.0

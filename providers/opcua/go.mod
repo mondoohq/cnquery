@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/opcua
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.2
+go 1.26.3
 
 require (
 	github.com/gopcua/opcua v0.8.0

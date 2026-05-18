@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/k8s
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.2
+go 1.26.3
 
 require (
 	github.com/cockroachdb/errors v1.13.0
@@ -268,7 +268,7 @@ require (
 	github.com/vbatts/tar-split v0.12.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20260514123334-0a6920e9c757 // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20260516002613-6840c8cf7282 // indirect
 	go.mondoo.com/ranger-rpc v0.8.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.42.0 // indirect

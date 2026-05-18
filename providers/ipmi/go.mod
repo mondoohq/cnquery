@@ -2,7 +2,7 @@ module go.mondoo.com/mql/v13/providers/ipmi
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.2
+go 1.26.3
 
 require (
 	github.com/rs/zerolog v1.35.1

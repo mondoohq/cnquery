@@ -2,11 +2,11 @@ module go.mondoo.com/mql/v13/providers/mondoo
 
 replace go.mondoo.com/mql/v13 => ../..
 
-go 1.26.2
+go 1.26.3
 
 require (
 	github.com/stretchr/testify v1.11.1
-	go.mondoo.com/mondoo-go v0.0.0-20260514123334-0a6920e9c757
+	go.mondoo.com/mondoo-go v0.0.0-20260516002613-6840c8cf7282
 	go.mondoo.com/mql/v13 v13.9.0
 )
 

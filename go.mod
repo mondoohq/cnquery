@@ -1,6 +1,6 @@
 module go.mondoo.com/mql/v13
 
-go 1.26.2
+go 1.26.3
 
 require (
 	cloud.google.com/go/logging v1.11.0
@@ -97,7 +97,7 @@ require (
 	github.com/tliron/glsp v0.2.2
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/ulikunitz/xz v0.5.15
-	go.mondoo.com/mondoo-go v0.0.0-20260514123334-0a6920e9c757
+	go.mondoo.com/mondoo-go v0.0.0-20260516002613-6840c8cf7282
 	go.mondoo.com/ranger-rpc v0.8.0
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
