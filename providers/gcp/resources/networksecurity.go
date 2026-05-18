@@ -440,6 +440,10 @@ func (g *mqlGcpProjectNetworkSecurityService) urlLists() ([]any, error) {
 	return res, nil
 }
 
+// networkSecurityProfiles lists organization-scoped network security profiles.
+// Organization-scoped accessors have no serviceusage service-enabled pre-check
+// (enablement is per-project); a disabled API surfaces as a 403/404 that
+// isHTTPSkippable handles below.
 func (g *mqlGcpOrganization) networkSecurityProfiles() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -508,6 +512,9 @@ func (g *mqlGcpOrganization) networkSecurityProfiles() ([]any, error) {
 	return res, nil
 }
 
+// networkSecurityProfileGroups lists organization-scoped network security
+// profile groups. See networkSecurityProfiles for why there is no
+// service-enabled pre-check.
 func (g *mqlGcpOrganization) networkSecurityProfileGroups() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error

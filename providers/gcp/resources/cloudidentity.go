@@ -23,6 +23,11 @@ func (g *mqlGcpCloudIdentityMembership) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+// cloudIdentityGroups lists the Cloud Identity / Workspace groups for the
+// organization. Unlike the project-level accessors there is no serviceusage
+// service-enabled pre-check: service enablement is a per-project concept and
+// this resource is organization-scoped, so a disabled API instead surfaces as
+// a 403/404 that isHTTPSkippable handles below.
 func (g *mqlGcpOrganization) cloudIdentityGroups() ([]any, error) {
 	if g.CustomerId.Error != nil {
 		return nil, g.CustomerId.Error
