@@ -66,7 +66,8 @@ jobs:
         run: |
           VERSION=$(make version)
           git tag ${VERSION/\+/-}
-
+      - run: go env GOCACHE GOMODCACHE CGO_ENABLED GOFLAGS GOARCH GOOS GOGC
+      - run: du -s $(go env GOCACHE)
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@1a80836c5c9d9e5755a25cb59ec6f45a3b5f41a8 # v7.2.1
         with:
@@ -77,7 +78,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-
+      - run: du -s $(go env GOCACHE)
       - name: Upload artifacts
         if: ${{ inputs.upload-artifacts == true }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
