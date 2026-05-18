@@ -211,7 +211,22 @@ func initMicrosoftUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		return nil, nil, err
 	}
 
+	// index the user so per-user batched fields can resolve it
+	if microsoft, err := CreateResource(runtime, "microsoft", map[string]*llx.RawData{}); err == nil {
+		microsoft.(*mqlMicrosoft).indexUser(mqlMsApp)
+	}
+
 	return nil, mqlMsApp, nil
+}
+
+// microsoftParent returns the singleton microsoft resource, which owns the
+// shared user index and the per-user batched-field caches.
+func (a *mqlMicrosoftUser) microsoftParent() (*mqlMicrosoft, error) {
+	resource, err := CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoft), nil
 }
 
 func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicrosoftUser, error) {
@@ -386,55 +401,91 @@ func (a *mqlMicrosoftUser) auditlog() (*mqlMicrosoftUserAuditlog, error) {
 }
 
 func (a *mqlMicrosoftUserAuditlog) signins() ([]any, error) {
-	ctx := context.Background()
-	now := time.Now()
-	dayAgo := now.AddDate(0, 0, -1)
-	filter := fmt.Sprintf(
-		"createdDateTime ge %s and createdDateTime lt %s and (userId eq '%s' or contains(tolower(userDisplayName), '%s'))",
-		dayAgo.Format(time.RFC3339),
-		now.Format(time.RFC3339),
-		a.UserId.Data,
-		a.UserId.Data)
-	top := int32(50)
-	res := []any{}
-	signIns, err := fetchUserSignins(ctx, a.MqlRuntime, filter, top)
+	ms, err := a.microsoftParent()
 	if err != nil {
 		return nil, err
 	}
-	for _, s := range signIns {
-		res = append(res, s)
+	v, err := ms.auditlogBatches.signins.resolve(a.UserId.Data, ms.indexedUserIDs(), ms.loadUserSignins)
+	if err != nil {
+		return nil, err
 	}
-	return res, nil
+	if v == nil {
+		return []any{}, nil
+	}
+	return v.([]any), nil
 }
 
-func fetchUserSignins(ctx context.Context, runtime *plugin.Runtime, filter string, top int32) ([]*mqlMicrosoftUserSignin, error) {
-	conn := runtime.Connection.(*connection.Ms365Connection)
-	betaClient, err := conn.BetaGraphClient()
+// microsoftParent returns the singleton microsoft resource, which owns the
+// per-user audit-log batched-field caches.
+func (a *mqlMicrosoftUserAuditlog) microsoftParent() (*mqlMicrosoft, error) {
+	resource, err := CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
-	orderBy := "createdDateTime desc"
-	req := &auditlogs.SignInsRequestBuilderGetRequestConfiguration{
-		QueryParameters: &auditlogs.SignInsRequestBuilderGetQueryParameters{
-			Top:     &top,
-			Filter:  &filter,
-			Orderby: []string{orderBy},
-		},
-	}
-	resp, err := betaClient.AuditLogs().SignIns().Get(ctx, req)
-	if err != nil {
-		return nil, transformError(err)
-	}
+	return resource.(*mqlMicrosoft), nil
+}
 
-	res := []*mqlMicrosoftUserSignin{}
-	for _, s := range resp.GetValue() {
-		signIn, err := newMqlMicrosoftSignIn(runtime, s)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, signIn)
+// batchUserSignins fetches sign-ins for the given users in one batched Graph
+// (beta) request. filterFor builds the per-user $filter and top caps the page
+// size. The result maps a user id to its []any of sign-in resources.
+func (m *mqlMicrosoft) batchUserSignins(ids []string, top int32, filterFor func(userID string) string) (map[string]any, map[string]error, error) {
+	conn := m.MqlRuntime.Connection.(*connection.Ms365Connection)
+	betaClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, nil, err
 	}
-	return res, nil
+	ctx := context.Background()
+	orderBy := "createdDateTime desc"
+	reqs := make([]batchItemRequest, 0, len(ids))
+	for _, id := range ids {
+		filter := filterFor(id)
+		config := &auditlogs.SignInsRequestBuilderGetRequestConfiguration{
+			QueryParameters: &auditlogs.SignInsRequestBuilderGetQueryParameters{
+				Top:     &top,
+				Filter:  &filter,
+				Orderby: []string{orderBy},
+			},
+		}
+		reqInfo, err := betaClient.AuditLogs().SignIns().ToGetRequestInformation(ctx, config)
+		if err != nil {
+			return nil, nil, transformError(err)
+		}
+		reqs = append(reqs, batchItemRequest{key: id, reqInfo: reqInfo})
+	}
+	res, err := batchGet[*betamodels.SignInCollectionResponse](ctx, betaClient.GetAdapter(), reqs, betamodels.CreateSignInCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, nil, err
+	}
+	data := make(map[string]any, len(res.results))
+	for id, coll := range res.results {
+		signins := []any{}
+		var itemErr error
+		for _, s := range coll.GetValue() {
+			signIn, err := newMqlMicrosoftSignIn(m.MqlRuntime, s)
+			if err != nil {
+				itemErr = err
+				break
+			}
+			signins = append(signins, signIn)
+		}
+		if itemErr != nil {
+			res.errs[id] = itemErr
+			continue
+		}
+		data[id] = signins
+	}
+	return data, res.errs, nil
+}
+
+// loadUserSignins fetches the recent interactive sign-ins of the given users.
+func (m *mqlMicrosoft) loadUserSignins(ids []string) (map[string]any, map[string]error, error) {
+	now := time.Now()
+	dayAgo := now.AddDate(0, 0, -1)
+	return m.batchUserSignins(ids, int32(50), func(userID string) string {
+		return fmt.Sprintf(
+			"createdDateTime ge %s and createdDateTime lt %s and (userId eq '%s' or contains(tolower(userDisplayName), '%s'))",
+			dayAgo.Format(time.RFC3339), now.Format(time.RFC3339), userID, userID)
+	})
 }
 
 func (a *mqlMicrosoftUserAuditlog) lastInteractiveSignIn() (*mqlMicrosoftUserSignin, error) {
@@ -454,25 +505,44 @@ func (a *mqlMicrosoftUserAuditlog) lastInteractiveSignIn() (*mqlMicrosoftUserSig
 // Note: the audit log API by default excludes the non-interactive sign-ins. This is a workaround to fetch the last non-interactive sign-in.
 // We could also grab those as part of the `sign-ins` query but then the amount of data would be much larger as non-interactive logins are much more frequent.
 func (a *mqlMicrosoftUserAuditlog) lastNonInteractiveSignIn() (*mqlMicrosoftUserSignin, error) {
-	ctx := context.Background()
-	now := time.Now()
-	dayAgo := now.AddDate(0, 0, -1)
-	filter := fmt.Sprintf(
-		"signInEventTypes/any(t: t ne 'interactiveUser') and createdDateTime ge %s and createdDateTime lt %s and (userId eq '%s' or contains(tolower(userDisplayName), '%s'))",
-		dayAgo.Format(time.RFC3339),
-		now.Format(time.RFC3339),
-		a.UserId.Data,
-		a.UserId.Data)
-	top := int32(1)
-	signIns, err := fetchUserSignins(ctx, a.MqlRuntime, filter, top)
+	ms, err := a.microsoftParent()
 	if err != nil {
 		return nil, err
 	}
-	if len(signIns) == 0 {
+	v, err := ms.auditlogBatches.lastNonInteractiveSignIn.resolve(a.UserId.Data, ms.indexedUserIDs(), ms.loadUserLastNonInteractiveSignin)
+	if err != nil {
+		return nil, err
+	}
+	if v == nil {
 		a.LastNonInteractiveSignIn.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return signIns[0], nil
+	return v.(*mqlMicrosoftUserSignin), nil
+}
+
+// loadUserLastNonInteractiveSignin fetches the most recent non-interactive
+// sign-in of the given users. Users with no such sign-in are omitted so the
+// accessor reports a null field.
+func (m *mqlMicrosoft) loadUserLastNonInteractiveSignin(ids []string) (map[string]any, map[string]error, error) {
+	now := time.Now()
+	dayAgo := now.AddDate(0, 0, -1)
+	data, errs, err := m.batchUserSignins(ids, int32(1), func(userID string) string {
+		return fmt.Sprintf(
+			"signInEventTypes/any(t: t ne 'interactiveUser') and createdDateTime ge %s and createdDateTime lt %s and (userId eq '%s' or contains(tolower(userDisplayName), '%s'))",
+			dayAgo.Format(time.RFC3339), now.Format(time.RFC3339), userID, userID)
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	out := make(map[string]any, len(data))
+	for id, v := range data {
+		signins := v.([]any)
+		if len(signins) == 0 {
+			continue
+		}
+		out[id] = signins[0]
+	}
+	return out, errs, nil
 }
 
 func newMqlMicrosoftSignIn(runtime *plugin.Runtime, signIn betamodels.SignInable) (*mqlMicrosoftUserSignin, error) {
@@ -552,41 +622,93 @@ func (a *mqlMicrosoftUser) contact() (any, error) {
 }
 
 func (a *mqlMicrosoftUser) settings() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
+	ms, err := a.microsoftParent()
 	if err != nil {
 		return nil, err
 	}
-	ctx := context.Background()
-	id := a.Id.Data
-	userSettings, err := graphClient.Users().ByUserId(id).Settings().Get(ctx, &users.ItemSettingsRequestBuilderGetRequestConfiguration{})
-	if err != nil {
-		return nil, transformError(err)
-	}
+	return ms.userBatches.settings.resolve(a.Id.Data, ms.indexedUserIDs(), ms.loadUserSettings)
+}
 
-	return convert.JsonToDict(newUserSettings(userSettings))
+// loadUserSettings fetches the settings of the given users in one batched
+// Graph request.
+func (m *mqlMicrosoft) loadUserSettings(ids []string) (map[string]any, map[string]error, error) {
+	conn := m.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	reqs := make([]batchItemRequest, 0, len(ids))
+	for _, id := range ids {
+		reqInfo, err := graphClient.Users().ByUserId(id).Settings().ToGetRequestInformation(ctx, nil)
+		if err != nil {
+			return nil, nil, transformError(err)
+		}
+		reqs = append(reqs, batchItemRequest{key: id, reqInfo: reqInfo})
+	}
+	res, err := batchGet[*models.UserSettings](ctx, graphClient.GetAdapter(), reqs, models.CreateUserSettingsFromDiscriminatorValue)
+	if err != nil {
+		return nil, nil, err
+	}
+	data := make(map[string]any, len(res.results))
+	for id, s := range res.results {
+		dict, err := convert.JsonToDict(newUserSettings(s))
+		if err != nil {
+			res.errs[id] = err
+			continue
+		}
+		data[id] = dict
+	}
+	return data, res.errs, nil
 }
 
 // signInActivity returns the user's last interactive and non-interactive sign-in
 // timestamps. The signInActivity property requires the AuditLog.Read.All permission,
-// so it is fetched per-user on demand rather than included in the bulk user select.
+// so it is fetched on demand rather than included in the bulk user select.
 func (a *mqlMicrosoftUser) signInActivity() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
+	ms, err := a.microsoftParent()
 	if err != nil {
 		return nil, err
 	}
+	return ms.userBatches.signInActivity.resolve(a.Id.Data, ms.indexedUserIDs(), ms.loadUserSignInActivity)
+}
+
+// loadUserSignInActivity fetches the signInActivity of the given users in one
+// batched Graph request.
+func (m *mqlMicrosoft) loadUserSignInActivity(ids []string) (map[string]any, map[string]error, error) {
+	conn := m.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, nil, err
+	}
 	ctx := context.Background()
-	user, err := graphClient.Users().ByUserId(a.Id.Data).Get(ctx, &users.UserItemRequestBuilderGetRequestConfiguration{
+	config := &users.UserItemRequestBuilderGetRequestConfiguration{
 		QueryParameters: &users.UserItemRequestBuilderGetQueryParameters{
 			Select: []string{"signInActivity"},
 		},
-	})
-	if err != nil {
-		return nil, transformError(err)
 	}
-
-	return convert.JsonToDict(newSignInActivity(user.GetSignInActivity()))
+	reqs := make([]batchItemRequest, 0, len(ids))
+	for _, id := range ids {
+		reqInfo, err := graphClient.Users().ByUserId(id).ToGetRequestInformation(ctx, config)
+		if err != nil {
+			return nil, nil, transformError(err)
+		}
+		reqs = append(reqs, batchItemRequest{key: id, reqInfo: reqInfo})
+	}
+	res, err := batchGet[*models.User](ctx, graphClient.GetAdapter(), reqs, models.CreateUserFromDiscriminatorValue)
+	if err != nil {
+		return nil, nil, err
+	}
+	data := make(map[string]any, len(res.results))
+	for id, u := range res.results {
+		dict, err := convert.JsonToDict(newSignInActivity(u.GetSignInActivity()))
+		if err != nil {
+			res.errs[id] = err
+			continue
+		}
+		data[id] = dict
+	}
+	return data, res.errs, nil
 }
 
 type authMethod struct {
@@ -655,34 +777,71 @@ type userAuthentication struct {
 	EmailMethods               []emailMethod                  `json:"emailMethods"`
 }
 
-// needs the permission UserAuthenticationMethod.Read.All
+// authMethods needs the permission UserAuthenticationMethod.Read.All
 func (a *mqlMicrosoftUser) authMethods() (*mqlMicrosoftUserAuthenticationMethods, error) {
-	runtime := a.MqlRuntime
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
+	ms, err := a.microsoftParent()
 	if err != nil {
 		return nil, err
 	}
-
-	userID := a.Id.Data
-	ua := userAuthentication{
-		userID: userID,
+	v, err := ms.userBatches.authMethods.resolve(a.Id.Data, ms.indexedUserIDs(), ms.loadUserAuthMethods)
+	if err != nil {
+		return nil, err
 	}
+	if v == nil {
+		a.AuthMethods.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return v.(*mqlMicrosoftUserAuthenticationMethods), nil
+}
 
+// loadUserAuthMethods fetches the authentication methods of the given users in
+// one batched Graph request. A 403 on a user's call surfaces the missing
+// UserAuthenticationMethod.Read.All permission for that user only.
+func (m *mqlMicrosoft) loadUserAuthMethods(ids []string) (map[string]any, map[string]error, error) {
+	conn := m.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, nil, err
+	}
 	ctx := context.Background()
-
-	authMethods, err := graphClient.Users().ByUserId(userID).Authentication().Methods().Get(ctx, &users.ItemAuthenticationMethodsRequestBuilderGetRequestConfiguration{})
-	if oErr, ok := isOdataError(err); ok {
-		if oErr.ResponseStatusCode == 403 {
-			return nil, errors.New("UserAuthenticationMethod.Read.All permission is required")
+	reqs := make([]batchItemRequest, 0, len(ids))
+	for _, id := range ids {
+		reqInfo, err := graphClient.Users().ByUserId(id).Authentication().Methods().ToGetRequestInformation(ctx, nil)
+		if err != nil {
+			return nil, nil, transformError(err)
 		}
-		return nil, transformError(err)
-	} else if err != nil {
-		return nil, transformError(err)
+		reqs = append(reqs, batchItemRequest{key: id, reqInfo: reqInfo})
 	}
+	res, err := batchGet[*models.AuthenticationMethodCollectionResponse](ctx, graphClient.GetAdapter(), reqs, models.CreateAuthenticationMethodCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, nil, err
+	}
+	data := make(map[string]any, len(res.results))
+	for id, coll := range res.results {
+		mqlAuth, err := newMqlMicrosoftUserAuthentication(m.MqlRuntime, buildUserAuthentication(id, coll.GetValue()))
+		if err != nil {
+			res.errs[id] = err
+			continue
+		}
+		data[id] = mqlAuth
+	}
+	for id, code := range res.statuses {
+		if code == 403 {
+			res.errs[id] = errors.New("UserAuthenticationMethod.Read.All permission is required")
+			// the error wins over any partially-deserialized result; keep the
+			// data and errs maps disjoint so lookups stay consistent
+			delete(data, id)
+		}
+	}
+	return data, res.errs, nil
+}
 
-	methods := authMethods.GetValue()
-	ua.methodCount = len(methods)
+// buildUserAuthentication groups a user's authentication methods by type.
+func buildUserAuthentication(userID string, methods []models.AuthenticationMethodable) userAuthentication {
+	ua := userAuthentication{
+		userID:      userID,
+		methodCount: len(methods),
+	}
 	for i := range methods {
 		entry := methods[i]
 		switch x := entry.(type) {
@@ -808,7 +967,7 @@ func (a *mqlMicrosoftUser) authMethods() (*mqlMicrosoftUserAuthenticationMethods
 		}
 	}
 
-	return newMqlMicrosoftUserAuthentication(runtime, ua)
+	return ua
 }
 
 func newMqlMicrosoftUserAuthentication(runtime *plugin.Runtime, u userAuthentication) (*mqlMicrosoftUserAuthenticationMethods, error) {
@@ -844,29 +1003,60 @@ func newMqlMicrosoftUserAuthentication(runtime *plugin.Runtime, u userAuthentica
 }
 
 func (a *mqlMicrosoftUser) authenticationRequirements() (*mqlMicrosoftUserAuthenticationRequirements, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.BetaGraphClient()
+	ms, err := a.microsoftParent()
 	if err != nil {
 		return nil, err
 	}
-
-	userID := a.Id.Data
-
-	authRequirements, err := graphClient.Users().ByUserId(userID).Authentication().Requirements().Get(context.Background(), nil)
-	if err != nil {
-		return nil, transformError(err)
-	}
-
-	mqlAuthRequirements, err := CreateResource(a.MqlRuntime, ResourceMicrosoftUserAuthenticationRequirements,
-		map[string]*llx.RawData{
-			"__id":            llx.StringData(userID),
-			"perUserMfaState": llx.StringData(authRequirements.GetPerUserMfaState().String()),
-		})
+	v, err := ms.userBatches.authRequires.resolve(a.Id.Data, ms.indexedUserIDs(), ms.loadUserAuthRequirements)
 	if err != nil {
 		return nil, err
 	}
+	if v == nil {
+		a.AuthenticationRequirements.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return v.(*mqlMicrosoftUserAuthenticationRequirements), nil
+}
 
-	return mqlAuthRequirements.(*mqlMicrosoftUserAuthenticationRequirements), nil
+// loadUserAuthRequirements fetches the per-user MFA state of the given users in
+// one batched Graph (beta) request.
+func (m *mqlMicrosoft) loadUserAuthRequirements(ids []string) (map[string]any, map[string]error, error) {
+	conn := m.MqlRuntime.Connection.(*connection.Ms365Connection)
+	betaClient, err := conn.BetaGraphClient()
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	reqs := make([]batchItemRequest, 0, len(ids))
+	for _, id := range ids {
+		reqInfo, err := betaClient.Users().ByUserId(id).Authentication().Requirements().ToGetRequestInformation(ctx, nil)
+		if err != nil {
+			return nil, nil, transformError(err)
+		}
+		reqs = append(reqs, batchItemRequest{key: id, reqInfo: reqInfo})
+	}
+	res, err := batchGet[*betamodels.StrongAuthenticationRequirements](ctx, betaClient.GetAdapter(), reqs, betamodels.CreateStrongAuthenticationRequirementsFromDiscriminatorValue)
+	if err != nil {
+		return nil, nil, err
+	}
+	data := make(map[string]any, len(res.results))
+	for id, r := range res.results {
+		var perUserMfaState string
+		if r.GetPerUserMfaState() != nil {
+			perUserMfaState = r.GetPerUserMfaState().String()
+		}
+		mqlAuthRequirements, err := CreateResource(m.MqlRuntime, ResourceMicrosoftUserAuthenticationRequirements,
+			map[string]*llx.RawData{
+				"__id":            llx.StringData(id),
+				"perUserMfaState": llx.StringData(perUserMfaState),
+			})
+		if err != nil {
+			res.errs[id] = err
+			continue
+		}
+		data[id] = mqlAuthRequirements
+	}
+	return data, res.errs, nil
 }
 
 // Needs the permission AuditLog.Read.All
@@ -937,31 +1127,62 @@ func newMqlUserRegistrationDetails(runtime *plugin.Runtime, details models.UserR
 }
 
 func (a *mqlMicrosoftUser) licenseDetails() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
+	ms, err := a.microsoftParent()
 	if err != nil {
 		return nil, err
 	}
-
-	userID := a.Id.Data
-	ctx := context.Background()
-
-	// Permissions: User.Read.All, Directory.Read.All
-	details, err := graphClient.Users().ByUserId(userID).LicenseDetails().Get(ctx, nil)
+	v, err := ms.userBatches.licenseDetails.resolve(a.Id.Data, ms.indexedUserIDs(), ms.loadUserLicenseDetails)
 	if err != nil {
-		return nil, transformError(err)
+		return nil, err
 	}
+	if v == nil {
+		return []any{}, nil
+	}
+	return v.([]any), nil
+}
 
-	results := []any{}
-	for _, d := range details.GetValue() {
-		mqlDetail, err := newMqlMicrosoftUserLicenseDetail(a.MqlRuntime, d)
+// loadUserLicenseDetails fetches the license details of the given users in one
+// batched Graph request.
+//
+// Permissions: User.Read.All, Directory.Read.All
+func (m *mqlMicrosoft) loadUserLicenseDetails(ids []string) (map[string]any, map[string]error, error) {
+	conn := m.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx := context.Background()
+	reqs := make([]batchItemRequest, 0, len(ids))
+	for _, id := range ids {
+		reqInfo, err := graphClient.Users().ByUserId(id).LicenseDetails().ToGetRequestInformation(ctx, nil)
 		if err != nil {
-			return nil, err
+			return nil, nil, transformError(err)
 		}
-		results = append(results, mqlDetail)
+		reqs = append(reqs, batchItemRequest{key: id, reqInfo: reqInfo})
 	}
-
-	return results, nil
+	res, err := batchGet[*models.LicenseDetailsCollectionResponse](ctx, graphClient.GetAdapter(), reqs, models.CreateLicenseDetailsCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, nil, err
+	}
+	data := make(map[string]any, len(res.results))
+	for id, coll := range res.results {
+		details := []any{}
+		var itemErr error
+		for _, d := range coll.GetValue() {
+			mqlDetail, err := newMqlMicrosoftUserLicenseDetail(m.MqlRuntime, d)
+			if err != nil {
+				itemErr = err
+				break
+			}
+			details = append(details, mqlDetail)
+		}
+		if itemErr != nil {
+			res.errs[id] = itemErr
+			continue
+		}
+		data[id] = details
+	}
+	return data, res.errs, nil
 }
 
 func newMqlMicrosoftUserLicenseDetail(runtime *plugin.Runtime, d models.LicenseDetailsable) (*mqlMicrosoftUserLicenseDetail, error) {

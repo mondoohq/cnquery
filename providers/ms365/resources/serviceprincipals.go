@@ -455,33 +455,137 @@ func (a *mqlMicrosoftServiceprincipal) isFirstParty() (bool, error) {
 }
 
 func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	ms, err := a.microsoftParent()
+	if err != nil {
+		return nil, err
+	}
+	// service principals are not kept in a dedicated index; the full set comes
+	// from the serviceprincipals list, which is the batch's id universe
+	spList := ms.GetServiceprincipals()
+	if spList.Error != nil {
+		return nil, spList.Error
+	}
+	ids := make([]string, 0, len(spList.Data))
+	for _, item := range spList.Data {
+		ids = append(ids, item.(*mqlMicrosoftServiceprincipal).Id.Data)
+	}
+	v, err := ms.spBatches.permissions.resolve(a.Id.Data, ids, ms.loadServicePrincipalPermissions)
+	if err != nil {
+		return nil, err
+	}
+	if v == nil {
+		return []any{}, nil
+	}
+	return v.([]any), nil
+}
+
+// microsoftParent returns the singleton microsoft resource, which owns the
+// app-role index and the per-service-principal batched-field caches.
+func (a *mqlMicrosoftServiceprincipal) microsoftParent() (*mqlMicrosoft, error) {
+	resource, err := CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoft), nil
+}
+
+// loadServicePrincipalPermissions fetches the application (appRoleAssignments)
+// and delegated (oauth2PermissionGrants) permissions of the given service
+// principals in two batched Graph requests, then assembles the per-principal
+// microsoft.application.permission lists.
+func (m *mqlMicrosoft) loadServicePrincipalPermissions(ids []string) (map[string]any, map[string]error, error) {
+	conn := m.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	servicePrincipalId := a.Id.Data
 
-	res, err := CreateResource(a.MqlRuntime, "microsoft", nil)
-	if err != nil {
-		return nil, err
+	// resolving the service principals builds up the app-role index that the
+	// permission assembly relies on. GetServiceprincipals does not resolve the
+	// permissions field, so it cannot re-enter the cache mutex held here.
+	spList := m.GetServiceprincipals()
+	if spList.Error != nil {
+		return nil, nil, spList.Error
 	}
-	mqlMicrosoftResource := res.(*mqlMicrosoft)
 
-	// fetch service credentials to build up the app role index
-	mqlMicrosoftResource.GetServiceprincipals()
-
-	// fetch all role assignments for the service principal, those are "application" types
 	ctx := context.Background()
-	grantedApplicationRolesResp, err := graphClient.ServicePrincipals().ByServicePrincipalId(servicePrincipalId).AppRoleAssignments().Get(ctx, &serviceprincipals.ItemAppRoleAssignmentsRequestBuilderGetRequestConfiguration{})
-	if err != nil {
-		return nil, transformError(err)
-	}
-	appRolesAssignments, err := iterate[models.AppRoleAssignmentable](ctx, grantedApplicationRolesResp, graphClient.GetAdapter(), models.CreateAppRoleAssignmentCollectionResponseFromDiscriminatorValue)
-	if err != nil {
-		return nil, err
+	roleReqs := make([]batchItemRequest, 0, len(ids))
+	oauthReqs := make([]batchItemRequest, 0, len(ids))
+	for _, id := range ids {
+		roleInfo, err := graphClient.ServicePrincipals().ByServicePrincipalId(id).AppRoleAssignments().ToGetRequestInformation(ctx, nil)
+		if err != nil {
+			return nil, nil, transformError(err)
+		}
+		roleReqs = append(roleReqs, batchItemRequest{key: id, reqInfo: roleInfo})
+
+		oauthInfo, err := graphClient.ServicePrincipals().ByServicePrincipalId(id).Oauth2PermissionGrants().ToGetRequestInformation(ctx, nil)
+		if err != nil {
+			return nil, nil, transformError(err)
+		}
+		oauthReqs = append(oauthReqs, batchItemRequest{key: id, reqInfo: oauthInfo})
 	}
 
+	roleRes, err := batchGet[*models.AppRoleAssignmentCollectionResponse](ctx, graphClient.GetAdapter(), roleReqs, models.CreateAppRoleAssignmentCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, nil, err
+	}
+	oauthRes, err := batchGet[*models.OAuth2PermissionGrantCollectionResponse](ctx, graphClient.GetAdapter(), oauthReqs, models.CreateOAuth2PermissionGrantCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	adapter := graphClient.GetAdapter()
+	data := make(map[string]any, len(ids))
+	errs := make(map[string]error)
+	for _, id := range ids {
+		if e := roleRes.errs[id]; e != nil {
+			errs[id] = e
+			continue
+		}
+		if e := oauthRes.errs[id]; e != nil {
+			errs[id] = e
+			continue
+		}
+
+		// A $batch sub-response carries only the first page of a collection.
+		// Drain any @odata.nextLink so service principals with many role
+		// assignments or grants are not silently truncated; the PageIterator
+		// makes no additional HTTP calls when the first page is already
+		// complete, which is the common case.
+		var roleAssignments []models.AppRoleAssignmentable
+		if coll := roleRes.results[id]; coll != nil {
+			roleAssignments, err = iterate[models.AppRoleAssignmentable](ctx, coll, adapter, models.CreateAppRoleAssignmentCollectionResponseFromDiscriminatorValue)
+			if err != nil {
+				errs[id] = err
+				continue
+			}
+		}
+		var oauthGrants []models.OAuth2PermissionGrantable
+		if coll := oauthRes.results[id]; coll != nil {
+			oauthGrants, err = iterate[models.OAuth2PermissionGrantable](ctx, coll, adapter, models.CreateOAuth2PermissionGrantCollectionResponseFromDiscriminatorValue)
+			if err != nil {
+				errs[id] = err
+				continue
+			}
+		}
+
+		list, err := m.buildServicePrincipalPermissions(roleAssignments, oauthGrants)
+		if err != nil {
+			errs[id] = err
+			continue
+		}
+		data[id] = list
+	}
+	return data, errs, nil
+}
+
+// buildServicePrincipalPermissions assembles the granted and available
+// application and delegated permissions for a single service principal from
+// its fully-paged appRoleAssignments and oauth2PermissionGrants.
+func (m *mqlMicrosoft) buildServicePrincipalPermissions(
+	appRolesAssignments []models.AppRoleAssignmentable,
+	delegatedRolesAssignments []models.OAuth2PermissionGrantable,
+) ([]any, error) {
 	list := []any{}
 	// track which app roles are granted, keyed by resourceSpId/roleId, and the
 	// display name of each resource service principal the application touches
@@ -497,13 +601,13 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 		}
 		grantedRoleKeys[spId.String()+"/"+roleId.String()] = true
 		resourceSpNames[spId.String()] = convert.ToValue(roleAssignment.GetResourceDisplayName())
-		role, ok := mqlMicrosoftResource.appRole(spId.String(), roleId.String())
+		role, ok := m.appRole(spId.String(), roleId.String())
 		if !ok {
 			log.Debug().Msgf("role not found in cache: %v", roleId)
 			continue
 		}
 
-		assignment, err := CreateResource(a.MqlRuntime, "microsoft.application.permission", map[string]*llx.RawData{
+		assignment, err := CreateResource(m.MqlRuntime, "microsoft.application.permission", map[string]*llx.RawData{
 			"__id":        llx.StringDataPtr(assignmentID),
 			"appId":       llx.StringData(spId.String()),
 			"appName":     llx.StringDataPtr(roleAssignment.GetResourceDisplayName()),
@@ -523,14 +627,14 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 	// has a grant on but has not been assigned, so audits can see the unused
 	// capability the application could request
 	for resourceSpId, resourceName := range resourceSpNames {
-		for _, role := range mqlMicrosoftResource.appRolesForSp(resourceSpId) {
+		for _, role := range m.appRolesForSp(resourceSpId) {
 			key := resourceSpId + "/" + role.id
 			if grantedRoleKeys[key] {
 				continue
 			}
 			grantedRoleKeys[key] = true // also dedupes repeated roles
 
-			assignment, err := CreateResource(a.MqlRuntime, "microsoft.application.permission", map[string]*llx.RawData{
+			assignment, err := CreateResource(m.MqlRuntime, "microsoft.application.permission", map[string]*llx.RawData{
 				"__id":        llx.StringData(key + "/available"),
 				"appId":       llx.StringData(resourceSpId),
 				"appName":     llx.StringData(resourceName),
@@ -547,14 +651,6 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 		}
 	}
 
-	oauthResp, err := graphClient.ServicePrincipals().ByServicePrincipalId(servicePrincipalId).Oauth2PermissionGrants().Get(ctx, &serviceprincipals.ItemOauth2PermissionGrantsRequestBuilderGetRequestConfiguration{})
-	if err != nil {
-		return nil, transformError(err)
-	}
-	delegatedRolesAssignments, err := iterate[models.OAuth2PermissionGrantable](ctx, oauthResp, graphClient.GetAdapter(), models.CreateOAuth2PermissionGrantCollectionResponseFromDiscriminatorValue)
-	if err != nil {
-		return nil, err
-	}
 	for _, roleAssignment := range delegatedRolesAssignments {
 
 		spId := roleAssignment.GetResourceId() // id of the service account
@@ -562,7 +658,7 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 			continue
 		}
 
-		appName, _ := mqlMicrosoftResource.appName(*spId)
+		appName, _ := m.appName(*spId)
 		scope := roleAssignment.GetScope()
 		if scope == nil {
 			continue
@@ -577,12 +673,12 @@ func (a *mqlMicrosoftServiceprincipal) permissions() ([]any, error) {
 			}
 			id := convert.ToValue(roleAssignment.GetId())
 			desc := ""
-			role, ok := mqlMicrosoftResource.getOauthPermissionScope(*spId, scopeEntry)
+			role, ok := m.getOauthPermissionScope(*spId, scopeEntry)
 			if ok {
 				desc = role.desc
 			}
 
-			assignment, err := CreateResource(a.MqlRuntime, "microsoft.application.permission", map[string]*llx.RawData{
+			assignment, err := CreateResource(m.MqlRuntime, "microsoft.application.permission", map[string]*llx.RawData{
 				"__id":        llx.StringData(id + "/" + scopeEntry),
 				"appId":       llx.StringDataPtr(spId),
 				"appName":     llx.StringData(appName),

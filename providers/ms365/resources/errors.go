@@ -32,8 +32,3 @@ func transformError(err error) error {
 	}
 	return err
 }
-
-func isOdataError(err error) (*odataerrors.ODataError, bool) {
-	oDataErr, ok := err.(*odataerrors.ODataError)
-	return oDataErr, ok
-}

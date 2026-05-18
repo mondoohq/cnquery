@@ -31,6 +31,119 @@ type mqlMicrosoftInternal struct {
 	mfaOnce sync.Once
 	// the response when asking for the user registration details
 	mfaResp mfaResp
+	// per-user fields resolved in one batched Graph call on first access
+	userBatches userBatchCaches
+	// per-service-principal fields resolved in one batched Graph call
+	spBatches spBatchCaches
+	// per-user audit-log fields resolved in one batched Graph call
+	auditlogBatches auditlogBatchCaches
+}
+
+// userBatchCaches holds one cache per per-user field that is resolved through
+// the Graph $batch endpoint. The first accessor of a field triggers a single
+// batched fetch covering every indexed user; the rest read from the cache.
+type userBatchCaches struct {
+	settings       batchFieldCache
+	signInActivity batchFieldCache
+	authMethods    batchFieldCache
+	authRequires   batchFieldCache
+	licenseDetails batchFieldCache
+}
+
+// spBatchCaches holds one cache per per-service-principal field resolved
+// through the Graph $batch endpoint, working the same way as userBatchCaches.
+type spBatchCaches struct {
+	permissions batchFieldCache
+}
+
+// auditlogBatchCaches holds one cache per per-user audit-log field resolved
+// through the Graph $batch endpoint, working the same way as userBatchCaches.
+type auditlogBatchCaches struct {
+	signins                  batchFieldCache
+	lastNonInteractiveSignIn batchFieldCache
+}
+
+// batchFieldCache memoizes a bulk-loaded per-item field. It tracks which item
+// keys have been resolved so items discovered after the first batch (for
+// example a group member indexed while resolving group members) are still
+// fetched on demand rather than silently returning a nil result.
+type batchFieldCache struct {
+	mu     sync.Mutex
+	data   map[string]any
+	errs   map[string]error
+	loaded map[string]bool
+	err    error
+}
+
+// resolve returns the bulk-loaded value for key. The first call for any
+// not-yet-loaded key runs load over every id in allIDs still outstanding (so a
+// query touching many items batches them in one call) plus key itself, and
+// merges the outcome into the cache. A batch-wide failure or a per-item
+// failure is surfaced as an error.
+//
+// load runs with the cache mutex held; it must not call back into resolve on
+// the same cache.
+func (c *batchFieldCache) resolve(
+	key string,
+	allIDs []string,
+	load func(ids []string) (map[string]any, map[string]error, error),
+) (any, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.err != nil {
+		return nil, c.err
+	}
+	if c.data == nil {
+		c.data = map[string]any{}
+		c.errs = map[string]error{}
+		c.loaded = map[string]bool{}
+	}
+	if !c.loaded[key] {
+		todo := make([]string, 0, len(allIDs)+1)
+		seen := map[string]bool{}
+		for _, id := range allIDs {
+			if c.loaded[id] || seen[id] {
+				continue
+			}
+			seen[id] = true
+			todo = append(todo, id)
+		}
+		if !seen[key] {
+			todo = append(todo, key)
+		}
+		data, errs, err := load(todo)
+		if err != nil {
+			c.err = err
+			return nil, err
+		}
+		for _, id := range todo {
+			c.loaded[id] = true
+		}
+		for id, v := range data {
+			c.data[id] = v
+		}
+		for id, e := range errs {
+			c.errs[id] = e
+		}
+	}
+	if e := c.errs[key]; e != nil {
+		return nil, e
+	}
+	return c.data[key], nil
+}
+
+// indexedUserIDs returns the ids of every user materialized so far. Users are
+// indexed by microsoft.users.list, initMicrosoftUser, and group/application
+// member resolution, so this is the set of users whose fields a batched query
+// can ask for.
+func (a *mqlMicrosoft) indexedUserIDs() []string {
+	idxUsersById.RLock()
+	defer idxUsersById.RUnlock()
+	ids := make([]string, 0, len(a.idxUsersById))
+	for id := range a.idxUsersById {
+		ids = append(ids, id)
+	}
+	return ids
 }
 
 // loadMfaResp lazily fetches user MFA registration details from the beta
