@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-github/v86/github"
+	"github.com/google/go-github/v87/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +23,7 @@ func newTestGithubClient(t *testing.T, server *httptest.Server) *github.Client {
 	t.Helper()
 	base, err := url.Parse(server.URL + "/")
 	require.NoError(t, err)
-	client, err := github.NewClient(nil).WithEnterpriseURLs(base.String(), base.String())
+	client, err := github.NewClient(github.WithEnterpriseURLs(base.String(), base.String()))
 	require.NoError(t, err)
 	return client
 }

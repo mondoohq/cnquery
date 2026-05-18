@@ -12,7 +12,7 @@ import (
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v86/github"
+	"github.com/google/go-github/v87/github"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog"
@@ -94,17 +94,7 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 	}
 	connectionOpts := connectionOptionsFromConfigOptions(asset.Connections[0])
 
-	var client *github.Client
-	var err error
-	if connectionOpts.AppID != "" {
-		client, err = newGithubAppClient(connectionOpts)
-	} else {
-		client, err = newGithubTokenClient(connectionOpts)
-	}
-	if err != nil {
-		return nil, err
-	}
-
+	var clientOpts []github.ClientOptionsFunc
 	if connectionOpts.EnterpriseURL != "" {
 		parsedUrl, err := url.Parse(connectionOpts.EnterpriseURL)
 		if err != nil {
@@ -113,10 +103,18 @@ func NewGithubConnection(id uint32, asset *inventory.Asset) (*GithubConnection, 
 
 		baseUrl := parsedUrl.JoinPath("api/v3/")
 		uploadUrl := parsedUrl.JoinPath("api/uploads/")
-		client, err = client.WithEnterpriseURLs(baseUrl.String(), uploadUrl.String())
-		if err != nil {
-			return nil, err
-		}
+		clientOpts = append(clientOpts, github.WithEnterpriseURLs(baseUrl.String(), uploadUrl.String()))
+	}
+
+	var client *github.Client
+	var err error
+	if connectionOpts.AppID != "" {
+		client, err = newGithubAppClient(connectionOpts, clientOpts...)
+	} else {
+		client, err = newGithubTokenClient(connectionOpts, clientOpts...)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	// set the context so github client can handle backoff
@@ -165,7 +163,7 @@ func (c *GithubConnection) Verify() error {
 	return nil
 }
 
-func newGithubAppClient(opts githubConnectionOptions) (*github.Client, error) {
+func newGithubAppClient(opts githubConnectionOptions, clientOpts ...github.ClientOptionsFunc) (*github.Client, error) {
 	if opts.AppID == "" {
 		return nil, errors.New("app-id is required for GitHub App authentication")
 	}
@@ -196,10 +194,11 @@ func newGithubAppClient(opts githubConnectionOptions) (*github.Client, error) {
 		return nil, errors.New("app-private-key is required for GitHub App authentication")
 	}
 
-	return github.NewClient(newGithubRetryableClient(&http.Client{Transport: itr})), nil
+	clientOpts = append(clientOpts, github.WithHTTPClient(newGithubRetryableClient(&http.Client{Transport: itr})))
+	return github.NewClient(clientOpts...)
 }
 
-func newGithubTokenClient(opts githubConnectionOptions) (*github.Client, error) {
+func newGithubTokenClient(opts githubConnectionOptions, clientOpts ...github.ClientOptionsFunc) (*github.Client, error) {
 	// if we still have no token, error out
 	if opts.Token == "" {
 		return nil, errors.New("a valid GitHub token is required, pass --token '<yourtoken>' or set GITHUB_TOKEN environment variable")
@@ -210,7 +209,8 @@ func newGithubTokenClient(opts githubConnectionOptions) (*github.Client, error) 
 		&oauth2.Token{AccessToken: opts.Token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-	return github.NewClient(newGithubRetryableClient(tc)), nil
+	clientOpts = append(clientOpts, github.WithHTTPClient(newGithubRetryableClient(tc)))
+	return github.NewClient(clientOpts...)
 }
 
 func newGithubRetryableClient(httpClient *http.Client) *http.Client {
