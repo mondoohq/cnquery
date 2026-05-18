@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.15.0",
-  "generated_at": "2026-05-17T19:29:33-07:00",
+  "generated_at": "2026-05-17T19:31:07-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -172,6 +172,14 @@
     "monitoring.services.list",
     "monitoring.slos.list",
     "monitoring.uptimeCheckConfigs.list",
+    "networksecurity.addressGroups.list",
+    "networksecurity.authorizationPolicies.list",
+    "networksecurity.clientTlsPolicies.list",
+    "networksecurity.securityProfileGroups.list",
+    "networksecurity.securityProfiles.list",
+    "networksecurity.serverTlsPolicies.list",
+    "networksecurity.tlsInspectionPolicies.list",
+    "networksecurity.urlLists.list",
     "orgpolicy.constraints.list",
     "orgpolicy.customConstraints.list",
     "orgpolicy.policies.list",
@@ -1265,6 +1273,54 @@
       "service": "monitoring",
       "action": "UptimeCheckConfigs.List",
       "source_file": "monitoring.go"
+    },
+    {
+      "permission": "networksecurity.addressGroups.list",
+      "service": "networksecurity",
+      "action": "AddressGroups.List",
+      "source_file": "networksecurity.go"
+    },
+    {
+      "permission": "networksecurity.authorizationPolicies.list",
+      "service": "networksecurity",
+      "action": "AuthorizationPolicies.List",
+      "source_file": "networksecurity.go"
+    },
+    {
+      "permission": "networksecurity.clientTlsPolicies.list",
+      "service": "networksecurity",
+      "action": "ClientTlsPolicies.List",
+      "source_file": "networksecurity.go"
+    },
+    {
+      "permission": "networksecurity.securityProfileGroups.list",
+      "service": "networksecurity",
+      "action": "SecurityProfileGroups.List",
+      "source_file": "networksecurity.go"
+    },
+    {
+      "permission": "networksecurity.securityProfiles.list",
+      "service": "networksecurity",
+      "action": "SecurityProfiles.List",
+      "source_file": "networksecurity.go"
+    },
+    {
+      "permission": "networksecurity.serverTlsPolicies.list",
+      "service": "networksecurity",
+      "action": "ServerTlsPolicies.List",
+      "source_file": "networksecurity.go"
+    },
+    {
+      "permission": "networksecurity.tlsInspectionPolicies.list",
+      "service": "networksecurity",
+      "action": "TlsInspectionPolicies.List",
+      "source_file": "networksecurity.go"
+    },
+    {
+      "permission": "networksecurity.urlLists.list",
+      "service": "networksecurity",
+      "action": "UrlLists.List",
+      "source_file": "networksecurity.go"
     },
     {
       "permission": "orgpolicy.constraints.list",

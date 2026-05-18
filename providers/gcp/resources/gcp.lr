@@ -90,6 +90,73 @@ gcp.organization @defaults("name") {
   customConstraints() []gcp.orgPolicy.customConstraint
   // Cloud Identity groups in the associated Google Workspace / Cloud Identity account
   cloudIdentityGroups() []gcp.cloudIdentity.group
+  // Network Security profiles defined for the organization
+  networkSecurityProfiles() []gcp.organization.networkSecurityProfile
+  // Network Security profile groups defined for the organization
+  networkSecurityProfileGroups() []gcp.organization.networkSecurityProfileGroup
+}
+
+// Network Security profile for an organization
+//
+// Examine a Network Security profile that defines a reusable set of
+// threat-detection and traffic-handling behavior referenced by
+// firewall policy rules: `threatPreventionProfile` configures
+// intrusion prevention severity overrides, `urlFilteringProfile`
+// configures URL filtering, and the intercept and mirroring profiles
+// configure packet handling. The `type` field records which behavior
+// the profile carries. Selected by the full resource name.
+private gcp.organization.networkSecurityProfile @defaults("name type") {
+  // Full resource name of the security profile
+  name string
+  // Optional human-readable description
+  description string
+  // Profile type (THREAT_PREVENTION, CUSTOM_MIRRORING, CUSTOM_INTERCEPT, URL_FILTERING)
+  type string
+  // Threat prevention configuration, including per-severity and per-threat overrides
+  threatPreventionProfile dict
+  // URL filtering configuration applied by the profile
+  urlFilteringProfile dict
+  // Custom packet-mirroring configuration applied by the profile
+  customMirroringProfile dict
+  // Custom packet-intercept configuration applied by the profile
+  customInterceptProfile dict
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Entity tag for optimistic concurrency control
+  etag string
+  // Time the security profile was created
+  created time
+  // Time the security profile was last updated
+  updated time
+}
+
+// Network Security profile group for an organization
+//
+// Examine a Network Security profile group, which bundles individual
+// security profiles so that a single firewall policy rule can apply
+// threat prevention, URL filtering, mirroring, and intercept behavior
+// together. Each field references the full resource name of the
+// security profile that supplies that behavior. Selected by the full
+// resource name.
+private gcp.organization.networkSecurityProfileGroup @defaults("name") {
+  // Full resource name of the security profile group
+  name string
+  // Optional human-readable description
+  description string
+  // Resource name of the threat prevention profile in the group
+  threatPreventionProfile string
+  // Resource name of the custom mirroring profile in the group
+  customMirroringProfile string
+  // Resource name of the custom intercept profile in the group
+  customInterceptProfile string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Entity tag for optimistic concurrency control
+  etag string
+  // Time the security profile group was created
+  created time
+  // Time the security profile group was last updated
+  updated time
 }
 
 // Google Cloud Identity group
@@ -678,6 +745,8 @@ gcp.project @defaults("name number") {
   healthcare() gcp.project.healthcareService
   // GCP VM Manager (OS Config) resources
   osConfig() gcp.project.osConfigService
+  // GCP Network Security resources
+  networkSecurity() gcp.project.networkSecurityService
 }
 
 // Google Cloud service API
@@ -9259,6 +9328,191 @@ private gcp.project.osConfigService.osPolicyAssignment @defaults("name rolloutSt
   deleted bool
   // Whether the assignment is currently being reconciled
   reconciling bool
+}
+
+// ============================================================
+// Network Security
+// ============================================================
+
+// Network Security service for a project
+//
+// Use this resource to reach Google Cloud Network Security resources
+// for a project: service-mesh `authorizationPolicies`, the
+// `serverTlsPolicies` and `clientTlsPolicies` that govern TLS
+// behavior, the `tlsInspectionPolicies` used to decrypt and inspect
+// traffic, the `addressGroups` referenced by firewall policy rules,
+// and the `urlLists` used for URL-based filtering.
+private gcp.project.networkSecurityService {
+  // Project ID
+  projectId string
+  // Authorization policies governing service-to-service access
+  authorizationPolicies() []gcp.project.networkSecurityService.authorizationPolicy
+  // Server-side TLS policies
+  serverTlsPolicies() []gcp.project.networkSecurityService.serverTlsPolicy
+  // Client-side TLS policies
+  clientTlsPolicies() []gcp.project.networkSecurityService.clientTlsPolicy
+  // TLS inspection policies used to decrypt and inspect traffic
+  tlsInspectionPolicies() []gcp.project.networkSecurityService.tlsInspectionPolicy
+  // Address groups referenced by firewall policy rules
+  addressGroups() []gcp.project.networkSecurityService.addressGroup
+  // URL lists used for URL-based filtering
+  urlLists() []gcp.project.networkSecurityService.urlList
+}
+
+// Network Security authorization policy
+//
+// Examine an authorization policy that allows or denies traffic
+// between workloads in a service mesh or load-balanced application:
+// `action` records the default ALLOW or DENY decision and `rules`
+// lists the source and destination matchers that select which
+// requests the policy applies to. Selected by the full resource name.
+private gcp.project.networkSecurityService.authorizationPolicy @defaults("name action") {
+  // Full resource name of the authorization policy
+  name string
+  // Optional human-readable description
+  description string
+  // Default action applied to matching traffic (ALLOW, DENY)
+  action string
+  // Source and destination matchers selecting which requests the policy applies to
+  rules []dict
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Time the policy was created
+  created time
+  // Time the policy was last updated
+  updated time
+}
+
+// Network Security server TLS policy
+//
+// Examine a server-side TLS policy attached to inbound traffic: the
+// `allowOpen` predicate audits whether plaintext connections are
+// permitted, `mtlsPolicy` configures mutual TLS client validation,
+// and `serverCertificate` configures the certificate the server
+// presents. Selected by the full resource name.
+private gcp.project.networkSecurityService.serverTlsPolicy @defaults("name allowOpen") {
+  // Full resource name of the server TLS policy
+  name string
+  // Optional human-readable description
+  description string
+  // Whether plaintext (non-TLS) connections are permitted
+  allowOpen bool
+  // Mutual TLS configuration for validating client certificates
+  mtlsPolicy dict
+  // Certificate provider configuration for the certificate the server presents
+  serverCertificate dict
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Time the policy was created
+  created time
+  // Time the policy was last updated
+  updated time
+}
+
+// Network Security client TLS policy
+//
+// Examine a client-side TLS policy used for outbound connections:
+// `sni` records the server name indication sent during the
+// handshake, `clientCertificate` configures the certificate the
+// client presents for mutual TLS, and `serverValidationCa` lists the
+// certificate authorities trusted to validate the server. Selected by
+// the full resource name.
+private gcp.project.networkSecurityService.clientTlsPolicy @defaults("name sni") {
+  // Full resource name of the client TLS policy
+  name string
+  // Optional human-readable description
+  description string
+  // Server name indication sent during the TLS handshake
+  sni string
+  // Certificate provider configuration for the certificate the client presents
+  clientCertificate dict
+  // Certificate authorities trusted to validate the server certificate
+  serverValidationCa []dict
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Time the policy was created
+  created time
+  // Time the policy was last updated
+  updated time
+}
+
+// Network Security TLS inspection policy
+//
+// Examine a TLS inspection policy that lets firewall rules decrypt,
+// inspect, and re-encrypt TLS traffic: `caPool` references the
+// Certificate Authority Service pool used to mint intercept
+// certificates, `minTlsVersion` and `tlsFeatureProfile` constrain the
+// negotiated TLS parameters, and `trustConfig` supplies additional
+// trusted certificates. Selected by the full resource name.
+private gcp.project.networkSecurityService.tlsInspectionPolicy @defaults("name minTlsVersion") {
+  // Full resource name of the TLS inspection policy
+  name string
+  // Optional human-readable description
+  description string
+  // Certificate Authority Service CA pool used to mint intercept certificates
+  caPool string
+  // Minimum accepted TLS version (TLS_VERSION_UNSPECIFIED, TLS_1_0, TLS_1_1, TLS_1_2, TLS_1_3)
+  minTlsVersion string
+  // TLS feature profile constraining the negotiated cipher suites (PROFILE_UNSPECIFIED, PROFILE_COMPATIBLE, PROFILE_MODERN, PROFILE_RESTRICTED, PROFILE_CUSTOM)
+  tlsFeatureProfile string
+  // Custom TLS features negotiated when tlsFeatureProfile is PROFILE_CUSTOM
+  customTlsFeatures []string
+  // Whether the set of public certificate authorities is excluded from the trust store
+  excludePublicCaSet bool
+  // Resource name of the trust config supplying additional trusted certificates
+  trustConfig string
+  // Time the policy was created
+  created time
+  // Time the policy was last updated
+  updated time
+}
+
+// Network Security address group
+//
+// Examine an address group: a named, reusable collection of IP
+// addresses or ranges in `items` that firewall policy rules reference
+// instead of inline address lists. `type` records whether the group
+// holds IPv4 or IPv6 addresses, `capacity` is the maximum number of
+// items, and `purpose` records where the group may be used. Selected
+// by the full resource name.
+private gcp.project.networkSecurityService.addressGroup @defaults("name type") {
+  // Full resource name of the address group
+  name string
+  // Optional human-readable description
+  description string
+  // Address family held by the group (IPV4, IPV6)
+  type string
+  // IP addresses or CIDR ranges in the group
+  items []string
+  // Maximum number of items the group can hold
+  capacity int
+  // Where the address group may be used (DEFAULT, CLOUD_ARMOR)
+  purpose []string
+  // User-defined key/value labels for organizing the resource
+  labels map[string]string
+  // Time the address group was created
+  created time
+  // Time the address group was last updated
+  updated time
+}
+
+// Network Security URL list
+//
+// Examine a URL list: a named collection of URL patterns in `values`
+// that secure web proxy and firewall rules reference to allow or
+// block web traffic by destination. Selected by the full resource
+// name.
+private gcp.project.networkSecurityService.urlList @defaults("name") {
+  // Full resource name of the URL list
+  name string
+  // Optional human-readable description
+  description string
+  // URL patterns in the list
+  values []string
+  // Time the URL list was created
+  created time
+  // Time the URL list was last updated
+  updated time
 }
 
 // ============================================================

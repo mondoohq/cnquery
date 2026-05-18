@@ -17,6 +17,8 @@ import (
 // The MQL type names exposed as public consts for ease of reference.
 const (
 	ResourceGcpOrganization                                                            string = "gcp.organization"
+	ResourceGcpOrganizationNetworkSecurityProfile                                      string = "gcp.organization.networkSecurityProfile"
+	ResourceGcpOrganizationNetworkSecurityProfileGroup                                 string = "gcp.organization.networkSecurityProfileGroup"
 	ResourceGcpCloudIdentityGroup                                                      string = "gcp.cloudIdentity.group"
 	ResourceGcpCloudIdentityMembership                                                 string = "gcp.cloudIdentity.membership"
 	ResourceGcpFolders                                                                 string = "gcp.folders"
@@ -366,6 +368,13 @@ const (
 	ResourceGcpProjectOsConfigService                                                  string = "gcp.project.osConfigService"
 	ResourceGcpProjectOsConfigServicePatchDeployment                                   string = "gcp.project.osConfigService.patchDeployment"
 	ResourceGcpProjectOsConfigServiceOsPolicyAssignment                                string = "gcp.project.osConfigService.osPolicyAssignment"
+	ResourceGcpProjectNetworkSecurityService                                           string = "gcp.project.networkSecurityService"
+	ResourceGcpProjectNetworkSecurityServiceAuthorizationPolicy                        string = "gcp.project.networkSecurityService.authorizationPolicy"
+	ResourceGcpProjectNetworkSecurityServiceServerTlsPolicy                            string = "gcp.project.networkSecurityService.serverTlsPolicy"
+	ResourceGcpProjectNetworkSecurityServiceClientTlsPolicy                            string = "gcp.project.networkSecurityService.clientTlsPolicy"
+	ResourceGcpProjectNetworkSecurityServiceTlsInspectionPolicy                        string = "gcp.project.networkSecurityService.tlsInspectionPolicy"
+	ResourceGcpProjectNetworkSecurityServiceAddressGroup                               string = "gcp.project.networkSecurityService.addressGroup"
+	ResourceGcpProjectNetworkSecurityServiceUrlList                                    string = "gcp.project.networkSecurityService.urlList"
 	ResourceGcpProjectGkeBackupService                                                 string = "gcp.project.gkeBackupService"
 	ResourceGcpProjectGkeBackupServiceBackupPlan                                       string = "gcp.project.gkeBackupService.backupPlan"
 	ResourceGcpProjectGkeBackupServiceRestorePlan                                      string = "gcp.project.gkeBackupService.restorePlan"
@@ -412,6 +421,14 @@ func init() {
 		"gcp.organization": {
 			Init:   initGcpOrganization,
 			Create: createGcpOrganization,
+		},
+		"gcp.organization.networkSecurityProfile": {
+			// to override args, implement: initGcpOrganizationNetworkSecurityProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpOrganizationNetworkSecurityProfile,
+		},
+		"gcp.organization.networkSecurityProfileGroup": {
+			// to override args, implement: initGcpOrganizationNetworkSecurityProfileGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpOrganizationNetworkSecurityProfileGroup,
 		},
 		"gcp.cloudIdentity.group": {
 			// to override args, implement: initGcpCloudIdentityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1809,6 +1826,34 @@ func init() {
 			// to override args, implement: initGcpProjectOsConfigServiceOsPolicyAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectOsConfigServiceOsPolicyAssignment,
 		},
+		"gcp.project.networkSecurityService": {
+			Init:   initGcpProjectNetworkSecurityService,
+			Create: createGcpProjectNetworkSecurityService,
+		},
+		"gcp.project.networkSecurityService.authorizationPolicy": {
+			// to override args, implement: initGcpProjectNetworkSecurityServiceAuthorizationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectNetworkSecurityServiceAuthorizationPolicy,
+		},
+		"gcp.project.networkSecurityService.serverTlsPolicy": {
+			// to override args, implement: initGcpProjectNetworkSecurityServiceServerTlsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectNetworkSecurityServiceServerTlsPolicy,
+		},
+		"gcp.project.networkSecurityService.clientTlsPolicy": {
+			// to override args, implement: initGcpProjectNetworkSecurityServiceClientTlsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectNetworkSecurityServiceClientTlsPolicy,
+		},
+		"gcp.project.networkSecurityService.tlsInspectionPolicy": {
+			// to override args, implement: initGcpProjectNetworkSecurityServiceTlsInspectionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectNetworkSecurityServiceTlsInspectionPolicy,
+		},
+		"gcp.project.networkSecurityService.addressGroup": {
+			// to override args, implement: initGcpProjectNetworkSecurityServiceAddressGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectNetworkSecurityServiceAddressGroup,
+		},
+		"gcp.project.networkSecurityService.urlList": {
+			// to override args, implement: initGcpProjectNetworkSecurityServiceUrlList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectNetworkSecurityServiceUrlList,
+		},
 		"gcp.project.gkeBackupService": {
 			Init:   initGcpProjectGkeBackupService,
 			Create: createGcpProjectGkeBackupService,
@@ -2093,6 +2138,72 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.organization.cloudIdentityGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetCloudIdentityGroups()).ToDataRes(types.Array(types.Resource("gcp.cloudIdentity.group")))
+	},
+	"gcp.organization.networkSecurityProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganization).GetNetworkSecurityProfiles()).ToDataRes(types.Array(types.Resource("gcp.organization.networkSecurityProfile")))
+	},
+	"gcp.organization.networkSecurityProfileGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganization).GetNetworkSecurityProfileGroups()).ToDataRes(types.Array(types.Resource("gcp.organization.networkSecurityProfileGroup")))
+	},
+	"gcp.organization.networkSecurityProfile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetName()).ToDataRes(types.String)
+	},
+	"gcp.organization.networkSecurityProfile.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.organization.networkSecurityProfile.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetType()).ToDataRes(types.String)
+	},
+	"gcp.organization.networkSecurityProfile.threatPreventionProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetThreatPreventionProfile()).ToDataRes(types.Dict)
+	},
+	"gcp.organization.networkSecurityProfile.urlFilteringProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetUrlFilteringProfile()).ToDataRes(types.Dict)
+	},
+	"gcp.organization.networkSecurityProfile.customMirroringProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetCustomMirroringProfile()).ToDataRes(types.Dict)
+	},
+	"gcp.organization.networkSecurityProfile.customInterceptProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetCustomInterceptProfile()).ToDataRes(types.Dict)
+	},
+	"gcp.organization.networkSecurityProfile.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.organization.networkSecurityProfile.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.organization.networkSecurityProfile.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.organization.networkSecurityProfile.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.organization.networkSecurityProfileGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.organization.networkSecurityProfileGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.organization.networkSecurityProfileGroup.threatPreventionProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).GetThreatPreventionProfile()).ToDataRes(types.String)
+	},
+	"gcp.organization.networkSecurityProfileGroup.customMirroringProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).GetCustomMirroringProfile()).ToDataRes(types.String)
+	},
+	"gcp.organization.networkSecurityProfileGroup.customInterceptProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).GetCustomInterceptProfile()).ToDataRes(types.String)
+	},
+	"gcp.organization.networkSecurityProfileGroup.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.organization.networkSecurityProfileGroup.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.organization.networkSecurityProfileGroup.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.organization.networkSecurityProfileGroup.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).GetUpdated()).ToDataRes(types.Time)
 	},
 	"gcp.cloudIdentity.group.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpCloudIdentityGroup).GetName()).ToDataRes(types.String)
@@ -2810,6 +2921,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.osConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetOsConfig()).ToDataRes(types.Resource("gcp.project.osConfigService"))
+	},
+	"gcp.project.networkSecurity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetNetworkSecurity()).ToDataRes(types.Resource("gcp.project.networkSecurityService"))
 	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
@@ -12951,6 +13065,168 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.osConfigService.osPolicyAssignment.reconciling": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetReconciling()).ToDataRes(types.Bool)
 	},
+	"gcp.project.networkSecurityService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.authorizationPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityService).GetAuthorizationPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.networkSecurityService.authorizationPolicy")))
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityService).GetServerTlsPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.networkSecurityService.serverTlsPolicy")))
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityService).GetClientTlsPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.networkSecurityService.clientTlsPolicy")))
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityService).GetTlsInspectionPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.networkSecurityService.tlsInspectionPolicy")))
+	},
+	"gcp.project.networkSecurityService.addressGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityService).GetAddressGroups()).ToDataRes(types.Array(types.Resource("gcp.project.networkSecurityService.addressGroup")))
+	},
+	"gcp.project.networkSecurityService.urlLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityService).GetUrlLists()).ToDataRes(types.Array(types.Resource("gcp.project.networkSecurityService.urlList")))
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).GetAction()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.allowOpen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetAllowOpen()).ToDataRes(types.Bool)
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.mtlsPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetMtlsPolicy()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.serverCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetServerCertificate()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.sni": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).GetSni()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.clientCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).GetClientCertificate()).ToDataRes(types.Dict)
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.serverValidationCa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).GetServerValidationCa()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.caPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetCaPool()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.minTlsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetMinTlsVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.tlsFeatureProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetTlsFeatureProfile()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.customTlsFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetCustomTlsFeatures()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.excludePublicCaSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetExcludePublicCaSet()).ToDataRes(types.Bool)
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.trustConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetTrustConfig()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.addressGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.addressGroup.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.addressGroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).GetType()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.addressGroup.items": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).GetItems()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.networkSecurityService.addressGroup.capacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).GetCapacity()).ToDataRes(types.Int)
+	},
+	"gcp.project.networkSecurityService.addressGroup.purpose": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).GetPurpose()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.networkSecurityService.addressGroup.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.networkSecurityService.addressGroup.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.addressGroup.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.urlList.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceUrlList).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.urlList.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceUrlList).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.networkSecurityService.urlList.values": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceUrlList).GetValues()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.networkSecurityService.urlList.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceUrlList).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.networkSecurityService.urlList.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectNetworkSecurityServiceUrlList).GetUpdated()).ToDataRes(types.Time)
+	},
 	"gcp.project.gkeBackupService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeBackupService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -13953,6 +14229,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.organization.cloudIdentityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganization).CloudIdentityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganization).NetworkSecurityProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganization).NetworkSecurityProfileGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.threatPreventionProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).ThreatPreventionProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.urlFilteringProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).UrlFilteringProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.customMirroringProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).CustomMirroringProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.customInterceptProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).CustomInterceptProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfile.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfile).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroup.threatPreventionProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).ThreatPreventionProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroup.customMirroringProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).CustomMirroringProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroup.customInterceptProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).CustomInterceptProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroup.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroup.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroup.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.networkSecurityProfileGroup.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationNetworkSecurityProfileGroup).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.cloudIdentity.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -14981,6 +15353,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.osConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProject).OsConfig, ok = plugin.RawToTValue[*mqlGcpProjectOsConfigService](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).NetworkSecurity, ok = plugin.RawToTValue[*mqlGcpProjectNetworkSecurityService](v.Value, v.Error)
 		return
 	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29827,6 +30203,250 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).Reconciling, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.networkSecurityService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkSecurityService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.authorizationPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityService).AuthorizationPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityService).ServerTlsPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityService).ClientTlsPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityService).TlsInspectionPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityService).AddressGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.urlLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityService).UrlLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.authorizationPolicy.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.allowOpen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).AllowOpen, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.mtlsPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).MtlsPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.serverCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).ServerCertificate, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.serverTlsPolicy.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceServerTlsPolicy).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.sni": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).Sni, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.clientCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).ClientCertificate, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.serverValidationCa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).ServerValidationCa, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.clientTlsPolicy.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.caPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).CaPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.minTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).MinTlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.tlsFeatureProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).TlsFeatureProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.customTlsFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).CustomTlsFeatures, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.excludePublicCaSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).ExcludePublicCaSet, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.trustConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).TrustConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.tlsInspectionPolicy.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroup.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroup.items": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).Items, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroup.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).Capacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroup.purpose": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).Purpose, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroup.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroup.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.addressGroup.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceAddressGroup).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.urlList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceUrlList).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.networkSecurityService.urlList.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceUrlList).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.urlList.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceUrlList).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.urlList.values": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceUrlList).Values, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.urlList.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceUrlList).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.networkSecurityService.urlList.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectNetworkSecurityServiceUrlList).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeBackupService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeBackupService).__id, ok = v.Value.(string)
 		return
@@ -31204,28 +31824,30 @@ type mqlGcpOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpOrganizationInternal it will be used here
-	Id                      plugin.TValue[string]
-	CustomerId              plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	State                   plugin.TValue[string]
-	IamPolicy               plugin.TValue[[]any]
-	AuditConfig             plugin.TValue[[]any]
-	OrgPolicies             plugin.TValue[[]any]
-	Created                 plugin.TValue[*time.Time]
-	Updated                 plugin.TValue[*time.Time]
-	DeleteTime              plugin.TValue[*time.Time]
-	AccessApprovalSettings  plugin.TValue[*mqlGcpAccessApprovalSettings]
-	Folders                 plugin.TValue[*mqlGcpFolders]
-	Projects                plugin.TValue[*mqlGcpProjects]
-	SccSources              plugin.TValue[[]any]
-	SccFindings             plugin.TValue[[]any]
-	SccNotificationConfigs  plugin.TValue[[]any]
-	SccMuteConfigs          plugin.TValue[[]any]
-	SccBigQueryExports      plugin.TValue[[]any]
-	SccOrganizationSettings plugin.TValue[*mqlGcpSccOrganizationSettings]
-	AccessPolicies          plugin.TValue[[]any]
-	CustomConstraints       plugin.TValue[[]any]
-	CloudIdentityGroups     plugin.TValue[[]any]
+	Id                           plugin.TValue[string]
+	CustomerId                   plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	State                        plugin.TValue[string]
+	IamPolicy                    plugin.TValue[[]any]
+	AuditConfig                  plugin.TValue[[]any]
+	OrgPolicies                  plugin.TValue[[]any]
+	Created                      plugin.TValue[*time.Time]
+	Updated                      plugin.TValue[*time.Time]
+	DeleteTime                   plugin.TValue[*time.Time]
+	AccessApprovalSettings       plugin.TValue[*mqlGcpAccessApprovalSettings]
+	Folders                      plugin.TValue[*mqlGcpFolders]
+	Projects                     plugin.TValue[*mqlGcpProjects]
+	SccSources                   plugin.TValue[[]any]
+	SccFindings                  plugin.TValue[[]any]
+	SccNotificationConfigs       plugin.TValue[[]any]
+	SccMuteConfigs               plugin.TValue[[]any]
+	SccBigQueryExports           plugin.TValue[[]any]
+	SccOrganizationSettings      plugin.TValue[*mqlGcpSccOrganizationSettings]
+	AccessPolicies               plugin.TValue[[]any]
+	CustomConstraints            plugin.TValue[[]any]
+	CloudIdentityGroups          plugin.TValue[[]any]
+	NetworkSecurityProfiles      plugin.TValue[[]any]
+	NetworkSecurityProfileGroups plugin.TValue[[]any]
 }
 
 // createGcpOrganization creates a new instance of this resource
@@ -31535,6 +32157,226 @@ func (c *mqlGcpOrganization) GetCloudIdentityGroups() *plugin.TValue[[]any] {
 
 		return c.cloudIdentityGroups()
 	})
+}
+
+func (c *mqlGcpOrganization) GetNetworkSecurityProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkSecurityProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.organization", c.__id, "networkSecurityProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkSecurityProfiles()
+	})
+}
+
+func (c *mqlGcpOrganization) GetNetworkSecurityProfileGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NetworkSecurityProfileGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.organization", c.__id, "networkSecurityProfileGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.networkSecurityProfileGroups()
+	})
+}
+
+// mqlGcpOrganizationNetworkSecurityProfile for the gcp.organization.networkSecurityProfile resource
+type mqlGcpOrganizationNetworkSecurityProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpOrganizationNetworkSecurityProfileInternal it will be used here
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
+	Type                    plugin.TValue[string]
+	ThreatPreventionProfile plugin.TValue[any]
+	UrlFilteringProfile     plugin.TValue[any]
+	CustomMirroringProfile  plugin.TValue[any]
+	CustomInterceptProfile  plugin.TValue[any]
+	Labels                  plugin.TValue[map[string]any]
+	Etag                    plugin.TValue[string]
+	Created                 plugin.TValue[*time.Time]
+	Updated                 plugin.TValue[*time.Time]
+}
+
+// createGcpOrganizationNetworkSecurityProfile creates a new instance of this resource
+func createGcpOrganizationNetworkSecurityProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpOrganizationNetworkSecurityProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.organization.networkSecurityProfile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) MqlName() string {
+	return "gcp.organization.networkSecurityProfile"
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetThreatPreventionProfile() *plugin.TValue[any] {
+	return &c.ThreatPreventionProfile
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetUrlFilteringProfile() *plugin.TValue[any] {
+	return &c.UrlFilteringProfile
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetCustomMirroringProfile() *plugin.TValue[any] {
+	return &c.CustomMirroringProfile
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetCustomInterceptProfile() *plugin.TValue[any] {
+	return &c.CustomInterceptProfile
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfile) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpOrganizationNetworkSecurityProfileGroup for the gcp.organization.networkSecurityProfileGroup resource
+type mqlGcpOrganizationNetworkSecurityProfileGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpOrganizationNetworkSecurityProfileGroupInternal it will be used here
+	Name                    plugin.TValue[string]
+	Description             plugin.TValue[string]
+	ThreatPreventionProfile plugin.TValue[string]
+	CustomMirroringProfile  plugin.TValue[string]
+	CustomInterceptProfile  plugin.TValue[string]
+	Labels                  plugin.TValue[map[string]any]
+	Etag                    plugin.TValue[string]
+	Created                 plugin.TValue[*time.Time]
+	Updated                 plugin.TValue[*time.Time]
+}
+
+// createGcpOrganizationNetworkSecurityProfileGroup creates a new instance of this resource
+func createGcpOrganizationNetworkSecurityProfileGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpOrganizationNetworkSecurityProfileGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.organization.networkSecurityProfileGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) MqlName() string {
+	return "gcp.organization.networkSecurityProfileGroup"
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) GetThreatPreventionProfile() *plugin.TValue[string] {
+	return &c.ThreatPreventionProfile
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) GetCustomMirroringProfile() *plugin.TValue[string] {
+	return &c.CustomMirroringProfile
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) GetCustomInterceptProfile() *plugin.TValue[string] {
+	return &c.CustomInterceptProfile
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpOrganizationNetworkSecurityProfileGroup) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
 }
 
 // mqlGcpCloudIdentityGroup for the gcp.cloudIdentity.group resource
@@ -33329,6 +34171,7 @@ type mqlGcpProject struct {
 	Composer                 plugin.TValue[*mqlGcpProjectComposerService]
 	Healthcare               plugin.TValue[*mqlGcpProjectHealthcareService]
 	OsConfig                 plugin.TValue[*mqlGcpProjectOsConfigService]
+	NetworkSecurity          plugin.TValue[*mqlGcpProjectNetworkSecurityService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -34453,6 +35296,22 @@ func (c *mqlGcpProject) GetOsConfig() *plugin.TValue[*mqlGcpProjectOsConfigServi
 		}
 
 		return c.osConfig()
+	})
+}
+
+func (c *mqlGcpProject) GetNetworkSecurity() *plugin.TValue[*mqlGcpProjectNetworkSecurityService] {
+	return plugin.GetOrCompute[*mqlGcpProjectNetworkSecurityService](&c.NetworkSecurity, func() (*mqlGcpProjectNetworkSecurityService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "networkSecurity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectNetworkSecurityService), nil
+			}
+		}
+
+		return c.networkSecurity()
 	})
 }
 
@@ -69353,6 +70212,656 @@ func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetDeleted() *plugin.TV
 
 func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetReconciling() *plugin.TValue[bool] {
 	return &c.Reconciling
+}
+
+// mqlGcpProjectNetworkSecurityService for the gcp.project.networkSecurityService resource
+type mqlGcpProjectNetworkSecurityService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectNetworkSecurityServiceInternal
+	ProjectId             plugin.TValue[string]
+	AuthorizationPolicies plugin.TValue[[]any]
+	ServerTlsPolicies     plugin.TValue[[]any]
+	ClientTlsPolicies     plugin.TValue[[]any]
+	TlsInspectionPolicies plugin.TValue[[]any]
+	AddressGroups         plugin.TValue[[]any]
+	UrlLists              plugin.TValue[[]any]
+}
+
+// createGcpProjectNetworkSecurityService creates a new instance of this resource
+func createGcpProjectNetworkSecurityService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkSecurityService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkSecurityService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkSecurityService) MqlName() string {
+	return "gcp.project.networkSecurityService"
+}
+
+func (c *mqlGcpProjectNetworkSecurityService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkSecurityService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectNetworkSecurityService) GetAuthorizationPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuthorizationPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkSecurityService", c.__id, "authorizationPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.authorizationPolicies()
+	})
+}
+
+func (c *mqlGcpProjectNetworkSecurityService) GetServerTlsPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServerTlsPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkSecurityService", c.__id, "serverTlsPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serverTlsPolicies()
+	})
+}
+
+func (c *mqlGcpProjectNetworkSecurityService) GetClientTlsPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientTlsPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkSecurityService", c.__id, "clientTlsPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clientTlsPolicies()
+	})
+}
+
+func (c *mqlGcpProjectNetworkSecurityService) GetTlsInspectionPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsInspectionPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkSecurityService", c.__id, "tlsInspectionPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tlsInspectionPolicies()
+	})
+}
+
+func (c *mqlGcpProjectNetworkSecurityService) GetAddressGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AddressGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkSecurityService", c.__id, "addressGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.addressGroups()
+	})
+}
+
+func (c *mqlGcpProjectNetworkSecurityService) GetUrlLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UrlLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.networkSecurityService", c.__id, "urlLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.urlLists()
+	})
+}
+
+// mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy for the gcp.project.networkSecurityService.authorizationPolicy resource
+type mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectNetworkSecurityServiceAuthorizationPolicyInternal it will be used here
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Action      plugin.TValue[string]
+	Rules       plugin.TValue[[]any]
+	Labels      plugin.TValue[map[string]any]
+	Created     plugin.TValue[*time.Time]
+	Updated     plugin.TValue[*time.Time]
+}
+
+// createGcpProjectNetworkSecurityServiceAuthorizationPolicy creates a new instance of this resource
+func createGcpProjectNetworkSecurityServiceAuthorizationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkSecurityService.authorizationPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy) MqlName() string {
+	return "gcp.project.networkSecurityService.authorizationPolicy"
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAuthorizationPolicy) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpProjectNetworkSecurityServiceServerTlsPolicy for the gcp.project.networkSecurityService.serverTlsPolicy resource
+type mqlGcpProjectNetworkSecurityServiceServerTlsPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectNetworkSecurityServiceServerTlsPolicyInternal it will be used here
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	AllowOpen         plugin.TValue[bool]
+	MtlsPolicy        plugin.TValue[any]
+	ServerCertificate plugin.TValue[any]
+	Labels            plugin.TValue[map[string]any]
+	Created           plugin.TValue[*time.Time]
+	Updated           plugin.TValue[*time.Time]
+}
+
+// createGcpProjectNetworkSecurityServiceServerTlsPolicy creates a new instance of this resource
+func createGcpProjectNetworkSecurityServiceServerTlsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkSecurityServiceServerTlsPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkSecurityService.serverTlsPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) MqlName() string {
+	return "gcp.project.networkSecurityService.serverTlsPolicy"
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetAllowOpen() *plugin.TValue[bool] {
+	return &c.AllowOpen
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetMtlsPolicy() *plugin.TValue[any] {
+	return &c.MtlsPolicy
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetServerCertificate() *plugin.TValue[any] {
+	return &c.ServerCertificate
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceServerTlsPolicy) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpProjectNetworkSecurityServiceClientTlsPolicy for the gcp.project.networkSecurityService.clientTlsPolicy resource
+type mqlGcpProjectNetworkSecurityServiceClientTlsPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectNetworkSecurityServiceClientTlsPolicyInternal it will be used here
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	Sni                plugin.TValue[string]
+	ClientCertificate  plugin.TValue[any]
+	ServerValidationCa plugin.TValue[[]any]
+	Labels             plugin.TValue[map[string]any]
+	Created            plugin.TValue[*time.Time]
+	Updated            plugin.TValue[*time.Time]
+}
+
+// createGcpProjectNetworkSecurityServiceClientTlsPolicy creates a new instance of this resource
+func createGcpProjectNetworkSecurityServiceClientTlsPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkSecurityServiceClientTlsPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkSecurityService.clientTlsPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceClientTlsPolicy) MqlName() string {
+	return "gcp.project.networkSecurityService.clientTlsPolicy"
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceClientTlsPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceClientTlsPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceClientTlsPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceClientTlsPolicy) GetSni() *plugin.TValue[string] {
+	return &c.Sni
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceClientTlsPolicy) GetClientCertificate() *plugin.TValue[any] {
+	return &c.ClientCertificate
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceClientTlsPolicy) GetServerValidationCa() *plugin.TValue[[]any] {
+	return &c.ServerValidationCa
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceClientTlsPolicy) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceClientTlsPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceClientTlsPolicy) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy for the gcp.project.networkSecurityService.tlsInspectionPolicy resource
+type mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicyInternal it will be used here
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	CaPool             plugin.TValue[string]
+	MinTlsVersion      plugin.TValue[string]
+	TlsFeatureProfile  plugin.TValue[string]
+	CustomTlsFeatures  plugin.TValue[[]any]
+	ExcludePublicCaSet plugin.TValue[bool]
+	TrustConfig        plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
+	Updated            plugin.TValue[*time.Time]
+}
+
+// createGcpProjectNetworkSecurityServiceTlsInspectionPolicy creates a new instance of this resource
+func createGcpProjectNetworkSecurityServiceTlsInspectionPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkSecurityService.tlsInspectionPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) MqlName() string {
+	return "gcp.project.networkSecurityService.tlsInspectionPolicy"
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetCaPool() *plugin.TValue[string] {
+	return &c.CaPool
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetMinTlsVersion() *plugin.TValue[string] {
+	return &c.MinTlsVersion
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetTlsFeatureProfile() *plugin.TValue[string] {
+	return &c.TlsFeatureProfile
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetCustomTlsFeatures() *plugin.TValue[[]any] {
+	return &c.CustomTlsFeatures
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetExcludePublicCaSet() *plugin.TValue[bool] {
+	return &c.ExcludePublicCaSet
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetTrustConfig() *plugin.TValue[string] {
+	return &c.TrustConfig
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceTlsInspectionPolicy) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpProjectNetworkSecurityServiceAddressGroup for the gcp.project.networkSecurityService.addressGroup resource
+type mqlGcpProjectNetworkSecurityServiceAddressGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectNetworkSecurityServiceAddressGroupInternal it will be used here
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Items       plugin.TValue[[]any]
+	Capacity    plugin.TValue[int64]
+	Purpose     plugin.TValue[[]any]
+	Labels      plugin.TValue[map[string]any]
+	Created     plugin.TValue[*time.Time]
+	Updated     plugin.TValue[*time.Time]
+}
+
+// createGcpProjectNetworkSecurityServiceAddressGroup creates a new instance of this resource
+func createGcpProjectNetworkSecurityServiceAddressGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkSecurityServiceAddressGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkSecurityService.addressGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) MqlName() string {
+	return "gcp.project.networkSecurityService.addressGroup"
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) GetItems() *plugin.TValue[[]any] {
+	return &c.Items
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) GetCapacity() *plugin.TValue[int64] {
+	return &c.Capacity
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) GetPurpose() *plugin.TValue[[]any] {
+	return &c.Purpose
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceAddressGroup) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpProjectNetworkSecurityServiceUrlList for the gcp.project.networkSecurityService.urlList resource
+type mqlGcpProjectNetworkSecurityServiceUrlList struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectNetworkSecurityServiceUrlListInternal it will be used here
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Values      plugin.TValue[[]any]
+	Created     plugin.TValue[*time.Time]
+	Updated     plugin.TValue[*time.Time]
+}
+
+// createGcpProjectNetworkSecurityServiceUrlList creates a new instance of this resource
+func createGcpProjectNetworkSecurityServiceUrlList(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectNetworkSecurityServiceUrlList{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.networkSecurityService.urlList", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceUrlList) MqlName() string {
+	return "gcp.project.networkSecurityService.urlList"
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceUrlList) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceUrlList) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceUrlList) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceUrlList) GetValues() *plugin.TValue[[]any] {
+	return &c.Values
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceUrlList) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectNetworkSecurityServiceUrlList) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
 }
 
 // mqlGcpProjectGkeBackupService for the gcp.project.gkeBackupService resource

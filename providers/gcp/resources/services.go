@@ -54,6 +54,7 @@ const (
 	service_sourcerepo          = "sourcerepo.googleapis.com"
 	service_osconfig            = "osconfig.googleapis.com"
 	service_cloudidentity       = "cloudidentity.googleapis.com"
+	service_networksecurity     = "networksecurity.googleapis.com"
 )
 
 func serviceName(name string) string {
