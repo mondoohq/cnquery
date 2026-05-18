@@ -28,14 +28,17 @@ func (g *mqlGcpProject) networkSecurity() (*mqlGcpProjectNetworkSecurityService,
 	}
 	projectId := g.Id.Data
 
-	res, err := CreateResource(g.MqlRuntime, "gcp.project.networkSecurityService", map[string]*llx.RawData{
-		"projectId": llx.StringData(projectId),
-	})
+	// Check service enablement before creating the resource: a transient error
+	// here must not leave a resource cached with serviceEnabled = false, which
+	// would make every child accessor silently return nil on later calls.
+	serviceEnabled, err := g.isServiceEnabled(service_networksecurity)
 	if err != nil {
 		return nil, err
 	}
 
-	serviceEnabled, err := g.isServiceEnabled(service_networksecurity)
+	res, err := CreateResource(g.MqlRuntime, "gcp.project.networkSecurityService", map[string]*llx.RawData{
+		"projectId": llx.StringData(projectId),
+	})
 	if err != nil {
 		return nil, err
 	}
