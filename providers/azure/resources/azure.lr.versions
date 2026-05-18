@@ -2653,6 +2653,7 @@ azure.subscription.networkService.watcher.type 9.0.1
 azure.subscription.networkService.watchers 9.0.1
 azure.subscription.policy 11.2.0
 azure.subscription.policy.assignment 11.2.0
+azure.subscription.policy.assignment.assignmentId 13.11.3
 azure.subscription.policy.assignment.description 11.2.0
 azure.subscription.policy.assignment.enforcementMode 11.2.0
 azure.subscription.policy.assignment.id 11.2.0
@@ -2688,7 +2689,7 @@ azure.subscription.policy.exemption.expiresOn 13.11.3
 azure.subscription.policy.exemption.id 13.11.3
 azure.subscription.policy.exemption.metadata 13.11.3
 azure.subscription.policy.exemption.name 13.11.3
-azure.subscription.policy.exemption.policyAssignmentId 13.11.3
+azure.subscription.policy.exemption.policyAssignment 13.11.3
 azure.subscription.policy.exemption.policyDefinitionReferenceIds 13.11.3
 azure.subscription.policy.exemption.scope 13.11.3
 azure.subscription.policy.exemption.updatedAt 13.11.3

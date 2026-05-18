@@ -6197,6 +6197,8 @@ private azure.subscription.policy @defaults("subscriptionId") {
 private azure.subscription.policy.assignment @defaults("name enforcementMode") {
   // Policy definition ID
   id string
+  // Policy assignment resource ID
+  assignmentId string
   // Policy name
   name string
   // Policy scope
@@ -6270,7 +6272,7 @@ private azure.subscription.policy.exemption @defaults("name exemptionCategory ex
   // Scope (resource, resource group, or subscription) the exemption applies to
   scope string
   // Policy assignment the exemption applies to
-  policyAssignmentId string
+  policyAssignment() azure.subscription.policy.assignment
   // Reference IDs of the grouped policy definitions exempted within the assignment
   policyDefinitionReferenceIds []string
   // Time after which the exemption expires and the policy is enforced again

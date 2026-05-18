@@ -42,6 +42,58 @@ func (a *mqlAzureSubscriptionPolicyAssignment) id() (string, error) {
 	return fmt.Sprintf("azure.subscription.policy/%s/%s", a.Scope.Data, a.Id.Data), nil
 }
 
+// initAzureSubscriptionPolicyAssignment resolves a single policy assignment by
+// its resource ID. The assignments() list path passes every field, so this
+// only fetches when the resource is created from just an assignmentId (e.g.
+// via the typed reference on a policy exemption).
+func initAzureSubscriptionPolicyAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+	idRaw, ok := args["assignmentId"]
+	if !ok {
+		return args, nil, nil
+	}
+	assignmentID, ok := idRaw.Value.(string)
+	if !ok || assignmentID == "" {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	clientFactory, err := policyClientFactory(conn, conn.SubId())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := clientFactory.NewAssignmentsClient().GetByID(context.Background(), assignmentID, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	props := resp.Properties
+	if props == nil {
+		props = &armpolicy.AssignmentProperties{}
+	}
+	parameters, err := convert.JsonToDict(props.Parameters)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	args["id"] = llx.StringDataPtr(props.PolicyDefinitionID)
+	args["assignmentId"] = llx.StringDataPtr(resp.ID)
+	args["name"] = llx.StringDataPtr(props.DisplayName)
+	args["scope"] = llx.StringDataPtr(props.Scope)
+	args["description"] = llx.StringDataPtr(props.Description)
+	args["enforcementMode"] = llx.StringData(string(convert.ToValue(props.EnforcementMode)))
+	args["parameters"] = llx.DictData(parameters)
+
+	return args, nil, nil
+}
+
 func (a *mqlAzureSubscriptionPolicy) assignments() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -66,6 +118,7 @@ func (a *mqlAzureSubscriptionPolicy) assignments() ([]any, error) {
 
 		assignmentData := map[string]*llx.RawData{
 			"id":              llx.StringData(assignment.Properties.PolicyDefinitionID),
+			"assignmentId":    llx.StringData(assignment.ID),
 			"name":            llx.StringData(assignment.Properties.DisplayName),
 			"scope":           llx.StringData(assignment.Properties.Scope),
 			"description":     llx.StringData(assignment.Properties.Description),
@@ -299,7 +352,7 @@ func newMqlPolicyExemption(runtime *plugin.Runtime, exemption *azurePolicyExempt
 		scope = scope[:idx]
 	}
 
-	return CreateResource(runtime, "azure.subscription.policy.exemption", map[string]*llx.RawData{
+	res, err := CreateResource(runtime, "azure.subscription.policy.exemption", map[string]*llx.RawData{
 		"__id":                         llx.StringData(exemption.ID),
 		"id":                           llx.StringData(exemption.ID),
 		"name":                         llx.StringData(exemption.Name),
@@ -307,13 +360,39 @@ func newMqlPolicyExemption(runtime *plugin.Runtime, exemption *azurePolicyExempt
 		"description":                  llx.StringData(exemption.Properties.Description),
 		"exemptionCategory":            llx.StringData(exemption.Properties.ExemptionCategory),
 		"scope":                        llx.StringData(scope),
-		"policyAssignmentId":           llx.StringData(exemption.Properties.PolicyAssignmentID),
 		"policyDefinitionReferenceIds": llx.ArrayData(convert.SliceAnyToInterface(exemption.Properties.PolicyDefinitionReferenceIDs), types.String),
 		"expiresOn":                    llx.TimeDataPtr(exemption.Properties.ExpiresOn),
 		"metadata":                     llx.DictData(metadata),
 		"createdAt":                    llx.TimeDataPtr(exemption.SystemData.CreatedAt),
 		"updatedAt":                    llx.TimeDataPtr(exemption.SystemData.LastModifiedAt),
 	})
+	if err != nil {
+		return nil, err
+	}
+	mqlExemption := res.(*mqlAzureSubscriptionPolicyExemption)
+	mqlExemption.cachePolicyAssignmentID = exemption.Properties.PolicyAssignmentID
+	return mqlExemption, nil
+}
+
+// mqlAzureSubscriptionPolicyExemptionInternal caches the raw policy assignment
+// ID so the typed policyAssignment() reference can resolve it lazily.
+type mqlAzureSubscriptionPolicyExemptionInternal struct {
+	cachePolicyAssignmentID string
+}
+
+func (a *mqlAzureSubscriptionPolicyExemption) policyAssignment() (*mqlAzureSubscriptionPolicyAssignment, error) {
+	if a.cachePolicyAssignmentID == "" {
+		a.PolicyAssignment.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.policy.assignment", map[string]*llx.RawData{
+		"assignmentId": llx.StringData(a.cachePolicyAssignmentID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionPolicyAssignment), nil
 }
 
 func initAzureSubscriptionPolicyComplianceSummary(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
