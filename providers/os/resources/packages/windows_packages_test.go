@@ -492,6 +492,106 @@ func TestFindAndUpdateMsSqlGDR_de_special_characters(t *testing.T) {
 	assert.Equal(t, "pkg:windows/windows/Not%20a%20hotfix@1.0.0?arch=x86", pkg.PUrl)
 }
 
+func TestNormalizeMsSqlVersion(t *testing.T) {
+	cases := []struct {
+		name string
+		in   string
+		want string
+	}{
+		// SP-era: MSI DisplayVersion encodes SP level in the minor; we rewrite
+		// to Microsoft's canonical product version (minor=0). The build
+		// component already identifies the SP (e.g., 6xxx for SQL 2016 SP3).
+		{"SQL 2012 SP1", "11.1.3128.0", "11.0.3128.0"},
+		{"SQL 2012 SP2", "11.2.5058.0", "11.0.5058.0"},
+		{"SQL 2012 SP3", "11.3.6020.0", "11.0.6020.0"},
+		{"SQL 2012 SP4", "11.4.7001.0", "11.0.7001.0"},
+		{"SQL 2014 SP1", "12.1.4100.1", "12.0.4100.1"},
+		{"SQL 2014 SP2", "12.2.5000.0", "12.0.5000.0"},
+		{"SQL 2014 SP3", "12.3.6433.1", "12.0.6433.1"},
+		{"SQL 2016 SP1", "13.1.4001.0", "13.0.4001.0"},
+		{"SQL 2016 SP2", "13.2.5108.50", "13.0.5108.50"},
+		{"SQL 2016 SP3 hotfix 6485", "13.3.6485.1", "13.0.6485.1"},
+
+		// Already canonical: pass through unchanged.
+		{"SQL 2016 RTM/SP3-GDR canonical", "13.0.6485.1", "13.0.6485.1"},
+		{"SQL 2014 RTM canonical", "12.0.2000.8", "12.0.2000.8"},
+		{"SQL 2012 RTM canonical", "11.0.2100.60", "11.0.2100.60"},
+
+		// Post-SP-era (Modern Servicing Model, no Service Packs): unchanged.
+		{"SQL 2017 GDR", "14.0.2110.2", "14.0.2110.2"},
+		{"SQL 2017 CU31+GDR", "14.0.3530.2", "14.0.3530.2"},
+		{"SQL 2019 GDR", "15.0.2170.1", "15.0.2170.1"},
+		{"SQL 2019 CU32+GDR", "15.0.4470.1", "15.0.4470.1"},
+		{"SQL 2022 GDR", "16.0.1180.1", "16.0.1180.1"},
+		{"SQL 2022 CU24+GDR", "16.0.4252.3", "16.0.4252.3"},
+		{"SQL 2025 GDR", "17.0.1115.1", "17.0.1115.1"},
+		{"SQL 2025 CU4+GDR", "17.0.4040.1", "17.0.4040.1"},
+
+		// Out of guarded major range: do not touch SQL 2008 / 2008 R2 or any
+		// pre-2012 version. They had Service Packs too, but they're EOL and
+		// the registry conventions on those binaries were different — leave
+		// the original DisplayVersion intact rather than risk a wrong rewrite.
+		{"SQL 2008 R2 SP3", "10.50.6000.34", "10.50.6000.34"},
+		{"SQL 2008 SP4", "10.0.6000.29", "10.0.6000.29"},
+
+		// Defensive: anything that doesn't match the strict 4-component shape
+		// passes through. We only rewrite when we're confident about the form.
+		{"empty", "", ""},
+		{"3-component", "13.3.6485", "13.3.6485"},
+		{"5-component", "13.3.6485.1.0", "13.3.6485.1.0"},
+		{"non-numeric build", "13.3.6485x.1", "13.3.6485x.1"},
+		{"minor 0 already", "13.0.6300.2", "13.0.6300.2"},
+		{"minor 5 (out of SP range)", "13.5.6485.1", "13.5.6485.1"},
+		{"leading whitespace", " 13.3.6485.1", " 13.3.6485.1"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := normalizeMsSqlVersion(tc.in)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func TestFindAndUpdateMsSqlHotfixes_NormalizesSqlServer2016SP3(t *testing.T) {
+	// Reproduces the SQL 2016 SP3 case from the field: MSI registers each
+	// hotfix's DisplayVersion as 13.3.<build>.<rev>, but advisory data uses
+	// the canonical 13.0.<build>.<rev>. updateMsSqlPackages must stamp the
+	// canonical form so KB advisories compare correctly.
+	packages := []Package{
+		{Name: "SQL Server 2016 Database Engine Services", Version: "13.0.1601.5", PUrl: "pkg:windows/windows/SQL%20Server%202016%20Database%20Engine%20Services@13.0.1601.5?arch=x64"},
+		{Name: "SQL Server 2016 Shared Management Objects", Version: "13.0.1601.5", PUrl: "pkg:windows/windows/SQL%20Server%202016%20Shared%20Management%20Objects@13.0.1601.5?arch=x64"},
+		{Name: "Hotfix 6480 for Microsoft SQL Server 2016 (KB5077474) (64-bit)", Version: "13.3.6480.4", PUrl: "pkg:windows/windows/Hotfix%206480%20for%20Microsoft%20SQL%20Server%202016%20%28KB5077474%29%20%2864-bit%29@13.3.6480.4?arch=x64"},
+		{Name: "Hotfix 6485 for Microsoft SQL Server 2016 (KB5084821) (64-bit)", Version: "13.3.6485.1", PUrl: "pkg:windows/windows/Hotfix%206485%20for%20Microsoft%20SQL%20Server%202016%20%28KB5084821%29%20%2864-bit%29@13.3.6485.1?arch=x64"},
+	}
+
+	hotfixes := findMsSqlHotfixes(packages)
+	require.Len(t, hotfixes, 2)
+	latest := hotfixes[len(hotfixes)-1]
+	require.Equal(t, "13.3.6485.1", latest.Version, "hotfix's own DisplayVersion is left untouched")
+
+	updated := updateMsSqlPackages(packages, latest)
+
+	// Engine package is stamped with the normalized canonical version
+	// (13.0.6485.1, matching Microsoft's build-versions table for KB5084821).
+	pkg := findPkgByName(updated, "SQL Server 2016 Database Engine Services")
+	require.NotNil(t, pkg)
+	assert.Equal(t, "13.0.6485.1", pkg.Version)
+	assert.Equal(t, "pkg:windows/windows/SQL%20Server%202016%20Database%20Engine%20Services@13.0.6485.1?arch=x64", pkg.PUrl)
+
+	// Other engine-bound SQL Server packages get the same canonical stamping.
+	pkg = findPkgByName(updated, "SQL Server 2016 Shared Management Objects")
+	require.NotNil(t, pkg)
+	assert.Equal(t, "13.0.6485.1", pkg.Version)
+
+	// The hotfix package itself keeps its MSI DisplayVersion — it isn't
+	// engine-bound (different currentVersion) so updateMsSqlPackages doesn't
+	// rewrite it, and consumers identify the patch via the KB-encoded name.
+	pkg = findPkgByName(updated, "Hotfix 6485 for Microsoft SQL Server 2016 (KB5084821) (64-bit)")
+	require.NotNil(t, pkg)
+	assert.Equal(t, "13.3.6485.1", pkg.Version)
+}
+
 func TestGetPackageFromRegistryKeyItemsWow6432Node(t *testing.T) {
 	items := []registry.RegistryKeyItem{
 		{

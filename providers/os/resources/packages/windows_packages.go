@@ -734,17 +734,52 @@ func updateMsSqlPackages(pkgs []Package, latestMsSqlUpdate Package) []Package {
 			break
 		}
 	}
-	log.Debug().Str("currentVersion", currentVersion).Msg("Updating SQL Server packages")
+	// MSI registers SP-era SQL Server hotfix DisplayVersions with the SP level
+	// baked into the minor component (13.3.x for SP3, etc.). Microsoft's
+	// canonical product version uses .0 in the minor and encodes the SP in the
+	// build component instead — that's the form MSRC publishes and the form
+	// advisory consumers expect. Normalize before stamping so the engine
+	// package version compares correctly against advisory ranges.
+	normalizedVersion := normalizeMsSqlVersion(latestMsSqlUpdate.Version)
+	log.Debug().Str("currentVersion", currentVersion).Str("normalizedVersion", normalizedVersion).Msg("Updating SQL Server packages")
 
 	// Find other SQL Server packages and update them to the latest hotfix version
 	for i, pkg := range pkgs {
 		if strings.Contains(pkg.Name, "SQL Server") && pkg.Version == currentVersion {
-			pkgs[i].Version = latestMsSqlUpdate.Version
-			log.Debug().Str("package", pkg.Name).Str("version", latestMsSqlUpdate.Version).Msg("Updated SQL Server package")
-			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, latestMsSqlUpdate.Version, 1)
+			pkgs[i].Version = normalizedVersion
+			log.Debug().Str("package", pkg.Name).Str("version", normalizedVersion).Msg("Updated SQL Server package")
+			pkgs[i].PUrl = strings.Replace(pkgs[i].PUrl, currentVersion, normalizedVersion, 1)
 		}
 	}
 	return pkgs
+}
+
+// msSqlSpVersionRegex matches the MSI DisplayVersion form for SP-era SQL Server
+// (2012=11, 2014=12, 2016=13). The minor component carries the SP level
+// (1–4); the build component carries the canonical patch level Microsoft's
+// docs and the MSRC OSV both use.
+var msSqlSpVersionRegex = regexp.MustCompile(`^(1[1-3])\.([1-4])\.(\d+)\.(\d+)$`)
+
+// normalizeMsSqlVersion rewrites the SP-era MSI DisplayVersion
+// `<major>.<SP>.<build>.<rev>` to the canonical Microsoft product version
+// `<major>.0.<build>.<rev>` for SQL Server 2012 / 2014 / 2016. Other versions
+// (SQL 2017+, which dropped Service Packs in the Modern Servicing Model, plus
+// any input the regex doesn't recognize) are returned unchanged.
+//
+// The conversion is lossless: the SP level can be recovered from the build
+// component (4xxx=SP1, 5xxx=SP2, 6xxx=SP3, 7xxx=SP4 for SQL 2016 for
+// example), so the .0 form is equally informative and matches what Microsoft
+// records in its build-versions tables and what MSRC publishes.
+//
+// Refs:
+//   - https://learn.microsoft.com/troubleshoot/sql/releases/sqlserver-2016/build-versions
+//   - https://learn.microsoft.com/troubleshoot/sql/releases/download-and-install-latest-updates
+func normalizeMsSqlVersion(version string) string {
+	m := msSqlSpVersionRegex.FindStringSubmatch(version)
+	if m == nil {
+		return version
+	}
+	return m[1] + ".0." + m[3] + "." + m[4]
 }
 
 // createPackage creates a new package with the given parameters
