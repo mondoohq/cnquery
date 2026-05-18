@@ -944,7 +944,7 @@ func (p *Provider) binPath() string {
 func MustLoadSchema(name string, data []byte) *resources.Schema {
 	var res resources.Schema
 	if err := json.Unmarshal(data, &res); err != nil {
-		panic("failed to embed schema for " + name)
+		panic("failed to embed schema for " + name + ": " + err.Error())
 	}
 	return &res
 }
@@ -952,7 +952,7 @@ func MustLoadSchema(name string, data []byte) *resources.Schema {
 func MustLoadSchemaFromFile(name string, path string) *resources.Schema {
 	raw, err := os.ReadFile(path)
 	if err != nil {
-		panic("cannot read schema file: " + path)
+		panic("cannot read schema file: " + path + ": " + err.Error())
 	}
 	return MustLoadSchema(name, raw)
 }
