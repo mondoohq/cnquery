@@ -6183,6 +6183,14 @@ private azure.subscription.policy @defaults("subscriptionId") {
   subscriptionId string
   // List of policy assignments in the subscription
   assignments () []azure.subscription.policy.assignment
+  // List of policy definitions available in the subscription
+  definitions() []azure.subscription.policy.definition
+  // List of policy initiatives (set definitions) available in the subscription
+  setDefinitions() []azure.subscription.policy.setDefinition
+  // List of policy exemptions in the subscription
+  exemptions() []azure.subscription.policy.exemption
+  // Aggregate policy compliance summary for the subscription
+  complianceSummary() azure.subscription.policy.complianceSummary
 }
 
 // Azure Policy assignment
@@ -6199,6 +6207,96 @@ private azure.subscription.policy.assignment @defaults("name enforcementMode") {
   enforcementMode string
   // Policy parameters
   parameters dict
+}
+
+// Azure Policy definition
+private azure.subscription.policy.definition @defaults("name displayName policyType") {
+  // Policy definition resource ID
+  id string
+  // Policy definition name
+  name string
+  // Display name of the policy definition
+  displayName string
+  // Description of what the policy enforces
+  description string
+  // Origin of the definition: BuiltIn, Custom, Static, or NotSpecified
+  policyType string
+  // Resource types the policy evaluates, for example All, Indexed, or a Microsoft.*.Data mode
+  mode string
+  // Policy rule expressing the if/then condition and resulting effect
+  policyRule dict
+  // Parameter definitions accepted by the policy rule
+  parameters dict
+  // Open-ended metadata such as category and version information
+  metadata dict
+  // Definition version in #.#.# format
+  version string
+}
+
+// Azure Policy initiative
+private azure.subscription.policy.setDefinition @defaults("name displayName policyType") {
+  // Policy set definition resource ID
+  id string
+  // Policy set definition name
+  name string
+  // Display name of the initiative
+  displayName string
+  // Description of the initiative
+  description string
+  // Origin of the initiative: BuiltIn, Custom, Static, or NotSpecified
+  policyType string
+  // Policy definitions grouped by this initiative, each with its parameters and reference ID
+  policyDefinitions []dict
+  // Parameter definitions shared across the grouped policy definitions
+  parameters dict
+  // Open-ended metadata such as category and version information
+  metadata dict
+  // Initiative version in #.#.# format
+  version string
+}
+
+// Azure Policy exemption
+private azure.subscription.policy.exemption @defaults("name exemptionCategory expiresOn") {
+  // Policy exemption resource ID
+  id string
+  // Policy exemption name
+  name string
+  // Display name of the exemption
+  displayName string
+  // Reason the exemption was granted
+  description string
+  // Exemption category: Waiver or Mitigated
+  exemptionCategory string
+  // Scope (resource, resource group, or subscription) the exemption applies to
+  scope string
+  // Policy assignment the exemption applies to
+  policyAssignmentId string
+  // Reference IDs of the grouped policy definitions exempted within the assignment
+  policyDefinitionReferenceIds []string
+  // Time after which the exemption expires and the policy is enforced again
+  expiresOn time
+  // Open-ended metadata attached to the exemption
+  metadata dict
+  // Time the exemption was created
+  createdAt time
+  // Time the exemption was last modified
+  updatedAt time
+}
+
+// Azure Policy compliance summary
+private azure.subscription.policy.complianceSummary @defaults("nonCompliantResources nonCompliantPolicies") {
+  // Subscription identifier
+  subscriptionId string
+  // Number of resources currently non-compliant with assigned policies
+  nonCompliantResources() int
+  // Number of policies with at least one non-compliant resource
+  nonCompliantPolicies() int
+  // Resource counts keyed by compliance state, for example Compliant, NonCompliant, Conflict, Exempt
+  resourceComplianceCounts() map[string]int
+  // Policy counts keyed by compliance state
+  policyComplianceCounts() map[string]int
+  // Per-assignment compliance breakdown with non-compliant resource and policy counts
+  assignments() []dict
 }
 
 // Azure IoT Hub Service

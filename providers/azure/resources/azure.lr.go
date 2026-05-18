@@ -242,6 +242,10 @@ const (
 	ResourceAzureSubscriptionAdvisorServiceSecurityScore                                         string = "azure.subscription.advisorService.securityScore"
 	ResourceAzureSubscriptionPolicy                                                              string = "azure.subscription.policy"
 	ResourceAzureSubscriptionPolicyAssignment                                                    string = "azure.subscription.policy.assignment"
+	ResourceAzureSubscriptionPolicyDefinition                                                    string = "azure.subscription.policy.definition"
+	ResourceAzureSubscriptionPolicySetDefinition                                                 string = "azure.subscription.policy.setDefinition"
+	ResourceAzureSubscriptionPolicyExemption                                                     string = "azure.subscription.policy.exemption"
+	ResourceAzureSubscriptionPolicyComplianceSummary                                             string = "azure.subscription.policy.complianceSummary"
 	ResourceAzureSubscriptionIotService                                                          string = "azure.subscription.iotService"
 	ResourceAzureSubscriptionIotServiceIotHub                                                    string = "azure.subscription.iotService.iotHub"
 	ResourceAzureSubscriptionCacheService                                                        string = "azure.subscription.cacheService"
@@ -1255,6 +1259,22 @@ func init() {
 		"azure.subscription.policy.assignment": {
 			// to override args, implement: initAzureSubscriptionPolicyAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionPolicyAssignment,
+		},
+		"azure.subscription.policy.definition": {
+			// to override args, implement: initAzureSubscriptionPolicyDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionPolicyDefinition,
+		},
+		"azure.subscription.policy.setDefinition": {
+			// to override args, implement: initAzureSubscriptionPolicySetDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionPolicySetDefinition,
+		},
+		"azure.subscription.policy.exemption": {
+			// to override args, implement: initAzureSubscriptionPolicyExemption(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionPolicyExemption,
+		},
+		"azure.subscription.policy.complianceSummary": {
+			Init:   initAzureSubscriptionPolicyComplianceSummary,
+			Create: createAzureSubscriptionPolicyComplianceSummary,
 		},
 		"azure.subscription.iotService": {
 			Init:   initAzureSubscriptionIotService,
@@ -9084,6 +9104,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.policy.assignments": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPolicy).GetAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.policy.assignment")))
 	},
+	"azure.subscription.policy.definitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicy).GetDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.policy.definition")))
+	},
+	"azure.subscription.policy.setDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicy).GetSetDefinitions()).ToDataRes(types.Array(types.Resource("azure.subscription.policy.setDefinition")))
+	},
+	"azure.subscription.policy.exemptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicy).GetExemptions()).ToDataRes(types.Array(types.Resource("azure.subscription.policy.exemption")))
+	},
+	"azure.subscription.policy.complianceSummary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicy).GetComplianceSummary()).ToDataRes(types.Resource("azure.subscription.policy.complianceSummary"))
+	},
 	"azure.subscription.policy.assignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPolicyAssignment).GetId()).ToDataRes(types.String)
 	},
@@ -9101,6 +9133,117 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.policy.assignment.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPolicyAssignment).GetParameters()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.policy.definition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyDefinition).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.definition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyDefinition).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.definition.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyDefinition).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.definition.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyDefinition).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.definition.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyDefinition).GetPolicyType()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.definition.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyDefinition).GetMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.definition.policyRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyDefinition).GetPolicyRule()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.policy.definition.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyDefinition).GetParameters()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.policy.definition.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyDefinition).GetMetadata()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.policy.definition.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyDefinition).GetVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.setDefinition.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicySetDefinition).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.setDefinition.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicySetDefinition).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.setDefinition.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicySetDefinition).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.setDefinition.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicySetDefinition).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.setDefinition.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicySetDefinition).GetPolicyType()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.setDefinition.policyDefinitions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicySetDefinition).GetPolicyDefinitions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.policy.setDefinition.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicySetDefinition).GetParameters()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.policy.setDefinition.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicySetDefinition).GetMetadata()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.policy.setDefinition.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicySetDefinition).GetVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.exemption.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.exemption.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.exemption.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.exemption.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.exemption.exemptionCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetExemptionCategory()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.exemption.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetScope()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.exemption.policyAssignmentId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetPolicyAssignmentId()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.exemption.policyDefinitionReferenceIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetPolicyDefinitionReferenceIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.policy.exemption.expiresOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetExpiresOn()).ToDataRes(types.Time)
+	},
+	"azure.subscription.policy.exemption.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetMetadata()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.policy.exemption.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.policy.exemption.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyExemption).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.policy.complianceSummary.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyComplianceSummary).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.policy.complianceSummary.nonCompliantResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyComplianceSummary).GetNonCompliantResources()).ToDataRes(types.Int)
+	},
+	"azure.subscription.policy.complianceSummary.nonCompliantPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyComplianceSummary).GetNonCompliantPolicies()).ToDataRes(types.Int)
+	},
+	"azure.subscription.policy.complianceSummary.resourceComplianceCounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyComplianceSummary).GetResourceComplianceCounts()).ToDataRes(types.Map(types.String, types.Int))
+	},
+	"azure.subscription.policy.complianceSummary.policyComplianceCounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyComplianceSummary).GetPolicyComplianceCounts()).ToDataRes(types.Map(types.String, types.Int))
+	},
+	"azure.subscription.policy.complianceSummary.assignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPolicyComplianceSummary).GetAssignments()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.iotService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionIotService).GetSubscriptionId()).ToDataRes(types.String)
@@ -22817,6 +22960,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionPolicy).Assignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.policy.definitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicy).Definitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.setDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicy).SetDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicy).Exemptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.complianceSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicy).ComplianceSummary, ok = plugin.RawToTValue[*mqlAzureSubscriptionPolicyComplianceSummary](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.policy.assignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPolicyAssignment).__id, ok = v.Value.(string)
 		return
@@ -22843,6 +23002,170 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.policy.assignment.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPolicyAssignment).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.definition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.policy.definition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.definition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.definition.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.definition.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.definition.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.definition.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.definition.policyRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).PolicyRule, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.definition.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.definition.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.definition.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyDefinition).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.setDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicySetDefinition).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.policy.setDefinition.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicySetDefinition).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.setDefinition.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicySetDefinition).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.setDefinition.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicySetDefinition).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.setDefinition.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicySetDefinition).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.setDefinition.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicySetDefinition).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.setDefinition.policyDefinitions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicySetDefinition).PolicyDefinitions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.setDefinition.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicySetDefinition).Parameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.setDefinition.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicySetDefinition).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.setDefinition.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicySetDefinition).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.policy.exemption.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.exemptionCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).ExemptionCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.policyAssignmentId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).PolicyAssignmentId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.policyDefinitionReferenceIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).PolicyDefinitionReferenceIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.expiresOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).ExpiresOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.exemption.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyExemption).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.complianceSummary.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyComplianceSummary).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.policy.complianceSummary.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyComplianceSummary).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.complianceSummary.nonCompliantResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyComplianceSummary).NonCompliantResources, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.complianceSummary.nonCompliantPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyComplianceSummary).NonCompliantPolicies, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.complianceSummary.resourceComplianceCounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyComplianceSummary).ResourceComplianceCounts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.complianceSummary.policyComplianceCounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyComplianceSummary).PolicyComplianceCounts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.policy.complianceSummary.assignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPolicyComplianceSummary).Assignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.iotService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53165,8 +53488,12 @@ type mqlAzureSubscriptionPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionPolicyInternal it will be used here
-	SubscriptionId plugin.TValue[string]
-	Assignments    plugin.TValue[[]any]
+	SubscriptionId    plugin.TValue[string]
+	Assignments       plugin.TValue[[]any]
+	Definitions       plugin.TValue[[]any]
+	SetDefinitions    plugin.TValue[[]any]
+	Exemptions        plugin.TValue[[]any]
+	ComplianceSummary plugin.TValue[*mqlAzureSubscriptionPolicyComplianceSummary]
 }
 
 // createAzureSubscriptionPolicy creates a new instance of this resource
@@ -53218,6 +53545,70 @@ func (c *mqlAzureSubscriptionPolicy) GetAssignments() *plugin.TValue[[]any] {
 		}
 
 		return c.assignments()
+	})
+}
+
+func (c *mqlAzureSubscriptionPolicy) GetDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Definitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.policy", c.__id, "definitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.definitions()
+	})
+}
+
+func (c *mqlAzureSubscriptionPolicy) GetSetDefinitions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SetDefinitions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.policy", c.__id, "setDefinitions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.setDefinitions()
+	})
+}
+
+func (c *mqlAzureSubscriptionPolicy) GetExemptions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Exemptions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.policy", c.__id, "exemptions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exemptions()
+	})
+}
+
+func (c *mqlAzureSubscriptionPolicy) GetComplianceSummary() *plugin.TValue[*mqlAzureSubscriptionPolicyComplianceSummary] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionPolicyComplianceSummary](&c.ComplianceSummary, func() (*mqlAzureSubscriptionPolicyComplianceSummary, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.policy", c.__id, "complianceSummary")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionPolicyComplianceSummary), nil
+			}
+		}
+
+		return c.complianceSummary()
 	})
 }
 
@@ -53293,6 +53684,362 @@ func (c *mqlAzureSubscriptionPolicyAssignment) GetEnforcementMode() *plugin.TVal
 
 func (c *mqlAzureSubscriptionPolicyAssignment) GetParameters() *plugin.TValue[any] {
 	return &c.Parameters
+}
+
+// mqlAzureSubscriptionPolicyDefinition for the azure.subscription.policy.definition resource
+type mqlAzureSubscriptionPolicyDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionPolicyDefinitionInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	PolicyType  plugin.TValue[string]
+	Mode        plugin.TValue[string]
+	PolicyRule  plugin.TValue[any]
+	Parameters  plugin.TValue[any]
+	Metadata    plugin.TValue[any]
+	Version     plugin.TValue[string]
+}
+
+// createAzureSubscriptionPolicyDefinition creates a new instance of this resource
+func createAzureSubscriptionPolicyDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionPolicyDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.policy.definition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) MqlName() string {
+	return "azure.subscription.policy.definition"
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) GetPolicyRule() *plugin.TValue[any] {
+	return &c.PolicyRule
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) GetParameters() *plugin.TValue[any] {
+	return &c.Parameters
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) GetMetadata() *plugin.TValue[any] {
+	return &c.Metadata
+}
+
+func (c *mqlAzureSubscriptionPolicyDefinition) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+// mqlAzureSubscriptionPolicySetDefinition for the azure.subscription.policy.setDefinition resource
+type mqlAzureSubscriptionPolicySetDefinition struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionPolicySetDefinitionInternal it will be used here
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	Description       plugin.TValue[string]
+	PolicyType        plugin.TValue[string]
+	PolicyDefinitions plugin.TValue[[]any]
+	Parameters        plugin.TValue[any]
+	Metadata          plugin.TValue[any]
+	Version           plugin.TValue[string]
+}
+
+// createAzureSubscriptionPolicySetDefinition creates a new instance of this resource
+func createAzureSubscriptionPolicySetDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionPolicySetDefinition{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.policy.setDefinition", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) MqlName() string {
+	return "azure.subscription.policy.setDefinition"
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) GetPolicyDefinitions() *plugin.TValue[[]any] {
+	return &c.PolicyDefinitions
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) GetParameters() *plugin.TValue[any] {
+	return &c.Parameters
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) GetMetadata() *plugin.TValue[any] {
+	return &c.Metadata
+}
+
+func (c *mqlAzureSubscriptionPolicySetDefinition) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+// mqlAzureSubscriptionPolicyExemption for the azure.subscription.policy.exemption resource
+type mqlAzureSubscriptionPolicyExemption struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionPolicyExemptionInternal it will be used here
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	DisplayName                  plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	ExemptionCategory            plugin.TValue[string]
+	Scope                        plugin.TValue[string]
+	PolicyAssignmentId           plugin.TValue[string]
+	PolicyDefinitionReferenceIds plugin.TValue[[]any]
+	ExpiresOn                    plugin.TValue[*time.Time]
+	Metadata                     plugin.TValue[any]
+	CreatedAt                    plugin.TValue[*time.Time]
+	UpdatedAt                    plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionPolicyExemption creates a new instance of this resource
+func createAzureSubscriptionPolicyExemption(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionPolicyExemption{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.policy.exemption", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) MqlName() string {
+	return "azure.subscription.policy.exemption"
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetExemptionCategory() *plugin.TValue[string] {
+	return &c.ExemptionCategory
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetPolicyAssignmentId() *plugin.TValue[string] {
+	return &c.PolicyAssignmentId
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetPolicyDefinitionReferenceIds() *plugin.TValue[[]any] {
+	return &c.PolicyDefinitionReferenceIds
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetExpiresOn() *plugin.TValue[*time.Time] {
+	return &c.ExpiresOn
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetMetadata() *plugin.TValue[any] {
+	return &c.Metadata
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAzureSubscriptionPolicyExemption) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAzureSubscriptionPolicyComplianceSummary for the azure.subscription.policy.complianceSummary resource
+type mqlAzureSubscriptionPolicyComplianceSummary struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionPolicyComplianceSummaryInternal
+	SubscriptionId           plugin.TValue[string]
+	NonCompliantResources    plugin.TValue[int64]
+	NonCompliantPolicies     plugin.TValue[int64]
+	ResourceComplianceCounts plugin.TValue[map[string]any]
+	PolicyComplianceCounts   plugin.TValue[map[string]any]
+	Assignments              plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionPolicyComplianceSummary creates a new instance of this resource
+func createAzureSubscriptionPolicyComplianceSummary(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionPolicyComplianceSummary{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.policy.complianceSummary", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionPolicyComplianceSummary) MqlName() string {
+	return "azure.subscription.policy.complianceSummary"
+}
+
+func (c *mqlAzureSubscriptionPolicyComplianceSummary) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionPolicyComplianceSummary) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionPolicyComplianceSummary) GetNonCompliantResources() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NonCompliantResources, func() (int64, error) {
+		return c.nonCompliantResources()
+	})
+}
+
+func (c *mqlAzureSubscriptionPolicyComplianceSummary) GetNonCompliantPolicies() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NonCompliantPolicies, func() (int64, error) {
+		return c.nonCompliantPolicies()
+	})
+}
+
+func (c *mqlAzureSubscriptionPolicyComplianceSummary) GetResourceComplianceCounts() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ResourceComplianceCounts, func() (map[string]any, error) {
+		return c.resourceComplianceCounts()
+	})
+}
+
+func (c *mqlAzureSubscriptionPolicyComplianceSummary) GetPolicyComplianceCounts() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.PolicyComplianceCounts, func() (map[string]any, error) {
+		return c.policyComplianceCounts()
+	})
+}
+
+func (c *mqlAzureSubscriptionPolicyComplianceSummary) GetAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Assignments, func() ([]any, error) {
+		return c.assignments()
+	})
 }
 
 // mqlAzureSubscriptionIotService for the azure.subscription.iotService resource
