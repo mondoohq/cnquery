@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/docker/docker/client"
@@ -16,61 +15,30 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
-	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/uuid"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	containerimage "go.mondoo.com/mql/v13/providers/os/connection/container/image"
 	"go.mondoo.com/mql/v13/providers/os/connection/tar"
 )
 
-// resolveRemoteImage returns the digest the registry currently advertises for
-// imageRef. Tests use this so assertions stay valid when the upstream tag is
-// rebuilt and the manifest digest changes.
-func resolveRemoteImage(t *testing.T, imageRef string) string {
-	t.Helper()
-	ref, err := name.ParseReference(imageRef)
-	require.NoError(t, err)
-	desc, err := containerimage.GetImageDescriptor(ref)
-	require.NoError(t, err)
-	return desc.Digest.String()
-}
+// The two TestAssetNameForRemoteImages* tests below use a tag reference
+// (mirror.gcr.io/library/busybox:1.36.1) rather than a digest reference, on
+// purpose: the goal is to exercise the tag→digest resolution path in
+// NewContainerImageConnection. The expected digest is hardcoded in the
+// assertions so a helper regression (wrong short-hash length, stray "sha256:"
+// prefix, etc.) would still be caught. If mirror.gcr.io ever rebuilds the
+// tag, update the hardcoded digest to match — this is preferable to a
+// dynamic lookup, which would make the assertions tautological against the
+// production helpers.
+// mirror.gcr.io is Google's anonymous pull-through cache for Docker Hub and
+// is not bound to docker-credential-gcloud, which made the previous gcr.io
+// fixture flake on CI.
 
-// Assertion strategy (read this before you "simplify" the assertions below):
-//
-// These tests exercise the remote-registry branch of NewContainerImageConnection
-// and verify it populates asset.Name and asset.PlatformIds in the format
-// `<repo>@<12-hex-short-digest>` and `//platformid.api.mondoo.app/runtime/docker/images/<64-hex-digest>`.
-//
-// Previously the expected digest was hardcoded, which made the test brittle
-// against `mirror.gcr.io` rebuilding the tag. The "obvious" fix is to recompute
-// the expected name with `containerid.ShortContainerImageID` /
-// `containerid.MondooContainerImageID` — but those are exactly the helpers the
-// production code uses, so doing that makes the assertions tautological: a
-// regression in either helper (wrong truncation length, prefix typo, stray
-// "sha256:") would be hidden because both sides would compute the same wrong
-// value. We deliberately stick to literal string composition and explicit
-// length checks here so that regressions in those helpers fail this test.
-//
-// The image digest is still fetched dynamically from the registry so the test
-// survives tag rebuilds.
-
-// TestAssetNameForRemoteImages depends on mirror.gcr.io. mirror.gcr.io is
-// Google's anonymous pull-through cache for Docker Hub, picked because it is
-// not bound to the docker-credential-gcloud helper that intermittently fails
-// on CI when the GHA OIDC token can't be refreshed.
 // To test this specific case, we cannot use a stored image, we need to call remote.Get
 func TestAssetNameForRemoteImages(t *testing.T) {
-	const imageRef = "mirror.gcr.io/library/busybox:1.36.1"
-	const imageRepo = "mirror.gcr.io/library/busybox"
-	imgDigest := resolveRemoteImage(t, imageRef)
-	digestHex := strings.TrimPrefix(imgDigest, "sha256:")
-	require.Len(t, digestHex, 64, "expected 64 hex chars after sha256: prefix, got %q", imgDigest)
-	shortDigest := digestHex[:12]
-
 	var err error
 	var conn *tar.Connection
 	var asset *inventory.Asset
@@ -79,7 +47,7 @@ func TestAssetNameForRemoteImages(t *testing.T) {
 
 	config := &inventory.Config{
 		Type: "docker-image",
-		Host: imageRef,
+		Host: "mirror.gcr.io/library/busybox:1.36.1",
 	}
 	asset = &inventory.Asset{
 		Connections: []*inventory.Config{config},
@@ -96,22 +64,12 @@ func TestAssetNameForRemoteImages(t *testing.T) {
 	require.NotNil(t, conn)
 
 	assert.True(t, config.DelayDiscovery)
-	// Literal composition on purpose — see "Assertion strategy" comment above.
-	assert.Equal(t, imageRepo+"@"+shortDigest, asset.Name)
-	assert.Contains(t, asset.PlatformIds, "//platformid.api.mondoo.app/runtime/docker/images/"+digestHex)
+	assert.Equal(t, "mirror.gcr.io/library/busybox@73aaf090f3d8", asset.Name)
+	assert.Contains(t, asset.PlatformIds, "//platformid.api.mondoo.app/runtime/docker/images/73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662")
 }
 
-// TestAssetNameForRemoteImages_DisableDelayedDiscovery depends on mirror.gcr.io
-// for the same reason described on TestAssetNameForRemoteImages.
 // To test this specific case, we cannot use a stored image, we need to call remote.Get
 func TestAssetNameForRemoteImages_DisableDelayedDiscovery(t *testing.T) {
-	const imageRef = "mirror.gcr.io/library/busybox:1.36.1"
-	const imageRepo = "mirror.gcr.io/library/busybox"
-	imgDigest := resolveRemoteImage(t, imageRef)
-	digestHex := strings.TrimPrefix(imgDigest, "sha256:")
-	require.Len(t, digestHex, 64, "expected 64 hex chars after sha256: prefix, got %q", imgDigest)
-	shortDigest := digestHex[:12]
-
 	var err error
 	var conn *tar.Connection
 	var asset *inventory.Asset
@@ -120,7 +78,7 @@ func TestAssetNameForRemoteImages_DisableDelayedDiscovery(t *testing.T) {
 
 	config := &inventory.Config{
 		Type: "docker-image",
-		Host: imageRef,
+		Host: "mirror.gcr.io/library/busybox:1.36.1",
 		Options: map[string]string{
 			plugin.DISABLE_DELAYED_DISCOVERY_OPTION: "true",
 		},
@@ -140,9 +98,8 @@ func TestAssetNameForRemoteImages_DisableDelayedDiscovery(t *testing.T) {
 	require.NotNil(t, conn)
 
 	assert.False(t, config.DelayDiscovery)
-	// Literal composition on purpose — see "Assertion strategy" comment above.
-	assert.Equal(t, imageRepo+"@"+shortDigest, asset.Name)
-	assert.Contains(t, asset.PlatformIds, "//platformid.api.mondoo.app/runtime/docker/images/"+digestHex)
+	assert.Equal(t, "mirror.gcr.io/library/busybox@73aaf090f3d8", asset.Name)
+	assert.Contains(t, asset.PlatformIds, "//platformid.api.mondoo.app/runtime/docker/images/73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662")
 }
 
 func fetchAndCreateImage(t *testing.T, ctx context.Context, dClient *client.Client, img string) container.CreateResponse {
