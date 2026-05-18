@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
 	"go.mondoo.com/mql/v13/types"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
 	osconfig "google.golang.org/api/osconfig/v1"
@@ -103,7 +104,10 @@ func (g *mqlGcpProjectOsConfigService) patchDeployments() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
 	client, err := conn.Client(osconfig.CloudPlatformScope)
 	if err != nil {
 		return nil, err
@@ -177,7 +181,10 @@ func (g *mqlGcpProjectOsConfigService) osPolicyAssignments() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
 	client, err := conn.Client(osconfig.CloudPlatformScope)
 	if err != nil {
 		return nil, err
@@ -208,17 +215,20 @@ func (g *mqlGcpProjectOsConfigService) osPolicyAssignments() ([]any, error) {
 		return nil, err
 	}
 
+	// Fan out across zones, but cap concurrency so a project with many zones
+	// doesn't trigger GCP API rate-limiting. A non-skippable error from any
+	// zone fails the whole call so the caller never sees partial results.
 	var (
 		res []any
 		mux sync.Mutex
-		wg  sync.WaitGroup
 	)
-	wg.Add(len(zones))
+	grp, grpCtx := errgroup.WithContext(ctx)
+	grp.SetLimit(10)
 	for i := range zones {
-		go func(zone string) {
-			defer wg.Done()
+		zone := zones[i]
+		grp.Go(func() error {
 			parent := fmt.Sprintf("projects/%s/locations/%s", projectId, zone)
-			err := osConfigSvc.Projects.Locations.OsPolicyAssignments.List(parent).Pages(ctx, func(page *osconfig.ListOSPolicyAssignmentsResponse) error {
+			err := osConfigSvc.Projects.Locations.OsPolicyAssignments.List(parent).Pages(grpCtx, func(page *osconfig.ListOSPolicyAssignmentsResponse) error {
 				for _, a := range page.OsPolicyAssignments {
 					mqlAssignment, err := newMqlOsPolicyAssignment(g.MqlRuntime, a)
 					if err != nil {
@@ -230,12 +240,19 @@ func (g *mqlGcpProjectOsConfigService) osPolicyAssignments() ([]any, error) {
 				}
 				return nil
 			})
-			if err != nil && !isHTTPSkippable(err) {
-				log.Warn().Err(err).Str("zone", zone).Msg("could not list OS policy assignments")
+			if err != nil {
+				if isHTTPSkippable(err) {
+					log.Warn().Err(err).Str("zone", zone).Msg("could not list OS policy assignments")
+					return nil
+				}
+				return err
 			}
-		}(zones[i])
+			return nil
+		})
 	}
-	wg.Wait()
+	if err := grp.Wait(); err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 
@@ -301,7 +318,10 @@ func (g *mqlGcpProjectComputeServiceInstance) inventory() (*mqlGcpProjectCompute
 		return nil, err
 	}
 
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
 	client, err := conn.Client(osconfig.CloudPlatformScope)
 	if err != nil {
 		return nil, err
@@ -352,7 +372,10 @@ func (g *mqlGcpProjectComputeServiceInstance) vulnerabilityReport() (*mqlGcpProj
 		return nil, err
 	}
 
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
 	client, err := conn.Client(osconfig.CloudPlatformScope)
 	if err != nil {
 		return nil, err
