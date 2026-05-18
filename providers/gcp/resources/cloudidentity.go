@@ -1,0 +1,141 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+package resources
+
+import (
+	"context"
+
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
+	cloudidentity "google.golang.org/api/cloudidentity/v1"
+	"google.golang.org/api/option"
+)
+
+func (g *mqlGcpCloudIdentityGroup) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpCloudIdentityMembership) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpOrganization) cloudIdentityGroups() ([]any, error) {
+	if g.CustomerId.Error != nil {
+		return nil, g.CustomerId.Error
+	}
+	customerId := g.CustomerId.Data
+	if customerId == "" {
+		return nil, nil
+	}
+
+	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil
+	}
+	client, err := conn.Client(cloudidentity.CloudIdentityGroupsReadonlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	cloudIdentitySvc, err := cloudidentity.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	call := cloudIdentitySvc.Groups.List().Parent("customers/" + customerId).View("FULL")
+	if err := call.Pages(ctx, func(page *cloudidentity.ListGroupsResponse) error {
+		for _, group := range page.Groups {
+			email := ""
+			if group.GroupKey != nil {
+				email = group.GroupKey.Id
+			}
+
+			mqlGroup, err := CreateResource(g.MqlRuntime, "gcp.cloudIdentity.group", map[string]*llx.RawData{
+				"name":        llx.StringData(group.Name),
+				"id":          llx.StringData(parseResourceName(group.Name)),
+				"email":       llx.StringData(email),
+				"displayName": llx.StringData(group.DisplayName),
+				"description": llx.StringData(group.Description),
+				"labels":      llx.MapData(convert.MapToInterfaceMap(group.Labels), types.String),
+				"created":     llx.TimeDataPtr(parseTime(group.CreateTime)),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlGroup)
+		}
+		return nil
+	}); err != nil {
+		if isHTTPSkippable(err) {
+			log.Warn().Err(err).Msg("could not list Cloud Identity groups")
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res, nil
+}
+
+func (g *mqlGcpCloudIdentityGroup) memberships() ([]any, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	groupName := g.Name.Data
+
+	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil
+	}
+	client, err := conn.Client(cloudidentity.CloudIdentityGroupsReadonlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	cloudIdentitySvc, err := cloudidentity.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	call := cloudIdentitySvc.Groups.Memberships.List(groupName).View("FULL")
+	if err := call.Pages(ctx, func(page *cloudidentity.ListMembershipsResponse) error {
+		for _, m := range page.Memberships {
+			memberKey := ""
+			if m.PreferredMemberKey != nil {
+				memberKey = m.PreferredMemberKey.Id
+			}
+
+			roles := make([]any, 0, len(m.Roles))
+			for _, role := range m.Roles {
+				roles = append(roles, role.Name)
+			}
+
+			mqlMembership, err := CreateResource(g.MqlRuntime, "gcp.cloudIdentity.membership", map[string]*llx.RawData{
+				"name":            llx.StringData(m.Name),
+				"memberKey":       llx.StringData(memberKey),
+				"type":            llx.StringData(m.Type),
+				"roles":           llx.ArrayData(roles, types.String),
+				"deliverySetting": llx.StringData(m.DeliverySetting),
+				"created":         llx.TimeDataPtr(parseTime(m.CreateTime)),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlMembership)
+		}
+		return nil
+	}); err != nil {
+		if isHTTPSkippable(err) {
+			log.Warn().Err(err).Str("group", groupName).Msg("could not list Cloud Identity group memberships")
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res, nil
+}

@@ -48,6 +48,8 @@ alias gcp.memorystore = gcp.project.memorystoreService
 gcp.organization @defaults("name") {
   // Organization ID
   id string
+  // Google Workspace / Cloud Identity customer ID associated with the organization
+  customerId string
   // Organization name
   name() string
   // Organization state
@@ -86,6 +88,57 @@ gcp.organization @defaults("name") {
   accessPolicies() []gcp.accesscontextmanager.accessPolicy
   // Custom Organization Policy constraints defined on the organization
   customConstraints() []gcp.orgPolicy.customConstraint
+  // Cloud Identity groups in the associated Google Workspace / Cloud Identity account
+  cloudIdentityGroups() []gcp.cloudIdentity.group
+}
+
+// Google Cloud Identity group
+//
+// Examine a Cloud Identity or Google Workspace group: the `email`
+// that identifies it, its `displayName` and `description`, the
+// `labels` that classify it as a security group or discussion forum,
+// and its `memberships` — the users, service accounts, and nested
+// groups that belong to it. Use it to expand an IAM binding granted
+// to a group into the concrete principals the binding reaches.
+private gcp.cloudIdentity.group @defaults("displayName email") {
+  // Resource name of the group (groups/{groupId})
+  name string
+  // Group ID
+  id string
+  // Email address that identifies the group
+  email string
+  // Human-friendly name displayed for the group
+  displayName string
+  // Human-readable description of the group
+  description string
+  // Labels classifying the group, such as security group or discussion forum
+  labels map[string]string
+  // Time the group was created
+  created time
+  // Members of the group
+  memberships() []gcp.cloudIdentity.membership
+}
+
+// Google Cloud Identity group membership
+//
+// Examine a single membership in a Cloud Identity group: `memberKey`
+// identifies the member, `type` distinguishes a user from a service
+// account or a nested group, `roles` lists the roles the member holds
+// in the group (MEMBER, MANAGER, OWNER), and `deliverySetting`
+// records how group mail reaches the member.
+private gcp.cloudIdentity.membership @defaults("memberKey type") {
+  // Resource name of the membership (groups/{groupId}/memberships/{membershipId})
+  name string
+  // Email address or identifier of the member
+  memberKey string
+  // Member type (USER, SERVICE_ACCOUNT, GROUP, SHARED_DRIVE, OTHER)
+  type string
+  // Roles the member holds in the group (MEMBER, MANAGER, OWNER)
+  roles []string
+  // Mail delivery setting for the member (ALL_MAIL, DIGEST, DAILY, NONE, DISABLED)
+  deliverySetting string
+  // Time the membership was created
+  created time
 }
 
 // Google Cloud (GCP) folders

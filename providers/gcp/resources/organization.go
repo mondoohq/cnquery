@@ -72,6 +72,7 @@ func initGcpOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	}
 
 	args["id"] = llx.StringData(org.Name)
+	args["customerId"] = llx.StringData(org.DirectoryCustomerId)
 	args["name"] = llx.StringData(org.DisplayName)
 	args["state"] = llx.StringData(org.State)
 	args["created"] = llx.TimeDataPtr(parseTime(org.CreateTime))

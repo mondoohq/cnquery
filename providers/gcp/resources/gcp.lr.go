@@ -17,6 +17,8 @@ import (
 // The MQL type names exposed as public consts for ease of reference.
 const (
 	ResourceGcpOrganization                                                            string = "gcp.organization"
+	ResourceGcpCloudIdentityGroup                                                      string = "gcp.cloudIdentity.group"
+	ResourceGcpCloudIdentityMembership                                                 string = "gcp.cloudIdentity.membership"
 	ResourceGcpFolders                                                                 string = "gcp.folders"
 	ResourceGcpProjectRedisService                                                     string = "gcp.project.redisService"
 	ResourceGcpProjectRedisServiceInstance                                             string = "gcp.project.redisService.instance"
@@ -410,6 +412,14 @@ func init() {
 		"gcp.organization": {
 			Init:   initGcpOrganization,
 			Create: createGcpOrganization,
+		},
+		"gcp.cloudIdentity.group": {
+			// to override args, implement: initGcpCloudIdentityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpCloudIdentityGroup,
+		},
+		"gcp.cloudIdentity.membership": {
+			// to override args, implement: initGcpCloudIdentityMembership(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpCloudIdentityMembership,
 		},
 		"gcp.folders": {
 			// to override args, implement: initGcpFolders(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2021,6 +2031,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.organization.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetId()).ToDataRes(types.String)
 	},
+	"gcp.organization.customerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganization).GetCustomerId()).ToDataRes(types.String)
+	},
 	"gcp.organization.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetName()).ToDataRes(types.String)
 	},
@@ -2077,6 +2090,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.organization.customConstraints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetCustomConstraints()).ToDataRes(types.Array(types.Resource("gcp.orgPolicy.customConstraint")))
+	},
+	"gcp.organization.cloudIdentityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganization).GetCloudIdentityGroups()).ToDataRes(types.Array(types.Resource("gcp.cloudIdentity.group")))
+	},
+	"gcp.cloudIdentity.group.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityGroup).GetName()).ToDataRes(types.String)
+	},
+	"gcp.cloudIdentity.group.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityGroup).GetId()).ToDataRes(types.String)
+	},
+	"gcp.cloudIdentity.group.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityGroup).GetEmail()).ToDataRes(types.String)
+	},
+	"gcp.cloudIdentity.group.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityGroup).GetDisplayName()).ToDataRes(types.String)
+	},
+	"gcp.cloudIdentity.group.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityGroup).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.cloudIdentity.group.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityGroup).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.cloudIdentity.group.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityGroup).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.cloudIdentity.group.memberships": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityGroup).GetMemberships()).ToDataRes(types.Array(types.Resource("gcp.cloudIdentity.membership")))
+	},
+	"gcp.cloudIdentity.membership.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityMembership).GetName()).ToDataRes(types.String)
+	},
+	"gcp.cloudIdentity.membership.memberKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityMembership).GetMemberKey()).ToDataRes(types.String)
+	},
+	"gcp.cloudIdentity.membership.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityMembership).GetType()).ToDataRes(types.String)
+	},
+	"gcp.cloudIdentity.membership.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityMembership).GetRoles()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.cloudIdentity.membership.deliverySetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityMembership).GetDeliverySetting()).ToDataRes(types.String)
+	},
+	"gcp.cloudIdentity.membership.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpCloudIdentityMembership).GetCreated()).ToDataRes(types.Time)
 	},
 	"gcp.folders.parentId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolders).GetParentId()).ToDataRes(types.String)
@@ -13813,6 +13871,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.organization.customerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganization).CustomerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.organization.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganization).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -13887,6 +13949,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.organization.customConstraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganization).CustomConstraints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.cloudIdentityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganization).CloudIdentityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.cloudIdentity.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.group.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.group.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityGroup).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.group.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityGroup).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.group.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityGroup).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.group.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityGroup).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.group.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityGroup).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.group.memberships": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityGroup).Memberships, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.membership.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityMembership).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.cloudIdentity.membership.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityMembership).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.membership.memberKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityMembership).MemberKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.membership.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityMembership).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.membership.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityMembership).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.membership.deliverySetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityMembership).DeliverySetting, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.cloudIdentity.membership.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpCloudIdentityMembership).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.folders.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31075,6 +31205,7 @@ type mqlGcpOrganization struct {
 	__id       string
 	// optional: if you define mqlGcpOrganizationInternal it will be used here
 	Id                      plugin.TValue[string]
+	CustomerId              plugin.TValue[string]
 	Name                    plugin.TValue[string]
 	State                   plugin.TValue[string]
 	IamPolicy               plugin.TValue[[]any]
@@ -31094,6 +31225,7 @@ type mqlGcpOrganization struct {
 	SccOrganizationSettings plugin.TValue[*mqlGcpSccOrganizationSettings]
 	AccessPolicies          plugin.TValue[[]any]
 	CustomConstraints       plugin.TValue[[]any]
+	CloudIdentityGroups     plugin.TValue[[]any]
 }
 
 // createGcpOrganization creates a new instance of this resource
@@ -31135,6 +31267,10 @@ func (c *mqlGcpOrganization) MqlID() string {
 
 func (c *mqlGcpOrganization) GetId() *plugin.TValue[string] {
 	return &c.Id
+}
+
+func (c *mqlGcpOrganization) GetCustomerId() *plugin.TValue[string] {
+	return &c.CustomerId
 }
 
 func (c *mqlGcpOrganization) GetName() *plugin.TValue[string] {
@@ -31383,6 +31519,192 @@ func (c *mqlGcpOrganization) GetCustomConstraints() *plugin.TValue[[]any] {
 
 		return c.customConstraints()
 	})
+}
+
+func (c *mqlGcpOrganization) GetCloudIdentityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CloudIdentityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.organization", c.__id, "cloudIdentityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cloudIdentityGroups()
+	})
+}
+
+// mqlGcpCloudIdentityGroup for the gcp.cloudIdentity.group resource
+type mqlGcpCloudIdentityGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpCloudIdentityGroupInternal it will be used here
+	Name        plugin.TValue[string]
+	Id          plugin.TValue[string]
+	Email       plugin.TValue[string]
+	DisplayName plugin.TValue[string]
+	Description plugin.TValue[string]
+	Labels      plugin.TValue[map[string]any]
+	Created     plugin.TValue[*time.Time]
+	Memberships plugin.TValue[[]any]
+}
+
+// createGcpCloudIdentityGroup creates a new instance of this resource
+func createGcpCloudIdentityGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpCloudIdentityGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.cloudIdentity.group", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpCloudIdentityGroup) MqlName() string {
+	return "gcp.cloudIdentity.group"
+}
+
+func (c *mqlGcpCloudIdentityGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpCloudIdentityGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpCloudIdentityGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpCloudIdentityGroup) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlGcpCloudIdentityGroup) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlGcpCloudIdentityGroup) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpCloudIdentityGroup) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlGcpCloudIdentityGroup) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpCloudIdentityGroup) GetMemberships() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Memberships, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.cloudIdentity.group", c.__id, "memberships")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.memberships()
+	})
+}
+
+// mqlGcpCloudIdentityMembership for the gcp.cloudIdentity.membership resource
+type mqlGcpCloudIdentityMembership struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpCloudIdentityMembershipInternal it will be used here
+	Name            plugin.TValue[string]
+	MemberKey       plugin.TValue[string]
+	Type            plugin.TValue[string]
+	Roles           plugin.TValue[[]any]
+	DeliverySetting plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+}
+
+// createGcpCloudIdentityMembership creates a new instance of this resource
+func createGcpCloudIdentityMembership(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpCloudIdentityMembership{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.cloudIdentity.membership", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpCloudIdentityMembership) MqlName() string {
+	return "gcp.cloudIdentity.membership"
+}
+
+func (c *mqlGcpCloudIdentityMembership) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpCloudIdentityMembership) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpCloudIdentityMembership) GetMemberKey() *plugin.TValue[string] {
+	return &c.MemberKey
+}
+
+func (c *mqlGcpCloudIdentityMembership) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGcpCloudIdentityMembership) GetRoles() *plugin.TValue[[]any] {
+	return &c.Roles
+}
+
+func (c *mqlGcpCloudIdentityMembership) GetDeliverySetting() *plugin.TValue[string] {
+	return &c.DeliverySetting
+}
+
+func (c *mqlGcpCloudIdentityMembership) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
 }
 
 // mqlGcpFolders for the gcp.folders resource
