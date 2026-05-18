@@ -43,6 +43,8 @@ const (
 	ResourceGcpProjectComputeServiceZone                                               string = "gcp.project.computeService.zone"
 	ResourceGcpProjectComputeServiceMachineType                                        string = "gcp.project.computeService.machineType"
 	ResourceGcpProjectComputeServiceInstance                                           string = "gcp.project.computeService.instance"
+	ResourceGcpProjectComputeServiceInstanceOsInventory                                string = "gcp.project.computeService.instance.osInventory"
+	ResourceGcpProjectComputeServiceInstanceVulnerabilityReport                        string = "gcp.project.computeService.instance.vulnerabilityReport"
 	ResourceGcpProjectComputeServiceInstanceShieldedInstanceConfig                     string = "gcp.project.computeService.instance.shieldedInstanceConfig"
 	ResourceGcpProjectComputeServiceServiceaccount                                     string = "gcp.project.computeService.serviceaccount"
 	ResourceGcpProjectComputeServiceDisk                                               string = "gcp.project.computeService.disk"
@@ -359,6 +361,9 @@ const (
 	ResourceGcpProjectBatchServiceJobTaskGroup                                         string = "gcp.project.batchService.job.taskGroup"
 	ResourceGcpProjectIdsService                                                       string = "gcp.project.idsService"
 	ResourceGcpProjectIdsServiceEndpoint                                               string = "gcp.project.idsService.endpoint"
+	ResourceGcpProjectOsConfigService                                                  string = "gcp.project.osConfigService"
+	ResourceGcpProjectOsConfigServicePatchDeployment                                   string = "gcp.project.osConfigService.patchDeployment"
+	ResourceGcpProjectOsConfigServiceOsPolicyAssignment                                string = "gcp.project.osConfigService.osPolicyAssignment"
 	ResourceGcpProjectGkeBackupService                                                 string = "gcp.project.gkeBackupService"
 	ResourceGcpProjectGkeBackupServiceBackupPlan                                       string = "gcp.project.gkeBackupService.backupPlan"
 	ResourceGcpProjectGkeBackupServiceRestorePlan                                      string = "gcp.project.gkeBackupService.restorePlan"
@@ -509,6 +514,14 @@ func init() {
 		"gcp.project.computeService.instance": {
 			Init:   initGcpProjectComputeServiceInstance,
 			Create: createGcpProjectComputeServiceInstance,
+		},
+		"gcp.project.computeService.instance.osInventory": {
+			// to override args, implement: initGcpProjectComputeServiceInstanceOsInventory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceInstanceOsInventory,
+		},
+		"gcp.project.computeService.instance.vulnerabilityReport": {
+			// to override args, implement: initGcpProjectComputeServiceInstanceVulnerabilityReport(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceInstanceVulnerabilityReport,
 		},
 		"gcp.project.computeService.instance.shieldedInstanceConfig": {
 			// to override args, implement: initGcpProjectComputeServiceInstanceShieldedInstanceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1774,6 +1787,18 @@ func init() {
 			// to override args, implement: initGcpProjectIdsServiceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectIdsServiceEndpoint,
 		},
+		"gcp.project.osConfigService": {
+			Init:   initGcpProjectOsConfigService,
+			Create: createGcpProjectOsConfigService,
+		},
+		"gcp.project.osConfigService.patchDeployment": {
+			// to override args, implement: initGcpProjectOsConfigServicePatchDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectOsConfigServicePatchDeployment,
+		},
+		"gcp.project.osConfigService.osPolicyAssignment": {
+			// to override args, implement: initGcpProjectOsConfigServiceOsPolicyAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectOsConfigServiceOsPolicyAssignment,
+		},
 		"gcp.project.gkeBackupService": {
 			Init:   initGcpProjectGkeBackupService,
 			Create: createGcpProjectGkeBackupService,
@@ -2725,6 +2750,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.healthcare": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProject).GetHealthcare()).ToDataRes(types.Resource("gcp.project.healthcareService"))
 	},
+	"gcp.project.osConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProject).GetOsConfig()).ToDataRes(types.Resource("gcp.project.osConfigService"))
+	},
 	"gcp.service.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -3291,6 +3319,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.instance.workloadIdentityConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstance).GetWorkloadIdentityConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instance.inventory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetInventory()).ToDataRes(types.Resource("gcp.project.computeService.instance.osInventory"))
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstance).GetVulnerabilityReport()).ToDataRes(types.Resource("gcp.project.computeService.instance.vulnerabilityReport"))
+	},
+	"gcp.project.computeService.instance.osInventory.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.osInventory.osInfo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetOsInfo()).ToDataRes(types.Dict)
+	},
+	"gcp.project.computeService.instance.osInventory.items": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetItems()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.instance.osInventory.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceOsInventory).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).GetVulnerabilities()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.highestUpgradableCveSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).GetHighestUpgradableCveSeverity()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).GetUpdateTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.computeService.instance.shieldedInstanceConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig).GetId()).ToDataRes(types.String)
@@ -12757,6 +12815,84 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.idsService.endpoint.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIdsServiceEndpoint).GetUpdated()).ToDataRes(types.Time)
 	},
+	"gcp.project.osConfigService.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigService).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.osConfigService.patchDeployments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigService).GetPatchDeployments()).ToDataRes(types.Array(types.Resource("gcp.project.osConfigService.patchDeployment")))
+	},
+	"gcp.project.osConfigService.osPolicyAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigService).GetOsPolicyAssignments()).ToDataRes(types.Array(types.Resource("gcp.project.osConfigService.osPolicyAssignment")))
+	},
+	"gcp.project.osConfigService.patchDeployment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.osConfigService.patchDeployment.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.osConfigService.patchDeployment.instanceFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetInstanceFilter()).ToDataRes(types.Dict)
+	},
+	"gcp.project.osConfigService.patchDeployment.patchConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetPatchConfig()).ToDataRes(types.Dict)
+	},
+	"gcp.project.osConfigService.patchDeployment.duration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetDuration()).ToDataRes(types.Int)
+	},
+	"gcp.project.osConfigService.patchDeployment.oneTimeSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetOneTimeSchedule()).ToDataRes(types.Dict)
+	},
+	"gcp.project.osConfigService.patchDeployment.recurringSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetRecurringSchedule()).ToDataRes(types.Dict)
+	},
+	"gcp.project.osConfigService.patchDeployment.rollout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetRollout()).ToDataRes(types.Dict)
+	},
+	"gcp.project.osConfigService.patchDeployment.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.osConfigService.patchDeployment.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.osConfigService.patchDeployment.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.project.osConfigService.patchDeployment.lastExecuteTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServicePatchDeployment).GetLastExecuteTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.osPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetOsPolicies()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.instanceFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetInstanceFilter()).ToDataRes(types.Dict)
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.rollout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetRollout()).ToDataRes(types.Dict)
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.revisionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetRevisionId()).ToDataRes(types.String)
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.revisionCreateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetRevisionCreateTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.rolloutState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetRolloutState()).ToDataRes(types.String)
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.baseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetBaseline()).ToDataRes(types.Bool)
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.deleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetDeleted()).ToDataRes(types.Bool)
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.reconciling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).GetReconciling()).ToDataRes(types.Bool)
+	},
 	"gcp.project.gkeBackupService.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeBackupService).GetProjectId()).ToDataRes(types.String)
 	},
@@ -14713,6 +14849,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProject).Healthcare, ok = plugin.RawToTValue[*mqlGcpProjectHealthcareService](v.Value, v.Error)
 		return
 	},
+	"gcp.project.osConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProject).OsConfig, ok = plugin.RawToTValue[*mqlGcpProjectOsConfigService](v.Value, v.Error)
+		return
+	},
 	"gcp.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpService).__id, ok = v.Value.(string)
 		return
@@ -15507,6 +15647,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.instance.workloadIdentityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstance).WorkloadIdentityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.inventory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).Inventory, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceInstanceOsInventory](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstance).VulnerabilityReport, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceInstanceVulnerabilityReport](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.osInfo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).OsInfo, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.items": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).Items, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.osInventory.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceOsInventory).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.highestUpgradableCveSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).HighestUpgradableCveSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instance.vulnerabilityReport.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instance.shieldedInstanceConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29393,6 +29581,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectIdsServiceEndpoint).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.project.osConfigService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.osConfigService.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigService).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigService).PatchDeployments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigService).OsPolicyAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.instanceFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).InstanceFilter, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.patchConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).PatchConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.duration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).Duration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.oneTimeSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).OneTimeSchedule, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.recurringSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).RecurringSchedule, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.rollout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).Rollout, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.patchDeployment.lastExecuteTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServicePatchDeployment).LastExecuteTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.osPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).OsPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.instanceFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).InstanceFilter, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.rollout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).Rollout, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.revisionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).RevisionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.revisionCreateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).RevisionCreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.rolloutState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).RolloutState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.baseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).Baseline, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.deleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).Deleted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.osConfigService.osPolicyAssignment.reconciling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectOsConfigServiceOsPolicyAssignment).Reconciling, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeBackupService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeBackupService).__id, ok = v.Value.(string)
 		return
@@ -32702,6 +33006,7 @@ type mqlGcpProject struct {
 	Notebooks                plugin.TValue[*mqlGcpProjectNotebooksService]
 	Composer                 plugin.TValue[*mqlGcpProjectComposerService]
 	Healthcare               plugin.TValue[*mqlGcpProjectHealthcareService]
+	OsConfig                 plugin.TValue[*mqlGcpProjectOsConfigService]
 }
 
 // createGcpProject creates a new instance of this resource
@@ -33810,6 +34115,22 @@ func (c *mqlGcpProject) GetHealthcare() *plugin.TValue[*mqlGcpProjectHealthcareS
 		}
 
 		return c.healthcare()
+	})
+}
+
+func (c *mqlGcpProject) GetOsConfig() *plugin.TValue[*mqlGcpProjectOsConfigService] {
+	return plugin.GetOrCompute[*mqlGcpProjectOsConfigService](&c.OsConfig, func() (*mqlGcpProjectOsConfigService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project", c.__id, "osConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectOsConfigService), nil
+			}
+		}
+
+		return c.osConfig()
 	})
 }
 
@@ -35493,6 +35814,8 @@ type mqlGcpProjectComputeServiceInstance struct {
 	SatisfiesPzi                    plugin.TValue[bool]
 	SatisfiesPzs                    plugin.TValue[bool]
 	WorkloadIdentityConfig          plugin.TValue[any]
+	Inventory                       plugin.TValue[*mqlGcpProjectComputeServiceInstanceOsInventory]
+	VulnerabilityReport             plugin.TValue[*mqlGcpProjectComputeServiceInstanceVulnerabilityReport]
 }
 
 // createGcpProjectComputeServiceInstance creates a new instance of this resource
@@ -35754,6 +36077,166 @@ func (c *mqlGcpProjectComputeServiceInstance) GetSatisfiesPzs() *plugin.TValue[b
 
 func (c *mqlGcpProjectComputeServiceInstance) GetWorkloadIdentityConfig() *plugin.TValue[any] {
 	return &c.WorkloadIdentityConfig
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetInventory() *plugin.TValue[*mqlGcpProjectComputeServiceInstanceOsInventory] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceInstanceOsInventory](&c.Inventory, func() (*mqlGcpProjectComputeServiceInstanceOsInventory, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.instance", c.__id, "inventory")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceInstanceOsInventory), nil
+			}
+		}
+
+		return c.inventory()
+	})
+}
+
+func (c *mqlGcpProjectComputeServiceInstance) GetVulnerabilityReport() *plugin.TValue[*mqlGcpProjectComputeServiceInstanceVulnerabilityReport] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceInstanceVulnerabilityReport](&c.VulnerabilityReport, func() (*mqlGcpProjectComputeServiceInstanceVulnerabilityReport, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.instance", c.__id, "vulnerabilityReport")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceInstanceVulnerabilityReport), nil
+			}
+		}
+
+		return c.vulnerabilityReport()
+	})
+}
+
+// mqlGcpProjectComputeServiceInstanceOsInventory for the gcp.project.computeService.instance.osInventory resource
+type mqlGcpProjectComputeServiceInstanceOsInventory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceInstanceOsInventoryInternal it will be used here
+	Name       plugin.TValue[string]
+	OsInfo     plugin.TValue[any]
+	Items      plugin.TValue[[]any]
+	UpdateTime plugin.TValue[*time.Time]
+}
+
+// createGcpProjectComputeServiceInstanceOsInventory creates a new instance of this resource
+func createGcpProjectComputeServiceInstanceOsInventory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceInstanceOsInventory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.instance.osInventory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) MqlName() string {
+	return "gcp.project.computeService.instance.osInventory"
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetOsInfo() *plugin.TValue[any] {
+	return &c.OsInfo
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetItems() *plugin.TValue[[]any] {
+	return &c.Items
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceOsInventory) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlGcpProjectComputeServiceInstanceVulnerabilityReport for the gcp.project.computeService.instance.vulnerabilityReport resource
+type mqlGcpProjectComputeServiceInstanceVulnerabilityReport struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceInstanceVulnerabilityReportInternal it will be used here
+	Name                         plugin.TValue[string]
+	Vulnerabilities              plugin.TValue[[]any]
+	HighestUpgradableCveSeverity plugin.TValue[string]
+	UpdateTime                   plugin.TValue[*time.Time]
+}
+
+// createGcpProjectComputeServiceInstanceVulnerabilityReport creates a new instance of this resource
+func createGcpProjectComputeServiceInstanceVulnerabilityReport(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceInstanceVulnerabilityReport{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.instance.vulnerabilityReport", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReport) MqlName() string {
+	return "gcp.project.computeService.instance.vulnerabilityReport"
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReport) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReport) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReport) GetVulnerabilities() *plugin.TValue[[]any] {
+	return &c.Vulnerabilities
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReport) GetHighestUpgradableCveSeverity() *plugin.TValue[string] {
+	return &c.HighestUpgradableCveSeverity
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceVulnerabilityReport) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
 }
 
 // mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig for the gcp.project.computeService.instance.shieldedInstanceConfig resource
@@ -68262,6 +68745,292 @@ func (c *mqlGcpProjectIdsServiceEndpoint) GetCreated() *plugin.TValue[*time.Time
 
 func (c *mqlGcpProjectIdsServiceEndpoint) GetUpdated() *plugin.TValue[*time.Time] {
 	return &c.Updated
+}
+
+// mqlGcpProjectOsConfigService for the gcp.project.osConfigService resource
+type mqlGcpProjectOsConfigService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectOsConfigServiceInternal
+	ProjectId           plugin.TValue[string]
+	PatchDeployments    plugin.TValue[[]any]
+	OsPolicyAssignments plugin.TValue[[]any]
+}
+
+// createGcpProjectOsConfigService creates a new instance of this resource
+func createGcpProjectOsConfigService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectOsConfigService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.osConfigService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectOsConfigService) MqlName() string {
+	return "gcp.project.osConfigService"
+}
+
+func (c *mqlGcpProjectOsConfigService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectOsConfigService) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectOsConfigService) GetPatchDeployments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PatchDeployments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.osConfigService", c.__id, "patchDeployments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.patchDeployments()
+	})
+}
+
+func (c *mqlGcpProjectOsConfigService) GetOsPolicyAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OsPolicyAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.osConfigService", c.__id, "osPolicyAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.osPolicyAssignments()
+	})
+}
+
+// mqlGcpProjectOsConfigServicePatchDeployment for the gcp.project.osConfigService.patchDeployment resource
+type mqlGcpProjectOsConfigServicePatchDeployment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectOsConfigServicePatchDeploymentInternal it will be used here
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	InstanceFilter    plugin.TValue[any]
+	PatchConfig       plugin.TValue[any]
+	Duration          plugin.TValue[int64]
+	OneTimeSchedule   plugin.TValue[any]
+	RecurringSchedule plugin.TValue[any]
+	Rollout           plugin.TValue[any]
+	State             plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	Updated           plugin.TValue[*time.Time]
+	LastExecuteTime   plugin.TValue[*time.Time]
+}
+
+// createGcpProjectOsConfigServicePatchDeployment creates a new instance of this resource
+func createGcpProjectOsConfigServicePatchDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectOsConfigServicePatchDeployment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.osConfigService.patchDeployment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) MqlName() string {
+	return "gcp.project.osConfigService.patchDeployment"
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetInstanceFilter() *plugin.TValue[any] {
+	return &c.InstanceFilter
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetPatchConfig() *plugin.TValue[any] {
+	return &c.PatchConfig
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetDuration() *plugin.TValue[int64] {
+	return &c.Duration
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetOneTimeSchedule() *plugin.TValue[any] {
+	return &c.OneTimeSchedule
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetRecurringSchedule() *plugin.TValue[any] {
+	return &c.RecurringSchedule
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetRollout() *plugin.TValue[any] {
+	return &c.Rollout
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+func (c *mqlGcpProjectOsConfigServicePatchDeployment) GetLastExecuteTime() *plugin.TValue[*time.Time] {
+	return &c.LastExecuteTime
+}
+
+// mqlGcpProjectOsConfigServiceOsPolicyAssignment for the gcp.project.osConfigService.osPolicyAssignment resource
+type mqlGcpProjectOsConfigServiceOsPolicyAssignment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectOsConfigServiceOsPolicyAssignmentInternal it will be used here
+	Name               plugin.TValue[string]
+	Description        plugin.TValue[string]
+	OsPolicies         plugin.TValue[[]any]
+	InstanceFilter     plugin.TValue[any]
+	Rollout            plugin.TValue[any]
+	RevisionId         plugin.TValue[string]
+	RevisionCreateTime plugin.TValue[*time.Time]
+	RolloutState       plugin.TValue[string]
+	Baseline           plugin.TValue[bool]
+	Deleted            plugin.TValue[bool]
+	Reconciling        plugin.TValue[bool]
+}
+
+// createGcpProjectOsConfigServiceOsPolicyAssignment creates a new instance of this resource
+func createGcpProjectOsConfigServiceOsPolicyAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectOsConfigServiceOsPolicyAssignment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.osConfigService.osPolicyAssignment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) MqlName() string {
+	return "gcp.project.osConfigService.osPolicyAssignment"
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetOsPolicies() *plugin.TValue[[]any] {
+	return &c.OsPolicies
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetInstanceFilter() *plugin.TValue[any] {
+	return &c.InstanceFilter
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetRollout() *plugin.TValue[any] {
+	return &c.Rollout
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetRevisionId() *plugin.TValue[string] {
+	return &c.RevisionId
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetRevisionCreateTime() *plugin.TValue[*time.Time] {
+	return &c.RevisionCreateTime
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetRolloutState() *plugin.TValue[string] {
+	return &c.RolloutState
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetBaseline() *plugin.TValue[bool] {
+	return &c.Baseline
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetDeleted() *plugin.TValue[bool] {
+	return &c.Deleted
+}
+
+func (c *mqlGcpProjectOsConfigServiceOsPolicyAssignment) GetReconciling() *plugin.TValue[bool] {
+	return &c.Reconciling
 }
 
 // mqlGcpProjectGkeBackupService for the gcp.project.gkeBackupService resource

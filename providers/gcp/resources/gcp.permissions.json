@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.15.0",
-  "generated_at": "2026-05-16T21:05:57-07:00",
+  "generated_at": "2026-05-17T15:56:14-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -173,6 +173,10 @@
     "orgpolicy.constraints.list",
     "orgpolicy.customConstraints.list",
     "orgpolicy.policies.list",
+    "osconfig.inventories.get",
+    "osconfig.osPolicyAssignments.list",
+    "osconfig.patchDeployments.list",
+    "osconfig.vulnerabilityReports.get",
     "policyanalyzer.serviceAccountLastAuthenticationActivities.query",
     "privateca.caPools.list",
     "privateca.certificateAuthorities.list",
@@ -862,6 +866,12 @@
       "permission": "compute.zones.list",
       "service": "compute",
       "action": "Zones.List",
+      "source_file": "osconfig.go"
+    },
+    {
+      "permission": "compute.zones.list",
+      "service": "compute",
+      "action": "Zones.List",
       "source_file": "recommendations.go"
     },
     {
@@ -1259,6 +1269,30 @@
       "service": "orgpolicy",
       "action": "ListPolicies",
       "source_file": "orgpolicy.go"
+    },
+    {
+      "permission": "osconfig.inventories.get",
+      "service": "osconfig",
+      "action": "Inventories.Get",
+      "source_file": "osconfig.go"
+    },
+    {
+      "permission": "osconfig.osPolicyAssignments.list",
+      "service": "osconfig",
+      "action": "OsPolicyAssignments.List",
+      "source_file": "osconfig.go"
+    },
+    {
+      "permission": "osconfig.patchDeployments.list",
+      "service": "osconfig",
+      "action": "PatchDeployments.List",
+      "source_file": "osconfig.go"
+    },
+    {
+      "permission": "osconfig.vulnerabilityReports.get",
+      "service": "osconfig",
+      "action": "VulnerabilityReports.Get",
+      "source_file": "osconfig.go"
     },
     {
       "permission": "policyanalyzer.serviceAccountLastAuthenticationActivities.query",

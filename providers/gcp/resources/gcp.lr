@@ -623,6 +623,8 @@ gcp.project @defaults("name number") {
   composer() gcp.project.composerService
   // GCP Cloud Healthcare resources
   healthcare() gcp.project.healthcareService
+  // GCP VM Manager (OS Config) resources
+  osConfig() gcp.project.osConfigService
 }
 
 // Google Cloud service API
@@ -1085,6 +1087,48 @@ gcp.project.computeService.instance @defaults("name id") {
   satisfiesPzs bool
   // Workload identity configuration for the instance
   workloadIdentityConfig dict
+  // VM Manager OS inventory of installed packages and operating system details
+  inventory() gcp.project.computeService.instance.osInventory
+  // VM Manager vulnerability report for the instance
+  vulnerabilityReport() gcp.project.computeService.instance.vulnerabilityReport
+}
+
+// VM Manager OS inventory for a Compute Engine instance
+//
+// Examine the operating system and software state that the VM Manager
+// OS Config agent reports for a single instance: `osInfo` carries the
+// detected OS name, version, and architecture, while `items` lists
+// every installed package and every available package update. Use it
+// to audit patch level and installed software without logging in to
+// the VM.
+private gcp.project.computeService.instance.osInventory @defaults("name updateTime") {
+  // Full resource name of the inventory
+  name string
+  // Operating system details reported by the OS Config agent
+  osInfo dict
+  // Installed packages and available package updates, each keyed by its item id
+  items []dict
+  // Time the inventory was last refreshed
+  updateTime time
+}
+
+// VM Manager vulnerability report for a Compute Engine instance
+//
+// Examine the vulnerabilities that VM Manager detects on a single
+// instance by correlating its OS inventory against vulnerability
+// feeds. Each entry in `vulnerabilities` records the affected
+// packages and the CVE details, and `highestUpgradableCveSeverity`
+// summarizes the most severe issue that an available package update
+// would fix.
+private gcp.project.computeService.instance.vulnerabilityReport @defaults("name highestUpgradableCveSeverity updateTime") {
+  // Full resource name of the vulnerability report
+  name string
+  // Vulnerabilities affecting installed packages on the instance
+  vulnerabilities []dict
+  // Highest severity among upgradable vulnerabilities with an attached CVE (NONE, MINIMAL, LOW, MEDIUM, HIGH, CRITICAL)
+  highestUpgradableCveSeverity string
+  // Time the report was last refreshed
+  updateTime time
 }
 
 // Google Cloud (GCP) Compute Shielded Instance configuration
@@ -9072,6 +9116,96 @@ private gcp.project.idsService.endpoint @defaults("name severity state") {
   created time
   // Last update time
   updated time
+}
+
+// ============================================================
+// VM Manager (OS Config)
+// ============================================================
+
+// VM Manager (OS Config) service for a project
+//
+// Use this resource to reach Google Cloud VM Manager resources for a
+// project: `patchDeployments` lists scheduled OS patch rollouts and
+// `osPolicyAssignments` lists the OS policy assignments applied to
+// instances across every zone. Per-instance patch and vulnerability
+// state is exposed on `gcp.project.computeService.instance` through
+// its `inventory` and `vulnerabilityReport` fields.
+private gcp.project.osConfigService {
+  // Project ID
+  projectId string
+  // Scheduled OS patch deployments in the project
+  patchDeployments() []gcp.project.osConfigService.patchDeployment
+  // OS policy assignments across all zones in the project
+  osPolicyAssignments() []gcp.project.osConfigService.osPolicyAssignment
+}
+
+// VM Manager OS patch deployment
+//
+// Examine a scheduled patch rollout managed by VM Manager: the
+// `instanceFilter` selecting which VM instances are patched, the
+// per-package-manager behavior and reboot policy in `patchConfig`,
+// the `oneTimeSchedule` or `recurringSchedule` that triggers it, the
+// `rollout` strategy and disruption budget, and the `state` that
+// audits whether the deployment is ACTIVE or PAUSED. Selected by the
+// full resource name.
+private gcp.project.osConfigService.patchDeployment @defaults("name state lastExecuteTime") {
+  // Full resource name of the patch deployment
+  name string
+  // Optional human-readable description
+  description string
+  // Filter selecting which VM instances receive the patch
+  instanceFilter dict
+  // Per-package-manager patch behavior and reboot configuration
+  patchConfig dict
+  // Length of time the patch is allowed to run, in seconds
+  duration int
+  // One-time schedule that triggers this patch deployment
+  oneTimeSchedule dict
+  // Recurring schedule that triggers this patch deployment
+  recurringSchedule dict
+  // Rollout strategy and disruption budget for the patch
+  rollout dict
+  // Deployment state (ACTIVE, PAUSED)
+  state string
+  // Time the patch deployment was created
+  created time
+  // Time the patch deployment was last updated
+  updated time
+  // Time the patch deployment last ran
+  lastExecuteTime time
+}
+
+// VM Manager OS policy assignment
+//
+// Examine an OS policy assignment that applies a set of OS policies
+// (`osPolicies`) to the VM instances selected by `instanceFilter`.
+// Each assignment tracks its `rollout` strategy, its progress through
+// `rolloutState`, the immutable `revisionId` of the applied
+// configuration, and whether the revision is a `baseline` or has been
+// `deleted`. Selected by the full resource name.
+private gcp.project.osConfigService.osPolicyAssignment @defaults("name rolloutState") {
+  // Full resource name of the OS policy assignment
+  name string
+  // Optional human-readable description
+  description string
+  // OS policies applied to the selected instances
+  osPolicies []dict
+  // Filter selecting which VM instances the policies apply to
+  instanceFilter dict
+  // Rollout strategy and disruption budget for the assignment
+  rollout dict
+  // Immutable identifier of this revision of the assignment
+  revisionId string
+  // Time this revision was created
+  revisionCreateTime time
+  // Rollout state of the assignment (IN_PROGRESS, CANCELLING, CANCELLED, SUCCEEDED)
+  rolloutState string
+  // Whether this is the baseline revision used to roll back the rollout
+  baseline bool
+  // Whether the assignment has been deleted
+  deleted bool
+  // Whether the assignment is currently being reconciled
+  reconciling bool
 }
 
 // ============================================================
