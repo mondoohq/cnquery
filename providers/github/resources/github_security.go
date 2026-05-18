@@ -68,6 +68,82 @@ func doRawGraphQL(ctx context.Context, client *github.Client, query string, vars
 	return client.Do(req, v)
 }
 
+// The resources below are reachable both as a field of their parent
+// (github.repository / github.organization) and as a standalone dotted path
+// (e.g. `github.repository.codeowners`). The dotted form instantiates the
+// resource directly, bypassing the parent accessor that populates it. These
+// init functions delegate to the parent so a bare instantiation resolves to
+// the same fully-populated resource.
+
+func initGithubRepositoryCodeowners(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	repo, err := NewResource(runtime, "github.repository", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	codeowners := repo.(*mqlGithubRepository).GetCodeowners()
+	if codeowners.Error != nil {
+		return nil, nil, codeowners.Error
+	}
+	return args, codeowners.Data, nil
+}
+
+func initGithubOrganizationSamlConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	org, err := NewResource(runtime, "github.organization", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	samlConfig := org.(*mqlGithubOrganization).GetSamlConfig()
+	if samlConfig.Error != nil {
+		return nil, nil, samlConfig.Error
+	}
+	if samlConfig.Data == nil {
+		return nil, nil, errors.New("SAML SSO configuration is not available for this organization (requires GitHub Enterprise Cloud and admin access)")
+	}
+	return args, samlConfig.Data, nil
+}
+
+func initGithubOrganizationIpAllowList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	org, err := NewResource(runtime, "github.organization", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	ipAllowList := org.(*mqlGithubOrganization).GetIpAllowList()
+	if ipAllowList.Error != nil {
+		return nil, nil, ipAllowList.Error
+	}
+	if ipAllowList.Data == nil {
+		return nil, nil, errors.New("IP allow list is not available for this organization (requires GitHub Enterprise Cloud and admin access)")
+	}
+	return args, ipAllowList.Data, nil
+}
+
+func initGithubOrganizationAuditLogStreamConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	org, err := NewResource(runtime, "github.organization", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	streamConfig := org.(*mqlGithubOrganization).GetAuditLogStreamConfig()
+	if streamConfig.Error != nil {
+		return nil, nil, streamConfig.Error
+	}
+	if streamConfig.Data == nil {
+		return nil, nil, errors.New("audit log streaming configuration is not available for this organization (requires GitHub Enterprise Cloud and admin access)")
+	}
+	return args, streamConfig.Data, nil
+}
+
 // ---------- SAML config (GraphQL) ----------
 
 func (g *mqlGithubOrganizationSamlConfig) id() (string, error) {

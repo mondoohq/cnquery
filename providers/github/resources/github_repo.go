@@ -298,13 +298,17 @@ func (g *mqlGithubRepository) license() (*mqlGithubLicense, error) {
 
 	repoLicense, _, err := conn.Client().Repositories.License(conn.Context(), ownerLogin, repoName)
 	if err != nil {
+		// A repository without a LICENSE file returns 404; that is a valid
+		// empty state, not an error.
 		if strings.Contains(err.Error(), "404") {
-			return nil, errors.New("not found")
+			g.License.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
 
 	if repoLicense == nil || repoLicense.License == nil {
+		g.License.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 
@@ -571,7 +575,10 @@ func (g *mqlGithubRepository) defaultBranch() (*mqlGithubBranch, error) {
 
 	branch, _, err := conn.Client().Repositories.GetBranch(conn.Context(), ownerLogin, repoName, repoDefaultBranchName, 3)
 	if err != nil {
+		// An empty repository (or one without the named default branch) returns
+		// 404; that is a valid empty state, not an error.
 		if strings.Contains(err.Error(), "404") {
+			g.DefaultBranch.State = plugin.StateIsSet | plugin.StateIsNull
 			return nil, nil
 		}
 		return nil, err
@@ -878,6 +885,10 @@ func (g *mqlGithubRepository) commits() ([]any, error) {
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
+			}
+			// An empty repository has no commits; the API reports this as a 409.
+			if strings.Contains(err.Error(), "Git Repository is empty") {
+				return []any{}, nil
 			}
 			return nil, err
 		}

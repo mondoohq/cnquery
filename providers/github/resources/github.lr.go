@@ -102,11 +102,11 @@ func init() {
 			Create: createGithubOrganization,
 		},
 		"github.organization.samlConfig": {
-			// to override args, implement: initGithubOrganizationSamlConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGithubOrganizationSamlConfig,
 			Create: createGithubOrganizationSamlConfig,
 		},
 		"github.organization.ipAllowList": {
-			// to override args, implement: initGithubOrganizationIpAllowList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGithubOrganizationIpAllowList,
 			Create: createGithubOrganizationIpAllowList,
 		},
 		"github.organization.ipAllowList.entry": {
@@ -126,7 +126,7 @@ func init() {
 			Create: createGithubOrganizationPersonalAccessToken,
 		},
 		"github.organization.auditLogStreamConfig": {
-			// to override args, implement: initGithubOrganizationAuditLogStreamConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGithubOrganizationAuditLogStreamConfig,
 			Create: createGithubOrganizationAuditLogStreamConfig,
 		},
 		"github.repositoryFineGrainedPermission": {
@@ -174,7 +174,7 @@ func init() {
 			Create: createGithubPublicKey,
 		},
 		"github.repository.codeowners": {
-			// to override args, implement: initGithubRepositoryCodeowners(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGithubRepositoryCodeowners,
 			Create: createGithubRepositoryCodeowners,
 		},
 		"github.codeowners.rule": {

@@ -310,6 +310,8 @@ func (g *mqlGithubOrganization) owners() ([]any, error) {
 			"updatedAt":       llx.TimeDataPtr(githubTimestamp(member.UpdatedAt)),
 			"suspendedAt":     llx.TimeDataPtr(githubTimestamp(member.SuspendedAt)),
 			"company":         llx.StringDataPtr(member.Company),
+			"hireable":        llx.BoolData(member.GetHireable()),
+			"siteAdmin":       llx.BoolData(member.GetSiteAdmin()),
 		})
 		if err != nil {
 			return nil, err
