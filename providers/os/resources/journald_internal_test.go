@@ -62,6 +62,138 @@ URL=https://dropin.example.test
 	require.Equal(t, "yes", params.Data["ForwardToSyslog"])
 }
 
+func TestJournaldConfigUsesSystemdConfigSearchPath(t *testing.T) {
+	runtime := journaldMockRuntime(t, map[string]*mock.MockFileData{
+		"/usr/lib/systemd/journald.conf": {
+			StatData: mock.FileInfo{Mode: 0o644},
+			Content: `[Journal]
+Storage=auto
+`,
+		},
+		"/usr/lib/systemd/journald.conf.d": {
+			StatData: mock.FileInfo{Mode: os.ModeDir | 0o755, IsDir: true},
+		},
+		"/usr/lib/systemd/journald.conf.d/10-vendor.conf": {
+			StatData: mock.FileInfo{Mode: 0o644},
+			Content: `[Journal]
+ForwardToSyslog=YES
+Compress=YES
+`,
+		},
+		"/usr/local/lib/systemd/journald.conf.d": {
+			StatData: mock.FileInfo{Mode: os.ModeDir | 0o755, IsDir: true},
+		},
+		"/usr/local/lib/systemd/journald.conf.d/20-local-vendor.conf": {
+			StatData: mock.FileInfo{Mode: 0o644},
+			Content: `[Journal]
+Compress=NO
+`,
+		},
+		"/run/systemd/journald.conf.d": {
+			StatData: mock.FileInfo{Mode: os.ModeDir | 0o755, IsDir: true},
+		},
+		"/run/systemd/journald.conf.d/30-runtime.conf": {
+			StatData: mock.FileInfo{Mode: 0o644},
+			Content: `[Journal]
+Storage=volatile
+`,
+		},
+	})
+
+	raw, err := CreateResource(runtime, ResourceJournaldConfig, nil)
+	require.NoError(t, err)
+
+	config := raw.(*mqlJournaldConfig)
+	file := config.GetFile()
+	require.NoError(t, file.Error)
+	path := file.Data.GetPath()
+	require.NoError(t, path.Error)
+	require.Equal(t, "/usr/lib/systemd/journald.conf", path.Data)
+
+	sections := config.GetSections()
+	require.NoError(t, sections.Error)
+
+	requireJournaldParam(t, sections.Data, "Journal", "Storage", "volatile")
+	requireJournaldParam(t, sections.Data, "Journal", "ForwardToSyslog", "yes")
+	requireJournaldParam(t, sections.Data, "Journal", "Compress", "no")
+}
+
+func TestJournaldConfigDropinsUseSystemdFilenameOrdering(t *testing.T) {
+	runtime := journaldMockRuntime(t, map[string]*mock.MockFileData{
+		"/etc/systemd/journald.conf": {
+			StatData: mock.FileInfo{Mode: 0o644},
+			Content: `[Journal]
+ForwardToSyslog=yes
+`,
+		},
+		"/etc/systemd/journald.conf.d": {
+			StatData: mock.FileInfo{Mode: os.ModeDir | 0o755, IsDir: true},
+		},
+		"/etc/systemd/journald.conf.d/10-local.conf": {
+			StatData: mock.FileInfo{Mode: 0o644},
+			Content: `[Journal]
+ForwardToSyslog=no
+`,
+		},
+		"/usr/lib/systemd/journald.conf.d": {
+			StatData: mock.FileInfo{Mode: os.ModeDir | 0o755, IsDir: true},
+		},
+		"/usr/lib/systemd/journald.conf.d/90-vendor.conf": {
+			StatData: mock.FileInfo{Mode: 0o644},
+			Content: `[Journal]
+ForwardToSyslog=YES
+`,
+		},
+	})
+
+	raw, err := CreateResource(runtime, ResourceJournaldConfig, nil)
+	require.NoError(t, err)
+
+	config := raw.(*mqlJournaldConfig)
+	sections := config.GetSections()
+	require.NoError(t, sections.Error)
+
+	requireJournaldParam(t, sections.Data, "Journal", "ForwardToSyslog", "yes")
+}
+
+func TestJournaldConfigDropinsMaskSameFilenamesByDirectoryPriority(t *testing.T) {
+	runtime := journaldMockRuntime(t, map[string]*mock.MockFileData{
+		"/etc/systemd/journald.conf": {
+			StatData: mock.FileInfo{Mode: 0o644},
+			Content: `[Journal]
+Storage=auto
+`,
+		},
+		"/usr/lib/systemd/journald.conf.d": {
+			StatData: mock.FileInfo{Mode: os.ModeDir | 0o755, IsDir: true},
+		},
+		"/usr/lib/systemd/journald.conf.d/50-forward.conf": {
+			StatData: mock.FileInfo{Mode: 0o644},
+			Content: `[Journal]
+ForwardToSyslog=no
+`,
+		},
+		"/etc/systemd/journald.conf.d": {
+			StatData: mock.FileInfo{Mode: os.ModeDir | 0o755, IsDir: true},
+		},
+		"/etc/systemd/journald.conf.d/50-forward.conf": {
+			StatData: mock.FileInfo{Mode: 0o644},
+			Content: `[Journal]
+ForwardToSyslog=YES
+`,
+		},
+	})
+
+	raw, err := CreateResource(runtime, ResourceJournaldConfig, nil)
+	require.NoError(t, err)
+
+	config := raw.(*mqlJournaldConfig)
+	sections := config.GetSections()
+	require.NoError(t, sections.Error)
+
+	requireJournaldParam(t, sections.Data, "Journal", "ForwardToSyslog", "yes")
+}
+
 func journaldMockRuntime(t *testing.T, files map[string]*mock.MockFileData) *plugin.Runtime {
 	t.Helper()
 
