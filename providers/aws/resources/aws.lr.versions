@@ -33,7 +33,9 @@ aws.acm.certificate.arn 11.15.2
 aws.acm.certificate.certificate 11.15.2
 aws.acm.certificate.createdAt 11.15.2
 aws.acm.certificate.domainName 11.15.2
+aws.acm.certificate.domainValidationOptions 13.26.1
 aws.acm.certificate.importedAt 11.15.2
+aws.acm.certificate.inUseBy 13.26.1
 aws.acm.certificate.issuedAt 11.15.2
 aws.acm.certificate.issuer 11.15.2
 aws.acm.certificate.keyAlgorithm 11.15.2
@@ -3478,6 +3480,7 @@ aws.elb.loadbalancer.availabilityZones 11.15.2
 aws.elb.loadbalancer.createdAt 11.15.2
 aws.elb.loadbalancer.dnsName 11.15.2
 aws.elb.loadbalancer.elbType 11.15.2
+aws.elb.loadbalancer.healthCheck 13.26.1
 aws.elb.loadbalancer.hostedZoneId 11.15.2
 aws.elb.loadbalancer.instances 11.15.2
 aws.elb.loadbalancer.ipAddressType 11.15.2
@@ -4392,6 +4395,7 @@ aws.iam.user.createdAt 11.15.2
 aws.iam.user.groups 11.15.2
 aws.iam.user.id 11.15.2
 aws.iam.user.loginProfile 11.15.2
+aws.iam.user.mfaDevices 13.26.1
 aws.iam.user.name 11.15.2
 aws.iam.user.passwordLastUsed 11.15.2
 aws.iam.user.path 11.15.2
@@ -4847,6 +4851,7 @@ aws.lambda.function.eventInvokeConfig 13.6.3
 aws.lambda.function.eventSourceMappings 11.15.2
 aws.lambda.function.fileSystemConfigs 11.15.2
 aws.lambda.function.handler 11.15.2
+aws.lambda.function.imageUri 13.26.1
 aws.lambda.function.kmsKey 11.16.1
 aws.lambda.function.kmsKeyArn 11.15.2
 aws.lambda.function.lastModifiedAt 11.15.2
@@ -4877,6 +4882,7 @@ aws.lambda.function.provisionedConcurrencyConfig.status 11.15.2
 aws.lambda.function.provisionedConcurrencyConfig.statusReason 11.15.2
 aws.lambda.function.provisionedConcurrencyConfigs 11.15.2
 aws.lambda.function.region 11.15.2
+aws.lambda.function.resolvedImageUri 13.26.1
 aws.lambda.function.role 11.15.2
 aws.lambda.function.runtime 11.15.2
 aws.lambda.function.runtimeManagementConfig 13.6.3
@@ -6136,6 +6142,7 @@ aws.rds.snapshot.engine 11.15.2
 aws.rds.snapshot.engineVersion 11.15.2
 aws.rds.snapshot.id 11.15.2
 aws.rds.snapshot.isClusterSnapshot 11.15.2
+aws.rds.snapshot.isPublic 13.26.1
 aws.rds.snapshot.kmsKey 11.15.2
 aws.rds.snapshot.port 11.15.2
 aws.rds.snapshot.preferredBackupWindow 13.14.2
@@ -6365,6 +6372,17 @@ aws.route53.record.type 11.15.3
 aws.route53.record.weight 11.15.3
 aws.s3 11.15.2
 aws.s3.bucket 11.15.2
+aws.s3.bucket.accessPoint 13.26.1
+aws.s3.bucket.accessPoint.alias 13.26.1
+aws.s3.bucket.accessPoint.arn 13.26.1
+aws.s3.bucket.accessPoint.bucket 13.26.1
+aws.s3.bucket.accessPoint.bucketAccountId 13.26.1
+aws.s3.bucket.accessPoint.name 13.26.1
+aws.s3.bucket.accessPoint.networkOrigin 13.26.1
+aws.s3.bucket.accessPoint.policy 13.26.1
+aws.s3.bucket.accessPoint.publicAccessBlock 13.26.1
+aws.s3.bucket.accessPoint.vpcId 13.26.1
+aws.s3.bucket.accessPoints 13.26.1
 aws.s3.bucket.acl 11.15.2
 aws.s3.bucket.arn 11.15.2
 aws.s3.bucket.cors 11.15.2

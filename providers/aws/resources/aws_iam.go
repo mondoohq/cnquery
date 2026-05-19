@@ -350,6 +350,32 @@ func (a *mqlAwsIam) createIamUser(usr *iamtypes.User) (plugin.Resource, error) {
 	)
 }
 
+func (a *mqlAwsIamUser) mfaDevices() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	userName := a.Name.Data
+	res := []any{}
+	params := &iam.ListMFADevicesInput{UserName: &userName}
+	paginator := iam.NewListMFADevicesPaginator(svc, params)
+	for paginator.HasMorePages() {
+		devices, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		dicts, err := convert.JsonToDictSlice(devices.MFADevices)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, dicts...)
+	}
+	return res, nil
+}
+
 func (a *mqlAwsIam) virtualMfaDevices() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 

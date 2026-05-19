@@ -356,14 +356,66 @@ func (a *mqlAwsLambdaFunction) id() (string, error) {
 
 type mqlAwsLambdaFunctionInternal struct {
 	securityGroupIdHandler
-	cacheRoleArn   *string
-	cacheTags      map[string]string
-	tagsFetched    bool
-	tagsLock       sync.Mutex
-	cacheVpcId     *string
-	cacheSubnetIds []string
-	region         string
-	accountID      string
+	cacheRoleArn          *string
+	cacheTags             map[string]string
+	tagsFetched           bool
+	tagsLock              sync.Mutex
+	cacheVpcId            *string
+	cacheSubnetIds        []string
+	region                string
+	accountID             string
+	imageDataFetched      bool
+	imageDataLock         sync.Mutex
+	cacheImageUri         *string
+	cacheResolvedImageUri *string
+}
+
+// fetchImageData resolves the container image URIs for Image package type
+// functions via a GetFunction call, caching the result with double-check
+// locking. Zip functions leave the cached URIs nil.
+func (a *mqlAwsLambdaFunction) fetchImageData() error {
+	if a.imageDataFetched {
+		return nil
+	}
+	a.imageDataLock.Lock()
+	defer a.imageDataLock.Unlock()
+	if a.imageDataFetched {
+		return nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Lambda(a.Region.Data)
+	ctx := context.Background()
+
+	funcName := a.Name.Data
+	resp, err := svc.GetFunction(ctx, &lambda.GetFunctionInput{FunctionName: &funcName})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.imageDataFetched = true
+			return nil
+		}
+		return err
+	}
+	if resp.Code != nil {
+		a.cacheImageUri = resp.Code.ImageUri
+		a.cacheResolvedImageUri = resp.Code.ResolvedImageUri
+	}
+	a.imageDataFetched = true
+	return nil
+}
+
+func (a *mqlAwsLambdaFunction) imageUri() (string, error) {
+	if err := a.fetchImageData(); err != nil {
+		return "", err
+	}
+	return convert.ToValue(a.cacheImageUri), nil
+}
+
+func (a *mqlAwsLambdaFunction) resolvedImageUri() (string, error) {
+	if err := a.fetchImageData(); err != nil {
+		return "", err
+	}
+	return convert.ToValue(a.cacheResolvedImageUri), nil
 }
 
 func (a *mqlAwsLambdaFunction) tags() (map[string]any, error) {

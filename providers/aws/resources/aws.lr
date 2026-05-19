@@ -1733,6 +1733,8 @@ private aws.iam.user @defaults("arn name createdAt") {
   loginProfile() aws.iam.loginProfile
   // Path to the user
   path string
+  // List of MFA devices (virtual and hardware) assigned to the user
+  mfaDevices() []dict
 }
 
 // AWS IAM instance profile
@@ -4481,6 +4483,10 @@ private aws.acm.certificate @defaults("domainName issuer createdAt notAfter") {
   renewalEligible bool
   // Algorithm used to sign the certificate
   signatureAlgorithm string
+  // ARNs of AWS resources the certificate is associated with (load balancers, CloudFront distributions, and so on)
+  inUseBy []string
+  // Per-domain validation details, including validation method, status, and DNS validation records
+  domainValidationOptions []dict
 }
 
 // Amazon EC2 Auto Scaling
@@ -4736,6 +4742,8 @@ private aws.elb.loadbalancer @defaults("name region elbType scheme dnsName") {
   listeners() []aws.elb.listener
   // Typed attributes for ALB/NLB load balancers
   attribute() aws.elb.loadbalancer.attribute
+  // Health check configuration (classic load balancers only; null for ALB/NLB)
+  healthCheck dict
 }
 
 // AWS ELB listener
@@ -8183,6 +8191,30 @@ private aws.s3.bucket @defaults("name location public") {
   //
   // Reports sensitivity score, public-access summary, encryption defaults, and automated-discovery status. Null when Macie is not enabled in the bucket's region or the bucket is outside Macie's monitored set.
   macieCoverage() aws.macie.bucket
+  // S3 access points attached to the bucket
+  accessPoints() []aws.s3.bucket.accessPoint
+}
+
+// Amazon S3 bucket access point
+private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
+  // ARN of the access point
+  arn string
+  // Name of the access point
+  name string
+  // Name of the bucket the access point is attached to
+  bucket string
+  // Account ID that owns the bucket
+  bucketAccountId string
+  // Network origin of the access point: Internet or VPC
+  networkOrigin string
+  // ID of the VPC the access point is restricted to (empty for Internet-origin access points)
+  vpcId string
+  // Alias of the access point
+  alias string
+  // Public access block configuration for the access point
+  publicAccessBlock() dict
+  // Resource policy attached to the access point
+  policy() string
 }
 
 // Amazon S3 bucket grant
@@ -9430,6 +9462,8 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   timezone string
   // KMS key used for snapshot encryption
   kmsKey() aws.kms.key
+  // Whether the snapshot is shared publicly (restorable by any AWS account)
+  isPublic() bool
 }
 
 // Amazon RDS database instance
@@ -11351,6 +11385,10 @@ private aws.lambda.function @defaults("arn") {
   runtimeManagementConfig() dict
   // Published versions of this function
   versions() []aws.lambda.function.version
+  // Container image URI for Image package type functions (empty for Zip package type functions)
+  imageUri() string
+  // Resolved digest-pinned container image URI for Image package type functions (empty for Zip package type functions)
+  resolvedImageUri() string
 }
 
 // AWS Lambda function version

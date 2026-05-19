@@ -232,6 +232,119 @@ func (a *mqlAwsS3Bucket) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
+type mqlAwsS3BucketAccessPointInternal struct {
+	region    string
+	accountID string
+}
+
+func (a *mqlAwsS3BucketAccessPoint) id() (string, error) {
+	return a.Arn.Data, nil
+}
+
+func (a *mqlAwsS3Bucket) accessPoints() ([]any, error) {
+	res := []any{}
+	// placeholder buckets (e.g., cross-account references) can't be queried
+	if !a.Exists.Data {
+		return res, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	bucketName := a.Name.Data
+	region := a.GetLocation().Data
+	if region == "" {
+		region = "us-east-1"
+	}
+	accountID := conn.AccountId()
+	svc := conn.S3Control(region)
+	ctx := context.Background()
+
+	params := &s3control.ListAccessPointsInput{
+		AccountId: aws.String(accountID),
+		Bucket:    aws.String(bucketName),
+	}
+	paginator := s3control.NewListAccessPointsPaginator(svc, params)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, ap := range page.AccessPointList {
+			vpcId := ""
+			if ap.VpcConfiguration != nil {
+				vpcId = convert.ToValue(ap.VpcConfiguration.VpcId)
+			}
+			mqlAp, err := CreateResource(a.MqlRuntime, "aws.s3.bucket.accessPoint",
+				map[string]*llx.RawData{
+					"__id":            llx.StringDataPtr(ap.AccessPointArn),
+					"arn":             llx.StringDataPtr(ap.AccessPointArn),
+					"name":            llx.StringDataPtr(ap.Name),
+					"bucket":          llx.StringDataPtr(ap.Bucket),
+					"bucketAccountId": llx.StringDataPtr(ap.BucketAccountId),
+					"networkOrigin":   llx.StringData(string(ap.NetworkOrigin)),
+					"vpcId":           llx.StringData(vpcId),
+					"alias":           llx.StringDataPtr(ap.Alias),
+				})
+			if err != nil {
+				return nil, err
+			}
+			apResource := mqlAp.(*mqlAwsS3BucketAccessPoint)
+			apResource.region = region
+			apResource.accountID = accountID
+			res = append(res, mqlAp)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsS3BucketAccessPoint) publicAccessBlock() (any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3Control(a.region)
+	ctx := context.Background()
+
+	name := a.Name.Data
+	resp, err := svc.GetAccessPoint(ctx, &s3control.GetAccessPointInput{
+		AccountId: aws.String(a.accountID),
+		Name:      aws.String(name),
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if resp.PublicAccessBlockConfiguration == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(resp.PublicAccessBlockConfiguration)
+}
+
+func (a *mqlAwsS3BucketAccessPoint) policy() (string, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.S3Control(a.region)
+	ctx := context.Background()
+
+	name := a.Name.Data
+	resp, err := svc.GetAccessPointPolicy(ctx, &s3control.GetAccessPointPolicyInput{
+		AccountId: aws.String(a.accountID),
+		Name:      aws.String(name),
+	})
+	if err != nil {
+		// access points without a resource policy return NoSuchAccessPointPolicy
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "NoSuchAccessPointPolicy" {
+			return "", nil
+		}
+		if Is400AccessDeniedError(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return convert.ToValue(resp.Policy), nil
+}
+
 func (a *mqlAwsS3Bucket) policy() (*mqlAwsS3BucketPolicy, error) {
 	// Placeholder buckets (e.g., cross-account references) can't be queried
 	if !a.Exists.Data {

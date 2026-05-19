@@ -368,6 +368,7 @@ const (
 	ResourceAwsS3control                                                        string = "aws.s3control"
 	ResourceAwsS3                                                               string = "aws.s3"
 	ResourceAwsS3Bucket                                                         string = "aws.s3.bucket"
+	ResourceAwsS3BucketAccessPoint                                              string = "aws.s3.bucket.accessPoint"
 	ResourceAwsS3BucketGrant                                                    string = "aws.s3.bucket.grant"
 	ResourceAwsS3BucketCorsrule                                                 string = "aws.s3.bucket.corsrule"
 	ResourceAwsS3BucketEncryptionRule                                           string = "aws.s3.bucket.encryptionRule"
@@ -2212,6 +2213,10 @@ func init() {
 		"aws.s3.bucket": {
 			Init:   initAwsS3Bucket,
 			Create: createAwsS3Bucket,
+		},
+		"aws.s3.bucket.accessPoint": {
+			// to override args, implement: initAwsS3BucketAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsS3BucketAccessPoint,
 		},
 		"aws.s3.bucket.grant": {
 			// to override args, implement: initAwsS3BucketGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5901,6 +5906,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.user.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetPath()).ToDataRes(types.String)
 	},
+	"aws.iam.user.mfaDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetMfaDevices()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.iam.instanceProfile.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamInstanceProfile).GetArn()).ToDataRes(types.String)
 	},
@@ -9285,6 +9293,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.acm.certificate.signatureAlgorithm": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAcmCertificate).GetSignatureAlgorithm()).ToDataRes(types.String)
 	},
+	"aws.acm.certificate.inUseBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetInUseBy()).ToDataRes(types.Array(types.String))
+	},
+	"aws.acm.certificate.domainValidationOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsAcmCertificate).GetDomainValidationOptions()).ToDataRes(types.Array(types.Dict))
+	},
 	"aws.autoscaling.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAutoscaling).GetGroups()).ToDataRes(types.Array(types.Resource("aws.autoscaling.group")))
 	},
@@ -9605,6 +9619,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.elb.loadbalancer.attribute": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetAttribute()).ToDataRes(types.Resource("aws.elb.loadbalancer.attribute"))
+	},
+	"aws.elb.loadbalancer.healthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetHealthCheck()).ToDataRes(types.Dict)
 	},
 	"aws.elb.listener.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetArn()).ToDataRes(types.String)
@@ -13443,6 +13460,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.macieCoverage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetMacieCoverage()).ToDataRes(types.Resource("aws.macie.bucket"))
 	},
+	"aws.s3.bucket.accessPoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetAccessPoints()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.accessPoint")))
+	},
+	"aws.s3.bucket.accessPoint.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetArn()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.accessPoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetName()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.accessPoint.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetBucket()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.accessPoint.bucketAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetBucketAccountId()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.accessPoint.networkOrigin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetNetworkOrigin()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.accessPoint.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.accessPoint.alias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetAlias()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.accessPoint.publicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetPublicAccessBlock()).ToDataRes(types.Dict)
+	},
+	"aws.s3.bucket.accessPoint.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetPolicy()).ToDataRes(types.String)
+	},
 	"aws.s3.bucket.grant.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketGrant).GetId()).ToDataRes(types.String)
 	},
@@ -14867,6 +14914,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.snapshot.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.rds.snapshot.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetIsPublic()).ToDataRes(types.Bool)
 	},
 	"aws.rds.dbinstance.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsDbinstance).GetArn()).ToDataRes(types.String)
@@ -17147,6 +17197,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.lambda.function.versions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetVersions()).ToDataRes(types.Array(types.Resource("aws.lambda.function.version")))
+	},
+	"aws.lambda.function.imageUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetImageUri()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.resolvedImageUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetResolvedImageUri()).ToDataRes(types.String)
 	},
 	"aws.lambda.function.version.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunctionVersion).GetArn()).ToDataRes(types.String)
@@ -30469,6 +30525,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamUser).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.iam.user.mfaDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).MfaDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.instanceProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamInstanceProfile).__id, ok = v.Value.(string)
 		return
@@ -35417,6 +35477,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsAcmCertificate).SignatureAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.acm.certificate.inUseBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).InUseBy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.acm.certificate.domainValidationOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsAcmCertificate).DomainValidationOptions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.autoscaling.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAutoscaling).__id, ok = v.Value.(string)
 		return
@@ -35871,6 +35939,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.elb.loadbalancer.attribute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).Attribute, ok = plugin.RawToTValue[*mqlAwsElbLoadbalancerAttribute](v.Value, v.Error)
+		return
+	},
+	"aws.elb.loadbalancer.healthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).HealthCheck, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.elb.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41633,6 +41705,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3Bucket).MacieCoverage, ok = plugin.RawToTValue[*mqlAwsMacieBucket](v.Value, v.Error)
 		return
 	},
+	"aws.s3.bucket.accessPoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).AccessPoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.s3.bucket.accessPoint.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).Bucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.bucketAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).BucketAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.networkOrigin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).NetworkOrigin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).Alias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.publicAccessBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).PublicAccessBlock, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.s3.bucket.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3BucketGrant).__id, ok = v.Value.(string)
 		return
@@ -43711,6 +43827,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.rds.snapshot.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.rds.snapshot.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.rds.dbinstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46979,6 +47099,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.lambda.function.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.imageUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).ImageUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.resolvedImageUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).ResolvedImageUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.lambda.function.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69840,6 +69968,7 @@ type mqlAwsIamUser struct {
 	AccessKeys       plugin.TValue[[]any]
 	LoginProfile     plugin.TValue[*mqlAwsIamLoginProfile]
 	Path             plugin.TValue[string]
+	MfaDevices       plugin.TValue[[]any]
 }
 
 // createAwsIamUser creates a new instance of this resource
@@ -69955,6 +70084,12 @@ func (c *mqlAwsIamUser) GetLoginProfile() *plugin.TValue[*mqlAwsIamLoginProfile]
 
 func (c *mqlAwsIamUser) GetPath() *plugin.TValue[string] {
 	return &c.Path
+}
+
+func (c *mqlAwsIamUser) GetMfaDevices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MfaDevices, func() ([]any, error) {
+		return c.mfaDevices()
+	})
 }
 
 // mqlAwsIamInstanceProfile for the aws.iam.instanceProfile resource
@@ -83233,23 +83368,25 @@ type mqlAwsAcmCertificate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsAcmCertificateInternal it will be used here
-	Arn                plugin.TValue[string]
-	NotBefore          plugin.TValue[*time.Time]
-	NotAfter           plugin.TValue[*time.Time]
-	CreatedAt          plugin.TValue[*time.Time]
-	DomainName         plugin.TValue[string]
-	Status             plugin.TValue[string]
-	Subject            plugin.TValue[string]
-	Certificate        plugin.TValue[plugin.Resource]
-	Tags               plugin.TValue[map[string]any]
-	KeyAlgorithm       plugin.TValue[string]
-	Serial             plugin.TValue[string]
-	Source             plugin.TValue[string]
-	Issuer             plugin.TValue[string]
-	IssuedAt           plugin.TValue[*time.Time]
-	ImportedAt         plugin.TValue[*time.Time]
-	RenewalEligible    plugin.TValue[bool]
-	SignatureAlgorithm plugin.TValue[string]
+	Arn                     plugin.TValue[string]
+	NotBefore               plugin.TValue[*time.Time]
+	NotAfter                plugin.TValue[*time.Time]
+	CreatedAt               plugin.TValue[*time.Time]
+	DomainName              plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	Subject                 plugin.TValue[string]
+	Certificate             plugin.TValue[plugin.Resource]
+	Tags                    plugin.TValue[map[string]any]
+	KeyAlgorithm            plugin.TValue[string]
+	Serial                  plugin.TValue[string]
+	Source                  plugin.TValue[string]
+	Issuer                  plugin.TValue[string]
+	IssuedAt                plugin.TValue[*time.Time]
+	ImportedAt              plugin.TValue[*time.Time]
+	RenewalEligible         plugin.TValue[bool]
+	SignatureAlgorithm      plugin.TValue[string]
+	InUseBy                 plugin.TValue[[]any]
+	DomainValidationOptions plugin.TValue[[]any]
 }
 
 // createAwsAcmCertificate creates a new instance of this resource
@@ -83367,6 +83504,14 @@ func (c *mqlAwsAcmCertificate) GetRenewalEligible() *plugin.TValue[bool] {
 
 func (c *mqlAwsAcmCertificate) GetSignatureAlgorithm() *plugin.TValue[string] {
 	return &c.SignatureAlgorithm
+}
+
+func (c *mqlAwsAcmCertificate) GetInUseBy() *plugin.TValue[[]any] {
+	return &c.InUseBy
+}
+
+func (c *mqlAwsAcmCertificate) GetDomainValidationOptions() *plugin.TValue[[]any] {
+	return &c.DomainValidationOptions
 }
 
 // mqlAwsAutoscaling for the aws.autoscaling resource
@@ -84248,6 +84393,7 @@ type mqlAwsElbLoadbalancer struct {
 	Instances            plugin.TValue[[]any]
 	Listeners            plugin.TValue[[]any]
 	Attribute            plugin.TValue[*mqlAwsElbLoadbalancerAttribute]
+	HealthCheck          plugin.TValue[any]
 }
 
 // createAwsElbLoadbalancer creates a new instance of this resource
@@ -84415,6 +84561,10 @@ func (c *mqlAwsElbLoadbalancer) GetAttribute() *plugin.TValue[*mqlAwsElbLoadbala
 
 		return c.attribute()
 	})
+}
+
+func (c *mqlAwsElbLoadbalancer) GetHealthCheck() *plugin.TValue[any] {
+	return &c.HealthCheck
 }
 
 // mqlAwsElbListener for the aws.elb.listener resource
@@ -100443,6 +100593,7 @@ type mqlAwsS3Bucket struct {
 	NotificationConfiguration plugin.TValue[any]
 	OwnershipControls         plugin.TValue[string]
 	MacieCoverage             plugin.TValue[*mqlAwsMacieBucket]
+	AccessPoints              plugin.TValue[[]any]
 }
 
 // createAwsS3Bucket creates a new instance of this resource
@@ -100723,6 +100874,115 @@ func (c *mqlAwsS3Bucket) GetMacieCoverage() *plugin.TValue[*mqlAwsMacieBucket] {
 		}
 
 		return c.macieCoverage()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetAccessPoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessPoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket", c.__id, "accessPoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessPoints()
+	})
+}
+
+// mqlAwsS3BucketAccessPoint for the aws.s3.bucket.accessPoint resource
+type mqlAwsS3BucketAccessPoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsS3BucketAccessPointInternal
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Bucket            plugin.TValue[string]
+	BucketAccountId   plugin.TValue[string]
+	NetworkOrigin     plugin.TValue[string]
+	VpcId             plugin.TValue[string]
+	Alias             plugin.TValue[string]
+	PublicAccessBlock plugin.TValue[any]
+	Policy            plugin.TValue[string]
+}
+
+// createAwsS3BucketAccessPoint creates a new instance of this resource
+func createAwsS3BucketAccessPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsS3BucketAccessPoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.s3.bucket.accessPoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsS3BucketAccessPoint) MqlName() string {
+	return "aws.s3.bucket.accessPoint"
+}
+
+func (c *mqlAwsS3BucketAccessPoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetBucket() *plugin.TValue[string] {
+	return &c.Bucket
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetBucketAccountId() *plugin.TValue[string] {
+	return &c.BucketAccountId
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetNetworkOrigin() *plugin.TValue[string] {
+	return &c.NetworkOrigin
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetAlias() *plugin.TValue[string] {
+	return &c.Alias
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetPublicAccessBlock() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PublicAccessBlock, func() (any, error) {
+		return c.publicAccessBlock()
+	})
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Policy, func() (string, error) {
+		return c.policy()
 	})
 }
 
@@ -105723,6 +105983,7 @@ type mqlAwsRdsSnapshot struct {
 	AvailabilityZone      plugin.TValue[string]
 	Timezone              plugin.TValue[string]
 	KmsKey                plugin.TValue[*mqlAwsKmsKey]
+	IsPublic              plugin.TValue[bool]
 }
 
 // createAwsRdsSnapshot creates a new instance of this resource
@@ -105853,6 +106114,12 @@ func (c *mqlAwsRdsSnapshot) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 		}
 
 		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsRdsSnapshot) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
 	})
 }
 
@@ -113142,6 +113409,8 @@ type mqlAwsLambdaFunction struct {
 	EventInvokeConfig             plugin.TValue[any]
 	RuntimeManagementConfig       plugin.TValue[any]
 	Versions                      plugin.TValue[[]any]
+	ImageUri                      plugin.TValue[string]
+	ResolvedImageUri              plugin.TValue[string]
 }
 
 // createAwsLambdaFunction creates a new instance of this resource
@@ -113504,6 +113773,18 @@ func (c *mqlAwsLambdaFunction) GetVersions() *plugin.TValue[[]any] {
 		}
 
 		return c.versions()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetImageUri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ImageUri, func() (string, error) {
+		return c.imageUri()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetResolvedImageUri() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ResolvedImageUri, func() (string, error) {
+		return c.resolvedImageUri()
 	})
 }
 

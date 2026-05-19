@@ -77,6 +77,10 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 					if err != nil {
 						return nil, err
 					}
+					healthCheck, err := convert.JsonToDict(lb.HealthCheck)
+					if err != nil {
+						return nil, err
+					}
 					lbName := convert.ToValue(lb.LoadBalancerName)
 
 					availabilityZones := []any{}
@@ -106,6 +110,7 @@ func (a *mqlAwsElb) getClassicLoadBalancers(conn *connection.AwsConnection) []*j
 						"dnsName":              llx.StringDataPtr(lb.DNSName),
 						"elbType":              llx.StringData("classic"),
 						"hostedZoneId":         llx.StringDataPtr(lb.CanonicalHostedZoneNameID),
+						"healthCheck":          llx.DictData(healthCheck),
 						"listenerDescriptions": llx.AnyData(jsonListeners),
 						"name":                 llx.StringDataPtr(lb.LoadBalancerName),
 						"region":               llx.StringData(region),
@@ -278,6 +283,7 @@ func (a *mqlAwsElb) getLoadBalancers(conn *connection.AwsConnection) []*jobpool.
 						"ipAddressType":     llx.StringData(string(lb.IpAddressType)),
 						"region":            llx.StringData(region),
 						"vpc":               llx.NilData, // set vpc to nil as default, if vpc is not set
+						"healthCheck":       llx.NilData, // classic ELB only; ALB/NLB have no LB-level health check
 					}
 
 					if lb.VpcId != nil {

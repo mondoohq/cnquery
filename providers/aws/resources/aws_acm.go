@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -129,6 +130,16 @@ func initAwsAcmCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData
 	args["tags"] = llx.MapData(CertTagsToMapTags(certTags.Tags), types.String)
 	args["renewalEligible"] = llx.BoolData(certDetails.Certificate.RenewalEligibility == acmtypes.RenewalEligibilityEligible)
 	args["signatureAlgorithm"] = llx.StringDataPtr(certDetails.Certificate.SignatureAlgorithm)
+	inUseBy := make([]any, 0, len(certDetails.Certificate.InUseBy))
+	for _, u := range certDetails.Certificate.InUseBy {
+		inUseBy = append(inUseBy, u)
+	}
+	args["inUseBy"] = llx.ArrayData(inUseBy, types.String)
+	domainValidationOptions, err := convert.JsonToDictSlice(certDetails.Certificate.DomainValidationOptions)
+	if err != nil {
+		return nil, nil, err
+	}
+	args["domainValidationOptions"] = llx.ArrayData(domainValidationOptions, types.Dict)
 	return args, nil, nil
 }
 

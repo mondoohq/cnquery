@@ -383,6 +383,7 @@
     "iam:ListGroups",
     "iam:ListGroupsForUser",
     "iam:ListInstanceProfiles",
+    "iam:ListMFADevices",
     "iam:ListOpenIDConnectProviders",
     "iam:ListPolicies",
     "iam:ListPolicyVersions",
@@ -428,6 +429,7 @@
     "kms:ListKeys",
     "kms:ListResourceTags",
     "lambda:GetCodeSigningConfig",
+    "lambda:GetFunction",
     "lambda:GetFunctionCodeSigningConfig",
     "lambda:GetFunctionConcurrency",
     "lambda:GetFunctionEventInvokeConfig",
@@ -543,6 +545,8 @@
     "route53:ListTagsForResource",
     "route53domains:GetDomainDetail",
     "route53domains:ListDomains",
+    "s3:GetAccessPoint",
+    "s3:GetAccessPointPolicy",
     "s3:GetBucketAcl",
     "s3:GetBucketCors",
     "s3:GetBucketEncryption",
@@ -558,6 +562,7 @@
     "s3:GetBucketWebsite",
     "s3:GetObjectLockConfiguration",
     "s3:GetPublicAccessBlock",
+    "s3:ListAccessPoints",
     "s3:ListBucketMetricsConfigurations",
     "s3:ListBuckets",
     "sagemaker:DescribeAction",
@@ -3109,6 +3114,12 @@
       "source_file": "aws_iam.go"
     },
     {
+      "permission": "iam:ListMFADevices",
+      "service": "iam",
+      "action": "ListMFADevices",
+      "source_file": "aws_iam.go"
+    },
+    {
       "permission": "iam:ListOpenIDConnectProviders",
       "service": "iam",
       "action": "ListOpenIDConnectProviders",
@@ -3382,6 +3393,12 @@
       "permission": "lambda:GetCodeSigningConfig",
       "service": "lambda",
       "action": "GetCodeSigningConfig",
+      "source_file": "aws_lambda.go"
+    },
+    {
+      "permission": "lambda:GetFunction",
+      "service": "lambda",
+      "action": "GetFunction",
       "source_file": "aws_lambda.go"
     },
     {
@@ -4147,6 +4164,18 @@
       "source_file": "aws_route53.go"
     },
     {
+      "permission": "s3:GetAccessPoint",
+      "service": "s3",
+      "action": "GetAccessPoint",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:GetAccessPointPolicy",
+      "service": "s3",
+      "action": "GetAccessPointPolicy",
+      "source_file": "aws_s3.go"
+    },
+    {
       "permission": "s3:GetBucketAcl",
       "service": "s3",
       "action": "GetBucketAcl",
@@ -4234,6 +4263,12 @@
       "permission": "s3:GetPublicAccessBlock",
       "service": "s3",
       "action": "GetPublicAccessBlock",
+      "source_file": "aws_s3.go"
+    },
+    {
+      "permission": "s3:ListAccessPoints",
+      "service": "s3",
+      "action": "ListAccessPoints",
       "source_file": "aws_s3.go"
     },
     {

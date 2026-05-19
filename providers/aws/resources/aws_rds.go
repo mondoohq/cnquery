@@ -1407,6 +1407,35 @@ func (a *mqlAwsRdsSnapshot) attributes() ([]any, error) {
 	return convert.JsonToDictSlice(snapshotAttributes.DBSnapshotAttributesResult.DBSnapshotAttributes)
 }
 
+// isPublic reports whether the snapshot is shared with all AWS accounts, which
+// makes it restorable by anyone. RDS exposes this through the "restore" attribute
+// carrying the special value "all" in its list of authorized accounts.
+func (a *mqlAwsRdsSnapshot) isPublic() (bool, error) {
+	attributes, err := a.attributes()
+	if err != nil {
+		return false, err
+	}
+	for _, attr := range attributes {
+		attrMap, ok := attr.(map[string]any)
+		if !ok {
+			continue
+		}
+		if name, ok := attrMap["AttributeName"].(string); !ok || name != "restore" {
+			continue
+		}
+		values, ok := attrMap["AttributeValues"].([]any)
+		if !ok {
+			continue
+		}
+		for _, v := range values {
+			if account, ok := v.(string); ok && account == "all" {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
 func (a *mqlAwsRds) proxies() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
