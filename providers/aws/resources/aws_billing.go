@@ -72,10 +72,11 @@ func lastMonthRange(now time.Time) (string, string) {
 	return start.Format("2006-01-02"), first.Format("2006-01-02")
 }
 
-// trailing30Range returns Start (today-30d) and End (today+1d, exclusive).
+// trailing30Range returns Start and End (exclusive) for a 30-day window
+// ending today (inclusive): [today-29, today+1).
 func trailing30Range(now time.Time) (string, string) {
 	end := now.UTC().AddDate(0, 0, 1)
-	start := end.AddDate(0, 0, -31)
+	start := end.AddDate(0, 0, -30)
 	return start.Format("2006-01-02"), end.Format("2006-01-02")
 }
 
@@ -102,6 +103,72 @@ func parseCEAmount(s *string) float64 {
 	return v
 }
 
+// costByServiceResult accumulates an unblended cost total and per-service
+// breakdown across all pages of a GetCostAndUsage(GroupBy=SERVICE) call.
+type costByServiceResult struct {
+	total     float64
+	byService map[string]any
+	currency  string
+}
+
+// fetchCostByService runs GetCostAndUsage(GroupBy=SERVICE) for the given
+// window, paginating via NextPageToken so accounts with many services
+// don't get truncated. The label is used in log messages.
+func fetchCostByService(svc *costexplorer.Client, label, start, end string) (*costByServiceResult, bool, error) {
+	out := &costByServiceResult{byService: map[string]any{}}
+
+	var pageToken *string
+	for {
+		resp, err := svc.GetCostAndUsage(context.TODO(), &costexplorer.GetCostAndUsageInput{
+			TimePeriod:    &cetypes.DateInterval{Start: aws.String(start), End: aws.String(end)},
+			Granularity:   cetypes.GranularityMonthly,
+			Metrics:       []string{"UnblendedCost"},
+			GroupBy:       []cetypes.GroupDefinition{{Type: cetypes.GroupDefinitionTypeDimension, Key: aws.String("SERVICE")}},
+			NextPageToken: pageToken,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Debug().Msgf("aws.billing: Cost Explorer access denied for %s", label)
+				return nil, true, nil
+			}
+			return nil, false, err
+		}
+
+		for _, r := range resp.ResultsByTime {
+			for _, g := range r.Groups {
+				if len(g.Keys) == 0 {
+					continue
+				}
+				metric, ok := g.Metrics["UnblendedCost"]
+				if !ok {
+					continue
+				}
+				amt := parseCEAmount(metric.Amount)
+				out.byService[g.Keys[0]] = amt
+				out.total += amt
+				if out.currency == "" && metric.Unit != nil {
+					out.currency = *metric.Unit
+				}
+			}
+			if len(r.Groups) == 0 {
+				if metric, ok := r.Total["UnblendedCost"]; ok {
+					out.total = parseCEAmount(metric.Amount)
+					if out.currency == "" && metric.Unit != nil {
+						out.currency = *metric.Unit
+					}
+				}
+			}
+		}
+
+		if resp.NextPageToken == nil || *resp.NextPageToken == "" {
+			break
+		}
+		pageToken = resp.NextPageToken
+	}
+
+	return out, false, nil
+}
+
 // fetchMonthToDate populates the mtd* fields. Safe to call repeatedly.
 func (a *mqlAwsBilling) fetchMonthToDate() error {
 	if a.mtdFetched {
@@ -114,54 +181,20 @@ func (a *mqlAwsBilling) fetchMonthToDate() error {
 	}
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.CostExplorer()
 	start, end := monthRange(time.Now())
-
-	a.mtdByService = map[string]any{}
-	resp, err := svc.GetCostAndUsage(context.TODO(), &costexplorer.GetCostAndUsageInput{
-		TimePeriod:  &cetypes.DateInterval{Start: aws.String(start), End: aws.String(end)},
-		Granularity: cetypes.GranularityMonthly,
-		Metrics:     []string{"UnblendedCost"},
-		GroupBy: []cetypes.GroupDefinition{
-			{Type: cetypes.GroupDefinitionTypeDimension, Key: aws.String("SERVICE")},
-		},
-	})
+	res, denied, err := fetchCostByService(conn.CostExplorer(), "month-to-date", start, end)
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			log.Debug().Msg("aws.billing: Cost Explorer access denied for month-to-date")
-			a.mtdUnavailable = true
-			a.mtdFetched = true
-			return nil
-		}
 		return err
 	}
-
-	for _, r := range resp.ResultsByTime {
-		for _, g := range r.Groups {
-			if len(g.Keys) == 0 {
-				continue
-			}
-			metric, ok := g.Metrics["UnblendedCost"]
-			if !ok {
-				continue
-			}
-			amt := parseCEAmount(metric.Amount)
-			a.mtdByService[g.Keys[0]] = amt
-			a.mtdTotal += amt
-			if a.mtdCurrency == "" && metric.Unit != nil {
-				a.mtdCurrency = *metric.Unit
-			}
-		}
-		if len(r.Groups) == 0 {
-			if metric, ok := r.Total["UnblendedCost"]; ok {
-				a.mtdTotal = parseCEAmount(metric.Amount)
-				if a.mtdCurrency == "" && metric.Unit != nil {
-					a.mtdCurrency = *metric.Unit
-				}
-			}
-		}
+	if denied {
+		a.mtdByService = map[string]any{}
+		a.mtdUnavailable = true
+		a.mtdFetched = true
+		return nil
 	}
-
+	a.mtdTotal = res.total
+	a.mtdByService = res.byService
+	a.mtdCurrency = res.currency
 	a.mtdFetched = true
 	return nil
 }
@@ -177,48 +210,19 @@ func (a *mqlAwsBilling) fetchLastMonth() error {
 	}
 
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.CostExplorer()
 	start, end := lastMonthRange(time.Now())
-
-	a.lastMonthByService = map[string]any{}
-	resp, err := svc.GetCostAndUsage(context.TODO(), &costexplorer.GetCostAndUsageInput{
-		TimePeriod:  &cetypes.DateInterval{Start: aws.String(start), End: aws.String(end)},
-		Granularity: cetypes.GranularityMonthly,
-		Metrics:     []string{"UnblendedCost"},
-		GroupBy: []cetypes.GroupDefinition{
-			{Type: cetypes.GroupDefinitionTypeDimension, Key: aws.String("SERVICE")},
-		},
-	})
+	res, denied, err := fetchCostByService(conn.CostExplorer(), "last month", start, end)
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			log.Debug().Msg("aws.billing: Cost Explorer access denied for last month")
-			a.lastMonthUnavailable = true
-			a.lastMonthFetched = true
-			return nil
-		}
 		return err
 	}
-
-	for _, r := range resp.ResultsByTime {
-		for _, g := range r.Groups {
-			if len(g.Keys) == 0 {
-				continue
-			}
-			metric, ok := g.Metrics["UnblendedCost"]
-			if !ok {
-				continue
-			}
-			amt := parseCEAmount(metric.Amount)
-			a.lastMonthByService[g.Keys[0]] = amt
-			a.lastMonthTotal += amt
-		}
-		if len(r.Groups) == 0 {
-			if metric, ok := r.Total["UnblendedCost"]; ok {
-				a.lastMonthTotal = parseCEAmount(metric.Amount)
-			}
-		}
+	if denied {
+		a.lastMonthByService = map[string]any{}
+		a.lastMonthUnavailable = true
+		a.lastMonthFetched = true
+		return nil
 	}
-
+	a.lastMonthTotal = res.total
+	a.lastMonthByService = res.byService
 	a.lastMonthFetched = true
 	return nil
 }

@@ -89,6 +89,7 @@ cdroms
 ceph
 certificatechains
 certificatesmanagement
+cetypes
 chabc
 chatgpt
 chokepoint
@@ -97,6 +98,7 @@ ciscocatalyst
 classpath
 claude
 clcerts
+clientcache
 cloudflare
 cloudflareaccess
 Clusterwide
@@ -106,6 +108,7 @@ cmk
 cmnd
 cname
 cocoapods
+codegen
 Codeium
 codeowners
 codeql
@@ -118,6 +121,7 @@ containeranalysis
 continuedev
 corosync
 cosmosdb
+costexplorer
 cowlib
 cpe
 CPWn
@@ -184,6 +188,7 @@ eku
 elbv
 embeddings
 encryptor
+encryptors
 endpointslice
 eni
 ENIId
@@ -198,7 +203,6 @@ Eventstream
 evs
 EXACC
 Exadata
-exadata
 exo
 faa
 failback
@@ -220,6 +224,7 @@ flink
 fluentd
 fortios
 fqdns
+freetier
 frontdoor
 frontmatter
 fsn
@@ -315,8 +320,8 @@ jupyter
 jwks
 KEDA
 kerberoastable
-KEYSTORE
 keymanager
+KEYSTORE
 KEYTAB
 kilocode
 kiro
@@ -426,8 +431,10 @@ nodepool
 noeviction
 nokeys
 NONSHARDED
+noreply
 Noreuse
 notebookinstancedetails
+notif
 nproc
 nsg
 nsp
@@ -471,6 +478,7 @@ owpjy
 Paa
 pacman
 pagerduty
+paginators
 panos
 parallelquery
 PAYG
