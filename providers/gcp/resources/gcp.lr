@@ -233,7 +233,17 @@ private gcp.project.redisService {
   clusters() []gcp.project.redisService.cluster
 }
 
-// Google Cloud (GCP) Redis instance
+// Google Cloud (GCP) Memorystore for Redis instance
+//
+// Examine a managed Redis instance — its version, tier, memory
+// size, and network placement (`authorizedNetwork`, `connectMode`).
+// Surfaces authentication posture (`authEnabled`,
+// `transitEncryptionMode`), replica topology (`replicaCount`,
+// `readReplicasMode`, `readEndpoint`), the customer-managed
+// encryption key via `kmsKey()`, persistence and maintenance
+// configuration, and the list of `serverCaCerts` used for TLS
+// connections. The `state` and `statusMessage` fields reflect the
+// current operational condition of the instance.
 private gcp.project.redisService.instance @defaults("name") {
   // Unique name of the resource in this scope including project and location
   name string
@@ -341,6 +351,18 @@ private gcp.project.redisService.instance.serverCaCert @defaults("serialNumber s
 }
 
 // Google Cloud (GCP) Memorystore for Redis Cluster
+//
+// Examine a sharded Memorystore for Redis Cluster deployment.
+// Surfaces the cluster `state`, shard and replica counts,
+// `nodeType`, total memory size (`sizeGb`, `preciseSizeGb`),
+// authorization and transit-encryption modes, deletion protection,
+// the customer-managed encryption key via `cryptoKey()`, and
+// operational metadata such as `maintenancePolicy`,
+// `maintenanceSchedule`, `persistenceConfig`, and
+// `automatedBackupConfig`. The `pscConfigs`, `pscConnections`,
+// `clusterEndpoints`, and `discoveryEndpoints` describe the Private
+// Service Connect topology. Use `backups()` to enumerate
+// point-in-time cluster backups.
 private gcp.project.redisService.cluster @defaults("name") {
   // Unique name of the resource
   name string
@@ -458,7 +480,14 @@ private gcp.project.redisService.cluster.pscConnection @defaults("pscConnectionI
   connectionType string
 }
 
-// Google Cloud (GCP) Redis Cluster backup
+// Google Cloud (GCP) Memorystore for Redis Cluster backup
+//
+// Examine a point-in-time backup of a Redis Cluster. Surfaces the
+// backup `name`, `state`, `backupType` (ON_DEMAND or AUTOMATED),
+// creation and expiry timestamps, total size, the engine version
+// and cluster topology (node type, shard and replica counts) at
+// backup time, encryption information, and the list of constituent
+// `backupFiles`.
 private gcp.project.redisService.cluster.backup @defaults("name state") {
   // Project ID
   projectId string
@@ -545,6 +574,13 @@ private gcp.project.redisService.cluster.connectionDetail @defaults("pscConnecti
 }
 
 // Google Cloud (GCP) folder
+//
+// Examine a Cloud Resource Manager folder — a node in the org
+// hierarchy between the organization and its projects. Surfaces
+// the folder `id`, `name`, `parentId`, lifecycle `state`, creation
+// and update timestamps, and the timestamp when deletion was
+// requested. Use `folders()` to enumerate immediate child folders
+// and `projects()` to list the projects directly under this folder.
 private gcp.folder @defaults("name") {
   // Folder ID
   id string
@@ -924,7 +960,16 @@ private gcp.project.computeService {
   instanceTemplates() []gcp.project.computeService.instanceTemplate
 }
 
-// Google Cloud (GCP) Compute address
+// Google Cloud (GCP) Compute Engine static IP address
+//
+// Examine a reserved static IP address (external or internal).
+// Surfaces the `address` value, `addressType`, `ipVersion`,
+// `purpose` (EXTERNAL, GCE_ENDPOINT, SHARED_LOADBALANCER_VIP, etc.),
+// `networkTier`, `status`, and `prefixLength` for IP-range
+// reservations. The typed `network()` and `subnetwork()` accessors
+// link to the VPC resources the address is scoped to, and
+// `resourceUrls` lists the compute resources currently using the
+// address.
 private gcp.project.computeService.address @defaults("name address addressType") {
   // Unique identifier
   id string
@@ -966,7 +1011,16 @@ private gcp.project.computeService.address @defaults("name address addressType")
   resourceUrls []string
 }
 
-// Google Cloud (GCP) Compute forwarding rules
+// Google Cloud (GCP) Compute Engine forwarding rule
+//
+// Examine a load-balancer forwarding rule that routes incoming
+// traffic to a backend. Surfaces the `ipAddress`, `ipProtocol`,
+// `portRange`, `ports`, `loadBalancingScheme`, `networkTier`, and
+// `targetUrl` describing where traffic is sent. The typed
+// `network()` and `subnetwork()` accessors link to the VPC
+// resources the rule is scoped to. Audit Private Service Connect
+// posture via `pscConnectionStatus` and `allowPscGlobalAccess`, and
+// packet mirroring eligibility via `isMirroringCollector`.
 private gcp.project.computeService.forwardingRule {
   // Unique identifier
   id string
@@ -1034,7 +1088,13 @@ private gcp.project.computeService.forwardingRule {
   ipCollection string
 }
 
-// Google Cloud (GCP) Compute region
+// Google Cloud (GCP) Compute Engine region
+//
+// Examine a Compute Engine region and its capacity posture.
+// Surfaces the region `name`, `status`, creation timestamp,
+// per-resource `quotas` (CPU, disk, instances, etc.) as a
+// name-to-float map, deprecation status, and whether the region
+// supports Protected Zone Separation (`supportsPzs`).
 private gcp.project.computeService.region @defaults("name") {
   // Unique identifier
   id string
@@ -1068,7 +1128,14 @@ private gcp.project.computeService.zone @defaults("name") {
   created time
 }
 
-// Google Cloud (GCP) machine type
+// Google Cloud (GCP) Compute Engine machine type
+//
+// Examine a Compute Engine machine type and its hardware
+// specification. Surfaces the `name`, `guestCpus`, `memoryMb`,
+// `isSharedCpu`, maximum persistent-disk count and total size,
+// and the `zone` it belongs to. Used for auditing instance
+// right-sizing and validating that workloads run on approved
+// machine families.
 private gcp.project.computeService.machineType @defaults("name") {
   // Unique identifier
   id string
@@ -1273,7 +1340,18 @@ private gcp.project.computeService.serviceaccount @defaults("email") {
   scopes []string
 }
 
-// Google Cloud (GCP) Compute persistent disk
+// Google Cloud (GCP) Compute Engine persistent disk
+//
+// Examine a Compute Engine persistent disk and its security
+// configuration. Surfaces the disk `type` (pd-standard, pd-ssd,
+// pd-balanced, etc.), `sizeGb`, `status`, attached instance
+// `users`, and the `zone` or `region` of the disk. Audit
+// encryption posture via `diskEncryptionKey` and the typed
+// `kmsKey()` accessor for customer-managed keys, and
+// `enableConfidentialCompute` for Confidential VM disks. The
+// `sourceImage()` and `sourceSnapshot()` accessors identify what
+// the disk was created from, and `storagePool()` links to the
+// provisioned storage pool when applicable.
 private gcp.project.computeService.disk @defaults("name") {
   // Unique identifier for the resource
   id string
@@ -1375,7 +1453,17 @@ private gcp.project.computeService.attachedDisk {
   type string
 }
 
-// Google Cloud (GCP) Compute persistent disk snapshot
+// Google Cloud (GCP) Compute Engine persistent disk snapshot
+//
+// Examine a Compute Engine disk snapshot and its security posture.
+// Surfaces the snapshot `name`, `status`, `snapshotType`,
+// `diskSizeGb`, storage consumption (`storageBytes`,
+// `storageLocations`), and `labels`. Audit access exposure via
+// `iamPolicy()` and the `public()` predicate that returns true
+// when the snapshot is shared with `allUsers` or
+// `allAuthenticatedUsers`. The typed `kmsKey()` accessor links to
+// the customer-managed encryption key when CMEK is used, and
+// `sourceDisk` identifies the disk the snapshot was taken from.
 private gcp.project.computeService.snapshot @defaults("name") {
   // Unique identifier
   id string
@@ -1433,7 +1521,16 @@ private gcp.project.computeService.snapshot @defaults("name") {
   public() bool
 }
 
-// Google Cloud (GCP) Compute
+// Google Compute Engine custom or public machine image
+//
+// Examine a Compute Engine image's configuration, encryption posture, and
+// access controls. Surfaces the image `family`, `architecture`, disk and
+// archive sizes, `status`, confidential-compute flag, Protected Zone
+// attributes, Cloud Storage `storageLocations`, source provenance
+// (`sourceDisk()`, `sourceImage()`, `sourceSnapshot()`), the CMEK key
+// protecting the image, the IAM policy — including any `allUsers` /
+// `allAuthenticatedUsers` grants that make the image `public()` — and
+// user-defined `labels`.
 private gcp.project.computeService.image @defaults("id name") {
   // Unique identifier
   id string
@@ -1481,7 +1578,16 @@ private gcp.project.computeService.image @defaults("id name") {
   public() bool
 }
 
-// Google Cloud (GCP) Compute firewall
+// Google Compute Engine VPC firewall rule
+//
+// Examine a Compute Engine firewall rule's traffic-filtering configuration.
+// Surfaces the rule `direction` (INGRESS / EGRESS), `priority`, `disabled`
+// state, `sourceRanges`, `destinationRanges`, target and source tags and
+// service accounts, `allowed` and `denied` protocol/port lists, and log
+// configuration. Derived predicates — `openToInternet()`,
+// `allowsSshFromInternet()`, and `allowsRdpFromInternet()` — flag the
+// most common exposure patterns. The parent `network()` links to the VPC
+// the rule belongs to.
 private gcp.project.computeService.firewall @defaults("name") {
   // Unique identifier
   id string
@@ -1660,7 +1766,14 @@ private gcp.project.computeService.subnetwork.logConfig @defaults("enable") {
   metadataFields []string
 }
 
-// Google Cloud (GCP) Compute cloud router
+// Google Compute Engine Cloud Router
+//
+// Examine a Cloud Router's BGP configuration and NAT services. Surfaces
+// `bgp` session settings, `bgpPeers` for dynamic route exchange,
+// `encryptedInterconnectRouter` for HA VPN / Dedicated Interconnect
+// encryption enforcement, and the `natServices()` defining Cloud NAT
+// gateway configuration within the router. The parent `network()` links
+// to the VPC the router is attached to.
 private gcp.project.computeService.router @defaults("name")  {
   // Unique identifier
   id string
@@ -1684,7 +1797,16 @@ private gcp.project.computeService.router @defaults("name")  {
   network() gcp.project.computeService.network
 }
 
-// Google Cloud (GCP) Compute backend service
+// Google Compute Engine backend service
+//
+// Examine a load-balancer backend service's configuration and security
+// posture. Surfaces the `loadBalancingScheme`, `protocol`, `backends()`
+// (instance groups or NEGs), `healthChecks`, session-affinity settings,
+// Cloud CDN policy (`cdnPolicy`), Identity-Aware Proxy configuration
+// (`iap`), and the attached Cloud Armor `securityPolicy()`. Derived
+// predicates `cloudArmorEnabled()` and `iapEnabled()` provide quick
+// posture checks. The parent `network()` links to the VPC the service
+// is deployed in.
 private gcp.project.computeService.backendService @defaults("name") {
   // Unique identifier
   id string
@@ -1844,7 +1966,18 @@ private gcp.project.storageService {
   buckets() []gcp.project.storageService.bucket
 }
 
-// Google Cloud (GCP) Storage bucket
+// Google Cloud Storage bucket
+//
+// Examine a Cloud Storage bucket's configuration, access controls, and
+// data-protection settings. Surfaces the `storageClass`, `location` and
+// `locationType`, `labels`, IAM policy (including `public()` which flags
+// any `allUsers` / `allAuthenticatedUsers` grant), `iamConfiguration`
+// (uniform bucket-level access, public access prevention), `retentionPolicy`
+// and `retentionPolicyLocked`, object `versioningEnabled`, default CMEK
+// encryption key (`defaultKmsKey()`), lifecycle management rules
+// (`lifecycle`), and soft-delete policy. The `loggingEnabled` predicate
+// indicates whether access logs are being exported to another bucket. Cloud
+// DLP integration surfaces the bucket's `dlpDataProfile()` when enabled.
 private gcp.project.storageService.bucket @defaults("id") {
   // Bucket ID
   id string
@@ -2001,7 +2134,18 @@ private gcp.project.sqlService {
   instances() []gcp.project.sqlService.instance
 }
 
-// Google Cloud (GCP) SQL instance
+// Google Cloud SQL managed database instance
+//
+// Examine a Cloud SQL instance's configuration, connectivity, and security
+// posture. Surfaces the `databaseVersion`, `state`, `region`, `zone()`,
+// instance `settings` (backup configuration, IP configuration, database
+// flags, password policy, maintenance window), assigned `ipAddresses`,
+// CMEK disk-encryption key (`kmsKey()`), replica configuration, and
+// PSC / private networking attributes. Derived predicates include
+// `publicIpEnabled()`, `backupConfigurationEnabled()`,
+// `pointInTimeRecoveryEnabled()`, `hasBuiltInUsers()`, and
+// `localRootEnabled()`. Child collections expose `databases()`, `users()`,
+// `sslCerts()`, and `backupRuns()`.
 private gcp.project.sqlService.instance @defaults("name") {
   // Project ID
   projectId string
@@ -2113,7 +2257,14 @@ private gcp.project.sqlService.instance.database @defaults("name") {
   sqlserverDatabaseDetails dict
 }
 
-// Google Cloud (GCP) SQL instance user
+// Google Cloud SQL database user
+//
+// Examine a Cloud SQL database user's authentication type and access
+// configuration. Surfaces the `name`, `host` (MySQL-specific connection
+// restriction), `type` (BUILT_IN, CLOUD_IAM_USER, CLOUD_IAM_SERVICE_ACCOUNT,
+// CLOUD_IAM_GROUP, CLOUD_IAM_GROUP_USER, CLOUD_IAM_GROUP_SERVICE_ACCOUNT),
+// `iamEmail` for Cloud IAM principals, `databaseRoles` (PostgreSQL and
+// SQL Server), `dualPasswordType`, and `passwordPolicy`.
 private gcp.project.sqlService.instance.user @defaults("name type host") {
   // Project ID
   projectId string
@@ -2135,7 +2286,14 @@ private gcp.project.sqlService.instance.user @defaults("name type host") {
   passwordPolicy dict
 }
 
-// Google Cloud (GCP) SQL backup run
+// Google Cloud SQL backup run
+//
+// Examine a Cloud SQL backup run's status, timing, and storage configuration.
+// Surfaces the `backupKind` (SNAPSHOT or PHYSICAL), `status`
+// (ENQUEUED, RUNNING, FAILED, SUCCESSFUL, SKIPPED, DELETED), `startTime`,
+// `endTime`, `enqueuedTime`, `location`, `databaseVersion` at backup time,
+// disk-encryption configuration, and any `error` details for failed runs.
+// The `type` field distinguishes AUTOMATED, ON_DEMAND, and FINAL backups.
 private gcp.project.sqlService.backupRun @defaults("id status type startTime") {
   // Project ID
   projectId string
@@ -2177,7 +2335,13 @@ private gcp.project.sqlService.backupRun @defaults("id status type startTime") {
   maxChargeableBytes int
 }
 
-// Google Cloud (GCP) SQL instance SSL/TLS certificate
+// Google Cloud SQL instance SSL/TLS client certificate
+//
+// Examine a Cloud SQL client certificate used for SSL/TLS mutual
+// authentication. Surfaces the `commonName`, `sha1Fingerprint`,
+// `certSerialNumber`, the PEM-encoded `cert` body, `createTime`, and
+// `expirationTime`. Use `expirationTime` to audit certificates approaching
+// their expiry.
 private gcp.project.sqlService.instance.sslCert @defaults("commonName sha1Fingerprint") {
   // Project ID
   projectId string
@@ -2371,7 +2535,12 @@ private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defau
   reuseInterval int
 }
 
-// Google Cloud (GCP) BigQuery resources
+// Google Cloud BigQuery service
+//
+// Use this resource as the entry point for BigQuery in the project. It
+// hosts the project's `datasets()` (with their tables, models, routines,
+// access entries, and CMEK encryption), `connections()` to external data
+// sources, and slot `reservations()` for capacity management audits.
 private gcp.project.bigqueryService @defaults("projectId") {
   // Project ID
   projectId string
@@ -2383,7 +2552,15 @@ private gcp.project.bigqueryService @defaults("projectId") {
   reservations() []gcp.project.bigqueryService.reservation
 }
 
-// Google Cloud (GCP) BigQuery dataset
+// Google BigQuery dataset
+//
+// Examine a BigQuery dataset's configuration, access controls, and
+// data-protection settings. Surfaces the `location`, `labels`, `tags`,
+// access entries (`access` and the `public()` predicate for any
+// `allUsers` / `allAuthenticatedUsers` grant), the CMEK encryption key
+// (`kmsKey()`), `defaultTableExpirationMs`, `maxTimeTravelHours`,
+// `storageBillingModel`, and case-sensitivity settings. Child collections
+// expose `tables()`, `models()`, and `routines()` within the dataset.
 private gcp.project.bigqueryService.dataset @defaults("id name") {
   // Dataset ID
   id string
@@ -2451,7 +2628,16 @@ private gcp.project.bigqueryService.dataset.accessEntry @defaults("role entity e
   datasetRef dict
 }
 
-// Google Cloud (GCP) BigQuery table
+// Google BigQuery table
+//
+// Examine a BigQuery table's schema, partitioning, and data-protection
+// configuration. Surfaces the `type` (TABLE, VIEW, MATERIALIZED_VIEW,
+// EXTERNAL), `schema`, `location`, `labels`, size metrics (`numBytes`,
+// `numLongTermBytes`, `numRows`), time-based and range `timePartitioning`
+// and `rangePartitioning`, `clusteringFields`, `expirationTime`, CMEK
+// encryption key (`kmsKey()`), and external data configuration for
+// federated tables. Cloud DLP integration surfaces the table's
+// `dlpDataProfile()` when enabled.
 private gcp.project.bigqueryService.table @defaults("id") {
   // Table ID
   id string
@@ -2509,7 +2695,12 @@ private gcp.project.bigqueryService.table @defaults("id") {
   dlpDataProfile() gcp.project.dlpService.tableDataProfile
 }
 
-// Google Cloud (GCP) BigQuery ML model
+// Google BigQuery ML model
+//
+// Examine a BigQuery ML model's metadata and encryption configuration.
+// Surfaces the `type`, `location`, `labels`, `created` and `modified`
+// timestamps, `expirationTime`, and the CMEK encryption key (`kmsKey()`)
+// protecting the model artifacts.
 private gcp.project.bigqueryService.model @defaults("id") {
   // Model ID
   id string
@@ -2539,7 +2730,13 @@ private gcp.project.bigqueryService.model @defaults("id") {
   kmsKey() gcp.project.kmsService.keyring.cryptokey
 }
 
-// Google Cloud (GCP) BigQuery routine
+// Google BigQuery routine (UDF or stored procedure)
+//
+// Examine a BigQuery routine's definition and metadata. Surfaces the
+// `type` (SCALAR_FUNCTION, PROCEDURE, TABLE_VALUED_FUNCTION, etc.),
+// `language` (SQL, JAVASCRIPT, PYTHON, etc.), `body` containing the
+// routine's implementation, `description`, and `created` / `modified`
+// timestamps.
 private gcp.project.bigqueryService.routine @defaults("id") {
   // Routine ID
   id string
@@ -2561,7 +2758,14 @@ private gcp.project.bigqueryService.routine @defaults("id") {
   body string
 }
 
-// Google Cloud (GCP) BigQuery connection to an external data source
+// Google BigQuery external data source connection
+//
+// Examine a BigQuery connection used to query data residing outside
+// BigQuery. Surfaces the connection `type` (CLOUD_SQL, AWS, AZURE,
+// CLOUD_SPANNER, CLOUD_RESOURCE, SPARK, SALESFORCE_DATA_CLOUD, or
+// UNKNOWN), `location`, type-specific `properties` (credentials,
+// endpoint, database), and `hasCredential` to verify that authentication
+// material is configured.
 private gcp.project.bigqueryService.connection @defaults("name friendlyName type") {
   // Full resource name of the connection: projects/{project}/locations/{location}/connections/{id}
   name string
@@ -2585,7 +2789,13 @@ private gcp.project.bigqueryService.connection @defaults("name friendlyName type
   hasCredential bool
 }
 
-// Google Cloud (GCP) BigQuery slot reservation
+// Google BigQuery slot reservation
+//
+// Examine a BigQuery capacity reservation's slot allocation and autoscaling
+// configuration. Surfaces the `slotCapacity` baseline, `autoscale` settings,
+// `concurrency` limit, `edition` (STANDARD, ENTERPRISE, ENTERPRISE_PLUS),
+// `ignoreIdleSlots` isolation flag, and managed disaster-recovery location
+// attributes (`primaryLocation`, `secondaryLocation`, `originalPrimaryLocation`).
 private gcp.project.bigqueryService.reservation @defaults("name slotCapacity edition") {
   // Full resource name of the reservation: projects/{project}/locations/{location}/reservations/{id}
   name string
@@ -2630,7 +2840,16 @@ private gcp.project.dnsService {
   policies() []gcp.project.dnsService.policy
 }
 
-// Google Cloud (GCP) DNS managed zone (a resource that represents a DNS zone hosted by the Cloud DNS service)
+// Google Cloud DNS managed zone
+//
+// Examine a Cloud DNS managed zone's configuration and security posture.
+// Surfaces the `dnsName`, `visibility` (public or private), `dnssecConfig`
+// (DNSSEC enablement and key-signing algorithm), the `cloudLoggingEnabled`
+// flag, `privateVisibilityConfig` for VPC-scoped private zones,
+// `nameServers`, `nameServerSet`, `labels`, and IAM policy bindings.
+// Derived predicates `dnssecEnabled` and `dnsSecAlgorithmWeak()` flag
+// DNSSEC posture issues. Child `recordSets()` expose the DNS records
+// within the zone.
 private gcp.project.dnsService.managedzone @defaults("name") {
   // Managed zone ID
   id string
@@ -2668,7 +2887,12 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   iamPolicy() []gcp.resourcemanager.binding
 }
 
-// Google Cloud (GCP) DNS record set
+// Google Cloud DNS record set
+//
+// Examine a Cloud DNS resource record set within a managed zone. Surfaces
+// the record `name`, `type` (A, AAAA, CNAME, MX, TXT, NS, SOA, etc.),
+// `ttl`, `rrdatas` (the actual record data as defined in RFC 1035 / 1034),
+// and `signatureRrdatas` (DNSSEC signatures as defined in RFC 4034).
 private gcp.project.dnsService.recordset @defaults("name") {
   // Project ID
   projectId string
@@ -2684,7 +2908,13 @@ private gcp.project.dnsService.recordset @defaults("name") {
   type string
 }
 
-// Google Cloud (GCP) DNS rules applied to one or more Virtual Private Cloud resources
+// Google Cloud DNS policy
+//
+// Examine a Cloud DNS policy applied to one or more VPC networks. Surfaces
+// `enableInboundForwarding` (whether on-premises resolvers can send queries
+// to Cloud DNS), `enableLogging` for DNS query audit trails, and
+// `networkNames` / `networks()` listing the VPC networks the policy
+// governs.
 private gcp.project.dnsService.policy @defaults("name") {
   // Project ID
   projectId string
@@ -2718,6 +2948,13 @@ private gcp.project.gkeService {
 }
 
 // Google Kubernetes Engine (GKE) cluster
+//
+// Examine a GKE cluster's full configuration and security posture — node
+// pools, networking, control-plane version and release channel, workload
+// identity, binary authorization, shielded nodes, database encryption,
+// security posture scanning, and maintenance policy. Select a cluster by
+// name and location, for example
+// `gcp.project.gkeService.clusters.one(name == "my-cluster")`.
 private gcp.project.gkeService.cluster @defaults("name description location status currentMasterVersion") {
   // Project ID
   projectId string
@@ -2892,6 +3129,11 @@ private gcp.project.gkeService.cluster.securityPostureConfig {
 }
 
 // Google Kubernetes Engine (GKE) cluster network policy configuration
+//
+// Examine whether a Kubernetes network policy provider (such as Calico) is
+// enabled on the cluster. An `enabled: false` result means pod-to-pod traffic
+// is unrestricted by Kubernetes NetworkPolicy objects — a common CIS
+// benchmark finding.
 private gcp.project.gkeService.cluster.networkPolicy @defaults("enabled provider") {
   // Internal ID
   id string
@@ -2962,6 +3204,11 @@ private gcp.project.gkeService.cluster.ipAllocationPolicy @defaults("stackType c
 }
 
 // Google Kubernetes Engine (GKE) cluster network config
+//
+// Examine the VPC network and subnetwork the cluster is attached to, along
+// with datapath provider, intra-node visibility, L4 internal load-balancer
+// subsetting, IPv6 access settings, DNS configuration, and restrictions on
+// services with external IPs.
 private gcp.project.gkeService.cluster.networkConfig @defaults("networkPath") {
   // Internal ID for this resource
   id string
@@ -2996,6 +3243,13 @@ private gcp.project.gkeService.cluster.networkConfig @defaults("networkPath") {
 }
 
 // Google Kubernetes Engine (GKE) cluster node pool
+//
+// Examine a node pool's VM configuration, autoscaling bounds, auto-upgrade
+// and auto-repair settings, Kubernetes version, pod CIDR size, upgrade
+// strategy, and the managed instance groups that back it. Each node pool
+// contains a `config` sub-resource covering machine type, disk, service
+// account, image type, shielded-instance settings, and workload metadata
+// mode.
 private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   // Internal ID for this resource
   id string
@@ -3050,6 +3304,11 @@ private gcp.project.gkeService.cluster.nodepool.upgradeSettings @defaults("strat
 }
 
 // Google Kubernetes Engine (GKE) node pool autoscaling configuration
+//
+// Examine whether autoscaling is enabled on a node pool and the minimum and
+// maximum node count bounds — both per-location and total across all
+// locations. The `autoprovisioned` flag indicates the pool was created by
+// Node Auto-Provisioning rather than configured directly.
 private gcp.project.gkeService.cluster.nodepool.autoscaling @defaults( "enabled" ) {
   // Is autoscaling enabled for this node pool.
   enabled bool
@@ -3094,6 +3353,14 @@ private gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig 
 }
 
 // Google Kubernetes Engine (GKE) node pool configuration
+//
+// Examine the per-node VM settings for a node pool — machine type, disk
+// size and type, service account (and whether it is the default Compute
+// Engine account or carries the broad cloud-platform OAuth scope), image
+// type, workload metadata mode, Kubernetes labels and taints, shielded
+// instance settings, sandbox type (gVisor), confidential nodes, and
+// accelerator configuration. This resource is the primary surface for CIS
+// GKE node-security benchmarks.
 private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType diskSizeGb") {
   // Internal ID for this resource
   id string
@@ -3204,6 +3471,11 @@ private gcp.project.gkeService.cluster.nodepool.config.sandboxConfig @defaults("
 }
 
 // Google Kubernetes Engine (GKE) node pool shielded instance configuration
+//
+// Examine whether Secure Boot and integrity monitoring are enabled for nodes
+// in the pool. Both settings are CIS GKE benchmark controls: Secure Boot
+// ensures only signed OS components run, and integrity monitoring detects
+// runtime changes to the boot sequence.
 private gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig @defaults("enableSecureBoot enableIntegrityMonitoring") {
   // Internal ID for this resource
   id string
@@ -3222,6 +3494,11 @@ private gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig @defaults
 }
 
 // Google Kubernetes Engine (GKE) Node Pool kubelet configuration
+//
+// Examine kubelet settings applied to every node in the pool — the CPU
+// manager policy (e.g., `static` for guaranteed-QoS containers), the CPU
+// CFS quota period, and the per-pod PID limit. These settings affect
+// workload isolation and resource-exhaustion blast-radius.
 private gcp.project.gkeService.cluster.nodepool.config.kubeletConfig @defaults("cpuManagerPolicy podPidsLimit") {
   // Internal ID for this resource
   id string
@@ -3285,6 +3562,11 @@ private gcp.project.pubsubService {
 }
 
 // Google Cloud (GCP) Pub/Sub topic
+//
+// Examine a Pub/Sub topic's encryption key, message storage policy,
+// retention duration, schema validation settings, and IAM policy. The
+// `public` field flags topics whose IAM policy grants access to
+// `allUsers` or `allAuthenticatedUsers`.
 private gcp.project.pubsubService.topic @defaults("name") {
   // Project ID
   projectId string
@@ -3299,6 +3581,12 @@ private gcp.project.pubsubService.topic @defaults("name") {
 }
 
 // Google Cloud (GCP) Pub/Sub topic configuration
+//
+// Examine the detailed settings for a Pub/Sub topic — the customer-managed
+// KMS key (`kmsKey`) used to encrypt messages at rest, the message storage
+// policy restricting which regions may persist messages, message retention
+// duration, topic lifecycle state, and the schema validation settings that
+// govern which message formats the topic accepts.
 private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStoragePolicy") {
   // Project ID
   projectId string
@@ -3345,6 +3633,12 @@ private gcp.project.pubsubService.topic.config.messagestoragepolicy @defaults("a
 }
 
 // Google Cloud (GCP) Pub/Sub subscription
+//
+// Examine a Pub/Sub subscription's delivery configuration and IAM policy.
+// The `config` sub-resource exposes ack deadline, message ordering, push
+// endpoint, dead-letter policy, retry backoff, filter expression, and
+// retention settings. The `public` field flags subscriptions accessible
+// to `allUsers` or `allAuthenticatedUsers`.
 private gcp.project.pubsubService.subscription @defaults("name") {
   // Project ID
   projectId string
@@ -3359,6 +3653,12 @@ private gcp.project.pubsubService.subscription @defaults("name") {
 }
 
 // Google Cloud (GCP) Pub/Sub subscription configuration
+//
+// Examine the detailed delivery settings for a Pub/Sub subscription —
+// the parent topic, acknowledgement deadline, message retention duration,
+// push endpoint configuration, expiration policy, dead-letter queue,
+// retry backoff, message ordering and exactly-once delivery flags, filter
+// expression, detachment state, and the topic's own retention window.
 private gcp.project.pubsubService.subscription.config @defaults("topic.name ackDeadline expirationPolicy") {
   // Project ID
   projectId string
@@ -3407,6 +3707,11 @@ private gcp.project.pubsubService.subscription.config.pushconfig @defaults("attr
 }
 
 // Google Cloud (GCP) Pub/Sub snapshot
+//
+// Examine a point-in-time Pub/Sub snapshot — the topic it was taken from
+// and the time at which it expires and is automatically deleted. Snapshots
+// allow subscriptions to seek back to a specific point in the message
+// backlog.
 private gcp.project.pubsubService.snapshot @defaults("name") {
   // Project ID
   projectId string
@@ -3419,6 +3724,11 @@ private gcp.project.pubsubService.snapshot @defaults("name") {
 }
 
 // Google Cloud (GCP) Pub/Sub schema
+//
+// Examine a Pub/Sub schema that validates message payloads published to
+// associated topics. Exposes the schema type (`PROTOCOL_BUFFER` or `AVRO`),
+// the full schema definition text, the current revision ID, and the time
+// the revision was created.
 private gcp.project.pubsubService.schema @defaults("name type") {
   // Project ID
   projectId string
@@ -3453,6 +3763,11 @@ private gcp.project.kmsService {
 }
 
 // Google Cloud (GCP) KMS keyring
+//
+// Examine a Cloud KMS keyring — its location, creation time, and the
+// collection of `cryptokeys` it contains. A keyring is the regional
+// container that groups cryptographic keys; individual key rotation,
+// protection level, and IAM policy are on the `cryptokey` sub-resource.
 private gcp.project.kmsService.keyring @defaults("name") {
   // Project ID
   projectId string
@@ -3469,6 +3784,14 @@ private gcp.project.kmsService.keyring @defaults("name") {
 }
 
 // Google Cloud (GCP) KMS crypto key
+//
+// Examine a Cloud KMS cryptographic key — its purpose
+// (`ENCRYPT_DECRYPT`, `ASYMMETRIC_SIGN`, `ASYMMETRIC_DECRYPT`, `MAC`),
+// rotation schedule (`nextRotation`, `rotationPeriod`), import-only flag,
+// destroy-scheduled duration, backend environment, key access
+// justification policy, IAM policy, and all key versions. The `public`
+// field flags keys whose IAM policy is accessible to `allUsers` or
+// `allAuthenticatedUsers`.
 private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   // Full resource path
   resourcePath string
@@ -3507,6 +3830,13 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
 }
 
 // Google Cloud (GCP) KMS crypto key version
+//
+// Examine an individual version of a Cloud KMS cryptographic key — its
+// lifecycle state (`ENABLED`, `DISABLED`, `DESTROY_SCHEDULED`,
+// `DESTROYED`), protection level (`SOFTWARE`, `HSM`, `EXTERNAL`),
+// algorithm, HSM attestation, creation and destruction timestamps, import
+// job provenance, and external protection level options for keys held
+// outside Google.
 private gcp.project.kmsService.keyring.cryptokey.version @defaults("name state") {
   // Full resource path
   resourcePath string
@@ -3573,6 +3903,11 @@ private gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevel
 }
 
 // Google Cloud (GCP) KMS retired resource (deleted key tracking)
+//
+// Examine a Cloud KMS resource that has been deleted — capturing its
+// original resource name, type (`CryptoKey` or `CryptoKeyVersion`), and
+// the time it was deleted. Useful for auditing key-deletion events and
+// confirming that scheduled key destruction completed.
 private gcp.project.kmsService.retiredResource @defaults("name resourceType") {
   // Full resource name
   name string
@@ -3584,7 +3919,14 @@ private gcp.project.kmsService.retiredResource @defaults("name resourceType") {
   deleteTime time
 }
 
-// Google Cloud (GCP) contact
+// Google Cloud (GCP) Essential Contacts entry
+//
+// Examine a contact registered to receive security, legal, billing,
+// technical, or product-update notifications for a GCP organization,
+// folder, or project. Exposes the contact's email address, preferred
+// language, the notification categories they are subscribed to, and
+// their validation state — allowing audits to confirm that critical
+// security contacts are present and validated.
 private gcp.essentialContact @defaults("email notificationCategories") {
   // Full resource path
   resourcePath string
@@ -3601,6 +3943,13 @@ private gcp.essentialContact @defaults("email notificationCategories") {
 }
 
 // Google Cloud (GCP) project API key
+//
+// Examine an API key scoped to the project — its display name, annotations,
+// creation and deletion timestamps, the encrypted key string, and the
+// restrictions that limit which applications, IP addresses, or API targets
+// may use it. The `restrictions` sub-resource exposes the `unrestricted`
+// flag used by CIS benchmarks to detect keys that have no app, IP, or
+// referrer restrictions configured.
 private gcp.project.apiKey @defaults("name") {
   // The ID of the key
   id string
@@ -3625,6 +3974,12 @@ private gcp.project.apiKey @defaults("name") {
 }
 
 // Google Cloud (GCP) project API key restrictions
+//
+// Examine the access restrictions applied to a GCP API key — Android app
+// restrictions, iOS app restrictions, HTTP referrer restrictions, server IP
+// restrictions, and specific API target restrictions. The `unrestricted`
+// derived field is `true` when none of these restriction types are
+// configured, which CIS benchmarks flag as a finding.
 private gcp.project.apiKey.restrictions {
   // Parent resource path
   parentResourcePath string
@@ -3642,7 +3997,15 @@ private gcp.project.apiKey.restrictions {
   unrestricted() bool
 }
 
-// Google Cloud (GCP) Logging resources
+// Google Cloud (GCP) Cloud Logging
+//
+// Use this resource as the entry point for Cloud Logging in the project.
+// It hosts `buckets` (log storage with retention and CMEK settings),
+// `metrics` (log-based metrics for alerting on security events),
+// `sinks` (export configurations to Cloud Storage, BigQuery, or Pub/Sub),
+// and `exclusions` (filters that drop matching log entries before
+// ingestion). Together these are the primary surface for CIS logging
+// benchmark controls.
 private gcp.project.loggingservice {
   // Project ID
   projectId string
@@ -3656,7 +4019,13 @@ private gcp.project.loggingservice {
   exclusions() []gcp.project.loggingservice.exclusion
 }
 
-// Google Cloud (GCP) Logging bucket
+// Google Cloud (GCP) Cloud Logging bucket
+//
+// Examine a Cloud Logging log bucket — its location, retention period,
+// lock status, customer-managed KMS encryption key, lifecycle state,
+// Log Analytics enablement, restricted fields, index configurations,
+// and the views that control which log entries are visible to different
+// principals.
 private gcp.project.loggingservice.bucket @defaults("name") {
   // Project ID
   projectId string
@@ -3718,7 +4087,14 @@ private gcp.project.loggingservice.bucket.indexConfig @defaults("id") {
   type string
 }
 
-// Google Cloud (GCP) Logging metric
+// Google Cloud (GCP) Cloud Logging log-based metric
+//
+// Examine a log-based metric defined in the project — its advanced log
+// filter, description, and the alert policies that monitor it. The derived
+// fields `filtersIamChanges`, `filtersAuditConfigChanges`,
+// `filtersRouteChanges`, and `filtersFirewallChanges` indicate whether the
+// metric covers the specific mutation categories required by CIS GCP
+// benchmark logging controls.
 private gcp.project.loggingservice.metric @defaults("description filter") {
   // Metric ID
   id string
@@ -3740,7 +4116,13 @@ private gcp.project.loggingservice.metric @defaults("description filter") {
   alertPolicies() []gcp.project.monitoringService.alertPolicy
 }
 
-// Google Cloud (GCP) Logging sink
+// Google Cloud (GCP) Cloud Logging sink
+//
+// Examine a Cloud Logging export sink — its destination (Cloud Storage
+// bucket, BigQuery dataset, or Pub/Sub topic), optional log filter,
+// writer identity used for authorization, and whether the sink exports
+// logs from child resources. The `storageBucket` field resolves the
+// destination to a typed storage bucket resource when applicable.
 private gcp.project.loggingservice.sink @defaults("destination") {
   // Sink ID
   id string
@@ -3758,7 +4140,13 @@ private gcp.project.loggingservice.sink @defaults("destination") {
   includeChildren bool
 }
 
-// Google Cloud (GCP) Logging exclusion filter
+// Google Cloud (GCP) Cloud Logging exclusion filter
+//
+// Examine a log exclusion configured in the project — the advanced log
+// filter that selects entries to drop, whether the exclusion is currently
+// disabled, its description, and creation and update timestamps. Exclusions
+// can suppress security-relevant log entries if misconfigured; auditing
+// them confirms that critical event categories are not silently discarded.
 private gcp.project.loggingservice.exclusion @defaults("name disabled") {
   // Exclusion name
   name string
@@ -3797,6 +4185,12 @@ private gcp.project.iamService {
 }
 
 // Google Cloud (GCP) IAM custom role
+//
+// Examine a custom IAM role defined in the project — its title,
+// description, launch stage (`ALPHA`, `BETA`, `GA`, `DEPRECATED`,
+// `DISABLED`), the full list of permissions it grants, and whether it
+// has been soft-deleted. Custom roles with overly broad permission sets
+// are a common privilege-escalation finding.
 private gcp.project.iamService.role @defaults("title name") {
   // Project ID
   projectId string
@@ -3814,7 +4208,14 @@ private gcp.project.iamService.role @defaults("title name") {
   deleted bool
 }
 
-// Google Cloud (GCP) service account
+// Google Cloud (GCP) IAM service account
+//
+// Examine a GCP service account — its email address, display name,
+// description, disabled status, OAuth 2.0 client ID, and all associated
+// keys. The `activeUserManagedKeys` field surfaces non-disabled,
+// user-managed keys (the audit hot spot for key sprawl), and
+// `lastAuthenticatedTime` reports when the account last successfully
+// authenticated, drawn from Policy Intelligence data.
 private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   // Project ID
   projectId string
@@ -3842,7 +4243,15 @@ private gcp.project.iamService.serviceAccount @defaults("displayName name") {
   lastAuthenticatedTime() time
 }
 
-// Google Cloud (GCP) service account keys
+// Google Cloud (GCP) IAM service account key
+//
+// Examine an individual key associated with a service account — its
+// algorithm, origin (`GOOGLE_PROVIDED` or `USER_PROVIDED`), type
+// (`SYSTEM_MANAGED` or `USER_MANAGED`), validity window
+// (`validAfterTime`, `validBeforeTime`), and disabled status. The
+// `userManaged` derived field is `true` when the key was created by a
+// user rather than Google, making it the primary field for CIS
+// service-account-key rotation audits.
 private gcp.project.iamService.serviceAccount.key @defaults("name") {
   // Service account key name
   name string
@@ -3970,7 +4379,14 @@ private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayN
   samlIdpMetadataXml string
 }
 
-// Google Cloud (GCP) Cloud Function
+// Google Cloud (GCP) Cloud Function (1st gen)
+//
+// Examine a first-generation Cloud Function deployed to a project. Covers
+// the trigger configuration (HTTP or event), runtime, service account,
+// networking (VPC connector, ingress and egress settings), memory and
+// timeout limits, environment variables, secret bindings, KMS encryption
+// key, and build settings including the Artifact Registry repository and
+// custom worker pool.
 private gcp.project.cloudFunction @defaults("name") {
   // Project ID
   projectId string
@@ -4045,6 +4461,13 @@ private gcp.project.cloudFunction @defaults("name") {
 }
 
 // Google Cloud (GCP) Cloud Function (v2 / 2nd gen)
+//
+// Examine a second-generation Cloud Function backed by Cloud Run. Covers
+// function state and environment generation (GEN_1, GEN_2), the deployed
+// HTTPS URL, KMS encryption key, build configuration (runtime, entry
+// point, Artifact Registry repository, worker pool), service configuration
+// (scaling limits, VPC connector, ingress settings, service account, secret
+// bindings), and the Eventarc event trigger.
 private gcp.project.cloudFunctionV2 @defaults("name state environment") {
   // Project ID
   projectId string
@@ -4179,6 +4602,14 @@ private gcp.project.dataprocService {
 }
 
 // Google Cloud (GCP) Dataproc cluster
+//
+// Examine a Dataproc cluster's configuration and operational state. Covers
+// the cluster UUID, labels, GCE and GKE compute configurations (machine
+// types, disk settings, shielded-instance settings, service account,
+// network and subnet), lifecycle policy (idle and auto-delete TTLs),
+// software configuration, security settings, initialization actions,
+// current and historical status, and virtual-cluster configuration for
+// clusters that delegate to Kubernetes.
 private gcp.project.dataprocService.cluster @defaults("name") {
   // Project ID
   projectId string
@@ -4393,6 +4824,11 @@ private gcp.project.dataprocService.cluster.virtualClusterConfig {
 }
 
 // Google Cloud (GCP) Dataproc job
+//
+// Examine a Dataproc job submitted to a cluster. Covers the job UUID,
+// status (PENDING, RUNNING, DONE, ERROR, CANCELLED), job type (hadoop,
+// spark, pyspark, hive, pig, presto, sparkR, sparkSql, flink), the
+// target cluster, user-defined labels, and the driver output resource URI.
 private gcp.project.dataprocService.job @defaults("name status") {
   // Project ID
   projectId string
@@ -4417,6 +4853,11 @@ private gcp.project.dataprocService.job @defaults("name status") {
 }
 
 // Google Cloud (GCP) Dataproc autoscaling policy
+//
+// Examine a Dataproc autoscaling policy that governs cluster scaling.
+// Covers the worker and secondary-worker scale-up/scale-down configurations
+// and the basic autoscaling algorithm settings (cooldown period, scale-up
+// and scale-down factors, minimum and maximum worker counts).
 private gcp.project.dataprocService.autoscalingPolicy @defaults("name") {
   // Project ID
   projectId string
@@ -4450,7 +4891,11 @@ private gcp.project.cloudRunService {
   jobs() []gcp.project.cloudRunService.job
 }
 
-// Google Cloud (GCP) Run operation
+// Google Cloud (GCP) Cloud Run long-running operation
+//
+// Examine the status of a Cloud Run long-running operation. Covers the
+// operation name and its completion state. Useful for auditing in-progress
+// or recently completed deployments and configuration changes.
 private gcp.project.cloudRunService.operation @defaults("name") {
   // Project ID
   projectId string
@@ -4460,7 +4905,15 @@ private gcp.project.cloudRunService.operation @defaults("name") {
   done bool
 }
 
-// Google Cloud (GCP) Run service
+// Google Cloud (GCP) Cloud Run service
+//
+// Examine a Cloud Run service's configuration and security posture.
+// Covers ingress settings, IAM policy, binary authorization configuration,
+// the revision template (container images, scaling limits, VPC access,
+// service account, secret bindings, encryption key), traffic distribution
+// across revisions, terminal and sub-resource conditions, and whether the
+// service is publicly invocable (internet-reachable with unauthenticated
+// access).
 private gcp.project.cloudRunService.service @defaults("name") {
   // Service identifier
   id string
@@ -4629,7 +5082,14 @@ private gcp.project.cloudRunService.condition @defaults("type state message") {
   severity string
 }
 
-// Google Cloud (GCP) Run job
+// Google Cloud (GCP) Cloud Run job
+//
+// Examine a Cloud Run job and its execution configuration. Covers labels,
+// annotations, launch stage, the execution template (container images,
+// parallelism, task count, VPC access, service account, secret bindings,
+// encryption key, retry limit), terminal and sub-resource conditions,
+// reconciliation state, and the IAM policy governing who can trigger or
+// manage the job.
 private gcp.project.cloudRunService.job {
   // Job identifier
   id string
@@ -4727,7 +5187,14 @@ private gcp.project.cloudRunService.job.executionTemplate.taskTemplate {
   maxRetries int
 }
 
-// Google Cloud (GCP) access approval settings
+// Google Cloud (GCP) Access Approval settings
+//
+// Examine the Access Approval configuration for a project, folder, or
+// organization. Covers enrolled Google Cloud services, notification email
+// addresses for approval requests, the active asymmetric KMS key version
+// used to sign approvals, and whether an ancestor resource has enrolled
+// or configured a key — enabling audits of which services require explicit
+// human approval before Google personnel can access customer resources.
 private gcp.accessApprovalSettings {
   // Resource path
   resourcePath string
@@ -4768,7 +5235,15 @@ private gcp.project.monitoringService {
   services() []gcp.project.monitoringService.service
 }
 
-// Google Cloud (GCP) monitoring alert policy
+// Google Cloud (GCP) Cloud Monitoring alert policy
+//
+// Examine a Cloud Monitoring alert policy that defines when incidents are
+// opened. Covers the condition set (metric thresholds, log-based metrics,
+// uptime failures) and how they are combined (AND / OR), notification
+// channels that receive alerts, documentation attached to notifications,
+// the alerting strategy (auto-close duration, notification rate limiting),
+// whether the policy is enabled, and validity errors that prevent
+// evaluation.
 private gcp.project.monitoringService.alertPolicy {
   // Project ID
   projectId string
@@ -4802,7 +5277,14 @@ private gcp.project.monitoringService.alertPolicy {
   alertStrategy dict
 }
 
-// Google Cloud (GCP) Monitoring uptime check configuration
+// Google Cloud (GCP) Cloud Monitoring uptime check configuration
+//
+// Examine a Cloud Monitoring uptime check that probes an endpoint for
+// availability. Covers the check type (HTTP or TCP), target (monitored
+// resource or resource group), check period and timeout, checker type
+// (STATIC_IP_CHECKERS or VPC_CHECKERS), selected geographic regions,
+// content matchers for response validation, and whether the check is
+// currently disabled.
 private gcp.project.monitoringService.uptimeCheckConfig @defaults("displayName disabled checkerType") {
   // Full resource name
   name string
@@ -4832,7 +5314,13 @@ private gcp.project.monitoringService.uptimeCheckConfig @defaults("displayName d
   userLabels map[string]string
 }
 
-// Google Cloud (GCP) Monitoring notification channel
+// Google Cloud (GCP) Cloud Monitoring notification channel
+//
+// Examine a Cloud Monitoring notification channel that receives alert
+// notifications. Covers the channel type (email, sms, slack, pagerduty,
+// webhook_tokenauth, and others), configuration labels (such as
+// email_address or channel_name), verification status (UNVERIFIED or
+// VERIFIED), and whether the channel is currently enabled.
 private gcp.project.monitoringService.notificationChannel @defaults("displayName type") {
   // Full resource name
   name string
@@ -4852,7 +5340,12 @@ private gcp.project.monitoringService.notificationChannel @defaults("displayName
   verificationStatus string
 }
 
-// Google Cloud (GCP) Monitoring resource group
+// Google Cloud (GCP) Cloud Monitoring resource group
+//
+// Examine a Cloud Monitoring resource group that organizes monitored
+// resources by a filter expression. Covers the group's display name,
+// parent group (for nested hierarchies), the filter that determines
+// membership, and whether the group is a cluster group.
 private gcp.project.monitoringService.group @defaults("displayName") {
   // Full resource name
   name string
@@ -4866,7 +5359,12 @@ private gcp.project.monitoringService.group @defaults("displayName") {
   isCluster bool
 }
 
-// Google Cloud (GCP) Monitoring dashboard
+// Google Cloud (GCP) Cloud Monitoring dashboard
+//
+// Examine a Cloud Monitoring dashboard that visualizes metrics and data.
+// Covers the dashboard display name, ETag for concurrency control, and
+// the layout configuration (grid, mosaic, row, or column layout) that
+// defines how charts and widgets are arranged.
 private gcp.project.monitoringService.dashboard @defaults("name displayName") {
   // Project ID
   projectId string
@@ -4880,7 +5378,13 @@ private gcp.project.monitoringService.dashboard @defaults("name displayName") {
   layout dict
 }
 
-// Google Cloud (GCP) Monitoring service (for SLO tracking)
+// Google Cloud (GCP) Cloud Monitoring service (for SLO tracking)
+//
+// Examine a Cloud Monitoring service used to define and track service
+// level objectives. Covers the service display name, telemetry
+// configuration, user-defined labels, and the service's SLOs — each
+// expressing a target (goal), measurement window (rolling period or
+// calendar period), and the service level indicator definition.
 private gcp.project.monitoringService.service @defaults("name displayName") {
   // Project ID
   projectId string
@@ -4896,7 +5400,13 @@ private gcp.project.monitoringService.service @defaults("name displayName") {
   slos() []gcp.project.monitoringService.service.slo
 }
 
-// Google Cloud (GCP) Monitoring service level objective (SLO)
+// Google Cloud (GCP) Cloud Monitoring service level objective (SLO)
+//
+// Examine a service level objective defined for a Cloud Monitoring service.
+// Covers the SLO target (goal between 0 and 0.9999), the service level
+// indicator definition, the measurement window (rolling period in seconds
+// or a calendar period such as DAY, WEEK, or MONTH), and user-defined
+// labels for organizing SLOs.
 private gcp.project.monitoringService.service.slo @defaults("name displayName goal") {
   // Project ID
   projectId string
@@ -4917,6 +5427,12 @@ private gcp.project.monitoringService.service.slo @defaults("name displayName go
 }
 
 // Google Cloud (GCP) Binary Authorization
+//
+// Use this resource as the entry point for Binary Authorization in the
+// project. It hosts the project's deployment `policy` — covering default
+// and per-cluster admission rules, allowlist patterns, and global policy
+// evaluation mode — and the list of trusted `attestors` whose signatures
+// validate container images before deployment.
 private gcp.project.binaryAuthorizationControl {
   // The policy for container image binary authorization
   policy gcp.project.binaryAuthorizationControl.policy
@@ -4925,6 +5441,13 @@ private gcp.project.binaryAuthorizationControl {
 }
 
 // Google Cloud (GCP) Binary Authorization policy
+//
+// Examine the Binary Authorization policy that controls which container
+// images may be deployed in the project. Covers the default admission
+// rule (evaluation mode and enforcement mode), per-cluster admission
+// rules, per-Kubernetes-namespace and per-service-account rules,
+// per-Istio-service-identity rules, admission allowlist patterns, and
+// whether a Google-maintained global policy is also evaluated.
 private gcp.project.binaryAuthorizationControl.policy {
   // The resource name
   name string
@@ -4957,6 +5480,14 @@ private gcp.project.binaryAuthorizationControl.admissionRule {
 }
 
 // Google Cloud (GCP) Binary Authorization attestor
+//
+// Examine a Binary Authorization attestor trusted to verify container
+// image signatures. Covers the backing Grafeas Attestation Authority note,
+// the set of trusted public keys (PGP or PKIX) whose signatures satisfy
+// attestation requirements, the delegation service account email used to
+// query Container Analysis, and the last-updated timestamp. Audits look
+// for attestors with no trusted keys (which reject all attestations) or
+// keys using weak or unspecified signature algorithms.
 private gcp.project.binaryAuthorizationControl.attestor @defaults("name") {
   // Full resource name
   name string
@@ -5013,6 +5544,13 @@ private gcp.project.secretmanagerService {
 }
 
 // Google Cloud (GCP) Secret Manager secret
+//
+// Examine a Secret Manager secret and its security configuration. Covers
+// the replication policy (automatic or user-managed with specific regions),
+// customer-managed KMS encryption keys, rotation policy and whether
+// rotation is configured, expiration time, Pub/Sub notification topics,
+// version destroy TTL, IAM policy, and whether the secret's IAM policy
+// grants access to allUsers or allAuthenticatedUsers.
 private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   // Project ID
   projectId string
@@ -5057,6 +5595,12 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
 }
 
 // Google Cloud (GCP) Secret Manager secret version
+//
+// Examine an individual version of a Secret Manager secret. Covers the
+// version state (ENABLED, DISABLED, or DESTROYED), creation and
+// destruction timestamps, customer-managed encryption status, scheduled
+// destroy time for versions pending deletion, and whether the client
+// provided a payload checksum when the version was created.
 private gcp.project.secretmanagerService.secret.version @defaults("name state") {
   // Full resource path (projects/*/secrets/*/versions/*)
   resourcePath string
@@ -5092,6 +5636,13 @@ private gcp.project.firestoreService {
 }
 
 // Google Cloud (GCP) Firestore database
+//
+// Examine a Firestore database's configuration and protection settings.
+// Covers the database type (FIRESTORE_NATIVE or DATASTORE_MODE), location,
+// concurrency mode, App Engine integration mode, point-in-time recovery
+// enablement, delete-protection state, customer-managed KMS encryption
+// configuration, version retention period, the earliest recoverable
+// timestamp, resource manager tags, indexes, and backup schedules.
 private gcp.project.firestoreService.database @defaults("name") {
   // Project ID
   projectId string
@@ -5177,6 +5728,13 @@ private gcp.project.spannerService {
 }
 
 // Google Cloud (GCP) Spanner instance
+//
+// Examine a Cloud Spanner instance — the top-level billable unit that
+// holds databases and backups. Query its compute allocation (`nodeCount`,
+// `processingUnits`, `autoscalingConfig`), edition, state, and endpoint
+// URIs. Drill into `databases` for schema and IAM audits, `backups` and
+// `backupSchedules` for retention policy audits, and `instancePartitions`
+// for geographic data-placement configuration.
 private gcp.project.spannerService.instance @defaults("name") {
   // Project ID
   projectId string
@@ -5227,6 +5785,13 @@ private gcp.project.spannerService.instance @defaults("name") {
 }
 
 // Google Cloud (GCP) Spanner database
+//
+// Examine a Cloud Spanner database within an instance. Query its SQL
+// dialect (`GOOGLE_STANDARD_SQL` or `POSTGRESQL`), state, encryption
+// configuration and KMS keys (for CMEK multi-region databases), version
+// retention period, and earliest restore timestamp. Access the full DDL
+// schema via `ddl`, IAM bindings via `iamPolicy`, and fine-grained access
+// control roles via `databaseRoles`.
 private gcp.project.spannerService.instance.database @defaults("name") {
   // Project ID
   projectId string
@@ -5267,6 +5832,14 @@ private gcp.project.spannerService.instance.database @defaults("name") {
 }
 
 // Google Cloud (GCP) Spanner backup
+//
+// Examine a Cloud Spanner backup created from a source database. Query its
+// state, expiration time, size in bytes, encryption information, and
+// database dialect. For incremental backups, `incrementalBackupChainId`
+// links backups in the same chain, and `oldestVersionTime` records how far
+// back the chain reaches. `freeableSizeBytes` and `exclusiveSizeBytes`
+// indicate the storage reclaimed or attributed to this backup within its
+// chain.
 private gcp.project.spannerService.instance.backup @defaults("name") {
   // Project ID
   projectId string
@@ -5309,6 +5882,14 @@ private gcp.project.spannerService.instance.backup @defaults("name") {
 }
 
 // Google Cloud (GCP) Spanner instance configuration
+//
+// Examine a Cloud Spanner instance configuration — the regional or
+// multi-region placement template used when creating or comparing
+// instances. Query the list of replica regions (`replicas`), allowed
+// leader regions (`leaderOptions`), configuration type
+// (`GOOGLE_MANAGED` or `USER_MANAGED`), and free-instance availability.
+// For user-managed configurations, `baseConfig` names the Google-managed
+// config it derives from.
 private gcp.project.spannerService.instanceConfig @defaults("name displayName") {
   // Project ID
   projectId string
@@ -5353,6 +5934,11 @@ private gcp.project.spannerService.instance.database.role @defaults("name") {
 }
 
 // Google Cloud (GCP) Spanner backup schedule
+//
+// Examine an automated backup schedule attached to a Spanner database.
+// Query the cron-like `spec`, backup `retentionDuration`, backup type
+// (`FULL` or `INCREMENTAL`), and encryption configuration used for
+// scheduled backups.
 private gcp.project.spannerService.instance.backupSchedule @defaults("name") {
   // Project ID
   projectId string
@@ -5375,6 +5961,12 @@ private gcp.project.spannerService.instance.backupSchedule @defaults("name") {
 }
 
 // Google Cloud (GCP) Spanner instance partition
+//
+// Examine a Cloud Spanner instance partition — a sub-allocation of
+// compute capacity within an instance used to pin databases to specific
+// geographic regions. Query its `nodeCount` or `processingUnits`,
+// `autoscalingConfig`, configuration reference, state, and the list of
+// databases that reference the partition.
 private gcp.project.spannerService.instance.instancePartition @defaults("name") {
   // Project ID
   projectId string
@@ -5418,6 +6010,13 @@ private gcp.project.bigtableService {
 }
 
 // Google Cloud (GCP) Bigtable instance
+//
+// Examine a Cloud Bigtable instance — the top-level container for
+// clusters, tables, and app profiles. Query its type (`PRODUCTION` or
+// `DEVELOPMENT`), state, and labels. Drill into `clusters` for storage
+// type and CMEK encryption configuration, `tables` for column-family and
+// deletion-protection settings, `appProfiles` for routing policy audits,
+// `backups` for retention review, and `iamPolicy` for access control.
 private gcp.project.bigtableService.instance @defaults("name") {
   // Project ID
   projectId string
@@ -5446,6 +6045,12 @@ private gcp.project.bigtableService.instance @defaults("name") {
 }
 
 // Google Cloud (GCP) Bigtable cluster
+//
+// Examine a Cloud Bigtable cluster — the zonal compute and storage unit
+// within a Bigtable instance. Query its location (zone), state,
+// `serveNodes`, default storage type (`SSD` or `HDD`), encryption
+// configuration, and node scaling factor. The `kmsKey` field resolves to
+// the customer-managed KMS key when CMEK is enabled.
 private gcp.project.bigtableService.cluster @defaults("name") {
   // Project ID
   projectId string
@@ -5472,6 +6077,12 @@ private gcp.project.bigtableService.cluster @defaults("name") {
 }
 
 // Google Cloud (GCP) Bigtable table
+//
+// Examine a Cloud Bigtable table within an instance. Query its column
+// families and their garbage-collection configurations, timestamp
+// granularity, deletion protection status, automated backup policy, and
+// change stream configuration. `tieredStorageConfig` controls data
+// movement between SSD and HDD storage tiers.
 private gcp.project.bigtableService.table @defaults("name") {
   // Project ID
   projectId string
@@ -5494,6 +6105,12 @@ private gcp.project.bigtableService.table @defaults("name") {
 }
 
 // Google Cloud (GCP) Bigtable app profile
+//
+// Examine a Cloud Bigtable app profile — the named configuration that
+// controls how client traffic is routed to clusters and how reads behave.
+// Query its `routingPolicy` (single-cluster vs. multi-cluster routing),
+// `description`, and `etag`. App profiles are selected by the `name`
+// field as it appears in the Bigtable instance.
 private gcp.project.bigtableService.appProfile @defaults("name") {
   // Project ID
   projectId string
@@ -5510,6 +6127,11 @@ private gcp.project.bigtableService.appProfile @defaults("name") {
 }
 
 // Google Cloud (GCP) Bigtable backup
+//
+// Examine a Cloud Bigtable backup created from a source table. Query its
+// state, source table, expiration time, start and end times, size in
+// bytes, and encryption information. Backups are stored in a specific
+// cluster and expire automatically at `expireTime`.
 private gcp.project.bigtableService.backup @defaults("name") {
   // Project ID
   projectId string
@@ -5547,6 +6169,15 @@ private gcp.project.alloydbService {
 }
 
 // Google Cloud (GCP) AlloyDB cluster
+//
+// Examine an AlloyDB for PostgreSQL cluster — the top-level container
+// for a highly available PostgreSQL-compatible database. Query its
+// `clusterType` (`PRIMARY` or `SECONDARY`), `databaseVersion`, `state`,
+// network configuration, encryption configuration (CMEK via `kmsKey`),
+// automated and continuous backup policies, SSL configuration, and
+// maintenance schedule. Drill into `instances` for primary and read-pool
+// instance details, `backups` for restore-point review, and `users` for
+// database user audits.
 private gcp.project.alloydbService.cluster @defaults("name") {
   // Project ID
   projectId string
@@ -5609,6 +6240,11 @@ private gcp.project.alloydbService.cluster @defaults("name") {
 }
 
 // Google Cloud (GCP) AlloyDB cluster user
+//
+// Examine a database user defined on an AlloyDB cluster. Query the
+// `userType` (`ALLOYDB_BUILT_IN` for password-authenticated users or
+// `ALLOYDB_IAM_USER` for IAM-authenticated users) and the PostgreSQL
+// database role memberships granted to the user.
 private gcp.project.alloydbService.cluster.user @defaults("name userType") {
   // Project ID
   projectId string
@@ -5623,6 +6259,14 @@ private gcp.project.alloydbService.cluster.user @defaults("name userType") {
 }
 
 // Google Cloud (GCP) AlloyDB instance
+//
+// Examine an AlloyDB instance within a cluster — either a primary
+// read-write instance, a read-pool instance, or a secondary instance.
+// Query its `instanceType`, `availabilityType` (`ZONAL` or `REGIONAL`),
+// `machineConfig`, IP addresses, database flags, query insights
+// configuration, client connection configuration, and Private Service
+// Connect settings. `activationPolicy` controls whether the instance is
+// always running or stopped.
 private gcp.project.alloydbService.instance @defaults("name") {
   // Project ID
   projectId string
@@ -5679,6 +6323,12 @@ private gcp.project.alloydbService.instance @defaults("name") {
 }
 
 // Google Cloud (GCP) AlloyDB backup
+//
+// Examine an AlloyDB backup created from a source cluster. Query its
+// `type` (manual or automated), `state`, `databaseVersion`, size in
+// bytes, encryption configuration, and expiry time. `expiryQuantity`
+// describes count-based retention when the backup was created under a
+// quantitative retention policy.
 private gcp.project.alloydbService.backup @defaults("name") {
   // Project ID
   projectId string
@@ -5721,6 +6371,14 @@ private gcp.project.alloydbService.backup @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute Cloud Armor security policy
+//
+// Examine a Cloud Armor security policy that protects Google Cloud load
+// balancers from DDoS attacks, web application threats, and unwanted
+// traffic. Query its `type` (`CLOUD_ARMOR`, `CLOUD_ARMOR_EDGE`, or
+// `CLOUD_ARMOR_NETWORK`), adaptive protection configuration, advanced
+// options (request body inspection, JSON parsing), DDoS protection
+// settings, and reCAPTCHA options. Drill into `rules` for the ordered
+// list of allow, deny, rate-limit, and redirect rules.
 private gcp.project.computeService.securityPolicy @defaults("name type") {
   // Unique identifier
   id string
@@ -5781,6 +6439,15 @@ private gcp.project.computeService.securityPolicy.rule @defaults("priority actio
 }
 
 // Google Cloud (GCP) Compute SSL policy
+//
+// Examine a Compute Engine SSL policy that governs the TLS protocol
+// version and cipher suites negotiated by HTTPS and SSL proxy load
+// balancers. Query its `profile` (`COMPATIBLE`, `MODERN`, `RESTRICTED`,
+// or `CUSTOM`), `minTlsVersion`, enabled features, and custom features
+// (when profile is `CUSTOM`). The `weakTls` field evaluates to `true`
+// when the policy permits cipher suites or protocol versions considered
+// cryptographically weak. `warnings` surfaces any API-reported
+// configuration issues.
 private gcp.project.computeService.sslPolicy @defaults("name profile minTlsVersion") {
   // Unique identifier
   id string
@@ -5809,6 +6476,13 @@ private gcp.project.computeService.sslPolicy @defaults("name profile minTlsVersi
 }
 
 // Google Cloud (GCP) Compute SSL certificate
+//
+// Examine a Compute Engine SSL certificate attached to HTTPS or SSL proxy
+// load balancers. Query its `type` (`SELF_MANAGED` for user-uploaded
+// certificates or `MANAGED` for Google-managed certificates), subject
+// alternative names, managed certificate configuration and provisioning
+// status, expiration time, and the region it belongs to (empty for global
+// certificates).
 private gcp.project.computeService.sslCertificate @defaults("name type") {
   // Unique identifier
   id string
@@ -5833,6 +6507,13 @@ private gcp.project.computeService.sslCertificate @defaults("name type") {
 }
 
 // Google Cloud (GCP) Compute HA VPN gateway
+//
+// Examine a High Availability (HA) VPN gateway that provides redundant
+// Site-to-Site VPN connectivity. Query its attached `network`, IP family
+// (`gatewayIpVersion`), stack type (`IPV4_ONLY`, `IPV4_IPV6`, or
+// `IPV6_ONLY`), `vpnInterfaces` (each with an IP address and optional
+// interconnect attachment), and resource manager tags. HA VPN gateways
+// always provide two interfaces for 99.99% availability.
 private gcp.project.computeService.vpnGateway @defaults("name") {
   // Unique identifier
   id string
@@ -5859,6 +6540,13 @@ private gcp.project.computeService.vpnGateway @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute VPN tunnel
+//
+// Examine a Cloud VPN tunnel carrying encrypted traffic between a GCP
+// network and a peer gateway. Query its `status`, `ikeVersion`,
+// `localTrafficSelector` and `remoteTrafficSelector` CIDRs, and the
+// `sharedSecretHash`. Resolve the peer via `peerExternalVpnGateway` or
+// `peerGcpVpnGateway`, the owning HA VPN gateway via `vpnGateway`, and
+// the dynamic routing Cloud Router via `router`.
 private gcp.project.computeService.vpnTunnel @defaults("name status") {
   // Unique identifier
   id string
@@ -5913,6 +6601,13 @@ private gcp.project.computeService.vpnTunnel @defaults("name status") {
 }
 
 // Google Cloud (GCP) Compute storage pool
+//
+// Examine a Compute Engine storage pool — a pre-provisioned block storage
+// capacity container that disks are created from. Query its `state`,
+// capacity provisioning type (`ADVANCED` or `STANDARD`), performance
+// provisioning type, provisioned capacity in GiB, IOPS, and throughput.
+// `storagePoolType` identifies the underlying disk technology, and `zone`
+// names the zone where the pool resides.
 private gcp.project.computeService.storagePool @defaults("name state") {
   // Unique identifier
   id string
@@ -5943,6 +6638,13 @@ private gcp.project.computeService.storagePool @defaults("name state") {
 }
 
 // Google Cloud (GCP) Compute Cloud NAT configuration on a router
+//
+// Examine a Cloud NAT configuration attached to a Cloud Router. Query its
+// NAT IP allocation option (`AUTO_ONLY` or `MANUAL_ONLY`), which subnet
+// IP ranges are NATed, port allocation settings (`minPortsPerVm`,
+// `maxPortsPerVm`, `enableDynamicPortAllocation`), endpoint-independent
+// mapping, idle timeout values per protocol, configured NAT rules, and
+// log configuration.
 private gcp.project.computeService.router.nat @defaults("name") {
   // Internal ID for this resource
   id string
@@ -5999,6 +6701,14 @@ private gcp.project.certificateAuthorityService {
 }
 
 // Google Cloud (GCP) Certificate Authority Service CA pool
+//
+// Examine a CA pool within the Private CA Service — a logical grouping of
+// certificate authorities that share an issuance policy and publishing
+// options. Query the pool `tier` (`ENTERPRISE` for full-featured or
+// `DEVOPS` for high-volume issuance), `issuancePolicy` (constraints on
+// what the CAs may sign), `publishingOptions` (CRL/OCSP URLs), and
+// labels. Drill into `certificateAuthorities` and `certificates` to
+// review CA states and issued certificate details.
 private gcp.project.certificateAuthorityService.caPool @defaults("name tier") {
   // Project ID
   projectId string
@@ -6023,6 +6733,15 @@ private gcp.project.certificateAuthorityService.caPool @defaults("name tier") {
 }
 
 // Google Cloud (GCP) Certificate Authority
+//
+// Examine a certificate authority managed by the Private CA Service.
+// Query its `type` (`SELF_SIGNED` for root CAs or `SUBORDINATE` for
+// intermediate CAs), `state` (`ENABLED`, `DISABLED`, `STAGED`,
+// `AWAITING_USER_ACTIVATION`, `DELETION_REQUESTED`), key specification,
+// certificate configuration (subject, subject alternative names),
+// certificate lifetime, PEM-encoded CA certificate chains, GCS bucket
+// for published CRL and CA certs, and access URLs. `expireTime` is when
+// the CA certificate itself expires.
 private gcp.project.certificateAuthorityService.certificateAuthority @defaults("name state type") {
   // Project ID
   projectId string
@@ -6065,6 +6784,13 @@ private gcp.project.certificateAuthorityService.certificateAuthority @defaults("
 }
 
 // Google Cloud (GCP) Certificate Authority Service certificate
+//
+// Examine a certificate issued by the Private CA Service within a CA
+// pool. Query the `subjectDescription` (common name, SAN, validity
+// period), `certDescription` (key usage, extended key usage, subject key
+// identifier), PEM-encoded certificate and chain, and revocation details.
+// `issuerCertificateAuthority` identifies which CA within the pool signed
+// this certificate.
 private gcp.project.certificateAuthorityService.certificate @defaults("name") {
   // Project ID
   projectId string
@@ -6354,6 +7080,13 @@ private gcp.project.certificateManagerService.trustConfig @defaults("name") {
 }
 
 // Google Cloud (GCP) audit logging configuration for a service
+//
+// Examine the Cloud Audit Logs configuration for a single GCP service
+// within a project, folder, or organization IAM policy. `service` is
+// either `allServices` (a catch-all) or a specific service hostname such
+// as `storage.googleapis.com`. Drill into `auditLogConfigs` to see which
+// log types (`ADMIN_READ`, `DATA_READ`, `DATA_WRITE`) are enabled and
+// which principals are exempted.
 private gcp.resourcemanager.auditConfig @defaults("service") {
   // Internal ID for this resource
   id string
@@ -6374,6 +7107,13 @@ private gcp.resourcemanager.auditConfig.logConfig @defaults("logType") {
 }
 
 // Google Cloud (GCP) Organization Policy
+//
+// Examine an Organization Policy applied to a project, folder, or
+// organization. Query the `constraintName` (e.g.,
+// `constraints/compute.disableSerialPortAccess`), the effective `spec`
+// (rules and inheritance behavior), the dry-run `dryRunSpec` for testing
+// policy changes before enforcement, and the `etag` for optimistic
+// concurrency control.
 private gcp.orgPolicy @defaults("constraintName") {
   // Internal ID
   id string
@@ -6392,6 +7132,15 @@ private gcp.orgPolicy @defaults("constraintName") {
 }
 
 // Google Cloud (GCP) Organization policy constraint
+//
+// Examine a predefined Organization Policy constraint — the policy
+// vocabulary item that an `orgPolicy` rule references. Query the
+// `constraintDefault` behavior when no policy is set
+// (`CONSTRAINT_DEFAULT_ALLOW` or `CONSTRAINT_DEFAULT_DENY`),
+// `listConstraint` details (allowed/denied values, supports wildcards),
+// and `booleanConstraint` details. The `name` field is the full
+// constraint identifier, e.g.,
+// `constraints/compute.disableSerialPortAccess`.
 private gcp.orgPolicy.constraint @defaults("name") {
   // Full resource name (e.g., constraints/compute.disableSerialPortAccess)
   name string
@@ -6436,6 +7185,13 @@ private gcp.orgPolicy.customConstraint @defaults("displayName name") {
 }
 
 // Google Cloud (GCP) Compute instance group
+//
+// Examine a Compute Engine instance group — a collection of VM instances
+// that can be managed together for load balancing and autoscaling.
+// Query its `size` (current instance count), `namedPorts` (protocol/port
+// pairs registered for load balancing), attached `network` and
+// `subnetwork`, and zone. Instance groups are either managed (backed by
+// an `instanceGroupManager`) or unmanaged.
 private gcp.project.computeService.instanceGroup @defaults("name size") {
   // Unique identifier
   id string
@@ -6464,6 +7220,14 @@ private gcp.project.computeService.instanceGroup @defaults("name size") {
 }
 
 // Google Cloud (GCP) Compute instance group manager (managed instance group)
+//
+// Examine a Compute Engine managed instance group (MIG) — a group manager
+// that maintains a fleet of identical VM instances from a single instance
+// template. Query its `targetSize`, `currentActions` (creatingInstances,
+// deletingInstances, recreatingInstances), `autoHealingPolicies` (health
+// checks and initial delay), `statefulPolicy` (preserved disks and
+// metadata), and group `status`. `instanceTemplateUrl` identifies the
+// template used to create instances.
 private gcp.project.computeService.instanceGroupManager @defaults("name targetSize") {
   // Unique identifier
   id string
@@ -6500,6 +7264,14 @@ private gcp.project.computeService.instanceGroupManager @defaults("name targetSi
 }
 
 // Google Cloud (GCP) Compute network firewall policy
+//
+// Examine a Compute Engine network firewall policy — a hierarchical or
+// global/regional policy containing an ordered set of firewall rules that
+// can be associated with multiple VPC networks. Query its `ruleTupleCount`
+// (total rule tuples consumed toward the quota), `associations` (the
+// networks and scopes the policy is attached to), and `regionUrl` (empty
+// for global policies). Drill into `rules` for the ordered allow, deny,
+// and goto-next rules.
 private gcp.project.computeService.firewallPolicy @defaults("name") {
   // Unique identifier
   id string
@@ -6596,6 +7368,12 @@ private gcp.project.filestoreService {
 }
 
 // Google Cloud (GCP) Filestore instance
+//
+// Examine a managed NFS file server: its service tier (BASIC_HDD, BASIC_SSD,
+// HIGH_SCALE_SSD, ENTERPRISE, ZONAL, REGIONAL), current lifecycle state,
+// file share configurations, network interfaces with assigned IP addresses,
+// KMS encryption key, deletion-protection status, and zone-separation
+// compliance flags.
 private gcp.project.filestoreService.instance @defaults("name state tier") {
   // Project ID
   projectId string
@@ -6666,6 +7444,11 @@ private gcp.project.cloudTasksService {
 }
 
 // Google Cloud (GCP) Cloud Tasks queue
+//
+// Examine a Cloud Tasks queue: its current state (RUNNING, PAUSED, DISABLED),
+// dispatch rate limits, retry configuration (max attempts, backoff, max retry
+// duration), and any App Engine routing overrides that apply to tasks
+// dispatched from this queue.
 private gcp.project.cloudTasksService.queue @defaults("name state") {
   // Project ID
   projectId string
@@ -6694,6 +7477,11 @@ private gcp.project.cloudSchedulerService {
 }
 
 // Google Cloud (GCP) Cloud Scheduler job
+//
+// Examine a Cloud Scheduler job: its cron schedule expression, time zone,
+// current state (ENABLED, PAUSED, DISABLED, UPDATE_FAILED), target type
+// (HTTP, Pub/Sub, or App Engine HTTP), retry configuration, and timestamps
+// for the last attempted run and the next scheduled run.
 private gcp.project.cloudSchedulerService.job @defaults("name state schedule") {
   // Project ID
   projectId string
@@ -6734,6 +7522,12 @@ private gcp.project.appEngineService {
 }
 
 // Google Cloud (GCP) App Engine application
+//
+// Examine the singleton App Engine application for a project: its serving
+// location, serving status (SERVING, USER_DISABLED, SYSTEM_DISABLED), default
+// hostname, Cloud Storage buckets for code staging and Blobstore, GCR domain
+// for managed Docker images, database type (Firestore or Datastore), auth
+// domain, Identity-Aware Proxy configuration, and feature settings.
 private gcp.project.appEngineService.application @defaults("id locationId servingStatus") {
   // Project ID
   projectId string
@@ -6764,6 +7558,10 @@ private gcp.project.appEngineService.application @defaults("id locationId servin
 }
 
 // Google Cloud (GCP) App Engine service
+//
+// Examine an App Engine service (e.g., "default"): its traffic split
+// configuration across versions, resource labels, and the deployed versions
+// reachable through the `versions` field.
 private gcp.project.appEngineService.service @defaults("id") {
   // Project ID
   projectId string
@@ -6780,6 +7578,12 @@ private gcp.project.appEngineService.service @defaults("id") {
 }
 
 // Google Cloud (GCP) App Engine version
+//
+// Examine a deployed App Engine version: its serving status (SERVING,
+// STOPPED), runtime (e.g., "python39", "go121", "nodejs20"), execution
+// environment (standard or flex), runtime API version, VPC access connector
+// configuration, URL handlers with their HTTPS enforcement and login
+// requirements, and creation timestamp.
 private gcp.project.appEngineService.version @defaults("id servingStatus") {
   // Project ID
   projectId string
@@ -6821,6 +7625,11 @@ private gcp.project.apiGatewayService {
 }
 
 // Google Cloud (GCP) API Gateway API
+//
+// Examine a managed API Gateway API: its lifecycle state (CREATING, ACTIVE,
+// FAILED, DELETING, UPDATING), the name of the Google-managed service backing
+// it, resource labels, creation and update timestamps, and the API
+// configurations deployed under this API.
 private gcp.project.apiGatewayService.api @defaults("name state") {
   // Project ID
   projectId string
@@ -6843,6 +7652,12 @@ private gcp.project.apiGatewayService.api @defaults("name state") {
 }
 
 // Google Cloud (GCP) API Gateway API config
+//
+// Examine an API Gateway API configuration: its lifecycle state (CREATING,
+// ACTIVE, FAILED, DELETING, UPDATING, ACTIVATING), the associated service
+// config ID, the IAM service account used by gateways to authenticate to
+// backend services, OpenAPI specification documents, resource labels, and
+// creation and update timestamps.
 private gcp.project.apiGatewayService.apiConfig @defaults("name state") {
   // Project ID
   projectId string
@@ -6867,6 +7682,11 @@ private gcp.project.apiGatewayService.apiConfig @defaults("name state") {
 }
 
 // Google Cloud (GCP) API Gateway gateway
+//
+// Examine an API Gateway deployment: its lifecycle state (CREATING, ACTIVE,
+// FAILED, DELETING, UPDATING), the API config it serves, the default hostname
+// clients use to reach backend services, resource labels, and creation and
+// update timestamps.
 private gcp.project.apiGatewayService.gateway @defaults("name state") {
   // Project ID
   projectId string
@@ -6902,6 +7722,13 @@ private gcp.project.workstationsService {
 }
 
 // Google Cloud (GCP) Cloud Workstations cluster
+//
+// Examine a Cloud Workstations cluster: its VPC network and subnetwork, the
+// private control-plane IP address, whether the cluster is in degraded mode,
+// whether it is currently reconciling toward its intended state, private
+// cluster configuration (endpoint enablement, cluster hostname, service
+// attachment URI, allowed projects), resource labels, client annotations, and
+// creation and update timestamps.
 private gcp.project.workstationsService.cluster @defaults("name displayName degraded") {
   // Project ID
   projectId string
@@ -6947,6 +7774,13 @@ private gcp.project.workbenchService {
 }
 
 // Google Cloud (GCP) Vertex AI Workbench instance
+//
+// Examine a Vertex AI Workbench managed notebook instance: its lifecycle
+// state, health state (HEALTHY, UNHEALTHY, AGENT_NOT_INSTALLED), proxy
+// endpoint for Jupyter access, instance owners, whether proxy access and
+// public IP are disabled, whether deletion protection is enabled, Compute
+// Engine setup details (including network interfaces and disk configuration),
+// and creation and update timestamps.
 private gcp.project.workbenchService.instance @defaults("name state healthState") {
   // Project ID
   projectId string
@@ -6992,6 +7826,12 @@ private gcp.project.notebooksService {
 }
 
 // Google Cloud (GCP) legacy Notebooks instance
+//
+// Examine a User-Managed Notebooks instance: its lifecycle state, Compute
+// Engine machine type, whether a public IP is assigned (`noPublicIp`),
+// whether the notebook proxy is registered (`noProxyAccess`), VPC network and
+// subnet, service account, proxy URI for Jupyter access, creator email, and
+// creation and update timestamps.
 private gcp.project.notebooksService.instance @defaults("name state noPublicIp") {
   // Project ID
   projectId string
@@ -7079,6 +7919,10 @@ private gcp.project.healthcareService {
 }
 
 // Google Cloud (GCP) Cloud Healthcare dataset
+//
+// Examine a Cloud Healthcare dataset: its default IANA time zone, customer-
+// managed encryption key configuration, and the DICOM, FHIR, and HL7v2
+// stores it contains.
 private gcp.project.healthcareService.dataset @defaults("name timeZone") {
   // Project ID
   projectId string
@@ -7097,6 +7941,9 @@ private gcp.project.healthcareService.dataset @defaults("name timeZone") {
 }
 
 // Google Cloud (GCP) Cloud Healthcare DICOM store
+//
+// Examine a Cloud Healthcare DICOM store: its resource labels and the Pub/Sub
+// notification destination configured for new DICOM instance ingestion events.
 private gcp.project.healthcareService.dicomStore @defaults("name") {
   // Project ID
   projectId string
@@ -7109,6 +7956,12 @@ private gcp.project.healthcareService.dicomStore @defaults("name") {
 }
 
 // Google Cloud (GCP) Cloud Healthcare FHIR store
+//
+// Examine a Cloud Healthcare FHIR store: the FHIR specification version
+// (DSTU2, STU3, R4, R5), whether referential integrity is disabled, whether
+// the updateCreate capability is enabled, complex data type reference parsing
+// mode, whether strict search-parameter handling is the default, and resource
+// labels.
 private gcp.project.healthcareService.fhirStore @defaults("name version") {
   // Project ID
   projectId string
@@ -7129,6 +7982,9 @@ private gcp.project.healthcareService.fhirStore @defaults("name version") {
 }
 
 // Google Cloud (GCP) Cloud Healthcare HL7v2 store
+//
+// Examine a Cloud Healthcare HL7v2 store: its message parser configuration,
+// whether duplicate messages are rejected, and resource labels.
 private gcp.project.healthcareService.hl7v2Store @defaults("name") {
   // Project ID
   projectId string
@@ -7143,6 +7999,13 @@ private gcp.project.healthcareService.hl7v2Store @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute health check
+//
+// Examine a Compute Engine health check: its protocol type (HTTP, HTTPS, TCP,
+// SSL, HTTP2, GRPC), check interval and timeout, healthy and unhealthy
+// thresholds, protocol-specific configuration (httpHealthCheck,
+// httpsHealthCheck, tcpHealthCheck, sslHealthCheck, http2HealthCheck,
+// grpcHealthCheck), logging configuration, and whether the check is regional
+// or global.
 private gcp.project.computeService.healthCheck @defaults("name type") {
   // Unique identifier
   id string
@@ -7185,6 +8048,11 @@ private gcp.project.computeService.healthCheck @defaults("name type") {
 }
 
 // Google Cloud (GCP) Compute URL map
+//
+// Examine a Compute Engine URL map: its default backend service, host rules
+// that match incoming hostnames, path matchers that route requests to backend
+// services or buckets, URL map tests, and whether the map is regional or
+// global.
 private gcp.project.computeService.urlMap @defaults("name") {
   // Unique identifier
   id string
@@ -7211,6 +8079,10 @@ private gcp.project.computeService.urlMap @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute target HTTP proxy
+//
+// Examine a Compute Engine target HTTP proxy: the URL map it routes traffic
+// through, whether proxy bind is enabled for Cloud Armor, and whether the
+// proxy is regional or global.
 private gcp.project.computeService.targetHttpProxy @defaults("name") {
   // Unique identifier
   id string
@@ -7235,6 +8107,12 @@ private gcp.project.computeService.targetHttpProxy @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute target HTTPS proxy
+//
+// Examine a Compute Engine target HTTPS proxy: the URL map it routes traffic
+// through, the SSL certificates it presents, the SSL policy governing TLS
+// version and cipher requirements, the QUIC override setting (NONE, ENABLE,
+// DISABLE), whether proxy bind is enabled for Cloud Armor, and whether the
+// proxy is regional or global.
 private gcp.project.computeService.targetHttpsProxy @defaults("name") {
   // Unique identifier
   id string
@@ -7267,6 +8145,11 @@ private gcp.project.computeService.targetHttpsProxy @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute network peering
+//
+// Examine a VPC network peering connection: its state (ACTIVE, INACTIVE),
+// the peer network resource, whether full-mesh routes are auto-created,
+// whether subnet routes are exchanged, and the import/export settings for
+// custom routes and public-IP subnet routes.
 private gcp.project.computeService.network.peering @defaults("name state") {
   // Internal ID
   id string
@@ -7295,6 +8178,13 @@ private gcp.project.computeService.network.peering @defaults("name state") {
 }
 
 // Google Cloud (GCP) Compute static route
+//
+// Examine a Compute Engine route: its destination IP range, priority
+// (0-65535), the network it belongs to, the next hop (gateway, instance, IP
+// address, VPN tunnel, ILB forwarding rule, or NCC hub), the instance tags
+// that scope the route, route type (STATIC, BGP, SUBNET, TRANSIT), route
+// status (ACTIVE, INACTIVE, PENDING, DROPPED), and any configuration
+// warnings reported by the API.
 private gcp.project.computeService.route @defaults("name destRange") {
   // Unique identifier
   id string
@@ -7343,6 +8233,12 @@ private gcp.project.computeService.route @defaults("name destRange") {
 }
 
 // Google Cloud (GCP) Compute Private Service Connect service attachment
+//
+// Examine a Private Service Connect service attachment: its connection
+// preference (ACCEPT_AUTOMATIC, ACCEPT_MANUAL), the connected consumer
+// endpoints, consumer accept and reject lists, whether proxy protocol is
+// enabled, DNS domain names for service discovery, NAT subnets, the producer
+// forwarding rule, and the target service URL.
 private gcp.project.computeService.serviceAttachment @defaults("name connectionPreference") {
   // Unique identifier
   id string
@@ -7381,6 +8277,13 @@ private gcp.project.computeService.serviceAttachment @defaults("name connectionP
 }
 
 // Google Cloud (GCP) Compute network endpoint group
+//
+// Examine a Compute Engine Network Endpoint Group (NEG): its endpoint type
+// (GCE_VM_IP, GCE_VM_IP_PORT, SERVERLESS, PRIVATE_SERVICE_CONNECT,
+// INTERNET_IP_PORT, INTERNET_FQDN_PORT), default port, number of endpoints,
+// the network and subnetwork it belongs to, serverless backend configuration
+// (Cloud Run, App Engine, or Cloud Functions), PSC target service, and zone
+// or region placement.
 private gcp.project.computeService.networkEndpointGroup @defaults("name networkEndpointType") {
   // Unique identifier
   id string
@@ -7425,6 +8328,15 @@ private gcp.project.computeService.networkEndpointGroup @defaults("name networkE
 }
 
 // Google Cloud (GCP) Compute Interconnect connection
+//
+// Examine a Dedicated or Partner Interconnect connection: its type
+// (DEDICATED, PARTNER), link type (10G_LR, 100G_LR), requested and
+// provisioned link counts, administrative status, operational status,
+// connection state (ACTIVE, UNPROVISIONED), Google and peer IP addresses for
+// ping testing, NOC contact email, physical location, remote location for
+// Cross-Cloud Interconnect, MACsec feature availability, attached VLAN
+// attachment URLs, circuit information, expected outages, zone separation
+// compliance, and resource labels.
 private gcp.project.computeService.interconnect @defaults("name interconnectType state") {
   // Unique identifier
   id string
@@ -7481,6 +8393,14 @@ private gcp.project.computeService.interconnect @defaults("name interconnectType
 }
 
 // Google Cloud (GCP) Compute Interconnect Attachment (VLAN)
+//
+// Examine a Dedicated or Partner Interconnect VLAN attachment: its type
+// (DEDICATED, PARTNER, PARTNER_PROVIDER), state (ACTIVE, UNPROVISIONED,
+// PENDING_PARTNER, DEFUNCT, PENDING_CUSTOMER), edge availability domain,
+// bandwidth, VLAN tag (802.1Q), encryption mode (NONE, IPSEC), IPv4 and IPv6
+// addresses for the Cloud Router and customer router sides, stack type
+// (IPV4_ONLY, IPV4_IPV6), the associated Interconnect connection and Cloud
+// Router resources, and partner metadata.
 private gcp.project.computeService.interconnectAttachment @defaults("name type state") {
   // Unique identifier
   id string
@@ -7535,6 +8455,11 @@ private gcp.project.computeService.interconnectAttachment @defaults("name type s
 }
 
 // Google Cloud (GCP) Compute external VPN gateway (peer/customer-side)
+//
+// Examine the peer-side VPN gateway used in a Cloud VPN configuration: its
+// redundancy type (SINGLE_IP_INTERNALLY_REDUNDANT, TWO_IPS_REDUNDANCY,
+// FOUR_IPS_REDUNDANCY), the IP addresses of the peer gateway's interfaces,
+// and resource labels.
 private gcp.project.computeService.externalVpnGateway @defaults("name redundancyType") {
   // Unique identifier
   id string
@@ -7555,6 +8480,10 @@ private gcp.project.computeService.externalVpnGateway @defaults("name redundancy
 }
 
 // Google Cloud (GCP) Compute target TCP proxy
+//
+// Examine a Compute Engine target TCP proxy: the backend service it forwards
+// traffic to, the proxy header mode (NONE, PROXY_V1), whether proxy bind is
+// enabled, and whether the proxy is regional or global.
 private gcp.project.computeService.targetTcpProxy @defaults("name") {
   // Unique identifier
   id string
@@ -7577,6 +8506,11 @@ private gcp.project.computeService.targetTcpProxy @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute target SSL proxy
+//
+// Examine a Compute Engine target SSL proxy: the backend service it forwards
+// traffic to, the proxy header mode (NONE, PROXY_V1), the SSL certificates it
+// presents, the SSL policy governing TLS version and cipher requirements, and
+// the certificate map URL.
 private gcp.project.computeService.targetSslProxy @defaults("name") {
   // Unique identifier
   id string
@@ -7603,6 +8537,11 @@ private gcp.project.computeService.targetSslProxy @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute packet mirroring policy
+//
+// Examine a Compute Engine packet mirroring policy: whether mirroring is
+// enabled, its priority, the collector internal load balancer, the mirrored
+// resources (specific instances, subnetworks, or tags), traffic filter
+// configuration, and the network it applies to.
 private gcp.project.computeService.packetMirroring @defaults("name enable") {
   // Unique identifier
   id string
@@ -7631,6 +8570,11 @@ private gcp.project.computeService.packetMirroring @defaults("name enable") {
 }
 
 // Google Cloud (GCP) Compute backend bucket
+//
+// Examine a Compute Engine backend bucket: the backing Cloud Storage bucket
+// name, whether Cloud CDN is enabled, the CDN policy configuration,
+// compression mode (AUTOMATIC, DISABLED), custom response headers, and the
+// edge security policy URL.
 private gcp.project.computeService.backendBucket @defaults("name enableCdn") {
   // Unique identifier
   id string
@@ -7657,6 +8601,11 @@ private gcp.project.computeService.backendBucket @defaults("name enableCdn") {
 }
 
 // Google Cloud (GCP) Compute target pool (legacy network load balancing)
+//
+// Examine a legacy network load balancing target pool: its session affinity
+// mode (NONE, CLIENT_IP, CLIENT_IP_PROTO, CLIENT_IP_PORT_PROTO), failover
+// ratio, backup pool URL, associated health check URLs, the instance URLs of
+// members in the pool, and the security policy applied.
 private gcp.project.computeService.targetPool @defaults("name") {
   // Unique identifier
   id string
@@ -7685,6 +8634,13 @@ private gcp.project.computeService.targetPool @defaults("name") {
 }
 
 // Google Cloud (GCP) Compute public advertised prefix (BYOIP)
+//
+// Examine a Bring Your Own IP (BYOIP) public advertised prefix: the IP CIDR
+// range being advertised, its validation status (INITIAL, PTR_CONFIGURED,
+// VALIDATED, PREFIX_CONFIGURATION_COMPLETE, PREFIX_CONFIGURATION_IN_PROGRESS,
+// PREFIX_REMOVAL_IN_PROGRESS, READY_TO_USE), the DNS verification IP, BYOIP
+// API version, PDP scope (REGIONAL, GLOBAL), and any public delegated
+// sub-prefixes.
 private gcp.project.computeService.publicAdvertisedPrefix @defaults("name ipCidrRange status") {
   // Unique identifier
   id string
@@ -7713,6 +8669,11 @@ private gcp.project.computeService.publicAdvertisedPrefix @defaults("name ipCidr
 }
 
 // Google Cloud (GCP) Compute instance template
+//
+// Examine a Compute Engine instance template: the instance properties it
+// defines (machine type, boot and data disks, network interfaces, service
+// account, metadata, and scheduling options), whether it was derived from an
+// existing instance, and its creation timestamp.
 private gcp.project.computeService.instanceTemplate @defaults("name description") {
   // Unique identifier
   id string
@@ -7746,6 +8707,11 @@ private gcp.project.cloudDeployService {
 }
 
 // Google Cloud (GCP) Cloud Deploy delivery pipeline
+//
+// Examine a Cloud Deploy delivery pipeline: its serial pipeline stage
+// configuration, whether the pipeline is suspended, pipeline conditions
+// (readiness and pipeline readiness state), resource labels, annotations, and
+// the releases created from this pipeline.
 private gcp.project.cloudDeployService.deliveryPipeline @defaults("name") {
   // Project ID
   projectId string
@@ -7774,6 +8740,11 @@ private gcp.project.cloudDeployService.deliveryPipeline @defaults("name") {
 }
 
 // Google Cloud (GCP) Cloud Deploy target
+//
+// Examine a Cloud Deploy deployment target: whether approval is required
+// before a release is promoted to this target, the target type (GKE cluster,
+// Cloud Run service, or custom target), execution configuration, resource
+// labels, and annotations.
 private gcp.project.cloudDeployService.target @defaults("name") {
   // Project ID
   projectId string
@@ -7804,6 +8775,11 @@ private gcp.project.cloudDeployService.target @defaults("name") {
 }
 
 // Google Cloud (GCP) Cloud Deploy release
+//
+// Examine a Cloud Deploy release: its Skaffold configuration URI and version,
+// overall render state (SUCCEEDED, FAILED, IN_PROGRESS), whether the release
+// was abandoned, render start and end timestamps, pipeline and release
+// readiness conditions, resource labels, and annotations.
 private gcp.project.cloudDeployService.release @defaults("name") {
   // Full resource name
   name string
@@ -7847,6 +8823,12 @@ private gcp.project.dataflowService {
 }
 
 // Google Cloud (GCP) Dataflow job
+//
+// Examine a Dataflow job: its pipeline type (JOB_TYPE_BATCH,
+// JOB_TYPE_STREAMING), current state (JOB_STATE_RUNNING, JOB_STATE_DONE,
+// etc.), the environment configuration covering worker settings and SDK
+// pipeline options, region or location of execution, resource labels, and
+// creation timestamp.
 private gcp.project.dataflowService.job @defaults("name currentState") {
   // Project ID
   projectId string
@@ -7886,6 +8868,13 @@ private gcp.project.artifactRegistryService {
 }
 
 // Google Cloud (GCP) Artifact Registry repository
+//
+// Examine a single Artifact Registry repository — its package format
+// (DOCKER, MAVEN, NPM, PYTHON, APT, YUM, GO, GENERIC), repository mode
+// (STANDARD, VIRTUAL, REMOTE), encryption key, cleanup policies, format-
+// and mode-specific configuration, and IAM policy bindings. Use
+// `vulnerabilityScanningConfig` to audit whether container-image scanning
+// is active or inherited.
 private gcp.project.artifactRegistryService.repository @defaults("name format location") {
   // Project ID
   projectId string
@@ -7946,6 +8935,11 @@ private gcp.project.artifactRegistryService.repository.vulnScanConfig {
 }
 
 // Google Cloud (GCP) Artifact Registry repository cleanup policy
+//
+// Examine a cleanup policy attached to an Artifact Registry repository.
+// Each policy has an `action` (DELETE or KEEP) and a `policyType` that
+// selects between a condition-based filter (`condition`) or a most-recent-
+// versions retention rule (`mostRecentVersions`).
 private gcp.project.artifactRegistryService.repository.cleanupPolicy @defaults("id action policyType") {
   // Internal ID
   id string
@@ -8041,6 +9035,11 @@ private gcp.project.backupdrService {
 }
 
 // Google Cloud (GCP) Backup and DR management server
+//
+// Examine a Backup and DR management server — its current lifecycle state
+// (CREATING, READY, UPDATING, DELETING, REPAIRING, ERROR), network
+// configuration, management URI, OAuth2 client ID, and whether Physical
+// Zone Separation is satisfied.
 private gcp.project.backupdrService.managementServer @defaults("name state") {
   // Full resource name
   name string
@@ -8069,6 +9068,12 @@ private gcp.project.backupdrService.managementServer @defaults("name state") {
 }
 
 // Google Cloud (GCP) Backup and DR backup vault
+//
+// Examine a Backup and DR backup vault — its minimum enforced retention
+// duration, access restriction setting, whether the vault is deletable,
+// service account, total stored bytes, backup count, and the `dataSources`
+// that are protected within it. Use these fields to verify immutability
+// and data-protection policy compliance.
 private gcp.project.backupdrService.backupVault @defaults("name state") {
   // Full resource name
   name string
@@ -8105,6 +9110,11 @@ private gcp.project.backupdrService.backupVault @defaults("name state") {
 }
 
 // Google Cloud (GCP) Backup and DR data source
+//
+// Examine a data source protected within a Backup and DR backup vault —
+// its current state, configuration state, total stored bytes, backup
+// count, and the GCP resource or Backup Appliance application it
+// represents.
 private gcp.project.backupdrService.dataSource @defaults("name state") {
   // Full resource name
   name string
@@ -8131,6 +9141,11 @@ private gcp.project.backupdrService.dataSource @defaults("name state") {
 }
 
 // Google Cloud (GCP) Backup and DR backup plan
+//
+// Examine a Backup and DR backup plan — its target resource type, lifecycle
+// state, associated backup vault, vault service account, and the backup
+// rules that define schedules and retention windows for automated
+// protection.
 private gcp.project.backupdrService.backupPlan @defaults("name state") {
   // Full resource name
   name string
@@ -8188,6 +9203,11 @@ private gcp.project.vertexaiService {
 }
 
 // Google Cloud (GCP) Vertex AI metadata store
+//
+// Examine a Vertex AI Metadata Store — its current state, encryption
+// specification, and Dataplex integration configuration. Metadata stores
+// track ML artifacts, executions, and lineage for reproducibility and
+// governance audits.
 private gcp.project.vertexaiService.metadataStore @defaults("name state") {
   // Full resource name
   name string
@@ -8206,6 +9226,12 @@ private gcp.project.vertexaiService.metadataStore @defaults("name state") {
 }
 
 // Google Cloud (GCP) Vertex AI model
+//
+// Examine a Vertex AI model — its version ID and aliases, container
+// serving spec, supported deployment resource types, input/output storage
+// formats, artifact URI, training pipeline reference, encryption
+// specification (CMEK), and labels. Use these fields to audit model
+// provenance, encryption posture, and deployment readiness.
 private gcp.project.vertexaiService.model @defaults("name displayName") {
   // Full resource name
   name string
@@ -8246,6 +9272,12 @@ private gcp.project.vertexaiService.model @defaults("name displayName") {
 }
 
 // Google Cloud (GCP) Vertex AI endpoint
+//
+// Examine a Vertex AI endpoint — its deployed models, traffic split
+// percentages, network attachment for private endpoints, whether public
+// endpoint access is enabled, encryption specification (CMEK), and labels.
+// Use these fields to audit model serving configuration and network
+// exposure.
 private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   // Full resource name
   name string
@@ -8274,6 +9306,12 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
 }
 
 // Google Cloud (GCP) Vertex AI pipeline job
+//
+// Examine a Vertex AI pipeline job — its current state (QUEUED, RUNNING,
+// SUCCEEDED, FAILED, CANCELLING, CANCELLED, PAUSED), pipeline and runtime
+// configuration, service account, VPC network, encryption specification,
+// template URI, and execution timestamps. Use these fields to audit ML
+// pipeline security posture and job lifecycle.
 private gcp.project.vertexaiService.pipelineJob @defaults("name displayName state") {
   // Full resource name
   name string
@@ -8308,6 +9346,11 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
 }
 
 // Google Cloud (GCP) Vertex AI dataset
+//
+// Examine a Vertex AI dataset — its metadata schema URI, user-defined
+// metadata payload, encryption specification (CMEK), and labels. Datasets
+// hold training data for AutoML and custom model workflows; audit them to
+// verify encryption posture and metadata compliance.
 private gcp.project.vertexaiService.dataset @defaults("name displayName") {
   // Full resource name
   name string
@@ -8332,6 +9375,12 @@ private gcp.project.vertexaiService.dataset @defaults("name displayName") {
 }
 
 // Google Cloud (GCP) Vertex AI Feature Online Store
+//
+// Examine a Vertex AI Feature Online Store — its backend type (Bigtable or
+// Optimized), dedicated serving endpoint, encryption specification, Physical
+// Zone Separation and Isolation compliance flags, and current lifecycle
+// state. Feature Online Stores serve low-latency feature values to models
+// at prediction time.
 private gcp.project.vertexaiService.featureOnlineStore @defaults("name state") {
   // Full resource name
   name string
@@ -8360,6 +9409,11 @@ private gcp.project.vertexaiService.featureOnlineStore @defaults("name state") {
 }
 
 // Google Cloud (GCP) Vertex AI Tensorboard instance
+//
+// Examine a Vertex AI Tensorboard instance — its display name, whether it
+// is the default Tensorboard for the project, encryption specification, and
+// labels. Tensorboard instances store and visualize ML experiment metrics
+// and model training runs.
 private gcp.project.vertexaiService.tensorboard @defaults("displayName") {
   // Full resource name
   name string
@@ -8380,6 +9434,12 @@ private gcp.project.vertexaiService.tensorboard @defaults("displayName") {
 }
 
 // Google Cloud (GCP) Vertex AI custom training job
+//
+// Examine a Vertex AI custom training job — its current state (QUEUED,
+// PENDING, RUNNING, SUCCEEDED, FAILED, CANCELLING, CANCELLED, PAUSED,
+// EXPIRED), worker pool job specification, encryption specification, error
+// details, and execution timestamps. Use these fields to audit training
+// infrastructure configuration and job lifecycle.
 private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   // Full resource name
   name string
@@ -8406,6 +9466,12 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
 }
 
 // Google Cloud (GCP) Vertex AI vector search index
+//
+// Examine a Vertex AI vector search index — its metadata schema URI, index
+// update method (BATCH_UPDATE or STREAM_UPDATE), deployed index references,
+// index statistics (vector count, shard count), and encryption
+// specification. Vector search indexes enable approximate nearest-neighbor
+// search over high-dimensional embeddings.
 private gcp.project.vertexaiService.index @defaults("displayName") {
   // Full resource name
   name string
@@ -8434,6 +9500,12 @@ private gcp.project.vertexaiService.index @defaults("displayName") {
 }
 
 // Google Cloud (GCP) Vertex AI vector search index endpoint
+//
+// Examine a Vertex AI vector search index endpoint — its deployed indexes,
+// VPC network for private endpoints, whether public endpoint access is
+// enabled, the public endpoint domain name, and encryption specification.
+// Index endpoints serve online vector similarity queries against deployed
+// indexes.
 private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
   // Full resource name
   name string
@@ -8460,6 +9532,11 @@ private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
 }
 
 // Google Cloud Security Command Center organization settings
+//
+// Examine the Security Command Center organization-level settings — whether
+// Cloud asset discovery is enabled and the asset discovery configuration
+// that controls which project types and regions are included in the
+// inventory.
 private gcp.scc.organizationSettings @defaults("name") {
   // Full resource name
   name string
@@ -8470,6 +9547,11 @@ private gcp.scc.organizationSettings @defaults("name") {
 }
 
 // Google Cloud Security Command Center source
+//
+// Examine a Security Command Center finding source — its display name,
+// description, and canonical name. Sources represent the security tools or
+// services (built-in or third-party) that generate findings surfaced in
+// Security Command Center.
 private gcp.scc.source @defaults("name displayName") {
   // Full resource name (organizations/{orgId}/sources/{sourceId})
   name string
@@ -8482,6 +9564,13 @@ private gcp.scc.source @defaults("name displayName") {
 }
 
 // Google Cloud Security Command Center finding
+//
+// Examine a Security Command Center finding — its category (e.g.,
+// OPEN_FIREWALL, PUBLIC_BUCKET_ACL), severity (CRITICAL, HIGH, MEDIUM,
+// LOW), state (ACTIVE, INACTIVE), mute state, finding class (THREAT,
+// VULNERABILITY, MISCONFIGURATION), affected resource name, event and
+// create times, source-specific properties, security marks, and external
+// exposure details including toxic combination and chokepoint analysis.
 private gcp.scc.finding @defaults("name category severity") {
   // Full resource name
   name string
@@ -8518,6 +9607,11 @@ private gcp.scc.finding @defaults("name category severity") {
 }
 
 // Google Cloud Security Command Center notification config
+//
+// Examine a Security Command Center notification configuration — its
+// Pub/Sub topic target, the service account used to publish messages, and
+// the CEL filter expression that controls which findings trigger
+// notifications.
 private gcp.scc.notificationConfig @defaults("name") {
   // Full resource name
   name string
@@ -8532,6 +9626,11 @@ private gcp.scc.notificationConfig @defaults("name") {
 }
 
 // Google Cloud Security Command Center mute config
+//
+// Examine a Security Command Center mute configuration — its display name,
+// CEL filter expression that determines which findings are muted, and the
+// identity of the most recent editor. Mute configs suppress findings that
+// match the filter from appearing as active in the console.
 private gcp.scc.muteConfig @defaults("name") {
   // Full resource name
   name string
@@ -8550,6 +9649,12 @@ private gcp.scc.muteConfig @defaults("name") {
 }
 
 // Google Cloud Security Command Center BigQuery export config
+//
+// Examine a Security Command Center BigQuery export configuration — the
+// target BigQuery dataset, the CEL filter expression that selects which
+// findings are exported, and the identity of the most recent editor. BigQuery
+// exports stream matching findings into a dataset for analysis and
+// long-term retention.
 private gcp.scc.bigQueryExport @defaults("name") {
   // Full resource name
   name string
@@ -8568,6 +9673,11 @@ private gcp.scc.bigQueryExport @defaults("name") {
 }
 
 // Google Cloud Access Context Manager access policy
+//
+// Examine a VPC Service Controls access policy — its human-readable title,
+// parent organization, ETag, and the `accessLevels` and `servicePerimeters`
+// it contains. An access policy is the top-level container for all Access
+// Context Manager rules in an organization.
 private gcp.accesscontextmanager.accessPolicy @defaults("name title") {
   // Full resource name (accessPolicies/{policyId})
   name string
@@ -8584,6 +9694,11 @@ private gcp.accesscontextmanager.accessPolicy @defaults("name title") {
 }
 
 // Google Cloud Access Context Manager access level
+//
+// Examine a VPC Service Controls access level — its title, description,
+// basic conditions (device policy, IP ranges, required access levels), and
+// custom CEL expression. Access levels define trust tiers used in service
+// perimeter ingress and egress rules.
 private gcp.accesscontextmanager.accessLevel @defaults("name title") {
   // Full resource name (accessPolicies/{policyId}/accessLevels/{levelId})
   name string
@@ -8602,6 +9717,12 @@ private gcp.accesscontextmanager.accessLevel @defaults("name title") {
 }
 
 // Google Cloud Access Context Manager service perimeter
+//
+// Examine a VPC Service Controls service perimeter — its type (REGULAR or
+// BRIDGE), enforced configuration (`statusConfig`), dry-run proposed
+// configuration (`specConfig`), and whether an explicit dry-run spec is
+// set. Use these fields to audit which projects, Google Cloud services,
+// access levels, and ingress/egress policies are in effect.
 private gcp.accesscontextmanager.servicePerimeter @defaults("name title") {
   // Full resource name
   name string
@@ -8628,6 +9749,11 @@ private gcp.accesscontextmanager.servicePerimeter @defaults("name title") {
 }
 
 // Google Cloud (GCP) VPC Service Controls perimeter configuration
+//
+// Examine the enforced or dry-run configuration of a service perimeter —
+// the projects inside the perimeter, restricted Google Cloud services,
+// access levels that grant entry, VPC-accessible services settings, and
+// the ingress and egress policies that control cross-perimeter data flows.
 private gcp.accesscontextmanager.servicePerimeter.config {
   // Internal ID
   id string
@@ -8660,6 +9786,12 @@ private gcp.project.modelArmorService {
 }
 
 // Google Cloud (GCP) Model Armor template
+//
+// Examine a Model Armor safety-filter template — its filter configuration
+// (RAI settings, SDP settings, PI and jailbreak filter, malicious URI
+// filter) and template metadata (enforcement type, error handling, multi-
+// language detection). Templates are applied to AI prompts and responses
+// to enforce safety policies.
 private gcp.project.modelArmorService.template @defaults("name") {
   // Full resource name
   name string
@@ -8678,6 +9810,11 @@ private gcp.project.modelArmorService.template @defaults("name") {
 }
 
 // Google Cloud (GCP) Model Armor floor setting
+//
+// Examine the Model Armor floor setting — the minimum AI safety
+// configuration enforced across the project, whether floor setting
+// enforcement is enabled, the Google Cloud services to which it applies,
+// and the AI Platform-specific floor setting configuration.
 private gcp.project.modelArmorService.floorSetting @defaults("name") {
   // Full resource name
   name string
@@ -8714,6 +9851,12 @@ private gcp.project.eventarcService {
 }
 
 // Google Cloud (GCP) Eventarc trigger
+//
+// Examine an Eventarc trigger — its event filters (CloudEvents attribute
+// matchers), destination configuration, transport configuration, associated
+// channel, service account, event data content type, and trigger condition
+// status. Triggers define which events are routed to which destinations
+// such as Cloud Run, Cloud Functions, or Workflows.
 private gcp.project.eventarcService.trigger @defaults("name") {
   // Full resource name
   name string
@@ -8754,6 +9897,11 @@ private gcp.project.eventarcService.trigger.eventFilter @defaults("attribute val
 }
 
 // Google Cloud (GCP) Eventarc channel
+//
+// Examine an Eventarc channel — its provider name, associated Pub/Sub
+// topic, current state (PENDING, ACTIVE, INACTIVE), and CMEK crypto key
+// name. Channels receive events from third-party or custom event sources
+// and make them available to Eventarc triggers.
 private gcp.project.eventarcService.channel @defaults("name state") {
   // Full resource name
   name string
@@ -9071,6 +10219,12 @@ private gcp.project.dlpService.fileStoreDataProfile @defaults("fileStorePath sen
 }
 
 // Google Cloud (GCP) Cloud DLP inspect template
+//
+// Examine the configuration of a Cloud DLP inspect template. Inspect
+// `inspectConfig` for the info types, likelihood thresholds, and content
+// inspection rules that govern sensitive-data detection. Templates are
+// referenced by discovery configurations and job triggers to standardize
+// scanning parameters across the project.
 private gcp.project.dlpService.inspectTemplate @defaults("name displayName") {
   // Full resource name
   name string
@@ -9087,6 +10241,12 @@ private gcp.project.dlpService.inspectTemplate @defaults("name displayName") {
 }
 
 // Google Cloud (GCP) Cloud DLP deidentify template
+//
+// Examine the configuration of a Cloud DLP deidentify template. Inspect
+// `deidentifyConfig` for the transformation rules (masking, encryption,
+// replacement, bucketing) applied to sensitive data fields detected during
+// inspection. Templates are referenced by DLP jobs to ensure consistent
+// de-identification across the project.
 private gcp.project.dlpService.deidentifyTemplate @defaults("name displayName") {
   // Full resource name
   name string
@@ -9103,6 +10263,12 @@ private gcp.project.dlpService.deidentifyTemplate @defaults("name displayName") 
 }
 
 // Google Cloud (GCP) Cloud DLP job trigger
+//
+// Examine a Cloud DLP job trigger — a scheduled or event-driven rule that
+// automatically launches DLP inspect jobs. Inspect `status` for operational
+// health (HEALTHY, PAUSED, CANCELLED), `triggers` for the schedule or
+// event conditions that activate the job, `inspectJob` for the scan
+// configuration, and `errors` for failures from recent activations.
 private gcp.project.dlpService.jobTrigger @defaults("name displayName status") {
   // Full resource name
   name string
@@ -9125,6 +10291,12 @@ private gcp.project.dlpService.jobTrigger @defaults("name displayName status") {
 }
 
 // Google Cloud (GCP) Cloud DLP stored info type
+//
+// Examine a Cloud DLP stored info type — a reusable, pre-built dictionary
+// or regular-expression detector that can be referenced across inspect
+// templates and job triggers. `currentVersion` holds the active config,
+// stats, and build state; `pendingVersions` lists versions being rebuilt
+// when the underlying data source changes.
 private gcp.project.dlpService.storedInfoType @defaults("name") {
   // Full resource name
   name string
@@ -9152,6 +10324,12 @@ private gcp.project.batchService {
 }
 
 // Google Cloud (GCP) Batch job
+//
+// Examine a Cloud Batch job and its execution configuration. Inspect
+// `taskGroups` for the task specifications, parallelism, and scheduling
+// policies; `allocationPolicy` for the compute and network resources
+// provisioned to run the tasks; `status` for the current lifecycle state;
+// and `logsPolicy` for where task logs are sent.
 private gcp.project.batchService.job @defaults("name") {
   // Full resource name
   name string
@@ -9176,6 +10354,12 @@ private gcp.project.batchService.job @defaults("name") {
 }
 
 // Google Cloud (GCP) Batch job task group
+//
+// Examine a task group within a Cloud Batch job. Inspect `taskSpec` for
+// the container or script definition, environment variables, and volume
+// mounts; `taskCount` and `parallelism` for the execution scale;
+// `schedulingPolicy` (AS_SOON_AS_POSSIBLE or IN_ORDER) for the run order;
+// and `permissiveSsh` for the inter-task SSH access setting.
 private gcp.project.batchService.job.taskGroup @defaults("name taskCount") {
   // Full resource name
   name string
@@ -9213,6 +10397,13 @@ private gcp.project.idsService {
 }
 
 // Google Cloud (GCP) Cloud IDS endpoint
+//
+// Examine a Cloud IDS intrusion-detection endpoint. Inspect `severity`
+// for the minimum threat level that generates alerts (INFORMATIONAL, LOW,
+// MEDIUM, HIGH, CRITICAL); `network` for the VPC network under inspection;
+// `state` for the operational lifecycle (CREATING, READY, DELETING,
+// UPDATING); and `trafficLogs` to verify whether full traffic logging is
+// enabled for forensic audits.
 private gcp.project.idsService.endpoint @defaults("name severity state") {
   // Full resource name
   name string
@@ -9534,6 +10725,13 @@ private gcp.project.gkeBackupService {
 }
 
 // Google Cloud (GCP) GKE Backup plan
+//
+// Examine a Backup for GKE backup plan. Inspect `cluster` for the source
+// GKE cluster being protected; `backupSchedule` for the cron-based
+// schedule; `retentionPolicy` for how long backups are retained and
+// whether deletion protection is active; `backupConfig` for the scope
+// (all namespaces, selected namespaces, or selected applications); and
+// `state` for the plan's operational lifecycle.
 private gcp.project.gkeBackupService.backupPlan @defaults("name") {
   // Full resource name
   name string
@@ -9568,6 +10766,13 @@ private gcp.project.gkeBackupService.backupPlan @defaults("name") {
 }
 
 // Google Cloud (GCP) GKE Backup restore plan
+//
+// Examine a Backup for GKE restore plan. Inspect `backupPlan` to traverse
+// to the source backup plan; `cluster` for the target GKE cluster where
+// backups are restored; `restoreConfig` for the namespace mapping,
+// substitution rules, and volume data restore policies; and `state` for
+// the plan's operational lifecycle (CLUSTER_PENDING, READY, FAILED,
+// DELETING).
 private gcp.project.gkeBackupService.restorePlan @defaults("name") {
   // Full resource name
   name string
@@ -9613,7 +10818,15 @@ private gcp.project.containerAnalysisService {
   occurrences() []gcp.project.containerAnalysisService.occurrence
 }
 
-// Google Cloud (GCP) Container Analysis occurrence (vulnerability finding)
+// Google Cloud (GCP) Container Analysis occurrence
+//
+// Examine a Container Analysis occurrence — a scan finding attached to a
+// container image artifact. `kind` identifies the occurrence type
+// (VULNERABILITY, BUILD, IMAGE, PACKAGE, DEPLOYMENT, DISCOVERY,
+// ATTESTATION, UPGRADE, COMPLIANCE, SBOM_REFERENCE); `resourceUri`
+// identifies the artifact; and the corresponding detail field (e.g.
+// `vulnerability`, `attestation`, `build`) holds the type-specific data
+// for software-supply-chain audits.
 private gcp.project.containerAnalysisService.occurrence @defaults("name kind") {
   // Full resource name
   name string
@@ -9664,6 +10877,13 @@ private gcp.project.cloudBuildService {
 }
 
 // Google Cloud (GCP) Cloud Build trigger
+//
+// Examine a Cloud Build trigger and its event configuration. Inspect
+// `disabled` to verify whether the trigger is active; `serviceAccount`
+// (and `iamServiceAccount`) for the identity builds run under;
+// `substitutions` for variable overrides passed to the build; and the
+// event source — `github`, `pubsubConfig`, `webhookConfig`, or
+// `repositoryEventConfig` — that fires the trigger.
 private gcp.project.cloudBuildService.trigger @defaults("name description disabled") {
   // Project ID
   projectId string
@@ -9700,6 +10920,11 @@ private gcp.project.cloudBuildService.trigger @defaults("name description disabl
 }
 
 // Google Cloud (GCP) Cloud Build trigger GitHub events configuration
+//
+// Examine the GitHub event configuration for a Cloud Build trigger. Inspect
+// `owner` and `name` to identify the GitHub repository; `push` for the
+// branch or tag regex that fires on push events; and `pullRequest` for the
+// branch filter and comment-control setting that govern pull-request builds.
 private gcp.project.cloudBuildService.trigger.githubEventsConfig @defaults("owner name") {
   // Internal ID
   id string
@@ -9716,6 +10941,12 @@ private gcp.project.cloudBuildService.trigger.githubEventsConfig @defaults("owne
 }
 
 // Google Cloud (GCP) Cloud Build trigger Pub/Sub configuration
+//
+// Examine the Pub/Sub event configuration for a Cloud Build trigger. Inspect
+// `topic` (and `pubsubTopic`) for the Pub/Sub topic that fires the trigger;
+// `serviceAccountEmail` for the identity used to create the subscription;
+// and `state` for connectivity health (OK, TOPIC_DELETED,
+// SUBSCRIPTION_DELETED, SUBSCRIPTION_MISCONFIGURED).
 private gcp.project.cloudBuildService.trigger.pubsubConfig @defaults("topic state") {
   // Internal ID
   id string
@@ -9732,6 +10963,12 @@ private gcp.project.cloudBuildService.trigger.pubsubConfig @defaults("topic stat
 }
 
 // Google Cloud (GCP) Cloud Build trigger webhook configuration
+//
+// Examine the webhook event configuration for a Cloud Build trigger. Inspect
+// `state` for the health of the webhook secret binding — OK indicates the
+// Secret Manager secret is accessible; SECRET_DELETED indicates the secret
+// has been removed and the trigger can no longer authenticate incoming
+// webhook requests.
 private gcp.project.cloudBuildService.trigger.webhookConfig @defaults("state") {
   // Internal ID
   id string
@@ -9740,6 +10977,13 @@ private gcp.project.cloudBuildService.trigger.webhookConfig @defaults("state") {
 }
 
 // Google Cloud (GCP) Cloud Build trigger repository event configuration
+//
+// Examine the repository event configuration for a Cloud Build trigger
+// connected to a 2nd-gen Cloud Build repository. Inspect `repository` for
+// the connected repository resource name; `repositoryType` for the hosting
+// platform (GITHUB, GITHUB_ENTERPRISE, GITLAB_ENTERPRISE); `push` for the
+// branch or tag filter; and `pullRequest` for the pull-request branch
+// filter and comment-control policy.
 private gcp.project.cloudBuildService.trigger.repositoryEventConfig @defaults("repository repositoryType") {
   // Internal ID
   id string
@@ -9754,6 +10998,12 @@ private gcp.project.cloudBuildService.trigger.repositoryEventConfig @defaults("r
 }
 
 // Google Cloud (GCP) Cloud Build worker pool
+//
+// Examine a Cloud Build private worker pool. Inspect `workerConfig` for
+// the machine type and disk size of individual build workers; `networkConfig`
+// for the peered VPC network and egress option that isolate builds from
+// the public internet; and `state` for the pool's operational lifecycle
+// (CREATING, RUNNING, DELETING, UPDATING).
 private gcp.project.cloudBuildService.workerPool @defaults("name displayName state") {
   // Project ID
   projectId string
@@ -9776,6 +11026,12 @@ private gcp.project.cloudBuildService.workerPool @defaults("name displayName sta
 }
 
 // Google Cloud (GCP) Cloud Build worker pool worker configuration
+//
+// Examine the machine configuration for workers in a Cloud Build private
+// worker pool. Inspect `machineType` for the Compute Engine machine family
+// (e.g. e2-standard-2); `diskSizeGb` for the boot disk size; and
+// `enableNestedVirtualization` to verify whether nested VM support is
+// active for builds that require it.
 private gcp.project.cloudBuildService.workerPool.workerConfig @defaults("machineType diskSizeGb") {
   // Internal ID
   id string
@@ -9788,6 +11044,12 @@ private gcp.project.cloudBuildService.workerPool.workerConfig @defaults("machine
 }
 
 // Google Cloud (GCP) Cloud Build worker pool network configuration
+//
+// Examine the network configuration for a Cloud Build private worker pool.
+// Inspect `peeredNetwork` for the VPC network that workers are peered into;
+// `peeredNetworkIpRange` for the secondary IP range used for workers; and
+// `egressOption` to verify whether outbound internet access is blocked
+// (NO_PUBLIC_EGRESS) or permitted (PUBLIC_EGRESS) for builds.
 private gcp.project.cloudBuildService.workerPool.networkConfig @defaults("egressOption") {
   // Internal ID
   id string
@@ -9818,6 +11080,12 @@ private gcp.project.iapService {
 }
 
 // Google Cloud (GCP) IAP OAuth brand
+//
+// Examine an Identity-Aware Proxy OAuth brand — the OAuth consent screen
+// configuration for a project. Inspect `applicationTitle` and
+// `supportEmail` for the user-visible consent screen content; and
+// `orgInternalOnly` to verify whether access is restricted to internal
+// organization users or open to external identities.
 private gcp.project.iapService.brand @defaults("name applicationTitle") {
   // Project ID
   projectId string
@@ -9832,6 +11100,11 @@ private gcp.project.iapService.brand @defaults("name applicationTitle") {
 }
 
 // Google Cloud (GCP) IAP tunnel destination group
+//
+// Examine an Identity-Aware Proxy tunnel destination group — a named set
+// of hosts or IP ranges that IAP TCP forwarding can route to. Inspect
+// `cidrs` for the allowed IP CIDR ranges and `fqdns` for the allowed fully
+// qualified domain names that define the group's reachable destinations.
 private gcp.project.iapService.tunnelDestGroup @defaults("name") {
   // Project ID
   projectId string
@@ -9860,6 +11133,12 @@ private gcp.project.sourceRepositoriesService {
 }
 
 // Google Cloud (GCP) Cloud Source repository
+//
+// Examine a Cloud Source Repositories repository. Inspect `url` for the
+// clone endpoint; `size` for the repository's disk footprint in bytes; and
+// `mirrorConfig` for the upstream repository URL and authentication details
+// when the repo is mirrored from an external source such as GitHub or
+// Bitbucket.
 private gcp.project.sourceRepositoriesService.repo @defaults("name url") {
   // Project ID
   projectId string
@@ -9874,6 +11153,12 @@ private gcp.project.sourceRepositoriesService.repo @defaults("name url") {
 }
 
 // Google Cloud (GCP) Cloud Source repository mirror configuration
+//
+// Examine the mirror configuration for a Cloud Source repository that
+// syncs from an external upstream. Inspect `url` for the upstream
+// repository address; `deployKeyId` for the SSH deploy key used to
+// authenticate; and `webhookId` for the push-notification webhook that
+// triggers sync when the upstream changes.
 private gcp.project.sourceRepositoriesService.repo.mirrorConfig @defaults("url") {
   // Internal ID
   id string
@@ -9899,6 +11184,13 @@ private gcp.project.memcacheService {
 }
 
 // Google Cloud (GCP) Memcached instance
+//
+// Examine a Memorystore for Memcache instance. Inspect `nodeCount`,
+// `nodeCpuCount`, and `nodeMemorySizeMb` for the cluster's compute
+// allocation; `network` for the authorized VPC network; `parameters` for
+// the effective Memcached tuning parameters; `maintenancePolicy` for the
+// maintenance window configuration; and `state` for the instance's
+// operational lifecycle. Individual nodes are accessible via `nodes`.
 private gcp.project.memcacheService.instance @defaults("name state") {
   // Project ID
   projectId string
@@ -9943,6 +11235,12 @@ private gcp.project.memcacheService.instance @defaults("name state") {
 }
 
 // Google Cloud (GCP) Memcached node
+//
+// Examine an individual node within a Memorystore for Memcache instance.
+// Inspect `nodeId` for the stable node identifier, `zone` for its
+// placement, `host` and `port` for the connection endpoint, `state` for
+// the node's operational health, and `parameters` for the Memcached
+// tuning parameters effective on this node.
 private gcp.project.memcacheService.instance.node @defaults("nodeId zone state") {
   // Project ID
   projectId string
@@ -10006,6 +11304,14 @@ private gcp.project.datastreamService {
 }
 
 // Google Cloud (GCP) Datastream stream
+//
+// Examine a Datastream change-data-capture stream. Inspect `state` for the
+// operational lifecycle; `source` and `destination` to traverse to the
+// connection profiles at each end; `sourceConfig` and `destinationConfig`
+// for the type-specific replication parameters; `kmsKey` for the
+// customer-managed encryption key; `backfillStrategy` to verify whether
+// historical data is automatically backfilled; and `errors` for failures
+// reported by the stream.
 private gcp.project.datastreamService.stream @defaults("name state") {
   // Project ID
   projectId string
@@ -10042,6 +11348,11 @@ private gcp.project.datastreamService.stream @defaults("name state") {
 }
 
 // Google Cloud (GCP) Datastream stream error
+//
+// Examine an error reported by a Datastream stream. Inspect `reason` for
+// the error code, `message` for the human-readable description, `errorTime`
+// for when the error occurred, and `details` for additional key-value
+// context returned by the Datastream service.
 private gcp.project.datastreamService.stream.error @defaults("errorUuid reason") {
   // Project ID
   projectId string
@@ -10060,6 +11371,14 @@ private gcp.project.datastreamService.stream.error @defaults("errorUuid reason")
 }
 
 // Google Cloud (GCP) Datastream connection profile
+//
+// Examine a Datastream connection profile — the credentials and endpoint
+// configuration for a data source or destination. Inspect `profileType`
+// (mysql, postgresql, oracle, sqlserver, mongodb, bigquery, gcs,
+// salesforce) to determine the profile variant; `profile` for the
+// type-specific connection parameters; `connectivityType` for the network
+// path (forwardSsh, privateConnectivity, staticServiceIp); and
+// `privateConnection` when private VPC connectivity is used.
 private gcp.project.datastreamService.connectionProfile @defaults("name profileType") {
   // Project ID
   projectId string
@@ -10091,7 +11410,15 @@ private gcp.project.datastreamService.connectionProfile @defaults("name profileT
   updateTime time
 }
 
-// Google Cloud (GCP) Datastream private connection (VPC peering for source connectivity)
+// Google Cloud (GCP) Datastream private connection
+//
+// Examine a Datastream private connection — a VPC peering arrangement that
+// provides private network access from Datastream to on-premises or
+// private cloud data sources. Inspect `network` for the peered VPC;
+// `subnet` for the CIDR range allocated to the peering; `state` for the
+// lifecycle (CREATING, CREATED, FAILED, DELETING, DELETED); `error` for
+// any failure details; and `routes` for the routing entries configured
+// inside the private connection.
 private gcp.project.datastreamService.privateConnection @defaults("name state") {
   // Project ID
   projectId string
@@ -10117,7 +11444,13 @@ private gcp.project.datastreamService.privateConnection @defaults("name state") 
   updateTime time
 }
 
-// Google Cloud (GCP) Datastream route inside a private connection
+// Google Cloud (GCP) Datastream route
+//
+// Examine a route inside a Datastream private connection. Inspect
+// `destinationAddress` for the destination host or IP and
+// `destinationPort` for the optional port override that steers traffic
+// from Datastream workers through the private connection to the target
+// data source.
 private gcp.project.datastreamService.route @defaults("name destinationAddress") {
   // Project ID
   projectId string
@@ -10155,7 +11488,16 @@ private gcp.project.memorystoreService {
   backupCollections() []gcp.project.memorystoreService.backupCollection
 }
 
-// Google Cloud (GCP) Memorystore instance (Valkey or Redis)
+// Google Cloud (GCP) Memorystore instance
+//
+// Examine a Memorystore instance running Valkey or Redis. Inspect `mode`
+// (STANDALONE, CLUSTER, CLUSTER_DISABLED) and `shardCount` for the
+// topology; `authorizationMode` and `transitEncryptionMode` for security
+// posture; `kmsKey` for customer-managed encryption; `persistenceConfig`
+// for RDB or AOF durability settings; `maintenancePolicy` for the
+// maintenance window; `deletionProtectionEnabled` to check against
+// accidental removal; and `automatedBackupConfig` for the backup schedule
+// and retention settings.
 private gcp.project.memorystoreService.instance @defaults("name state mode") {
   // Project ID
   projectId string
@@ -10232,6 +11574,11 @@ private gcp.project.memorystoreService.instance @defaults("name state mode") {
 }
 
 // Google Cloud (GCP) Memorystore instance PSC attachment detail
+//
+// Examine a Private Service Connect attachment associated with a
+// Memorystore instance. Inspect `serviceAttachment` for the service
+// attachment resource name and `connectionType` to distinguish
+// PRIVATE_SERVICE_CONNECT from PUBLIC_ENDPOINT access paths.
 private gcp.project.memorystoreService.instance.pscAttachmentDetail @defaults("serviceAttachment") {
   // Project ID
   projectId string
@@ -10244,6 +11591,13 @@ private gcp.project.memorystoreService.instance.pscAttachmentDetail @defaults("s
 }
 
 // Google Cloud (GCP) Memorystore backup collection
+//
+// Examine a Memorystore backup collection — the container that retains all
+// backups for a single instance. Inspect `instance` to traverse to the
+// source instance; `totalBackupCount` and `totalBackupSizeBytes` for
+// storage consumption; `kmsKey` for the customer-managed encryption key
+// protecting the backups; `lastBackupTime` for the most recent backup
+// timestamp; and `backups` to iterate the individual backup records.
 private gcp.project.memorystoreService.backupCollection @defaults("name") {
   // Project ID
   projectId string
@@ -10270,6 +11624,13 @@ private gcp.project.memorystoreService.backupCollection @defaults("name") {
 }
 
 // Google Cloud (GCP) Memorystore backup
+//
+// Examine a Memorystore backup snapshot. Inspect `backupType` (ON_DEMAND or
+// AUTOMATED) and `state` for lifecycle status; `engineVersion`,
+// `nodeType`, `shardCount`, and `replicaCount` for the cluster shape at
+// backup time; `totalSizeBytes` for storage consumption; `encryptionInfo`
+// for the encryption details; `expireTime` for the retention deadline; and
+// `backupFiles` for the individual component files that make up the backup.
 private gcp.project.memorystoreService.backup @defaults("name state") {
   // Project ID
   projectId string
