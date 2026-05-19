@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "jamf",
 	ID:              "go.mondoo.com/mql/providers/jamf",
-	Version:         "13.0.0",
+	Version:         "13.0.1",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Connectors: []plugin.Connector{
 		{
