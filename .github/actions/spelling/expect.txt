@@ -129,6 +129,7 @@ cpx
 CRDR
 crowdstrike
 cryptokey
+Csec
 ctx
 customresources
 cwes
@@ -410,6 +411,7 @@ naflags
 natgateway
 nativead
 NCUs
+NEGs
 neq
 netbios
 netin
