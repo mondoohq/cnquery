@@ -1586,8 +1586,8 @@ private gcp.project.computeService.image @defaults("id name") {
 // service accounts, `allowed` and `denied` protocol/port lists, and log
 // configuration. Derived predicates — `openToInternet()`,
 // `allowsSshFromInternet()`, and `allowsRdpFromInternet()` — flag the
-// most common exposure patterns. The parent `network()` links to the VPC
-// the rule belongs to.
+// most common exposure patterns. The `network()` reference links to the
+// VPC the rule belongs to.
 private gcp.project.computeService.firewall @defaults("name") {
   // Unique identifier
   id string
@@ -1693,7 +1693,7 @@ gcp.project.computeService.network @defaults("name") {
 // `logConfig`, the `privateIpGoogleAccess` and
 // `privateIpv6GoogleAccess` settings that control reachability of
 // Google APIs from instances without external IPs, and typed
-// references to the parent `network()` and the `region()` the subnet
+// references to the `network()` and the `region()` the subnet
 // is bound to.
 gcp.project.computeService.subnetwork @defaults("name") {
   // Unique identifier
@@ -1772,8 +1772,8 @@ private gcp.project.computeService.subnetwork.logConfig @defaults("enable") {
 // `bgp` session settings, `bgpPeers` for dynamic route exchange,
 // `encryptedInterconnectRouter` for HA VPN / Dedicated Interconnect
 // encryption enforcement, and the `natServices()` defining Cloud NAT
-// gateway configuration within the router. The parent `network()` links
-// to the VPC the router is attached to.
+// gateway configuration within the router. The `network()` reference
+// links to the VPC the router is attached to.
 private gcp.project.computeService.router @defaults("name")  {
   // Unique identifier
   id string
@@ -1805,7 +1805,7 @@ private gcp.project.computeService.router @defaults("name")  {
 // Cloud CDN policy (`cdnPolicy`), Identity-Aware Proxy configuration
 // (`iap`), and the attached Cloud Armor `securityPolicy()`. Derived
 // predicates `cloudArmorEnabled()` and `iapEnabled()` provide quick
-// posture checks. The parent `network()` links to the VPC the service
+// posture checks. The `network()` reference links to the VPC the service
 // is deployed in.
 private gcp.project.computeService.backendService @defaults("name") {
   // Unique identifier
