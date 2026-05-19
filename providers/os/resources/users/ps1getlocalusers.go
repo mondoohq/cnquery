@@ -36,7 +36,30 @@ type WindowsLocalUser struct {
 	PasswordExpires        *string
 	PasswordLastSet        *string
 	LastLogon              *string
+
+	// On-disk profile path, joined from HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList.
+	// Empty for accounts that have never logged in (Guest, DefaultAccount, WDAGUtilityAccount, ...).
+	LocalPath string
 }
+
+// getLocalUsersScript enumerates local users and joins each with their on-disk
+// profile path. Profile paths come from the ProfileList registry hive — the same
+// data Win32_UserProfile exposes — to avoid WMI latency on hosts with many
+// cached profiles (RDS, Citrix). The output is a JSON array shaped like the
+// previous `Get-LocalUser | ConvertTo-Json` output, with an extra LocalPath field.
+const getLocalUsersScript = `
+$profiles = @{}
+Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' -ErrorAction SilentlyContinue |
+    ForEach-Object {
+        $sid = Split-Path $_.Name -Leaf
+        $path = (Get-ItemProperty -LiteralPath $_.PSPath -ErrorAction SilentlyContinue).ProfileImagePath
+        if ($path) { $profiles[$sid] = $path }
+    }
+$out = foreach ($u in Get-LocalUser) {
+    $u | Add-Member -NotePropertyName LocalPath -NotePropertyValue $profiles[$u.SID.Value] -PassThru -Force
+}
+ConvertTo-Json -InputObject @($out) -Depth 4
+`
 
 func ParseWindowsLocalUsers(r io.Reader) ([]WindowsLocalUser, error) {
 	data, err := io.ReadAll(r)
@@ -71,8 +94,7 @@ func (s *WindowsUserManager) User(id string) (*User, error) {
 }
 
 func (s *WindowsUserManager) List() ([]*User, error) {
-	powershellCmd := "Get-LocalUser | ConvertTo-Json"
-	c, err := s.conn.RunCommand(powershell.Wrap(powershellCmd))
+	c, err := s.conn.RunCommand(powershell.Encode(getLocalUsersScript))
 	if err != nil {
 		return nil, err
 	}
@@ -96,6 +118,7 @@ func winToUser(g WindowsLocalUser) *User {
 		Uid:     -1, // TODO: not its suboptimal, but lets make sure to avoid runtime conflicts for now
 		Gid:     -1,
 		Name:    g.Name,
+		Home:    g.LocalPath,
 		Enabled: g.Enabled,
 	}
 }

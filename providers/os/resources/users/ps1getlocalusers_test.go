@@ -40,9 +40,13 @@ func TestWindowsLocalUsersParser(t *testing.T) {
 		PasswordExpires:        pointer("/Date(1590610319962)/"),
 		PasswordLastSet:        pointer("/Date(1586981519962)/"),
 		LastLogon:              pointer("/Date(1587041759064)/"),
+		LocalPath:              `C:\Users\chris`,
 	}
 	found := findWindowsUser(localUsers, "chris")
 	assert.EqualValues(t, expected, found)
+
+	guest := findWindowsUser(localUsers, "Guest")
+	assert.Equal(t, "", guest.LocalPath, "accounts without a profile registry entry have empty LocalPath")
 }
 
 func pointer(val string) *string {

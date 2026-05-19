@@ -102,9 +102,15 @@ func TestManagerWindows(t *testing.T) {
 	assert.Equal(t, "S-1-5-21-2356735557-1575748656-448136971-500", usr.ID)
 	assert.Equal(t, int64(-1), usr.Uid)
 	assert.Equal(t, int64(-1), usr.Gid)
-	assert.Equal(t, "", usr.Home)
+	assert.Equal(t, `C:\Users\chris`, usr.Home)
 	assert.Equal(t, "chris", usr.Name)
 	assert.Equal(t, "", usr.Shell)
+
+	// Accounts without a profile registry entry must surface as empty home,
+	// not as a fabricated C:\Users\<Name>. Downstream filters (vscode, firefox)
+	// rely on the empty value to skip them.
+	guest := findUser(userList, "S-1-5-21-2356735557-1575748656-448136971-501")
+	assert.Equal(t, "", guest.Home)
 
 	assert.Equal(t, 5, len(userList))
 }

@@ -1,4 +1,4 @@
-[commands."powershell -c \"Get-LocalUser | ConvertTo-Json\""]
+[commands."powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsACgAkAHAAcgBvAGYAaQBsAGUAcwAgAD0AIABAAHsAfQAKAEcAZQB0AC0AQwBoAGkAbABkAEkAdABlAG0AIAAnAEgASwBMAE0AOgBcAFMATwBGAFQAVwBBAFIARQBcAE0AaQBjAHIAbwBzAG8AZgB0AFwAVwBpAG4AZABvAHcAcwAgAE4AVABcAEMAdQByAHIAZQBuAHQAVgBlAHIAcwBpAG8AbgBcAFAAcgBvAGYAaQBsAGUATABpAHMAdAAnACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAGkAbABlAG4AdABsAHkAQwBvAG4AdABpAG4AdQBlACAAfAAKACAAIAAgACAARgBvAHIARQBhAGMAaAAtAE8AYgBqAGUAYwB0ACAAewAKACAAIAAgACAAIAAgACAAIAAkAHMAaQBkACAAPQAgAFMAcABsAGkAdAAtAFAAYQB0AGgAIAAkAF8ALgBOAGEAbQBlACAALQBMAGUAYQBmAAoAIAAgACAAIAAgACAAIAAgACQAcABhAHQAaAAgAD0AIAAoAEcAZQB0AC0ASQB0AGUAbQBQAHIAbwBwAGUAcgB0AHkAIAAtAEwAaQB0AGUAcgBhAGwAUABhAHQAaAAgACQAXwAuAFAAUwBQAGEAdABoACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAGkAbABlAG4AdABsAHkAQwBvAG4AdABpAG4AdQBlACkALgBQAHIAbwBmAGkAbABlAEkAbQBhAGcAZQBQAGEAdABoAAoAIAAgACAAIAAgACAAIAAgAGkAZgAgACgAJABwAGEAdABoACkAIAB7ACAAJABwAHIAbwBmAGkAbABlAHMAWwAkAHMAaQBkAF0AIAA9ACAAJABwAGEAdABoACAAfQAKACAAIAAgACAAfQAKACQAbwB1AHQAIAA9ACAAZgBvAHIAZQBhAGMAaAAgACgAJAB1ACAAaQBuACAARwBlAHQALQBMAG8AYwBhAGwAVQBzAGUAcgApACAAewAKACAAIAAgACAAJAB1ACAAfAAgAEEAZABkAC0ATQBlAG0AYgBlAHIAIAAtAE4AbwB0AGUAUAByAG8AcABlAHIAdAB5AE4AYQBtAGUAIABMAG8AYwBhAGwAUABhAHQAaAAgAC0ATgBvAHQAZQBQAHIAbwBwAGUAcgB0AHkAVgBhAGwAdQBlACAAJABwAHIAbwBmAGkAbABlAHMAWwAkAHUALgBTAEkARAAuAFYAYQBsAHUAZQBdACAALQBQAGEAcwBzAFQAaAByAHUAIAAtAEYAbwByAGMAZQAKAH0ACgBDAG8AbgB2AGUAcgB0AFQAbwAtAEoAcwBvAG4AIAAtAEkAbgBwAHUAdABPAGIAagBlAGMAdAAgAEAAKAAkAG8AdQB0ACkAIAAtAEQAZQBwAHQAaAAgADQACgA="]
 stdout = """
 [
   {
@@ -19,7 +19,8 @@ stdout = """
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-500"
               },
       "PrincipalSource":  1,
-      "ObjectClass":  "User"
+      "ObjectClass":  "User",
+      "LocalPath":  "C:\\\\Users\\\\chris"
   },
   {
       "AccountExpires":  null,
@@ -39,7 +40,8 @@ stdout = """
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-503"
               },
       "PrincipalSource":  1,
-      "ObjectClass":  "User"
+      "ObjectClass":  "User",
+      "LocalPath":  null
   },
   {
       "AccountExpires":  null,
@@ -59,7 +61,8 @@ stdout = """
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-501"
               },
       "PrincipalSource":  1,
-      "ObjectClass":  "User"
+      "ObjectClass":  "User",
+      "LocalPath":  null
   },
   {
       "AccountExpires":  null,
@@ -79,7 +82,8 @@ stdout = """
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-1000"
               },
       "PrincipalSource":  1,
-      "ObjectClass":  "User"
+      "ObjectClass":  "User",
+      "LocalPath":  null
   },
   {
       "AccountExpires":  null,
@@ -99,7 +103,8 @@ stdout = """
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-504"
               },
       "PrincipalSource":  1,
-      "ObjectClass":  "User"
+      "ObjectClass":  "User",
+      "LocalPath":  null
   }
 ]
 """

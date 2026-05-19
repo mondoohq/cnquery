@@ -17,7 +17,8 @@
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-500"
               },
       "PrincipalSource":  1,
-      "ObjectClass":  "User"
+      "ObjectClass":  "User",
+      "LocalPath":  "C:\\Users\\chris"
   },
   {
       "AccountExpires":  null,
@@ -37,7 +38,8 @@
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-503"
               },
       "PrincipalSource":  1,
-      "ObjectClass":  "User"
+      "ObjectClass":  "User",
+      "LocalPath":  null
   },
   {
       "AccountExpires":  null,
@@ -57,7 +59,8 @@
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-501"
               },
       "PrincipalSource":  1,
-      "ObjectClass":  "User"
+      "ObjectClass":  "User",
+      "LocalPath":  null
   },
   {
       "AccountExpires":  null,
@@ -77,7 +80,8 @@
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-1000"
               },
       "PrincipalSource":  1,
-      "ObjectClass":  "User"
+      "ObjectClass":  "User",
+      "LocalPath":  null
   },
   {
       "AccountExpires":  null,
@@ -97,6 +101,7 @@
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-504"
               },
       "PrincipalSource":  1,
-      "ObjectClass":  "User"
+      "ObjectClass":  "User",
+      "LocalPath":  null
   }
 ]
