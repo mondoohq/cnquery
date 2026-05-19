@@ -262,6 +262,7 @@ func listGoFiles(dir string) []string {
 var awsServiceNameOverrides = map[string]string{
 	"cloudwatchlogs":           "logs",
 	"configservice":            "config",
+	"costexplorer":             "ce",
 	"cognitoidentityprovider":  "cognito-idp",
 	"cognitoidentity":          "cognito-identity",
 	"databasemigrationservice": "dms",
@@ -537,6 +538,8 @@ func awsConnectionMethodToService(method string) string {
 		"dsql":                     "dsql",
 		"neptunegraph":             "neptunegraph",
 		"apigatewayv2":             "apigatewayv2",
+		"budgets":                  "budgets",
+		"costexplorer":             "costexplorer",
 	}
 	if svc, ok := knownMethods[lower]; ok {
 		return svc

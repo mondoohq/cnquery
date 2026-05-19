@@ -19,6 +19,8 @@ const (
 	ResourceAws                                                                 string = "aws"
 	ResourceAwsAccount                                                          string = "aws.account"
 	ResourceAwsAccountAlternateContact                                          string = "aws.account.alternateContact"
+	ResourceAwsBilling                                                          string = "aws.billing"
+	ResourceAwsBillingBudget                                                    string = "aws.billing.budget"
 	ResourceAwsOrganization                                                     string = "aws.organization"
 	ResourceAwsOrganizationDelegatedAdministrator                               string = "aws.organization.delegatedAdministrator"
 	ResourceAwsOrganizationDelegatedService                                     string = "aws.organization.delegatedService"
@@ -810,6 +812,14 @@ func init() {
 		"aws.account.alternateContact": {
 			Init:   initAwsAccountAlternateContact,
 			Create: createAwsAccountAlternateContact,
+		},
+		"aws.billing": {
+			// to override args, implement: initAwsBilling(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBilling,
+		},
+		"aws.billing.budget": {
+			// to override args, implement: initAwsBillingBudget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBillingBudget,
 		},
 		"aws.organization": {
 			// to override args, implement: initAwsOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4052,6 +4062,69 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.account.alternateContact.exists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsAccountAlternateContact).GetExists()).ToDataRes(types.Bool)
+	},
+	"aws.billing.currency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBilling).GetCurrency()).ToDataRes(types.String)
+	},
+	"aws.billing.monthToDateCost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBilling).GetMonthToDateCost()).ToDataRes(types.Float)
+	},
+	"aws.billing.lastMonthCost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBilling).GetLastMonthCost()).ToDataRes(types.Float)
+	},
+	"aws.billing.last30DaysCost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBilling).GetLast30DaysCost()).ToDataRes(types.Float)
+	},
+	"aws.billing.forecastedMonthCost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBilling).GetForecastedMonthCost()).ToDataRes(types.Float)
+	},
+	"aws.billing.costsByService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBilling).GetCostsByService()).ToDataRes(types.Map(types.String, types.Float))
+	},
+	"aws.billing.costsByServiceLastMonth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBilling).GetCostsByServiceLastMonth()).ToDataRes(types.Map(types.String, types.Float))
+	},
+	"aws.billing.budgets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBilling).GetBudgets()).ToDataRes(types.Array(types.Resource("aws.billing.budget")))
+	},
+	"aws.billing.budget.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetName()).ToDataRes(types.String)
+	},
+	"aws.billing.budget.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.billing.budget.budgetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetBudgetType()).ToDataRes(types.String)
+	},
+	"aws.billing.budget.timeUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetTimeUnit()).ToDataRes(types.String)
+	},
+	"aws.billing.budget.budgetLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetBudgetLimit()).ToDataRes(types.Float)
+	},
+	"aws.billing.budget.budgetLimitUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetBudgetLimitUnit()).ToDataRes(types.String)
+	},
+	"aws.billing.budget.actualSpend": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetActualSpend()).ToDataRes(types.Float)
+	},
+	"aws.billing.budget.forecastedSpend": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetForecastedSpend()).ToDataRes(types.Float)
+	},
+	"aws.billing.budget.costFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetCostFilters()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"aws.billing.budget.periodStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetPeriodStart()).ToDataRes(types.Time)
+	},
+	"aws.billing.budget.periodEnd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetPeriodEnd()).ToDataRes(types.Time)
+	},
+	"aws.billing.budget.lastUpdatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetLastUpdatedTime()).ToDataRes(types.Time)
+	},
+	"aws.billing.budget.notifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBillingBudget).GetNotifications()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.organization.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOrganization).GetArn()).ToDataRes(types.String)
@@ -27473,6 +27546,98 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.account.alternateContact.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsAccountAlternateContact).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.billing.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBilling).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.billing.currency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBilling).Currency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.billing.monthToDateCost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBilling).MonthToDateCost, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.billing.lastMonthCost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBilling).LastMonthCost, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.billing.last30DaysCost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBilling).Last30DaysCost, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.billing.forecastedMonthCost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBilling).ForecastedMonthCost, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.billing.costsByService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBilling).CostsByService, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.billing.costsByServiceLastMonth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBilling).CostsByServiceLastMonth, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budgets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBilling).Budgets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.billing.budget.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.budgetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).BudgetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.timeUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).TimeUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.budgetLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).BudgetLimit, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.budgetLimitUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).BudgetLimitUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.actualSpend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).ActualSpend, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.forecastedSpend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).ForecastedSpend, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.costFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).CostFilters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.periodStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).PeriodStart, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.periodEnd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).PeriodEnd, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.lastUpdatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).LastUpdatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.billing.budget.notifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBillingBudget).Notifications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62003,6 +62168,227 @@ func (c *mqlAwsAccountAlternateContact) GetTitle() *plugin.TValue[string] {
 
 func (c *mqlAwsAccountAlternateContact) GetExists() *plugin.TValue[bool] {
 	return &c.Exists
+}
+
+// mqlAwsBilling for the aws.billing resource
+type mqlAwsBilling struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBillingInternal
+	Currency                plugin.TValue[string]
+	MonthToDateCost         plugin.TValue[float64]
+	LastMonthCost           plugin.TValue[float64]
+	Last30DaysCost          plugin.TValue[float64]
+	ForecastedMonthCost     plugin.TValue[float64]
+	CostsByService          plugin.TValue[map[string]any]
+	CostsByServiceLastMonth plugin.TValue[map[string]any]
+	Budgets                 plugin.TValue[[]any]
+}
+
+// createAwsBilling creates a new instance of this resource
+func createAwsBilling(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBilling{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.billing", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBilling) MqlName() string {
+	return "aws.billing"
+}
+
+func (c *mqlAwsBilling) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBilling) GetCurrency() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Currency, func() (string, error) {
+		return c.currency()
+	})
+}
+
+func (c *mqlAwsBilling) GetMonthToDateCost() *plugin.TValue[float64] {
+	return plugin.GetOrCompute[float64](&c.MonthToDateCost, func() (float64, error) {
+		return c.monthToDateCost()
+	})
+}
+
+func (c *mqlAwsBilling) GetLastMonthCost() *plugin.TValue[float64] {
+	return plugin.GetOrCompute[float64](&c.LastMonthCost, func() (float64, error) {
+		return c.lastMonthCost()
+	})
+}
+
+func (c *mqlAwsBilling) GetLast30DaysCost() *plugin.TValue[float64] {
+	return plugin.GetOrCompute[float64](&c.Last30DaysCost, func() (float64, error) {
+		return c.last30DaysCost()
+	})
+}
+
+func (c *mqlAwsBilling) GetForecastedMonthCost() *plugin.TValue[float64] {
+	return plugin.GetOrCompute[float64](&c.ForecastedMonthCost, func() (float64, error) {
+		return c.forecastedMonthCost()
+	})
+}
+
+func (c *mqlAwsBilling) GetCostsByService() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.CostsByService, func() (map[string]any, error) {
+		return c.costsByService()
+	})
+}
+
+func (c *mqlAwsBilling) GetCostsByServiceLastMonth() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.CostsByServiceLastMonth, func() (map[string]any, error) {
+		return c.costsByServiceLastMonth()
+	})
+}
+
+func (c *mqlAwsBilling) GetBudgets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Budgets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.billing", c.__id, "budgets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.budgets()
+	})
+}
+
+// mqlAwsBillingBudget for the aws.billing.budget resource
+type mqlAwsBillingBudget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBillingBudgetInternal it will be used here
+	Name            plugin.TValue[string]
+	AccountId       plugin.TValue[string]
+	BudgetType      plugin.TValue[string]
+	TimeUnit        plugin.TValue[string]
+	BudgetLimit     plugin.TValue[float64]
+	BudgetLimitUnit plugin.TValue[string]
+	ActualSpend     plugin.TValue[float64]
+	ForecastedSpend plugin.TValue[float64]
+	CostFilters     plugin.TValue[map[string]any]
+	PeriodStart     plugin.TValue[*time.Time]
+	PeriodEnd       plugin.TValue[*time.Time]
+	LastUpdatedTime plugin.TValue[*time.Time]
+	Notifications   plugin.TValue[[]any]
+}
+
+// createAwsBillingBudget creates a new instance of this resource
+func createAwsBillingBudget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBillingBudget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.billing.budget", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBillingBudget) MqlName() string {
+	return "aws.billing.budget"
+}
+
+func (c *mqlAwsBillingBudget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBillingBudget) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBillingBudget) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsBillingBudget) GetBudgetType() *plugin.TValue[string] {
+	return &c.BudgetType
+}
+
+func (c *mqlAwsBillingBudget) GetTimeUnit() *plugin.TValue[string] {
+	return &c.TimeUnit
+}
+
+func (c *mqlAwsBillingBudget) GetBudgetLimit() *plugin.TValue[float64] {
+	return &c.BudgetLimit
+}
+
+func (c *mqlAwsBillingBudget) GetBudgetLimitUnit() *plugin.TValue[string] {
+	return &c.BudgetLimitUnit
+}
+
+func (c *mqlAwsBillingBudget) GetActualSpend() *plugin.TValue[float64] {
+	return &c.ActualSpend
+}
+
+func (c *mqlAwsBillingBudget) GetForecastedSpend() *plugin.TValue[float64] {
+	return &c.ForecastedSpend
+}
+
+func (c *mqlAwsBillingBudget) GetCostFilters() *plugin.TValue[map[string]any] {
+	return &c.CostFilters
+}
+
+func (c *mqlAwsBillingBudget) GetPeriodStart() *plugin.TValue[*time.Time] {
+	return &c.PeriodStart
+}
+
+func (c *mqlAwsBillingBudget) GetPeriodEnd() *plugin.TValue[*time.Time] {
+	return &c.PeriodEnd
+}
+
+func (c *mqlAwsBillingBudget) GetLastUpdatedTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedTime
+}
+
+func (c *mqlAwsBillingBudget) GetNotifications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Notifications, func() ([]any, error) {
+		return c.notifications()
+	})
 }
 
 // mqlAwsOrganization for the aws.organization resource

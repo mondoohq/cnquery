@@ -24,6 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.55.2
 	github.com/aws/aws-sdk-go-v2/service/batch v1.64.2
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.60.0
+	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.6
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.11
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.11
@@ -35,6 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.60.2
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.62.3
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.11
+	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.8
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.18
 	github.com/aws/aws-sdk-go-v2/service/detective v1.38.15

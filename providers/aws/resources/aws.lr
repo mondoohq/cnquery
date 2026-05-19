@@ -115,6 +115,75 @@ private aws.account.alternateContact @defaults("contactType name emailAddress") 
   exists bool
 }
 
+// AWS Billing
+//
+// Examine the AWS account's billing posture: month-to-date and recent
+// historical spend (from AWS Cost Explorer), service-level breakdowns,
+// forecasts for the current month, and the inventory of configured
+// AWS Budgets. Cost Explorer must be enabled in the account; if not,
+// cost fields return zero. Each Cost Explorer API call is billed by
+// AWS at $0.01, so cost-related fields are fetched lazily and cached.
+aws.billing @defaults("monthToDateCost currency budgets.length") {
+  // Currency the account is billed in (e.g., USD)
+  currency() string
+  // Month-to-date unblended cost in `currency`
+  monthToDateCost() float
+  // Total unblended cost for the previous full calendar month
+  lastMonthCost() float
+  // Total unblended cost for the trailing 30 days
+  last30DaysCost() float
+  // Forecasted total unblended cost for the current calendar month:
+  // month-to-date actuals plus a Cost Explorer forecast for the
+  // remainder of the month
+  forecastedMonthCost() float
+  // Month-to-date unblended cost broken down by AWS service name
+  costsByService() map[string]float
+  // Previous full calendar month unblended cost broken down by AWS service name
+  costsByServiceLastMonth() map[string]float
+  // All AWS Budgets configured on the account
+  budgets() []aws.billing.budget
+}
+
+// AWS Budget
+//
+// Examine a single AWS Budgets entry. The `name` field selects the budget
+// (unique per account), e.g. `aws.billing.budgets.where(name == "monthly-cap")`.
+// Surfaces the budget's type, time unit, limit, actual and forecasted
+// spend, cost filters, and the configured notifications and subscribers.
+private aws.billing.budget @defaults("name budgetType budgetLimit actualSpend") {
+  // Budget name (unique within an account)
+  name string
+  // Account ID that owns the budget
+  accountId string
+  // Budget type: COST, USAGE, RI_UTILIZATION, RI_COVERAGE,
+  // SAVINGS_PLANS_UTILIZATION, or SAVINGS_PLANS_COVERAGE
+  budgetType string
+  // Reporting period: DAILY, MONTHLY, QUARTERLY, or ANNUALLY
+  timeUnit string
+  // Configured budget ceiling
+  budgetLimit float
+  // Unit of `budgetLimit` (e.g., USD, GB, hours)
+  budgetLimitUnit string
+  // Actual spend/usage in the current period
+  actualSpend float
+  // Forecasted spend/usage for the current period
+  forecastedSpend float
+  // Cost filter dimensions applied to the budget
+  // (e.g., "Service" -> ["Amazon EC2"], "LinkedAccount" -> ["123..."])
+  costFilters map[string][]string
+  // Start time of the current budget period
+  periodStart time
+  // End time of the current budget period
+  periodEnd time
+  // Last time the budget definition was updated
+  lastUpdatedTime time
+  // Notifications configured on the budget. Each entry has keys:
+  // notificationType (ACTUAL|FORECASTED), comparisonOperator, threshold,
+  // thresholdType (PERCENTAGE|ABSOLUTE_VALUE), notificationState
+  // (OK|ALARM), and subscribers ([{type, address}])
+  notifications() []dict
+}
+
 // AWS Organizations organization
 //
 // Examine the AWS Organizations entity that the account belongs to.

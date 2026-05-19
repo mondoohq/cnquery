@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
+	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
@@ -32,6 +33,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
+	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/aws/aws-sdk-go-v2/service/detective"
@@ -2299,6 +2301,44 @@ func (t *AwsConnection) Securitylake(region string) *securitylake.Client {
 	cfg := t.cfg.Copy()
 	cfg.Region = region
 	client := securitylake.NewFromConfig(cfg)
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+// CostExplorer returns a Cost Explorer client. Cost Explorer is a global
+// service whose endpoint lives only in us-east-1, so the region is pinned.
+func (t *AwsConnection) CostExplorer() *costexplorer.Client {
+	cacheVal := "_costexplorer_"
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached costexplorer client")
+		return c.Data.(*costexplorer.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = "us-east-1"
+	client := costexplorer.NewFromConfig(cfg)
+
+	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+// Budgets returns an AWS Budgets client. Budgets is a global service whose
+// endpoint lives only in us-east-1, so the region is pinned.
+func (t *AwsConnection) Budgets() *budgets.Client {
+	cacheVal := "_budgets_"
+
+	c, ok := t.clientcache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached budgets client")
+		return c.Data.(*budgets.Client)
+	}
+
+	cfg := t.cfg.Copy()
+	cfg.Region = "us-east-1"
+	client := budgets.NewFromConfig(cfg)
+
 	t.clientcache.Store(cacheVal, &CacheEntry{Data: client})
 	return client
 }
