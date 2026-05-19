@@ -92,6 +92,7 @@
     "Microsoft.KeyVault/vaults/read",
     "Microsoft.Logic/workflows/read",
     "Microsoft.ManagedIdentity/userAssignedIdentities/read",
+    "Microsoft.Mongocluster/mongoClusters/read",
     "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
     "Microsoft.Network/applicationGateways/read",
     "Microsoft.Network/applicationSecurityGroups/read",
@@ -735,6 +736,12 @@
       "source_file": "iam.go"
     },
     {
+      "permission": "Microsoft.Mongocluster/mongoClusters/read",
+      "service": "Microsoft.Mongocluster",
+      "action": "NewListPager",
+      "source_file": "cosmosdb.go"
+    },
+    {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
       "service": "Microsoft.Network",
       "action": "Get",
@@ -991,12 +998,6 @@
       "service": "Microsoft.RecoveryServices",
       "action": "NewListBySubscriptionIDPager",
       "source_file": "recoveryservices.go"
-    },
-    {
-      "permission": "Microsoft.Resources/resources/read",
-      "service": "Microsoft.Resources",
-      "action": "NewListPager",
-      "source_file": "cosmosdb.go"
     },
     {
       "permission": "Microsoft.Resources/resources/read",
