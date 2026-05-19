@@ -187,7 +187,6 @@ ekm
 eku
 elbv
 embeddings
-encryptor
 encryptors
 endpointslice
 eni
@@ -203,6 +202,7 @@ Eventstream
 evs
 EXACC
 Exadata
+exadata
 exo
 faa
 failback
