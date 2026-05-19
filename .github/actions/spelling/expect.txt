@@ -187,7 +187,6 @@ eventhubs
 Eventstream
 evs
 EXACC
-Exadata
 exadata
 exo
 faa
@@ -577,7 +576,6 @@ stepfunctions
 streamable
 stringx
 stu
-Stus
 stv
 subfolders
 subkeys
