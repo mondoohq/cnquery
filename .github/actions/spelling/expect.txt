@@ -74,7 +74,6 @@ broadwell
 bumpable
 bwawxf
 BXdl
-BYOD
 bytematchstatement
 cafd
 cavium
@@ -83,7 +82,6 @@ cce
 ccf
 CCN
 cdc
-CDMA
 cdn
 cdroms
 ceph
@@ -112,11 +110,8 @@ codegen
 Codeium
 codeowners
 codeql
-colo
-colocation
 compressratio
 computeagent
-conntrack
 containeranalysis
 continuedev
 corosync
@@ -143,9 +138,6 @@ dataplex
 datasource
 datastream
 DATAUSER
-DBFS
-DBRS
-DCs
 ddl
 ddos
 dedup
@@ -155,11 +147,8 @@ deliverychannel
 depsdev
 detectedapp
 dfw
-dhcpcd
-dhcpv
 dicom
 directoryservice
-discriminants
 diskread
 diskwrite
 dlp
@@ -174,13 +163,10 @@ draid
 DRdf
 dscp
 dsse
-DSTU
 Duf
-DVR
 eas
 ecc
 Ecmp
-ECP
 efa
 efi
 eip
@@ -191,7 +177,6 @@ embeddings
 encryptors
 endpointslice
 eni
-ENIId
 erlang
 ERPCLOUD
 ethertype
@@ -206,7 +191,6 @@ Exadata
 exadata
 exo
 faa
-failback
 fargate
 fce
 fdfhash
@@ -226,11 +210,9 @@ fluentd
 fortios
 fqdns
 freetier
-frontdoor
 frontmatter
 fsn
 ftps
-fumadocs
 functionapp
 FWaa
 gcfs
@@ -251,15 +233,12 @@ gopls
 GOSUMDB
 gotchas
 gpc
-GPLv
 gpo
 gpu
 grafana
 groupname
-GSM
 gsuite
 gvnic
-GZRS
 hadoop
 HBFNV
 HCMCLOUD
@@ -272,9 +251,6 @@ Hns
 horizontalpodautoscaler
 hostedzone
 hostkeyalgorithms
-hostkeys
-hotlink
-HPC
 hpi
 hsts
 hvm
@@ -283,7 +259,6 @@ iana
 iap
 IBgt
 iccid
-IDCS
 identitycenter
 identitysource
 idps
@@ -312,14 +287,12 @@ jira
 jkl
 jpi
 jre
-JSM
 jsonbody
 julia
 junie
 junos
 jupyter
 jwks
-KEDA
 kerberoastable
 keymanager
 KEYSTORE
@@ -329,7 +302,6 @@ kiro
 kmip
 kolide
 kotlin
-KQL
 kqueue
 krbtgt
 kts
@@ -352,7 +324,6 @@ linuxefi
 liveanalytics
 localos
 loggingservice
-logon
 logpull
 logpush
 lon
@@ -410,7 +381,6 @@ myvendor
 naflags
 natgateway
 nativead
-NCUs
 NEGs
 neq
 netbios
@@ -446,8 +416,6 @@ nullgroup
 nullstring
 NUnit
 nvmxnet
-OAC
-OAI
 objectstorage
 ocr
 octavia
@@ -470,9 +438,7 @@ openstack
 openvpn
 openzfs
 operationalinsights
-ORDS
 orstatement
-OSGi
 ospf
 ovmf
 ovn
@@ -489,10 +455,8 @@ pdp
 persistentvolume
 persistentvolumeclaim
 pfs
-PFSMM
 pgp
 phpunit
-Pids
 pipefail
 pki
 podfile
@@ -534,20 +498,16 @@ rbcd
 rdm
 Rdp
 readlines
-recaptcha
 recordsets
 regexmatchstatement
 regexpatternsetreferencestatement
 renv
-replicators
-reshard
 RESKEY
 resourcegroup
 resourcepolicy
 resourcequota
 richrule
 roku
-rollup
 rootdir
 rpo
 RRULE
@@ -598,7 +558,6 @@ SNYK
 softdep
 spdx
 sph
-SPIFFE
 splunk
 spo
 sqli
@@ -627,7 +586,6 @@ subports
 subscriptionfilter
 superusers
 swi
-switchports
 SYMANTEC
 symfony
 tacacs
@@ -641,9 +599,6 @@ temurin
 tensorboard
 testutils
 tgw
-throughputs
-timeframe
-timestream
 tokenauth
 tokenid
 tokio
@@ -652,7 +607,6 @@ toport
 totp
 tpl
 tpu
-traceroute
 trae
 trainingjob
 transitgateway
@@ -709,7 +663,6 @@ vtpm
 vulnerabilityassessmentsettings
 vulnmgmt
 vulns
-VVOL
 vxlan
 vztmpl
 WAFV
