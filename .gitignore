@@ -1,11 +1,11 @@
 /lr
-mql
+/mql
 mqlr
 dist
 alpine-container.tar
 centos-container.tar
-./mql
 test/commands/mql
+test/providers/mql
 file1
 id_rsa
 id_rsa.pub
