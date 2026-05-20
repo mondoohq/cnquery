@@ -36,10 +36,10 @@ func TestWindowsLocalUsersParser(t *testing.T) {
 		PasswordRequired:       true,
 		UserMayChangePassword:  true,
 		AccountExpires:         nil,
-		PasswordChangeableDate: pointer("/Date(1586981519962)/"),
-		PasswordExpires:        pointer("/Date(1590610319962)/"),
-		PasswordLastSet:        pointer("/Date(1586981519962)/"),
-		LastLogon:              pointer("/Date(1587041759064)/"),
+		PasswordChangeableDate: pointer("2020-04-15T20:11:59.9620000+00:00"),
+		PasswordExpires:        pointer("2020-05-27T20:51:59.9620000+00:00"),
+		PasswordLastSet:        pointer("2020-04-15T20:11:59.9620000+00:00"),
+		LastLogon:              pointer("2020-04-16T14:55:59.0640000+00:00"),
 		LocalPath:              `C:\Users\chris`,
 	}
 	found := findWindowsUser(localUsers, "chris")
