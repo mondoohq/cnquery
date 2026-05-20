@@ -2528,6 +2528,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"sshd.config.kexs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetKexs()).ToDataRes(types.Array(types.String))
 	},
+	"sshd.config.effectiveCiphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetEffectiveCiphers()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.effectiveMacs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetEffectiveMacs()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.effectiveKexs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetEffectiveKexs()).ToDataRes(types.Array(types.String))
+	},
 	"sshd.config.hostkeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetHostkeys()).ToDataRes(types.Array(types.String))
 	},
@@ -8262,6 +8271,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"sshd.config.kexs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfig).Kexs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sshd.config.effectiveCiphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).EffectiveCiphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sshd.config.effectiveMacs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).EffectiveMacs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"sshd.config.effectiveKexs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).EffectiveKexs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"sshd.config.hostkeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19739,6 +19760,9 @@ type mqlSshdConfig struct {
 	Ciphers           plugin.TValue[[]any]
 	Macs              plugin.TValue[[]any]
 	Kexs              plugin.TValue[[]any]
+	EffectiveCiphers  plugin.TValue[[]any]
+	EffectiveMacs     plugin.TValue[[]any]
+	EffectiveKexs     plugin.TValue[[]any]
 	Hostkeys          plugin.TValue[[]any]
 	Hostkeyalgorithms plugin.TValue[[]any]
 	PermitRootLogin   plugin.TValue[[]any]
@@ -19880,6 +19904,24 @@ func (c *mqlSshdConfig) GetKexs() *plugin.TValue[[]any] {
 		}
 
 		return c.kexs(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfig) GetEffectiveCiphers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveCiphers, func() ([]any, error) {
+		return c.effectiveCiphers()
+	})
+}
+
+func (c *mqlSshdConfig) GetEffectiveMacs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveMacs, func() ([]any, error) {
+		return c.effectiveMacs()
+	})
+}
+
+func (c *mqlSshdConfig) GetEffectiveKexs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EffectiveKexs, func() ([]any, error) {
+		return c.effectiveKexs()
 	})
 }
 

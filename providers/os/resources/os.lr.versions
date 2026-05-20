@@ -1667,6 +1667,9 @@ sshd 9.0.0
 sshd.config 9.0.0
 sshd.config.blocks 10.0.5
 sshd.config.ciphers 9.0.0
+sshd.config.effectiveCiphers 13.16.9
+sshd.config.effectiveKexs 13.16.9
+sshd.config.effectiveMacs 13.16.9
 sshd.config.file 9.0.0
 sshd.config.files 9.0.0
 sshd.config.hostkeyalgorithms 13.10.1

@@ -6,6 +6,8 @@ package resources
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,7 +23,11 @@ import (
 )
 
 type mqlSshdConfigInternal struct {
-	lock sync.Mutex
+	lock                 sync.Mutex
+	effectiveLock        sync.Mutex
+	effectiveFetched     bool
+	effectiveParamsCache map[string]string
+	effectiveParamsErr   error
 }
 
 func initSshdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -46,6 +52,8 @@ func initSshdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 }
 
 const defaultSshdConfig = "/etc/ssh/sshd_config"
+
+const sshdEffectiveConfigCommand = "sshd -T"
 
 func (s *mqlSshdConfig) id() (string, error) {
 	file := s.GetFile()
@@ -279,6 +287,113 @@ func (s *mqlSshdConfig) kexs(params map[string]any) ([]any, error) {
 	}
 
 	return parseConfigEntrySlice(rawkexs)
+}
+
+func parseEffectiveSshdConfig(input string) map[string]string {
+	res := map[string]string{}
+	lines := strings.Split(input, "\n")
+	for i := range lines {
+		line := strings.TrimSpace(lines[i])
+		if line == "" {
+			continue
+		}
+
+		key, value, ok := strings.Cut(line, " ")
+		key = strings.ToLower(strings.TrimSpace(key))
+		if !ok {
+			res[key] = ""
+			continue
+		}
+		res[key] = strings.TrimSpace(value)
+	}
+	return res
+}
+
+func (s *mqlSshdConfig) effectiveParams() (map[string]string, error) {
+	s.effectiveLock.Lock()
+	defer s.effectiveLock.Unlock()
+	if s.effectiveFetched {
+		return s.effectiveParamsCache, s.effectiveParamsErr
+	}
+	defer func() {
+		s.effectiveFetched = true
+	}()
+
+	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
+	if !ok || !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		s.effectiveParamsCache = map[string]string{}
+		return s.effectiveParamsCache, nil
+	}
+
+	command, err := s.effectiveConfigCommand()
+	if err != nil {
+		s.effectiveParamsErr = err
+		return nil, err
+	}
+
+	cmd, err := conn.RunCommand(command)
+	if err != nil {
+		s.effectiveParamsErr = err
+		return nil, err
+	}
+	if cmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(cmd.Stderr)
+		err := fmt.Errorf("%s failed (exit %d): %s", command, cmd.ExitStatus, strings.TrimSpace(string(stderr)))
+		s.effectiveParamsErr = err
+		return nil, err
+	}
+
+	stdout, err := io.ReadAll(cmd.Stdout)
+	if err != nil {
+		s.effectiveParamsErr = err
+		return nil, err
+	}
+
+	s.effectiveParamsCache = parseEffectiveSshdConfig(string(stdout))
+	return s.effectiveParamsCache, nil
+}
+
+func (s *mqlSshdConfig) effectiveConfigCommand() (string, error) {
+	file := s.GetFile()
+	if file.Error != nil {
+		return "", file.Error
+	}
+	if file.Data == nil || file.Data.Path.Data == "" || file.Data.Path.Data == defaultSshdConfig {
+		return sshdEffectiveConfigCommand, nil
+	}
+	return sshdEffectiveConfigCommand + " -f " + shared.ShellEscape(file.Data.Path.Data), nil
+}
+
+func effectiveConfigEntrySlice(params map[string]string, key string) ([]any, error) {
+	raw, ok := params[key]
+	if !ok {
+		return nil, nil
+	}
+	return parseConfigEntrySlice(raw)
+}
+
+func (s *mqlSshdConfig) effectiveCiphers() ([]any, error) {
+	params, err := s.effectiveParams()
+	if err != nil {
+		return nil, err
+	}
+	return effectiveConfigEntrySlice(params, "ciphers")
+}
+
+func (s *mqlSshdConfig) effectiveMacs() ([]any, error) {
+	params, err := s.effectiveParams()
+	if err != nil {
+		return nil, err
+	}
+	return effectiveConfigEntrySlice(params, "macs")
+}
+
+func (s *mqlSshdConfig) effectiveKexs() ([]any, error) {
+	params, err := s.effectiveParams()
+	if err != nil {
+		return nil, err
+	}
+	return effectiveConfigEntrySlice(params, "kexalgorithms")
 }
 
 func (s *mqlSshdConfig) hostkeys(params map[string]any) ([]any, error) {

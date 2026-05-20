@@ -980,6 +980,12 @@ sshd.config {
   macs(params) []string
   // Key exchange algorithms configured for this SSH server
   kexs(params) []string
+  // Effective ciphers reported by sshd -T
+  effectiveCiphers() []string
+  // Effective MACs reported by sshd -T
+  effectiveMacs() []string
+  // Effective key exchange algorithms reported by sshd -T
+  effectiveKexs() []string
   // Host keys configured for this SSH server
   hostkeys(params) []string
   // Host key algorithms configured for this SSH server
