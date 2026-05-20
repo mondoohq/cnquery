@@ -20,7 +20,10 @@ set -euo pipefail
 
 # Patterns whose change forces a full re-run across every provider.
 # Anything outside providers/<name>/ that providers depend on belongs here.
-FORCE_ALL_PATTERN='^(providers-sdk/|providers/core/|providers/builtin(_dev)?\.go$|providers/coordinator|providers/providers|providers/extensible_schema|providers/defaults|providers/crashlog|providers/logger|providers/mock|providers\.yaml$|Makefile$|scripts/changed-providers\.sh$|\.github/workflows/(pr-test-generated-files\.yaml|pr-test-lint\.yml|pr-extended-linting\.yml|reusable-lint-providers\.yml)$|go\.mod$|go\.sum$|[^/]+\.go$)'
+# Note: `providers/[^/]+\.go$` catches every .go file directly under providers/
+# (coordinator, runtime, registry, sbom, builtin*, etc.) — they're all shared
+# plumbing that every provider relies on.
+FORCE_ALL_PATTERN='^(providers-sdk/|providers/core/|providers/[^/]+\.go$|providers\.yaml$|Makefile$|\.github/env$|scripts/changed-providers\.sh$|\.github/workflows/(pr-test-generated-files\.yaml|pr-test-lint\.yml|pr-extended-linting\.yml|reusable-lint-providers\.yml)$|go\.mod$|go\.sum$|[^/]+\.go$)'
 
 base="${BASE_SHA:-}"
 if [ -z "$base" ]; then
