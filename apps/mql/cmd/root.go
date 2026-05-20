@@ -50,6 +50,11 @@ func BuildRootCmd() (*cobra.Command, error) {
 			Run:     RunCmdRun,
 			Action:  "Run a query with ",
 		},
+		&cliproviders.Command{
+			Command: DiscoverCmd,
+			Run:     DiscoverCmdRun,
+			Action:  "Discover assets with ",
+		},
 	)
 	return rootCmd, err
 }
