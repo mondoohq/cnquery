@@ -7,6 +7,10 @@ on:
         description: 'Only report new issues (requires pull-requests: read permission at caller workflow level)'
         type: boolean
         default: false
+      providers:
+        description: 'Space-separated provider names (under providers/) to lint. Empty means all providers.'
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -33,10 +37,11 @@ jobs:
       - name: Install golangci-lint
         run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@5d1e709b7be35cb2025444e19de266b056b7b7ee    #v2.10.1
 
-      - name: Run golangci-lint on all providers
+      - name: Run golangci-lint on providers
         env:
           ONLY_NEW_ISSUES: ${{ inputs.only-new-issues }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PROVIDERS_FILTER: ${{ inputs.providers }}
         run: |
           failed=""
           extra_args=""
@@ -44,11 +49,36 @@ jobs:
             git fetch origin "${BASE_SHA}" --depth=1
             extra_args="--new-from-rev=${BASE_SHA}"
           fi
-          for provider in providers/*/; do
-            # Skip providers without go.mod (they are part of the main module)
-            if [ ! -f "$provider/go.mod" ]; then
-              continue
-            fi
+
+          if [ -n "${PROVIDERS_FILTER}" ]; then
+            echo "=== Scoped lint: ${PROVIDERS_FILTER} ==="
+            providers=""
+            for name in ${PROVIDERS_FILTER}; do
+              dir="providers/${name}"
+              if [ ! -f "${dir}/go.mod" ]; then
+                # Providers without their own go.mod live in the main module
+                # and are linted by the root golangci-lint job.
+                echo "--- Skipping ${name}: no go.mod (linted via main module)"
+                continue
+              fi
+              providers="${providers} ${dir}/"
+            done
+          else
+            echo "=== Full lint: every provider with go.mod ==="
+            providers=""
+            for provider in providers/*/; do
+              if [ -f "${provider}/go.mod" ]; then
+                providers="${providers} ${provider}"
+              fi
+            done
+          fi
+
+          if [ -z "${providers}" ]; then
+            echo "No providers to lint."
+            exit 0
+          fi
+
+          for provider in ${providers}; do
             name=$(basename "$provider")
             echo "=== Linting provider: $name ==="
             if ! (cd "$provider" && golangci-lint run --timeout=30m $extra_args); then

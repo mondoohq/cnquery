@@ -20,6 +20,23 @@ permissions:
   pull-requests: read
 
 jobs:
+  detect-changed-providers:
+    runs-on: ubuntu-latest
+    outputs:
+      providers: ${{ steps.changed.outputs.providers }}
+      all: ${{ steps.changed.outputs.all }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Determine changed providers
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bash scripts/changed-providers.sh
+
   golangci-lint:
     permissions:
       # allow read access to the content for analysis.
@@ -51,6 +68,8 @@ jobs:
           skip-cache: true
 
   golangci-lint-providers:
+    needs: detect-changed-providers
     uses: ./.github/workflows/reusable-lint-providers.yml
     with:
       only-new-issues: true
+      providers: ${{ needs.detect-changed-providers.outputs.all == 'true' && '' || needs.detect-changed-providers.outputs.providers }}

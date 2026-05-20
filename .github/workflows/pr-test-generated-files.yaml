@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
 
       - name: Import environment variables from file
         run: cat ".github/env" >> $GITHUB_ENV
@@ -53,12 +55,38 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ env.protoc-version }}
 
+      - name: Determine changed providers
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bash scripts/changed-providers.sh
+
       - name: Check generated files
+        env:
+          ALL_PROVIDERS: ${{ steps.changed.outputs.all }}
+          CHANGED_PROVIDERS: ${{ steps.changed.outputs.providers }}
         run: |
+          set -euo pipefail
           protoc --version
           make prep
-          make mql/generate
-          SKIP_COMPILE=yes make providers/build
+          # Run all non-provider code generators (these are cheap relative to
+          # the per-provider work and may affect non-provider source files).
+          make clean/proto llx/generate shared/generate sbom/generate reporter/generate
+          # Provider plumbing that every provider relies on.
+          make providers/proto providers/config providers/lr
+          # Regenerate provider sources. Skip compile — we only need .lr.go,
+          # .lr.json, .resources.json to validate against the committed copies.
+          if [ "$ALL_PROVIDERS" = "true" ] || [ -z "$CHANGED_PROVIDERS" ]; then
+            echo "--> regenerating all providers"
+            SKIP_COMPILE=yes make providers/build
+          else
+            echo "--> regenerating changed providers: $CHANGED_PROVIDERS"
+            targets="providers/build/mock providers/build/core"
+            for p in $CHANGED_PROVIDERS; do
+              targets="$targets providers/build/$p"
+            done
+            SKIP_COMPILE=yes make $targets
+          fi
           git diff --exit-code *.go
           git diff --exit-code providers/**/*.lr.json
           git diff --exit-code providers/**/*.lr.go
