@@ -34,6 +34,8 @@ jobs:
       - name: Determine changed providers
         id: changed
         env:
+          # Empty on push events (this workflow only triggers on push);
+          # scripts/changed-providers.sh falls back to merge-base with origin/main.
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: bash scripts/changed-providers.sh
 

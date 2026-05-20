@@ -50,6 +50,12 @@ fi
 # Make sure the base commit is reachable locally (shallow clones).
 git fetch origin "$base" --depth=1 >/dev/null 2>&1 || true
 
+# Triple-dot diff: changes introduced on HEAD relative to the merge-base
+# with `base`. On a push directly to main the merge-base resolves to HEAD,
+# producing no files and an empty providers list. The callers treat an
+# empty list as "lint/regen all" (see the `[ -z "$CHANGED_PROVIDERS" ]`
+# branch in pr-test-generated-files.yaml and the empty-input handling in
+# reusable-lint-providers.yml), so this fallback is intentional.
 changed_files=$(git diff --name-only "$base"...HEAD)
 
 if printf '%s\n' "$changed_files" | grep -qE "$FORCE_ALL_PATTERN"; then
