@@ -34,7 +34,6 @@ func TestParseAixPackages(t *testing.T) {
 		PUrl:        "pkg:generic/aix/X11.apps.msmit@7.3.0.0?arch=powerpc",
 		CPEs: []string{
 			"cpe:2.3:a:x11.apps.msmit:x11.apps.msmit:7.3.0.0:*:*:*:*:*:powerpc:*",
-			"cpe:2.3:a:x11.apps.msmit:x11.apps.msmit:7.3.0:*:*:*:*:*:powerpc:*",
 		},
 		Format: "bff",
 		Status: "COMMITTED",
@@ -49,7 +48,6 @@ func TestParseAixPackages(t *testing.T) {
 		PUrl:        "pkg:generic/aix/bos.sysmgt.nim.client@7.3.3.0?arch=powerpc&efix=locked",
 		CPEs: []string{
 			"cpe:2.3:a:bos.sysmgt.nim.client:bos.sysmgt.nim.client:7.3.3.0:*:*:*:*:*:powerpc:*",
-			"cpe:2.3:a:bos.sysmgt.nim.client:bos.sysmgt.nim.client:7.3.3:*:*:*:*:*:powerpc:*",
 		},
 		Format: "bff",
 		Status: "COMMITTED|EFIXLOCKED",

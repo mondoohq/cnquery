@@ -45,7 +45,6 @@ func TestAlpineApkdbParser(t *testing.T) {
 		PUrl:        "pkg:apk/alpine/musl@1510953106:1.1.18-r2?arch=x86_64&distro=alpine-3.7.0&epoch=1510953106",
 		CPEs: []string{
 			"cpe:2.3:a:*:musl:1.1.18-r2:*:*:*:*:*:x86_64:*",
-			"cpe:2.3:a:*:musl:1.1.18:*:*:*:*:*:x86_64:*",
 		},
 		Format:         AlpinePkgFormat,
 		FilesAvailable: PkgFilesIncluded,
@@ -67,7 +66,6 @@ func TestAlpineApkdbParser(t *testing.T) {
 		PUrl:        "pkg:apk/alpine/libressl2.6-libcrypto@1510257703:2.6.3-r0?arch=x86_64&distro=alpine-3.7.0&epoch=1510257703",
 		CPEs: []string{
 			"cpe:2.3:a:*:libressl2.6-libcrypto:2.6.3-r0:*:*:*:*:*:x86_64:*",
-			"cpe:2.3:a:*:libressl2.6-libcrypto:2.6.3:*:*:*:*:*:x86_64:*",
 		},
 		Format:         AlpinePkgFormat,
 		FilesAvailable: PkgFilesIncluded,
@@ -89,7 +87,6 @@ func TestAlpineApkdbParser(t *testing.T) {
 		PUrl:        "pkg:apk/alpine/libressl2.6-libssl@1510257703:2.6.3-r0?arch=x86_64&distro=alpine-3.7.0&epoch=1510257703",
 		CPEs: []string{
 			"cpe:2.3:a:*:libressl2.6-libssl:2.6.3-r0:*:*:*:*:*:x86_64:*",
-			"cpe:2.3:a:*:libressl2.6-libssl:2.6.3:*:*:*:*:*:x86_64:*",
 		},
 		Format:         AlpinePkgFormat,
 		FilesAvailable: PkgFilesIncluded,
@@ -111,7 +108,6 @@ func TestAlpineApkdbParser(t *testing.T) {
 		PUrl:        "pkg:apk/alpine/apk-tools@1515485577:2.8.2-r0?arch=x86_64&distro=alpine-3.7.0&epoch=1515485577",
 		CPEs: []string{
 			"cpe:2.3:a:*:apk-tools:2.8.2-r0:*:*:*:*:*:x86_64:*",
-			"cpe:2.3:a:*:apk-tools:2.8.2:*:*:*:*:*:x86_64:*",
 		},
 		Format:         AlpinePkgFormat,
 		FilesAvailable: PkgFilesIncluded,
@@ -133,7 +129,6 @@ func TestAlpineApkdbParser(t *testing.T) {
 		PUrl:        "pkg:apk/alpine/busybox@1513075346:1.27.2-r7?arch=x86_64&distro=alpine-3.7.0&epoch=1513075346",
 		CPEs: []string{
 			"cpe:2.3:a:*:busybox:1.27.2-r7:*:*:*:*:*:x86_64:*",
-			"cpe:2.3:a:*:busybox:1.27.2:*:*:*:*:*:x86_64:*",
 		},
 		Format:         AlpinePkgFormat,
 		FilesAvailable: PkgFilesIncluded,
@@ -155,7 +150,6 @@ func TestAlpineApkdbParser(t *testing.T) {
 		PUrl:        "pkg:apk/alpine/alpine-baselayout@1510075862:3.0.5-r2?arch=x86_64&distro=alpine-3.7.0&epoch=1510075862",
 		CPEs: []string{
 			"cpe:2.3:a:*:alpine-baselayout:3.0.5-r2:*:*:*:*:*:x86_64:*",
-			"cpe:2.3:a:*:alpine-baselayout:3.0.5:*:*:*:*:*:x86_64:*",
 		},
 		Format:         AlpinePkgFormat,
 		FilesAvailable: PkgFilesIncluded,
