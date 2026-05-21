@@ -350,6 +350,7 @@ maxmem
 maxmemory
 mcp
 mcr
+mde
 mebibytes
 memorydb
 memorystore
@@ -412,6 +413,7 @@ Noreuse
 notebookinstancedetails
 notif
 nproc
+NRT
 nsg
 nsp
 nsrecord
@@ -428,6 +430,7 @@ Odr
 oem
 oid
 oidc
+onboarded
 ondemand
 oneof
 ontap
