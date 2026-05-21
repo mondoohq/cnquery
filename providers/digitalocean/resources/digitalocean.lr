@@ -234,7 +234,9 @@ digitalocean.database @defaults("id name engine") {
   privateConnectionHost string
   // Private connection port (reachable within the VPC)
   privateConnectionPort int
-  // Key eviction policy for Redis/Valkey clusters (noeviction, allkeys_lru, allkeys_random, volatile_lru, volatile_random, volatile_ttl); empty for other engines
+  // Key eviction policy for Redis/Valkey clusters
+  //
+  // One of noeviction, allkeys_lru, allkeys_random, volatile_lru, volatile_random, volatile_ttl. Empty for other engines.
   evictionPolicy() string
   // Maintenance window configuration (day, hour, pending status)
   maintenanceWindow dict

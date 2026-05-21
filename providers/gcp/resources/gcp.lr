@@ -277,10 +277,11 @@ private gcp.project.redisService.instance @defaults("name") {
   redisConfigs map[string]string
   // Redis memory size in GiB
   memorySizeGb int
-  // The full name of the Google Compute Engine
-  // [network](https://cloud.google.com/vpc/docs/vpc) to which the
-  // instance is connected. If left unspecified, the `default` network
-  // will be used
+  // The full name of the Google Compute Engine network
+  //
+  // The [VPC network](https://cloud.google.com/vpc/docs/vpc) to which
+  // the instance is connected. If left unspecified, the `default`
+  // network will be used.
   AuthorizedNetwork string
   // Cloud IAM identity used by import / export operations to transfer data to/from Cloud Storage
   persistenceIamIdentity string
@@ -2043,9 +2044,13 @@ private gcp.project.storageService.bucket @defaults("id") {
   acl() []dict
   // Default access control list applied to newly-created objects (legacy, only populated when uniform bucket-level access is disabled)
   defaultObjectAcl() []dict
-  // Whether the bucket is publicly accessible via any mechanism (IAM policy, bucket ACL, or default object ACL); returns false when iamConfiguration.publicAccessPrevention is "enforced"
+  // Whether the bucket is publicly accessible via any mechanism
+  //
+  // Reflects IAM policy, bucket ACL, or default object ACL. Returns false when iamConfiguration.publicAccessPrevention is "enforced".
   public() bool
-  // Cloud DLP file-store data profile for this bucket — sensitivity score, risk level, and detected infoTypes. Null when discovery has not profiled this bucket or DLP is not enabled in the project
+  // Cloud DLP file-store data profile for this bucket
+  //
+  // Reports sensitivity score, risk level, and detected infoTypes. Null when discovery has not profiled this bucket or DLP is not enabled in the project.
   dlpDataProfile() gcp.project.dlpService.fileStoreDataProfile
 }
 
@@ -2061,62 +2066,67 @@ private gcp.project.storageService.bucket.lifecycleRule {
 private gcp.project.storageService.bucket.lifecycleRuleAction @defaults("type storageClass") {
   // Target storage class. Required iff the type of the action is SetStorageClass
   storageClass string
-  // Type of the action. Currently, only Delete, SetStorageClass, and
-  // AbortIncompleteMultipartUpload are supported
+  // Type of the action
+  //
+  // Currently, only Delete, SetStorageClass, and AbortIncompleteMultipartUpload are supported.
   type string
 }
 
 // The condition(s) under which the action will be taken
 private gcp.project.storageService.bucket.lifecycleRuleCondition @defaults("age numNewerVersions") {
-  // Age of an object (in days). This condition is satisfied when an object
-  // reaches the specified age
+  // Age of an object (in days)
+  //
+  // This condition is satisfied when an object reaches the specified age.
   age int
-  // CreatedBefore: A date in RFC 3339 format with only the date part (for
-  // instance, "2013-01-15"). This condition is satisfied when an object is
-  // created before midnight of the specified date in UTC
+  // CreatedBefore: A date in RFC 3339 format with only the date part
+  //
+  // For instance, "2013-01-15". This condition is satisfied when an object is created before midnight of the specified date in UTC.
   createdBefore string
-  // CustomTimeBefore: A date in RFC 3339 format with only the date part (for
-  // instance, "2013-01-15"). This condition is satisfied when the custom time on
-  // an object is before this date in UTC
+  // CustomTimeBefore: A date in RFC 3339 format with only the date part
+  //
+  // For instance, "2013-01-15". This condition is satisfied when the custom time on an object is before this date in UTC.
   customTimeBefore string
-  // DaysSinceCustomTime: Number of days elapsed since the user-specified
-  // timestamp set on an object. The condition is satisfied if the days elapsed
-  // is at least this number. If no custom timestamp is specified on an object,
-  // the condition does not apply
+  // DaysSinceCustomTime: Number of days elapsed since the user-specified timestamp
+  //
+  // The condition is satisfied if the days elapsed is at least this number.
+  // If no custom timestamp is specified on an object, the condition does not apply.
   daysSinceCustomTime int
-  // DaysSinceNoncurrentTime: Number of days elapsed since the noncurrent
-  // timestamp of an object. The condition is satisfied if the days elapsed is at
-  // least this number. This condition is relevant only for versioned objects.
-  // The value of the field must be a nonnegative integer. If it's zero, the
-  // object version will become eligible for Lifecycle action as soon as it
-  // becomes noncurrent
+  // DaysSinceNoncurrentTime: Number of days elapsed since the noncurrent timestamp of an object
+  //
+  // The condition is satisfied if the days elapsed is at least this number.
+  // This condition is relevant only for versioned objects. The value of the field
+  // must be a nonnegative integer. If it's zero, the object version will become
+  // eligible for Lifecycle action as soon as it becomes noncurrent.
   daysSinceNoncurrentTime int
-  // IsLive: Relevant only for versioned objects. If the value is true, this
-  // condition matches live objects; if the value is false, it matches archived
-  // objects
+  // IsLive: Relevant only for versioned objects
+  //
+  // If the value is true, this condition matches live objects; if the value is false, it matches archived objects.
   isLive bool
-  // MatchesPattern: A regular expression that satisfies the RE2 syntax. This
-  // condition is satisfied when the name of the object matches the RE2 pattern
+  // MatchesPattern: A regular expression that satisfies the RE2 syntax
+  //
+  // This condition is satisfied when the name of the object matches the RE2 pattern.
   matchesPattern string
-  // MatchesPrefix: List of object name prefixes. This condition will be
-  // satisfied when at least one of the prefixes exactly matches the beginning of
-  // the object name
+  // MatchesPrefix: List of object name prefixes
+  //
+  // This condition will be satisfied when at least one of the prefixes exactly matches the beginning of the object name.
   matchesPrefix []string
-  // MatchesStorageClass: Objects having any of the storage classes specified by
-  // this condition will be matched
+  // MatchesStorageClass: storage classes selected for this condition
+  //
+  // Objects having any of the storage classes specified by this condition will be matched.
   matchesStorageClass []string
-  // MatchesSuffix: List of object name suffixes. This condition will be
-  // satisfied when at least one of the suffixes exactly matches the end of the
-  // object name
+  // MatchesSuffix: List of object name suffixes
+  //
+  // This condition will be satisfied when at least one of the suffixes exactly matches the end of the object name.
   matchesSuffix []string
-  // NoncurrentTimeBefore: A date in RFC 3339 format with only the date part (for
-  // instance, "2013-01-15"). This condition is satisfied when the noncurrent
+  // NoncurrentTimeBefore: A date in RFC 3339 format with only the date part
+  //
+  // For instance, "2013-01-15". This condition is satisfied when the noncurrent
   // time on an object is before this date in UTC. This condition is relevant
-  // only for versioned objects
+  // only for versioned objects.
   noncurrentTimeBefore string
-  // NumNewerVersions: Relevant only for versioned objects. If the value is N,
-  // this condition is satisfied when there are at least N versions (including
-  // the live version) newer than this version of the object
+  // NumNewerVersions: Relevant only for versioned objects
+  //
+  // If the value is N, this condition is satisfied when there are at least N versions (including the live version) newer than this version of the object.
   numNewerVersions int
 }
 
@@ -2485,7 +2495,9 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   requireSsl bool
   // Specifies how SSL/TLS is enforced in database connections.
   sslMode string
-  // Whether the service uses an internal direct path instead of the private IP address inside of the Virtual Private Cloud (Controls connectivity to private IP instances from Google services, such as BigQuery)
+  // Whether the service uses an internal direct path instead of the private IP address inside of the VPC
+  //
+  // Controls connectivity to private IP instances from Google services, such as BigQuery.
   enablePrivatePathForGoogleCloudServices bool
   // Specifies how the server CA certificate is signed (GOOGLE_MANAGED_INTERNAL_CA, GOOGLE_MANAGED_CAS_CA)
   serverCaMode string
@@ -3056,7 +3068,9 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   networkPolicy() gcp.project.gkeService.cluster.networkPolicy
   // The release channel that the cluster is subscribed to
   releaseChannel string
-  // Whether the cluster is subscribed to a Google-managed release channel (rapid, regular, or stable). False for unspecified, which means upgrades are manual.
+  // Whether the cluster is subscribed to a Google-managed release channel
+  //
+  // True when the channel is rapid, regular, or stable. False for unspecified, which means upgrades are manual.
   releaseChannelManaged() bool
   // Whether Cloud TPU integration is enabled
   enableTpu bool
@@ -3312,23 +3326,25 @@ private gcp.project.gkeService.cluster.nodepool.upgradeSettings @defaults("strat
 private gcp.project.gkeService.cluster.nodepool.autoscaling @defaults( "enabled" ) {
   // Is autoscaling enabled for this node pool.
   enabled bool
-  // Minimum number of nodes for one location in the node pool. Must be greater
-  // than or equal to 0 and less than or equal to max_node_count.
+  // Minimum number of nodes for one location in the node pool
+  //
+  // Must be greater than or equal to 0 and less than or equal to max_node_count.
   minNodeCount int
-  // Maximum number of nodes for one location in the node pool. Must be >=
-  // min_node_count. There has to be enough quota to scale up the cluster.
+  // Maximum number of nodes for one location in the node pool
+  //
+  // Must be >= min_node_count. There has to be enough quota to scale up the cluster.
   maxNodeCount int
   // Can this node pool be deleted automatically.
   autoprovisioned bool
-  // Minimum number of nodes in the node pool. Must be greater than or equal
-  // to 0 and less than or equal to total_max_node_count.
-  // The total_*_node_count fields are mutually exclusive with the *_node_count
-  // fields.
+  // Minimum number of nodes in the node pool
+  //
+  // Must be greater than or equal to 0 and less than or equal to total_max_node_count.
+  // The total_*_node_count fields are mutually exclusive with the *_node_count fields.
   totalMinNodeCount int
-  // Maximum number of nodes in the node pool. Must be greater than or equal to
-  // total_min_node_count. There has to be enough quota to scale up the cluster.
-  // The total_*_node_count fields are mutually exclusive with the *_node_count
-  // fields.
+  // Maximum number of nodes in the node pool
+  //
+  // Must be greater than or equal to total_min_node_count. There has to be enough quota to scale up the cluster.
+  // The total_*_node_count fields are mutually exclusive with the *_node_count fields.
   totalMaxNodeCount int
 }
 
@@ -4136,7 +4152,9 @@ private gcp.project.loggingservice.sink @defaults("destination") {
   filter string
   // When exporting logs, logging adopts this identity for authorization
   writerIdentity string
-  // Whether to allow the sink to export log entries from the organization or folder, plus (recursively) from any contained folders, billings accounts, or projects
+  // Whether to allow the sink to export log entries from the organization or folder
+  //
+  // When true, the sink also receives log entries (recursively) from any contained folders, billing accounts, or projects.
   includeChildren bool
 }
 
@@ -4324,7 +4342,9 @@ private gcp.project.iamService.workloadIdentityPool @defaults("displayName name 
   disabled bool
   // Time the pool is scheduled to be permanently deleted (set when `state` is DELETED)
   expireTime time
-  // Pool operating mode (FEDERATION_ONLY, TRUST_DOMAIN, SYSTEM_TRUST_DOMAIN, or empty/MODE_UNSPECIFIED — both unspecified values operate as FEDERATION_ONLY). FEDERATION_ONLY pools accept external workload identities (the audit hot spot); TRUST_DOMAIN and SYSTEM_TRUST_DOMAIN pools (e.g. GKE's `*.svc.id.goog` pools) do not host user-defined providers.
+  // Pool operating mode
+  //
+  // One of FEDERATION_ONLY, TRUST_DOMAIN, SYSTEM_TRUST_DOMAIN, or empty/MODE_UNSPECIFIED (both unspecified values operate as FEDERATION_ONLY). FEDERATION_ONLY pools accept external workload identities (the audit hot spot); TRUST_DOMAIN and SYSTEM_TRUST_DOMAIN pools (e.g. GKE's `*.svc.id.goog` pools) do not host user-defined providers.
   mode string
   // Identity providers attached to this pool. Null for TRUST_DOMAIN and SYSTEM_TRUST_DOMAIN pools, which cannot host user-defined providers.
   providers() []gcp.project.iamService.workloadIdentityPool.provider
@@ -4363,7 +4383,9 @@ private gcp.project.iamService.workloadIdentityPool.provider @defaults("displayN
   disabled bool
   // Time the provider is scheduled to be permanently deleted (set when `state` is DELETED)
   expireTime time
-  // Maps Google claims (`google.subject`, `google.groups`, `attribute.*`) to expressions over the external token. A mapping of `google.subject` to an unfiltered external claim is the audit hot spot.
+  // Maps Google claims to expressions over the external token
+  //
+  // Maps `google.subject`, `google.groups`, and `attribute.*` to expressions over the external token. A mapping of `google.subject` to an unfiltered external claim is the audit hot spot.
   attributeMapping map[string]string
   // CEL expression evaluated against the external token. When empty, every external token that satisfies the mapping is accepted.
   attributeCondition string
@@ -5036,7 +5058,6 @@ private gcp.project.cloudRunService.container @defaults("name image") {
   // Compute resource requirements by the container
   resources dict
   // List of ports to expose from the container
-  // @afiune Fix issue int32 not parse as dict
   ports []dict
   // Volumes to mount into the container's file system
   volumeMounts []dict
@@ -5202,7 +5223,9 @@ private gcp.accessApprovalSettings {
   notificationEmails []string
   // List of Google Cloud services for which the given resource has access approval enrolled
   enrolledServices []dict
-  // Whether at least one service is enrolled for access approval in one or more ancestors of the project or folder (unset for organizations since organizations do not have ancestors)
+  // Whether at least one service is enrolled for access approval in an ancestor
+  //
+  // True when one or more ancestors of the project or folder have enrolled. Unset for organizations since organizations do not have ancestors.
   enrolledAncestor bool
   // Asymmetric crypto key version to use for signing approval requests
   activeKeyVersion string
@@ -5499,7 +5522,9 @@ private gcp.project.binaryAuthorizationControl.attestor @defaults("name") {
   noteReference string
   // Public keys that verify attestations signed by this attestor. An empty list means the attestor rejects every attestation.
   publicKeys []gcp.project.binaryAuthorizationControl.attestor.publicKey
-  // Output-only service account email this attestor uses to query Container Analysis. Administrators must grant it `containeranalysis.notes.occurrences.viewer` on the backing note.
+  // Output-only service account email this attestor uses to query Container Analysis
+  //
+  // Administrators must grant it `containeranalysis.notes.occurrences.viewer` on the backing note.
   delegationServiceAccountEmail string
   // Last update time
   updated time
@@ -5516,7 +5541,9 @@ private gcp.project.binaryAuthorizationControl.attestor @defaults("name") {
 // missing signature algorithms (`SIGNATURE_ALGORITHM_UNSPECIFIED`), or PGP
 // keys where PKIX would be stronger.
 private gcp.project.binaryAuthorizationControl.attestor.publicKey @defaults("id pkixSignatureAlgorithm") {
-  // Public key ID. Signatures sent to BinAuthz must include this exact ID; for PGP keys it equals the OpenPGP V4 fingerprint, for PKIX keys it is user-specified.
+  // Public key ID
+  //
+  // Signatures sent to BinAuthz must include this exact ID. For PGP keys it equals the OpenPGP V4 fingerprint; for PKIX keys it is user-specified.
   id string
   // Optional descriptive comment
   comment string
@@ -6459,7 +6486,9 @@ private gcp.project.computeService.sslPolicy @defaults("name profile minTlsVersi
   profile string
   // Minimum TLS version (TLS_1_0, TLS_1_1, TLS_1_2)
   minTlsVersion string
-  // Whether the policy permits weak TLS — true when minTlsVersion is TLS_1_0/TLS_1_1 (version weakness) or profile is COMPATIBLE (cipher-suite weakness, even when minTlsVersion is TLS_1_2)
+  // Whether the policy permits weak TLS
+  //
+  // True when minTlsVersion is TLS_1_0/TLS_1_1 (version weakness) or profile is COMPATIBLE (cipher-suite weakness, even when minTlsVersion is TLS_1_2).
   weakTls() bool
   // Custom features enabled when profile is CUSTOM
   customFeatures []string
@@ -6932,7 +6961,9 @@ private gcp.project.certificateManagerService.certificateMap @defaults("name") {
   createTime time
   // Time the map was last updated
   updateTime time
-  // Output-only list of GCLB target proxies this map is attached to. Each entry is shaped {targetHttpsProxy|targetSslProxy, ipConfigs:[{ipv4Address|ipv6Address, ports:[]}]}
+  // Output-only list of GCLB target proxies this map is attached to
+  //
+  // Each entry is shaped {targetHttpsProxy|targetSslProxy, ipConfigs:[{ipv4Address|ipv6Address, ports:[]}]}.
   gclbTargets []dict
   // Map entries (per-hostname certificate assignments)
   entries() []gcp.project.certificateManagerService.certificateMapEntry
@@ -9445,7 +9476,9 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   name string
   // Display name
   displayName string
-  // Job state (JOB_STATE_QUEUED, JOB_STATE_PENDING, JOB_STATE_RUNNING, JOB_STATE_SUCCEEDED, JOB_STATE_FAILED, JOB_STATE_CANCELLING, JOB_STATE_CANCELLED, JOB_STATE_PAUSED, JOB_STATE_EXPIRED)
+  // Job state
+  //
+  // One of: JOB_STATE_QUEUED, JOB_STATE_PENDING, JOB_STATE_RUNNING, JOB_STATE_SUCCEEDED, JOB_STATE_FAILED, JOB_STATE_CANCELLING, JOB_STATE_CANCELLED, JOB_STATE_PAUSED, JOB_STATE_EXPIRED.
   state string
   // Job spec (worker pool specs, scheduling, etc.)
   jobSpec dict
@@ -9945,9 +9978,13 @@ private gcp.project.dlpService {
   jobTriggers() []gcp.project.dlpService.jobTrigger
   // Stored info types
   storedInfoTypes() []gcp.project.dlpService.storedInfoType
-  // Inspect and risk-analysis jobs (current and historical) — `INSPECT_JOB` runs sensitive-data scans against BigQuery, Cloud Storage, or Datastore; `RISK_ANALYSIS_JOB` analyzes re-identification risk
+  // Inspect and risk-analysis jobs (current and historical)
+  //
+  // `INSPECT_JOB` runs sensitive-data scans against BigQuery, Cloud Storage, or Datastore; `RISK_ANALYSIS_JOB` analyzes re-identification risk.
   dlpJobs() []gcp.project.dlpService.dlpJob
-  // Discovery configurations — schedules that auto-profile BigQuery datasets and Cloud Storage buckets and emit `tableDataProfile` and `fileStoreDataProfile` records
+  // Discovery configurations
+  //
+  // Schedules that auto-profile BigQuery datasets and Cloud Storage buckets and emit `tableDataProfile` and `fileStoreDataProfile` records.
   discoveryConfigs() []gcp.project.dlpService.discoveryConfig
   // Connections to data sources used by discovery (Cloud SQL, AlloyDB)
   connections() []gcp.project.dlpService.connection
@@ -9957,7 +9994,9 @@ private gcp.project.dlpService {
   tableDataProfiles() []gcp.project.dlpService.tableDataProfile
   // Column-level data sensitivity profiles for BigQuery columns — detected infoType, free-text status, and column data type
   columnDataProfiles() []gcp.project.dlpService.columnDataProfile
-  // File-store sensitivity profiles for Cloud Storage buckets — sensitivity score, risk level, infoType summaries, and visibility (the GCS analog of AWS Macie bucket coverage)
+  // File-store sensitivity profiles for Cloud Storage buckets
+  //
+  // Reports sensitivity score, risk level, infoType summaries, and visibility (the GCS analog of AWS Macie bucket coverage).
   fileStoreDataProfiles() []gcp.project.dlpService.fileStoreDataProfile
 }
 
@@ -9978,7 +10017,9 @@ private gcp.project.dlpService.dlpJob @defaults("name type state") {
   state string
   // Resource name of the job trigger that created this job, empty for ad-hoc jobs
   jobTrigger string
-  // Job-type-specific configuration and result details. Keys depend on `type`: INSPECT_JOB has `requestedOptions`, `result`, `inspectDetails`; RISK_ANALYSIS_JOB has `requestedSourceTable`, `requestedPrivacyMetric`, `riskDetails`
+  // Job-type-specific configuration and result details
+  //
+  // Keys depend on `type`: INSPECT_JOB has `requestedOptions`, `result`, `inspectDetails`; RISK_ANALYSIS_JOB has `requestedSourceTable`, `requestedPrivacyMetric`, `riskDetails`.
   details dict
   // Errors encountered while running the job
   errors []dict
@@ -10008,7 +10049,9 @@ private gcp.project.dlpService.discoveryConfig @defaults("name displayName statu
   displayName string
   // Run state: RUNNING or PAUSED
   status string
-  // Resource discovery targets. Keys depend on the target type: BigQuery has `bigQueryTarget` (filter + conditions), Cloud Storage has `cloudStorageTarget`, Cloud SQL has `cloudSqlTarget`
+  // Resource discovery targets
+  //
+  // Keys depend on the target type: BigQuery has `bigQueryTarget` (filter + conditions), Cloud Storage has `cloudStorageTarget`, Cloud SQL has `cloudSqlTarget`.
   targets []dict
   // Errors encountered during recent discovery runs
   errors []dict
@@ -10644,7 +10687,9 @@ private gcp.project.networkSecurityService.tlsInspectionPolicy @defaults("name m
   caPool string
   // Minimum accepted TLS version (TLS_VERSION_UNSPECIFIED, TLS_1_0, TLS_1_1, TLS_1_2, TLS_1_3)
   minTlsVersion string
-  // TLS feature profile constraining the negotiated cipher suites (PROFILE_UNSPECIFIED, PROFILE_COMPATIBLE, PROFILE_MODERN, PROFILE_RESTRICTED, PROFILE_CUSTOM)
+  // TLS feature profile constraining the negotiated cipher suites
+  //
+  // One of: PROFILE_UNSPECIFIED, PROFILE_COMPATIBLE, PROFILE_MODERN, PROFILE_RESTRICTED, PROFILE_CUSTOM.
   tlsFeatureProfile string
   // Custom TLS features negotiated when tlsFeatureProfile is PROFILE_CUSTOM
   customTlsFeatures []string
@@ -11329,7 +11374,9 @@ private gcp.project.datastreamService.stream @defaults("name state") {
   source() gcp.project.datastreamService.connectionProfile
   // Destination connection profile
   destination() gcp.project.datastreamService.connectionProfile
-  // Source configuration variant (oneof: mysqlSourceConfig | postgresqlSourceConfig | oracleSourceConfig | sqlServerSourceConfig | mongodbSourceConfig | salesforceSourceConfig)
+  // Source configuration variant
+  //
+  // Oneof: mysqlSourceConfig | postgresqlSourceConfig | oracleSourceConfig | sqlServerSourceConfig | mongodbSourceConfig | salesforceSourceConfig.
   sourceConfig dict
   // Destination configuration variant (oneof: bigqueryDestinationConfig | gcsDestinationConfig)
   destinationConfig dict

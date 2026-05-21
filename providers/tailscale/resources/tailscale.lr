@@ -54,8 +54,6 @@ tailscale.device @defaults("id hostname os") {
   init(id? string)
   // Legacy identifier for a device
   id string
-  // Preferred identifier for a device (not supported yet)
-  // nodeId string
   // Machine name in the admin console
   hostname string
   // Operating system that the device is running
@@ -127,6 +125,7 @@ tailscale.user @defaults("id displayName type") {
   // Role of the user (owner, member, admin, etc.)
   role string
   // Status of the user
+  //
   //   'active' - Last seen within 28 days
   //   'idle' - Last seen more than 28 days ago
   //   'suspended' - Suspended from accessing the tailnet
@@ -172,7 +171,8 @@ tailscale.aclPolicy @defaults("tailnet") {
   // Per-node attribute grants
   nodeAttrs []dict
   // Users or groups whose advertised exit-node routes are auto-approved
-  // (empty means no users may auto-advertise as exit nodes)
+  //
+  // Empty means no users may auto-advertise as exit nodes.
   autoApproverExitNodes []string
   // Subnet routes that are auto-approved when advertised by listed users/groups (CIDR → owners)
   autoApproverRoutes map[string][]string

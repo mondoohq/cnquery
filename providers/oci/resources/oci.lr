@@ -679,7 +679,9 @@ private oci.network.securityList @defaults("name") {
   created time
   // Security list lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
   state string
-  // Egress security rules for outbound traffic; each entry: {description, stateless, protocol (IANA number, e.g. "6"=TCP, "17"=UDP, "1"=ICMP), destination, destinationType, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}
+  // Egress security rules for outbound traffic
+  //
+  // Each entry: {description, stateless, protocol (IANA number, e.g. "6"=TCP, "17"=UDP, "1"=ICMP), destination, destinationType, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}.
   egressSecurityRules []dict
   // Ingress security rules for inbound traffic; same shape as egressSecurityRules but with source/sourceType instead of destination/destinationType
   ingressSecurityRules []dict
@@ -715,7 +717,9 @@ private oci.network.networkSecurityGroup @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
-  // Ingress security rules; each entry: {direction, protocol (IANA number, e.g. "6"=TCP), description, source, sourceType, isStateless, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}
+  // Ingress security rules
+  //
+  // Each entry: {direction, protocol (IANA number, e.g. "6"=TCP), description, source, sourceType, isStateless, tcpOptions{sourcePortRange{min,max}, destinationPortRange{min,max}}, udpOptions{...}, icmpOptions{type,code}}.
   ingressSecurityRules() []dict
   // Egress security rules; same shape as ingressSecurityRules but with destination/destinationType instead of source/sourceType
   egressSecurityRules() []dict
@@ -876,7 +880,9 @@ private oci.kms.vault @defaults("name") {
   compartmentID string
   // Vault type (DEFAULT, VIRTUAL_PRIVATE, EXTERNAL)
   vaultType string
-  // Lifecycle state (e.g., CREATING, ACTIVE, DELETING, DELETED, PENDING_DELETION, SCHEDULING_DELETION, CANCELLING_DELETION, UPDATING, BACKUP_IN_PROGRESS, RESTORING)
+  // Lifecycle state
+  //
+  // For example: CREATING, ACTIVE, DELETING, DELETED, PENDING_DELETION, SCHEDULING_DELETION, CANCELLING_DELETION, UPDATING, BACKUP_IN_PROGRESS, RESTORING.
   state string
   // Vault management endpoint
   managementEndpoint string
@@ -900,7 +906,9 @@ private oci.kms.key @defaults("name") {
   algorithm string
   // Protection mode (HSM, SOFTWARE, EXTERNAL)
   protectionMode string
-  // Lifecycle state (e.g., CREATING, ENABLING, ENABLED, DISABLING, DISABLED, DELETING, DELETED, PENDING_DELETION, SCHEDULING_DELETION, CANCELLING_DELETION, UPDATING, BACKUP_IN_PROGRESS, RESTORING)
+  // Lifecycle state
+  //
+  // For example: CREATING, ENABLING, ENABLED, DISABLING, DISABLED, DELETING, DELETED, PENDING_DELETION, SCHEDULING_DELETION, CANCELLING_DELETION, UPDATING, BACKUP_IN_PROGRESS, RESTORING.
   state string
   // Whether auto key rotation is enabled
   isAutoRotationEnabled bool
@@ -922,7 +930,9 @@ private oci.kms.keyVersion @defaults("id") {
   compartmentID string
   // Origin of the key material (INTERNAL, EXTERNAL)
   origin string
-  // Lifecycle state (e.g., CREATING, ENABLING, ENABLED, DISABLING, DISABLED, DELETING, DELETED, PENDING_DELETION, SCHEDULING_DELETION, CANCELLING_DELETION)
+  // Lifecycle state
+  //
+  // For example: CREATING, ENABLING, ENABLED, DISABLING, DISABLED, DELETING, DELETED, PENDING_DELETION, SCHEDULING_DELETION, CANCELLING_DELETION.
   state string
   // Whether this version was created by auto-rotation
   isAutoRotated bool
@@ -1139,7 +1149,9 @@ private oci.cloudGuard.detectorRecipe @defaults("name") {
   description string
   // Owner of the detector recipe (CUSTOMER or ORACLE)
   owner string
-  // Type of detector (e.g., IAAS_ACTIVITY_DETECTOR, IAAS_CONFIGURATION_DETECTOR, IAAS_THREAT_DETECTOR, IAAS_LOG_INSIGHT_DETECTOR, IAAS_INSTANCE_SECURITY_DETECTOR, IAAS_CONTAINER_SECURITY_DETECTOR)
+  // Type of detector
+  //
+  // For example: IAAS_ACTIVITY_DETECTOR, IAAS_CONFIGURATION_DETECTOR, IAAS_THREAT_DETECTOR, IAAS_LOG_INSIGHT_DETECTOR, IAAS_INSTANCE_SECURITY_DETECTOR, IAAS_CONTAINER_SECURITY_DETECTOR.
   detectorType string
   // Detector recipe lifecycle state (e.g., CREATING, UPDATING, ACTIVE, INACTIVE, DELETING, DELETED, FAILED)
   state string
@@ -1881,7 +1893,9 @@ private oci.database.backup @defaults("name") {
   backupDestinationType string
   // Size of the source database at backup time, in GBs
   databaseSizeInGBs float
-  // Database edition (STANDARD_EDITION, ENTERPRISE_EDITION, ENTERPRISE_EDITION_HIGH_PERFORMANCE, ENTERPRISE_EDITION_EXTREME_PERFORMANCE, ENTERPRISE_EDITION_DEVELOPER)
+  // Database edition
+  //
+  // One of: STANDARD_EDITION, ENTERPRISE_EDITION, ENTERPRISE_EDITION_HIGH_PERFORMANCE, ENTERPRISE_EDITION_EXTREME_PERFORMANCE, ENTERPRISE_EDITION_DEVELOPER.
   databaseEdition string
   // Database version used by the source database
   version string
@@ -1985,7 +1999,9 @@ private oci.database.dbSystem @defaults("name") {
   nsgIds []string
   // Backup network NSG OCIDs
   backupNetworkNsgIds []string
-  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, UPDATING, TERMINATING, TERMINATED, FAILED, MIGRATED, MAINTENANCE_IN_PROGRESS, NEEDS_ATTENTION, UPGRADING)
+  // Lifecycle state
+  //
+  // For example: PROVISIONING, AVAILABLE, UPDATING, TERMINATING, TERMINATED, FAILED, MIGRATED, MAINTENANCE_IN_PROGRESS, NEEDS_ATTENTION, UPGRADING.
   state string
   // Creation time
   created time
@@ -2047,9 +2063,13 @@ private oci.database.autonomousDatabase @defaults("name") {
   privateEndpointIp string
   // Private endpoint label
   privateEndpointLabel string
-  // Connection URLs for management and user interfaces (SQL Developer Web, APEX, GraphStudio, ORDS, MongoDB, Machine Learning Notebook/User Management, Database Transforms); populated when the database is publicly accessible or reachable via an allowed private endpoint
+  // Connection URLs for management and user interfaces
+  //
+  // Covers SQL Developer Web, APEX, GraphStudio, ORDS, MongoDB, Machine Learning Notebook/User Management, and Database Transforms. Populated when the database is publicly accessible or reachable via an allowed private endpoint.
   connectionUrls dict
-  // Lifecycle state (e.g., PROVISIONING, AVAILABLE, STOPPING, STOPPED, STARTING, TERMINATING, TERMINATED, UNAVAILABLE, RESTORE_IN_PROGRESS, RESTORE_FAILED, BACKUP_IN_PROGRESS, SCALE_IN_PROGRESS, AVAILABLE_NEEDS_ATTENTION, UPDATING, MAINTENANCE_IN_PROGRESS, RESTARTING, RECREATING, ROLE_CHANGE_IN_PROGRESS, UPGRADING, INACCESSIBLE, STANDBY)
+  // Lifecycle state
+  //
+  // For example: PROVISIONING, AVAILABLE, STOPPING, STOPPED, STARTING, TERMINATING, TERMINATED, UNAVAILABLE, RESTORE_IN_PROGRESS, RESTORE_FAILED, BACKUP_IN_PROGRESS, SCALE_IN_PROGRESS, AVAILABLE_NEEDS_ATTENTION, UPDATING, MAINTENANCE_IN_PROGRESS, RESTARTING, RECREATING, ROLE_CHANGE_IN_PROGRESS, UPGRADING, INACCESSIBLE, STANDBY.
   state string
   // Creation time
   created time
@@ -2265,7 +2285,9 @@ private oci.certificates.certificateAuthority @defaults("name") {
   compartmentID string
   // CA kind inferred from configType (ROOT for ROOT_CA_*, SUBORDINATE for SUBORDINATE_CA_*)
   kind string
-  // Configuration origin (ROOT_CA_GENERATED_INTERNALLY, SUBORDINATE_CA_ISSUED_BY_INTERNAL_CA, ROOT_CA_MANAGED_EXTERNALLY, SUBORDINATE_CA_MANAGED_INTERNALLY_ISSUED_BY_EXTERNAL_CA)
+  // Configuration origin
+  //
+  // One of: ROOT_CA_GENERATED_INTERNALLY, SUBORDINATE_CA_ISSUED_BY_INTERNAL_CA, ROOT_CA_MANAGED_EXTERNALLY, SUBORDINATE_CA_MANAGED_INTERNALLY_ISSUED_BY_EXTERNAL_CA.
   configType string
   // Parent CA for subordinate CAs (null for root CAs)
   issuerCertificateAuthority() oci.certificates.certificateAuthority

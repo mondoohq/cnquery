@@ -117,7 +117,9 @@ github.organization @defaults("login name") {
   billingEmail string
   // GitHub plan details (name, seats, filled_seats, private_repos)
   plan dict
-  // Whether two-factor authentication is required for all members. This value will be null if the API token does not have owner access on the organization.
+  // Whether two-factor authentication is required for all members
+  //
+  // This value will be null if the API token does not have owner access on the organization.
   twoFactorRequirementEnabled bool
   // Whether the organization is verified by GitHub
   isVerified bool
@@ -163,8 +165,9 @@ github.organization @defaults("login name") {
   owners() []github.user
   // List of users that are part of the members group
   members() []github.user
-  // List of outside collaborators — users who have access to one or more
-  // repositories in the organization but are not members of the organization
+  // List of outside collaborators
+  //
+  // Users who have access to one or more repositories in the organization but are not members of the organization.
   outsideCollaborators() []github.user
   // List of users that are part of the teams group
   teams() []github.team
@@ -598,7 +601,8 @@ github.packages {
 // `deployments`, `rulesets`, `deployKeys`, `codeowners`, `actionsSettings`,
 // `license`, `spdxSbom`, `secrets`, and `variables`.
 github.repository @defaults("fullName") {
-  init(name string) // can only be used when logged in to github as a user
+  // can only be used when logged in to github as a user
+  init(name string)
   // Repository ID
   id int
   // Repository name
@@ -741,10 +745,12 @@ github.repository @defaults("fullName") {
   secretScanningValidityChecksEnabled bool
   // Whether GitHub code security is enabled
   codeSecurityEnabled bool
-  // Whether Dependabot vulnerability alerts are enabled on the repository.
+  // Whether Dependabot vulnerability alerts are enabled on the repository
+  //
   // Required for `dependabotSecurityUpdatesEnabled` to deliver auto-fix PRs.
   vulnerabilityAlertsEnabled() bool
-  // Whether private vulnerability reporting is enabled on the repository.
+  // Whether private vulnerability reporting is enabled on the repository
+  //
   // When true, security researchers can submit private advisories to maintainers.
   privateVulnerabilityReportingEnabled() bool
   // Whether web-based commit signoff is required

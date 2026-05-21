@@ -19,8 +19,9 @@ alias os.unix.sshd = sshd
 extend asset {
   // Common Platform Enumeration (CPE) for the asset
   cpes() []core.cpe
-  // Advisory & vulnerability report
-  // DEPRECATED: will be removed in version 13.0 (use vulnmgmt instead)
+  // DEPRECATED: Advisory & vulnerability report
+  //
+  // Will be removed in version 13.0 (use vulnmgmt instead).
   vulnerabilityReport() @maturity("deprecated") dict
   // Platform URL in the package URL format (as opposed to the CPE format)
   purl() string
@@ -1043,6 +1044,7 @@ auditd.rules {
 private auditd.rule {}
 
 // auditd (Linux Audit Daemon) rule for a control
+//
 // We translate these into simple key-value pairs consisting of a flag and a value
 // eg: --backlog_wait_time 60000  =>  {flag: "--backlog_wait_time", value: "60000"}
 // eg: -b 8192                    =>  {flag: "-b", value: "8192"}
@@ -1055,6 +1057,7 @@ private auditd.rule.control @defaults("flag value") {
 }
 
 // auditd (Linux Audit Daemon) rule for a file
+//
 // eg: -w /etc/shadow -p rw -k shadow_access
 //  => {path: "/etc/shadow", permissions: "rw", keyname: "shadow_access"}
 private auditd.rule.file @defaults("path permissions") {
@@ -1067,6 +1070,7 @@ private auditd.rule.file @defaults("path permissions") {
 }
 
 // auditd (Linux Audit Daemon) rule for a syscall
+//
 // eg: -a always,exit -F arch=b32 -F auid>=1000 -F auid!=unset
 //  => {
 //    action: "always",
@@ -1474,7 +1478,8 @@ private docker.file.stage @defaults("from.name") {
 private docker.file.arg @defaults("name default") {
   // Name of the variable
   name string
-  // (optional) Default value of the variable.
+  // (optional) Default value of the variable
+  //
   // Values are preserved as-is, without stripping quotes.
   default string
 }
@@ -1484,6 +1489,7 @@ private docker.file.env @defaults("name value") {
   // Name of the variable
   name string
   // Value of the variable
+  //
   // Values are preserved as-is, without stripping quotes.
   value string
 }
@@ -3798,7 +3804,8 @@ openBSMAudit @defaults("path") {
 // Examine computer info, hotfixes, and server / optional features
 windows {
   // A consolidated object of system and operating system properties
-  // see https://learn.microsoft.com/en-us/dotnet/api/microsoft.powershell.commands.computerinfo?view=powershellsdk-1.1.0 for more information
+  //
+  // See https://learn.microsoft.com/en-us/dotnet/api/microsoft.powershell.commands.computerinfo?view=powershellsdk-1.1.0 for more information.
   computerInfo() dict
 
   // Hotfixes installed on the computer
@@ -3893,8 +3900,11 @@ private launchd.job @defaults("label type") {
   programArguments []string
   // Whether the job is disabled
   disabled bool
-  // Keep alive configuration, normalized to: {"enabled": bool} for simple values,
-  // {"enabled": true, "conditions": {...}} for conditional keep-alive, or null if not specified
+  // Keep alive configuration
+  //
+  // Normalized to: {"enabled": bool} for simple values,
+  // {"enabled": true, "conditions": {...}} for conditional keep-alive,
+  // or null if not specified.
   keepAlive dict
   // Working directory
   workingDirectory string
@@ -4056,22 +4066,26 @@ windows.firewall.rule {
   // The group that this rule belongs to
   displayGroup string
   // Whether this rule is administratively enabled or disabled
-  // Values: enabled (1), disabled (2)
+  //
+  // Values: enabled (1), disabled (2).
   enabled int
   // Specifies which direction of traffic to match with this rule
-  // Values: inbound (1), outbound (2)
+  //
+  // Values: inbound (1), outbound (2).
   direction int
   // Specifies the action to take on traffic that matches this rule
   action int
   // Specifies how this firewall rule will handle edge traversal cases
-  // Values: block (0), allow (1), defer to user (2), defer to app (3)
+  //
+  // Values: block (0), allow (1), defer to user (2), defer to app (3).
   edgeTraversalPolicy int
   // Whether to group UDP packets into conversations based on the local address, local port, and remote port
   looseSourceMapping bool
   // Whether to group UDP packets into conversations based only on the local address and port
   localOnlyMapping bool
   // PrimaryStatus provides a high level status value
-  // Values: unknown (0), OK (1), degraded (2), error (3)
+  //
+  // Values: unknown (0), OK (1), degraded (2), error (3).
   primaryStatus int
   // Detailed status of the rule
   status string
@@ -4108,12 +4122,14 @@ windows.bitlocker.volume {
   // Encryption algorithm and key size used on the volume
   encryptionMethod dict
   // Whether the contents of the volume are accessible from Windows
+  //
   // 0 = Full contents of the volume are accessible
   // 1 = All or a portion of the contents of the volume are not accessible
   lockStatus int
   // Persistent identifier for the volume on this system
   persistentVolumeID string
   // Status of the volume, whether or not BitLocker is protecting the volume
+  //
   // 0 = Protection off
   // 1 = Protection on
   // 2 = Protection unknown

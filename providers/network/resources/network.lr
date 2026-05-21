@@ -82,8 +82,11 @@ private http.header.sts @defaults("maxAge includeSubDomains preload") {
   preload bool
 }
 
-// HTTP header X-XSS-Protection, which is now outdated (replaced by CSP)
-// and may even cause security vulnerabilities
+// HTTP header X-XSS-Protection
+//
+// Now outdated (replaced by Content Security Policy) and may even cause
+// security vulnerabilities. Examine `enabled`, `mode`, and `report` to
+// see how a server is configuring the legacy XSS filter.
 private http.header.xssProtection @defaults("enabled mode report") {
   // Whether the header is enabled (Enabled when the header value is set to 1; disabled if set to 0)
   enabled bool

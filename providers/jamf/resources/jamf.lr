@@ -160,7 +160,9 @@ private jamf.computer @defaults("name platform") {
   // Whether enrolled via Automated Device Enrollment
   enrolledViaAutomatedDeviceEnrollment bool
 
-  // FileVault 2 encryption status (e.g., VALID, NOT_APPLICABLE, BOOT_PARTITION_ENCRYPTED, VALID_BUT_DISABLED_BY_USER, INDIVIDUAL_RECOVERY_KEY_USED, PERSONAL_RECOVERY_KEY_REQUIRED, INSTITUTIONAL_RECOVERY_KEY_USED)
+  // FileVault 2 encryption status
+  //
+  // For example: VALID, NOT_APPLICABLE, BOOT_PARTITION_ENCRYPTED, VALID_BUT_DISABLED_BY_USER, INDIVIDUAL_RECOVERY_KEY_USED, PERSONAL_RECOVERY_KEY_REQUIRED, INSTITUTIONAL_RECOVERY_KEY_USED.
   fileVault2Status string
 
   // Whether auto-login is disabled

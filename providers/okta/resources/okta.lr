@@ -168,7 +168,9 @@ private okta.userFactor @defaults("factorType status") {
   lastUpdated time
   // The user this factor belongs to
   user() okta.user
-  // Provider- and factor-type-specific profile data. Shape depends on factorType:
+  // Provider- and factor-type-specific profile data
+  //
+  // Shape depends on factorType:
   //  - sms/call: { phoneNumber }
   //  - push: { name, platform, version, deviceType, ... }
   //  - webauthn: { credentialId, authenticatorName, ... }

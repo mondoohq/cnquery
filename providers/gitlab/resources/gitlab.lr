@@ -85,6 +85,7 @@ gitlab.user @defaults("username name state") {
   // Whether the user has the Auditor role (read-only access across the instance)
   isAuditor() bool
   // Whether the user is marked as external
+  //
   // Externals get read-only access by default and cannot create groups, projects, or namespaces.
   external() bool
   // Whether the user's profile is private
@@ -100,11 +101,13 @@ gitlab.user @defaults("username name state") {
   // Time of the user's current sign-in
   currentSignInAt() time
   // Date of the user's most recent activity (commit, comment, etc.)
+  //
   // The API returns this as a date with no time-of-day component.
   lastActivityOn() time
   // Time when the user's email was confirmed
   confirmedAt() time
   // Administrator note attached to the user account
+  //
   // Often used to record the reason an account is restricted, banned, or kept under review.
   note() string
   // External SSO identities linked to this user (SAML, LDAP, OAuth providers, etc.)
@@ -267,7 +270,9 @@ gitlab.group @defaults("name visibility webURL") {
   auditEvents() []gitlab.group.auditEvent
 }
 
-// GitLab SAML group link - maps an external SAML group/claim value to a GitLab access level.
+// GitLab SAML group link
+//
+// Maps an external SAML group/claim value to a GitLab access level.
 // Available on Premium and Ultimate tiers via /groups/:id/saml_group_links.
 private gitlab.group.samlGroupLink @defaults("name accessLevel provider") {
   // Name of the SAML group / claim value
@@ -280,7 +285,9 @@ private gitlab.group.samlGroupLink @defaults("name accessLevel provider") {
   provider string
 }
 
-// GitLab group audit event - records a security-relevant action against the group.
+// GitLab group audit event
+//
+// Records a security-relevant action against the group.
 // Available on Premium and Ultimate tiers via /groups/:id/audit_events.
 private gitlab.group.auditEvent @defaults("id eventName createdAt") {
   // Audit event ID
@@ -765,7 +772,9 @@ private gitlab.project.pipeline @defaults("id status ref") {
   projectId int
   // Pipeline status (created, waiting_for_resource, preparing, pending, running, success, failed, canceled, skipped, manual, scheduled)
   status string
-  // Pipeline source (push, web, trigger, schedule, api, external, pipeline, chat, webide, merge_request_event, external_pull_request_event, parent_pipeline, ondemand_dast_scan, ondemand_dast_validation)
+  // Pipeline source
+  //
+  // One of: push, web, trigger, schedule, api, external, pipeline, chat, webide, merge_request_event, external_pull_request_event, parent_pipeline, ondemand_dast_scan, ondemand_dast_validation.
   source string
   // Git reference (branch or tag name)
   ref string

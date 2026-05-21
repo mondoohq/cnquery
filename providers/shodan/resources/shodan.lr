@@ -41,12 +41,14 @@ shodan.host @defaults("ip") {
   hostnames() []string
   // Open ports
   ports() []int
-  // DEPRECATED: use vulns() instead.
+  // DEPRECATED: use vulns() instead
+  //
   // CVE IDs sourced from the host-level `vulns` map Shodan returns alongside
   // the host record (flat list, no CVSS metadata).
   vulnerabilities() @maturity("deprecated") []string
-  // Detailed vulnerabilities aggregated from each service banner's `vulns`
-  // map, with the highest CVSS score across banners reporting the same CVE.
+  // Detailed vulnerabilities aggregated from each service banner's `vulns` map
+  //
+  // The highest CVSS score across banners reporting the same CVE is used.
   // May diverge from `vulnerabilities` because the two come from different
   // parts of the Shodan response.
   vulns() []shodan.host.vulnerability
@@ -76,7 +78,9 @@ shodan.host @defaults("ip") {
   isTor() bool
   // True if Shodan tags identify this IP as an open/anonymous proxy
   isProxy() bool
-  // True if any Shodan infrastructure tag matches this IP — cloud, CDN, VPN, proxy, or Tor. Broader-than-datacenter heuristic for spotting non-residential traffic origins.
+  // True if any Shodan infrastructure tag matches this IP
+  //
+  // Matches cloud, CDN, VPN, proxy, or Tor. Broader-than-datacenter heuristic for spotting non-residential traffic origins.
   isInfrastructure() bool
   // Service banners observed on this host
   services() []shodan.host.service

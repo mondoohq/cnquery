@@ -687,7 +687,9 @@ private openstack.image @defaults("id name status visibility") {
   tags []string
   // User-defined metadata
   metadata map[string]string
-  // Free-form image properties; carries Glance signing fields (`img_signature`, `img_signature_hash_method`, `img_signature_key_type`, `img_signature_certificate_uuid`), kernel/ramdisk references, and OS distro hints
+  // Free-form image properties
+  //
+  // Carries Glance signing fields (`img_signature`, `img_signature_hash_method`, `img_signature_key_type`, `img_signature_certificate_uuid`), kernel/ramdisk references, and OS distro hints.
   properties dict
   // Creation timestamp
   createdAt time
@@ -718,7 +720,9 @@ private openstack.keymanager.secret @defaults("id name secretType status") {
   status string
   // Available payload content types (e.g. {"default": "application/octet-stream"})
   contentTypes map[string]string
-  // Full Barbican secret URL; matches the `default_tls_container_ref` / `sni_container_refs` strings used by Octavia listeners (when those point at a secret rather than a container)
+  // Full Barbican secret URL
+  //
+  // Matches the `default_tls_container_ref` / `sni_container_refs` strings used by Octavia listeners (when those point at a secret rather than a container).
   secretRef string
   // Expiration timestamp; null when the secret has no expiry
   expiresAt time
@@ -1155,7 +1159,9 @@ private openstack.qosPolicy @defaults("id name shared isDefault") {
   shared bool
   // Whether the policy is the project's default
   isDefault bool
-  // Rules attached to this policy. Rules are heterogeneous; each entry has a `type` key (`bandwidth_limit`, `dscp_marking`, `minimum_bandwidth`, `packet_rate_limit`) plus the type-specific fields (e.g. `max_kbps`, `dscp_mark`, `min_kbps`).
+  // Rules attached to this policy
+  //
+  // Rules are heterogeneous; each entry has a `type` key (`bandwidth_limit`, `dscp_marking`, `minimum_bandwidth`, `packet_rate_limit`) plus the type-specific fields (e.g. `max_kbps`, `dscp_mark`, `min_kbps`).
   rules []dict
   // Tags
   tags []string
@@ -1558,7 +1564,9 @@ private openstack.image.member @defaults("memberId imageId status") {
   project() openstack.project
 }
 
-// OpenStack Keystone application credential. Long-lived authentication credential for service principals (often used by automation), scoped to a single project with a subset of the owning user's roles.
+// OpenStack Keystone application credential
+//
+// Long-lived authentication credential for service principals (often used by automation), scoped to a single project with a subset of the owning user's roles.
 private openstack.applicationCredential @defaults("id name unrestricted expiresAt") {
   init(id? string)
   // Application credential ID (UUID)
@@ -1567,7 +1575,9 @@ private openstack.applicationCredential @defaults("id name unrestricted expiresA
   name string
   // Description
   description string
-  // Whether the credential can use restricted operations (creating other credentials or trusts). Unrestricted credentials are equivalent to long-lived tokens for the scoped roles and should be reviewed closely.
+  // Whether the credential can use restricted operations
+  //
+  // True when the credential is allowed to create other credentials or trusts. Unrestricted credentials are equivalent to long-lived tokens for the scoped roles and should be reviewed closely.
   unrestricted bool
   // Owning user ID
   userId string
@@ -1585,7 +1595,9 @@ private openstack.applicationCredential @defaults("id name unrestricted expiresA
   project() openstack.project
 }
 
-// OpenStack Nova host aggregate. Admin-defined grouping of compute hosts, commonly used as a building block for availability zones or to expose pinned scheduling capabilities.
+// OpenStack Nova host aggregate
+//
+// Admin-defined grouping of compute hosts, commonly used as a building block for availability zones or to expose pinned scheduling capabilities.
 private openstack.compute.aggregate @defaults("id name availabilityZone hostCount") {
   init(id? int)
   // Aggregate ID (Nova-assigned integer)
@@ -1608,7 +1620,9 @@ private openstack.compute.aggregate @defaults("id name availabilityZone hostCoun
   deleted bool
 }
 
-// OpenStack Nova compute limits and usage for the scoped project. Reports both the configured maximum (`max*`) and the current usage (`*Used`) for each tracked resource. Limits without a usage counter are admin-set caps only.
+// OpenStack Nova compute limits and usage for the scoped project
+//
+// Reports both the configured maximum (`max*`) and the current usage (`*Used`) for each tracked resource. Limits without a usage counter are admin-set caps only.
 private openstack.compute.limits @defaults("maxTotalInstances totalInstancesUsed maxTotalCores totalCoresUsed maxTotalRAMSize totalRAMUsed") {
   // Project the limits report applies to
   projectId string

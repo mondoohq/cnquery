@@ -65,8 +65,9 @@ private microsoft.identityAndAccess.accessReviewDefinition @defaults("id display
   id string
   // The display name for the access review
   displayName string
-  // The status of the access review. Possible values are:
-  // Initializing, NotStarted, Starting, InProgress, Completing, Completed, AutoReviewing, and AutoReviewed
+  // The status of the access review
+  //
+  // Possible values are: Initializing, NotStarted, Starting, InProgress, Completing, Completed, AutoReviewing, and AutoReviewed.
   status string
   // Defines the entities whose access is reviewed
   scope microsoft.identityAndAccess.accessReviewDefinition.scope
@@ -319,6 +320,7 @@ microsoft.identityAndAccess.privilegedIdentityManagement.policies {
   []microsoft.identityAndAccess.privilegedIdentityManagement.policy
   init(filter? string)
   // Filter by scopeId and scopeType
+  //
   // e.g., "scopeId eq '/' and scopeType eq 'Directory'"
   filter string
 }
@@ -495,8 +497,9 @@ private microsoft.user.licenseDetail @defaults("skuId skuPartNumber") {
 private microsoft.user.licenseDetail.servicePlanInfo @defaults("appliesTo provisioningStatus servicePlanName") {
   // The object the service plan can be assigned to. The possible values are: User or Company
   appliesTo string
-  // The provisioning status of the service plan. The possible values are:
-  // Success, Disabled, Error, PendingInput, PendingActivation, PendingProvisioning
+  // The provisioning status of the service plan
+  //
+  // The possible values are: Success, Disabled, Error, PendingInput, PendingActivation, PendingProvisioning.
   provisioningStatus string
   // The unique identifier of the service plan
   servicePlanId string
@@ -596,7 +599,9 @@ private microsoft.conditionalAccess.policy.conditions @defaults("id applications
   applications microsoft.conditionalAccess.policy.conditions.applications
   // Authentication flows included in the policy scope
   authenticationFlows microsoft.conditionalAccess.policy.conditions.authenticationFlows
-  // Client applications (service principals and workload identities) included in and excluded from the policy. Either users or clientApplications is required.
+  // Client applications (service principals and workload identities) included in and excluded from the policy
+  //
+  // Either users or clientApplications is required.
   clientApplications microsoft.conditionalAccess.policy.conditions.clientApplications
   // Client application types included in the policy
   clientAppTypes []string
@@ -632,9 +637,13 @@ private microsoft.conditionalAccess.policy.grantControls.authenticationStrength 
   displayName string
   // The human-readable description of this policy
   description string
-  // A descriptor if this policy is built into Microsoft Entra ID or created by an admin for the tenant. The possible values are: builtIn, custom, unknownFutureValue.
+  // A descriptor if this policy is built into Microsoft Entra ID or created by an admin for the tenant
+  //
+  // The possible values are: builtIn, custom, unknownFutureValue.
   policyType string
-  // A descriptor if this authentication strength grants the MFA claim upon successful satisfaction. The possible values are: none, mfa, unknownFutureValue.
+  // A descriptor if this authentication strength grants the MFA claim upon successful satisfaction
+  //
+  // The possible values are: none, mfa, unknownFutureValue.
   requirementsSatisfied string
   // The time when this policy was created
   createdDateTime time
@@ -646,6 +655,8 @@ private microsoft.conditionalAccess.policy.grantControls.authenticationStrength 
 private microsoft.conditionalAccess.policy.sessionControls.signInFrequency @defaults("authenticationType isEnabled") {
   // The possible values are primaryAndSecondaryAuthentication, secondaryAuthentication, unknownFutureValue.
   authenticationType string
+  // The frequency interval type
+  //
   // The possible values are timeBased, everyTime, unknownFutureValue. Sign-in frequency of everyTime is available for risky users, risky sign-ins, and Intune device enrollment.
   frequencyInterval string
   // Specifies whether the session control is enabled.
@@ -720,7 +731,9 @@ private microsoft.conditionalAccess.policy.conditions.users @defaults("includeUs
   excludeRoles []string
 }
 
-// Locations included in and excluded from the scope of a Microsoft Entra Conditional Access policy. Locations can be countries and regions or IP addresses.
+// Locations included in and excluded from a Conditional Access policy
+//
+// Examine which named locations a Microsoft Entra Conditional Access policy applies to (or excludes). Locations can be countries and regions or IP addresses.
 private microsoft.conditionalAccess.policy.conditions.locations @defaults("includeLocations excludeLocations") {
   // Location IDs in scope of policy unless explicitly excluded, All, or AllTrusted
   includeLocations []string
@@ -734,7 +747,9 @@ private microsoft.conditionalAccess.policy.grantControls @defaults("id") {
   id string
   // Defines the relationship of the grant controls. Possible values: AND, OR.
   operator string
-  // List of values of built-in controls required by the policy. Possible values: block, mfa, compliantDevice, domainJoinedDevice, approvedApplication, compliantApplication, passwordChange, unknownFutureValue.
+  // List of values of built-in controls required by the policy
+  //
+  // Possible values: block, mfa, compliantDevice, domainJoinedDevice, approvedApplication, compliantApplication, passwordChange, unknownFutureValue.
   builtInControls []string
   // The authentication strength required by the conditional access policy (Optional)
   authenticationStrength microsoft.conditionalAccess.policy.grantControls.authenticationStrength
@@ -987,9 +1002,13 @@ private microsoft.user.authenticationMethods.userRegistrationDetails @defaults("
   isSsprCapable bool
   // True if the user is allowed to perform self-service password reset by policy, even if they have not yet registered the required number of methods
   isSsprEnabled bool
-  // True if the user has registered the required number of authentication methods for self-service password reset, regardless of whether they are enabled for by policy
+  // True if the user has registered the required number of authentication methods for self-service password reset
+  //
+  // Reported regardless of whether they are enabled by policy.
   isSsprRegistered bool
-  // True if system-preferred authentication is enabled, which allows the system to dynamically determine the most secure authentication method for the user
+  // True if system-preferred authentication is enabled
+  //
+  // Allows the system to dynamically determine the most secure authentication method for the user.
   isSystemPreferredAuthenticationMethodEnabled bool
   // The date and time when the user's registration details were last updated
   lastUpdatedDateTime time
@@ -1289,7 +1308,9 @@ microsoft.application @defaults("id name hasExpiredCredentials") {
   publicClient dict
   // Application roles
   appRoles []microsoft.application.role
-  // API permissions the application requests, grouped by resource API — the configured permissions, distinct from what has actually been consented on the service principal
+  // API permissions the application requests, grouped by resource API
+  //
+  // The configured permissions, distinct from what has actually been consented on the service principal.
   requiredResourceAccess []dict
 }
 
@@ -1598,9 +1619,13 @@ microsoft.security.alert @defaults("title severity status category") {
   status string
   // Analyst classification (unknown, falsePositive, truePositive, informationalExpectedActivity)
   classification string
-  // Analyst determination (unknown, apt, malware, securityPersonnel, securityTesting, unwantedSoftware, other, multiStagedAttack, compromisedAccount, phishing, maliciousUserActivity, notMalicious, notEnoughDataToValidate, confirmedActivity, lineOfBusinessApplication)
+  // Analyst determination
+  //
+  // One of: unknown, apt, malware, securityPersonnel, securityTesting, unwantedSoftware, other, multiStagedAttack, compromisedAccount, phishing, maliciousUserActivity, notMalicious, notEnoughDataToValidate, confirmedActivity, lineOfBusinessApplication.
   determination string
-  // Defender service that generated the alert (microsoftDefenderForEndpoint, microsoftDefenderForIdentity, microsoftDefenderForCloudApps, microsoftDefenderForOffice365, microsoft365Defender, aadIdentityProtection, microsoftAppGovernance, dataLossPrevention)
+  // Defender service that generated the alert
+  //
+  // One of: microsoftDefenderForEndpoint, microsoftDefenderForIdentity, microsoftDefenderForCloudApps, microsoftDefenderForOffice365, microsoft365Defender, aadIdentityProtection, microsoftAppGovernance, dataLossPrevention.
   serviceSource string
   // Detection technology or sensor that surfaced the alert
   detectionSource string
@@ -1660,7 +1685,9 @@ microsoft.security.incident @defaults("displayName severity status") {
   status string
   // Analyst classification (unknown, falsePositive, truePositive, informationalExpectedActivity)
   classification string
-  // Analyst determination (unknown, apt, malware, securityPersonnel, securityTesting, unwantedSoftware, other, multiStagedAttack, compromisedAccount, phishing, maliciousUserActivity, notMalicious, notEnoughDataToValidate, confirmedActivity, lineOfBusinessApplication)
+  // Analyst determination
+  //
+  // One of: unknown, apt, malware, securityPersonnel, securityTesting, unwantedSoftware, other, multiStagedAttack, compromisedAccount, phishing, maliciousUserActivity, notMalicious, notEnoughDataToValidate, confirmedActivity, lineOfBusinessApplication.
   determination string
   // Owner the incident is assigned to
   assignedTo string
@@ -1804,7 +1831,8 @@ private microsoft.externalIdentitiesPolicy @defaults("displayName allowExternalI
   displayName string
   // Policy description
   description string
-  // Defines whether external users can leave the guest tenant. 
+  // Defines whether external users can leave the guest tenant
+  //
   // If set to false, self-service controls are disabled, and the admin must manually remove the external user.
   allowExternalIdentitiesToLeave bool
 }
@@ -1822,8 +1850,9 @@ microsoft.policies.activityBasedTimeoutPolicy @defaults("displayName isOrganizat
   displayName string
   // Policy definition
   definition []string
-  // If set to true, activates this policy. There can be many policies for the same policy 
-  // type, but only one can be activated as the organization default.
+  // If set to true, activates this policy
+  //
+  // There can be many policies for the same policy type, but only one can be activated as the organization default.
   isOrganizationDefault bool
 }
 
@@ -1895,7 +1924,9 @@ private microsoft.systemCredentialPreferences @defaults("state") {
 private microsoft.crossTenantAccessPolicyDefault @defaults("isServiceDefault automaticUserConsentSettings inboundTrust") {
   // True if the default configuration is inherited from the service default. False if the default configuration has been customized.
   isServiceDefault bool
-  // Determines the default configuration for automatic user consent settings. Controls if users consent automatically to apps on behalf of users in other tenants.
+  // Determines the default configuration for automatic user consent settings
+  //
+  // Controls if users consent automatically to apps on behalf of users in other tenants.
   automaticUserConsentSettings() microsoft.crossTenantAccessPolicyDefault.automaticUserConsentSettings
   // Defines your default configuration for users from other organizations accessing your resources via Microsoft Entra B2B collaboration.
   b2bCollaborationInbound() microsoft.crossTenantAccessPolicyDefault.b2bSetting
@@ -2135,7 +2166,9 @@ private microsoft.devicemanagement.manageddevice {
   windowsProtectionState dict
   // Compliance state of the device (compliant, noncompliant, conflict, error, unknown, notApplicable)
   complianceState string
-  // Device registration state (notRegistered, registered, revoked, keyConflict, approvalPending, certificateReset, notRegisteredPendingEnrollment, unknown)
+  // Device registration state
+  //
+  // One of: notRegistered, registered, revoked, keyConflict, approvalPending, certificateReset, notRegisteredPendingEnrollment, unknown.
   deviceRegistrationState string
   // Management agent type (eas, mdm, easMdm, intuneClient, easIntuneClient, configurationManagerClient, etc.)
   managementAgent string
@@ -2147,9 +2180,13 @@ private microsoft.devicemanagement.manageddevice {
   totalStorageSpaceInBytes int
   // Date and time that the device was enrolled
   enrolledDateTime time
-  // Device enrollment type (unknown, userEnrollment, deviceEnrollmentManager, appleBulkWithUser, appleBulkWithoutUser, windowsAzureADJoin, windowsBulkUserless, windowsAutoEnrollment, windowsBulkAzureDomainJoin, windowsCoManagement, etc.)
+  // Device enrollment type
+  //
+  // For example: unknown, userEnrollment, deviceEnrollmentManager, appleBulkWithUser, appleBulkWithoutUser, windowsAzureADJoin, windowsBulkUserless, windowsAutoEnrollment, windowsBulkAzureDomainJoin, windowsCoManagement.
   deviceEnrollmentType string
-  // Threat state reported by a Mobile Threat Defense partner (unknown, activated, deactivated, secured, lowSeverity, mediumSeverity, highSeverity, unresponsive, compromised, misconfigured)
+  // Threat state reported by a Mobile Threat Defense partner
+  //
+  // One of: unknown, activated, deactivated, secured, lowSeverity, mediumSeverity, highSeverity, unresponsive, compromised, misconfigured.
   partnerReportedThreatState string
   // Phone number of the device
   phoneNumber string

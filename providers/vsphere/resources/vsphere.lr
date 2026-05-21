@@ -216,9 +216,9 @@ private vsphere.identitysource @defaults("name type") {
 // trustAuthority, nativeKeyProvider, externalKeyProvider), and `servers`
 // lists each KMS server entry. Iterate from `vsphere.kmsClusters`.
 private vsphere.kmsCluster @defaults("clusterId useAsDefault managementType") {
-  // Cluster identifier — also the vCenter-visible name (KmipClusterInfo has no
-  // separate display name; the ID you set when registering the cluster is what
-  // appears in the UI).
+  // Cluster identifier — also the vCenter-visible name
+  //
+  // KmipClusterInfo has no separate display name; the ID you set when registering the cluster is what appears in the UI.
   clusterId string
   // Whether this cluster is the vCenter default for new encryption keys
   useAsDefault bool
@@ -792,7 +792,9 @@ private vsphere.vm @defaults("moid name") {
   powerState string
   // Free-form description / notes set on the VM
   annotation string
-  // When the VM was created. vCenter may not report this for VMs created before vSphere 6.7 or for templates; in those cases the field is the zero time (0001-01-01).
+  // When the VM was created
+  //
+  // vCenter may not report this for VMs created before vSphere 6.7 or for templates; in those cases the field is the zero time (0001-01-01).
   createDate time
   // Number of snapshots in the VM's snapshot tree (0 if none)
   numSnapshots int
@@ -804,7 +806,9 @@ private vsphere.vm @defaults("moid name") {
   guestIpAddress string
   // Hostname reported by VMware Tools (only meaningful when Tools is running)
   guestHostname string
-  // ESXi host the VM is currently registered on, resolved against vsphere.datacenters[].hosts; null when the VM is unregistered or the host is missing from inventory
+  // ESXi host the VM is currently registered on
+  //
+  // Resolved against vsphere.datacenters[].hosts; null when the VM is unregistered or the host is missing from inventory.
   host() vsphere.host
   // Datastores backing the VM's files, resolved against vsphere.datacenters[].datastores
   datastores() []vsphere.datastore
@@ -843,7 +847,9 @@ private vsphere.vm.cdrom @defaults("label backingType connected") {
   key int
   // Device label (e.g., "CD/DVD drive 1")
   label string
-  // Backing variant: iso (file on a datastore), atapi (host ATAPI passthrough), passthrough (host CD/DVD), remoteAtapi, remotePassthrough, or empty for an unknown backing
+  // Backing variant
+  //
+  // One of iso (file on a datastore), atapi (host ATAPI passthrough), passthrough (host CD/DVD), remoteAtapi, remotePassthrough, or empty for an unknown backing.
   backingType string
   // ISO file path in datastore-bracket form (e.g. "[datastore1] isos/install.iso"); empty unless backingType is iso
   isoPath string
@@ -853,7 +859,9 @@ private vsphere.vm.cdrom @defaults("label backingType connected") {
   connectedAtPowerOn bool
   // Whether the guest OS can connect / disconnect this device at runtime
   allowGuestControl bool
-  // Datastore backing the ISO file, resolved against vsphere.datacenters[].datastores; null when the backing isn't ISO-on-datastore or the datastore isn't visible in inventory
+  // Datastore backing the ISO file
+  //
+  // Resolved against vsphere.datacenters[].datastores. Null when the backing isn't ISO-on-datastore or the datastore isn't visible in inventory.
   datastore() vsphere.datastore
 }
 
@@ -888,11 +896,15 @@ private vsphere.vm.networkAdapter @defaults("label adapterType macAddress connec
   wakeOnLan bool
   // Backing variant: network (standard portgroup by name), dvs (distributed port group), opaque (NSX-T logical switch), or empty for unknown
   backingType string
-  // Network or portgroup name (human-readable). Populated for standard portgroup backings (`backingType == "network"`) and opaque-network backings; empty for DVS backings — use `portGroupMoid` to identify the port group instead.
+  // Network or portgroup name (human-readable)
+  //
+  // Populated for standard portgroup backings (`backingType == "network"`) and opaque-network backings; empty for DVS backings — use `portGroupMoid` to identify the port group instead.
   portGroupName string
   // DistributedVirtualSwitchPortConnection.PortgroupKey (the moid of the distributed port group); empty for standard portgroup or opaque backings
   portGroupMoid string
-  // Distributed port group the adapter is connected to, resolved against vsphere.datacenters[].distributedPortGroups; null for standard portgroup or opaque backings, or when the port group isn't visible in inventory
+  // Distributed port group the adapter is connected to
+  //
+  // Resolved against vsphere.datacenters[].distributedPortGroups. Null for standard portgroup or opaque backings, or when the port group isn't visible in inventory.
   portGroup() vsphere.vswitch.portgroup
 }
 
@@ -981,13 +993,17 @@ private vsphere.vm.disk @defaults("label capacityBytes diskMode") {
   key int
   // Device label (e.g., "Hard disk 1")
   label string
-  // Backing variant: flatVer2 (regular VMFS .vmdk), rdmV1 (raw device mapping), sparseVer2, seSparse (linked clone delta), or empty when an unknown backing is in use
+  // Backing variant
+  //
+  // One of flatVer2 (regular VMFS .vmdk), rdmV1 (raw device mapping), sparseVer2, seSparse (linked clone delta), or empty when an unknown backing is in use.
   backingType string
   // VMDK file path in datastore-bracket form (e.g. "[datastore1] vm/vm.vmdk")
   fileName string
   // Disk capacity in bytes
   capacityBytes int
-  // Persistence mode (persistent, independent_persistent, independent_nonpersistent, nonpersistent, undoable, append). Independent disks are excluded from snapshots.
+  // Persistence mode
+  //
+  // One of persistent, independent_persistent, independent_nonpersistent, nonpersistent, undoable, or append. Independent disks are excluded from snapshots.
   diskMode string
   // Whether the disk is thin-provisioned (only meaningful for flatVer2 backing)
   thinProvisioned bool
@@ -1001,7 +1017,9 @@ private vsphere.vm.disk @defaults("label capacityBytes diskMode") {
   uuid string
   // Encryption key wrapping this disk, resolved lazily; null when the disk is not encrypted
   encryptionKey() vsphere.encryptionKey
-  // Datastore backing this disk, resolved against vsphere.datacenters[].datastores; null when the backing has no datastore (e.g., RDM with passthrough) or the datastore isn't visible in inventory
+  // Datastore backing this disk
+  //
+  // Resolved against vsphere.datacenters[].datastores. Null when the backing has no datastore (e.g., RDM with passthrough) or the datastore isn't visible in inventory.
   datastore() vsphere.datastore
 }
 
@@ -1077,7 +1095,9 @@ private vsphere.vswitch.standard.portgroup @defaults("name vlanId vSwitchName") 
   name string
   // Name of the parent standard vSwitch this port group is attached to
   vSwitchName string
-  // VLAN tag carried on this port group's traffic. 0 means untagged (native VLAN); 4095 means VLAN trunking (the port group sees frames for all VLANs); any other value is a single tag.
+  // VLAN tag carried on this port group's traffic
+  //
+  // 0 means untagged (native VLAN); 4095 means VLAN trunking (the port group sees frames for all VLANs); any other value is a single tag.
   vlanId int
   // Effective layer-2 security policy after merging any port-group override with the parent vSwitch's policy
   securityPolicySettings() vsphere.vswitch.securityPolicy
@@ -1119,9 +1139,13 @@ private vsphere.vswitch.portgroup @defaults("name vlanId") {
   moid string
   // Port group name
   name string
-  // Generated dict view of the port-group config (DefaultPortConfig, policy overrides, etc.); use the typed `*PolicySettings` methods for audit-friendly access.
+  // Generated dict view of the port-group config
+  //
+  // Covers DefaultPortConfig, policy overrides, etc. Use the typed `*PolicySettings` methods for audit-friendly access.
   properties dict
-  // VLAN tag carried on this port group's traffic. 0 means untagged; non-zero is a single tag. For VLAN trunking or PVLAN configurations vlanId is reported as 0 — inspect `properties` for the full VLAN spec.
+  // VLAN tag carried on this port group's traffic
+  //
+  // 0 means untagged; non-zero is a single tag. For VLAN trunking or PVLAN configurations vlanId is reported as 0 — inspect `properties` for the full VLAN spec.
   vlanId int
   // Layer-2 security policy from the port group's DefaultPortConfig
   securityPolicySettings() vsphere.vswitch.securityPolicy
@@ -1142,11 +1166,17 @@ private vsphere.vswitch.portgroup @defaults("name vlanId") {
 // hardening benchmarks typically require all three to be false on production
 // port groups. Accessed via `securityPolicySettings` on vSwitch/portgroup.
 private vsphere.vswitch.securityPolicy @defaults("allowPromiscuous allowForgedTransmits allowMacChanges") {
-  // Whether a guest VM on this port can put its NIC in promiscuous mode and observe traffic destined for other ports on the segment. CIS hardening typically requires this be false on production port groups.
+  // Whether a guest VM on this port can put its NIC in promiscuous mode
+  //
+  // When true, the NIC can observe traffic destined for other ports on the segment. CIS hardening typically requires this be false on production port groups.
   allowPromiscuous bool
-  // Whether the guest may transmit frames with a source MAC different from the one assigned by ESXi. When false, the host silently drops mismatched frames.
+  // Whether the guest may transmit frames with a source MAC different from the one assigned by ESXi
+  //
+  // When false, the host silently drops mismatched frames.
   allowForgedTransmits bool
-  // Whether the guest may change the effective MAC of its NIC at runtime (away from the initial MAC assignment). When false, the host drops frames after a guest-initiated MAC change.
+  // Whether the guest may change the effective MAC of its NIC at runtime
+  //
+  // Away from the initial MAC assignment. When false, the host drops frames after a guest-initiated MAC change.
   allowMacChanges bool
 }
 
@@ -1207,7 +1237,9 @@ private vsphere.vmnic @defaults("name mac linkSpeedMb") {
   name string
   // Raw output of `esxcli network nic list` for this device, as a dict
   properties dict
-  // Output of `esxcli network nic get` for this device — driver, advertised auto-negotiation modes, VMDirectPath capability, virtual address. Lazy-loaded; one ESXCli call per access.
+  // Output of `esxcli network nic get` for this device
+  //
+  // Reports driver, advertised auto-negotiation modes, VMDirectPath capability, and virtual address. Lazy-loaded; one ESXCli call per access.
   details() dict
   // 802.3x (Ethernet flow-control) pause-frame parameters reported by the driver
   pauseParams dict
@@ -1252,11 +1284,17 @@ private vsphere.vmknic @defaults("name portGroupName tcpipStack") {
   tcpipStack string
   // Whether the VMkernel NIC's IPv4 address is provided by DHCP (false when statically configured)
   dhcp bool
-  // Standard-vSwitch port group the VMkernel NIC is attached to; empty when bound to a DVS port group instead — exactly one of `portGroupName` / `portGroupMoid` is populated.
+  // Standard-vSwitch port group the VMkernel NIC is attached to
+  //
+  // Empty when bound to a DVS port group instead — exactly one of `portGroupName` / `portGroupMoid` is populated.
   portGroupName string
-  // Encoded ManagedObjectReference of the DistributedVirtualPortgroup the VMkernel NIC is attached to; empty when bound to a standard-vSwitch port group instead.
+  // Encoded ManagedObjectReference of the DistributedVirtualPortgroup the VMkernel NIC is attached to
+  //
+  // Empty when bound to a standard-vSwitch port group instead.
   portGroupMoid string
-  // Host services this VMkernel NIC currently carries. Possible values: `management`, `vmotion`, `vsan`, `faultToleranceLogging`, `vSphereReplication`, `vSphereReplicationNFC`, `vSphereProvisioning`, `vSphereBackupNFC`, `ptp`. Empty when the NIC carries no managed services.
+  // Host services this VMkernel NIC currently carries
+  //
+  // Possible values: `management`, `vmotion`, `vsan`, `faultToleranceLogging`, `vSphereReplication`, `vSphereReplicationNFC`, `vSphereProvisioning`, `vSphereBackupNFC`, `ptp`. Empty when the NIC carries no managed services.
   services []string
 }
 

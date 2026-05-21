@@ -104,6 +104,7 @@ proxmox.node @defaults("name status") {
   ip string
 
   // --- Hardware ---
+
   // CPU model name
   cpuModel string
   // Number of CPU sockets
@@ -124,6 +125,7 @@ proxmox.node @defaults("name status") {
   swapUsed int
 
   // --- System ---
+
   // Running kernel version
   kernelVersion string
   // PVE manager version
@@ -132,44 +134,54 @@ proxmox.node @defaults("name status") {
   uptime int
 
   // --- Network ---
+
   // Network interfaces (bridges, bonds, physical)
   networks() []proxmox.network
   // DNS configuration
   dns() proxmox.dns
 
   // --- Services ---
+
   // systemd services
   services() []proxmox.service
 
   // --- Time ---
+
   // Configured timezone
   timezone string
 
   // --- Storage ---
+
   // Storage pools available on this node
   storages() []proxmox.storage
 
   // --- Certificates ---
+
   // TLS/SSL certificates
   certificates() []proxmox.certificate
 
   // --- Subscription ---
+
   // Proxmox subscription status
   subscription() proxmox.subscription
 
   // --- Repositories ---
+
   // APT repositories configured on this node
   repositories() []proxmox.repository
 
   // --- Updates ---
+
   // Available package updates
   updates() []proxmox.node.update
 
   // --- Firewall ---
+
   // Node-level firewall rules
   firewallRules() []proxmox.firewall.rule
 
   // --- VMs ---
+
   // VMs running on this node
   vms() []proxmox.vm
 }
@@ -215,6 +227,7 @@ proxmox.vm @defaults("id name status") {
   status string
 
   // --- Resource usage ---
+
   // Current CPU usage (fraction)
   cpu float
   // Number of configured vCPUs
@@ -241,6 +254,7 @@ proxmox.vm @defaults("id name status") {
   template bool
 
   // --- Configuration (lazy-loaded via separate API call) ---
+
   // Full VM configuration as dictionary
   config() dict
   // OS type (l26, win10, etc.)
@@ -261,20 +275,24 @@ proxmox.vm @defaults("id name status") {
   tags() []string
 
   // --- Devices ---
+
   // Network interfaces attached to the VM
   networks() []proxmox.vm.network
   // Disk devices attached to the VM
   disks() []proxmox.vm.disk
 
   // --- Snapshots ---
+
   // VM snapshots
   snapshots() []proxmox.vm.snapshot
 
   // --- Firewall ---
+
   // VM-level firewall rules
   firewallRules() []proxmox.firewall.rule
 
   // --- Updates (via QEMU Guest Agent) ---
+
   // Installed packages and available updates
   updates() []proxmox.vm.update
 }

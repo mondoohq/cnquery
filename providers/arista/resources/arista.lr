@@ -603,13 +603,16 @@ private arista.eos.snmpCommunity @defaults("name access acl") {
   name string
   // Access mode: "ro" (read-only) or "rw" (read-write)
   access string
-  // Access-list name applied to this community (empty = no ACL). When
-  // `ipv6` is true this is an IPv6 access-list; otherwise IPv4.
+  // Access-list name applied to this community
+  //
+  // Empty = no ACL. When `ipv6` is true this is an IPv6 access-list;
+  // otherwise IPv4.
   acl string
   // Typed reference to the access-list ACL applied to this community
   aclResource() arista.eos.acl
-  // Whether the community line declares an IPv6 ACL (via the `ipv6`
-  // keyword in `snmp-server community <name> ro ipv6 <acl6>`)
+  // Whether the community line declares an IPv6 ACL
+  //
+  // Set via the `ipv6` keyword in `snmp-server community <name> ro ipv6 <acl6>`.
   ipv6 bool
 }
 
@@ -677,8 +680,7 @@ private arista.eos.ntpAuthKey @defaults("id hashAlgo trusted") {
   id int
   // Hash algorithm (md5, sha1, sha256, sha384, sha512). md5 is weak.
   hashAlgo string
-  // Whether this key ID appears in `ntp trusted-key` and is therefore
-  // actually used for authenticating servers
+  // Whether this key ID appears in `ntp trusted-key` and is therefore actually used for authenticating servers
   trusted bool
 }
 

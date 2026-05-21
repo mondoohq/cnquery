@@ -121,7 +121,9 @@ azure.subscription @defaults ("name") {
   eventGrid() azure.subscription.eventGridService
   // API Management resources in the subscription
   apiManagement() azure.subscription.apiManagementService
-  // Microsoft Purview resources in the subscription — the data-governance and sensitive-data-discovery service (the Azure analog of AWS Macie / GCP Cloud DLP)
+  // Microsoft Purview resources in the subscription
+  //
+  // The data-governance and sensitive-data-discovery service (the Azure analog of AWS Macie / GCP Cloud DLP).
   purview() azure.subscription.purviewService
   // Azure AI Search resources in the subscription
   search() azure.subscription.searchService
@@ -287,7 +289,9 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   computerName string
   // VM admin username
   adminUsername string
-  // Azure Hybrid Benefit license type. Null if using standard Azure licensing. Possible values: "Windows_Client", "Windows_Server", "RHEL_BYOS", "SLES_BYOS"
+  // Azure Hybrid Benefit license type
+  //
+  // Null if using standard Azure licensing. Possible values: "Windows_Client", "Windows_Server", "RHEL_BYOS", "SLES_BYOS".
   licenseType string
   // ID of the resource that manages this VM (e.g. VMSS ARM resource ID)
   managedBy string
@@ -1643,7 +1647,9 @@ private azure.subscription.networkService.virtualNetworkGateway.connection.ipsec
   ipsecIntegrity string
   // Diffie-Hellman group used in IKE Phase 1 (one of: "None", "DHGroup1", "DHGroup2", "DHGroup14", "DHGroup24", "DHGroup2048", "ECP256", "ECP384")
   dhGroup string
-  // Diffie-Hellman group used for perfect forward secrecy in IKE Phase 2 (one of: "None", "PFS1", "PFS2", "PFS14", "PFS24", "PFS2048", "PFSMM", "ECP256", "ECP384")
+  // Diffie-Hellman group used for perfect forward secrecy in IKE Phase 2
+  //
+  // One of: "None", "PFS1", "PFS2", "PFS14", "PFS24", "PFS2048", "PFSMM", "ECP256", "ECP384".
   pfsGroup string
   // IPsec security association (Phase 2) lifetime, in seconds
   saLifeTimeSeconds int
@@ -2377,7 +2383,9 @@ private azure.subscription.networkService.privateLinkService @defaults("id name 
   visibilitySubscriptions []string
   // Subscription IDs whose connection requests are auto-approved
   autoApprovalSubscriptions []string
-  // IP configurations associated with the Private Link service (each entry: { id, name, primary, privateIPAddress, privateIPAddressVersion, privateIPAllocationMethod, subnetId, provisioningState })
+  // IP configurations associated with the Private Link service
+  //
+  // Each entry: { id, name, primary, privateIPAddress, privateIPAddressVersion, privateIPAllocationMethod, subnetId, provisioningState }.
   ipConfigurations []dict
   // Resource IDs of load balancer frontend IP configurations the service is fronted by
   loadBalancerFrontendIpConfigurationIds []string
@@ -2591,7 +2599,9 @@ private azure.subscription.storageService.account @defaults("id name location") 
   objectReplicationPolicies() []azure.subscription.storageService.account.objectReplicationPolicy
   // Blob inventory policy configured on the storage account, if any
   blobInventoryPolicy() azure.subscription.storageService.account.blobInventoryPolicy
-  // Microsoft Defender for Storage configuration for this account — including the Microsoft Purview-backed Sensitive Data Discovery feature that classifies blob containers for sensitive data (credit cards, credentials, etc.) and surfaces findings as security alerts
+  // Microsoft Defender for Storage configuration for this account
+  //
+  // Includes the Microsoft Purview-backed Sensitive Data Discovery feature that classifies blob containers for sensitive data (credit cards, credentials, etc.) and surfaces findings as security alerts.
   defenderForStorage() azure.subscription.storageService.account.defenderForStorageSetting
 }
 
@@ -3006,9 +3016,13 @@ private azure.subscription.storageService.account.defenderForStorageSetting @def
   isEnabled bool
   // Whether the per-account configuration overrides the subscription-level Defender for Storage settings
   overrideSubscriptionLevelSettings bool
-  // Whether the Microsoft Purview-backed Sensitive Data Discovery sub-feature is enabled — scans blob containers for sensitive data (credit cards, credentials, etc.) and emits security alerts
+  // Whether the Microsoft Purview-backed Sensitive Data Discovery sub-feature is enabled
+  //
+  // Scans blob containers for sensitive data (credit cards, credentials, etc.) and emits security alerts.
   sensitiveDataDiscoveryEnabled bool
-  // Status of the most recent Sensitive Data Discovery enable/disable operation, with keys `code` and `message` (populated only on failure or partial success)
+  // Status of the most recent Sensitive Data Discovery enable/disable operation
+  //
+  // Dict with keys `code` and `message` (populated only on failure or partial success).
   sensitiveDataDiscoveryStatus dict
   // Whether on-upload malware scanning is enabled — every new blob is scanned for malware before becoming readable
   malwareScanningOnUploadEnabled bool
@@ -4777,12 +4791,15 @@ private azure.subscription.cosmosDbService.account.sqlDatabase @defaults("name t
   // Etag
   etag string
   // Whether throughput is configured per-container instead of at the database level
+  //
   // True means each container manages its own throughput, equivalent to there being no database-scope throughput offer.
   throughputPerContainer() bool
   // Manual provisioned throughput in RU/s at the database level
+  //
   // Zero when configured per-container or when autoscale is enabled.
   manualThroughput() int
   // Autoscale max throughput in RU/s at the database level
+  //
   // Zero when not autoscale or when configured per-container.
   autoscaleMaxThroughput() int
   // Whether autoscale is enabled at the database level
@@ -4812,7 +4829,8 @@ private azure.subscription.cosmosDbService.account.sqlDatabase.container @defaul
   partitionKeyPaths []string
   // Partition key kind ("Hash", "Range", "MultiHash")
   partitionKeyKind string
-  // Default time-to-live for items in seconds.
+  // Default time-to-live for items in seconds
+  //
   //   0  — TTL is disabled on the container (the API returned nil; we surface that as 0).
   //   -1 — TTL is enabled on the container but items have no default expiration; per-item TTLs still apply.
   //   >0 — default TTL value in seconds applied to items in the container.
@@ -4830,12 +4848,15 @@ private azure.subscription.cosmosDbService.account.sqlDatabase.container @defaul
   // Conflict resolution path (when mode == "LastWriterWins")
   conflictResolutionPath string
   // Whether throughput is inherited from the parent database
+  //
   // True means there is no container-level offer and the database scope provides the offer for this container.
   throughputInherited() bool
   // Manual provisioned throughput in RU/s at the container level
+  //
   // Zero when inherited or when autoscale is configured.
   manualThroughput() int
   // Autoscale max throughput in RU/s at the container level
+  //
   // Zero when not autoscale or when inherited from the parent database.
   autoscaleMaxThroughput() int
   // Whether autoscale is enabled at the container level
@@ -6677,8 +6698,9 @@ private azure.subscription.dataFactoryService.factory.linkedService @defaults("n
   integrationRuntimeName string
   // Names of declared parameters
   parameterNames []string
-  // Whether any credential or secret field resolves via Azure Key Vault (i.e., a nested
-  // `{type: "AzureKeyVaultSecret", store: {...}, secretName: ...}` reference exists in typeProperties)
+  // Whether any credential or secret field resolves via Azure Key Vault
+  //
+  // True when a nested `{type: "AzureKeyVaultSecret", store: {...}, secretName: ...}` reference exists in typeProperties.
   usesKeyVaultReference bool
   // Annotations declared on the linked service (free-form list of any)
   annotations []dict
@@ -7610,13 +7632,13 @@ azure.subscription.functionsService.functionApp @defaults("id name location") {
   configuration() azure.subscription.webService.appsiteconfig
   // Functions in this function app
   functions() []azure.subscription.functionsService.functionApp.function
-  // Application settings configured on the function app. Values are not
-  // returned — each entry exposes name, slot-stickiness, Key-Vault-reference
-  // detection, and a heuristic flag for secret-bearing names.
+  // Application settings configured on the function app
+  //
+  // Values are not returned — each entry exposes name, slot-stickiness, Key-Vault-reference detection, and a heuristic flag for secret-bearing names.
   appSettings() []azure.subscription.functionsService.functionApp.appSetting
-  // Connection strings configured on the function app. Each entry has shape
-  // {name, type, hasKeyVaultReference, slotSetting}. Connection-string values
-  // are not returned.
+  // Connection strings configured on the function app
+  //
+  // Each entry has shape {name, type, hasKeyVaultReference, slotSetting}. Connection-string values are not returned.
   connectionStrings() []dict
 }
 
@@ -7634,14 +7656,16 @@ private azure.subscription.functionsService.functionApp.appSetting @defaults("na
   // Setting name
   name string
   // Whether the setting's value is a Key Vault reference
-  // (i.e., starts with `@Microsoft.KeyVault(...)`)
+  //
+  // True when the value starts with `@Microsoft.KeyVault(...)`.
   hasKeyVaultReference bool
-  // Whether the setting name suggests it carries a secret. True when the
-  // name (case-insensitively) contains "key", "password", "secret",
-  // "token", or a connection-string identifier ending in `str`.
+  // Whether the setting name suggests it carries a secret
+  //
+  // True when the name (case-insensitively) contains "key", "password", "secret", "token", or a connection-string identifier ending in `str`.
   isLikelySecret bool
-  // Whether the setting is "sticky" on slot swaps (configured via the
-  // app's slot-config-names list)
+  // Whether the setting is "sticky" on slot swaps
+  //
+  // Configured via the app's slot-config-names list.
   slotSetting bool
   // Whether the setting has a non-empty value (the value itself is not exposed)
   hasValue bool
@@ -8479,8 +8503,9 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   latestRevisionFqdn string
   // Whether ingress is enabled at all
   ingressEnabled bool
-  // External ingress (true) vs internal-only (false). Only meaningful when
-  // `ingressEnabled == true` — defaults to false when ingress is disabled.
+  // External ingress (true) vs internal-only (false)
+  //
+  // Only meaningful when `ingressEnabled == true` — defaults to false when ingress is disabled.
   ingressExternal bool
   // Target port for ingress
   targetPort int
@@ -8502,7 +8527,9 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   minReplicas int
   // Max replica count
   maxReplicas int
-  // Scale rules. Each entry has `name` plus exactly one of `http`, `tcp`,
+  // Scale rules
+  //
+  // Each entry has `name` plus exactly one of `http`, `tcp`,
   // `azureQueue`, or `custom` (KEDA), and an optional `auth []` of
   // `{triggerParameter, secretRef}` entries pointing at names in `secretNames`.
   //   http:       {metadata: {concurrentRequests}}
@@ -8815,8 +8842,9 @@ azure.subscription.logicService.workflow @defaults("name location state provisio
   changedTime time
   // Outgoing connector / workflow / access-endpoint IPs reported for the workflow
   endpointsConfiguration dict
-  // Access-control policy for inbound triggers — `allowedCallerIpAddresses []` and `openAuthenticationPolicies {}`.
-  // Empty IP list means no IP restriction.
+  // Access-control policy for inbound triggers
+  //
+  // Has `allowedCallerIpAddresses []` and `openAuthenticationPolicies {}`. Empty IP list means no IP restriction.
   accessControlTriggers dict
   // Access-control policy for reading workflow run contents
   accessControlContents dict
@@ -8826,15 +8854,21 @@ azure.subscription.logicService.workflow @defaults("name location state provisio
   accessControlWorkflowManagement dict
   // Whether at least one access-control policy has an IP allow list configured
   hasIpRestrictions bool
-  // Workflow parameters. Each entry has {name, type, hasDefaultValue, isSecure}.
+  // Workflow parameters
+  //
+  // Each entry has {name, type, hasDefaultValue, isSecure}.
   // `isSecure` is true when type is `SecureString` or `SecureObject`.
   parameters []dict
   // Names of parameters whose type is `SecureString` or `SecureObject`
   secureParameterNames []string
-  // Triggers parsed from the workflow definition. Each entry has {name, type, kind?}.
+  // Triggers parsed from the workflow definition
+  //
+  // Each entry has {name, type, kind?}.
   // `type` examples: "Request" (HTTP), "Recurrence", "ApiConnection", "ApiConnectionWebhook".
   triggers []dict
-  // Actions parsed from the workflow definition. Each entry has {name, type}.
+  // Actions parsed from the workflow definition
+  //
+  // Each entry has {name, type}.
   // `type` examples: "Http", "ApiConnection", "Compose", "Workflow", "If", "Foreach", "Until".
   actions []dict
   // Names of API connections referenced by triggers and actions (i.e., `parameters.$connections` keys)
@@ -8924,7 +8958,9 @@ azure.subscription.apiManagementService.service @defaults("name location skuName
   legacyPortalStatus string
   // Compute platform version running the service (e.g. "stv2", "stv1", "mtv1")
   platformVersion string
-  // Custom properties controlling gateway TLS protocol / cipher policy. Keys like `Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10` map to "True"/"False" string values.
+  // Custom properties controlling gateway TLS protocol / cipher policy
+  //
+  // Keys like `Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10` map to "True"/"False" string values.
   customProperties map[string]string
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
   identityType string

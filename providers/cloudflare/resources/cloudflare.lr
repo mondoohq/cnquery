@@ -146,8 +146,10 @@ private cloudflare.zone.owner @defaults("name") {
 	ownerType string
 }
 
-// Cloudflare zone plan. Deprecated and will be removed in the next major
-// release.
+// DEPRECATED: Cloudflare zone plan
+//
+// Examine the Cloudflare service plan attached to a zone. Deprecated and
+// will be removed in the next major release.
 private cloudflare.zone.plan @defaults("name") @maturity("deprecated") {
 	// Plan identifier
 	id string
@@ -437,7 +439,9 @@ private cloudflare.streams.video @defaults("name id") {
 	// Thumbnail URL
 	thumbnail string
 
-	// Timestamp for a thumbnail image, calculated as a percentage value of the video's duration (To convert from a second-wise timestamp to a percentage, divide the desired timestamp by the total duration of the video. If this value is not set, the default thumbnail image is taken from 0s of the video.)
+	// Timestamp for a thumbnail image, as a percentage of the video's duration
+	//
+	// To convert from a second-wise timestamp to a percentage, divide the desired timestamp by the total duration of the video. If this value is not set, the default thumbnail image is taken from 0s of the video.
 	thumbnailTimestampPct float
 
 	// Time the video was uploaded
@@ -583,35 +587,68 @@ private cloudflare.one {
 }
 
 // Cloudflare One application
+//
+// Examine a single Cloudflare One (Access) application — the identity
+// providers it accepts, its CORS and cookie hardening, its session and
+// authentication policies, and the deny / launcher UX it presents to users.
 private cloudflare.one.app @defaults("name id") {
-	id string // UUID
-	aud string // Audience tag
+	// UUID
+	id string
+	// Audience tag
+	aud string
 
-	name string // Name of the application
-	domain string // Domain of the application
+	// Name of the application
+	name string
+	// Domain of the application
+	domain string
 
-	allowedIdentityProviders []string // Allowed identity providers
-	appLauncherVisible bool // Whether the application displays in the App Launcher
-	autoRedirectToIdentity bool // Whether users skip the identity provider selection step during login
+	// Allowed identity providers
+	allowedIdentityProviders []string
+	// Whether the application displays in the App Launcher
+	appLauncherVisible bool
+	// Whether users skip the identity provider selection step during login
+	autoRedirectToIdentity bool
 
-	corsHeaders cloudflare.corsHeaders // CORS headers
-	optionsPreflightBypass bool // Whether preflight requests are allowed to bypass Access authentication and go directly to the origin (can't be true if corsHeaders is set)
+	// CORS headers
+	corsHeaders cloudflare.corsHeaders
+	// Whether preflight requests bypass Access authentication
+	//
+	// When true, preflight requests are allowed to go directly to the origin. Can't be true if corsHeaders is set.
+	optionsPreflightBypass bool
 
-	customDenyMessage string // Custom error message shown to a user when they are denied access to the application
-	customDenyUrl string // Custom URL to redirect a user to when they are denied access to the application
-	serviceAuth401Redirect bool // Whether to return a 401 status code when the request is blocked by a Service Auth policy
+	// Custom error message shown to a user when they are denied access to the application
+	customDenyMessage string
+	// Custom URL to redirect a user to when they are denied access to the application
+	customDenyUrl string
+	// Whether to return a 401 status code when the request is blocked by a Service Auth policy
+	serviceAuth401Redirect bool
 
-	enableBindingCookie bool // Whether to allow the binding cookie, which increases security against compromised authorization tokens and CSRF attacks
-	httpOnlyCookieAttribute bool // Whether the HttpOnly cookie attribute, which increases security against XSS attacks, is enabled
-	sameSiteCookieAttribute string // SameSite cookie setting, which provides increased security against CSRF attacks
+	// Whether to allow the binding cookie
+	//
+	// Increases security against compromised authorization tokens and CSRF attacks.
+	enableBindingCookie bool
+	// Whether the HttpOnly cookie attribute is enabled
+	//
+	// Increases security against XSS attacks.
+	httpOnlyCookieAttribute bool
+	// SameSite cookie setting
+	//
+	// Provides increased security against CSRF attacks.
+	sameSiteCookieAttribute string
 
-	logoUrl string // URL of the application's logo
+	// URL of the application's logo
+	logoUrl string
 
-	sessionDuration string // Amount of time that tokens issued for this application will be valid (Format is 300ms or 2h45m. Valid time units are: ns, us (or µs), ms, s, m, and h.)
+	// Amount of time that tokens issued for this application will be valid
+	//
+	// Format is 300ms or 2h45m. Valid time units are: ns, us (or µs), ms, s, m, and h.
+	sessionDuration string
 
-	skipInterstitial bool // Whether automatic authentication through cloudflared is enabled
+	// Whether automatic authentication through cloudflared is enabled
+	skipInterstitial bool
 
-	type string // Application type
+	// Application type
+	type string
 
 	// Time the application was created
 	createdAt time
@@ -674,7 +711,9 @@ private cloudflare.one.accessPolicy @defaults("name decision") {
 	createdAt time
 	// Time the policy was last updated
 	updatedAt time
-	// Rules that grant access — the user must satisfy at least one (OR). Each dict is one condition keyed by its rule type (e.g. email, email_domain, ip, ip_list, group, everyone, certificate, gsuite, okta, saml, azureAD, github-organization, service_token, device_posture)
+	// Rules that grant access — the user must satisfy at least one (OR)
+	//
+	// Each dict is one condition keyed by its rule type (e.g. email, email_domain, ip, ip_list, group, everyone, certificate, gsuite, okta, saml, azureAD, github-organization, service_token, device_posture).
 	include []dict
 	// Rules that must all be satisfied (AND); same dict shape as include
 	require []dict

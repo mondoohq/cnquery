@@ -381,12 +381,14 @@ atlassian.confluence.user @defaults("name") {
   type string
 }
 
-// Confluence user group.
-// Note: the `id` field may be either the group key or the display name
-// depending on the source API. Space permissions expose the group key as
-// `subjectKey`, while page restrictions only expose the display name. As a
-// result, the same group surfaced via both code paths will produce two
-// distinct cache entries (one keyed by group key, one by display name).
+// Confluence user group
+//
+// Examine a Confluence group. Note: the `id` field may be either the group key
+// or the display name depending on the source API. Space permissions expose
+// the group key as `subjectKey`, while page restrictions only expose the
+// display name. As a result, the same group surfaced via both code paths will
+// produce two distinct cache entries (one keyed by group key, one by display
+// name).
 private atlassian.confluence.group @defaults("id name") {
   // Group identifier — either the group key or, for page restrictions, the display name
   id string
@@ -465,7 +467,9 @@ atlassian.confluence.page.restriction @defaults("operation") {
   groupNames []string
   // Users with this operation restriction (typed)
   users() []atlassian.confluence.user
-  // Groups with this operation restriction (typed). Identified by display name only —
-  // see atlassian.confluence.group.id for cache-key caveats.
+  // Groups with this operation restriction (typed)
+  //
+  // Identified by display name only — see atlassian.confluence.group.id
+  // for cache-key caveats.
   groups() []atlassian.confluence.group
 }
