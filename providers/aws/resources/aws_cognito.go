@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -300,9 +301,16 @@ func (a *mqlAwsCognitoUserPool) riskConfiguration() (any, error) {
 			return nil, nil
 		}
 		// Pools without advanced security return ResourceNotFoundException
-		// or UserPoolAddOnNotEnabledException — both fine to surface as null.
-		log.Debug().Str("userPoolId", poolId).Err(err).Msg("could not fetch Cognito risk configuration")
-		return nil, nil
+		// or UserPoolAddOnNotEnabledException — surface as null. Any other
+		// error (rate limit, transient 5xx, etc.) propagates so the runtime
+		// can retry or report it.
+		var rnf *cognitoidentityprovidertypes.ResourceNotFoundException
+		var uae *cognitoidentityprovidertypes.UserPoolAddOnNotEnabledException
+		if errors.As(err, &rnf) || errors.As(err, &uae) {
+			log.Debug().Str("userPoolId", poolId).Err(err).Msg("cognito risk configuration not available for user pool")
+			return nil, nil
+		}
+		return nil, err
 	}
 	if resp == nil || resp.RiskConfiguration == nil {
 		return nil, nil
@@ -532,6 +540,9 @@ func (a *mqlAwsCognitoIdentityPool) roles() (any, error) {
 		return nil, err
 	}
 	if resp == nil {
+		return nil, nil
+	}
+	if len(resp.Roles) == 0 && len(resp.RoleMappings) == 0 {
 		return nil, nil
 	}
 	out := map[string]any{}
