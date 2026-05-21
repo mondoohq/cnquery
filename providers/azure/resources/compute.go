@@ -9,6 +9,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -271,57 +272,119 @@ func (a *mqlAzureSubscriptionComputeServiceVm) isRunning() (bool, error) {
 	return state.Data == "running", nil
 }
 
-func (a *mqlAzureSubscriptionComputeServiceVm) extensions() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	// id is a Azure resource ID
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, err
-	}
+type mqlAzureSubscriptionComputeServiceVmInternal struct {
+	extensionsOnce  sync.Once
+	extensionsList  []*compute.VirtualMachineExtension
+	extensionsError error
+}
 
-	vm, err := resourceID.Component("virtualMachines")
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	token := conn.Token()
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := compute.NewVirtualMachineExtensionsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
-		ClientOptions: conn.ClientOptions(),
+func (a *mqlAzureSubscriptionComputeServiceVm) fetchExtensions() ([]*compute.VirtualMachineExtension, error) {
+	a.extensionsOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		resourceID, err := ParseResourceID(a.Id.Data)
+		if err != nil {
+			a.extensionsError = err
+			return
+		}
+		vm, err := resourceID.Component("virtualMachines")
+		if err != nil {
+			a.extensionsError = err
+			return
+		}
+		client, err := compute.NewVirtualMachineExtensionsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			a.extensionsError = err
+			return
+		}
+		resp, err := client.List(context.Background(), resourceID.ResourceGroup, vm, &compute.VirtualMachineExtensionsClientListOptions{})
+		if err != nil {
+			a.extensionsError = err
+			return
+		}
+		a.extensionsList = resp.Value
 	})
+	return a.extensionsList, a.extensionsError
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) extensions() ([]any, error) {
+	list, err := a.fetchExtensions()
 	if err != nil {
 		return nil, err
 	}
-	extensions, err := client.List(ctx, resourceID.ResourceGroup, vm, &compute.VirtualMachineExtensionsClientListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	res := []any{}
-
-	if extensions.Value == nil {
-		return res, nil
-	}
-
-	list := extensions.Value
-
-	for i := range list {
-		entry := list[i]
-
+	res := make([]any, 0, len(list))
+	for _, entry := range list {
+		if entry == nil {
+			continue
+		}
 		dict, err := convert.JsonToDict(entry.Properties)
 		if err != nil {
 			return nil, err
 		}
-
 		res = append(res, dict)
 	}
-
 	return res, nil
+}
+
+// extensionInstalled reports whether the VM has an extension whose
+// (publisher, extension type) matches one of the entries in `match`.
+// Comparisons are case-insensitive.
+func (a *mqlAzureSubscriptionComputeServiceVm) extensionInstalled(match map[string][]string) (bool, error) {
+	list, err := a.fetchExtensions()
+	if err != nil {
+		return false, err
+	}
+	for _, entry := range list {
+		if entry == nil || entry.Properties == nil {
+			continue
+		}
+		pub, typ := entry.Properties.Publisher, entry.Properties.Type
+		if pub == nil || typ == nil {
+			continue
+		}
+		types, ok := match[strings.ToLower(*pub)]
+		if !ok {
+			continue
+		}
+		for _, t := range types {
+			if strings.EqualFold(t, *typ) {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+var (
+	mdeExtensionMatches = map[string][]string{
+		"microsoft.azure.azuredefenderforservers": {"MDE.Linux", "MDE.Windows"},
+	}
+	amaExtensionMatches = map[string][]string{
+		"microsoft.azure.monitor": {"AzureMonitorLinuxAgent", "AzureMonitorWindowsAgent"},
+	}
+	omsExtensionMatches = map[string][]string{
+		"microsoft.enterprisecloud.monitoring": {"MicrosoftMonitoringAgent", "OmsAgentForLinux"},
+	}
+	dependencyAgentExtensionMatches = map[string][]string{
+		"microsoft.azure.monitoring.dependencyagent": {"DependencyAgentLinux", "DependencyAgentWindows"},
+	}
+)
+
+func (a *mqlAzureSubscriptionComputeServiceVm) mdeInstalled() (bool, error) {
+	return a.extensionInstalled(mdeExtensionMatches)
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) amaInstalled() (bool, error) {
+	return a.extensionInstalled(amaExtensionMatches)
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) omsInstalled() (bool, error) {
+	return a.extensionInstalled(omsExtensionMatches)
+}
+
+func (a *mqlAzureSubscriptionComputeServiceVm) dependencyAgentInstalled() (bool, error) {
+	return a.extensionInstalled(dependencyAgentExtensionMatches)
 }
 
 func (a *mqlAzureSubscriptionComputeService) disks() ([]any, error) {

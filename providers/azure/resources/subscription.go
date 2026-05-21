@@ -445,3 +445,13 @@ func (a *mqlAzureSubscription) cognitiveServices() (*mqlAzureSubscriptionCogniti
 	}
 	return svc.(*mqlAzureSubscriptionCognitiveServicesService), nil
 }
+
+func (a *mqlAzureSubscription) sentinel() (*mqlAzureSubscriptionSentinelService, error) {
+	svc, err := NewResource(a.MqlRuntime, "azure.subscription.sentinelService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionSentinelService), nil
+}

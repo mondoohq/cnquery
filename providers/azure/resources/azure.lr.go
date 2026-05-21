@@ -357,6 +357,9 @@ const (
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter               string = "azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef                    string = "azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiTopic                             string = "azure.subscription.cognitiveServicesService.account.raiTopic"
+	ResourceAzureSubscriptionSentinelService                                                     string = "azure.subscription.sentinelService"
+	ResourceAzureSubscriptionSentinelServiceWorkspace                                            string = "azure.subscription.sentinelService.workspace"
+	ResourceAzureSubscriptionSentinelServiceAlertRule                                            string = "azure.subscription.sentinelService.alertRule"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -1727,6 +1730,18 @@ func init() {
 			Init:   initAzureSubscriptionCognitiveServicesServiceAccountRaiTopic,
 			Create: createAzureSubscriptionCognitiveServicesServiceAccountRaiTopic,
 		},
+		"azure.subscription.sentinelService": {
+			Init:   initAzureSubscriptionSentinelService,
+			Create: createAzureSubscriptionSentinelService,
+		},
+		"azure.subscription.sentinelService.workspace": {
+			// to override args, implement: initAzureSubscriptionSentinelServiceWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSentinelServiceWorkspace,
+		},
+		"azure.subscription.sentinelService.alertRule": {
+			// to override args, implement: initAzureSubscriptionSentinelServiceAlertRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSentinelServiceAlertRule,
+		},
 	}
 }
 
@@ -1942,6 +1957,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cognitiveServices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetCognitiveServices()).ToDataRes(types.Resource("azure.subscription.cognitiveServicesService"))
 	},
+	"azure.subscription.sentinel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetSentinel()).ToDataRes(types.Resource("azure.subscription.sentinelService"))
+	},
 	"azure.subscription.webService.function.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceFunction).GetId()).ToDataRes(types.String)
 	},
@@ -2082,6 +2100,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.vm.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetExtensions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.computeService.vm.mdeInstalled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetMdeInstalled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.vm.amaInstalled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetAmaInstalled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.vm.omsInstalled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetOmsInstalled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.vm.dependencyAgentInstalled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetDependencyAgentInstalled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.computeService.vm.osDisk": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetOsDisk()).ToDataRes(types.Resource("azure.subscription.computeService.disk"))
@@ -12475,6 +12505,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cognitiveServicesService.account.storedCompletionsDisabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetStoredCompletionsDisabled()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.cognitiveServicesService.account.defenderForAIEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetDefenderForAIEnabled()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.cognitiveServicesService.account.raiPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetRaiPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.raiPolicy")))
 	},
@@ -12561,6 +12594,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cognitiveServicesService.account.raiTopic.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetLastModifiedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.sentinelService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.workspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelService).GetWorkspaces()).ToDataRes(types.Array(types.Resource("azure.subscription.sentinelService.workspace")))
+	},
+	"azure.subscription.sentinelService.workspace.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.workspace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.workspace.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetResourceGroup()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.workspace.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.workspace.workspace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetWorkspace()).ToDataRes(types.Resource("azure.subscription.monitorService.workspace"))
+	},
+	"azure.subscription.sentinelService.workspace.alertRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetAlertRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sentinelService.alertRule")))
+	},
+	"azure.subscription.sentinelService.workspace.dataConnectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceWorkspace).GetDataConnectors()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.sentinelService.alertRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAlertRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.alertRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAlertRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.alertRule.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAlertRule).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.alertRule.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAlertRule).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.sentinelService.alertRule.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAlertRule).GetDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.alertRule.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAlertRule).GetSeverity()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.alertRule.tactics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAlertRule).GetTactics()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.sentinelService.alertRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAlertRule).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.sentinelService.alertRule.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSentinelServiceAlertRule).GetProperties()).ToDataRes(types.Dict)
 	},
 }
 
@@ -12774,6 +12861,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscription).CognitiveServices, ok = plugin.RawToTValue[*mqlAzureSubscriptionCognitiveServicesService](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sentinel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).Sentinel, ok = plugin.RawToTValue[*mqlAzureSubscriptionSentinelService](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.webService.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceFunction).__id, ok = v.Value.(string)
 		return
@@ -12980,6 +13071,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.vm.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.mdeInstalled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).MdeInstalled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.amaInstalled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).AmaInstalled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.omsInstalled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).OmsInstalled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.dependencyAgentInstalled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).DependencyAgentInstalled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.vm.osDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28158,6 +28265,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).StoredCompletionsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cognitiveServicesService.account.defenderForAIEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).DefenderForAIEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cognitiveServicesService.account.raiPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).RaiPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -28290,6 +28401,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sentinelService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.sentinelService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.workspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelService).Workspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.sentinelService.workspace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.workspace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.workspace.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).ResourceGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.workspace.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.workspace.workspace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).Workspace, ok = plugin.RawToTValue[*mqlAzureSubscriptionMonitorServiceWorkspace](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.workspace.alertRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).AlertRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.workspace.dataConnectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceWorkspace).DataConnectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.alertRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAlertRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.sentinelService.alertRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAlertRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.alertRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAlertRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.alertRule.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAlertRule).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.alertRule.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAlertRule).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.alertRule.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAlertRule).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.alertRule.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAlertRule).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.alertRule.tactics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAlertRule).Tactics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.alertRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAlertRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sentinelService.alertRule.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSentinelServiceAlertRule).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -28406,6 +28601,7 @@ type mqlAzureSubscription struct {
 	Search                plugin.TValue[*mqlAzureSubscriptionSearchService]
 	AppConfiguration      plugin.TValue[*mqlAzureSubscriptionAppConfigurationService]
 	CognitiveServices     plugin.TValue[*mqlAzureSubscriptionCognitiveServicesService]
+	Sentinel              plugin.TValue[*mqlAzureSubscriptionSentinelService]
 }
 
 // createAzureSubscription creates a new instance of this resource
@@ -29093,6 +29289,22 @@ func (c *mqlAzureSubscription) GetCognitiveServices() *plugin.TValue[*mqlAzureSu
 	})
 }
 
+func (c *mqlAzureSubscription) GetSentinel() *plugin.TValue[*mqlAzureSubscriptionSentinelService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSentinelService](&c.Sentinel, func() (*mqlAzureSubscriptionSentinelService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "sentinel")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSentinelService), nil
+			}
+		}
+
+		return c.sentinel()
+	})
+}
+
 // mqlAzureSubscriptionWebServiceFunction for the azure.subscription.webService.function resource
 type mqlAzureSubscriptionWebServiceFunction struct {
 	MqlRuntime *plugin.Runtime
@@ -29590,7 +29802,7 @@ func (c *mqlAzureSubscriptionComputeService) GetHybridMachines() *plugin.TValue[
 type mqlAzureSubscriptionComputeServiceVm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionComputeServiceVmInternal it will be used here
+	mqlAzureSubscriptionComputeServiceVmInternal
 	Id                            plugin.TValue[string]
 	Name                          plugin.TValue[string]
 	Location                      plugin.TValue[string]
@@ -29601,6 +29813,10 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	Type                          plugin.TValue[string]
 	Properties                    plugin.TValue[any]
 	Extensions                    plugin.TValue[[]any]
+	MdeInstalled                  plugin.TValue[bool]
+	AmaInstalled                  plugin.TValue[bool]
+	OmsInstalled                  plugin.TValue[bool]
+	DependencyAgentInstalled      plugin.TValue[bool]
 	OsDisk                        plugin.TValue[*mqlAzureSubscriptionComputeServiceDisk]
 	DataDisks                     plugin.TValue[[]any]
 	NetworkInterfaces             plugin.TValue[[]any]
@@ -29711,6 +29927,30 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetProperties() *plugin.TValue[an
 func (c *mqlAzureSubscriptionComputeServiceVm) GetExtensions() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
 		return c.extensions()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetMdeInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MdeInstalled, func() (bool, error) {
+		return c.mdeInstalled()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetAmaInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AmaInstalled, func() (bool, error) {
+		return c.amaInstalled()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetOmsInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OmsInstalled, func() (bool, error) {
+		return c.omsInstalled()
+	})
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetDependencyAgentInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DependencyAgentInstalled, func() (bool, error) {
+		return c.dependencyAgentInstalled()
 	})
 }
 
@@ -65816,6 +66056,7 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccount struct {
 	Endpoint                      plugin.TValue[string]
 	ProvisioningState             plugin.TValue[string]
 	StoredCompletionsDisabled     plugin.TValue[bool]
+	DefenderForAIEnabled          plugin.TValue[bool]
 	RaiPolicies                   plugin.TValue[[]any]
 	RaiTopics                     plugin.TValue[[]any]
 }
@@ -65927,6 +66168,12 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetProvisioningSta
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetStoredCompletionsDisabled() *plugin.TValue[bool] {
 	return &c.StoredCompletionsDisabled
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetDefenderForAIEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DefenderForAIEnabled, func() (bool, error) {
+		return c.defenderForAIEnabled()
+	})
 }
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetRaiPolicies() *plugin.TValue[[]any] {
@@ -66272,4 +66519,264 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetCreated
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetLastModifiedAt() *plugin.TValue[*time.Time] {
 	return &c.LastModifiedAt
+}
+
+// mqlAzureSubscriptionSentinelService for the azure.subscription.sentinelService resource
+type mqlAzureSubscriptionSentinelService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionSentinelServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Workspaces     plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionSentinelService creates a new instance of this resource
+func createAzureSubscriptionSentinelService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSentinelService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.sentinelService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSentinelService) MqlName() string {
+	return "azure.subscription.sentinelService"
+}
+
+func (c *mqlAzureSubscriptionSentinelService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSentinelService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionSentinelService) GetWorkspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workspaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sentinelService", c.__id, "workspaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workspaces()
+	})
+}
+
+// mqlAzureSubscriptionSentinelServiceWorkspace for the azure.subscription.sentinelService.workspace resource
+type mqlAzureSubscriptionSentinelServiceWorkspace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionSentinelServiceWorkspaceInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	ResourceGroup  plugin.TValue[string]
+	SubscriptionId plugin.TValue[string]
+	Workspace      plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspace]
+	AlertRules     plugin.TValue[[]any]
+	DataConnectors plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionSentinelServiceWorkspace creates a new instance of this resource
+func createAzureSubscriptionSentinelServiceWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSentinelServiceWorkspace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.sentinelService.workspace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) MqlName() string {
+	return "azure.subscription.sentinelService.workspace"
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) GetResourceGroup() *plugin.TValue[string] {
+	return &c.ResourceGroup
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) GetWorkspace() *plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspace] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionMonitorServiceWorkspace](&c.Workspace, func() (*mqlAzureSubscriptionMonitorServiceWorkspace, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sentinelService.workspace", c.__id, "workspace")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionMonitorServiceWorkspace), nil
+			}
+		}
+
+		return c.workspace()
+	})
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) GetAlertRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AlertRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sentinelService.workspace", c.__id, "alertRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.alertRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceWorkspace) GetDataConnectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataConnectors, func() ([]any, error) {
+		return c.dataConnectors()
+	})
+}
+
+// mqlAzureSubscriptionSentinelServiceAlertRule for the azure.subscription.sentinelService.alertRule resource
+type mqlAzureSubscriptionSentinelServiceAlertRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionSentinelServiceAlertRuleInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Kind        plugin.TValue[string]
+	Enabled     plugin.TValue[bool]
+	DisplayName plugin.TValue[string]
+	Severity    plugin.TValue[string]
+	Tactics     plugin.TValue[[]any]
+	Description plugin.TValue[string]
+	Properties  plugin.TValue[any]
+}
+
+// createAzureSubscriptionSentinelServiceAlertRule creates a new instance of this resource
+func createAzureSubscriptionSentinelServiceAlertRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSentinelServiceAlertRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.sentinelService.alertRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) MqlName() string {
+	return "azure.subscription.sentinelService.alertRule"
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) GetTactics() *plugin.TValue[[]any] {
+	return &c.Tactics
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionSentinelServiceAlertRule) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
 }

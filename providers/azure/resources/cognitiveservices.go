@@ -178,6 +178,49 @@ func (a *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) id() (stri
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) defenderForAIEnabled() (bool, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return false, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	parsed, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return false, err
+	}
+	accountName := parsed.Path["accounts"]
+
+	client, err := armcognitiveservices.NewDefenderForAISettingsClient(parsed.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	ctx := context.Background()
+	pager := client.NewListPager(parsed.ResourceGroup, accountName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msg("could not read Defender for AI settings due to access denied")
+				return false, nil
+			}
+			return false, err
+		}
+		for _, s := range page.Value {
+			if s == nil || s.Properties == nil || s.Properties.State == nil {
+				continue
+			}
+			if *s.Properties.State == armcognitiveservices.DefenderForAISettingStateEnabled {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
 func (a *mqlAzureSubscriptionCognitiveServicesServiceAccount) raiPolicies() ([]any, error) {
 	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	if !ok {

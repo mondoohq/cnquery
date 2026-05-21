@@ -131,6 +131,8 @@ azure.subscription @defaults ("name") {
   appConfiguration() azure.subscription.appConfigurationService
   // Azure AI Services / Cognitive Services resources in the subscription
   cognitiveServices() azure.subscription.cognitiveServicesService
+  // Microsoft Sentinel onboarded workspaces in the subscription
+  sentinel() azure.subscription.sentinelService
 }
 
 // Azure function
@@ -255,6 +257,14 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   properties dict
   // VM extension
   extensions() []dict
+  // Whether the Microsoft Defender for Endpoint (MDE) extension is installed on the VM
+  mdeInstalled() bool
+  // Whether the Azure Monitor Agent (AMA) extension is installed on the VM
+  amaInstalled() bool
+  // Whether the legacy Microsoft Monitoring Agent (OMS) extension is installed on the VM
+  omsInstalled() bool
+  // Whether the Dependency Agent extension (used by VM Insights for service-map data) is installed on the VM
+  dependencyAgentInstalled() bool
   // VM compute disk
   osDisk() azure.subscription.computeService.disk
   // VM compute data disk
@@ -9260,6 +9270,8 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   provisioningState string
   // Whether stored completions (request/response logging used for fine-tuning and evaluation) are disabled
   storedCompletionsDisabled bool
+  // Whether Microsoft Defender for AI threat detection is enabled on the account
+  defenderForAIEnabled() bool
   // Responsible AI content-filter policies configured on the account
   raiPolicies() []azure.subscription.cognitiveServicesService.account.raiPolicy
   // Responsible AI custom topics registered on the account
@@ -9356,4 +9368,76 @@ private azure.subscription.cognitiveServicesService.account.raiTopic @defaults("
   createdAt time
   // When the topic was last modified
   lastModifiedAt time
+}
+
+// Microsoft Sentinel
+//
+// Examine Microsoft Sentinel onboarding and analytics surface in a
+// subscription. Sentinel is layered on a Log Analytics workspace via
+// the SecurityInsights solution; a Log Analytics workspace appears
+// under `workspaces` only when Sentinel has been onboarded on it. Use
+// this to audit which subscriptions have Sentinel coverage, which
+// analytics rules are active, and which data connectors are ingesting
+// telemetry.
+private azure.subscription.sentinelService @defaults("subscriptionId") {
+  // ID of the subscription
+  subscriptionId string
+  // Sentinel-onboarded Log Analytics workspaces in the subscription
+  workspaces() []azure.subscription.sentinelService.workspace
+}
+
+// Microsoft Sentinel onboarded Log Analytics workspace
+//
+// Examine a Log Analytics workspace that has Sentinel enabled.
+// Surfaces the workspace identity plus the analytics rules and data
+// connectors configured on it. The underlying Log Analytics workspace
+// is reachable via `workspace()` for retention, network, and access
+// settings.
+private azure.subscription.sentinelService.workspace @defaults("name resourceGroup subscriptionId") {
+  // ARM resource ID of the underlying Log Analytics workspace
+  id string
+  // Workspace name
+  name string
+  // Resource group containing the workspace
+  resourceGroup string
+  // Subscription that owns the workspace
+  subscriptionId string
+  // The underlying Log Analytics workspace
+  workspace() azure.subscription.monitorService.workspace
+  // Sentinel analytics rules configured on the workspace
+  alertRules() []azure.subscription.sentinelService.alertRule
+  // Data connectors ingesting telemetry into the workspace
+  //
+  // Each entry is a kind-specific dict with `name`, `kind`, and `properties` describing the connector configuration. Kinds include `OfficeATP`, `AzureActiveDirectory`, `AzureSecurityCenter`, `MicrosoftDefenderAdvancedThreatProtection`, and many others.
+  dataConnectors() []dict
+}
+
+// Microsoft Sentinel analytics rule
+//
+// Examine a single Sentinel analytics rule. Rules detect threats by
+// running KQL queries on workspace data (Scheduled), correlating
+// alerts across data sources (Fusion), or forwarding alerts from
+// other Microsoft security products (MicrosoftSecurityIncidentCreation).
+// Use `kind` to filter by rule type and `enabled` to identify active
+// detection coverage. Kind-specific configuration (KQL query, trigger
+// thresholds, source product filters) is in `properties`.
+private azure.subscription.sentinelService.alertRule @defaults("name kind enabled severity displayName") {
+  // ARM resource ID
+  id string
+  // Rule name
+  name string
+  // Rule kind ("Scheduled", "Fusion", "MicrosoftSecurityIncidentCreation", "MLBehaviorAnalytics", "NRT", "ThreatIntelligence")
+  kind string
+  // Whether the rule is enabled
+  enabled bool
+  // Display name shown on alerts created by this rule
+  displayName string
+  // Severity assigned to alerts created by this rule ("Informational", "Low", "Medium", "High"); empty when the kind has no severity
+  severity string
+  // MITRE ATT&CK tactics the rule maps to (e.g., "Persistence", "PrivilegeEscalation", "Exfiltration")
+  tactics []string
+  // Description of the rule
+  description string
+  // Kind-specific properties (e.g., for Scheduled rules: query, queryFrequency, queryPeriod, triggerThreshold)
+  properties dict
 }
