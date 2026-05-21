@@ -540,6 +540,7 @@ SECRETID
 secretmanager
 SECRETVALUE
 secureboot
+Selfharm
 selfservice
 sentinelone
 serde
