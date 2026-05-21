@@ -345,6 +345,7 @@ func (a *mqlAwsS3BucketAccessPoint) publicAccessBlock() (any, error) {
 		return nil, err
 	}
 	if resp.PublicAccessBlockConfiguration == nil {
+		log.Debug().Str("accessPoint", a.Arn.Data).Msg("s3 access point has no public access block configured")
 		return nil, nil
 	}
 	return convert.JsonToDict(resp.PublicAccessBlockConfiguration)

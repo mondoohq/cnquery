@@ -8196,6 +8196,14 @@ private aws.s3.bucket @defaults("name location public") {
 }
 
 // Amazon S3 bucket access point
+//
+// Examine an S3 access point, a named endpoint attached to a bucket that
+// can have its own resource `policy()` and `publicAccessBlock()` separate
+// from the parent `bucket()`. `networkOrigin` distinguishes Internet-facing
+// from VPC-restricted access points (the latter resolve `vpc()` to the
+// allowed `aws.vpc`), `bucketAccountId` shows the account that owns the
+// underlying bucket, and `alias` exposes the access-point alias usable in
+// place of the bucket name in S3 API calls.
 private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
   // ARN of the access point
   arn string
