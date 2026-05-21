@@ -617,10 +617,22 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 		if err != nil {
 			return err
 		}
-		defer writer.Close()
 
-		_, err = io.Copy(writer, reader)
-		return err
+		if _, err = io.Copy(writer, reader); err != nil {
+			writer.Close()
+			return err
+		}
+		// Flush the file's data to disk before it gets renamed into the
+		// providers directory. Without this, a crash between the rename and
+		// the kernel writing back the page cache can leave the renamed file
+		// pointing at unwritten (zeroed) blocks, which later panics schema
+		// loading with "invalid character '\x00'". Sync also surfaces
+		// writeback errors (e.g. ENOSPC) that Close() would silently drop.
+		if err = writer.Sync(); err != nil {
+			writer.Close()
+			return err
+		}
+		return writer.Close()
 	})
 	if err != nil {
 		return nil, err
@@ -678,6 +690,10 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 			return nil, err
 		}
 
+		// Flush the directory entries so the renames above are durable;
+		// otherwise a crash can leave the provider half-installed.
+		syncDir(dstPath)
+
 		providerDirs = append(providerDirs, dstPath)
 	}
 
@@ -714,6 +730,23 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	LastProviderInstall = time.Now().Unix()
 
 	return res, nil
+}
+
+// syncDir flushes a directory's entries to disk so that renames into it
+// survive a crash. It is best-effort: directory fsync is not supported on
+// every platform (notably Windows), so failures are logged, not returned.
+// Even when the directory sync is skipped, the per-file Sync in InstallIO
+// still prevents the renamed file from pointing at zeroed blocks.
+func syncDir(path string) {
+	dir, err := os.Open(path)
+	if err != nil {
+		log.Warn().Err(err).Str("path", path).Msg("failed to open provider directory for sync")
+		return
+	}
+	defer dir.Close()
+	if err := dir.Sync(); err != nil {
+		log.Warn().Err(err).Str("path", path).Msg("failed to sync provider directory")
+	}
 }
 
 func walkTarXz(reader io.Reader, callback func(reader *tar.Reader, header *tar.Header) error) error {
