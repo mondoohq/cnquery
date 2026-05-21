@@ -19,7 +19,7 @@ func TestWindowsLocalUsersParser(t *testing.T) {
 
 	localUsers, err := users.ParseWindowsLocalUsers(data)
 	assert.Nil(t, err)
-	assert.Equal(t, 5, len(localUsers))
+	assert.Equal(t, 8, len(localUsers))
 
 	expected := &users.WindowsLocalUser{
 		Name:            "chris",
@@ -47,6 +47,29 @@ func TestWindowsLocalUsersParser(t *testing.T) {
 
 	guest := findWindowsUser(localUsers, "Guest")
 	assert.Equal(t, "", guest.LocalPath, "accounts without a profile registry entry have empty LocalPath")
+
+	// Domain user synthesized from ProfileList alone (not present in Get-LocalUser).
+	// Name comes from the ProfileImagePath leaf - no LSA call, just the on-disk
+	// folder name, which matches what consumers iterating C:\Users\* actually want.
+	jane := findWindowsUser(localUsers, "jane.doe")
+	assert.NotNil(t, jane, "domain user from ProfileList should appear with path-leaf name")
+	assert.Equal(t, 2, jane.PrincipalSource, "ActiveDirectory principal source for AD user")
+	assert.Equal(t, `C:\Users\jane.doe`, jane.LocalPath)
+	assert.True(t, jane.Enabled)
+
+	// Entra ID (AAD) user - SID starts with S-1-12-1 and PrincipalSource is 3.
+	// Name is the UPN harvested from the IdentityStore registry cache; the
+	// on-disk folder uses a sanitized form (no @), which is why the two differ.
+	bob := findWindowsUser(localUsers, "bob@example.com")
+	assert.NotNil(t, bob, "AAD user should appear with UPN from IdentityStore cache")
+	assert.Equal(t, 3, bob.PrincipalSource, "Azure AD principal source for S-1-12-1 SID")
+	assert.Equal(t, `C:\Users\bob.example.com`, bob.LocalPath)
+
+	// Orphan profile - whatever's still on disk. Name comes from the path leaf so
+	// even SIDs we know nothing about surface with a recognizable label.
+	orphan := findWindowsUser(localUsers, "orphan.user")
+	assert.NotNil(t, orphan, "orphan profile should still appear with path-leaf name")
+	assert.Equal(t, `C:\Users\orphan.user`, orphan.LocalPath)
 }
 
 func pointer(val string) *string {

@@ -112,7 +112,17 @@ func TestManagerWindows(t *testing.T) {
 	guest := findUser(userList, "S-1-5-21-2356735557-1575748656-448136971-501")
 	assert.Equal(t, "", guest.Home)
 
-	assert.Equal(t, 5, len(userList))
+	// Domain user discovered via ProfileList (not via Get-LocalUser) must surface
+	// with name + home so downstream resources (vscode.extensions, firefox.profiles,
+	// ai_coding_tools) can iterate them on RDS / Citrix / domain-joined hosts.
+	// Name comes from the ProfileImagePath leaf, never from LSA/AD.
+	jane := findUser(userList, "S-1-5-21-9999999999-8888888888-7777777777-1001")
+	assert.NotNil(t, jane, "domain user from ProfileList should appear in users.list")
+	assert.Equal(t, "jane.doe", jane.Name)
+	assert.Equal(t, `C:\Users\jane.doe`, jane.Home)
+	assert.True(t, jane.Enabled)
+
+	assert.Equal(t, 8, len(userList))
 }
 
 func findUser(userList []*users.User, id string) *users.User {

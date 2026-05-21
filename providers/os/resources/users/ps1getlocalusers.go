@@ -42,44 +42,131 @@ type WindowsLocalUser struct {
 	LocalPath string
 }
 
-// getLocalUsersScript enumerates local users and joins each with their on-disk
-// profile path. Profile paths come from the ProfileList registry hive — the same
-// data Win32_UserProfile exposes — to avoid WMI latency on hosts with many
-// cached profiles (RDS, Citrix). Fields are projected explicitly so the JSON
-// shape is independent of ConvertTo-Json's depth behavior — in particular,
-// SID.AccountDomainSid is forced to its string form rather than letting
-// PowerShell expand the SecurityIdentifier into a nested object.
+// getLocalUsersScript unions Get-LocalUser with ProfileList registry entries so
+// domain/AAD users with profiles on disk show up in users.list. Names for
+// profile-only SIDs come from the profile path leaf, upgraded to the UPN from
+// the IdentityStore cache for AAD SIDs - never from LSA, so AD reachability
+// never gates discovery. Registry I/O uses [Microsoft.Win32.Registry] directly
+// (the PSDrive provider adds ~10x overhead per call).
 const getLocalUsersScript = `
+$svcSids = @{ 'S-1-5-18' = $true; 'S-1-5-19' = $true; 'S-1-5-20' = $true }
 $profiles = @{}
-Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' -ErrorAction SilentlyContinue |
-    ForEach-Object {
-        $sid = Split-Path $_.Name -Leaf
-        $path = (Get-ItemProperty -LiteralPath $_.PSPath -ErrorAction SilentlyContinue).ProfileImagePath
-        if ($path) { $profiles[$sid] = $path }
-    }
-$out = foreach ($u in Get-LocalUser) {
-    [PSCustomObject]@{
-        Name                   = $u.Name
-        Description            = $u.Description
-        PrincipalSource        = [int]$u.PrincipalSource
-        ObjectClass            = $u.ObjectClass
-        Enabled                = [bool]$u.Enabled
-        FullName               = $u.FullName
-        PasswordRequired       = [bool]$u.PasswordRequired
-        UserMayChangePassword  = [bool]$u.UserMayChangePassword
-        AccountExpires         = if ($u.AccountExpires) { $u.AccountExpires.ToString('o') } else { $null }
-        PasswordChangeableDate = if ($u.PasswordChangeableDate) { $u.PasswordChangeableDate.ToString('o') } else { $null }
-        PasswordExpires        = if ($u.PasswordExpires) { $u.PasswordExpires.ToString('o') } else { $null }
-        PasswordLastSet        = if ($u.PasswordLastSet) { $u.PasswordLastSet.ToString('o') } else { $null }
-        LastLogon              = if ($u.LastLogon) { $u.LastLogon.ToString('o') } else { $null }
-        SID = [PSCustomObject]@{
-            BinaryLength     = [int]$u.SID.BinaryLength
-            AccountDomainSid = if ($u.SID.AccountDomainSid) { $u.SID.AccountDomainSid.ToString() } else { $null }
-            Value            = $u.SID.Value
+$plKey = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey('SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList', $false)
+if ($plKey) {
+    try {
+        foreach ($sid in $plKey.GetSubKeyNames()) {
+            if ($svcSids.ContainsKey($sid)) { continue }
+            $sub = $plKey.OpenSubKey($sid, $false)
+            if ($sub) {
+                try {
+                    $path = $sub.GetValue('ProfileImagePath')
+                    if ($path) { $profiles[$sid] = [string]$path }
+                } finally { $sub.Close() }
+            }
         }
-        LocalPath              = $profiles[$u.SID.Value]
+    } finally { $plKey.Close() }
+}
+$locals = @{}
+foreach ($u in Get-LocalUser) { $locals[$u.SID.Value] = $u }
+$machineDomainSid = $null
+foreach ($u in $locals.Values) {
+    if ($u.SID -and $u.SID.AccountDomainSid) {
+        $machineDomainSid = $u.SID.AccountDomainSid.Value
+        break
     }
 }
+$identityStoreRoot = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey('SOFTWARE\Microsoft\IdentityStore\Cache', $false)
+function Get-LeafName {
+    param([string]$path)
+    if ([string]::IsNullOrWhiteSpace($path)) { return $null }
+    $leaf = [System.IO.Path]::GetFileName($path.TrimEnd('\','/'))
+    if ([string]::IsNullOrWhiteSpace($leaf)) { return $null }
+    return $leaf.Trim()
+}
+function Get-AadCachedName {
+    param([string]$sid)
+    if (-not ($sid -like 'S-1-12-1-*')) { return $null }
+    if (-not $identityStoreRoot) { return $null }
+    $cacheKey = $identityStoreRoot.OpenSubKey("$sid\IdentityCache\$sid", $false)
+    if (-not $cacheKey) { return $null }
+    try {
+        $name = $cacheKey.GetValue('UserName')
+        if ($name) {
+            $n = [string]$name
+            if (-not [string]::IsNullOrWhiteSpace($n)) { return $n.Trim() }
+        }
+    } finally { $cacheKey.Close() }
+    return $null
+}
+$allSids = New-Object 'System.Collections.Generic.HashSet[string]'
+foreach ($k in $locals.Keys)   { [void]$allSids.Add($k) }
+foreach ($k in $profiles.Keys) { [void]$allSids.Add($k) }
+$out = foreach ($sid in $allSids) {
+    $u = $locals[$sid]
+    if ($u) {
+        [PSCustomObject]@{
+            Name                   = $u.Name
+            Description            = $u.Description
+            PrincipalSource        = [int]$u.PrincipalSource
+            ObjectClass            = $u.ObjectClass
+            Enabled                = [bool]$u.Enabled
+            FullName               = $u.FullName
+            PasswordRequired       = [bool]$u.PasswordRequired
+            UserMayChangePassword  = [bool]$u.UserMayChangePassword
+            AccountExpires         = if ($u.AccountExpires) { $u.AccountExpires.ToString('o') } else { $null }
+            PasswordChangeableDate = if ($u.PasswordChangeableDate) { $u.PasswordChangeableDate.ToString('o') } else { $null }
+            PasswordExpires        = if ($u.PasswordExpires) { $u.PasswordExpires.ToString('o') } else { $null }
+            PasswordLastSet        = if ($u.PasswordLastSet) { $u.PasswordLastSet.ToString('o') } else { $null }
+            LastLogon              = if ($u.LastLogon) { $u.LastLogon.ToString('o') } else { $null }
+            SID = [PSCustomObject]@{
+                BinaryLength     = [int]$u.SID.BinaryLength
+                AccountDomainSid = if ($u.SID.AccountDomainSid) { $u.SID.AccountDomainSid.ToString() } else { $null }
+                Value            = $u.SID.Value
+            }
+            LocalPath              = $profiles[$u.SID.Value]
+        }
+    } else {
+        $sidObj = $null
+        try { $sidObj = New-Object System.Security.Principal.SecurityIdentifier($sid) } catch { }
+        $accountDomainSid = $null
+        $binaryLength    = 0
+        if ($sidObj) {
+            $binaryLength = [int]$sidObj.BinaryLength
+            if ($sidObj.AccountDomainSid) { $accountDomainSid = $sidObj.AccountDomainSid.ToString() }
+        }
+        $name = Get-AadCachedName -sid $sid
+        if (-not $name) { $name = Get-LeafName -path $profiles[$sid] }
+        if (-not $name) { $name = $sid }
+        $principalSource = 2
+        if ($sid -like 'S-1-12-1-*') {
+            $principalSource = 3
+        } elseif ($accountDomainSid -and $machineDomainSid -and ($accountDomainSid -ieq $machineDomainSid)) {
+            $principalSource = 1
+        }
+        [PSCustomObject]@{
+            Name                   = $name
+            Description            = ''
+            PrincipalSource        = $principalSource
+            ObjectClass            = 'User'
+            Enabled                = $true
+            FullName               = ''
+            PasswordRequired       = $false
+            UserMayChangePassword  = $false
+            AccountExpires         = $null
+            PasswordChangeableDate = $null
+            PasswordExpires        = $null
+            PasswordLastSet        = $null
+            LastLogon              = $null
+            SID = [PSCustomObject]@{
+                BinaryLength     = $binaryLength
+                AccountDomainSid = $accountDomainSid
+                Value            = $sid
+            }
+            LocalPath              = $profiles[$sid]
+        }
+    }
+}
+if ($identityStoreRoot) { $identityStoreRoot.Close() }
 ConvertTo-Json -InputObject @($out) -Depth 3
 `
 

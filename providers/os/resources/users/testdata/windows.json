@@ -103,5 +103,68 @@
                   "Value":  "S-1-5-21-2356735557-1575748656-448136971-504"
               },
       "LocalPath":  null
+  },
+  {
+      "Name":  "jane.doe",
+      "Description":  "",
+      "PrincipalSource":  2,
+      "ObjectClass":  "User",
+      "Enabled":  true,
+      "FullName":  "",
+      "PasswordRequired":  false,
+      "UserMayChangePassword":  false,
+      "AccountExpires":  null,
+      "PasswordChangeableDate":  null,
+      "PasswordExpires":  null,
+      "PasswordLastSet":  null,
+      "LastLogon":  null,
+      "SID":  {
+                  "BinaryLength":  28,
+                  "AccountDomainSid":  "S-1-5-21-9999999999-8888888888-7777777777",
+                  "Value":  "S-1-5-21-9999999999-8888888888-7777777777-1001"
+              },
+      "LocalPath":  "C:\\Users\\jane.doe"
+  },
+  {
+      "Name":  "bob@example.com",
+      "Description":  "",
+      "PrincipalSource":  3,
+      "ObjectClass":  "User",
+      "Enabled":  true,
+      "FullName":  "",
+      "PasswordRequired":  false,
+      "UserMayChangePassword":  false,
+      "AccountExpires":  null,
+      "PasswordChangeableDate":  null,
+      "PasswordExpires":  null,
+      "PasswordLastSet":  null,
+      "LastLogon":  null,
+      "SID":  {
+                  "BinaryLength":  28,
+                  "AccountDomainSid":  null,
+                  "Value":  "S-1-12-1-1234567890-1234567890-1234567890-1234567890"
+              },
+      "LocalPath":  "C:\\Users\\bob.example.com"
+  },
+  {
+      "Name":  "orphan.user",
+      "Description":  "",
+      "PrincipalSource":  2,
+      "ObjectClass":  "User",
+      "Enabled":  true,
+      "FullName":  "",
+      "PasswordRequired":  false,
+      "UserMayChangePassword":  false,
+      "AccountExpires":  null,
+      "PasswordChangeableDate":  null,
+      "PasswordExpires":  null,
+      "PasswordLastSet":  null,
+      "LastLogon":  null,
+      "SID":  {
+                  "BinaryLength":  28,
+                  "AccountDomainSid":  "S-1-5-21-9999999999-8888888888-7777777777",
+                  "Value":  "S-1-5-21-9999999999-8888888888-7777777777-1500"
+              },
+      "LocalPath":  "C:\\Users\\orphan.user"
   }
 ]
