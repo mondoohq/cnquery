@@ -110,6 +110,9 @@ func parseFlagsToFiltersOpts(m map[string]*llx.Primitive) map[string]string {
 			// ecr filters
 			"ecr:tags",
 			"ecr:exclude:tags",
+			"ecr:private-repository-names",
+			"ecr:public-repository-names",
+			"ecr:scope",
 			// ecs filters
 			"ecs:only-running-containers",
 			"ecs:discover-instances",

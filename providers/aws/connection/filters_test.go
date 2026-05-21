@@ -247,6 +247,12 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 			"ecr:tags": "tag1,tag2",
 			// EcrDiscoveryFilters.ExcludeTags
 			"ecr:exclude:tags": "tag1,tag2",
+			// EcrDiscoveryFilters.PrivateRepositoryNames
+			"ecr:private-repository-names": "priv1,priv2",
+			// EcrDiscoveryFilters.PublicRepositoryNames
+			"ecr:public-repository-names": "pub1,pub2",
+			// EcrDiscoveryFilters.Scope
+			"ecr:scope": "private",
 			// EcsDiscoveryFilters
 			"ecs:only-running-containers": "true",
 			"ecs:discover-images":         "T",
@@ -279,8 +285,11 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				DiscoverInstances:     false,
 			},
 			Ecr: EcrDiscoveryFilters{
-				Tags:        []string{"tag1", "tag2"},
-				ExcludeTags: []string{"tag1", "tag2"},
+				Tags:                   []string{"tag1", "tag2"},
+				ExcludeTags:            []string{"tag1", "tag2"},
+				PrivateRepositoryNames: []string{"priv1", "priv2"},
+				PublicRepositoryNames:  []string{"pub1", "pub2"},
+				Scope:                  EcrScopePrivate,
 			},
 			PropagateAccountTags: true,
 			AccountTags: map[string]string{
@@ -306,8 +315,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				ExcludeInstanceIds: []string{},
 			},
 			Ecr: EcrDiscoveryFilters{
-				Tags:        []string{},
-				ExcludeTags: []string{},
+				Tags:                   []string{},
+				ExcludeTags:            []string{},
+				PrivateRepositoryNames: []string{},
+				PublicRepositoryNames:  []string{},
 			},
 			Ecs:         EcsDiscoveryFilters{},
 			AccountTags: map[string]string{},
@@ -329,8 +340,10 @@ func TestDiscoveryFiltersFromOpts(t *testing.T) {
 				ExcludeInstanceIds: []string{},
 			},
 			Ecr: EcrDiscoveryFilters{
-				Tags:        []string{},
-				ExcludeTags: []string{},
+				Tags:                   []string{},
+				ExcludeTags:            []string{},
+				PrivateRepositoryNames: []string{},
+				PublicRepositoryNames:  []string{},
 			},
 			Ecs:         EcsDiscoveryFilters{},
 			AccountTags: map[string]string{},

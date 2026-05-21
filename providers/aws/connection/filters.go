@@ -39,8 +39,11 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 			ExcludeInstanceIds: parseCsvSliceOpt(opts, "ec2:exclude:instance-ids"),
 		},
 		Ecr: EcrDiscoveryFilters{
-			Tags:        parseCsvSliceOpt(opts, "ecr:tags"),
-			ExcludeTags: parseCsvSliceOpt(opts, "ecr:exclude:tags"),
+			Tags:                   parseCsvSliceOpt(opts, "ecr:tags"),
+			ExcludeTags:            parseCsvSliceOpt(opts, "ecr:exclude:tags"),
+			PrivateRepositoryNames: parseCsvSliceOpt(opts, "ecr:private-repository-names"),
+			PublicRepositoryNames:  parseCsvSliceOpt(opts, "ecr:public-repository-names"),
+			Scope:                  parseStringOpt(opts, "ecr:scope"),
 		},
 		Ecs: EcsDiscoveryFilters{
 			OnlyRunningContainers: parseBoolOpt(opts, "ecs:only-running-containers", false),
@@ -135,9 +138,20 @@ func (f Ec2DiscoveryFilters) MatchesExcludeInstanceIds(instanceId *string) bool 
 	return instanceId != nil && slices.Contains(f.ExcludeInstanceIds, *instanceId)
 }
 
+// Values for EcrDiscoveryFilters.Scope. An empty Scope means both.
+const (
+	EcrScopePrivate = "private"
+	EcrScopePublic  = "public"
+)
+
 type EcrDiscoveryFilters struct {
-	Tags        []string
-	ExcludeTags []string
+	Tags                   []string
+	ExcludeTags            []string
+	PrivateRepositoryNames []string
+	PublicRepositoryNames  []string
+	// Scope restricts discovery to one registry visibility. Allowed values are
+	// EcrScopePrivate and EcrScopePublic; an empty string means both.
+	Scope string
 }
 
 func (f EcrDiscoveryFilters) IsFilteredOutByTags(imageTags []string) bool {
@@ -216,6 +230,16 @@ func parseMapOpt(opts map[string]string, keyPrefix string) map[string]string {
 		res[strings.TrimPrefix(k, keyPrefix)] = v
 	}
 	return res
+}
+
+// Given a map of options and a key, return the string value for that key.
+// Returns "" if the key is missing or its value is empty.
+// Example:
+// key = "ecr:scope"
+// opts = {"ecr:scope": "private"}
+// returns "private"
+func parseStringOpt(opts map[string]string, key string) string {
+	return opts[key]
 }
 
 // Given a map of options and a key, return a slice of strings

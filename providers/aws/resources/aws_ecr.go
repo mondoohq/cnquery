@@ -125,6 +125,10 @@ func (a *mqlAwsEcr) images() ([]any, error) {
 func (a *mqlAwsEcr) privateRepositories() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
+	if conn.Filters.Ecr.Scope == connection.EcrScopePublic {
+		return []any{}, nil
+	}
+
 	res := []any{}
 	poolOfJobs := jobpool.CreatePool(a.getPrivateRepositories(conn), 5)
 	poolOfJobs.Run()
@@ -155,7 +159,9 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 			svc := conn.Ecr(region)
 			res := []any{}
 
-			paginator := ecr.NewDescribeRepositoriesPaginator(svc, &ecr.DescribeRepositoriesInput{})
+			paginator := ecr.NewDescribeRepositoriesPaginator(svc, &ecr.DescribeRepositoriesInput{
+				RepositoryNames: conn.Filters.Ecr.PrivateRepositoryNames,
+			})
 			for paginator.HasMorePages() {
 				repoResp, err := paginator.NextPage(ctx)
 				if err != nil {
@@ -507,10 +513,17 @@ func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
+	if conn.Filters.Ecr.Scope == connection.EcrScopePrivate {
+		return []any{}, nil
+	}
+
 	svc := conn.EcrPublic("us-east-1") // only supported for us-east-1
 	res := []any{}
 
-	paginator := ecrpublic.NewDescribeRepositoriesPaginator(svc, &ecrpublic.DescribeRepositoriesInput{RegistryId: aws.String(conn.AccountId())})
+	paginator := ecrpublic.NewDescribeRepositoriesPaginator(svc, &ecrpublic.DescribeRepositoriesInput{
+		RegistryId:      aws.String(conn.AccountId()),
+		RepositoryNames: conn.Filters.Ecr.PublicRepositoryNames,
+	})
 	for paginator.HasMorePages() {
 		repoResp, err := paginator.NextPage(context.TODO())
 		if err != nil {
