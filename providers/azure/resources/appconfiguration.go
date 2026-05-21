@@ -95,7 +95,7 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 	var publicNetworkAccess, cmkKeyIdentifier, cmkIdentityClientId string
 	var endpoint, provisioningState, createMode string
 	var disableLocalAuth, enablePurgeProtection bool
-	var softDeleteRetentionInDays int64
+	var softDeleteRetentionInDays, defaultKeyValueRevisionRetentionPeriodInSeconds int64
 
 	if p := store.Properties; p != nil {
 		if p.PublicNetworkAccess != nil {
@@ -109,6 +109,9 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		}
 		if p.SoftDeleteRetentionInDays != nil {
 			softDeleteRetentionInDays = int64(*p.SoftDeleteRetentionInDays)
+		}
+		if p.DefaultKeyValueRevisionRetentionPeriodInSeconds != nil {
+			defaultKeyValueRevisionRetentionPeriodInSeconds = *p.DefaultKeyValueRevisionRetentionPeriodInSeconds
 		}
 		if enc := p.Encryption; enc != nil && enc.KeyVaultProperties != nil {
 			if enc.KeyVaultProperties.KeyIdentifier != nil {
@@ -145,6 +148,7 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		"endpoint":                  llx.StringData(endpoint),
 		"provisioningState":         llx.StringData(provisioningState),
 		"createMode":                llx.StringData(createMode),
+		"defaultKeyValueRevisionRetentionPeriodInSeconds": llx.IntData(defaultKeyValueRevisionRetentionPeriodInSeconds),
 	})
 	if err != nil {
 		return nil, err

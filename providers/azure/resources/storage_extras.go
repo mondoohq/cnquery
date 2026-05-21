@@ -270,6 +270,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) objectReplicationPolicies() 
 		for _, pol := range page.Value {
 			var policyId, sourceAccount, destinationAccount string
 			var enabledTime *time.Time
+			var tagsReplicationEnabled bool
 			rules := []any{}
 			if p := pol.Properties; p != nil {
 				if p.PolicyID != nil {
@@ -283,17 +284,21 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) objectReplicationPolicies() 
 				}
 				enabledTime = p.EnabledTime
 				rules = objectReplicationRulesToDicts(p.Rules)
+				if p.TagsReplication != nil && p.TagsReplication.Enabled != nil {
+					tagsReplicationEnabled = *p.TagsReplication.Enabled
+				}
 			}
 			mqlPol, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.objectReplicationPolicy",
 				map[string]*llx.RawData{
-					"id":                 llx.StringDataPtr(pol.ID),
-					"name":               llx.StringDataPtr(pol.Name),
-					"type":               llx.StringDataPtr(pol.Type),
-					"policyId":           llx.StringData(policyId),
-					"sourceAccount":      llx.StringData(sourceAccount),
-					"destinationAccount": llx.StringData(destinationAccount),
-					"enabledTime":        llx.TimeDataPtr(enabledTime),
-					"rules":              llx.ArrayData(rules, types.Dict),
+					"id":                     llx.StringDataPtr(pol.ID),
+					"name":                   llx.StringDataPtr(pol.Name),
+					"type":                   llx.StringDataPtr(pol.Type),
+					"policyId":               llx.StringData(policyId),
+					"sourceAccount":          llx.StringData(sourceAccount),
+					"destinationAccount":     llx.StringData(destinationAccount),
+					"enabledTime":            llx.TimeDataPtr(enabledTime),
+					"rules":                  llx.ArrayData(rules, types.Dict),
+					"tagsReplicationEnabled": llx.BoolData(tagsReplicationEnabled),
 				})
 			if err != nil {
 				return nil, err

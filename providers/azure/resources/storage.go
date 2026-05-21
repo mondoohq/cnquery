@@ -694,10 +694,28 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 		return nil, err
 	}
 
-	// Extract versioning enabled from blob properties
+	// Extract versioning enabled and static-website config from blob properties
 	var isVersioningEnabled bool
-	if blobProps.BlobServiceProperties != nil && blobProps.BlobServiceProperties.IsVersioningEnabled != nil {
-		isVersioningEnabled = convert.ToValue(blobProps.BlobServiceProperties.IsVersioningEnabled)
+	var sw *storage.StaticWebsite
+	if blobProps.BlobServiceProperties != nil {
+		if blobProps.BlobServiceProperties.IsVersioningEnabled != nil {
+			isVersioningEnabled = convert.ToValue(blobProps.BlobServiceProperties.IsVersioningEnabled)
+		}
+		sw = blobProps.BlobServiceProperties.StaticWebsite
+	}
+	if sw == nil {
+		sw = &storage.StaticWebsite{}
+	}
+	staticWebsite, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountStaticWebsiteConfig,
+		map[string]*llx.RawData{
+			"id":                       llx.StringData(fmt.Sprintf("%s/%s/properties/staticWebsite", parentId, serviceType)),
+			"enabled":                  llx.BoolDataPtr(sw.Enabled),
+			"indexDocument":            llx.StringDataPtr(sw.IndexDocument),
+			"errorDocument404Path":     llx.StringDataPtr(sw.ErrorDocument404Path),
+			"defaultIndexDocumentPath": llx.StringDataPtr(sw.DefaultIndexDocumentPath),
+		})
+	if err != nil {
+		return nil, err
 	}
 
 	settings, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties,
@@ -707,6 +725,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 			"hourMetrics":         llx.ResourceData(hourMetrics, "hourMetrics"),
 			"logging":             llx.ResourceData(logging, "logging"),
 			"isVersioningEnabled": llx.BoolData(isVersioningEnabled),
+			"staticWebsite":       llx.ResourceData(staticWebsite, "staticWebsite"),
 		})
 	if err != nil {
 		return nil, err

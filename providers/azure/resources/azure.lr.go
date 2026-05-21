@@ -106,6 +106,7 @@ const (
 	ResourceAzureSubscriptionStorageServiceAccountManagementPolicyRule                           string = "azure.subscription.storageService.account.managementPolicy.rule"
 	ResourceAzureSubscriptionStorageServiceAccountServiceProperties                              string = "azure.subscription.storageService.account.service.properties"
 	ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties                          string = "azure.subscription.storageService.account.service.blobProperties"
+	ResourceAzureSubscriptionStorageServiceAccountStaticWebsiteConfig                            string = "azure.subscription.storageService.account.staticWebsiteConfig"
 	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesMetrics                       string = "azure.subscription.storageService.account.service.properties.metrics"
 	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy               string = "azure.subscription.storageService.account.service.properties.retentionPolicy"
 	ResourceAzureSubscriptionStorageServiceAccountServicePropertiesLogging                       string = "azure.subscription.storageService.account.service.properties.logging"
@@ -352,6 +353,10 @@ const (
 	ResourceAzureSubscriptionAppConfigurationServiceConfigurationStore                           string = "azure.subscription.appConfigurationService.configurationStore"
 	ResourceAzureSubscriptionCognitiveServicesService                                            string = "azure.subscription.cognitiveServicesService"
 	ResourceAzureSubscriptionCognitiveServicesServiceAccount                                     string = "azure.subscription.cognitiveServicesService.account"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy                            string = "azure.subscription.cognitiveServicesService.account.raiPolicy"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter               string = "azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef                    string = "azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef"
+	ResourceAzureSubscriptionCognitiveServicesServiceAccountRaiTopic                             string = "azure.subscription.cognitiveServicesService.account.raiTopic"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -717,6 +722,10 @@ func init() {
 		"azure.subscription.storageService.account.service.blobProperties": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountServiceBlobProperties(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionStorageServiceAccountServiceBlobProperties,
+		},
+		"azure.subscription.storageService.account.staticWebsiteConfig": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountStaticWebsiteConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountStaticWebsiteConfig,
 		},
 		"azure.subscription.storageService.account.service.properties.metrics": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountServicePropertiesMetrics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1701,6 +1710,22 @@ func init() {
 		"azure.subscription.cognitiveServicesService.account": {
 			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCognitiveServicesServiceAccount,
+		},
+		"azure.subscription.cognitiveServicesService.account.raiPolicy": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy,
+		},
+		"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter,
+		},
+		"azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef": {
+			// to override args, implement: initAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef,
+		},
+		"azure.subscription.cognitiveServicesService.account.raiTopic": {
+			Init:   initAzureSubscriptionCognitiveServicesServiceAccountRaiTopic,
+			Create: createAzureSubscriptionCognitiveServicesServiceAccountRaiTopic,
 		},
 	}
 }
@@ -4965,6 +4990,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.service.blobProperties.isVersioningEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).GetIsVersioningEnabled()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.storageService.account.service.blobProperties.staticWebsite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).GetStaticWebsite()).ToDataRes(types.Resource("azure.subscription.storageService.account.staticWebsiteConfig"))
+	},
+	"azure.subscription.storageService.account.staticWebsiteConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.storageService.account.staticWebsiteConfig.indexDocument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig).GetIndexDocument()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.staticWebsiteConfig.errorDocument404Path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig).GetErrorDocument404Path()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.staticWebsiteConfig.defaultIndexDocumentPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig).GetDefaultIndexDocumentPath()).ToDataRes(types.String)
+	},
 	"azure.subscription.storageService.account.service.properties.metrics.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics).GetId()).ToDataRes(types.String)
 	},
@@ -5183,6 +5223,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.objectReplicationPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.storageService.account.objectReplicationPolicy.tagsReplicationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy).GetTagsReplicationEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.storageService.account.blobInventoryPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy).GetId()).ToDataRes(types.String)
@@ -12369,6 +12412,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.appConfigurationService.configurationStore.createMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetCreateMode()).ToDataRes(types.String)
 	},
+	"azure.subscription.appConfigurationService.configurationStore.defaultKeyValueRevisionRetentionPeriodInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetDefaultKeyValueRevisionRetentionPeriodInSeconds()).ToDataRes(types.Int)
+	},
 	"azure.subscription.cognitiveServicesService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -12425,6 +12471,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cognitiveServicesService.account.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.storedCompletionsDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetStoredCompletionsDisabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetRaiPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.raiPolicy")))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetRaiTopics()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.raiTopic")))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).GetMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).GetPolicyType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.basePolicyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).GetBasePolicyName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).GetContentFilters()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter")))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.customBlocklists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).GetCustomBlocklists()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.customTopics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).GetCustomTopics()).ToDataRes(types.Array(types.Resource("azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef")))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).GetSource()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.blocking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).GetBlocking()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.severityThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).GetSeverityThreshold()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.topicName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef).GetTopicName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef).GetSource()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.blocking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef).GetBlocking()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.topic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef).GetTopic()).ToDataRes(types.Resource("azure.subscription.cognitiveServicesService.account.raiTopic"))
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.topicName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetTopicName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.topicId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetTopicId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.failedReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetFailedReason()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.sampleBlobUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetSampleBlobUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.lastModifiedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).GetLastModifiedAt()).ToDataRes(types.Time)
 	},
 }
 
@@ -17054,6 +17190,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).IsVersioningEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.service.blobProperties.staticWebsite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties).StaticWebsite, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.staticWebsiteConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.staticWebsiteConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.staticWebsiteConfig.indexDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig).IndexDocument, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.staticWebsiteConfig.errorDocument404Path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig).ErrorDocument404Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.staticWebsiteConfig.defaultIndexDocumentPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig).DefaultIndexDocumentPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.service.properties.metrics.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics).__id, ok = v.Value.(string)
 		return
@@ -17372,6 +17532,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.objectReplicationPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.objectReplicationPolicy.tagsReplicationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy).TagsReplicationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.blobInventoryPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27902,6 +28066,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).CreateMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.appConfigurationService.configurationStore.defaultKeyValueRevisionRetentionPeriodInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).DefaultKeyValueRevisionRetentionPeriodInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cognitiveServicesService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesService).__id, ok = v.Value.(string)
 		return
@@ -27984,6 +28152,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cognitiveServicesService.account.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.storedCompletionsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).StoredCompletionsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).RaiPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).RaiTopics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.basePolicyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).BasePolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).ContentFilters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.customBlocklists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).CustomBlocklists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.customTopics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy).CustomTopics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.blocking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).Blocking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter.severityThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter).SeverityThreshold, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.topicName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef).TopicName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.blocking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef).Blocking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef.topic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef).Topic, ok = plugin.RawToTValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.topicName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).TopicName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.topicId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).TopicId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.failedReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).FailedReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.sampleBlobUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).SampleBlobUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cognitiveServicesService.account.raiTopic.lastModifiedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic).LastModifiedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 }
@@ -39070,6 +39374,7 @@ type mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties struct {
 	MinuteMetrics       plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics]
 	Logging             plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountServicePropertiesLogging]
 	IsVersioningEnabled plugin.TValue[bool]
+	StaticWebsite       plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig]
 }
 
 // createAzureSubscriptionStorageServiceAccountServiceBlobProperties creates a new instance of this resource
@@ -39127,6 +39432,69 @@ func (c *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) GetLogg
 
 func (c *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) GetIsVersioningEnabled() *plugin.TValue[bool] {
 	return &c.IsVersioningEnabled
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountServiceBlobProperties) GetStaticWebsite() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig] {
+	return &c.StaticWebsite
+}
+
+// mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig for the azure.subscription.storageService.account.staticWebsiteConfig resource
+type mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfigInternal it will be used here
+	Enabled                  plugin.TValue[bool]
+	IndexDocument            plugin.TValue[string]
+	ErrorDocument404Path     plugin.TValue[string]
+	DefaultIndexDocumentPath plugin.TValue[string]
+}
+
+// createAzureSubscriptionStorageServiceAccountStaticWebsiteConfig creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountStaticWebsiteConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.staticWebsiteConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig) MqlName() string {
+	return "azure.subscription.storageService.account.staticWebsiteConfig"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig) GetIndexDocument() *plugin.TValue[string] {
+	return &c.IndexDocument
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig) GetErrorDocument404Path() *plugin.TValue[string] {
+	return &c.ErrorDocument404Path
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStaticWebsiteConfig) GetDefaultIndexDocumentPath() *plugin.TValue[string] {
+	return &c.DefaultIndexDocumentPath
 }
 
 // mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics for the azure.subscription.storageService.account.service.properties.metrics resource
@@ -39723,14 +40091,15 @@ type mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicyInternal it will be used here
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Type               plugin.TValue[string]
-	PolicyId           plugin.TValue[string]
-	SourceAccount      plugin.TValue[string]
-	DestinationAccount plugin.TValue[string]
-	EnabledTime        plugin.TValue[*time.Time]
-	Rules              plugin.TValue[[]any]
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	PolicyId               plugin.TValue[string]
+	SourceAccount          plugin.TValue[string]
+	DestinationAccount     plugin.TValue[string]
+	EnabledTime            plugin.TValue[*time.Time]
+	Rules                  plugin.TValue[[]any]
+	TagsReplicationEnabled plugin.TValue[bool]
 }
 
 // createAzureSubscriptionStorageServiceAccountObjectReplicationPolicy creates a new instance of this resource
@@ -39800,6 +40169,10 @@ func (c *mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy) GetEn
 
 func (c *mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountObjectReplicationPolicy) GetTagsReplicationEnabled() *plugin.TValue[bool] {
+	return &c.TagsReplicationEnabled
 }
 
 // mqlAzureSubscriptionStorageServiceAccountBlobInventoryPolicy for the azure.subscription.storageService.account.blobInventoryPolicy resource
@@ -65235,21 +65608,22 @@ type mqlAzureSubscriptionAppConfigurationServiceConfigurationStore struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionAppConfigurationServiceConfigurationStoreInternal it will be used here
-	Id                        plugin.TValue[string]
-	Name                      plugin.TValue[string]
-	Location                  plugin.TValue[string]
-	Tags                      plugin.TValue[map[string]any]
-	Sku                       plugin.TValue[any]
-	Identity                  plugin.TValue[any]
-	PublicNetworkAccess       plugin.TValue[string]
-	DisableLocalAuth          plugin.TValue[bool]
-	CmkKeyIdentifier          plugin.TValue[string]
-	CmkIdentityClientId       plugin.TValue[string]
-	SoftDeleteRetentionInDays plugin.TValue[int64]
-	EnablePurgeProtection     plugin.TValue[bool]
-	Endpoint                  plugin.TValue[string]
-	ProvisioningState         plugin.TValue[string]
-	CreateMode                plugin.TValue[string]
+	Id                                              plugin.TValue[string]
+	Name                                            plugin.TValue[string]
+	Location                                        plugin.TValue[string]
+	Tags                                            plugin.TValue[map[string]any]
+	Sku                                             plugin.TValue[any]
+	Identity                                        plugin.TValue[any]
+	PublicNetworkAccess                             plugin.TValue[string]
+	DisableLocalAuth                                plugin.TValue[bool]
+	CmkKeyIdentifier                                plugin.TValue[string]
+	CmkIdentityClientId                             plugin.TValue[string]
+	SoftDeleteRetentionInDays                       plugin.TValue[int64]
+	EnablePurgeProtection                           plugin.TValue[bool]
+	Endpoint                                        plugin.TValue[string]
+	ProvisioningState                               plugin.TValue[string]
+	CreateMode                                      plugin.TValue[string]
+	DefaultKeyValueRevisionRetentionPeriodInSeconds plugin.TValue[int64]
 }
 
 // createAzureSubscriptionAppConfigurationServiceConfigurationStore creates a new instance of this resource
@@ -65349,6 +65723,10 @@ func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetCreat
 	return &c.CreateMode
 }
 
+func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetDefaultKeyValueRevisionRetentionPeriodInSeconds() *plugin.TValue[int64] {
+	return &c.DefaultKeyValueRevisionRetentionPeriodInSeconds
+}
+
 // mqlAzureSubscriptionCognitiveServicesService for the azure.subscription.cognitiveServicesService resource
 type mqlAzureSubscriptionCognitiveServicesService struct {
 	MqlRuntime *plugin.Runtime
@@ -65437,6 +65815,9 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccount struct {
 	CmkKeyVaultUri                plugin.TValue[string]
 	Endpoint                      plugin.TValue[string]
 	ProvisioningState             plugin.TValue[string]
+	StoredCompletionsDisabled     plugin.TValue[bool]
+	RaiPolicies                   plugin.TValue[[]any]
+	RaiTopics                     plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCognitiveServicesServiceAccount creates a new instance of this resource
@@ -65542,4 +65923,353 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetEndpoint() *plu
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetProvisioningState() *plugin.TValue[string] {
 	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetStoredCompletionsDisabled() *plugin.TValue[bool] {
+	return &c.StoredCompletionsDisabled
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetRaiPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RaiPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account", c.__id, "raiPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.raiPolicies()
+	})
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetRaiTopics() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RaiTopics, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account", c.__id, "raiTopics")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.raiTopics()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy for the azure.subscription.cognitiveServicesService.account.raiPolicy resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Mode             plugin.TValue[string]
+	PolicyType       plugin.TValue[string]
+	BasePolicyName   plugin.TValue[string]
+	ContentFilters   plugin.TValue[[]any]
+	CustomBlocklists plugin.TValue[[]any]
+	CustomTopics     plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.raiPolicy"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) GetBasePolicyName() *plugin.TValue[string] {
+	return &c.BasePolicyName
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) GetContentFilters() *plugin.TValue[[]any] {
+	return &c.ContentFilters
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) GetCustomBlocklists() *plugin.TValue[[]any] {
+	return &c.CustomBlocklists
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicy) GetCustomTopics() *plugin.TValue[[]any] {
+	return &c.CustomTopics
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter for the azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilterInternal it will be used here
+	Name              plugin.TValue[string]
+	Source            plugin.TValue[string]
+	Enabled           plugin.TValue[bool]
+	Blocking          plugin.TValue[bool]
+	SeverityThreshold plugin.TValue[string]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter) GetBlocking() *plugin.TValue[bool] {
+	return &c.Blocking
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyContentFilter) GetSeverityThreshold() *plugin.TValue[string] {
+	return &c.SeverityThreshold
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef for the azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRefInternal
+	TopicName plugin.TValue[string]
+	Source    plugin.TValue[string]
+	Blocking  plugin.TValue[bool]
+	Topic     plugin.TValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef) GetTopicName() *plugin.TValue[string] {
+	return &c.TopicName
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef) GetBlocking() *plugin.TValue[bool] {
+	return &c.Blocking
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiPolicyTopicRef) GetTopic() *plugin.TValue[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic](&c.Topic, func() (*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef", c.__id, "topic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic), nil
+			}
+		}
+
+		return c.topic()
+	})
+}
+
+// mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic for the azure.subscription.cognitiveServicesService.account.raiTopic resource
+type mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopicInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	TopicName      plugin.TValue[string]
+	TopicId        plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Status         plugin.TValue[string]
+	FailedReason   plugin.TValue[string]
+	SampleBlobUrl  plugin.TValue[string]
+	CreatedAt      plugin.TValue[*time.Time]
+	LastModifiedAt plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionCognitiveServicesServiceAccountRaiTopic creates a new instance of this resource
+func createAzureSubscriptionCognitiveServicesServiceAccountRaiTopic(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cognitiveServicesService.account.raiTopic", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) MqlName() string {
+	return "azure.subscription.cognitiveServicesService.account.raiTopic"
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetTopicName() *plugin.TValue[string] {
+	return &c.TopicName
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetTopicId() *plugin.TValue[string] {
+	return &c.TopicId
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetFailedReason() *plugin.TValue[string] {
+	return &c.FailedReason
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetSampleBlobUrl() *plugin.TValue[string] {
+	return &c.SampleBlobUrl
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountRaiTopic) GetLastModifiedAt() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedAt
 }

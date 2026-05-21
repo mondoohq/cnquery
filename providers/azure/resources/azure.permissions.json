@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.12.1",
-  "generated_at": "2026-05-21T06:31:08-07:00",
+  "generated_at": "2026-05-21T14:39:22-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.Apimanagement/service/read",
@@ -31,6 +31,8 @@
     "Microsoft.Cdn/profiles/origingroups/read",
     "Microsoft.Cdn/profiles/read",
     "Microsoft.Cognitiveservices/accounts/read",
+    "Microsoft.Cognitiveservices/raiPolicies/read",
+    "Microsoft.Cognitiveservices/raiTopics/read",
     "Microsoft.Compute/dedicatedHostGroups/read",
     "Microsoft.Compute/dedicatedHosts/read",
     "Microsoft.Compute/diskAccesses/read",
@@ -364,6 +366,18 @@
       "source_file": "cognitiveservices.go"
     },
     {
+      "permission": "Microsoft.Cognitiveservices/raiPolicies/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices.go"
+    },
+    {
+      "permission": "Microsoft.Cognitiveservices/raiTopics/read",
+      "service": "Microsoft.Cognitiveservices",
+      "action": "NewListPager",
+      "source_file": "cognitiveservices.go"
+    },
+    {
       "permission": "Microsoft.Compute/dedicatedHostGroups/read",
       "service": "Microsoft.Compute",
       "action": "NewListBySubscriptionPager",
@@ -516,7 +530,7 @@
     {
       "permission": "Microsoft.DBforMySQL/servers/configurations/read",
       "service": "Microsoft.DBforMySQL",
-      "action": "Get",
+      "action": "NewListByServerPager",
       "source_file": "mysql.go"
     },
     {
@@ -576,7 +590,7 @@
     {
       "permission": "Microsoft.DBforPostgreSQL/servers/read",
       "service": "Microsoft.DBforPostgreSQL",
-      "action": "NewListBySubscriptionPager",
+      "action": "NewListPager",
       "source_file": "postgresql.go"
     },
     {
@@ -636,7 +650,7 @@
     {
       "permission": "Microsoft.DocumentDB/sQLResources/read",
       "service": "Microsoft.DocumentDB",
-      "action": "NewListSQLContainersPager",
+      "action": "NewListSQLDatabasesPager",
       "source_file": "cosmosdb_extras.go"
     },
     {
@@ -774,7 +788,7 @@
     {
       "permission": "Microsoft.Network/connections/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListPager",
       "source_file": "network.go"
     },
     {
@@ -816,7 +830,7 @@
     {
       "permission": "Microsoft.Network/natGateways/read",
       "service": "Microsoft.Network",
-      "action": "Get",
+      "action": "NewListAllPager",
       "source_file": "network.go"
     },
     {
@@ -996,7 +1010,7 @@
     {
       "permission": "Microsoft.RecoveryServices/vaults/read",
       "service": "Microsoft.RecoveryServices",
-      "action": "Get",
+      "action": "NewListBySubscriptionIDPager",
       "source_file": "recoveryservices.go"
     },
     {

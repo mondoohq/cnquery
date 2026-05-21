@@ -2789,6 +2789,26 @@ private azure.subscription.storageService.account.service.blobProperties @defaul
   logging azure.subscription.storageService.account.service.properties.logging
   // Whether versioning is enabled for blobs
   isVersioningEnabled bool
+  // Static website hosting configuration for the blob service
+  staticWebsite azure.subscription.storageService.account.staticWebsiteConfig
+}
+
+// Static website hosting configuration on a storage account
+//
+// Examine whether $web is being served as a static site and which
+// documents the account returns for the root, subdirectory index, and
+// 404 responses. Enabled accounts expose an HTTPS-reachable web
+// endpoint without any access control on the served files, so the
+// presence of static hosting is itself an audit signal.
+private azure.subscription.storageService.account.staticWebsiteConfig @defaults("enabled indexDocument errorDocument404Path") {
+  // Whether static website hosting is enabled on the account
+  enabled bool
+  // Default index document served at the root (e.g., "index.html"); empty when unset
+  indexDocument string
+  // Path served for HTTP 404 responses (relative to $web); empty when unset
+  errorDocument404Path string
+  // Absolute path to the default index document served at any directory level; empty when unset
+  defaultIndexDocumentPath string
 }
 
 // Azure Storage account service properties metrics
@@ -2978,6 +2998,8 @@ private azure.subscription.storageService.account.objectReplicationPolicy @defau
   enabledTime time
   // Replication rules. Each entry has {ruleId, sourceContainer, destinationContainer, prefixMatch, minCreationTime}.
   rules []dict
+  // Whether blob index tags are replicated alongside blob data; false when the policy omits tag replication
+  tagsReplicationEnabled bool
 }
 
 // Azure Storage blob inventory policy
@@ -9167,6 +9189,8 @@ azure.subscription.appConfigurationService.configurationStore @defaults("id name
   provisioningState string
   // Creation mode of the store ("Default" or "Recover")
   createMode string
+  // Default retention period (seconds) for revisions of every key-value, controlling how far back point-in-time queries can read
+  defaultKeyValueRevisionRetentionPeriodInSeconds int
 }
 
 // Azure AI Services
@@ -9234,4 +9258,102 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   endpoint string
   // Provisioning state of the account
   provisioningState string
+  // Whether stored completions (request/response logging used for fine-tuning and evaluation) are disabled
+  storedCompletionsDisabled bool
+  // Responsible AI content-filter policies configured on the account
+  raiPolicies() []azure.subscription.cognitiveServicesService.account.raiPolicy
+  // Responsible AI custom topics registered on the account
+  raiTopics() []azure.subscription.cognitiveServicesService.account.raiTopic
+}
+
+// Responsible AI content-filter policy on a Cognitive Services account
+//
+// Examine the policy mode, the content filters it enforces (per category
+// and source), the custom blocklists it references, and the custom RAI
+// topics it applies. Use this to audit which accounts have content
+// filtering active, whether filters block or only warn, and at what
+// severity threshold each category trips.
+private azure.subscription.cognitiveServicesService.account.raiPolicy @defaults("name mode policyType") {
+  // ARM resource ID
+  id string
+  // Policy name
+  name string
+  // Filter mode: "Default", "Deferred", "Blocking", or "Asynchronous_filter"
+  mode string
+  // Policy type: "UserManaged" or "SystemManaged"
+  policyType string
+  // Base policy this one inherits from; empty when not inheriting
+  basePolicyName string
+  // Content filters configured on the policy, one per (category × source)
+  contentFilters []azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter
+  // Custom blocklist references. Each entry has {blocklistName, source, blocking}.
+  customBlocklists []dict
+  // Custom RAI topic references attached to the policy
+  customTopics []azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef
+}
+
+// Content filter on a Responsible AI policy
+//
+// Examine a single content-filter rule keyed by content category and
+// source. Rules describe which severity threshold trips the filter,
+// whether the filter is active, and whether matches block the request
+// or only flag it. Audit queries typically scope by (name, source) to
+// confirm coverage of sensitive categories.
+private azure.subscription.cognitiveServicesService.account.raiPolicy.contentFilter @defaults("name source enabled blocking severityThreshold") {
+  // Content category name (e.g., "Hate", "Sexual", "Violence", "Selfharm", "Jailbreak", "ProtectedMaterialText", "ProtectedMaterialCode")
+  name string
+  // Where the filter applies: "Prompt" (user input) or "Completion" (model output)
+  source string
+  // Whether the filter is enabled
+  enabled bool
+  // Whether matches block the request; when false, matches are only flagged
+  blocking bool
+  // Severity level at which the filter trips ("Low", "Medium", or "High"); empty when not set
+  severityThreshold string
+}
+
+// Custom RAI topic reference on a Responsible AI policy
+//
+// Examine the link between a policy and a custom topic registered on
+// the same account. Carries the per-attachment scalars (source the
+// topic applies to, whether matches block) and resolves to the
+// underlying [[azure.subscription.cognitiveServicesService.account.raiTopic]].
+private azure.subscription.cognitiveServicesService.account.raiPolicy.topicRef @defaults("topicName source blocking") {
+  // Name of the custom topic
+  topicName string
+  // Where the topic filter applies: "Prompt" or "Completion"
+  source string
+  // Whether matches block the request
+  blocking bool
+  // The referenced custom topic on the account
+  topic() azure.subscription.cognitiveServicesService.account.raiTopic
+}
+
+// Responsible AI custom topic on a Cognitive Services account
+//
+// Examine a custom RAI topic and its lifecycle: status, sample data
+// location, creation/last-modified times, and a failure reason when the
+// topic has failed to train. Topics referenced by an [[azure.subscription.cognitiveServicesService.account.raiPolicy]]
+// add custom blocked-content detection beyond the built-in categories.
+private azure.subscription.cognitiveServicesService.account.raiTopic @defaults("name status topicName") {
+  // ARM resource ID
+  id string
+  // Resource name
+  name string
+  // Custom topic name (the policy-facing identifier)
+  topicName string
+  // Stable identifier of the custom topic
+  topicId string
+  // Description of the custom topic
+  description string
+  // Lifecycle status of the topic (e.g., "Succeeded", "Failed", "Running")
+  status string
+  // Reason the topic is in a failed state; empty when not failed
+  failedReason string
+  // URL of the sample blob used to train the topic
+  sampleBlobUrl string
+  // When the topic was created
+  createdAt time
+  // When the topic was last modified
+  lastModifiedAt time
 }
