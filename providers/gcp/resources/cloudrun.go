@@ -410,6 +410,11 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					}
 
 					templateId := fmt.Sprintf("gcp.project.cloudRunService.service/%s/%s/revisionTemplate", projectId, s.Name)
+					mqlVpcAccessCfg, err := mqlVpcAccessConfig(g.MqlRuntime, templateId+"/vpcAccess", s.Template.VpcAccess)
+					if err != nil {
+						log.Error().Err(err).Send()
+					}
+
 					mqlContainers, err := mqlContainers(g.MqlRuntime, s.Template.Containers, templateId)
 					if err != nil {
 						log.Error().Err(err).Send()
@@ -423,6 +428,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 						"annotations":                   llx.MapData(convert.MapToInterfaceMap(s.Template.Annotations), types.String),
 						"scaling":                       llx.DictData(scalingCfg),
 						"vpcAccess":                     llx.DictData(vpcCfg),
+						"vpcAccessConfig":               llx.ResourceData(mqlVpcAccessCfg, "gcp.project.cloudRunService.vpcAccessConfig"),
 						"timeout":                       llx.TimeData(llx.DurationToTime((s.Template.Timeout.Seconds))),
 						"serviceAccountEmail":           llx.StringData(s.Template.ServiceAccount),
 						"containers":                    llx.ArrayData(mqlContainers, "gcp.project.cloudRunService.container"),
@@ -714,6 +720,13 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 							return
 						}
 
+						taskTemplateId := fmt.Sprintf("%s/template", templateId)
+						mqlVpcAccessCfg, err := mqlVpcAccessConfig(g.MqlRuntime, taskTemplateId+"/vpcAccess", j.Template.Template.VpcAccess)
+						if err != nil {
+							log.Error().Err(err).Send()
+							return
+						}
+
 						mqlContainers, err := mqlContainers(g.MqlRuntime, j.Template.Template.Containers, templateId)
 						if err != nil {
 							log.Error().Err(err).Send()
@@ -721,9 +734,10 @@ func (g *mqlGcpProjectCloudRunService) jobs() ([]any, error) {
 						}
 
 						mqlTaskTemplate, err = CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.job.executionTemplate.taskTemplate", map[string]*llx.RawData{
-							"id":                   llx.StringData(fmt.Sprintf("%s/template", templateId)),
+							"id":                   llx.StringData(taskTemplateId),
 							"projectId":            llx.StringData(projectId),
 							"vpcAccess":            llx.DictData(vpcAccess),
+							"vpcAccessConfig":      llx.ResourceData(mqlVpcAccessCfg, "gcp.project.cloudRunService.vpcAccessConfig"),
 							"timeout":              llx.TimeData(llx.DurationToTime((j.Template.Template.Timeout.Seconds))),
 							"serviceAccountEmail":  llx.StringData(j.Template.Template.ServiceAccount),
 							"containers":           llx.ArrayData(mqlContainers, types.Resource("gcp.project.cloudRunService.container")),
@@ -871,6 +885,38 @@ func mqlVpcAccess(vpcAccess *runpb.VpcAccess) (map[string]any, error) {
 	return convert.JsonToDict(mqlVpcAccess{
 		Connector: vpcAccess.Connector,
 		Egress:    vpcAccess.Egress.String(),
+	})
+}
+
+func (g *mqlGcpProjectCloudRunServiceVpcAccessConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+// mqlVpcAccessConfig builds the typed gcp.project.cloudRunService.vpcAccessConfig
+// resource shared by Cloud Run service revisions and Cloud Run job task
+// templates. id should be a parent-qualified path so multiple instances of
+// this sub-resource (one per revision or task template) do not collide in the
+// runtime cache.
+func mqlVpcAccessConfig(runtime *plugin.Runtime, id string, vpcAccess *runpb.VpcAccess) (plugin.Resource, error) {
+	if vpcAccess == nil {
+		return nil, nil
+	}
+	interfaces := make([]any, 0, len(vpcAccess.NetworkInterfaces))
+	for _, ni := range vpcAccess.NetworkInterfaces {
+		if ni == nil {
+			continue
+		}
+		interfaces = append(interfaces, map[string]any{
+			"network":    ni.Network,
+			"subnetwork": ni.Subnetwork,
+			"tags":       convert.SliceAnyToInterface(ni.Tags),
+		})
+	}
+	return CreateResource(runtime, "gcp.project.cloudRunService.vpcAccessConfig", map[string]*llx.RawData{
+		"id":                llx.StringData(id),
+		"connector":         llx.StringData(vpcAccess.Connector),
+		"egress":            llx.StringData(vpcAccess.Egress.String()),
+		"networkInterfaces": llx.ArrayData(interfaces, types.Dict),
 	})
 }
 

@@ -231,9 +231,20 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				Domain string `json:"domain,omitempty"`
 			}
 			var mqlADCfg map[string]any
+			var mqlActiveDirectory plugin.Resource
 			if s.ActiveDirectoryConfig != nil {
 				mqlADCfg, err = convert.JsonToDict(mqlActiveDirectoryCfg{
 					Domain: s.ActiveDirectoryConfig.Domain,
+				})
+				if err != nil {
+					return err
+				}
+				mqlActiveDirectory, err = CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings.activeDirectory", map[string]*llx.RawData{
+					"id":                        llx.StringData(fmt.Sprintf("%s/settings/activeDirectory", instanceId)),
+					"domain":                    llx.StringData(s.ActiveDirectoryConfig.Domain),
+					"mode":                      llx.StringData(s.ActiveDirectoryConfig.Mode),
+					"dnsServers":                llx.ArrayData(convert.SliceAnyToInterface(s.ActiveDirectoryConfig.DnsServers), types.String),
+					"adminCredentialSecretName": llx.StringData(s.ActiveDirectoryConfig.AdminCredentialSecretName),
 				})
 				if err != nil {
 					return err
@@ -428,6 +439,7 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 			mqlSettings, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings", map[string]*llx.RawData{
 				"activationPolicy":            llx.StringData(s.ActivationPolicy),
 				"activeDirectoryConfig":       llx.DictData(mqlADCfg),
+				"activeDirectory":             llx.ResourceData(mqlActiveDirectory, "gcp.project.sqlService.instance.settings.activeDirectory"),
 				"availabilityType":            llx.StringData(s.AvailabilityType),
 				"backupConfiguration":         llx.DictData(mqlBackupCfg),
 				"collation":                   llx.StringData(s.Collation),
@@ -704,6 +716,10 @@ func (g *mqlGcpProjectSqlServiceInstanceSettings) id() (string, error) {
 }
 
 func (g *mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
+func (g *mqlGcpProjectSqlServiceInstanceSettingsActiveDirectory) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 

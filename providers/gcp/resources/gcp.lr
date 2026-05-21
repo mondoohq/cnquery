@@ -1215,8 +1215,10 @@ gcp.project.computeService.instance @defaults("name id") {
   name string
   // Optional description for this instance
   description string
-  // Confidential instance configuration
-  confidentialInstanceConfig dict
+  // DEPRECATED: use confidentialCompute for the typed sub-resource that exposes the same fields plus the confidential VM type
+  confidentialInstanceConfig @maturity("deprecated") dict
+  // Confidential Compute configuration for this instance
+  confidentialCompute gcp.project.computeService.instance.confidentialCompute
   // Whether the instance is allowed to send and receive packets with non-matching destination or source IPs
   canIpForward bool
   // CPU platform used by this instance
@@ -1349,6 +1351,24 @@ private gcp.project.computeService.instance.vulnerabilityReport @defaults("name 
   highestUpgradableCveSeverity string
   // Time the report was last refreshed
   updateTime time
+}
+
+// Google Cloud (GCP) Compute Engine confidential VM configuration
+//
+// Examine the Confidential Compute settings on a VM instance — whether
+// confidential compute is enabled and, when it is, the underlying
+// technology used (AMD SEV, AMD SEV-SNP, or Intel TDX). Confidential
+// VMs encrypt memory at the hardware level and are the GCP control
+// surface for workloads that require runtime memory isolation.
+private gcp.project.computeService.instance.confidentialCompute @defaults("enabled instanceType") {
+  // Internal ID for this resource
+  id string
+  // Whether confidential compute is enabled on this instance
+  enabled bool
+  // Confidential VM technology
+  //
+  // One of SEV, SEV_SNP, TDX, or CONFIDENTIAL_INSTANCE_TYPE_UNSPECIFIED. Empty when confidential compute is not enabled.
+  instanceType string
 }
 
 // Google Cloud (GCP) Compute Shielded Instance configuration
@@ -2421,8 +2441,10 @@ private gcp.project.sqlService.instance.settings {
   instanceName string
   // When the instance is activated
   activationPolicy string
-  // Entra ID (formerly Active Directory) configuration (relevant only for Cloud SQL for SQL Server)
-  activeDirectoryConfig dict
+  // DEPRECATED: use activeDirectory for the typed sub-resource that exposes domain, mode, and DNS servers
+  activeDirectoryConfig @maturity("deprecated") dict
+  // Entra ID (formerly Active Directory) configuration; relevant only for Cloud SQL for SQL Server
+  activeDirectory gcp.project.sqlService.instance.settings.activeDirectory
   // Availability type
   availabilityType string
   // Daily backup configuration for the instance
@@ -2473,6 +2495,30 @@ private gcp.project.sqlService.instance.settings {
   timeZone string
   // User-provided labels
   userLabels map[string]string
+}
+
+// Google Cloud (GCP) SQL instance Entra ID / Active Directory configuration
+//
+// Examine the Active Directory (now Entra ID) binding on a Cloud SQL
+// for SQL Server instance. `domain` is the FQDN the instance is joined
+// to; `mode` selects between Google-managed (`MANAGED_ACTIVE_DIRECTORY`)
+// and customer-managed (`CUSTOMER_MANAGED_ACTIVE_DIRECTORY`) directory
+// services; `dnsServers` lists the domain controller IPv4 addresses
+// used to bootstrap the join. A SQL Server instance with no AD binding
+// (or a binding to an unexpected domain) is the audit hot spot.
+private gcp.project.sqlService.instance.settings.activeDirectory @defaults("domain mode") {
+  // Internal ID for this resource
+  id string
+  // Fully-qualified Active Directory / Entra ID domain (e.g., corp.example.com); empty when no binding is configured
+  domain string
+  // Active Directory mode
+  //
+  // One of MANAGED_ACTIVE_DIRECTORY (Google-managed), CUSTOMER_MANAGED_ACTIVE_DIRECTORY, ACTIVE_DIRECTORY_MODE_UNSPECIFIED, or the deprecated SELF_MANAGED_ACTIVE_DIRECTORY.
+  mode string
+  // Domain controller IPv4 addresses used to bootstrap Active Directory; populated only for customer-managed AD
+  dnsServers []string
+  // Secret Manager resource name (`projects/{p}/secrets/{s}`) holding the administrator credential; populated only for customer-managed AD
+  adminCredentialSecretName string
 }
 
 // Google Cloud (GCP) SQL instance settings backup configuration
@@ -3454,6 +3500,8 @@ private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType di
   shieldedInstanceConfig gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig
   // Parameters that can be configured on Linux nodes
   linuxNodeConfig gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig
+  // Parameters that can be configured on Windows nodes
+  windowsNodeConfig gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig
   // Node kubelet configs
   kubeletConfig gcp.project.gkeService.cluster.nodepool.config.kubeletConfig
   // The Customer Managed Encryption Key used to encrypt the boot disk attached to each node
@@ -3537,6 +3585,22 @@ private gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig @defaults
   id string
   // The Linux kernel parameters to apply to the nodes and all pods running on them
   sysctls map[string]string
+}
+
+// Google Kubernetes Engine (GKE) node pool parameters that can be configured on Windows nodes
+//
+// Examine the Windows-specific settings on a GKE node pool. Surfaces
+// the `osVersion` selecting which Windows Server LTSC image the pool
+// is pinned to (e.g., `LTSC2019`, `LTSC2022`). Auditors of mixed-OS
+// GKE clusters need this to verify that Windows nodes are running an
+// approved OS baseline.
+private gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig @defaults("osVersion") {
+  // Internal ID for this resource
+  id string
+  // Windows Server OS version pinned to this node pool
+  //
+  // One of OS_VERSION_UNSPECIFIED, OS_VERSION_LTSC2019, or OS_VERSION_LTSC2022.
+  osVersion string
 }
 
 // Google Kubernetes Engine (GKE) Node Pool kubelet configuration
@@ -5141,8 +5205,10 @@ private gcp.project.cloudRunService.service.revisionTemplate @defaults("name") {
   annotations map[string]string
   // Scaling settings
   scaling dict
-  // VPC access configuration
-  vpcAccess dict
+  // DEPRECATED: use vpcAccessConfig for the typed sub-resource (connector, egress, networkInterfaces)
+  vpcAccess @maturity("deprecated") dict
+  // VPC access configuration (Serverless VPC connector and egress policy)
+  vpcAccessConfig gcp.project.cloudRunService.vpcAccessConfig
   // Maximum allowed time for an instance to respond to a request
   timeout time
   // Email address of the IAM service account associated with the revision of the service
@@ -5205,6 +5271,32 @@ private gcp.project.cloudRunService.container.probe {
   httpGet dict
   // TCP socket probe configuration
   tcpSocket dict
+}
+
+// Google Cloud (GCP) Cloud Run VPC access configuration
+//
+// Examine how a Cloud Run revision or job task reaches private
+// networks. Surfaces the Serverless VPC `connector` (when traffic
+// flows through a connector), the direct-VPC `networkInterfaces`
+// (when the task is attached to a VPC subnet), and the `egress`
+// policy that decides which outbound traffic is sent through the
+// VPC: `PRIVATE_RANGES_ONLY` keeps RFC1918 traffic on the VPC and
+// sends public-IP traffic over the default internet path, while
+// `ALL_TRAFFIC` forces every egress packet through the VPC — the
+// stronger control for data-exfiltration audits.
+private gcp.project.cloudRunService.vpcAccessConfig @defaults("connector egress") {
+  // Internal ID for this resource
+  id string
+  // Serverless VPC Access connector (full resource name `projects/{p}/locations/{l}/connectors/{c}`); empty when direct-VPC `networkInterfaces` is used
+  connector string
+  // Outbound traffic routing through the VPC
+  //
+  // One of ALL_TRAFFIC (every packet egresses via the VPC), PRIVATE_RANGES_ONLY (only RFC1918 destinations), or VPC_EGRESS_UNSPECIFIED.
+  egress string
+  // Direct-VPC network interfaces the revision or task is attached to
+  //
+  // Each entry exposes `network` (the VPC network resource name), `subnetwork` (the subnet resource name), and `tags` (the network tags the workload presents). Populated when the workload uses direct VPC egress instead of a Serverless VPC Access connector.
+  networkInterfaces []dict
 }
 
 // Google Cloud (GCP) Run condition
@@ -5308,8 +5400,10 @@ private gcp.project.cloudRunService.job.executionTemplate.taskTemplate {
   id string
   // Project ID
   projectId string
-  // VPC access configuration
-  vpcAccess dict
+  // DEPRECATED: use vpcAccessConfig for the typed sub-resource (connector, egress, networkInterfaces)
+  vpcAccess @maturity("deprecated") dict
+  // VPC access configuration (Serverless VPC connector and egress policy)
+  vpcAccessConfig gcp.project.cloudRunService.vpcAccessConfig
   // Maximum allowed time for an instance to respond to a request
   timeout time
   // Email address of the IAM service account associated with the revision of the service

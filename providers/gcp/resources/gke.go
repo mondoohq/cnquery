@@ -190,6 +190,10 @@ func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) id(
 	return g.Id.Data, g.Id.Error
 }
 
+func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigWindowsNodeConfig) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
 func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
@@ -964,6 +968,17 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 		}
 	}
 
+	var mqlWindowsNodeCfg plugin.Resource
+	if cfg.WindowsNodeConfig != nil {
+		mqlWindowsNodeCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig", map[string]*llx.RawData{
+			"id":        llx.StringData(fmt.Sprintf("%s/windowsNodeConfig", nodePoolId)),
+			"osVersion": llx.StringData(cfg.WindowsNodeConfig.OsVersion.String()),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	var mqlKubeletCfg plugin.Resource
 	if cfg.KubeletConfig != nil {
 		mqlKubeletCfg, err = CreateResource(runtime, "gcp.project.gkeService.cluster.nodepool.config.kubeletConfig", map[string]*llx.RawData{
@@ -1054,6 +1069,7 @@ func createMqlNodePoolConfig(runtime *plugin.Runtime, np *containerpb.NodePool, 
 		"sandboxConfig":           llx.ResourceData(mqlSandboxCfg, "gcp.project.gkeService.cluster.nodepool.config.sandboxConfig"),
 		"shieldedInstanceConfig":  llx.ResourceData(mqlShieldedInstanceCfg, "gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig"),
 		"linuxNodeConfig":         llx.ResourceData(mqlLinuxNodeCfg, " gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig"),
+		"windowsNodeConfig":       llx.ResourceData(mqlWindowsNodeCfg, "gcp.project.gkeService.cluster.nodepool.config.windowsNodeConfig"),
 		"kubeletConfig":           llx.ResourceData(mqlKubeletCfg, "gcp.project.gkeService.cluster.nodepool.config.kubeletConfig"),
 		"bootDiskKmsKey":          llx.StringData(cfg.BootDiskKmsKey),
 		"gcfsConfig":              llx.ResourceData(mqlGcfsCfg, "gcp.project.gkeService.cluster.nodepool.config.gcfsConfig"),

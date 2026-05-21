@@ -368,6 +368,10 @@ func (g *mqlGcpProjectComputeServiceInstanceShieldedInstanceConfig) id() (string
 	return g.Id.Data, g.Id.Error
 }
 
+func (g *mqlGcpProjectComputeServiceInstanceConfidentialCompute) id() (string, error) {
+	return g.Id.Data, g.Id.Error
+}
+
 func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
 	if g.Id.Error != nil {
 		return "", g.Id.Error
@@ -619,12 +623,21 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 	}
 
 	var mqlConfCompute map[string]any
+	var mqlConfidentialCompute plugin.Resource
 	if instance.ConfidentialInstanceConfig != nil {
 		type mqlConfidentialInstanceConfig struct {
 			Enabled bool `json:"serviceEnabled,omitempty"`
 		}
 		mqlConfCompute, err = convert.JsonToDict(
 			mqlConfidentialInstanceConfig{Enabled: instance.ConfidentialInstanceConfig.EnableConfidentialCompute})
+		if err != nil {
+			return nil, err
+		}
+		mqlConfidentialCompute, err = CreateResource(runtime, "gcp.project.computeService.instance.confidentialCompute", map[string]*llx.RawData{
+			"id":           llx.StringData(fmt.Sprintf("%d/confidentialCompute", instance.Id)),
+			"enabled":      llx.BoolData(instance.ConfidentialInstanceConfig.EnableConfidentialCompute),
+			"instanceType": llx.StringData(instance.ConfidentialInstanceConfig.ConfidentialInstanceType),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -641,6 +654,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"name":                            llx.StringData(instance.Name),
 		"description":                     llx.StringData(instance.Description),
 		"confidentialInstanceConfig":      llx.DictData(mqlConfCompute),
+		"confidentialCompute":             llx.ResourceData(mqlConfidentialCompute, "gcp.project.computeService.instance.confidentialCompute"),
 		"canIpForward":                    llx.BoolData(instance.CanIpForward),
 		"cpuPlatform":                     llx.StringData(instance.CpuPlatform),
 		"created":                         llx.TimeDataPtr(parseTime(instance.CreationTimestamp)),
