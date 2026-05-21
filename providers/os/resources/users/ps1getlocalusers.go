@@ -26,7 +26,11 @@ type WindowsLocalUser struct {
 	SID             WindowsSID
 	ObjectClass     string
 
-	// special attributes for user
+	// special attributes for user.
+	// For profile-only SIDs (domain/AAD users that aren't in Get-LocalUser) Enabled
+	// is always true - the script can't read AD/AAD state without LSA, and a profile
+	// on disk implies the account logged in at some point. Don't treat Enabled as
+	// authoritative for synthesized entries; cross-check against an upstream IDP.
 	Enabled                bool
 	FullName               string
 	PasswordRequired       bool
@@ -131,8 +135,8 @@ $out = foreach ($sid in $allSids) {
         $accountDomainSid = $null
         $binaryLength    = 0
         if ($sidObj) {
-            $binaryLength = [int]$sidObj.BinaryLength
-            if ($sidObj.AccountDomainSid) { $accountDomainSid = $sidObj.AccountDomainSid.ToString() }
+            try { $binaryLength = [int]$sidObj.BinaryLength } catch { }
+            try { if ($sidObj.AccountDomainSid) { $accountDomainSid = $sidObj.AccountDomainSid.ToString() } } catch { }
         }
         $name = Get-AadCachedName -sid $sid
         if (-not $name) { $name = Get-LeafName -path $profiles[$sid] }
