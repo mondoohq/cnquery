@@ -259,6 +259,7 @@ horizontalpodautoscaler
 hostedzone
 hostkeyalgorithms
 hpi
+hsm
 hsts
 Hudi
 hvm
@@ -702,6 +703,7 @@ worktree
 writeback
 Xff
 xlarge
+xks
 xssmatchstatement
 xts
 xxxxx

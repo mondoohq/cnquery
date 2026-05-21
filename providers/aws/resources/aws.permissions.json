@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.26.2",
-  "generated_at": "2026-05-21T20:00:47-07:00",
+  "generated_at": "2026-05-21T15:32:32-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -68,28 +68,9 @@
     "batch:DescribeSchedulingPolicies",
     "batch:ListJobs",
     "batch:ListSchedulingPolicies",
-    "bedrock:GetAdvancedPromptOptimizationJob",
-    "bedrock:GetAgent",
-    "bedrock:GetCustomModel",
-    "bedrock:GetEvaluationJob",
-    "bedrock:GetFlow",
-    "bedrock:GetGuardrail",
-    "bedrock:GetKnowledgeBase",
-    "bedrock:GetModelImportJob",
-    "bedrock:GetModelInvocationLoggingConfiguration",
     "bedrock:ListAdvancedPromptOptimizationJobs",
-    "bedrock:ListAgentActionGroups",
-    "bedrock:ListAgentKnowledgeBases",
-    "bedrock:ListAgents",
     "bedrock:ListCustomModels",
-    "bedrock:ListDataSources",
-    "bedrock:ListEvaluationJobs",
-    "bedrock:ListFlows",
-    "bedrock:ListFoundationModels",
     "bedrock:ListGuardrails",
-    "bedrock:ListKnowledgeBases",
-    "bedrock:ListModelImportJobs",
-    "bedrock:ListModelInvocationJobs",
     "bedrock:ListProvisionedModelThroughputs",
     "budgets:DescribeBudgets",
     "budgets:DescribeNotificationsForBudget",
@@ -133,10 +114,8 @@
     "codedeploy:ListDeployments",
     "codedeploy:ListTagsForResource",
     "cognito-identity:DescribeIdentityPool",
-    "cognito-identity:GetIdentityPoolRoles",
     "cognito-identity:ListIdentityPools",
     "cognito-idp:DescribeIdentityProvider",
-    "cognito-idp:DescribeRiskConfiguration",
     "cognito-idp:DescribeUserPool",
     "cognito-idp:DescribeUserPoolClient",
     "cognito-idp:DescribeUserPoolDomain",
@@ -364,15 +343,9 @@
     "glue:GetDataCatalogEncryptionSettings",
     "glue:GetDatabases",
     "glue:GetJobs",
-    "glue:GetResourcePolicies",
-    "glue:GetSchema",
-    "glue:GetSecurityConfiguration",
     "glue:GetSecurityConfigurations",
     "glue:GetTables",
     "glue:GetTags",
-    "glue:GetTriggers",
-    "glue:ListRegistries",
-    "glue:ListSchemas",
     "glue:ListWorkflows",
     "guardduty:DescribePublishingDestination",
     "guardduty:GetCoverageStatistics",
@@ -447,6 +420,7 @@
     "kinesis:ListStreamConsumers",
     "kinesis:ListStreams",
     "kinesis:ListTagsForStream",
+    "kms:DescribeCustomKeyStores",
     "kms:DescribeKey",
     "kms:GetKeyLastUsage",
     "kms:GetKeyPolicy",
@@ -477,7 +451,6 @@
     "lightsail:GetInstances",
     "lightsail:GetLoadBalancers",
     "lightsail:GetRelationalDatabases",
-    "logs:DescribeAccountPolicies",
     "logs:DescribeDestinations",
     "logs:DescribeLogGroups",
     "logs:DescribeLogStreams",
@@ -485,8 +458,6 @@
     "logs:DescribeQueryDefinitions",
     "logs:DescribeResourcePolicies",
     "logs:DescribeSubscriptionFilters",
-    "logs:GetDataProtectionPolicy",
-    "logs:ListLogAnomalyDetectors",
     "logs:ListTagsForResource",
     "macie2:DescribeBuckets",
     "macie2:DescribeClassificationJob",
@@ -521,11 +492,9 @@
     "network-firewall:DescribeFirewallPolicy",
     "network-firewall:DescribeLoggingConfiguration",
     "network-firewall:DescribeRuleGroup",
-    "network-firewall:DescribeTLSInspectionConfiguration",
     "network-firewall:ListFirewallPolicies",
     "network-firewall:ListFirewalls",
     "network-firewall:ListRuleGroups",
-    "network-firewall:ListTLSInspectionConfigurations",
     "organizations:DescribeAccount",
     "organizations:DescribeOrganization",
     "organizations:ListAccounts",
@@ -729,21 +698,16 @@
     "sqs:GetQueueAttributes",
     "sqs:ListQueueTags",
     "sqs:ListQueues",
-    "ssm:DescribeAssociation",
     "ssm:DescribeDocument",
     "ssm:DescribeDocumentPermission",
     "ssm:DescribeInstanceInformation",
     "ssm:DescribeInstancePatchStates",
-    "ssm:DescribeMaintenanceWindowTargets",
-    "ssm:DescribeMaintenanceWindowTasks",
     "ssm:DescribeMaintenanceWindows",
     "ssm:DescribeParameters",
     "ssm:DescribePatchBaselines",
-    "ssm:DescribePatchGroups",
     "ssm:GetDocument",
     "ssm:GetMaintenanceWindow",
     "ssm:GetPatchBaseline",
-    "ssm:GetServiceSetting",
     "ssm:ListAssociations",
     "ssm:ListDocuments",
     "ssm:ListResourceComplianceSummaries",
@@ -1207,81 +1171,9 @@
       "source_file": "aws_batch.go"
     },
     {
-      "permission": "bedrock:GetAdvancedPromptOptimizationJob",
-      "service": "bedrock",
-      "action": "GetAdvancedPromptOptimizationJob",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:GetAgent",
-      "service": "bedrock",
-      "action": "GetAgent",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:GetCustomModel",
-      "service": "bedrock",
-      "action": "GetCustomModel",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:GetEvaluationJob",
-      "service": "bedrock",
-      "action": "GetEvaluationJob",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:GetFlow",
-      "service": "bedrock",
-      "action": "GetFlow",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:GetGuardrail",
-      "service": "bedrock",
-      "action": "GetGuardrail",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:GetKnowledgeBase",
-      "service": "bedrock",
-      "action": "GetKnowledgeBase",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:GetModelImportJob",
-      "service": "bedrock",
-      "action": "GetModelImportJob",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:GetModelInvocationLoggingConfiguration",
-      "service": "bedrock",
-      "action": "GetModelInvocationLoggingConfiguration",
-      "source_file": "aws_bedrock.go"
-    },
-    {
       "permission": "bedrock:ListAdvancedPromptOptimizationJobs",
       "service": "bedrock",
       "action": "ListAdvancedPromptOptimizationJobs",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:ListAgentActionGroups",
-      "service": "bedrock",
-      "action": "ListAgentActionGroups",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:ListAgentKnowledgeBases",
-      "service": "bedrock",
-      "action": "ListAgentKnowledgeBases",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:ListAgents",
-      "service": "bedrock",
-      "action": "ListAgents",
       "source_file": "aws_bedrock.go"
     },
     {
@@ -1291,51 +1183,9 @@
       "source_file": "aws_bedrock.go"
     },
     {
-      "permission": "bedrock:ListDataSources",
-      "service": "bedrock",
-      "action": "ListDataSources",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:ListEvaluationJobs",
-      "service": "bedrock",
-      "action": "ListEvaluationJobs",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:ListFlows",
-      "service": "bedrock",
-      "action": "ListFlows",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:ListFoundationModels",
-      "service": "bedrock",
-      "action": "ListFoundationModels",
-      "source_file": "aws_bedrock.go"
-    },
-    {
       "permission": "bedrock:ListGuardrails",
       "service": "bedrock",
       "action": "ListGuardrails",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:ListKnowledgeBases",
-      "service": "bedrock",
-      "action": "ListKnowledgeBases",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:ListModelImportJobs",
-      "service": "bedrock",
-      "action": "ListModelImportJobs",
-      "source_file": "aws_bedrock.go"
-    },
-    {
-      "permission": "bedrock:ListModelInvocationJobs",
-      "service": "bedrock",
-      "action": "ListModelInvocationJobs",
       "source_file": "aws_bedrock.go"
     },
     {
@@ -1597,12 +1447,6 @@
       "source_file": "aws_cognito.go"
     },
     {
-      "permission": "cognito-identity:GetIdentityPoolRoles",
-      "service": "cognito-identity",
-      "action": "GetIdentityPoolRoles",
-      "source_file": "aws_cognito.go"
-    },
-    {
       "permission": "cognito-identity:ListIdentityPools",
       "service": "cognito-identity",
       "action": "ListIdentityPools",
@@ -1612,12 +1456,6 @@
       "permission": "cognito-idp:DescribeIdentityProvider",
       "service": "cognito-idp",
       "action": "DescribeIdentityProvider",
-      "source_file": "aws_cognito.go"
-    },
-    {
-      "permission": "cognito-idp:DescribeRiskConfiguration",
-      "service": "cognito-idp",
-      "action": "DescribeRiskConfiguration",
       "source_file": "aws_cognito.go"
     },
     {
@@ -3031,24 +2869,6 @@
       "source_file": "aws_glue.go"
     },
     {
-      "permission": "glue:GetResourcePolicies",
-      "service": "glue",
-      "action": "GetResourcePolicies",
-      "source_file": "aws_glue.go"
-    },
-    {
-      "permission": "glue:GetSchema",
-      "service": "glue",
-      "action": "GetSchema",
-      "source_file": "aws_glue.go"
-    },
-    {
-      "permission": "glue:GetSecurityConfiguration",
-      "service": "glue",
-      "action": "GetSecurityConfiguration",
-      "source_file": "aws_glue.go"
-    },
-    {
       "permission": "glue:GetSecurityConfigurations",
       "service": "glue",
       "action": "GetSecurityConfigurations",
@@ -3064,24 +2884,6 @@
       "permission": "glue:GetTags",
       "service": "glue",
       "action": "GetTags",
-      "source_file": "aws_glue.go"
-    },
-    {
-      "permission": "glue:GetTriggers",
-      "service": "glue",
-      "action": "GetTriggers",
-      "source_file": "aws_glue.go"
-    },
-    {
-      "permission": "glue:ListRegistries",
-      "service": "glue",
-      "action": "ListRegistries",
-      "source_file": "aws_glue.go"
-    },
-    {
-      "permission": "glue:ListSchemas",
-      "service": "glue",
-      "action": "ListSchemas",
       "source_file": "aws_glue.go"
     },
     {
@@ -3535,6 +3337,12 @@
       "source_file": "aws_kinesis.go"
     },
     {
+      "permission": "kms:DescribeCustomKeyStores",
+      "service": "kms",
+      "action": "DescribeCustomKeyStores",
+      "source_file": "aws_kms.go"
+    },
+    {
       "permission": "kms:DescribeKey",
       "service": "kms",
       "action": "DescribeKey",
@@ -3721,12 +3529,6 @@
       "source_file": "aws_lightsail.go"
     },
     {
-      "permission": "logs:DescribeAccountPolicies",
-      "service": "logs",
-      "action": "DescribeAccountPolicies",
-      "source_file": "aws_cloudwatch_logs.go"
-    },
-    {
       "permission": "logs:DescribeDestinations",
       "service": "logs",
       "action": "DescribeDestinations",
@@ -3767,18 +3569,6 @@
       "service": "logs",
       "action": "DescribeSubscriptionFilters",
       "source_file": "aws_cloudwatch.go"
-    },
-    {
-      "permission": "logs:GetDataProtectionPolicy",
-      "service": "logs",
-      "action": "GetDataProtectionPolicy",
-      "source_file": "aws_cloudwatch_logs.go"
-    },
-    {
-      "permission": "logs:ListLogAnomalyDetectors",
-      "service": "logs",
-      "action": "ListLogAnomalyDetectors",
-      "source_file": "aws_cloudwatch_logs.go"
     },
     {
       "permission": "logs:ListTagsForResource",
@@ -3985,12 +3775,6 @@
       "source_file": "aws_networkfirewall.go"
     },
     {
-      "permission": "network-firewall:DescribeTLSInspectionConfiguration",
-      "service": "network-firewall",
-      "action": "DescribeTLSInspectionConfiguration",
-      "source_file": "aws_networkfirewall.go"
-    },
-    {
       "permission": "network-firewall:ListFirewallPolicies",
       "service": "network-firewall",
       "action": "ListFirewallPolicies",
@@ -4006,12 +3790,6 @@
       "permission": "network-firewall:ListRuleGroups",
       "service": "network-firewall",
       "action": "ListRuleGroups",
-      "source_file": "aws_networkfirewall.go"
-    },
-    {
-      "permission": "network-firewall:ListTLSInspectionConfigurations",
-      "service": "network-firewall",
-      "action": "ListTLSInspectionConfigurations",
       "source_file": "aws_networkfirewall.go"
     },
     {
@@ -5311,12 +5089,6 @@
       "source_file": "aws_sqs.go"
     },
     {
-      "permission": "ssm:DescribeAssociation",
-      "service": "ssm",
-      "action": "DescribeAssociation",
-      "source_file": "aws_ssm_state.go"
-    },
-    {
       "permission": "ssm:DescribeDocument",
       "service": "ssm",
       "action": "DescribeDocument",
@@ -5347,18 +5119,6 @@
       "source_file": "aws_ec2.go"
     },
     {
-      "permission": "ssm:DescribeMaintenanceWindowTargets",
-      "service": "ssm",
-      "action": "DescribeMaintenanceWindowTargets",
-      "source_file": "aws_ssm_state.go"
-    },
-    {
-      "permission": "ssm:DescribeMaintenanceWindowTasks",
-      "service": "ssm",
-      "action": "DescribeMaintenanceWindowTasks",
-      "source_file": "aws_ssm_state.go"
-    },
-    {
       "permission": "ssm:DescribeMaintenanceWindows",
       "service": "ssm",
       "action": "DescribeMaintenanceWindows",
@@ -5377,40 +5137,22 @@
       "source_file": "aws_ssm_documents.go"
     },
     {
-      "permission": "ssm:DescribePatchGroups",
-      "service": "ssm",
-      "action": "DescribePatchGroups",
-      "source_file": "aws_ssm_state.go"
-    },
-    {
       "permission": "ssm:GetDocument",
       "service": "ssm",
       "action": "GetDocument",
       "source_file": "aws_ssm_documents.go"
     },
     {
-      "permission": "ssm:GetDocument",
-      "service": "ssm",
-      "action": "GetDocument",
-      "source_file": "aws_ssm_state.go"
-    },
-    {
       "permission": "ssm:GetMaintenanceWindow",
       "service": "ssm",
       "action": "GetMaintenanceWindow",
-      "source_file": "aws_ssm_state.go"
+      "source_file": "aws_ssm_documents.go"
     },
     {
       "permission": "ssm:GetPatchBaseline",
       "service": "ssm",
       "action": "GetPatchBaseline",
       "source_file": "aws_ssm_documents.go"
-    },
-    {
-      "permission": "ssm:GetServiceSetting",
-      "service": "ssm",
-      "action": "GetServiceSetting",
-      "source_file": "aws_ssm_state.go"
     },
     {
       "permission": "ssm:ListAssociations",

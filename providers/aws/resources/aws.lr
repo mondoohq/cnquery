@@ -1609,6 +1609,10 @@ private aws.fsx.volume @defaults("id name lifecycle region") {
 aws.kms @defaults("keys") {
   // List of all customer master keys (CMKs) in the caller's AWS account across all regions
   keys() []aws.kms.key
+  // All grants attached to KMS keys in the account across all regions
+  grants() []aws.kms.grant
+  // Custom key stores (CloudHSM-backed and External Key Store) registered with KMS in the account across all regions
+  customKeyStores() []aws.kms.customKeyStore
 }
 
 // AWS Key Management Service (KMS) key
@@ -1651,10 +1655,16 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   keyUsage() string
   // Whether this is a multi-region key
   multiRegion() bool
-  // Multi-region key configuration including primary and replica details
-  multiRegionConfiguration() dict
+  // Primary and replica details of the multi-region key (null when not a multi-region key)
+  multiRegionConfiguration() aws.kms.key.multiRegionConfiguration
   // Origin of the key material: AWS_KMS, EXTERNAL, AWS_CLOUDHSM, EXTERNAL_KEY_STORE
   origin() string
+  // Custom key store that hosts the key's material (null when AWS-managed)
+  customKeyStore() aws.kms.customKeyStore
+  // External key associated with this key when the key store is an External Key Store (xks)
+  //
+  // Shape (when present): `{id: "external-key-id"}` — the identifier the external key store proxy uses to address the external key. Null for keys not backed by an External Key Store.
+  xksKeyConfiguration() dict
   // Number of days between each automatic rotation (default 365)
   rotationPeriodInDays() int
   // Next date that KMS will automatically rotate the key material
@@ -1687,6 +1697,8 @@ private aws.kms.grant @defaults("grantId granteePrincipal") {
   key() aws.kms.key
   // DEPRECATED: Use key() instead
   keyArn @maturity("deprecated") string
+  // Friendly name supplied at grant creation, or empty when none was provided
+  name string
   // Principal that receives the grant's permissions
   granteePrincipal string
   // Principal that can retire the grant
@@ -1694,9 +1706,78 @@ private aws.kms.grant @defaults("grantId granteePrincipal") {
   // AWS account under which the grant was issued
   issuingAccount string
   // List of operations permitted by the grant
+  //
+  // Examples: Decrypt, Encrypt, GenerateDataKey, GenerateDataKeyWithoutPlaintext, ReEncryptFrom, ReEncryptTo, Sign, Verify, GenerateMac, VerifyMac, CreateGrant, RetireGrant, DescribeKey, DeriveSharedSecret.
   operations []string
+  // Constraints that restrict the operations the grant allows
+  //
+  // Shape (any subset may be present): `{encryptionContextEquals: {key: "value", ...}, encryptionContextSubset: {key: "value", ...}}`. Empty/null when the grant has no constraints.
+  constraints dict
   // When the grant was created
   createdAt time
+}
+
+// Multi-region configuration of a KMS key
+//
+// Examine the primary/replica role of a multi-region key and the typed
+// references to its primary and replica keys. The `multiRegionKeyType`
+// field is PRIMARY for the primary key and REPLICA for replicas. The
+// `primaryKey()` accessor resolves the primary across regions and
+// `replicaKeys()` resolves every replica; both return null/empty when the
+// referenced keys are not accessible to the caller (cross-region or
+// permission boundary).
+private aws.kms.key.multiRegionConfiguration @defaults("multiRegionKeyType") {
+  // Whether the key is the PRIMARY or a REPLICA in its multi-region key set
+  multiRegionKeyType string
+  // ARN of the primary key in this multi-region key set
+  primaryKeyArn string
+  // Region of the primary key in this multi-region key set
+  primaryKeyRegion string
+  // ARNs of every replica key in this multi-region key set
+  replicaKeyArns []string
+  // Primary key in this multi-region key set
+  primaryKey() aws.kms.key
+  // Replica keys in this multi-region key set
+  replicaKeys() []aws.kms.key
+}
+
+// KMS custom key store
+//
+// Examine custom key stores registered with AWS KMS. A custom key store
+// is either backed by an AWS CloudHSM cluster (`AWS_CLOUDHSM`) or by an
+// external key manager reached through an external key store proxy
+// (`EXTERNAL_KEY_STORE`). The `customKeyStoreId` selects an individual
+// store, and the `connectionState`, `connectionErrorCode`,
+// `cloudHsmClusterId`, and `xksProxyConfiguration` fields surface what
+// is needed to audit which keys live outside KMS itself and whether the
+// backing store is currently reachable.
+private aws.kms.customKeyStore @defaults("customKeyStoreName customKeyStoreType connectionState region") {
+  // Unique identifier for the custom key store
+  customKeyStoreId string
+  // User-supplied friendly name for the custom key store
+  customKeyStoreName string
+  // Backing key store type
+  //
+  // One of `AWS_CLOUDHSM` (CloudHSM-backed) or `EXTERNAL_KEY_STORE` (external key store proxy + external key manager).
+  customKeyStoreType string
+  // Region the custom key store is registered in
+  region string
+  // Current connection state between KMS and the backing store
+  //
+  // One of CONNECTED, CONNECTING, DISCONNECTED, DISCONNECTING, FAILED.
+  connectionState string
+  // Error code explaining why the store is not connected (empty when connected)
+  connectionErrorCode string
+  // When the custom key store was registered
+  creationDate time
+  // CloudHSM cluster ID backing the store (only set when customKeyStoreType is AWS_CLOUDHSM)
+  cloudHsmClusterId string
+  // Trust anchor certificate of the CloudHSM cluster (only set when customKeyStoreType is AWS_CLOUDHSM)
+  trustAnchorCertificate string
+  // External key store proxy configuration
+  //
+  // Only set when `customKeyStoreType` is `EXTERNAL_KEY_STORE`. Shape: `{connectivity: "PUBLIC_ENDPOINT"|"VPC_ENDPOINT_SERVICE", accessKeyIdPresent: bool, uriEndpoint: string, uriPath: string, vpcEndpointServiceName: string, vpcEndpointServiceOwner: string}`. The raw `AccessKeyId` is intentionally surfaced only as `accessKeyIdPresent` to avoid leaking credentials into query output.
+  xksProxyConfiguration dict
 }
 
 

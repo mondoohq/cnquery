@@ -89,6 +89,8 @@ const (
 	ResourceAwsKms                                                              string = "aws.kms"
 	ResourceAwsKmsKey                                                           string = "aws.kms.key"
 	ResourceAwsKmsGrant                                                         string = "aws.kms.grant"
+	ResourceAwsKmsKeyMultiRegionConfiguration                                   string = "aws.kms.key.multiRegionConfiguration"
+	ResourceAwsKmsCustomKeyStore                                                string = "aws.kms.customKeyStore"
 	ResourceAwsIam                                                              string = "aws.iam"
 	ResourceAwsIamUsercredentialreportentry                                     string = "aws.iam.usercredentialreportentry"
 	ResourceAwsIamUser                                                          string = "aws.iam.user"
@@ -1114,6 +1116,14 @@ func init() {
 		"aws.kms.grant": {
 			// to override args, implement: initAwsKmsGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsKmsGrant,
+		},
+		"aws.kms.key.multiRegionConfiguration": {
+			// to override args, implement: initAwsKmsKeyMultiRegionConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsKmsKeyMultiRegionConfiguration,
+		},
+		"aws.kms.customKeyStore": {
+			Init:   initAwsKmsCustomKeyStore,
+			Create: createAwsKmsCustomKeyStore,
 		},
 		"aws.iam": {
 			// to override args, implement: initAwsIam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5811,6 +5821,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.keys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKms).GetKeys()).ToDataRes(types.Array(types.Resource("aws.kms.key")))
 	},
+	"aws.kms.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKms).GetGrants()).ToDataRes(types.Array(types.Resource("aws.kms.grant")))
+	},
+	"aws.kms.customKeyStores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKms).GetCustomKeyStores()).ToDataRes(types.Array(types.Resource("aws.kms.customKeyStore")))
+	},
 	"aws.kms.key.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetId()).ToDataRes(types.String)
 	},
@@ -5866,10 +5882,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsKmsKey).GetMultiRegion()).ToDataRes(types.Bool)
 	},
 	"aws.kms.key.multiRegionConfiguration": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsKmsKey).GetMultiRegionConfiguration()).ToDataRes(types.Dict)
+		return (r.(*mqlAwsKmsKey).GetMultiRegionConfiguration()).ToDataRes(types.Resource("aws.kms.key.multiRegionConfiguration"))
 	},
 	"aws.kms.key.origin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetOrigin()).ToDataRes(types.String)
+	},
+	"aws.kms.key.customKeyStore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetCustomKeyStore()).ToDataRes(types.Resource("aws.kms.customKeyStore"))
+	},
+	"aws.kms.key.xksKeyConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKey).GetXksKeyConfiguration()).ToDataRes(types.Dict)
 	},
 	"aws.kms.key.rotationPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsKey).GetRotationPeriodInDays()).ToDataRes(types.Int)
@@ -5910,6 +5932,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.grant.keyArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsGrant).GetKeyArn()).ToDataRes(types.String)
 	},
+	"aws.kms.grant.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsGrant).GetName()).ToDataRes(types.String)
+	},
 	"aws.kms.grant.granteePrincipal": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsGrant).GetGranteePrincipal()).ToDataRes(types.String)
 	},
@@ -5922,8 +5947,59 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.kms.grant.operations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsGrant).GetOperations()).ToDataRes(types.Array(types.String))
 	},
+	"aws.kms.grant.constraints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsGrant).GetConstraints()).ToDataRes(types.Dict)
+	},
 	"aws.kms.grant.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKmsGrant).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.kms.key.multiRegionConfiguration.multiRegionKeyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKeyMultiRegionConfiguration).GetMultiRegionKeyType()).ToDataRes(types.String)
+	},
+	"aws.kms.key.multiRegionConfiguration.primaryKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKeyMultiRegionConfiguration).GetPrimaryKeyArn()).ToDataRes(types.String)
+	},
+	"aws.kms.key.multiRegionConfiguration.primaryKeyRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKeyMultiRegionConfiguration).GetPrimaryKeyRegion()).ToDataRes(types.String)
+	},
+	"aws.kms.key.multiRegionConfiguration.replicaKeyArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKeyMultiRegionConfiguration).GetReplicaKeyArns()).ToDataRes(types.Array(types.String))
+	},
+	"aws.kms.key.multiRegionConfiguration.primaryKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKeyMultiRegionConfiguration).GetPrimaryKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.kms.key.multiRegionConfiguration.replicaKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsKeyMultiRegionConfiguration).GetReplicaKeys()).ToDataRes(types.Array(types.Resource("aws.kms.key")))
+	},
+	"aws.kms.customKeyStore.customKeyStoreId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsCustomKeyStore).GetCustomKeyStoreId()).ToDataRes(types.String)
+	},
+	"aws.kms.customKeyStore.customKeyStoreName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsCustomKeyStore).GetCustomKeyStoreName()).ToDataRes(types.String)
+	},
+	"aws.kms.customKeyStore.customKeyStoreType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsCustomKeyStore).GetCustomKeyStoreType()).ToDataRes(types.String)
+	},
+	"aws.kms.customKeyStore.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsCustomKeyStore).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.kms.customKeyStore.connectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsCustomKeyStore).GetConnectionState()).ToDataRes(types.String)
+	},
+	"aws.kms.customKeyStore.connectionErrorCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsCustomKeyStore).GetConnectionErrorCode()).ToDataRes(types.String)
+	},
+	"aws.kms.customKeyStore.creationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsCustomKeyStore).GetCreationDate()).ToDataRes(types.Time)
+	},
+	"aws.kms.customKeyStore.cloudHsmClusterId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsCustomKeyStore).GetCloudHsmClusterId()).ToDataRes(types.String)
+	},
+	"aws.kms.customKeyStore.trustAnchorCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsCustomKeyStore).GetTrustAnchorCertificate()).ToDataRes(types.String)
+	},
+	"aws.kms.customKeyStore.xksProxyConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKmsCustomKeyStore).GetXksProxyConfiguration()).ToDataRes(types.Dict)
 	},
 	"aws.iam.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetUsers()).ToDataRes(types.Array(types.Resource("aws.iam.user")))
@@ -31173,6 +31249,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKms).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.kms.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKms).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKms).CustomKeyStores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.kms.key.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsKey).__id, ok = v.Value.(string)
 		return
@@ -31250,11 +31334,19 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.kms.key.multiRegionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsKmsKey).MultiRegionConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlAwsKmsKey).MultiRegionConfiguration, ok = plugin.RawToTValue[*mqlAwsKmsKeyMultiRegionConfiguration](v.Value, v.Error)
 		return
 	},
 	"aws.kms.key.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsKey).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.customKeyStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).CustomKeyStore, ok = plugin.RawToTValue[*mqlAwsKmsCustomKeyStore](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.xksKeyConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKey).XksKeyConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.kms.key.rotationPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31313,6 +31405,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsGrant).KeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.kms.grant.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.kms.grant.granteePrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsGrant).GranteePrincipal, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -31329,8 +31425,84 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsKmsGrant).Operations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.kms.grant.constraints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsGrant).Constraints, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.kms.grant.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKmsGrant).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.multiRegionConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKeyMultiRegionConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.kms.key.multiRegionConfiguration.multiRegionKeyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKeyMultiRegionConfiguration).MultiRegionKeyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.multiRegionConfiguration.primaryKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKeyMultiRegionConfiguration).PrimaryKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.multiRegionConfiguration.primaryKeyRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKeyMultiRegionConfiguration).PrimaryKeyRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.multiRegionConfiguration.replicaKeyArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKeyMultiRegionConfiguration).ReplicaKeyArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.multiRegionConfiguration.primaryKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKeyMultiRegionConfiguration).PrimaryKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.kms.key.multiRegionConfiguration.replicaKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsKeyMultiRegionConfiguration).ReplicaKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.kms.customKeyStore.customKeyStoreId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).CustomKeyStoreId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStore.customKeyStoreName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).CustomKeyStoreName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStore.customKeyStoreType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).CustomKeyStoreType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStore.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStore.connectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).ConnectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStore.connectionErrorCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).ConnectionErrorCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStore.creationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).CreationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStore.cloudHsmClusterId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).CloudHsmClusterId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStore.trustAnchorCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).TrustAnchorCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.kms.customKeyStore.xksProxyConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKmsCustomKeyStore).XksProxyConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -71391,7 +71563,9 @@ type mqlAwsKms struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsKmsInternal it will be used here
-	Keys plugin.TValue[[]any]
+	Keys            plugin.TValue[[]any]
+	Grants          plugin.TValue[[]any]
+	CustomKeyStores plugin.TValue[[]any]
 }
 
 // createAwsKms creates a new instance of this resource
@@ -71447,6 +71621,38 @@ func (c *mqlAwsKms) GetKeys() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsKms) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
+	})
+}
+
+func (c *mqlAwsKms) GetCustomKeyStores() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomKeyStores, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms", c.__id, "customKeyStores")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customKeyStores()
+	})
+}
+
 // mqlAwsKmsKey for the aws.kms.key resource
 type mqlAwsKmsKey struct {
 	MqlRuntime *plugin.Runtime
@@ -71470,8 +71676,10 @@ type mqlAwsKmsKey struct {
 	KeySpec                   plugin.TValue[string]
 	KeyUsage                  plugin.TValue[string]
 	MultiRegion               plugin.TValue[bool]
-	MultiRegionConfiguration  plugin.TValue[any]
+	MultiRegionConfiguration  plugin.TValue[*mqlAwsKmsKeyMultiRegionConfiguration]
 	Origin                    plugin.TValue[string]
+	CustomKeyStore            plugin.TValue[*mqlAwsKmsCustomKeyStore]
+	XksKeyConfiguration       plugin.TValue[any]
 	RotationPeriodInDays      plugin.TValue[int64]
 	NextRotationAt            plugin.TValue[*time.Time]
 	OnDemandRotationStartedAt plugin.TValue[*time.Time]
@@ -71633,8 +71841,18 @@ func (c *mqlAwsKmsKey) GetMultiRegion() *plugin.TValue[bool] {
 	})
 }
 
-func (c *mqlAwsKmsKey) GetMultiRegionConfiguration() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.MultiRegionConfiguration, func() (any, error) {
+func (c *mqlAwsKmsKey) GetMultiRegionConfiguration() *plugin.TValue[*mqlAwsKmsKeyMultiRegionConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsKmsKeyMultiRegionConfiguration](&c.MultiRegionConfiguration, func() (*mqlAwsKmsKeyMultiRegionConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms.key", c.__id, "multiRegionConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKeyMultiRegionConfiguration), nil
+			}
+		}
+
 		return c.multiRegionConfiguration()
 	})
 }
@@ -71642,6 +71860,28 @@ func (c *mqlAwsKmsKey) GetMultiRegionConfiguration() *plugin.TValue[any] {
 func (c *mqlAwsKmsKey) GetOrigin() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Origin, func() (string, error) {
 		return c.origin()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetCustomKeyStore() *plugin.TValue[*mqlAwsKmsCustomKeyStore] {
+	return plugin.GetOrCompute[*mqlAwsKmsCustomKeyStore](&c.CustomKeyStore, func() (*mqlAwsKmsCustomKeyStore, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms.key", c.__id, "customKeyStore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsCustomKeyStore), nil
+			}
+		}
+
+		return c.customKeyStore()
+	})
+}
+
+func (c *mqlAwsKmsKey) GetXksKeyConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.XksKeyConfiguration, func() (any, error) {
+		return c.xksKeyConfiguration()
 	})
 }
 
@@ -71713,10 +71953,12 @@ type mqlAwsKmsGrant struct {
 	GrantId           plugin.TValue[string]
 	Key               plugin.TValue[*mqlAwsKmsKey]
 	KeyArn            plugin.TValue[string]
+	Name              plugin.TValue[string]
 	GranteePrincipal  plugin.TValue[string]
 	RetiringPrincipal plugin.TValue[string]
 	IssuingAccount    plugin.TValue[string]
 	Operations        plugin.TValue[[]any]
+	Constraints       plugin.TValue[any]
 	CreatedAt         plugin.TValue[*time.Time]
 }
 
@@ -71781,6 +72023,10 @@ func (c *mqlAwsKmsGrant) GetKeyArn() *plugin.TValue[string] {
 	return &c.KeyArn
 }
 
+func (c *mqlAwsKmsGrant) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
 func (c *mqlAwsKmsGrant) GetGranteePrincipal() *plugin.TValue[string] {
 	return &c.GranteePrincipal
 }
@@ -71797,8 +72043,194 @@ func (c *mqlAwsKmsGrant) GetOperations() *plugin.TValue[[]any] {
 	return &c.Operations
 }
 
+func (c *mqlAwsKmsGrant) GetConstraints() *plugin.TValue[any] {
+	return &c.Constraints
+}
+
 func (c *mqlAwsKmsGrant) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+// mqlAwsKmsKeyMultiRegionConfiguration for the aws.kms.key.multiRegionConfiguration resource
+type mqlAwsKmsKeyMultiRegionConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsKmsKeyMultiRegionConfigurationInternal
+	MultiRegionKeyType plugin.TValue[string]
+	PrimaryKeyArn      plugin.TValue[string]
+	PrimaryKeyRegion   plugin.TValue[string]
+	ReplicaKeyArns     plugin.TValue[[]any]
+	PrimaryKey         plugin.TValue[*mqlAwsKmsKey]
+	ReplicaKeys        plugin.TValue[[]any]
+}
+
+// createAwsKmsKeyMultiRegionConfiguration creates a new instance of this resource
+func createAwsKmsKeyMultiRegionConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKmsKeyMultiRegionConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kms.key.multiRegionConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKmsKeyMultiRegionConfiguration) MqlName() string {
+	return "aws.kms.key.multiRegionConfiguration"
+}
+
+func (c *mqlAwsKmsKeyMultiRegionConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKmsKeyMultiRegionConfiguration) GetMultiRegionKeyType() *plugin.TValue[string] {
+	return &c.MultiRegionKeyType
+}
+
+func (c *mqlAwsKmsKeyMultiRegionConfiguration) GetPrimaryKeyArn() *plugin.TValue[string] {
+	return &c.PrimaryKeyArn
+}
+
+func (c *mqlAwsKmsKeyMultiRegionConfiguration) GetPrimaryKeyRegion() *plugin.TValue[string] {
+	return &c.PrimaryKeyRegion
+}
+
+func (c *mqlAwsKmsKeyMultiRegionConfiguration) GetReplicaKeyArns() *plugin.TValue[[]any] {
+	return &c.ReplicaKeyArns
+}
+
+func (c *mqlAwsKmsKeyMultiRegionConfiguration) GetPrimaryKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.PrimaryKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms.key.multiRegionConfiguration", c.__id, "primaryKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.primaryKey()
+	})
+}
+
+func (c *mqlAwsKmsKeyMultiRegionConfiguration) GetReplicaKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ReplicaKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.kms.key.multiRegionConfiguration", c.__id, "replicaKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replicaKeys()
+	})
+}
+
+// mqlAwsKmsCustomKeyStore for the aws.kms.customKeyStore resource
+type mqlAwsKmsCustomKeyStore struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsKmsCustomKeyStoreInternal it will be used here
+	CustomKeyStoreId       plugin.TValue[string]
+	CustomKeyStoreName     plugin.TValue[string]
+	CustomKeyStoreType     plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	ConnectionState        plugin.TValue[string]
+	ConnectionErrorCode    plugin.TValue[string]
+	CreationDate           plugin.TValue[*time.Time]
+	CloudHsmClusterId      plugin.TValue[string]
+	TrustAnchorCertificate plugin.TValue[string]
+	XksProxyConfiguration  plugin.TValue[any]
+}
+
+// createAwsKmsCustomKeyStore creates a new instance of this resource
+func createAwsKmsCustomKeyStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsKmsCustomKeyStore{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.kms.customKeyStore", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsKmsCustomKeyStore) MqlName() string {
+	return "aws.kms.customKeyStore"
+}
+
+func (c *mqlAwsKmsCustomKeyStore) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsKmsCustomKeyStore) GetCustomKeyStoreId() *plugin.TValue[string] {
+	return &c.CustomKeyStoreId
+}
+
+func (c *mqlAwsKmsCustomKeyStore) GetCustomKeyStoreName() *plugin.TValue[string] {
+	return &c.CustomKeyStoreName
+}
+
+func (c *mqlAwsKmsCustomKeyStore) GetCustomKeyStoreType() *plugin.TValue[string] {
+	return &c.CustomKeyStoreType
+}
+
+func (c *mqlAwsKmsCustomKeyStore) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsKmsCustomKeyStore) GetConnectionState() *plugin.TValue[string] {
+	return &c.ConnectionState
+}
+
+func (c *mqlAwsKmsCustomKeyStore) GetConnectionErrorCode() *plugin.TValue[string] {
+	return &c.ConnectionErrorCode
+}
+
+func (c *mqlAwsKmsCustomKeyStore) GetCreationDate() *plugin.TValue[*time.Time] {
+	return &c.CreationDate
+}
+
+func (c *mqlAwsKmsCustomKeyStore) GetCloudHsmClusterId() *plugin.TValue[string] {
+	return &c.CloudHsmClusterId
+}
+
+func (c *mqlAwsKmsCustomKeyStore) GetTrustAnchorCertificate() *plugin.TValue[string] {
+	return &c.TrustAnchorCertificate
+}
+
+func (c *mqlAwsKmsCustomKeyStore) GetXksProxyConfiguration() *plugin.TValue[any] {
+	return &c.XksProxyConfiguration
 }
 
 // mqlAwsIam for the aws.iam resource

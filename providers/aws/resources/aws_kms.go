@@ -195,6 +195,144 @@ func (a *mqlAwsKms) getKeys(conn *connection.AwsConnection) []*jobpool.Job {
 	return tasks
 }
 
+func (a *mqlAwsKms) grants() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	rawKeys := a.GetKeys()
+	if rawKeys.Error != nil {
+		return nil, rawKeys.Error
+	}
+
+	res := []any{}
+	tasks := make([]*jobpool.Job, 0, len(rawKeys.Data))
+	for _, raw := range rawKeys.Data {
+		key, ok := raw.(*mqlAwsKmsKey)
+		if !ok || key == nil {
+			continue
+		}
+		keyArn := key.Arn.Data
+		keyRegion := key.Region.Data
+		f := func() (jobpool.JobResult, error) {
+			grants, err := listKmsGrantsForKey(a.MqlRuntime, conn, keyArn, keyRegion)
+			if err != nil {
+				return nil, err
+			}
+			return jobpool.JobResult(grants), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+
+	poolOfJobs := jobpool.CreatePool(tasks, 5)
+	poolOfJobs.Run()
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		result, ok := poolOfJobs.Jobs[i].Result.([]any)
+		if !ok {
+			continue
+		}
+		res = append(res, result...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsKms) customKeyStores() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getCustomKeyStoreTasks(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		entries, ok := poolOfJobs.Jobs[i].Result.([]any)
+		if !ok {
+			continue
+		}
+		res = append(res, entries...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsKms) getCustomKeyStoreTasks(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		region := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Str("region", region).Msg("kms>getCustomKeyStores>describe")
+
+			svc := conn.Kms(region)
+			res := []any{}
+			paginator := kms.NewDescribeCustomKeyStoresPaginator(svc, &kms.DescribeCustomKeyStoresInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(context.TODO())
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("access denied describing KMS custom key stores")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, entry := range page.CustomKeyStores {
+					mqlStore, err := newMqlAwsKmsCustomKeyStore(a.MqlRuntime, region, entry)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlStore)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsKmsCustomKeyStore(runtime *plugin.Runtime, region string, entry types.CustomKeyStoresListEntry) (plugin.Resource, error) {
+	id := region + "/" + convert.ToValue(entry.CustomKeyStoreId)
+	xksProxy, err := kmsXksProxyConfigToDict(entry.XksProxyConfiguration)
+	if err != nil {
+		return nil, err
+	}
+	return CreateResource(runtime, "aws.kms.customKeyStore",
+		map[string]*llx.RawData{
+			"__id":                   llx.StringData(id),
+			"customKeyStoreId":       llx.StringDataPtr(entry.CustomKeyStoreId),
+			"customKeyStoreName":     llx.StringDataPtr(entry.CustomKeyStoreName),
+			"customKeyStoreType":     llx.StringData(string(entry.CustomKeyStoreType)),
+			"region":                 llx.StringData(region),
+			"connectionState":        llx.StringData(string(entry.ConnectionState)),
+			"connectionErrorCode":    llx.StringData(string(entry.ConnectionErrorCode)),
+			"creationDate":           llx.TimeDataPtr(entry.CreationDate),
+			"cloudHsmClusterId":      llx.StringDataPtr(entry.CloudHsmClusterId),
+			"trustAnchorCertificate": llx.StringDataPtr(entry.TrustAnchorCertificate),
+			"xksProxyConfiguration":  llx.DictData(xksProxy),
+		})
+}
+
+func kmsXksProxyConfigToDict(c *types.XksProxyConfigurationType) (any, error) {
+	if c == nil {
+		return nil, nil
+	}
+	out := map[string]any{
+		"connectivity":            string(c.Connectivity),
+		"accessKeyIdPresent":      c.AccessKeyId != nil && *c.AccessKeyId != "",
+		"uriEndpoint":             convert.ToValue(c.UriEndpoint),
+		"uriPath":                 convert.ToValue(c.UriPath),
+		"vpcEndpointServiceName":  convert.ToValue(c.VpcEndpointServiceName),
+		"vpcEndpointServiceOwner": convert.ToValue(c.VpcEndpointServiceOwner),
+	}
+	return out, nil
+}
+
 func (a *mqlAwsKmsKey) metadata() (any, error) {
 	md, err := a.getKeyMetadata()
 	if err != nil {
@@ -479,15 +617,46 @@ func (a *mqlAwsKmsKey) multiRegion() (bool, error) {
 	return convert.ToValue(md.MultiRegion), nil
 }
 
-func (a *mqlAwsKmsKey) multiRegionConfiguration() (any, error) {
+func (a *mqlAwsKmsKey) multiRegionConfiguration() (*mqlAwsKmsKeyMultiRegionConfiguration, error) {
 	md, err := a.getKeyMetadata()
 	if err != nil {
 		return nil, err
 	}
 	if md.MultiRegionConfiguration == nil {
+		a.MultiRegionConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return convert.JsonToDict(md.MultiRegionConfiguration)
+
+	cfg := md.MultiRegionConfiguration
+	primaryArn := ""
+	primaryRegion := ""
+	if cfg.PrimaryKey != nil {
+		primaryArn = convert.ToValue(cfg.PrimaryKey.Arn)
+		primaryRegion = convert.ToValue(cfg.PrimaryKey.Region)
+	}
+	replicaArns := make([]any, 0, len(cfg.ReplicaKeys))
+	cachedReplicas := make([]types.MultiRegionKey, 0, len(cfg.ReplicaKeys))
+	for _, replica := range cfg.ReplicaKeys {
+		replicaArns = append(replicaArns, convert.ToValue(replica.Arn))
+		cachedReplicas = append(cachedReplicas, replica)
+	}
+
+	id := a.Arn.Data + "/multiRegionConfiguration"
+	res, err := CreateResource(a.MqlRuntime, "aws.kms.key.multiRegionConfiguration",
+		map[string]*llx.RawData{
+			"__id":               llx.StringData(id),
+			"multiRegionKeyType": llx.StringData(string(cfg.MultiRegionKeyType)),
+			"primaryKeyArn":      llx.StringData(primaryArn),
+			"primaryKeyRegion":   llx.StringData(primaryRegion),
+			"replicaKeyArns":     llx.ArrayData(replicaArns, mqlTypes.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mqlCfg := res.(*mqlAwsKmsKeyMultiRegionConfiguration)
+	mqlCfg.cachePrimary = cfg.PrimaryKey
+	mqlCfg.cacheReplicas = cachedReplicas
+	return mqlCfg, nil
 }
 
 func (a *mqlAwsKmsKey) origin() (string, error) {
@@ -496,6 +665,41 @@ func (a *mqlAwsKmsKey) origin() (string, error) {
 		return "", err
 	}
 	return string(md.Origin), nil
+}
+
+func (a *mqlAwsKmsKey) customKeyStore() (*mqlAwsKmsCustomKeyStore, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	if md.CustomKeyStoreId == nil || *md.CustomKeyStoreId == "" {
+		a.CustomKeyStore.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	store, err := NewResource(a.MqlRuntime, "aws.kms.customKeyStore",
+		map[string]*llx.RawData{
+			"__id":             llx.StringData(a.Region.Data + "/" + *md.CustomKeyStoreId),
+			"customKeyStoreId": llx.StringDataPtr(md.CustomKeyStoreId),
+			"region":           llx.StringData(a.Region.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return store.(*mqlAwsKmsCustomKeyStore), nil
+}
+
+func (a *mqlAwsKmsKey) xksKeyConfiguration() (any, error) {
+	md, err := a.getKeyMetadata()
+	if err != nil {
+		return nil, err
+	}
+	if md.XksKeyConfiguration == nil {
+		return nil, nil
+	}
+	return map[string]any{
+		"id": convert.ToValue(md.XksKeyConfiguration.Id),
+	}, nil
 }
 
 func (a *mqlAwsKmsKey) encryptionAlgorithms() ([]any, error) {
@@ -574,9 +778,15 @@ func (a *mqlAwsKmsKey) id() (string, error) {
 
 func (a *mqlAwsKmsKey) grants() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	keyArn := a.Arn.Data
+	return listKmsGrantsForKey(a.MqlRuntime, conn, a.Arn.Data, a.Region.Data)
+}
 
-	svc := conn.Kms(a.Region.Data)
+func listKmsGrantsForKey(runtime *plugin.Runtime, conn *connection.AwsConnection, keyArn, region string) ([]any, error) {
+	if keyArn == "" || region == "" {
+		return nil, nil
+	}
+
+	svc := conn.Kms(region)
 	ctx := context.Background()
 
 	res := []any{}
@@ -585,6 +795,10 @@ func (a *mqlAwsKmsKey) grants() ([]any, error) {
 	for paginator.HasMorePages() {
 		grantsResp, err := paginator.NextPage(ctx)
 		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Debug().Str("keyArn", keyArn).Msg("access denied listing KMS grants")
+				return res, nil
+			}
 			return nil, err
 		}
 		for _, grant := range grantsResp.Grants {
@@ -592,15 +806,21 @@ func (a *mqlAwsKmsKey) grants() ([]any, error) {
 			for i, op := range grant.Operations {
 				operations[i] = string(op)
 			}
-			mqlGrant, err := CreateResource(a.MqlRuntime, "aws.kms.grant",
+			constraints, err := kmsGrantConstraintsToDict(grant.Constraints)
+			if err != nil {
+				return nil, err
+			}
+			mqlGrant, err := CreateResource(runtime, "aws.kms.grant",
 				map[string]*llx.RawData{
 					"__id":              llx.StringData(keyArn + "/grant/" + convert.ToValue(grant.GrantId)),
 					"grantId":           llx.StringDataPtr(grant.GrantId),
 					"keyArn":            llx.StringData(keyArn),
+					"name":              llx.StringDataPtr(grant.Name),
 					"granteePrincipal":  llx.StringDataPtr(grant.GranteePrincipal),
 					"retiringPrincipal": llx.StringDataPtr(grant.RetiringPrincipal),
 					"issuingAccount":    llx.StringDataPtr(grant.IssuingAccount),
 					"operations":        llx.ArrayData(operations, mqlTypes.String),
+					"constraints":       llx.DictData(constraints),
 					"createdAt":         llx.TimeDataPtr(grant.CreationDate),
 				})
 			if err != nil {
@@ -610,6 +830,31 @@ func (a *mqlAwsKmsKey) grants() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+func kmsGrantConstraintsToDict(c *types.GrantConstraints) (any, error) {
+	if c == nil {
+		return nil, nil
+	}
+	out := map[string]any{}
+	if len(c.EncryptionContextEquals) > 0 {
+		eq := make(map[string]any, len(c.EncryptionContextEquals))
+		for k, v := range c.EncryptionContextEquals {
+			eq[k] = v
+		}
+		out["encryptionContextEquals"] = eq
+	}
+	if len(c.EncryptionContextSubset) > 0 {
+		sub := make(map[string]any, len(c.EncryptionContextSubset))
+		for k, v := range c.EncryptionContextSubset {
+			sub[k] = v
+		}
+		out["encryptionContextSubset"] = sub
+	}
+	if len(out) == 0 {
+		return nil, nil
+	}
+	return out, nil
 }
 
 func (a *mqlAwsKmsGrant) id() (string, error) {
@@ -869,6 +1114,101 @@ func rawStringArg(arg *llx.RawData) string {
 func isKmsNotFoundError(err error) bool {
 	var apiErr smithy.APIError
 	return errors.As(err, &apiErr) && apiErr.ErrorCode() == "NotFoundException"
+}
+
+type mqlAwsKmsKeyMultiRegionConfigurationInternal struct {
+	cachePrimary  *types.MultiRegionKey
+	cacheReplicas []types.MultiRegionKey
+}
+
+func (a *mqlAwsKmsKeyMultiRegionConfiguration) primaryKey() (*mqlAwsKmsKey, error) {
+	if a.cachePrimary == nil || a.cachePrimary.Arn == nil || *a.cachePrimary.Arn == "" {
+		a.PrimaryKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	args := map[string]*llx.RawData{
+		"arn": llx.StringDataPtr(a.cachePrimary.Arn),
+	}
+	if a.cachePrimary.Region != nil && *a.cachePrimary.Region != "" {
+		args["region"] = llx.StringDataPtr(a.cachePrimary.Region)
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey, args)
+	if err != nil {
+		// best-effort: the primary key may live in a region the caller doesn't have access to.
+		if Is400AccessDeniedError(err) {
+			log.Debug().Str("arn", *a.cachePrimary.Arn).Msg("access denied resolving primary KMS key")
+			a.PrimaryKey.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsKmsKeyMultiRegionConfiguration) replicaKeys() ([]any, error) {
+	res := make([]any, 0, len(a.cacheReplicas))
+	for _, replica := range a.cacheReplicas {
+		if replica.Arn == nil || *replica.Arn == "" {
+			continue
+		}
+		args := map[string]*llx.RawData{
+			"arn": llx.StringDataPtr(replica.Arn),
+		}
+		if replica.Region != nil && *replica.Region != "" {
+			args["region"] = llx.StringDataPtr(replica.Region)
+		}
+		mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey, args)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Debug().Str("arn", *replica.Arn).Msg("access denied resolving replica KMS key")
+				continue
+			}
+			return nil, err
+		}
+		res = append(res, mqlKey)
+	}
+	return res, nil
+}
+
+func initAwsKmsCustomKeyStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	idArg, ok := args["customKeyStoreId"]
+	if !ok || idArg == nil {
+		return args, nil, nil
+	}
+	customKeyStoreId, ok := idArg.Value.(string)
+	if !ok || customKeyStoreId == "" {
+		return args, nil, nil
+	}
+
+	region := rawStringArg(args["region"])
+	if region == "" {
+		return args, nil, errors.New("region required to fetch aws kms custom key store")
+	}
+
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Kms(region)
+
+	resp, err := svc.DescribeCustomKeyStores(context.Background(),
+		&kms.DescribeCustomKeyStoresInput{CustomKeyStoreId: &customKeyStoreId})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return args, nil, nil
+		}
+		return nil, nil, err
+	}
+	if len(resp.CustomKeyStores) == 0 {
+		return args, nil, nil
+	}
+
+	mqlStore, err := newMqlAwsKmsCustomKeyStore(runtime, region, resp.CustomKeyStores[0])
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlStore, nil
 }
 
 // extractKmsKeyId extracts the key ID from an ARN resource string like "key/uuid".
