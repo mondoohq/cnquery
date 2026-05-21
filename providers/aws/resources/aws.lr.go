@@ -739,6 +739,10 @@ const (
 	ResourceAwsCloudwatchLogDestination                                         string = "aws.cloudwatch.logDestination"
 	ResourceAwsCloudwatchLogInsightQuery                                        string = "aws.cloudwatch.logInsightQuery"
 	ResourceAwsEc2VpcEndpointServiceConfigurationConnection                     string = "aws.ec2.vpcEndpointServiceConfiguration.connection"
+	ResourceAwsEc2Ipam                                                          string = "aws.ec2.ipam"
+	ResourceAwsEc2IpamScope                                                     string = "aws.ec2.ipam.scope"
+	ResourceAwsEc2IpamPool                                                      string = "aws.ec2.ipam.pool"
+	ResourceAwsEc2IpamPoolAllocation                                            string = "aws.ec2.ipam.pool.allocation"
 	ResourceAwsSfn                                                              string = "aws.sfn"
 	ResourceAwsSfnStateMachine                                                  string = "aws.sfn.stateMachine"
 	ResourceAwsSfnStateMachineVersion                                           string = "aws.sfn.stateMachineVersion"
@@ -3692,6 +3696,22 @@ func init() {
 		"aws.ec2.vpcEndpointServiceConfiguration.connection": {
 			// to override args, implement: initAwsEc2VpcEndpointServiceConfigurationConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEc2VpcEndpointServiceConfigurationConnection,
+		},
+		"aws.ec2.ipam": {
+			Init:   initAwsEc2Ipam,
+			Create: createAwsEc2Ipam,
+		},
+		"aws.ec2.ipam.scope": {
+			// to override args, implement: initAwsEc2IpamScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2IpamScope,
+		},
+		"aws.ec2.ipam.pool": {
+			// to override args, implement: initAwsEc2IpamPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2IpamPool,
+		},
+		"aws.ec2.ipam.pool.allocation": {
+			// to override args, implement: initAwsEc2IpamPoolAllocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEc2IpamPoolAllocation,
 		},
 		"aws.sfn": {
 			// to override args, implement: initAwsSfn(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -17548,6 +17568,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.instanceConnectEndpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2).GetInstanceConnectEndpoints()).ToDataRes(types.Array(types.Resource("aws.ec2.instanceConnectEndpoint")))
 	},
+	"aws.ec2.ipams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2).GetIpams()).ToDataRes(types.Array(types.Resource("aws.ec2.ipam")))
+	},
 	"aws.ec2.eip.publicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Eip).GetPublicIp()).ToDataRes(types.String)
 	},
@@ -25992,6 +26015,192 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.vpcEndpointServiceConfiguration.connection.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2VpcEndpointServiceConfigurationConnection).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.ec2.ipam.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.ownerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetOwnerId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.tier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetTier()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetState()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.stateMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetStateMessage()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.operatingRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetOperatingRegions()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.ipam.enablePrivateGua": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetEnablePrivateGua()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.ipam.meteredAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetMeteredAccount()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.publicDefaultScopeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetPublicDefaultScopeId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.privateDefaultScopeId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetPrivateDefaultScopeId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.scopeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetScopeCount()).ToDataRes(types.Int)
+	},
+	"aws.ec2.ipam.resourceDiscoveryAssociationCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetResourceDiscoveryAssociationCount()).ToDataRes(types.Int)
+	},
+	"aws.ec2.ipam.defaultResourceDiscoveryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetDefaultResourceDiscoveryId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.defaultResourceDiscoveryAssociationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetDefaultResourceDiscoveryAssociationId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.ipam.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetScopes()).ToDataRes(types.Array(types.Resource("aws.ec2.ipam.scope")))
+	},
+	"aws.ec2.ipam.pools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Ipam).GetPools()).ToDataRes(types.Array(types.Resource("aws.ec2.ipam.pool")))
+	},
+	"aws.ec2.ipam.scope.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.scope.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.scope.ipamArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetIpamArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.scope.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.scope.ownerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetOwnerId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.scope.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.scope.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetType()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.scope.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.ipam.scope.poolCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetPoolCount()).ToDataRes(types.Int)
+	},
+	"aws.ec2.ipam.scope.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetState()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.scope.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamScope).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.ipam.pool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.ipamArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetIpamArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.ipamScopeArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetIpamScopeArn()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.ipamScopeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetIpamScopeType()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.ownerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetOwnerId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.addressFamily": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetAddressFamily()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.locale": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetLocale()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.awsService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetAwsService()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetState()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.stateMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetStateMessage()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.publicIpSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetPublicIpSource()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.publiclyAdvertisable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetPubliclyAdvertisable()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.ipam.pool.autoImport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetAutoImport()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.ipam.pool.allocationDefaultNetmaskLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetAllocationDefaultNetmaskLength()).ToDataRes(types.Int)
+	},
+	"aws.ec2.ipam.pool.allocationMinNetmaskLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetAllocationMinNetmaskLength()).ToDataRes(types.Int)
+	},
+	"aws.ec2.ipam.pool.allocationMaxNetmaskLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetAllocationMaxNetmaskLength()).ToDataRes(types.Int)
+	},
+	"aws.ec2.ipam.pool.poolDepth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetPoolDepth()).ToDataRes(types.Int)
+	},
+	"aws.ec2.ipam.pool.sourceIpamPoolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetSourceIpamPoolId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ec2.ipam.pool.allocationResourceTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetAllocationResourceTags()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.ipam.pool.allocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPool).GetAllocations()).ToDataRes(types.Array(types.Resource("aws.ec2.ipam.pool.allocation")))
+	},
+	"aws.ec2.ipam.pool.allocation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPoolAllocation).GetId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.allocation.cidr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPoolAllocation).GetCidr()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.allocation.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPoolAllocation).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.allocation.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPoolAllocation).GetResourceId()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.allocation.resourceOwner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPoolAllocation).GetResourceOwner()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.allocation.resourceRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPoolAllocation).GetResourceRegion()).ToDataRes(types.String)
+	},
+	"aws.ec2.ipam.pool.allocation.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2IpamPoolAllocation).GetResourceType()).ToDataRes(types.String)
 	},
 	"aws.sfn.stateMachines": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSfn).GetStateMachines()).ToDataRes(types.Array(types.Resource("aws.sfn.stateMachine")))
@@ -47388,6 +47597,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2).InstanceConnectEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.ipams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2).Ipams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.eip.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Eip).__id, ok = v.Value.(string)
 		return
@@ -59666,6 +59879,270 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.vpcEndpointServiceConfiguration.connection.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2VpcEndpointServiceConfigurationConnection).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.ipam.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.ownerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).OwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.tier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).Tier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.stateMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).StateMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.operatingRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).OperatingRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.enablePrivateGua": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).EnablePrivateGua, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.meteredAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).MeteredAccount, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.publicDefaultScopeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).PublicDefaultScopeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.privateDefaultScopeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).PrivateDefaultScopeId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scopeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).ScopeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.resourceDiscoveryAssociationCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).ResourceDiscoveryAssociationCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.defaultResourceDiscoveryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).DefaultResourceDiscoveryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.defaultResourceDiscoveryAssociationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).DefaultResourceDiscoveryAssociationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Ipam).Pools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.ipam.scope.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.ipamArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).IpamArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.ownerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).OwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.poolCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).PoolCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.scope.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamScope).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.ipam.pool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.ipamArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).IpamArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.ipamScopeArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).IpamScopeArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.ipamScopeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).IpamScopeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.ownerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).OwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.addressFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).AddressFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.locale": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).Locale, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.awsService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).AwsService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.stateMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).StateMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.publicIpSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).PublicIpSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.publiclyAdvertisable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).PubliclyAdvertisable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.autoImport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).AutoImport, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocationDefaultNetmaskLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).AllocationDefaultNetmaskLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocationMinNetmaskLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).AllocationMinNetmaskLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocationMaxNetmaskLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).AllocationMaxNetmaskLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.poolDepth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).PoolDepth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.sourceIpamPoolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).SourceIpamPoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocationResourceTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).AllocationResourceTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPool).Allocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPoolAllocation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ec2.ipam.pool.allocation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPoolAllocation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocation.cidr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPoolAllocation).Cidr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocation.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPoolAllocation).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocation.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPoolAllocation).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocation.resourceOwner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPoolAllocation).ResourceOwner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocation.resourceRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPoolAllocation).ResourceRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.ipam.pool.allocation.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2IpamPoolAllocation).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.sfn.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -114333,6 +114810,7 @@ type mqlAwsEc2 struct {
 	PlacementGroups                  plugin.TValue[[]any]
 	CapacityReservations             plugin.TValue[[]any]
 	InstanceConnectEndpoints         plugin.TValue[[]any]
+	Ipams                            plugin.TValue[[]any]
 }
 
 // createAwsEc2 creates a new instance of this resource
@@ -114723,6 +115201,22 @@ func (c *mqlAwsEc2) GetInstanceConnectEndpoints() *plugin.TValue[[]any] {
 		}
 
 		return c.instanceConnectEndpoints()
+	})
+}
+
+func (c *mqlAwsEc2) GetIpams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ipams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2", c.__id, "ipams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipams()
 	})
 }
 
@@ -145181,6 +145675,528 @@ func (c *mqlAwsEc2VpcEndpointServiceConfigurationConnection) GetGatewayLoadBalan
 
 func (c *mqlAwsEc2VpcEndpointServiceConfigurationConnection) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+// mqlAwsEc2Ipam for the aws.ec2.ipam resource
+type mqlAwsEc2Ipam struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2IpamInternal
+	Id                                    plugin.TValue[string]
+	Arn                                   plugin.TValue[string]
+	Region                                plugin.TValue[string]
+	OwnerId                               plugin.TValue[string]
+	Description                           plugin.TValue[string]
+	Tier                                  plugin.TValue[string]
+	State                                 plugin.TValue[string]
+	StateMessage                          plugin.TValue[string]
+	OperatingRegions                      plugin.TValue[[]any]
+	EnablePrivateGua                      plugin.TValue[bool]
+	MeteredAccount                        plugin.TValue[string]
+	PublicDefaultScopeId                  plugin.TValue[string]
+	PrivateDefaultScopeId                 plugin.TValue[string]
+	ScopeCount                            plugin.TValue[int64]
+	ResourceDiscoveryAssociationCount     plugin.TValue[int64]
+	DefaultResourceDiscoveryId            plugin.TValue[string]
+	DefaultResourceDiscoveryAssociationId plugin.TValue[string]
+	Tags                                  plugin.TValue[map[string]any]
+	Scopes                                plugin.TValue[[]any]
+	Pools                                 plugin.TValue[[]any]
+}
+
+// createAwsEc2Ipam creates a new instance of this resource
+func createAwsEc2Ipam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2Ipam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.ipam", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2Ipam) MqlName() string {
+	return "aws.ec2.ipam"
+}
+
+func (c *mqlAwsEc2Ipam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2Ipam) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEc2Ipam) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEc2Ipam) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEc2Ipam) GetOwnerId() *plugin.TValue[string] {
+	return &c.OwnerId
+}
+
+func (c *mqlAwsEc2Ipam) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEc2Ipam) GetTier() *plugin.TValue[string] {
+	return &c.Tier
+}
+
+func (c *mqlAwsEc2Ipam) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEc2Ipam) GetStateMessage() *plugin.TValue[string] {
+	return &c.StateMessage
+}
+
+func (c *mqlAwsEc2Ipam) GetOperatingRegions() *plugin.TValue[[]any] {
+	return &c.OperatingRegions
+}
+
+func (c *mqlAwsEc2Ipam) GetEnablePrivateGua() *plugin.TValue[bool] {
+	return &c.EnablePrivateGua
+}
+
+func (c *mqlAwsEc2Ipam) GetMeteredAccount() *plugin.TValue[string] {
+	return &c.MeteredAccount
+}
+
+func (c *mqlAwsEc2Ipam) GetPublicDefaultScopeId() *plugin.TValue[string] {
+	return &c.PublicDefaultScopeId
+}
+
+func (c *mqlAwsEc2Ipam) GetPrivateDefaultScopeId() *plugin.TValue[string] {
+	return &c.PrivateDefaultScopeId
+}
+
+func (c *mqlAwsEc2Ipam) GetScopeCount() *plugin.TValue[int64] {
+	return &c.ScopeCount
+}
+
+func (c *mqlAwsEc2Ipam) GetResourceDiscoveryAssociationCount() *plugin.TValue[int64] {
+	return &c.ResourceDiscoveryAssociationCount
+}
+
+func (c *mqlAwsEc2Ipam) GetDefaultResourceDiscoveryId() *plugin.TValue[string] {
+	return &c.DefaultResourceDiscoveryId
+}
+
+func (c *mqlAwsEc2Ipam) GetDefaultResourceDiscoveryAssociationId() *plugin.TValue[string] {
+	return &c.DefaultResourceDiscoveryAssociationId
+}
+
+func (c *mqlAwsEc2Ipam) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEc2Ipam) GetScopes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Scopes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.ipam", c.__id, "scopes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scopes()
+	})
+}
+
+func (c *mqlAwsEc2Ipam) GetPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Pools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.ipam", c.__id, "pools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pools()
+	})
+}
+
+// mqlAwsEc2IpamScope for the aws.ec2.ipam.scope resource
+type mqlAwsEc2IpamScope struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2IpamScopeInternal it will be used here
+	Id          plugin.TValue[string]
+	Arn         plugin.TValue[string]
+	IpamArn     plugin.TValue[string]
+	Region      plugin.TValue[string]
+	OwnerId     plugin.TValue[string]
+	Description plugin.TValue[string]
+	Type        plugin.TValue[string]
+	IsDefault   plugin.TValue[bool]
+	PoolCount   plugin.TValue[int64]
+	State       plugin.TValue[string]
+	Tags        plugin.TValue[map[string]any]
+}
+
+// createAwsEc2IpamScope creates a new instance of this resource
+func createAwsEc2IpamScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2IpamScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.ipam.scope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2IpamScope) MqlName() string {
+	return "aws.ec2.ipam.scope"
+}
+
+func (c *mqlAwsEc2IpamScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2IpamScope) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEc2IpamScope) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEc2IpamScope) GetIpamArn() *plugin.TValue[string] {
+	return &c.IpamArn
+}
+
+func (c *mqlAwsEc2IpamScope) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEc2IpamScope) GetOwnerId() *plugin.TValue[string] {
+	return &c.OwnerId
+}
+
+func (c *mqlAwsEc2IpamScope) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEc2IpamScope) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsEc2IpamScope) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlAwsEc2IpamScope) GetPoolCount() *plugin.TValue[int64] {
+	return &c.PoolCount
+}
+
+func (c *mqlAwsEc2IpamScope) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEc2IpamScope) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsEc2IpamPool for the aws.ec2.ipam.pool resource
+type mqlAwsEc2IpamPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEc2IpamPoolInternal
+	Id                             plugin.TValue[string]
+	Arn                            plugin.TValue[string]
+	IpamArn                        plugin.TValue[string]
+	IpamScopeArn                   plugin.TValue[string]
+	IpamScopeType                  plugin.TValue[string]
+	Region                         plugin.TValue[string]
+	OwnerId                        plugin.TValue[string]
+	Description                    plugin.TValue[string]
+	AddressFamily                  plugin.TValue[string]
+	Locale                         plugin.TValue[string]
+	AwsService                     plugin.TValue[string]
+	State                          plugin.TValue[string]
+	StateMessage                   plugin.TValue[string]
+	PublicIpSource                 plugin.TValue[string]
+	PubliclyAdvertisable           plugin.TValue[bool]
+	AutoImport                     plugin.TValue[bool]
+	AllocationDefaultNetmaskLength plugin.TValue[int64]
+	AllocationMinNetmaskLength     plugin.TValue[int64]
+	AllocationMaxNetmaskLength     plugin.TValue[int64]
+	PoolDepth                      plugin.TValue[int64]
+	SourceIpamPoolId               plugin.TValue[string]
+	Tags                           plugin.TValue[map[string]any]
+	AllocationResourceTags         plugin.TValue[[]any]
+	Allocations                    plugin.TValue[[]any]
+}
+
+// createAwsEc2IpamPool creates a new instance of this resource
+func createAwsEc2IpamPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2IpamPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.ipam.pool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2IpamPool) MqlName() string {
+	return "aws.ec2.ipam.pool"
+}
+
+func (c *mqlAwsEc2IpamPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2IpamPool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEc2IpamPool) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEc2IpamPool) GetIpamArn() *plugin.TValue[string] {
+	return &c.IpamArn
+}
+
+func (c *mqlAwsEc2IpamPool) GetIpamScopeArn() *plugin.TValue[string] {
+	return &c.IpamScopeArn
+}
+
+func (c *mqlAwsEc2IpamPool) GetIpamScopeType() *plugin.TValue[string] {
+	return &c.IpamScopeType
+}
+
+func (c *mqlAwsEc2IpamPool) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEc2IpamPool) GetOwnerId() *plugin.TValue[string] {
+	return &c.OwnerId
+}
+
+func (c *mqlAwsEc2IpamPool) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEc2IpamPool) GetAddressFamily() *plugin.TValue[string] {
+	return &c.AddressFamily
+}
+
+func (c *mqlAwsEc2IpamPool) GetLocale() *plugin.TValue[string] {
+	return &c.Locale
+}
+
+func (c *mqlAwsEc2IpamPool) GetAwsService() *plugin.TValue[string] {
+	return &c.AwsService
+}
+
+func (c *mqlAwsEc2IpamPool) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEc2IpamPool) GetStateMessage() *plugin.TValue[string] {
+	return &c.StateMessage
+}
+
+func (c *mqlAwsEc2IpamPool) GetPublicIpSource() *plugin.TValue[string] {
+	return &c.PublicIpSource
+}
+
+func (c *mqlAwsEc2IpamPool) GetPubliclyAdvertisable() *plugin.TValue[bool] {
+	return &c.PubliclyAdvertisable
+}
+
+func (c *mqlAwsEc2IpamPool) GetAutoImport() *plugin.TValue[bool] {
+	return &c.AutoImport
+}
+
+func (c *mqlAwsEc2IpamPool) GetAllocationDefaultNetmaskLength() *plugin.TValue[int64] {
+	return &c.AllocationDefaultNetmaskLength
+}
+
+func (c *mqlAwsEc2IpamPool) GetAllocationMinNetmaskLength() *plugin.TValue[int64] {
+	return &c.AllocationMinNetmaskLength
+}
+
+func (c *mqlAwsEc2IpamPool) GetAllocationMaxNetmaskLength() *plugin.TValue[int64] {
+	return &c.AllocationMaxNetmaskLength
+}
+
+func (c *mqlAwsEc2IpamPool) GetPoolDepth() *plugin.TValue[int64] {
+	return &c.PoolDepth
+}
+
+func (c *mqlAwsEc2IpamPool) GetSourceIpamPoolId() *plugin.TValue[string] {
+	return &c.SourceIpamPoolId
+}
+
+func (c *mqlAwsEc2IpamPool) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAwsEc2IpamPool) GetAllocationResourceTags() *plugin.TValue[[]any] {
+	return &c.AllocationResourceTags
+}
+
+func (c *mqlAwsEc2IpamPool) GetAllocations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Allocations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.ipam.pool", c.__id, "allocations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allocations()
+	})
+}
+
+// mqlAwsEc2IpamPoolAllocation for the aws.ec2.ipam.pool.allocation resource
+type mqlAwsEc2IpamPoolAllocation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEc2IpamPoolAllocationInternal it will be used here
+	Id             plugin.TValue[string]
+	Cidr           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	ResourceId     plugin.TValue[string]
+	ResourceOwner  plugin.TValue[string]
+	ResourceRegion plugin.TValue[string]
+	ResourceType   plugin.TValue[string]
+}
+
+// createAwsEc2IpamPoolAllocation creates a new instance of this resource
+func createAwsEc2IpamPoolAllocation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEc2IpamPoolAllocation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ec2.ipam.pool.allocation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEc2IpamPoolAllocation) MqlName() string {
+	return "aws.ec2.ipam.pool.allocation"
+}
+
+func (c *mqlAwsEc2IpamPoolAllocation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEc2IpamPoolAllocation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsEc2IpamPoolAllocation) GetCidr() *plugin.TValue[string] {
+	return &c.Cidr
+}
+
+func (c *mqlAwsEc2IpamPoolAllocation) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEc2IpamPoolAllocation) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAwsEc2IpamPoolAllocation) GetResourceOwner() *plugin.TValue[string] {
+	return &c.ResourceOwner
+}
+
+func (c *mqlAwsEc2IpamPoolAllocation) GetResourceRegion() *plugin.TValue[string] {
+	return &c.ResourceRegion
+}
+
+func (c *mqlAwsEc2IpamPoolAllocation) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
 }
 
 // mqlAwsSfn for the aws.sfn resource

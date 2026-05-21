@@ -11604,6 +11604,8 @@ aws.ec2 {
   capacityReservations() []aws.ec2.capacityReservation
   // List of EC2 Instance Connect endpoints
   instanceConnectEndpoints() []aws.ec2.instanceConnectEndpoint
+  // List of VPC IP Address Manager (IPAM) installations across the account
+  ipams() []aws.ec2.ipam
 }
 
 // Amazon Elastic IP (EIP)
@@ -18605,6 +18607,177 @@ private aws.ec2.vpcEndpointServiceConfiguration.connection @defaults("endpointId
   gatewayLoadBalancerArns []string
   // Creation time
   createdAt time
+}
+
+// Amazon VPC IP Address Manager (IPAM)
+//
+// Examine an IPAM installation, the account-wide controller that allocates,
+// audits, and monitors IPv4/IPv6 CIDR space across an AWS organization. The
+// IPAM owns the public and private default scopes (`publicDefaultScopeId` /
+// `privateDefaultScopeId`), is allowed to manage CIDRs only in its declared
+// `operatingRegions`, and may be on the Free or Advanced `tier`. Traverse
+// `scopes()` and `pools()` to walk the address-space hierarchy down to
+// individual CIDR allocations on resources.
+private aws.ec2.ipam @defaults("id region tier state") {
+  // ID of the IPAM
+  id string
+  // ARN of the IPAM
+  arn string
+  // Home region of the IPAM
+  region string
+  // AWS account that owns the IPAM
+  ownerId string
+  // User-supplied description for the IPAM
+  description string
+  // IPAM tier: free or advanced — the advanced tier unlocks public-scope features and resource discovery
+  tier string
+  // State of the IPAM: create-in-progress, create-complete, modify-in-progress, modify-complete, delete-in-progress, delete-complete, isolate-in-progress, isolate-complete, restore-in-progress
+  state string
+  // Diagnostic message that accompanies a non-terminal state
+  stateMessage string
+  // Regions where the IPAM is allowed to manage IP address CIDRs
+  operatingRegions []string
+  // Whether the IPAM may use your own GUA ranges as private IPv6 addresses
+  enablePrivateGua bool
+  // Cost-distribution mode for active IP addresses managed by the IPAM (ipam-owner or resource-owner)
+  meteredAccount string
+  // ID of the IPAM's default public scope
+  publicDefaultScopeId string
+  // ID of the IPAM's default private scope
+  privateDefaultScopeId string
+  // Number of scopes attached to the IPAM
+  scopeCount int
+  // Number of resource-discovery associations attached to the IPAM
+  resourceDiscoveryAssociationCount int
+  // Default resource-discovery ID created with the IPAM
+  defaultResourceDiscoveryId string
+  // Default resource-discovery association ID created with the IPAM
+  defaultResourceDiscoveryAssociationId string
+  // Tags attached to the IPAM
+  tags map[string]string
+  // Scopes attached to the IPAM (public, private, and any additional scopes)
+  scopes() []aws.ec2.ipam.scope
+  // Pools attached to the IPAM across all scopes
+  pools() []aws.ec2.ipam.pool
+}
+
+// Amazon VPC IPAM scope
+//
+// Examine a scope, the top-level container of IPAM address space. A scope
+// represents the IP space for a single network — the built-in `private` and
+// `public` scopes are flagged by `isDefault`, and additional scopes can be
+// added to model unconnected networks that reuse address ranges. The
+// `poolCount` summarizes how many pools live in the scope; iterate
+// `aws.ec2.ipam.pools()` and filter by `ipamScopeArn` to walk them.
+private aws.ec2.ipam.scope @defaults("id type isDefault region") {
+  // ID of the scope
+  id string
+  // ARN of the scope
+  arn string
+  // ARN of the IPAM that owns the scope
+  ipamArn string
+  // Region the scope lives in
+  region string
+  // AWS account that owns the scope
+  ownerId string
+  // Description of the scope
+  description string
+  // Scope type: public or private
+  type string
+  // Whether this is one of the two IPAM-default scopes
+  isDefault bool
+  // Number of pools in the scope
+  poolCount int
+  // State of the scope: create-in-progress, create-complete, modify-in-progress, modify-complete, delete-in-progress, delete-complete
+  state string
+  // Tags attached to the scope
+  tags map[string]string
+}
+
+// Amazon VPC IPAM pool
+//
+// Examine a pool, the level of IPAM that actually hands out CIDR blocks
+// to resources. The `addressFamily` distinguishes IPv4 from IPv6 pools,
+// `publicIpSource` distinguishes Amazon-provided from BYOIP space, and
+// `publiclyAdvertisable` flags pools whose IPv6 space is advertised on the
+// public internet. `locale` constrains where the pool can hand out
+// allocations, and `awsService` (when set) restricts which AWS service can
+// use the pool. Traverse `allocations()` to see every CIDR currently
+// handed out by the pool, including the resource that holds it.
+private aws.ec2.ipam.pool @defaults("id addressFamily state region") {
+  // ID of the pool
+  id string
+  // ARN of the pool
+  arn string
+  // ARN of the IPAM that owns the pool
+  ipamArn string
+  // ARN of the scope the pool belongs to
+  ipamScopeArn string
+  // Scope type of the pool: public or private
+  ipamScopeType string
+  // Region the pool lives in
+  region string
+  // AWS account that owns the pool
+  ownerId string
+  // Description of the pool
+  description string
+  // Address family of the pool: ipv4 or ipv6
+  addressFamily string
+  // Locale the pool is restricted to (an AWS Region or Local Zone network border group, or empty when global)
+  locale string
+  // AWS service the pool is restricted to (e.g., ec2). Empty when the pool can be used by any service.
+  awsService string
+  // State of the pool: create-in-progress, create-complete, modify-in-progress, modify-complete, delete-in-progress, delete-complete, isolate-in-progress, isolate-complete, restore-in-progress
+  state string
+  // Diagnostic message that accompanies a non-terminal state
+  stateMessage string
+  // Source of public IP space for the pool (only meaningful for public-scope pools): amazon or byoip
+  publicIpSource string
+  // Whether the pool's IPv6 CIDRs are advertised on the public internet
+  publiclyAdvertisable bool
+  // Whether IPAM auto-imports CIDRs that match the pool from elsewhere in the account
+  autoImport bool
+  // Default netmask length assigned to new allocations from the pool
+  allocationDefaultNetmaskLength int
+  // Minimum netmask length permitted for allocations from the pool
+  allocationMinNetmaskLength int
+  // Maximum netmask length permitted for allocations from the pool
+  allocationMaxNetmaskLength int
+  // Depth of the pool within its parent chain (1 for a top-level pool)
+  poolDepth int
+  // ID of the source pool when this pool is nested
+  sourceIpamPoolId string
+  // Tags attached to the pool
+  tags map[string]string
+  // Tags required on resources that use CIDRs from this pool, expressed as `key=value` pairs
+  allocationResourceTags []string
+  // CIDR allocations handed out by the pool
+  allocations() []aws.ec2.ipam.pool.allocation
+}
+
+// Amazon VPC IPAM pool allocation
+//
+// Examine a single CIDR that an IPAM pool has handed to a resource. The
+// `cidr` is the address range, `resourceType` and `resourceId` identify
+// the holder (a VPC, subnet, EC2 public-IPv4 pool, etc.), and
+// `resourceOwner` plus `resourceRegion` show which account and Region the
+// holder lives in — handy for spotting cross-account IPv4/IPv6
+// allocations that fall outside the IPAM owner's account.
+private aws.ec2.ipam.pool.allocation @defaults("cidr resourceType resourceId") {
+  // ID of the allocation
+  id string
+  // CIDR allocated to the resource
+  cidr string
+  // Description of the allocation
+  description string
+  // ID of the resource the CIDR is allocated to
+  resourceId string
+  // AWS account that owns the resource the CIDR is allocated to
+  resourceOwner string
+  // Region of the resource the CIDR is allocated to
+  resourceRegion string
+  // Type of the resource the CIDR is allocated to (vpc, subnet, ec2-public-ipv4-pool, ipam-pool, custom)
+  resourceType string
 }
 
 // AWS Step Functions (sfn)
