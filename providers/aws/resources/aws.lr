@@ -8201,14 +8201,14 @@ private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
   arn string
   // Name of the access point
   name string
-  // Name of the bucket the access point is attached to
-  bucket string
+  // S3 bucket the access point is attached to
+  bucket() aws.s3.bucket
   // Account ID that owns the bucket
   bucketAccountId string
   // Network origin of the access point: Internet or VPC
   networkOrigin string
-  // ID of the VPC the access point is restricted to (empty for Internet-origin access points)
-  vpcId string
+  // VPC the access point is restricted to (null for Internet-origin access points)
+  vpc() aws.vpc
   // Alias of the access point
   alias string
   // Public access block configuration for the access point

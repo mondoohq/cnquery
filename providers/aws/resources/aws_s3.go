@@ -233,8 +233,10 @@ func (a *mqlAwsS3Bucket) id() (string, error) {
 }
 
 type mqlAwsS3BucketAccessPointInternal struct {
-	region    string
-	accountID string
+	region          string
+	accountID       string
+	cacheBucketName string
+	cacheVpcId      string
 }
 
 func (a *mqlAwsS3BucketAccessPoint) id() (string, error) {
@@ -281,10 +283,8 @@ func (a *mqlAwsS3Bucket) accessPoints() ([]any, error) {
 					"__id":            llx.StringDataPtr(ap.AccessPointArn),
 					"arn":             llx.StringDataPtr(ap.AccessPointArn),
 					"name":            llx.StringDataPtr(ap.Name),
-					"bucket":          llx.StringDataPtr(ap.Bucket),
 					"bucketAccountId": llx.StringDataPtr(ap.BucketAccountId),
 					"networkOrigin":   llx.StringData(string(ap.NetworkOrigin)),
-					"vpcId":           llx.StringData(vpcId),
 					"alias":           llx.StringDataPtr(ap.Alias),
 				})
 			if err != nil {
@@ -293,10 +293,38 @@ func (a *mqlAwsS3Bucket) accessPoints() ([]any, error) {
 			apResource := mqlAp.(*mqlAwsS3BucketAccessPoint)
 			apResource.region = region
 			apResource.accountID = accountID
+			apResource.cacheBucketName = convert.ToValue(ap.Bucket)
+			apResource.cacheVpcId = vpcId
 			res = append(res, mqlAp)
 		}
 	}
 	return res, nil
+}
+
+func (a *mqlAwsS3BucketAccessPoint) bucket() (*mqlAwsS3Bucket, error) {
+	if a.cacheBucketName == "" {
+		a.Bucket.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.s3.bucket",
+		map[string]*llx.RawData{"name": llx.StringData(a.cacheBucketName)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsS3Bucket), nil
+}
+
+func (a *mqlAwsS3BucketAccessPoint) vpc() (*mqlAwsVpc, error) {
+	if a.cacheVpcId == "" {
+		a.Vpc.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAwsVpc,
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheVpcId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsVpc), nil
 }
 
 func (a *mqlAwsS3BucketAccessPoint) publicAccessBlock() (any, error) {
@@ -311,6 +339,7 @@ func (a *mqlAwsS3BucketAccessPoint) publicAccessBlock() (any, error) {
 	})
 	if err != nil {
 		if Is400AccessDeniedError(err) {
+			log.Debug().Str("accessPoint", a.Arn.Data).Err(err).Msg("access denied reading s3 access point public access block")
 			return nil, nil
 		}
 		return nil, err
@@ -338,6 +367,7 @@ func (a *mqlAwsS3BucketAccessPoint) policy() (string, error) {
 			return "", nil
 		}
 		if Is400AccessDeniedError(err) {
+			log.Debug().Str("accessPoint", a.Arn.Data).Err(err).Msg("access denied reading s3 access point policy")
 			return "", nil
 		}
 		return "", err

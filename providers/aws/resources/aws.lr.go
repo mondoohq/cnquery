@@ -13470,7 +13470,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAwsS3BucketAccessPoint).GetName()).ToDataRes(types.String)
 	},
 	"aws.s3.bucket.accessPoint.bucket": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsS3BucketAccessPoint).GetBucket()).ToDataRes(types.String)
+		return (r.(*mqlAwsS3BucketAccessPoint).GetBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
 	},
 	"aws.s3.bucket.accessPoint.bucketAccountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketAccessPoint).GetBucketAccountId()).ToDataRes(types.String)
@@ -13478,8 +13478,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3.bucket.accessPoint.networkOrigin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketAccessPoint).GetNetworkOrigin()).ToDataRes(types.String)
 	},
-	"aws.s3.bucket.accessPoint.vpcId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsS3BucketAccessPoint).GetVpcId()).ToDataRes(types.String)
+	"aws.s3.bucket.accessPoint.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
 	"aws.s3.bucket.accessPoint.alias": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketAccessPoint).GetAlias()).ToDataRes(types.String)
@@ -41722,7 +41722,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"aws.s3.bucket.accessPoint.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketAccessPoint).Bucket, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAwsS3BucketAccessPoint).Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.accessPoint.bucketAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41733,8 +41733,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3BucketAccessPoint).NetworkOrigin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.s3.bucket.accessPoint.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsS3BucketAccessPoint).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.s3.bucket.accessPoint.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.accessPoint.alias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -100900,10 +100900,10 @@ type mqlAwsS3BucketAccessPoint struct {
 	mqlAwsS3BucketAccessPointInternal
 	Arn               plugin.TValue[string]
 	Name              plugin.TValue[string]
-	Bucket            plugin.TValue[string]
+	Bucket            plugin.TValue[*mqlAwsS3Bucket]
 	BucketAccountId   plugin.TValue[string]
 	NetworkOrigin     plugin.TValue[string]
-	VpcId             plugin.TValue[string]
+	Vpc               plugin.TValue[*mqlAwsVpc]
 	Alias             plugin.TValue[string]
 	PublicAccessBlock plugin.TValue[any]
 	Policy            plugin.TValue[string]
@@ -100954,8 +100954,20 @@ func (c *mqlAwsS3BucketAccessPoint) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
-func (c *mqlAwsS3BucketAccessPoint) GetBucket() *plugin.TValue[string] {
-	return &c.Bucket
+func (c *mqlAwsS3BucketAccessPoint) GetBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket.accessPoint", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
 }
 
 func (c *mqlAwsS3BucketAccessPoint) GetBucketAccountId() *plugin.TValue[string] {
@@ -100966,8 +100978,20 @@ func (c *mqlAwsS3BucketAccessPoint) GetNetworkOrigin() *plugin.TValue[string] {
 	return &c.NetworkOrigin
 }
 
-func (c *mqlAwsS3BucketAccessPoint) GetVpcId() *plugin.TValue[string] {
-	return &c.VpcId
+func (c *mqlAwsS3BucketAccessPoint) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.s3.bucket.accessPoint", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
 }
 
 func (c *mqlAwsS3BucketAccessPoint) GetAlias() *plugin.TValue[string] {
