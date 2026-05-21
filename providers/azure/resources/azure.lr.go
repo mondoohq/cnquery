@@ -303,11 +303,15 @@ const (
 	ResourceAzureSubscriptionFunctionsServiceFunctionAppFunction                                 string = "azure.subscription.functionsService.functionApp.function"
 	ResourceAzureSubscriptionServiceBusService                                                   string = "azure.subscription.serviceBusService"
 	ResourceAzureSubscriptionServiceBusServiceNamespace                                          string = "azure.subscription.serviceBusService.namespace"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceNetworkRules                              string = "azure.subscription.serviceBusService.namespace.networkRules"
+	ResourceAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule            string = "azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule"
 	ResourceAzureSubscriptionServiceBusServiceNamespaceQueue                                     string = "azure.subscription.serviceBusService.namespace.queue"
 	ResourceAzureSubscriptionServiceBusServiceNamespaceTopic                                     string = "azure.subscription.serviceBusService.namespace.topic"
 	ResourceAzureSubscriptionServiceBusServiceNamespaceTopicSubscription                         string = "azure.subscription.serviceBusService.namespace.topic.subscription"
 	ResourceAzureSubscriptionEventHubService                                                     string = "azure.subscription.eventHubService"
 	ResourceAzureSubscriptionEventHubServiceNamespace                                            string = "azure.subscription.eventHubService.namespace"
+	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRules                                string = "azure.subscription.eventHubService.namespace.networkRules"
+	ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule              string = "azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule"
 	ResourceAzureSubscriptionEventHubServiceNamespaceEventHub                                    string = "azure.subscription.eventHubService.namespace.eventHub"
 	ResourceAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup                       string = "azure.subscription.eventHubService.namespace.eventHub.consumerGroup"
 	ResourceAzureSubscriptionEventGridService                                                    string = "azure.subscription.eventGridService"
@@ -1514,6 +1518,14 @@ func init() {
 			// to override args, implement: initAzureSubscriptionServiceBusServiceNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionServiceBusServiceNamespace,
 		},
+		"azure.subscription.serviceBusService.namespace.networkRules": {
+			// to override args, implement: initAzureSubscriptionServiceBusServiceNamespaceNetworkRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceBusServiceNamespaceNetworkRules,
+		},
+		"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule": {
+			// to override args, implement: initAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule,
+		},
 		"azure.subscription.serviceBusService.namespace.queue": {
 			// to override args, implement: initAzureSubscriptionServiceBusServiceNamespaceQueue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionServiceBusServiceNamespaceQueue,
@@ -1533,6 +1545,14 @@ func init() {
 		"azure.subscription.eventHubService.namespace": {
 			// to override args, implement: initAzureSubscriptionEventHubServiceNamespace(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionEventHubServiceNamespace,
+		},
+		"azure.subscription.eventHubService.namespace.networkRules": {
+			// to override args, implement: initAzureSubscriptionEventHubServiceNamespaceNetworkRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionEventHubServiceNamespaceNetworkRules,
+		},
+		"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule": {
+			// to override args, implement: initAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule,
 		},
 		"azure.subscription.eventHubService.namespace.eventHub": {
 			// to override args, implement: initAzureSubscriptionEventHubServiceNamespaceEventHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -10903,11 +10923,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.networkRuleSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetNetworkRuleSet()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.serviceBusService.namespace.networkRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetNetworkRules()).ToDataRes(types.Resource("azure.subscription.serviceBusService.namespace.networkRules"))
+	},
 	"azure.subscription.serviceBusService.namespace.queues": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetQueues()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.queue")))
 	},
 	"azure.subscription.serviceBusService.namespace.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetTopics()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.topic")))
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.defaultAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetDefaultAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.trustedServiceAccessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetTrustedServiceAccessEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.ipRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetIpRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule")))
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule.ignoreMissingVnetServiceEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule).GetIgnoreMissingVnetServiceEndpoint()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.serviceBusService.namespace.queue.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceQueue).GetId()).ToDataRes(types.String)
@@ -11059,8 +11103,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventHubService.namespace.networkRuleSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetNetworkRuleSet()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.eventHubService.namespace.networkRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetNetworkRules()).ToDataRes(types.Resource("azure.subscription.eventHubService.namespace.networkRules"))
+	},
 	"azure.subscription.eventHubService.namespace.eventHubs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetEventHubs()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.eventHub")))
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.defaultAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetDefaultAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.trustedServiceAccessEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetTrustedServiceAccessEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.ipRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetIpRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule")))
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule.ignoreMissingVnetServiceEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule).GetIgnoreMissingVnetServiceEndpoint()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.eventHubService.namespace.eventHub.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHub).GetId()).ToDataRes(types.String)
@@ -25929,12 +25997,52 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).NetworkRuleSet, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.serviceBusService.namespace.networkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).NetworkRules, ok = plugin.RawToTValue[*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.serviceBusService.namespace.queues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).Queues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.serviceBusService.namespace.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.defaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).DefaultAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.trustedServiceAccessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).TrustedServiceAccessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.ipRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).IpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).VirtualNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule.ignoreMissingVnetServiceEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule).IgnoreMissingVnetServiceEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.serviceBusService.namespace.queue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26157,8 +26265,48 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventHubServiceNamespace).NetworkRuleSet, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventHubService.namespace.networkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespace).NetworkRules, ok = plugin.RawToTValue[*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.eventHubService.namespace.eventHubs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventHubServiceNamespace).EventHubs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.defaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).DefaultAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.trustedServiceAccessEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).TrustedServiceAccessEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.ipRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).IpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).VirtualNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule.ignoreMissingVnetServiceEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule).IgnoreMissingVnetServiceEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventHubService.namespace.eventHub.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -60706,6 +60854,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespace struct {
 	RequireInfrastructureEncryption plugin.TValue[bool]
 	CmkKeys                         plugin.TValue[[]any]
 	NetworkRuleSet                  plugin.TValue[any]
+	NetworkRules                    plugin.TValue[*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules]
 	Queues                          plugin.TValue[[]any]
 	Topics                          plugin.TValue[[]any]
 }
@@ -60805,6 +60954,22 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetNetworkRuleSet() *pl
 	})
 }
 
+func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetNetworkRules() *plugin.TValue[*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules](&c.NetworkRules, func() (*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.serviceBusService.namespace", c.__id, "networkRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules), nil
+			}
+		}
+
+		return c.networkRules()
+	})
+}
+
 func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetQueues() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Queues, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -60835,6 +61000,131 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetTopics() *plugin.TVa
 
 		return c.topics()
 	})
+}
+
+// mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules for the azure.subscription.serviceBusService.namespace.networkRules resource
+type mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesInternal it will be used here
+	DefaultAction               plugin.TValue[string]
+	PublicNetworkAccess         plugin.TValue[string]
+	TrustedServiceAccessEnabled plugin.TValue[bool]
+	IpRules                     plugin.TValue[[]any]
+	VirtualNetworkRules         plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionServiceBusServiceNamespaceNetworkRules creates a new instance of this resource
+func createAzureSubscriptionServiceBusServiceNamespaceNetworkRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceBusService.namespace.networkRules", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) MqlName() string {
+	return "azure.subscription.serviceBusService.namespace.networkRules"
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetDefaultAction() *plugin.TValue[string] {
+	return &c.DefaultAction
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetTrustedServiceAccessEnabled() *plugin.TValue[bool] {
+	return &c.TrustedServiceAccessEnabled
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetIpRules() *plugin.TValue[[]any] {
+	return &c.IpRules
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetVirtualNetworkRules() *plugin.TValue[[]any] {
+	return &c.VirtualNetworkRules
+}
+
+// mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule for the azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule resource
+type mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRuleInternal
+	Subnet                           plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+	IgnoreMissingVnetServiceEndpoint plugin.TValue[bool]
+}
+
+// createAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule creates a new instance of this resource
+func createAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule) MqlName() string {
+	return "azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule"
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRulesVirtualNetworkRule) GetIgnoreMissingVnetServiceEndpoint() *plugin.TValue[bool] {
+	return &c.IgnoreMissingVnetServiceEndpoint
 }
 
 // mqlAzureSubscriptionServiceBusServiceNamespaceQueue for the azure.subscription.serviceBusService.namespace.queue resource
@@ -61224,6 +61514,7 @@ type mqlAzureSubscriptionEventHubServiceNamespace struct {
 	RequireInfrastructureEncryption plugin.TValue[bool]
 	CmkKeys                         plugin.TValue[[]any]
 	NetworkRuleSet                  plugin.TValue[any]
+	NetworkRules                    plugin.TValue[*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules]
 	EventHubs                       plugin.TValue[[]any]
 }
 
@@ -61334,6 +61625,22 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetNetworkRuleSet() *plug
 	})
 }
 
+func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetNetworkRules() *plugin.TValue[*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules](&c.NetworkRules, func() (*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventHubService.namespace", c.__id, "networkRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules), nil
+			}
+		}
+
+		return c.networkRules()
+	})
+}
+
 func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetEventHubs() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.EventHubs, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -61348,6 +61655,131 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetEventHubs() *plugin.TV
 
 		return c.eventHubs()
 	})
+}
+
+// mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules for the azure.subscription.eventHubService.namespace.networkRules resource
+type mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesInternal it will be used here
+	DefaultAction               plugin.TValue[string]
+	PublicNetworkAccess         plugin.TValue[string]
+	TrustedServiceAccessEnabled plugin.TValue[bool]
+	IpRules                     plugin.TValue[[]any]
+	VirtualNetworkRules         plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionEventHubServiceNamespaceNetworkRules creates a new instance of this resource
+func createAzureSubscriptionEventHubServiceNamespaceNetworkRules(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.eventHubService.namespace.networkRules", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) MqlName() string {
+	return "azure.subscription.eventHubService.namespace.networkRules"
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetDefaultAction() *plugin.TValue[string] {
+	return &c.DefaultAction
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetTrustedServiceAccessEnabled() *plugin.TValue[bool] {
+	return &c.TrustedServiceAccessEnabled
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetIpRules() *plugin.TValue[[]any] {
+	return &c.IpRules
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetVirtualNetworkRules() *plugin.TValue[[]any] {
+	return &c.VirtualNetworkRules
+}
+
+// mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule for the azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule resource
+type mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRuleInternal
+	Subnet                           plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+	IgnoreMissingVnetServiceEndpoint plugin.TValue[bool]
+}
+
+// createAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule creates a new instance of this resource
+func createAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule) MqlName() string {
+	return "azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule"
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule) GetIgnoreMissingVnetServiceEndpoint() *plugin.TValue[bool] {
+	return &c.IgnoreMissingVnetServiceEndpoint
 }
 
 // mqlAzureSubscriptionEventHubServiceNamespaceEventHub for the azure.subscription.eventHubService.namespace.eventHub resource

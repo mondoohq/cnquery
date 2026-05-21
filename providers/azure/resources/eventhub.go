@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventhub/armeventhub"
@@ -284,10 +285,98 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() 
 
 // networkRuleSet fetches the namespace-level network rule set.
 func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRuleSet() (any, error) {
+	props, err := a.fetchNetworkRuleSetProperties()
+	if err != nil {
+		return nil, err
+	}
+	if props == nil {
+		return nil, nil
+	}
+	return convert.JsonToDict(props)
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules, error) {
+	props, err := a.fetchNetworkRuleSetProperties()
+	if err != nil {
+		return nil, err
+	}
+	if props == nil {
+		a.NetworkRules.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	defaultAction := ""
+	if props.DefaultAction != nil {
+		defaultAction = string(*props.DefaultAction)
+	}
+	publicNetworkAccess := ""
+	if props.PublicNetworkAccess != nil {
+		publicNetworkAccess = string(*props.PublicNetworkAccess)
+	}
+	trustedServiceAccess := false
+	if props.TrustedServiceAccessEnabled != nil {
+		trustedServiceAccess = *props.TrustedServiceAccessEnabled
+	}
+
+	ipRules := []any{}
+	for _, r := range props.IPRules {
+		if r == nil {
+			continue
+		}
+		entry := map[string]any{}
+		if r.IPMask != nil {
+			entry["ipMask"] = *r.IPMask
+		}
+		if r.Action != nil {
+			entry["action"] = string(*r.Action)
+		}
+		ipRules = append(ipRules, entry)
+	}
+
+	vnetRules := []any{}
+	for i, r := range props.VirtualNetworkRules {
+		if r == nil {
+			continue
+		}
+		ignore := false
+		if r.IgnoreMissingVnetServiceEndpoint != nil {
+			ignore = *r.IgnoreMissingVnetServiceEndpoint
+		}
+		subnetID := ""
+		if r.Subnet != nil && r.Subnet.ID != nil {
+			subnetID = *r.Subnet.ID
+		}
+		id := fmt.Sprintf("%s/networkRules/virtualNetworkRules/%d", a.Id.Data, i)
+		mqlRule, err := CreateResource(a.MqlRuntime, "azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule",
+			map[string]*llx.RawData{
+				"__id":                             llx.StringData(id),
+				"ignoreMissingVnetServiceEndpoint": llx.BoolData(ignore),
+			})
+		if err != nil {
+			return nil, err
+		}
+		mqlRule.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule).cacheSubnetID = subnetID
+		vnetRules = append(vnetRules, mqlRule)
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.eventHubService.namespace.networkRules", map[string]*llx.RawData{
+		"__id":                        llx.StringData(a.Id.Data + "/networkRules"),
+		"defaultAction":               llx.StringData(defaultAction),
+		"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
+		"trustedServiceAccessEnabled": llx.BoolData(trustedServiceAccess),
+		"ipRules":                     llx.ArrayData(ipRules, types.Dict),
+		"virtualNetworkRules":         llx.ArrayData(vnetRules, types.Resource("azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule")),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules), nil
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespace) fetchNetworkRuleSetProperties() (*armeventhub.NetworkRuleSetProperties, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
-	id := a.Id.Data
-	resourceID, err := ParseResourceID(id)
+	resourceID, err := ParseResourceID(a.Id.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -305,8 +394,22 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRuleSet() (any, er
 	if err != nil {
 		return nil, err
 	}
-	if resp.NetworkRuleSet.Properties == nil {
+	return resp.NetworkRuleSet.Properties, nil
+}
+
+type mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRuleInternal struct {
+	cacheSubnetID string
+}
+
+func (a *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if a.cacheSubnetID == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	return convert.JsonToDict(resp.NetworkRuleSet.Properties)
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheSubnetID)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
 }

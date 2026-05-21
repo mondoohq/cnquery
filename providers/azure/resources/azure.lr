@@ -7766,10 +7766,47 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   cmkKeys []dict
   // Network rule set: default action ("Allow"/"Deny"), public network access, IP/VNet rules, and trusted-service access
   networkRuleSet() dict
+  // Typed namespace network rules (default action, IP / VNet rules, trusted-service access)
+  networkRules() azure.subscription.serviceBusService.namespace.networkRules
   // Queues in this namespace
   queues() []azure.subscription.serviceBusService.namespace.queue
   // Topics in this namespace
   topics() []azure.subscription.serviceBusService.namespace.topic
+}
+
+// Service Bus namespace network rule set
+//
+// Examine the namespace-level network access policy: the
+// `defaultAction` (Allow / Deny) applied to traffic that does not
+// match any rule, whether `publicNetworkAccess` is enabled at all,
+// whether `trustedServiceAccessEnabled` lets Microsoft-owned services
+// bypass the rule set, the list of `ipRules`, and the list of
+// `virtualNetworkRules` (each referencing a subnet).
+private azure.subscription.serviceBusService.namespace.networkRules @defaults("defaultAction publicNetworkAccess trustedServiceAccessEnabled") {
+  // Default action for traffic that does not match any rule ("Allow" or "Deny")
+  defaultAction string
+  // Whether traffic is allowed over the public network ("Enabled", "Disabled", or "SecuredByPerimeter")
+  publicNetworkAccess string
+  // Whether Microsoft-owned trusted services can bypass the rule set
+  trustedServiceAccessEnabled bool
+  // IP allow rules. Each entry is `{ipMask, action}` where `action` is "Allow".
+  ipRules []dict
+  // Virtual network rules; each references a subnet
+  virtualNetworkRules []azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule
+}
+
+// Service Bus namespace virtual network rule
+//
+// Examine a single VNet rule attached to a Service Bus namespace.
+// Resolves to the referenced subnet, with the
+// `ignoreMissingVnetServiceEndpoint` flag indicating whether the
+// rule permits traffic from the subnet even when the subnet has not
+// yet enabled the `Microsoft.ServiceBus` service endpoint.
+private azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule @defaults("ignoreMissingVnetServiceEndpoint") {
+  // Subnet referenced by the rule
+  subnet() azure.subscription.networkService.subnet
+  // Whether to allow traffic from the subnet even if the Microsoft.ServiceBus service endpoint is not yet enabled on it
+  ignoreMissingVnetServiceEndpoint bool
 }
 
 // Azure Service Bus queue
@@ -7901,8 +7938,45 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   cmkKeys []dict
   // Network rule set: default action ("Allow"/"Deny"), public network access, IP/VNet rules, trusted-service access
   networkRuleSet() dict
+  // Typed namespace network rules (default action, IP / VNet rules, trusted-service access)
+  networkRules() azure.subscription.eventHubService.namespace.networkRules
   // Event Hubs in this namespace
   eventHubs() []azure.subscription.eventHubService.namespace.eventHub
+}
+
+// Event Hubs namespace network rule set
+//
+// Examine the namespace-level network access policy: the
+// `defaultAction` (Allow / Deny) applied to traffic that does not
+// match any rule, whether `publicNetworkAccess` is enabled at all,
+// whether `trustedServiceAccessEnabled` lets Microsoft-owned services
+// bypass the rule set, the list of `ipRules`, and the list of
+// `virtualNetworkRules` (each referencing a subnet).
+private azure.subscription.eventHubService.namespace.networkRules @defaults("defaultAction publicNetworkAccess trustedServiceAccessEnabled") {
+  // Default action for traffic that does not match any rule ("Allow" or "Deny")
+  defaultAction string
+  // Whether traffic is allowed over the public network ("Enabled", "Disabled", or "SecuredByPerimeter")
+  publicNetworkAccess string
+  // Whether Microsoft-owned trusted services can bypass the rule set
+  trustedServiceAccessEnabled bool
+  // IP allow rules. Each entry is `{ipMask, action}` where `action` is "Allow".
+  ipRules []dict
+  // Virtual network rules; each references a subnet
+  virtualNetworkRules []azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule
+}
+
+// Event Hubs namespace virtual network rule
+//
+// Examine a single VNet rule attached to an Event Hubs namespace.
+// Resolves to the referenced subnet, with the
+// `ignoreMissingVnetServiceEndpoint` flag indicating whether the
+// rule permits traffic from the subnet even when the subnet has not
+// yet enabled the `Microsoft.EventHub` service endpoint.
+private azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule @defaults("ignoreMissingVnetServiceEndpoint") {
+  // Subnet referenced by the rule
+  subnet() azure.subscription.networkService.subnet
+  // Whether to allow traffic from the subnet even if the Microsoft.EventHub service endpoint is not yet enabled on it
+  ignoreMissingVnetServiceEndpoint bool
 }
 
 // Azure Event Hub
