@@ -93,6 +93,7 @@ chatgpt
 chokepoint
 cifs
 ciscocatalyst
+citus
 classpath
 claude
 clcerts
@@ -138,6 +139,7 @@ dataplex
 datasource
 datastream
 DATAUSER
+DBfor
 ddl
 ddos
 dedup
@@ -236,6 +238,7 @@ gpo
 gpu
 grafana
 groupname
+Groupsv
 gsuite
 gvnic
 hadoop
@@ -627,6 +630,7 @@ USERPOOL
 Utc
 valkey
 VAULTNAME
+VCores
 vcpus
 vdcs
 vdev
