@@ -240,6 +240,7 @@ grafana
 groupname
 Groupsv
 gsuite
+gua
 gvnic
 hadoop
 HBFNV
@@ -275,6 +276,7 @@ INPROGRESS
 iodef
 iotedge
 iothread
+ipam
 ipc
 ipsetforwardedipconfig
 ipsetreferencestatement
