@@ -346,4 +346,3 @@ func (a *mqlAwsEc2IpamPool) allocations() ([]any, error) {
 	}
 	return res, nil
 }
-
