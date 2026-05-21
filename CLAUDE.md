@@ -23,9 +23,9 @@ Resources are defined in `.lr` files (e.g., `providers/aws/resources/aws.lr`). T
 
 Every top-level resource (anything users will query directly — including singular records like `aws.ec2.instance` and namespace roots like `aws`) must have a two-part doc-comment immediately above the `resource {` line:
 
-1. **Title.** A simple, technically correct one-line name for the item — a noun phrase, no leading article ("A" / "An"), no trailing verbs like "static analysis" or "configuration analysis". The title belongs to *what the resource is*, not what you do with it. Deprecated resources keep `DEPRECATED:` at the start of the title. **Max 150 characters (enforced).** Titles render in CLI tables, auto-complete prompts, and the website resource docs, so they have a length cap; descriptions don't.
+1. **Title.** A simple, technically correct one-line name for the item — a noun phrase, no leading article ("A" / "An"), no trailing verbs like "static analysis" or "configuration analysis". The title belongs to *what the resource is*, not what you do with it. **Titles must not start with "deprecated"** (enforced) — deprecation is expressed via `@maturity("deprecated")`, not in the title. **Max 150 characters (enforced).** Titles render in CLI tables, auto-complete prompts, and the website resource docs, so they have a length cap; descriptions don't.
 2. **Single empty `//` line.**
-3. **Description.** Multi-line prose describing what's queryable through the resource — fields, sub-resources, derived predicates, the audits it enables. Lead with `Examine ...` (or `Iterate ...` for collection wrappers, `Use ...` for namespaces that exist mainly to host other resources). When the resource is keyed by a specific field, mention that field as the selection key with a concrete example. The description gets machine-parsed into the website-rendered resource docs, so favor depth and self-containment over single-line brevity.
+3. **Description.** Multi-line prose describing what's queryable through the resource — fields, sub-resources, derived predicates, the audits it enables. Lead with `Examine ...` (or `Iterate ...` for collection wrappers, `Use ...` for namespaces that exist mainly to host other resources). When the resource is keyed by a specific field, mention that field as the selection key with a concrete example. The description gets machine-parsed into the website-rendered resource docs, so favor depth and self-containment over single-line brevity. **Descriptions must not start with "Deprecated." or "Deprecated:" (enforced).** The only accepted leading phrases that contain the word "deprecated" are `Deprecated in favor of ...` and `Deprecated, please use ...`; any other variant must be rewritten so the deprecation notice comes after the resource/field summary.
 
 ```
 // Apache2 HTTP Server
@@ -50,7 +50,7 @@ arista.eos.runningConfig.section { ... }
 ```
 
 **Style rules:**
-- Title is a name-like noun phrase. No leading "A" / "An". No "static analysis" / "configuration analysis" verbs in the title. `DEPRECATED:` stays in the title for deprecated resources.
+- Title is a name-like noun phrase. No leading "A" / "An". No "static analysis" / "configuration analysis" verbs in the title. Never start a title with "deprecated" (case-insensitive) — that's signaled via `@maturity("deprecated")` and mentioned in the description.
 - Exactly one blank `//` separator between title and description.
 - Don't reference the parent resource as a navigation hint ("read from the parent device as ...", "iterate from the parent ..."). Just describe what *this* resource examines.
 - Don't use developer jargon ("Singleton", "Top-level entry point" is OK if it adds meaning, otherwise drop it). Write user-facing prose.
@@ -574,13 +574,23 @@ for {
 - **Consistency with existing fields:** Before adding new fields to a resource, check how its existing fields handle pointers, nil checks, and type conversions. Follow the same pattern.
 - **Verify enum values in `.lr` comments:** When listing possible values in field comments, check the SDK/API docs for completeness — don't assume the set is closed.
 - **Skip deprecated SDK fields and methods.** Before exposing a proto field or calling a method, check the SDK's `// Deprecated:` comment. Deprecated fields often return empty/zero on modern instances because the data has moved elsewhere (e.g. GCP Memorystore moved `DiscoveryEndpoints`/`PscAutoConnections` into `Endpoints`). Modeling them anyway adds dead schema that looks queryable but never returns data. Same goes for `Get*`/`List*` methods marked deprecated — pick the replacement. If you genuinely need a deprecated field for backward-compat with old API responses, leave a comment explaining why.
-- **Deprecating fields and resources — use `@maturity`.** When a field or resource is being kept for backward-compat but should not be used by new audits, mark it with `@maturity("deprecated")` in the `.lr` schema and prefix the field's doc comment with `DEPRECATED:`. The comment must explain what to use instead. Don't use a separate `// Deprecated:` line — `@maturity` is the source of truth and the comment is what users see. Also valid: `@maturity("preview")` for fields whose shape may still change. Examples:
+- **Deprecating fields and resources — use `@maturity`.** When a field or resource is being kept for backward-compat but should not be used by new audits, mark it with `@maturity("deprecated")` in the `.lr` schema. The title stays a plain noun phrase (titles starting with "deprecated" are rejected by the parser); the deprecation notice and the replacement go in the description. The description must lead with either `Deprecated in favor of ...` or `Deprecated, please use ...` — `Deprecated.` / `Deprecated:` are rejected. Also valid: `@maturity("preview")` for fields whose shape may still change. Examples:
   ```
-  // DEPRECATED: use endpointAddress, endpointPort, and endpointHostedZoneId instead
+  // Legacy endpoint dict
+  //
+  // Deprecated in favor of endpointAddress, endpointPort, and
+  // endpointHostedZoneId.
   endpoint @maturity("deprecated") dict
-  // DEPRECATED: replaced by aws.foo.bar.newField in 13.20.0
+
+  // Legacy field replaced in 13.20.0
+  //
+  // Deprecated in favor of aws.foo.bar.newField (since 13.20.0).
   legacyField @maturity("deprecated") string
-  // a whole resource can be deprecated too
+
+  // Cloudflare zone plan
+  //
+  // Examine the Cloudflare service plan attached to a zone. Will be
+  // removed in the next major release.
   private cloudflare.zone.plan @defaults("name") @maturity("deprecated") { ... }
   ```
   Keep the existing `.lr.versions` entry at its original version — deprecation does not bump the version.

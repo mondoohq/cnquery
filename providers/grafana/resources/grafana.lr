@@ -232,15 +232,14 @@ grafana.contactPoint @defaults("uid name type") {
   hasHttpAuth() bool
 }
 
-// DEPRECATED: legacy Grafana API key
+// Legacy Grafana API key
 //
-// Legacy API keys are distinct from service-account tokens; use
-// service accounts and tokens for new integrations. Examine a single
-// legacy API key: numeric ID and parent org ID, key name, granted
-// role (Admin / Editor / Viewer), expiration timestamp (zero when
-// none is set) plus `hasExpiration` and `isExpired` predicates, and
-// the service-account ID this key was migrated to (zero when not
-// migrated).
+// Deprecated in favor of service accounts and tokens, which should be
+// used for new integrations. Examine a single legacy API key: numeric ID
+// and parent org ID, key name, granted role (Admin / Editor / Viewer),
+// expiration timestamp (zero when none is set) plus `hasExpiration` and
+// `isExpired` predicates, and the service-account ID this key was
+// migrated to (zero when not migrated).
 grafana.apiKey @defaults("name role") @maturity("deprecated") {
   // API key ID
   id int

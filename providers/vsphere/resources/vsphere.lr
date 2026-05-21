@@ -683,10 +683,11 @@ private vsphere.host.certificate @defaults("subject status notAfter") {
   status string
 }
 
-// DEPRECATED: ESXi Firewall Ruleset (legacy)
+// Legacy ESXi firewall ruleset
 //
-// Use `vsphere.host.firewallRuleset` instead. This resource is kept for
-// backward compatibility and has the same fields as its replacement.
+// Deprecated in favor of `vsphere.host.firewallRuleset`. This resource
+// is kept for backward compatibility and has the same fields as its
+// replacement.
 private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("deprecated") {
   id string
   key string
@@ -700,10 +701,11 @@ private esxi.firewallRuleset @defaults("key enabled allIpsAllowed") @maturity("d
   rules []esxi.firewallRule
 }
 
-// DEPRECATED: ESXi Firewall Rule (legacy)
+// Legacy ESXi firewall rule
 //
-// Use `vsphere.host.firewallRule` instead. This resource is kept for
-// backward compatibility and has the same fields as its replacement.
+// Deprecated in favor of `vsphere.host.firewallRule`. This resource is
+// kept for backward compatibility and has the same fields as its
+// replacement.
 private esxi.firewallRule @defaults("port direction protocol") @maturity("deprecated") {
   id string
   port int
@@ -713,10 +715,11 @@ private esxi.firewallRule @defaults("port direction protocol") @maturity("deprec
   protocol string
 }
 
-// DEPRECATED: ESXi iSCSI Host Bus Adapter (legacy)
+// Legacy ESXi iSCSI host bus adapter
 //
-// Use `vsphere.host.iscsiAdapter` instead. This resource is kept for
-// backward compatibility and has the same fields as its replacement.
+// Deprecated in favor of `vsphere.host.iscsiAdapter`. This resource is
+// kept for backward compatibility and has the same fields as its
+// replacement.
 private esxi.iscsiAdapter @defaults("device iScsiName") @maturity("deprecated") {
   id string
   device string
@@ -729,10 +732,11 @@ private esxi.iscsiAdapter @defaults("device iScsiName") @maturity("deprecated") 
   mutualChapName string
 }
 
-// DEPRECATED: ESXi Host SSL/TLS Certificate (legacy)
+// Legacy ESXi host SSL/TLS certificate
 //
-// Use `vsphere.host.certificate` instead. This resource is kept for
-// backward compatibility and has the same fields as its replacement.
+// Deprecated in favor of `vsphere.host.certificate`. This resource is
+// kept for backward compatibility and has the same fields as its
+// replacement.
 private esxi.certificate @defaults("subject status notAfter") @maturity("deprecated") {
   id string
   kind string
@@ -1425,16 +1429,17 @@ private vsphere.host.ntpConfig @defaults("id") {
   config []string
 }
 
-// DEPRECATED: ESXi Namespace
+// Legacy ESXi namespace
 //
-// Use `vsphere` and its sub-resources instead. This namespace is kept
-// for backward compatibility only and exposes no queryable fields.
+// Deprecated in favor of `vsphere` and its sub-resources. This namespace
+// is kept for backward compatibility only and exposes no queryable
+// fields.
 esxi @maturity("deprecated") {}
 
-// DEPRECATED: ESXi Host Command Execution (legacy)
+// Legacy ESXi host command execution
 //
-// Use `vsphere.host.command` instead. This resource is kept for backward
-// compatibility and has the same fields as its replacement.
+// Deprecated in favor of `vsphere.host.command`. This resource is kept
+// for backward compatibility and has the same fields as its replacement.
 esxi.command @maturity("deprecated") {
   init(command string)
   inventoryPath string
@@ -1442,10 +1447,10 @@ esxi.command @maturity("deprecated") {
   result() []dict
 }
 
-// DEPRECATED: ESXi VIB (legacy)
+// Legacy ESXi VIB
 //
-// Use `vsphere.host.vib` instead. This resource is kept for backward
-// compatibility and has the same fields as its replacement.
+// Deprecated in favor of `vsphere.host.vib`. This resource is kept for
+// backward compatibility and has the same fields as its replacement.
 private esxi.vib @defaults("id name") @maturity("deprecated") {
   id string
   name string
@@ -1457,10 +1462,11 @@ private esxi.vib @defaults("id name") @maturity("deprecated") {
   version string
 }
 
-// DEPRECATED: ESXi Kernel Module (legacy)
+// Legacy ESXi kernel module
 //
-// Use `vsphere.host.kernelModule` instead. This resource is kept for backward
-// compatibility and has the same fields as its replacement.
+// Deprecated in favor of `vsphere.host.kernelModule`. This resource is
+// kept for backward compatibility and has the same fields as its
+// replacement.
 private esxi.kernelmodule @defaults("name") @maturity("deprecated") {
   name string
   modulefile string
@@ -1474,10 +1480,10 @@ private esxi.kernelmodule @defaults("name") @maturity("deprecated") {
   vibAcceptanceLevel string
 }
 
-// DEPRECATED: ESXi Management Service (legacy)
+// Legacy ESXi management service
 //
-// Use `vsphere.host.service` instead. This resource is kept for backward
-// compatibility and has the same fields as its replacement.
+// Deprecated in favor of `vsphere.host.service`. This resource is kept
+// for backward compatibility and has the same fields as its replacement.
 private esxi.service @defaults("key label") @maturity("deprecated") {
   key string
   label string
@@ -1487,10 +1493,10 @@ private esxi.service @defaults("key label") @maturity("deprecated") {
   policy string
 }
 
-// DEPRECATED: ESXi Host Timezone Configuration (legacy)
+// Legacy ESXi host timezone configuration
 //
-// Use `vsphere.host.timezone` instead. This resource is kept for backward
-// compatibility and has the same fields as its replacement.
+// Deprecated in favor of `vsphere.host.timezone`. This resource is kept
+// for backward compatibility and has the same fields as its replacement.
 private esxi.timezone @defaults("key name") @maturity("deprecated") {
   key string
   name string
@@ -1498,10 +1504,11 @@ private esxi.timezone @defaults("key name") @maturity("deprecated") {
   offset int
 }
 
-// DEPRECATED: ESXi Host NTP Configuration (legacy)
+// Legacy ESXi host NTP configuration
 //
-// Use `vsphere.host.ntpConfig` instead. This resource is kept for backward
-// compatibility and has the same fields as its replacement.
+// Deprecated in favor of `vsphere.host.ntpConfig`. This resource is
+// kept for backward compatibility and has the same fields as its
+// replacement.
 private esxi.ntpconfig @defaults("id") @maturity("deprecated") {
   id string
   server []string

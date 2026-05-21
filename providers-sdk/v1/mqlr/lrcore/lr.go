@@ -280,6 +280,68 @@ func extractTitleAndDescription(raw []CommentToken) (string, string) {
 // have no length cap.
 const MaxTitleLength = 150
 
+// titleStartsWithDeprecated reports whether a title begins with the word
+// "deprecated" (case-insensitive), optionally followed by a colon or other
+// non-letter punctuation. Deprecation is expressed via `@maturity` on the
+// resource/field, so the title should remain a plain noun phrase.
+func titleStartsWithDeprecated(title string) bool {
+	t := strings.TrimSpace(title)
+	if !hasDeprecatedWordPrefix(t) {
+		return false
+	}
+	return true
+}
+
+// descriptionStartsWithBadDeprecated reports whether a description starts
+// with the word "deprecated" (case-insensitive) in a way that conflicts
+// with the convention. The only accepted leading phrases are
+// "Deprecated in favor of ..." and "Deprecated, please use ..." — every
+// other variant ("Deprecated.", "Deprecated:", "Deprecated and ...", etc.)
+// is rejected so deprecation notices read consistently.
+func descriptionStartsWithBadDeprecated(desc string) bool {
+	d := strings.TrimSpace(desc)
+	if !hasDeprecatedWordPrefix(d) {
+		return false
+	}
+	rest := d[len("deprecated"):]
+	if hasPrefixFold(rest, " in favor of") {
+		return false
+	}
+	if hasPrefixFold(rest, ", please use") {
+		return false
+	}
+	return true
+}
+
+// hasDeprecatedWordPrefix reports whether s begins with the standalone
+// word "deprecated" (case-insensitive). It returns false for longer words
+// like "deprecation", and true when "deprecated" is followed by EOF or any
+// non-letter byte.
+func hasDeprecatedWordPrefix(s string) bool {
+	const word = "deprecated"
+	if len(s) < len(word) {
+		return false
+	}
+	if !strings.EqualFold(s[:len(word)], word) {
+		return false
+	}
+	if len(s) == len(word) {
+		return true
+	}
+	return !isLetter(s[len(word)])
+}
+
+func hasPrefixFold(s, prefix string) bool {
+	if len(s) < len(prefix) {
+		return false
+	}
+	return strings.EqualFold(s[:len(prefix)], prefix)
+}
+
+func isLetter(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
+}
+
 // validateDocCommentStructure enforces the doc-comment shape for resources
 // and fields:
 //   - 0 lines: nothing to validate.
@@ -308,11 +370,30 @@ func validateDocCommentStructure(comments []CommentToken, context string) error 
 		))
 	}
 
+	if titleStartsWithDeprecated(comments[0].Text) {
+		errs = append(errs, fmt.Errorf(
+			"%s: doc-comment title (line %d) starts with \"deprecated\" - "+
+				"deprecation is expressed via `@maturity(\"deprecated\")` on the resource/field, not in the title; "+
+				"keep the title as a plain noun phrase and mention the deprecation (and the replacement) in the description",
+			context, comments[0].Pos.Line,
+		))
+	}
+
 	if len(comments) >= 2 && comments[1].Text != "" {
 		errs = append(errs, fmt.Errorf(
 			"%s: doc-comment has %d lines but is missing the required blank `//` separator after the title (line %d) - "+
 				"either collapse the comment to a single line, or insert a blank `//` line between the title and the description",
 			context, len(comments), comments[0].Pos.Line,
+		))
+	}
+
+	_, desc := extractTitleAndDescription(comments)
+	if descriptionStartsWithBadDeprecated(desc) {
+		errs = append(errs, fmt.Errorf(
+			"%s: doc-comment description starts with \"deprecated\" but not in an accepted form - "+
+				"only \"Deprecated in favor of ...\" and \"Deprecated, please use ...\" are allowed as the leading phrase; "+
+				"rewrite the description so it begins with one of those or leads with the field/resource summary instead",
+			context,
 		))
 	}
 

@@ -19,9 +19,10 @@ alias os.unix.sshd = sshd
 extend asset {
   // Common Platform Enumeration (CPE) for the asset
   cpes() []core.cpe
-  // DEPRECATED: Advisory & vulnerability report
+  // Advisory and vulnerability report
   //
-  // Will be removed in version 13.0 (use vulnmgmt instead).
+  // Deprecated in favor of the `vulnmgmt` resource. Will be removed in
+  // version 13.0.
   vulnerabilityReport() @maturity("deprecated") dict
   // Platform URL in the package URL format (as opposed to the CPE format)
   purl() string
@@ -766,7 +767,9 @@ user @defaults("name uid gid") {
 privatekey {
   // PEM data
   pem string
-  // DEPRECATED: use file instead
+  // Path to the private key file
+  //
+  // Deprecated in favor of the `file` field.
   path @maturity("deprecated") string
   // File on disk for this private key
   file file
@@ -953,7 +956,10 @@ pam.conf {
   files() []file
   // The raw PAM configuration (across all files)
   content(files) string
-  // DEPRECATED: list of services that are configured via PAM
+  // Services configured via PAM
+  //
+  // Deprecated in favor of `entries`, which returns parsed, structured
+  // service entries.
   services(files) @maturity("deprecated") map[string][]string
   // List of services with parsed entries that are configured via PAM
   entries(files) map[string][]pam.conf.serviceEntry
@@ -1272,7 +1278,9 @@ journald.config {
   init(path? string)
   // File of this journald configuration
   file() file
-  // DEPRECATED: use sections() instead
+  // Flattened journald configuration parameters
+  //
+  // Deprecated in favor of `sections()`.
   params(file) @maturity("deprecated") map[string]string
   // All sections in this journald configuration
   sections(file) []journald.config.section
@@ -2715,7 +2723,10 @@ registrykey @defaults("path") {
   path string
   // Whether the property exists
   exists() bool
-  // DEPRECATED: use `items` instead
+  // Properties of the registry key as a name-to-value map
+  //
+  // Deprecated in favor of `items`, which returns structured property
+  // entries.
   properties() @maturity("deprecated") map[string]string
   // Registry key items
   items() []registrykey.property
@@ -2737,7 +2748,9 @@ registrykey.property @defaults("path name") {
   name string
   // Whether the property exists
   exists() bool
-  // DEPRECATED: use `data` instead
+  // Registry property value as a string
+  //
+  // Deprecated in favor of `data`, the parsed typed value.
   value() @maturity("deprecated") string
   // Registry key type
   type() string
@@ -2846,7 +2859,9 @@ npm.packages {
 
   init(path? string)
 
-  // DEPRECATED: path to search for packages, use paths instead
+  // Path to search for packages
+  //
+  // Deprecated in favor of `paths`, which accepts a list of search paths.
   path @maturity("deprecated") string
 
   // Optional: list of paths searched for packages

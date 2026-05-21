@@ -146,10 +146,10 @@ private cloudflare.zone.owner @defaults("name") {
 	ownerType string
 }
 
-// DEPRECATED: Cloudflare zone plan
+// Cloudflare zone plan
 //
-// Examine the Cloudflare service plan attached to a zone. Deprecated and
-// will be removed in the next major release.
+// Examine the Cloudflare service plan attached to a zone. Will be
+// removed in the next major release.
 private cloudflare.zone.plan @defaults("name") @maturity("deprecated") {
 	// Plan identifier
 	id string
@@ -1016,7 +1016,9 @@ private cloudflare.tunnel.virtualNetwork @defaults("name") {
 	deletedAt time
 }
 
-// DEPRECATED: legacy zone firewall rule, use cloudflare.zone.ruleset instead
+// Legacy Cloudflare zone firewall rule
+//
+// Deprecated in favor of `cloudflare.zone.ruleset`.
 private cloudflare.zone.firewallRule @defaults("id action") @maturity("deprecated") {
 	// Rule identifier
 	id string

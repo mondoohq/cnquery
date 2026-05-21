@@ -347,9 +347,9 @@ private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("m
   roleEligibilityScheduleId string
 }
 
-// DEPRECATED: use `microsoft.identityAndAccess.privilegedIdentityManagement.policy` instead.
+// PIM role management policy for Microsoft Entra ID roles
 //
-// PIM role management policy for Microsoft Entra ID roles.
+// Deprecated in favor of `microsoft.identityAndAccess.privilegedIdentityManagement.policy`.
 private microsoft.identityAndAccess.policy @defaults("id displayName scopeType") @maturity("deprecated") {
   // Policy ID
   id string
@@ -371,9 +371,9 @@ private microsoft.identityAndAccess.policy @defaults("id displayName scopeType")
   rules() []microsoft.identityAndAccess.policy.rule
 }
 
-// DEPRECATED: use `microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule` instead.
+// Rule defined for a PIM role management policy
 //
-// A rule defined for a PIM role management policy.
+// Deprecated in favor of `microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule`.
 private microsoft.identityAndAccess.policy.rule @defaults("id") @maturity("deprecated") {
   // The unique identifier for the rule
   id string
@@ -381,9 +381,9 @@ private microsoft.identityAndAccess.policy.rule @defaults("id") @maturity("depre
   target microsoft.identityAndAccess.policy.ruleTarget
 }
 
-// DEPRECATED: use `microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target` instead.
+// Scope targeted by a PIM role management policy rule
 //
-// Defines details of the scope that's targeted by role management policy rule.
+// Deprecated in favor of `microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target`.
 private microsoft.identityAndAccess.policy.ruleTarget @defaults("caller level") @maturity("deprecated") {
   // The type of caller that's the target of the policy rule. Allowed values are: None, Admin, EndUser
   caller string
@@ -2011,13 +2011,15 @@ microsoft.roles {
   search string
 }
 
-// DEPRECATED: use `microsoft.roles` instead
+// Microsoft role management namespace
 //
-// DEPRECATED: use `microsoft.roles` instead. This namespace previously
+// Deprecated in favor of `microsoft.roles`. This namespace previously
 // exposed role definitions and assignments; use `microsoft.roles` for
 // role definitions going forward.
 microsoft.rolemanagement @maturity("deprecated") {
-  // DEPRECATED: use `microsoft.roles` instead
+  // Role definitions
+  //
+  // Deprecated in favor of `microsoft.roles`.
   roleDefinitions() @maturity("deprecated") microsoft.roles
 }
 

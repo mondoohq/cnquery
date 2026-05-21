@@ -303,6 +303,177 @@ name {
 		require.NoError(t, err)
 	})
 
+	t.Run("rejects resource title starting with DEPRECATED", func(t *testing.T) {
+		_, err := Parse(`
+option provider = "test"
+
+// DEPRECATED: legacy thing, use replacement instead
+//
+// Long-form description here.
+name {
+	field type
+}
+`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "resource name")
+		assert.Contains(t, err.Error(), "starts with \"deprecated\"")
+		assert.Contains(t, err.Error(), "@maturity")
+	})
+
+	t.Run("rejects resource title starting with lowercase deprecated", func(t *testing.T) {
+		_, err := Parse(`
+option provider = "test"
+
+// deprecated zone plan
+//
+// Long-form description.
+name {
+	field type
+}
+`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "starts with \"deprecated\"")
+	})
+
+	t.Run("rejects field title starting with deprecated", func(t *testing.T) {
+		ast, err := Parse(`
+option provider = "test"
+
+// Resource title
+name {
+	// Deprecated: use newField instead
+	field type
+}
+`)
+		require.NoError(t, err)
+		_, err = Schema(ast)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "field name.field")
+		assert.Contains(t, err.Error(), "starts with \"deprecated\"")
+	})
+
+	t.Run("accepts titles where deprecated is part of a larger word", func(t *testing.T) {
+		_, err := Parse(`
+option provider = "test"
+
+// Deprecation policy summary
+//
+// Long-form description.
+name {
+	field type
+}
+`)
+		require.NoError(t, err)
+	})
+
+	t.Run("rejects description starting with Deprecated.", func(t *testing.T) {
+		_, err := Parse(`
+option provider = "test"
+
+// Legacy thing
+//
+// Deprecated. Use replacement instead.
+name {
+	field type
+}
+`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "resource name")
+		assert.Contains(t, err.Error(), "description starts with \"deprecated\"")
+		assert.Contains(t, err.Error(), "in favor of")
+	})
+
+	t.Run("rejects description starting with Deprecated:", func(t *testing.T) {
+		_, err := Parse(`
+option provider = "test"
+
+// Legacy thing
+//
+// Deprecated: use replacement.
+name {
+	field type
+}
+`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "description starts with \"deprecated\"")
+	})
+
+	t.Run("rejects field description starting with Deprecated.", func(t *testing.T) {
+		ast, err := Parse(`
+option provider = "test"
+
+// Resource title
+name {
+	// Field summary
+	//
+	// Deprecated. Use otherField instead.
+	field type
+}
+`)
+		require.NoError(t, err)
+		_, err = Schema(ast)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "field name.field")
+		assert.Contains(t, err.Error(), "description starts with \"deprecated\"")
+	})
+
+	t.Run("accepts description starting with Deprecated in favor of", func(t *testing.T) {
+		_, err := Parse(`
+option provider = "test"
+
+// Legacy thing
+//
+// Deprecated in favor of replacementResource.
+name {
+	field type
+}
+`)
+		require.NoError(t, err)
+	})
+
+	t.Run("accepts description starting with Deprecated, please use", func(t *testing.T) {
+		_, err := Parse(`
+option provider = "test"
+
+// Legacy thing
+//
+// Deprecated, please use replacementResource.
+name {
+	field type
+}
+`)
+		require.NoError(t, err)
+	})
+
+	t.Run("accepts description that mentions deprecated mid-sentence", func(t *testing.T) {
+		_, err := Parse(`
+option provider = "test"
+
+// Legacy thing
+//
+// Examines the legacy thing; this resource is deprecated and will be
+// removed soon.
+name {
+	field type
+}
+`)
+		require.NoError(t, err)
+	})
+
+	t.Run("accepts description where deprecation is part of a larger word", func(t *testing.T) {
+		_, err := Parse(`
+option provider = "test"
+
+// Policy summary
+//
+// Deprecation policy of the parent organization.
+name {
+	field type
+}
+`)
+		require.NoError(t, err)
+	})
+
 	t.Run("accepts two-part field comment with blank separator", func(t *testing.T) {
 		ast := parse(t, `
 option provider = "test"
