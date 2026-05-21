@@ -1782,6 +1782,8 @@ azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   etag string
   // Subnet address prefix
   addressPrefix string
+  // Subnet address prefixes (list form; populated when the subnet has multiple prefixes, e.g., dual-stack IPv4+IPv6)
+  addressPrefixes []string
   // Subnet properties
   properties dict
   // Whether network policies are applied to private endpoints in the subnet
@@ -1790,10 +1792,55 @@ azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   privateLinkServiceNetworkPolicies string
   // Whether default outbound access is enabled for VMs in the subnet
   defaultOutboundAccess bool
+  // Network Security Group attached to the subnet; null when no NSG is associated
+  networkSecurityGroup() azure.subscription.networkService.securityGroup
+  // Route table attached to the subnet; null when no route table is associated
+  routeTable() azure.subscription.networkService.routeTable
+  // Service endpoints configured on the subnet (e.g., Microsoft.Storage, Microsoft.Sql, Microsoft.KeyVault)
+  serviceEndpoints []azure.subscription.networkService.subnet.serviceEndpoint
+  // Service delegations configured on the subnet (e.g., Microsoft.ContainerInstance/containerGroups)
+  delegations []azure.subscription.networkService.subnet.delegation
   // The NAT gateway this subnet is associated with, if any
   natGateway() azure.subscription.networkService.natGateway
   // List of IP configurations for the subnet
   ipConfigurations() []azure.subscription.networkService.virtualNetworkGateway.ipConfig
+}
+
+// Azure subnet service endpoint
+//
+// Examine a single service endpoint configured on a subnet. Service
+// endpoints route traffic from the subnet to a PaaS service over the
+// Azure backbone instead of the public internet, scoped to the
+// service and optionally to specific locations. Audit queries
+// typically look for unexpected services (e.g., a database subnet
+// with `Microsoft.Storage` enabled) or endpoints whose
+// `provisioningState` has fallen out of `Succeeded`.
+private azure.subscription.networkService.subnet.serviceEndpoint @defaults("service provisioningState") {
+  // Service the endpoint routes traffic to (e.g., "Microsoft.Storage", "Microsoft.Sql", "Microsoft.KeyVault")
+  service string
+  // Locations the service endpoint is enabled for; empty when scoped to all locations
+  locations []string
+  // Provisioning state of the service endpoint (e.g., "Succeeded", "Updating", "Failed")
+  provisioningState string
+}
+
+// Azure subnet service delegation
+//
+// Examine a single service delegation on a subnet. Delegations grant a
+// PaaS service (for example, Azure Container Instances or App Service
+// VNet integration) permission to inject managed resources directly
+// into the subnet. Audit queries flag unexpected delegations such as a
+// production application subnet delegated to a service it should not
+// host.
+private azure.subscription.networkService.subnet.delegation @defaults("name serviceName provisioningState") {
+  // Delegation name (the customer-supplied label for the delegation)
+  name string
+  // Delegated service (e.g., "Microsoft.ContainerInstance/containerGroups", "Microsoft.Web/serverFarms")
+  serviceName string
+  // Actions delegated to the service (e.g., "Microsoft.Network/virtualNetworks/subnets/join/action")
+  actions []string
+  // Provisioning state of the delegation
+  provisioningState string
 }
 
 // Azure Virtual Network (VNet)

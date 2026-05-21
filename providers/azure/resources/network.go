@@ -3257,6 +3257,14 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 	var addressPrefix *llx.RawData
 	var privateEndpointNetworkPolicies, privateLinkServiceNetworkPolicies *llx.RawData
 	var defaultOutboundAccess *llx.RawData
+	addressPrefixes := []any{}
+	serviceEndpoints := []any{}
+	delegations := []any{}
+	var nsgID, routeTableID string
+	subnetID := ""
+	if subnet.ID != nil {
+		subnetID = *subnet.ID
+	}
 	if subnet.Properties != nil {
 		addressPrefix = llx.StringDataPtr(subnet.Properties.AddressPrefix)
 		if subnet.Properties.PrivateEndpointNetworkPolicies != nil {
@@ -3270,6 +3278,38 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 			privateLinkServiceNetworkPolicies = llx.StringData("")
 		}
 		defaultOutboundAccess = llx.BoolDataPtr(subnet.Properties.DefaultOutboundAccess)
+
+		for _, p := range subnet.Properties.AddressPrefixes {
+			if p != nil {
+				addressPrefixes = append(addressPrefixes, *p)
+			}
+		}
+		if subnet.Properties.NetworkSecurityGroup != nil && subnet.Properties.NetworkSecurityGroup.ID != nil {
+			nsgID = *subnet.Properties.NetworkSecurityGroup.ID
+		}
+		if subnet.Properties.RouteTable != nil && subnet.Properties.RouteTable.ID != nil {
+			routeTableID = *subnet.Properties.RouteTable.ID
+		}
+		for i, se := range subnet.Properties.ServiceEndpoints {
+			if se == nil {
+				continue
+			}
+			mqlSE, err := azureSubnetServiceEndpointToMql(runtime, subnetID, i, se)
+			if err != nil {
+				return nil, err
+			}
+			serviceEndpoints = append(serviceEndpoints, mqlSE)
+		}
+		for _, d := range subnet.Properties.Delegations {
+			if d == nil {
+				continue
+			}
+			mqlDel, err := azureSubnetDelegationToMql(runtime, subnetID, d)
+			if err != nil {
+				return nil, err
+			}
+			delegations = append(delegations, mqlDel)
+		}
 	} else {
 		addressPrefix = llx.StringData("")
 		privateEndpointNetworkPolicies = llx.StringData("")
@@ -3284,15 +3324,122 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 			"type":                              llx.StringDataPtr(subnet.Type),
 			"etag":                              llx.StringDataPtr(subnet.Etag),
 			"addressPrefix":                     addressPrefix,
+			"addressPrefixes":                   llx.ArrayData(addressPrefixes, types.String),
 			"properties":                        llx.DictData(props),
 			"privateEndpointNetworkPolicies":    privateEndpointNetworkPolicies,
 			"privateLinkServiceNetworkPolicies": privateLinkServiceNetworkPolicies,
 			"defaultOutboundAccess":             defaultOutboundAccess,
+			"serviceEndpoints":                  llx.ArrayData(serviceEndpoints, types.Resource("azure.subscription.networkService.subnet.serviceEndpoint")),
+			"delegations":                       llx.ArrayData(delegations, types.Resource("azure.subscription.networkService.subnet.delegation")),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return mqlAzure.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+	mqlSubnet := mqlAzure.(*mqlAzureSubscriptionNetworkServiceSubnet)
+	mqlSubnet.cacheNetworkSecurityGroupID = nsgID
+	mqlSubnet.cacheRouteTableID = routeTableID
+	return mqlSubnet, nil
+}
+
+type mqlAzureSubscriptionNetworkServiceSubnetInternal struct {
+	cacheNetworkSecurityGroupID string
+	cacheRouteTableID           string
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceSubnet) networkSecurityGroup() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {
+	if a.cacheNetworkSecurityGroupID == "" {
+		a.NetworkSecurityGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.securityGroup",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheNetworkSecurityGroupID)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSecurityGroup), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceSubnet) routeTable() (*mqlAzureSubscriptionNetworkServiceRouteTable, error) {
+	if a.cacheRouteTableID == "" {
+		a.RouteTable.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.routeTable",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheRouteTableID)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceRouteTable), nil
+}
+
+func azureSubnetServiceEndpointToMql(runtime *plugin.Runtime, subnetID string, idx int, se *network.ServiceEndpointPropertiesFormat) (*mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint, error) {
+	service := ""
+	if se.Service != nil {
+		service = *se.Service
+	}
+	provisioningState := ""
+	if se.ProvisioningState != nil {
+		provisioningState = string(*se.ProvisioningState)
+	}
+	locations := []any{}
+	for _, l := range se.Locations {
+		if l != nil {
+			locations = append(locations, *l)
+		}
+	}
+	id := fmt.Sprintf("%s/serviceEndpoints/%s/%d", subnetID, service, idx)
+	res, err := CreateResource(runtime, "azure.subscription.networkService.subnet.serviceEndpoint",
+		map[string]*llx.RawData{
+			"__id":              llx.StringData(id),
+			"service":           llx.StringData(service),
+			"locations":         llx.ArrayData(locations, types.String),
+			"provisioningState": llx.StringData(provisioningState),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint), nil
+}
+
+func azureSubnetDelegationToMql(runtime *plugin.Runtime, subnetID string, d *network.Delegation) (*mqlAzureSubscriptionNetworkServiceSubnetDelegation, error) {
+	name := ""
+	if d.Name != nil {
+		name = *d.Name
+	}
+	id := ""
+	if d.ID != nil {
+		id = *d.ID
+	} else {
+		id = fmt.Sprintf("%s/delegations/%s", subnetID, name)
+	}
+	serviceName := ""
+	provisioningState := ""
+	actions := []any{}
+	if d.Properties != nil {
+		if d.Properties.ServiceName != nil {
+			serviceName = *d.Properties.ServiceName
+		}
+		if d.Properties.ProvisioningState != nil {
+			provisioningState = string(*d.Properties.ProvisioningState)
+		}
+		for _, a := range d.Properties.Actions {
+			if a != nil {
+				actions = append(actions, *a)
+			}
+		}
+	}
+	res, err := CreateResource(runtime, "azure.subscription.networkService.subnet.delegation",
+		map[string]*llx.RawData{
+			"__id":              llx.StringData(id),
+			"name":              llx.StringData(name),
+			"serviceName":       llx.StringData(serviceName),
+			"actions":           llx.ArrayData(actions, types.String),
+			"provisioningState": llx.StringData(provisioningState),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnetDelegation), nil
 }
 
 func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mqlAzureSubscriptionNetworkServiceInterface, error) {
@@ -3683,6 +3830,41 @@ func initAzureSubscriptionNetworkServiceSecurityGroup(runtime *plugin.Runtime, a
 	}
 
 	return nil, nil, errors.New("azure network security group does not exist")
+}
+
+func initAzureSubscriptionNetworkServiceRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 1 {
+		return args, nil, nil
+	}
+
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	res, err := NewResource(runtime, "azure.subscription.networkService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	network := res.(*mqlAzureSubscriptionNetworkService)
+	tables := network.GetRouteTables()
+	if tables.Error != nil {
+		return nil, nil, tables.Error
+	}
+	id := args["id"].Value.(string)
+	for _, entry := range tables.Data {
+		rt := entry.(*mqlAzureSubscriptionNetworkServiceRouteTable)
+		if rt.Id.Data == id {
+			return args, rt, nil
+		}
+	}
+
+	return nil, nil, errors.New("azure route table does not exist")
 }
 
 // --- DDoS Protection Plans ---

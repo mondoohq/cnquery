@@ -64,6 +64,8 @@ const (
 	ResourceAzureSubscriptionNetworkServiceBgpSettingsIpConfigurationBgpPeeringAddress           string = "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress"
 	ResourceAzureSubscriptionNetworkServiceNatGateway                                            string = "azure.subscription.networkService.natGateway"
 	ResourceAzureSubscriptionNetworkServiceSubnet                                                string = "azure.subscription.networkService.subnet"
+	ResourceAzureSubscriptionNetworkServiceSubnetServiceEndpoint                                 string = "azure.subscription.networkService.subnet.serviceEndpoint"
+	ResourceAzureSubscriptionNetworkServiceSubnetDelegation                                      string = "azure.subscription.networkService.subnet.delegation"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetwork                                        string = "azure.subscription.networkService.virtualNetwork"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkPeering                                 string = "azure.subscription.networkService.virtualNetwork.peering"
 	ResourceAzureSubscriptionNetworkServiceVirtualNetworkDhcpOptions                             string = "azure.subscription.networkService.virtualNetwork.dhcpOptions"
@@ -558,6 +560,14 @@ func init() {
 			Init:   initAzureSubscriptionNetworkServiceSubnet,
 			Create: createAzureSubscriptionNetworkServiceSubnet,
 		},
+		"azure.subscription.networkService.subnet.serviceEndpoint": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceSubnetServiceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceSubnetServiceEndpoint,
+		},
+		"azure.subscription.networkService.subnet.delegation": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceSubnetDelegation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceSubnetDelegation,
+		},
 		"azure.subscription.networkService.virtualNetwork": {
 			Init:   initAzureSubscriptionNetworkServiceVirtualNetwork,
 			Create: createAzureSubscriptionNetworkServiceVirtualNetwork,
@@ -659,7 +669,7 @@ func init() {
 			Create: createAzureSubscriptionNetworkServicePrivateLinkServicePrivateEndpointConnection,
 		},
 		"azure.subscription.networkService.routeTable": {
-			// to override args, implement: initAzureSubscriptionNetworkServiceRouteTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAzureSubscriptionNetworkServiceRouteTable,
 			Create: createAzureSubscriptionNetworkServiceRouteTable,
 		},
 		"azure.subscription.networkService.route": {
@@ -3835,6 +3845,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.subnet.addressPrefix": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetAddressPrefix()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.subnet.addressPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetAddressPrefixes()).ToDataRes(types.Array(types.String))
+	},
 	"azure.subscription.networkService.subnet.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetProperties()).ToDataRes(types.Dict)
 	},
@@ -3847,11 +3860,44 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.subnet.defaultOutboundAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetDefaultOutboundAccess()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.networkService.subnet.networkSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetNetworkSecurityGroup()).ToDataRes(types.Resource("azure.subscription.networkService.securityGroup"))
+	},
+	"azure.subscription.networkService.subnet.routeTable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetRouteTable()).ToDataRes(types.Resource("azure.subscription.networkService.routeTable"))
+	},
+	"azure.subscription.networkService.subnet.serviceEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetServiceEndpoints()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.subnet.serviceEndpoint")))
+	},
+	"azure.subscription.networkService.subnet.delegations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetDelegations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.subnet.delegation")))
+	},
 	"azure.subscription.networkService.subnet.natGateway": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetNatGateway()).ToDataRes(types.Resource("azure.subscription.networkService.natGateway"))
 	},
 	"azure.subscription.networkService.subnet.ipConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetIpConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualNetworkGateway.ipConfig")))
+	},
+	"azure.subscription.networkService.subnet.serviceEndpoint.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint).GetService()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.subnet.serviceEndpoint.locations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint).GetLocations()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.subnet.serviceEndpoint.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.subnet.delegation.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnetDelegation).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.subnet.delegation.serviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnetDelegation).GetServiceName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.subnet.delegation.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnetDelegation).GetActions()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.networkService.subnet.delegation.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnetDelegation).GetProvisioningState()).ToDataRes(types.String)
 	},
 	"azure.subscription.networkService.virtualNetwork.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceVirtualNetwork).GetId()).ToDataRes(types.String)
@@ -15549,6 +15595,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceSubnet).AddressPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.subnet.addressPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnet).AddressPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.subnet.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceSubnet).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -15565,12 +15615,64 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceSubnet).DefaultOutboundAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.subnet.networkSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnet).NetworkSecurityGroup, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.routeTable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnet).RouteTable, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceRouteTable](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.serviceEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnet).ServiceEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.delegations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnet).Delegations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.subnet.natGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceSubnet).NatGateway, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceNatGateway](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.subnet.ipConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceSubnet).IpConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.serviceEndpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.subnet.serviceEndpoint.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.serviceEndpoint.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint).Locations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.serviceEndpoint.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.delegation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnetDelegation).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.subnet.delegation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnetDelegation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.delegation.serviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnetDelegation).ServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.delegation.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnetDelegation).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.delegation.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnetDelegation).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.virtualNetwork.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35323,16 +35425,21 @@ func (c *mqlAzureSubscriptionNetworkServiceNatGateway) GetSubnets() *plugin.TVal
 type mqlAzureSubscriptionNetworkServiceSubnet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceSubnetInternal it will be used here
+	mqlAzureSubscriptionNetworkServiceSubnetInternal
 	Id                                plugin.TValue[string]
 	Name                              plugin.TValue[string]
 	Type                              plugin.TValue[string]
 	Etag                              plugin.TValue[string]
 	AddressPrefix                     plugin.TValue[string]
+	AddressPrefixes                   plugin.TValue[[]any]
 	Properties                        plugin.TValue[any]
 	PrivateEndpointNetworkPolicies    plugin.TValue[string]
 	PrivateLinkServiceNetworkPolicies plugin.TValue[string]
 	DefaultOutboundAccess             plugin.TValue[bool]
+	NetworkSecurityGroup              plugin.TValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup]
+	RouteTable                        plugin.TValue[*mqlAzureSubscriptionNetworkServiceRouteTable]
+	ServiceEndpoints                  plugin.TValue[[]any]
+	Delegations                       plugin.TValue[[]any]
 	NatGateway                        plugin.TValue[*mqlAzureSubscriptionNetworkServiceNatGateway]
 	IpConfigurations                  plugin.TValue[[]any]
 }
@@ -35394,6 +35501,10 @@ func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetAddressPrefix() *plugin.TV
 	return &c.AddressPrefix
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetAddressPrefixes() *plugin.TValue[[]any] {
+	return &c.AddressPrefixes
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
 }
@@ -35408,6 +35519,46 @@ func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetPrivateLinkServiceNetworkP
 
 func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetDefaultOutboundAccess() *plugin.TValue[bool] {
 	return &c.DefaultOutboundAccess
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetNetworkSecurityGroup() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSecurityGroup] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSecurityGroup](&c.NetworkSecurityGroup, func() (*mqlAzureSubscriptionNetworkServiceSecurityGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.subnet", c.__id, "networkSecurityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSecurityGroup), nil
+			}
+		}
+
+		return c.networkSecurityGroup()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetRouteTable() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceRouteTable] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceRouteTable](&c.RouteTable, func() (*mqlAzureSubscriptionNetworkServiceRouteTable, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.subnet", c.__id, "routeTable")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceRouteTable), nil
+			}
+		}
+
+		return c.routeTable()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetServiceEndpoints() *plugin.TValue[[]any] {
+	return &c.ServiceEndpoints
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetDelegations() *plugin.TValue[[]any] {
+	return &c.Delegations
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetNatGateway() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceNatGateway] {
@@ -35440,6 +35591,119 @@ func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetIpConfigurations() *plugin
 
 		return c.ipConfigurations()
 	})
+}
+
+// mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint for the azure.subscription.networkService.subnet.serviceEndpoint resource
+type mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceSubnetServiceEndpointInternal it will be used here
+	Service           plugin.TValue[string]
+	Locations         plugin.TValue[[]any]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceSubnetServiceEndpoint creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceSubnetServiceEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.subnet.serviceEndpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint) MqlName() string {
+	return "azure.subscription.networkService.subnet.serviceEndpoint"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint) GetLocations() *plugin.TValue[[]any] {
+	return &c.Locations
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetServiceEndpoint) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+// mqlAzureSubscriptionNetworkServiceSubnetDelegation for the azure.subscription.networkService.subnet.delegation resource
+type mqlAzureSubscriptionNetworkServiceSubnetDelegation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceSubnetDelegationInternal it will be used here
+	Name              plugin.TValue[string]
+	ServiceName       plugin.TValue[string]
+	Actions           plugin.TValue[[]any]
+	ProvisioningState plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetworkServiceSubnetDelegation creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceSubnetDelegation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceSubnetDelegation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.subnet.delegation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetDelegation) MqlName() string {
+	return "azure.subscription.networkService.subnet.delegation"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetDelegation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetDelegation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetDelegation) GetServiceName() *plugin.TValue[string] {
+	return &c.ServiceName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetDelegation) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnetDelegation) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
 }
 
 // mqlAzureSubscriptionNetworkServiceVirtualNetwork for the azure.subscription.networkService.virtualNetwork resource
