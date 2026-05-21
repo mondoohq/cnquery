@@ -13990,6 +13990,69 @@ private aws.cognito.userPool @defaults("arn name") {
   domain() aws.cognito.userPoolDomain
   // Federated identity providers configured on the user pool
   identityProviders() []aws.cognito.userPoolIdentityProvider
+  // User pool feature plan: LITE, ESSENTIALS, or PLUS
+  //
+  // Determines eligibility for managed login, access-token customization,
+  // and threat protection. Defaults to ESSENTIALS on new user pools.
+  userPoolTier() string
+  // Account-recovery configuration
+  //
+  // Lists the password-recovery delivery mechanisms (email, phone) and the
+  // priority order Cognito applies when a user calls ForgotPassword. Keys
+  // include RecoveryMechanisms (a list of {Name, Priority} entries).
+  accountRecoverySetting() dict
+  // Device-remembering configuration
+  //
+  // A null value means device remembering is deactivated. When set, exposes
+  // ChallengeRequiredOnNewDevice and DeviceOnlyRememberedOnUserPrompt.
+  deviceConfiguration() dict
+  // Username case-sensitivity configuration
+  //
+  // Exposes CaseSensitive: when false, users can sign in with any
+  // capitalization variation of their username or email alias.
+  usernameConfiguration() dict
+  // Attribute schema of the user pool
+  //
+  // Each entry describes a standard or custom attribute (custom: prefix).
+  // Common keys: Name, AttributeDataType (String, Number, DateTime, Boolean),
+  // Mutable, Required, StringAttributeConstraints, NumberAttributeConstraints.
+  schema() []dict
+  // Verification message template
+  //
+  // Templates Cognito uses when sending an account-confirmation code or link
+  // to a user's email or phone. Keys include DefaultEmailOption
+  // (CONFIRM_WITH_LINK or CONFIRM_WITH_CODE), EmailMessage, EmailSubject,
+  // EmailMessageByLink, EmailSubjectByLink, SmsMessage.
+  verificationMessageTemplate() dict
+  // Email-delivery configuration
+  //
+  // Exposes EmailSendingAccount (COGNITO_DEFAULT or DEVELOPER), From,
+  // ReplyToEmailAddress, SourceArn (an SES-verified address or domain),
+  // and ConfigurationSet.
+  emailConfiguration() dict
+  // SMS-delivery configuration
+  //
+  // Exposes SnsCallerArn (the IAM role Cognito assumes to publish to SNS),
+  // ExternalId, and SnsRegion. Null when the user pool isn't configured
+  // to send SMS messages.
+  smsConfiguration() dict
+  // Lambda triggers configured on the user pool
+  //
+  // Map of trigger point to Lambda function ARN. Possible keys include
+  // PreSignUp, PostConfirmation, PreAuthentication, PostAuthentication,
+  // CustomMessage, DefineAuthChallenge, CreateAuthChallenge,
+  // VerifyAuthChallengeResponse, PreTokenGeneration, UserMigration,
+  // CustomEmailSender, CustomSMSSender, KMSKeyID.
+  lambdaConfig() dict
+  // Threat-protection risk configuration at the user-pool level
+  //
+  // Returned by DescribeRiskConfiguration. Keys include
+  // CompromisedCredentialsRiskConfiguration (EventFilter, Actions with
+  // EventAction of BLOCK or NO_ACTION), AccountTakeoverRiskConfiguration
+  // (LowAction, MediumAction, HighAction, each with Notify and EventAction
+  // of BLOCK, MFA_IF_CONFIGURED, MFA_REQUIRED, or NO_ACTION), and
+  // RiskExceptionConfiguration (BlockedIPRangeList, SkippedIPRangeList).
+  riskConfiguration() dict
   // Date the user pool was created
   createdAt time
   // Date the user pool was last modified
@@ -14120,6 +14183,19 @@ private aws.cognito.identityPool @defaults("id name") {
   samlProviderArns() []string
   // Supported login providers (provider name to app ID mapping)
   supportedLoginProviders() map[string]string
+  // Cognito user pools federated into the identity pool
+  //
+  // Each entry has ProviderName (e.g. cognito-idp.us-east-1.amazonaws.com/us-east-1_abc),
+  // ClientId, and ServerSideTokenCheck (whether the identity pool revalidates
+  // tokens against the user pool on every credential request).
+  cognitoIdentityProviders() []dict
+  // Authenticated and unauthenticated role bindings
+  //
+  // Returned by GetIdentityPoolRoles. Keys include Roles (a map with
+  // authenticated and unauthenticated role ARNs) and RoleMappings (a map
+  // keyed by provider with Type, AmbiguousRoleResolution, and
+  // RulesConfiguration).
+  roles() dict
   // Identity pool tags
   tags() map[string]string
 }

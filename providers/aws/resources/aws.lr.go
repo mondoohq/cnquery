@@ -20339,6 +20339,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cognito.userPool.identityProviders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetIdentityProviders()).ToDataRes(types.Array(types.Resource("aws.cognito.userPoolIdentityProvider")))
 	},
+	"aws.cognito.userPool.userPoolTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetUserPoolTier()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPool.accountRecoverySetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetAccountRecoverySetting()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPool.deviceConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetDeviceConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPool.usernameConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetUsernameConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPool.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetSchema()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.cognito.userPool.verificationMessageTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetVerificationMessageTemplate()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPool.emailConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetEmailConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPool.smsConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetSmsConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPool.lambdaConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetLambdaConfig()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPool.riskConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetRiskConfiguration()).ToDataRes(types.Dict)
+	},
 	"aws.cognito.userPool.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -20497,6 +20527,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cognito.identityPool.supportedLoginProviders": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoIdentityPool).GetSupportedLoginProviders()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.cognito.identityPool.cognitoIdentityProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetCognitoIdentityProviders()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.cognito.identityPool.roles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoIdentityPool).GetRoles()).ToDataRes(types.Dict)
 	},
 	"aws.cognito.identityPool.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoIdentityPool).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -51681,6 +51717,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCognitoUserPool).IdentityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.cognito.userPool.userPoolTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).UserPoolTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.accountRecoverySetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).AccountRecoverySetting, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.deviceConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).DeviceConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.usernameConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).UsernameConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).Schema, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.verificationMessageTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).VerificationMessageTemplate, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.emailConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).EmailConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.smsConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).SmsConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.lambdaConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).LambdaConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.riskConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).RiskConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.cognito.userPool.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPool).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -51907,6 +51983,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cognito.identityPool.supportedLoginProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoIdentityPool).SupportedLoginProviders, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.cognitoIdentityProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).CognitoIdentityProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.identityPool.roles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoIdentityPool).Roles, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.identityPool.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -125038,21 +125122,31 @@ type mqlAwsCognitoUserPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsCognitoUserPoolInternal
-	Arn                  plugin.TValue[string]
-	Id                   plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Region               plugin.TValue[string]
-	Status               plugin.TValue[string]
-	DeletionProtection   plugin.TValue[bool]
-	MfaConfiguration     plugin.TValue[string]
-	PasswordPolicy       plugin.TValue[any]
-	AdvancedSecurityMode plugin.TValue[string]
-	Tags                 plugin.TValue[map[string]any]
-	Clients              plugin.TValue[[]any]
-	Domain               plugin.TValue[*mqlAwsCognitoUserPoolDomain]
-	IdentityProviders    plugin.TValue[[]any]
-	CreatedAt            plugin.TValue[*time.Time]
-	UpdatedAt            plugin.TValue[*time.Time]
+	Arn                         plugin.TValue[string]
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	DeletionProtection          plugin.TValue[bool]
+	MfaConfiguration            plugin.TValue[string]
+	PasswordPolicy              plugin.TValue[any]
+	AdvancedSecurityMode        plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	Clients                     plugin.TValue[[]any]
+	Domain                      plugin.TValue[*mqlAwsCognitoUserPoolDomain]
+	IdentityProviders           plugin.TValue[[]any]
+	UserPoolTier                plugin.TValue[string]
+	AccountRecoverySetting      plugin.TValue[any]
+	DeviceConfiguration         plugin.TValue[any]
+	UsernameConfiguration       plugin.TValue[any]
+	Schema                      plugin.TValue[[]any]
+	VerificationMessageTemplate plugin.TValue[any]
+	EmailConfiguration          plugin.TValue[any]
+	SmsConfiguration            plugin.TValue[any]
+	LambdaConfig                plugin.TValue[any]
+	RiskConfiguration           plugin.TValue[any]
+	CreatedAt                   plugin.TValue[*time.Time]
+	UpdatedAt                   plugin.TValue[*time.Time]
 }
 
 // createAwsCognitoUserPool creates a new instance of this resource
@@ -125182,6 +125276,66 @@ func (c *mqlAwsCognitoUserPool) GetIdentityProviders() *plugin.TValue[[]any] {
 		}
 
 		return c.identityProviders()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetUserPoolTier() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UserPoolTier, func() (string, error) {
+		return c.userPoolTier()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetAccountRecoverySetting() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.AccountRecoverySetting, func() (any, error) {
+		return c.accountRecoverySetting()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetDeviceConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DeviceConfiguration, func() (any, error) {
+		return c.deviceConfiguration()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetUsernameConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.UsernameConfiguration, func() (any, error) {
+		return c.usernameConfiguration()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetSchema() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Schema, func() ([]any, error) {
+		return c.schema()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetVerificationMessageTemplate() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.VerificationMessageTemplate, func() (any, error) {
+		return c.verificationMessageTemplate()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetEmailConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.EmailConfiguration, func() (any, error) {
+		return c.emailConfiguration()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetSmsConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SmsConfiguration, func() (any, error) {
+		return c.smsConfiguration()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetLambdaConfig() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.LambdaConfig, func() (any, error) {
+		return c.lambdaConfig()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetRiskConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.RiskConfiguration, func() (any, error) {
+		return c.riskConfiguration()
 	})
 }
 
@@ -125585,6 +125739,8 @@ type mqlAwsCognitoIdentityPool struct {
 	OpenIdConnectProviderArns      plugin.TValue[[]any]
 	SamlProviderArns               plugin.TValue[[]any]
 	SupportedLoginProviders        plugin.TValue[map[string]any]
+	CognitoIdentityProviders       plugin.TValue[[]any]
+	Roles                          plugin.TValue[any]
 	Tags                           plugin.TValue[map[string]any]
 }
 
@@ -125665,6 +125821,18 @@ func (c *mqlAwsCognitoIdentityPool) GetSamlProviderArns() *plugin.TValue[[]any] 
 func (c *mqlAwsCognitoIdentityPool) GetSupportedLoginProviders() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.SupportedLoginProviders, func() (map[string]any, error) {
 		return c.supportedLoginProviders()
+	})
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetCognitoIdentityProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CognitoIdentityProviders, func() ([]any, error) {
+		return c.cognitoIdentityProviders()
+	})
+}
+
+func (c *mqlAwsCognitoIdentityPool) GetRoles() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Roles, func() (any, error) {
+		return c.roles()
 	})
 }
 
