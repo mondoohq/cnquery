@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -410,6 +411,90 @@ func (g *mqlGcpProjectIamServiceServiceAccount) lastAuthenticatedTime() (*time.T
 		t, err := time.Parse(time.RFC3339, parsed.LastAuthenticatedTime)
 		if err != nil {
 			log.Debug().Err(err).Str("value", parsed.LastAuthenticatedTime).Msg("failed to parse lastAuthenticatedTime timestamp")
+			continue
+		}
+		if latest == nil || t.After(*latest) {
+			latest = &t
+		}
+	}
+
+	if latest == nil {
+		g.LastAuthenticatedTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return latest, nil
+}
+
+// lastAuthKeyActivity matches the JSON shape returned by the Policy Analyzer
+// serviceAccountKeyLastAuthentication activity type.
+type lastAuthKeyActivity struct {
+	ServiceAccountKey struct {
+		ProjectNumber    string `json:"projectNumber"`
+		FullResourceName string `json:"fullResourceName"`
+	} `json:"serviceAccountKey"`
+	LastAuthenticatedTime string `json:"lastAuthenticatedTime"`
+}
+
+func (g *mqlGcpProjectIamServiceServiceAccountKey) lastAuthenticatedTime() (*time.Time, error) {
+	if g.Name.Error != nil {
+		return nil, g.Name.Error
+	}
+	keyName := g.Name.Data
+	if keyName == "" {
+		g.LastAuthenticatedTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	// Parse projects/{project}/serviceAccounts/{email}/keys/{keyId}.
+	parts := strings.Split(keyName, "/")
+	if len(parts) != 6 || parts[0] != "projects" || parts[2] != "serviceAccounts" || parts[4] != "keys" {
+		g.LastAuthenticatedTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	projectId := parts[1]
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(policyanalyzer.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	paSvc, err := policyanalyzer.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	parent := fmt.Sprintf("projects/%s/locations/global/activityTypes/serviceAccountKeyLastAuthentication", projectId)
+	filter := fmt.Sprintf("activities.full_resource_name=\"//iam.googleapis.com/%s\"", keyName)
+	resp, err := paSvc.Projects.Locations.ActivityTypes.Activities.Query(parent).Filter(filter).Context(ctx).Do()
+	if err != nil {
+		// Gracefully degrade if the Policy Analyzer API is disabled or the
+		// caller lacks the policyanalyzer.* permissions.
+		if gerr, ok := err.(*googleapi.Error); ok && (gerr.Code == 403 || gerr.Code == 404) {
+			log.Debug().Str("key", keyName).Int("code", gerr.Code).Msg("policyanalyzer key lastAuthenticatedTime unavailable")
+			g.LastAuthenticatedTime.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var latest *time.Time
+	for _, a := range resp.Activities {
+		if a == nil || len(a.Activity) == 0 {
+			continue
+		}
+		var parsed lastAuthKeyActivity
+		if err := json.Unmarshal(a.Activity, &parsed); err != nil {
+			log.Debug().Err(err).Msg("failed to parse key lastAuthenticatedTime activity")
+			continue
+		}
+		if parsed.LastAuthenticatedTime == "" {
+			continue
+		}
+		t, err := time.Parse(time.RFC3339, parsed.LastAuthenticatedTime)
+		if err != nil {
+			log.Debug().Err(err).Str("value", parsed.LastAuthenticatedTime).Msg("failed to parse key lastAuthenticatedTime timestamp")
 			continue
 		}
 		if latest == nil || t.After(*latest) {

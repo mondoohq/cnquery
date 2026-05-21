@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.16.2",
-  "generated_at": "2026-05-21T14:45:31-07:00",
+  "generated_at": "2026-05-21T15:23:44-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -158,6 +158,7 @@
     "ids.endpoints.list",
     "logging.buckets.list",
     "logging.exclusions.list",
+    "logging.sinks.list",
     "logging.views.list",
     "memcache.instances.list",
     "memorystore.backupCollections.get",
@@ -198,6 +199,7 @@
     "redis.backups.list",
     "redis.clusters.list",
     "redis.instances.list",
+    "resourcemanager.folders.getIamPolicy",
     "resourcemanager.projects.get",
     "resourcemanager.projects.getIamPolicy",
     "run.jobs.getIamPolicy",
@@ -1193,6 +1195,12 @@
       "source_file": "logging.go"
     },
     {
+      "permission": "logging.sinks.list",
+      "service": "logging",
+      "action": "Sinks.List",
+      "source_file": "logging.go"
+    },
+    {
       "permission": "logging.views.list",
       "service": "logging",
       "action": "Views.List",
@@ -1438,6 +1446,12 @@
       "action": "Folders.Get",
       "source_file": "folder.go",
       "scope": "org"
+    },
+    {
+      "permission": "resourcemanager.folders.getIamPolicy",
+      "service": "resourcemanager",
+      "action": "Folders.GetIamPolicy",
+      "source_file": "folder.go"
     },
     {
       "permission": "resourcemanager.folders.list",

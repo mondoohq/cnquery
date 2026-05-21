@@ -96,6 +96,8 @@ gcp.organization @defaults("name") {
   networkSecurityProfileGroups() []gcp.organization.networkSecurityProfileGroup
   // Custom IAM roles defined at the organization level
   customRoles() []gcp.organization.role
+  // Cloud Logging configuration scoped to the organization
+  logging() gcp.organization.loggingService
 }
 
 // Google Cloud (GCP) IAM custom role defined at the organization level
@@ -631,6 +633,12 @@ private gcp.folder @defaults("name") {
   projects() gcp.projects
   // Organization policies applied to the folder
   orgPolicies() []gcp.orgPolicy
+  // Folder IAM policy
+  iamPolicy() []gcp.resourcemanager.binding
+  // Audit logging configuration on the folder
+  auditConfig() []gcp.resourcemanager.auditConfig
+  // Cloud Logging configuration scoped to the folder
+  logging() gcp.folder.loggingService
 }
 
 // Google Cloud (GCP) projects
@@ -4407,6 +4415,8 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   userManaged bool
   // Whether the key is disabled
   disabled bool
+  // Timestamp when the key was last used to authenticate (from Policy Intelligence)
+  lastAuthenticatedTime() time
 }
 
 // Google Cloud (GCP) IAM deny policy
@@ -11846,3 +11856,98 @@ private gcp.project.memorystoreService.backup.backupFile @defaults("fileName siz
   // File creation time
   createTime time
 }
+
+// Google Cloud (GCP) organization-scope Cloud Logging
+//
+// Use this resource as the entry point for organization-level Cloud
+// Logging configuration. It hosts the organization's logging
+// `sinks` — the export rules that forward log entries from every
+// project under the organization to a central destination (Cloud
+// Storage, BigQuery, Pub/Sub, or another log bucket). Org-level sinks
+// are the primary control for forcing tamper-resistant log
+// aggregation across the entire org, which is a baseline requirement
+// for incident response and most compliance frameworks.
+private gcp.organization.loggingService {
+  // Full organization resource name (organizations/{id})
+  organizationName string
+  // List of logging sinks defined at the organization level
+  sinks() []gcp.organization.loggingService.sink
+}
+
+// Google Cloud (GCP) organization-level Cloud Logging sink
+//
+// Examine an organization-scoped Cloud Logging export sink. Surfaces
+// the `destination` (Cloud Storage bucket, BigQuery dataset, Pub/Sub
+// topic, or another log bucket), the advanced log `filter`, the
+// `writerIdentity` used for authorization, and the `includeChildren`
+// flag — when true, the sink also receives log entries (recursively)
+// from any contained folders, billing accounts, or projects.
+private gcp.organization.loggingService.sink @defaults("name destination") {
+  // Full organization resource name (organizations/{id})
+  organizationName string
+  // Sink ID (the short name of the sink within the organization)
+  name string
+  // Export destination
+  destination string
+  // Optional advanced logs filter
+  filter string
+  // When exporting logs, logging adopts this identity for authorization
+  writerIdentity string
+  // When true, the sink also receives log entries (recursively) from contained folders, billing accounts, or projects
+  includeChildren bool
+  // Whether the sink is disabled (no log entries are exported)
+  disabled bool
+  // Description of the sink
+  description string
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
+}
+
+// Google Cloud (GCP) folder-scope Cloud Logging
+//
+// Use this resource as the entry point for folder-level Cloud Logging
+// configuration. It hosts the folder's logging `sinks` — the export
+// rules that forward log entries from every project under the folder
+// to a central destination. Folder-level sinks are how a business unit
+// or environment enforces consistent log aggregation across all of its
+// projects without requiring per-project configuration.
+private gcp.folder.loggingService {
+  // Full folder resource name (folders/{id})
+  folderName string
+  // List of logging sinks defined at the folder level
+  sinks() []gcp.folder.loggingService.sink
+}
+
+// Google Cloud (GCP) folder-level Cloud Logging sink
+//
+// Examine a folder-scoped Cloud Logging export sink. Surfaces the
+// `destination` (Cloud Storage bucket, BigQuery dataset, Pub/Sub topic,
+// or another log bucket), the advanced log `filter`, the
+// `writerIdentity` used for authorization, and the `includeChildren`
+// flag — when true, the sink also receives log entries (recursively)
+// from any contained projects or sub-folders.
+private gcp.folder.loggingService.sink @defaults("name destination") {
+  // Full folder resource name (folders/{id})
+  folderName string
+  // Sink ID (the short name of the sink within the folder)
+  name string
+  // Export destination
+  destination string
+  // Optional advanced logs filter
+  filter string
+  // When exporting logs, logging adopts this identity for authorization
+  writerIdentity string
+  // When true, the sink also receives log entries (recursively) from contained projects or sub-folders
+  includeChildren bool
+  // Whether the sink is disabled (no log entries are exported)
+  disabled bool
+  // Description of the sink
+  description string
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
+}
+

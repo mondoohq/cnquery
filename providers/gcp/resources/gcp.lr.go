@@ -415,6 +415,10 @@ const (
 	ResourceGcpProjectMemorystoreServiceBackupCollection                               string = "gcp.project.memorystoreService.backupCollection"
 	ResourceGcpProjectMemorystoreServiceBackup                                         string = "gcp.project.memorystoreService.backup"
 	ResourceGcpProjectMemorystoreServiceBackupBackupFile                               string = "gcp.project.memorystoreService.backup.backupFile"
+	ResourceGcpOrganizationLoggingService                                              string = "gcp.organization.loggingService"
+	ResourceGcpOrganizationLoggingServiceSink                                          string = "gcp.organization.loggingService.sink"
+	ResourceGcpFolderLoggingService                                                    string = "gcp.folder.loggingService"
+	ResourceGcpFolderLoggingServiceSink                                                string = "gcp.folder.loggingService.sink"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2017,6 +2021,22 @@ func init() {
 			// to override args, implement: initGcpProjectMemorystoreServiceBackupBackupFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectMemorystoreServiceBackupBackupFile,
 		},
+		"gcp.organization.loggingService": {
+			// to override args, implement: initGcpOrganizationLoggingService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpOrganizationLoggingService,
+		},
+		"gcp.organization.loggingService.sink": {
+			// to override args, implement: initGcpOrganizationLoggingServiceSink(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpOrganizationLoggingServiceSink,
+		},
+		"gcp.folder.loggingService": {
+			// to override args, implement: initGcpFolderLoggingService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpFolderLoggingService,
+		},
+		"gcp.folder.loggingService.sink": {
+			// to override args, implement: initGcpFolderLoggingServiceSink(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpFolderLoggingServiceSink,
+		},
 	}
 }
 
@@ -2162,6 +2182,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.organization.customRoles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetCustomRoles()).ToDataRes(types.Array(types.Resource("gcp.organization.role")))
+	},
+	"gcp.organization.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganization).GetLogging()).ToDataRes(types.Resource("gcp.organization.loggingService"))
 	},
 	"gcp.organization.role.organizationId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationRole).GetOrganizationId()).ToDataRes(types.String)
@@ -2729,6 +2752,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.folder.orgPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolder).GetOrgPolicies()).ToDataRes(types.Array(types.Resource("gcp.orgPolicy")))
+	},
+	"gcp.folder.iamPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolder).GetIamPolicy()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.binding")))
+	},
+	"gcp.folder.auditConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolder).GetAuditConfig()).ToDataRes(types.Array(types.Resource("gcp.resourcemanager.auditConfig")))
+	},
+	"gcp.folder.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolder).GetLogging()).ToDataRes(types.Resource("gcp.folder.loggingService"))
 	},
 	"gcp.projects.parentId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjects).GetParentId()).ToDataRes(types.String)
@@ -6791,6 +6823,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.serviceAccount.key.disabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.iamService.serviceAccount.key.lastAuthenticatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetLastAuthenticatedTime()).ToDataRes(types.Time)
 	},
 	"gcp.project.iamService.denyPolicy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetName()).ToDataRes(types.String)
@@ -14241,6 +14276,78 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.memorystoreService.backup.backupFile.createTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).GetCreateTime()).ToDataRes(types.Time)
 	},
+	"gcp.organization.loggingService.organizationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingService).GetOrganizationName()).ToDataRes(types.String)
+	},
+	"gcp.organization.loggingService.sinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingService).GetSinks()).ToDataRes(types.Array(types.Resource("gcp.organization.loggingService.sink")))
+	},
+	"gcp.organization.loggingService.sink.organizationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetOrganizationName()).ToDataRes(types.String)
+	},
+	"gcp.organization.loggingService.sink.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetName()).ToDataRes(types.String)
+	},
+	"gcp.organization.loggingService.sink.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetDestination()).ToDataRes(types.String)
+	},
+	"gcp.organization.loggingService.sink.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetFilter()).ToDataRes(types.String)
+	},
+	"gcp.organization.loggingService.sink.writerIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetWriterIdentity()).ToDataRes(types.String)
+	},
+	"gcp.organization.loggingService.sink.includeChildren": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetIncludeChildren()).ToDataRes(types.Bool)
+	},
+	"gcp.organization.loggingService.sink.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.organization.loggingService.sink.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.organization.loggingService.sink.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.organization.loggingService.sink.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationLoggingServiceSink).GetUpdated()).ToDataRes(types.Time)
+	},
+	"gcp.folder.loggingService.folderName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingService).GetFolderName()).ToDataRes(types.String)
+	},
+	"gcp.folder.loggingService.sinks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingService).GetSinks()).ToDataRes(types.Array(types.Resource("gcp.folder.loggingService.sink")))
+	},
+	"gcp.folder.loggingService.sink.folderName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingServiceSink).GetFolderName()).ToDataRes(types.String)
+	},
+	"gcp.folder.loggingService.sink.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingServiceSink).GetName()).ToDataRes(types.String)
+	},
+	"gcp.folder.loggingService.sink.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingServiceSink).GetDestination()).ToDataRes(types.String)
+	},
+	"gcp.folder.loggingService.sink.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingServiceSink).GetFilter()).ToDataRes(types.String)
+	},
+	"gcp.folder.loggingService.sink.writerIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingServiceSink).GetWriterIdentity()).ToDataRes(types.String)
+	},
+	"gcp.folder.loggingService.sink.includeChildren": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingServiceSink).GetIncludeChildren()).ToDataRes(types.Bool)
+	},
+	"gcp.folder.loggingService.sink.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingServiceSink).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.folder.loggingService.sink.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingServiceSink).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.folder.loggingService.sink.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingServiceSink).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.folder.loggingService.sink.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolderLoggingServiceSink).GetUpdated()).ToDataRes(types.Time)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -14355,6 +14462,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.organization.customRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganization).CustomRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganization).Logging, ok = plugin.RawToTValue[*mqlGcpOrganizationLoggingService](v.Value, v.Error)
 		return
 	},
 	"gcp.organization.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15187,6 +15298,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.folder.orgPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpFolder).OrgPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.iamPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolder).IamPolicy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.auditConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolder).AuditConfig, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolder).Logging, ok = plugin.RawToTValue[*mqlGcpFolderLoggingService](v.Value, v.Error)
 		return
 	},
 	"gcp.projects.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21079,6 +21202,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.serviceAccount.key.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.key.lastAuthenticatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccountKey).LastAuthenticatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.denyPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32053,6 +32180,118 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectMemorystoreServiceBackupBackupFile).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"gcp.organization.loggingService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.organization.loggingService.organizationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingService).OrganizationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingService).Sinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.organization.loggingService.sink.organizationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).OrganizationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sink.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sink.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sink.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sink.writerIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).WriterIdentity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sink.includeChildren": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).IncludeChildren, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sink.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sink.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sink.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.loggingService.sink.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationLoggingServiceSink).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingService).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.folder.loggingService.folderName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingService).FolderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sinks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingService).Sinks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.folder.loggingService.sink.folderName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).FolderName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sink.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sink.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sink.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sink.writerIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).WriterIdentity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sink.includeChildren": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).IncludeChildren, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sink.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sink.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sink.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.loggingService.sink.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolderLoggingServiceSink).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -32107,6 +32346,7 @@ type mqlGcpOrganization struct {
 	NetworkSecurityProfiles      plugin.TValue[[]any]
 	NetworkSecurityProfileGroups plugin.TValue[[]any]
 	CustomRoles                  plugin.TValue[[]any]
+	Logging                      plugin.TValue[*mqlGcpOrganizationLoggingService]
 }
 
 // createGcpOrganization creates a new instance of this resource
@@ -32463,6 +32703,22 @@ func (c *mqlGcpOrganization) GetCustomRoles() *plugin.TValue[[]any] {
 		}
 
 		return c.customRoles()
+	})
+}
+
+func (c *mqlGcpOrganization) GetLogging() *plugin.TValue[*mqlGcpOrganizationLoggingService] {
+	return plugin.GetOrCompute[*mqlGcpOrganizationLoggingService](&c.Logging, func() (*mqlGcpOrganizationLoggingService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.organization", c.__id, "logging")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpOrganizationLoggingService), nil
+			}
+		}
+
+		return c.logging()
 	})
 }
 
@@ -34264,6 +34520,9 @@ type mqlGcpFolder struct {
 	Folders     plugin.TValue[*mqlGcpFolders]
 	Projects    plugin.TValue[*mqlGcpProjects]
 	OrgPolicies plugin.TValue[[]any]
+	IamPolicy   plugin.TValue[[]any]
+	AuditConfig plugin.TValue[[]any]
+	Logging     plugin.TValue[*mqlGcpFolderLoggingService]
 }
 
 // createGcpFolder creates a new instance of this resource
@@ -34376,6 +34635,54 @@ func (c *mqlGcpFolder) GetOrgPolicies() *plugin.TValue[[]any] {
 		}
 
 		return c.orgPolicies()
+	})
+}
+
+func (c *mqlGcpFolder) GetIamPolicy() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IamPolicy, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.folder", c.__id, "iamPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.iamPolicy()
+	})
+}
+
+func (c *mqlGcpFolder) GetAuditConfig() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditConfig, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.folder", c.__id, "auditConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.auditConfig()
+	})
+}
+
+func (c *mqlGcpFolder) GetLogging() *plugin.TValue[*mqlGcpFolderLoggingService] {
+	return plugin.GetOrCompute[*mqlGcpFolderLoggingService](&c.Logging, func() (*mqlGcpFolderLoggingService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.folder", c.__id, "logging")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpFolderLoggingService), nil
+			}
+		}
+
+		return c.logging()
 	})
 }
 
@@ -48807,14 +49114,15 @@ type mqlGcpProjectIamServiceServiceAccountKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectIamServiceServiceAccountKeyInternal it will be used here
-	Name            plugin.TValue[string]
-	KeyAlgorithm    plugin.TValue[string]
-	ValidAfterTime  plugin.TValue[*time.Time]
-	ValidBeforeTime plugin.TValue[*time.Time]
-	KeyOrigin       plugin.TValue[string]
-	KeyType         plugin.TValue[string]
-	UserManaged     plugin.TValue[bool]
-	Disabled        plugin.TValue[bool]
+	Name                  plugin.TValue[string]
+	KeyAlgorithm          plugin.TValue[string]
+	ValidAfterTime        plugin.TValue[*time.Time]
+	ValidBeforeTime       plugin.TValue[*time.Time]
+	KeyOrigin             plugin.TValue[string]
+	KeyType               plugin.TValue[string]
+	UserManaged           plugin.TValue[bool]
+	Disabled              plugin.TValue[bool]
+	LastAuthenticatedTime plugin.TValue[*time.Time]
 }
 
 // createGcpProjectIamServiceServiceAccountKey creates a new instance of this resource
@@ -48884,6 +49192,12 @@ func (c *mqlGcpProjectIamServiceServiceAccountKey) GetUserManaged() *plugin.TVal
 
 func (c *mqlGcpProjectIamServiceServiceAccountKey) GetDisabled() *plugin.TValue[bool] {
 	return &c.Disabled
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccountKey) GetLastAuthenticatedTime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastAuthenticatedTime, func() (*time.Time, error) {
+		return c.lastAuthenticatedTime()
+	})
 }
 
 // mqlGcpProjectIamServiceDenyPolicy for the gcp.project.iamService.denyPolicy resource
@@ -74965,4 +75279,324 @@ func (c *mqlGcpProjectMemorystoreServiceBackupBackupFile) GetSizeBytes() *plugin
 
 func (c *mqlGcpProjectMemorystoreServiceBackupBackupFile) GetCreateTime() *plugin.TValue[*time.Time] {
 	return &c.CreateTime
+}
+
+// mqlGcpOrganizationLoggingService for the gcp.organization.loggingService resource
+type mqlGcpOrganizationLoggingService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpOrganizationLoggingServiceInternal it will be used here
+	OrganizationName plugin.TValue[string]
+	Sinks            plugin.TValue[[]any]
+}
+
+// createGcpOrganizationLoggingService creates a new instance of this resource
+func createGcpOrganizationLoggingService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpOrganizationLoggingService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.organization.loggingService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpOrganizationLoggingService) MqlName() string {
+	return "gcp.organization.loggingService"
+}
+
+func (c *mqlGcpOrganizationLoggingService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpOrganizationLoggingService) GetOrganizationName() *plugin.TValue[string] {
+	return &c.OrganizationName
+}
+
+func (c *mqlGcpOrganizationLoggingService) GetSinks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sinks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.organization.loggingService", c.__id, "sinks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sinks()
+	})
+}
+
+// mqlGcpOrganizationLoggingServiceSink for the gcp.organization.loggingService.sink resource
+type mqlGcpOrganizationLoggingServiceSink struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpOrganizationLoggingServiceSinkInternal it will be used here
+	OrganizationName plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Destination      plugin.TValue[string]
+	Filter           plugin.TValue[string]
+	WriterIdentity   plugin.TValue[string]
+	IncludeChildren  plugin.TValue[bool]
+	Disabled         plugin.TValue[bool]
+	Description      plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	Updated          plugin.TValue[*time.Time]
+}
+
+// createGcpOrganizationLoggingServiceSink creates a new instance of this resource
+func createGcpOrganizationLoggingServiceSink(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpOrganizationLoggingServiceSink{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.organization.loggingService.sink", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) MqlName() string {
+	return "gcp.organization.loggingService.sink"
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) GetOrganizationName() *plugin.TValue[string] {
+	return &c.OrganizationName
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) GetWriterIdentity() *plugin.TValue[string] {
+	return &c.WriterIdentity
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) GetIncludeChildren() *plugin.TValue[bool] {
+	return &c.IncludeChildren
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpOrganizationLoggingServiceSink) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
+// mqlGcpFolderLoggingService for the gcp.folder.loggingService resource
+type mqlGcpFolderLoggingService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpFolderLoggingServiceInternal it will be used here
+	FolderName plugin.TValue[string]
+	Sinks      plugin.TValue[[]any]
+}
+
+// createGcpFolderLoggingService creates a new instance of this resource
+func createGcpFolderLoggingService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpFolderLoggingService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.folder.loggingService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpFolderLoggingService) MqlName() string {
+	return "gcp.folder.loggingService"
+}
+
+func (c *mqlGcpFolderLoggingService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpFolderLoggingService) GetFolderName() *plugin.TValue[string] {
+	return &c.FolderName
+}
+
+func (c *mqlGcpFolderLoggingService) GetSinks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sinks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.folder.loggingService", c.__id, "sinks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sinks()
+	})
+}
+
+// mqlGcpFolderLoggingServiceSink for the gcp.folder.loggingService.sink resource
+type mqlGcpFolderLoggingServiceSink struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpFolderLoggingServiceSinkInternal it will be used here
+	FolderName      plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Destination     plugin.TValue[string]
+	Filter          plugin.TValue[string]
+	WriterIdentity  plugin.TValue[string]
+	IncludeChildren plugin.TValue[bool]
+	Disabled        plugin.TValue[bool]
+	Description     plugin.TValue[string]
+	Created         plugin.TValue[*time.Time]
+	Updated         plugin.TValue[*time.Time]
+}
+
+// createGcpFolderLoggingServiceSink creates a new instance of this resource
+func createGcpFolderLoggingServiceSink(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpFolderLoggingServiceSink{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.folder.loggingService.sink", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) MqlName() string {
+	return "gcp.folder.loggingService.sink"
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) GetFolderName() *plugin.TValue[string] {
+	return &c.FolderName
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) GetWriterIdentity() *plugin.TValue[string] {
+	return &c.WriterIdentity
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) GetIncludeChildren() *plugin.TValue[bool] {
+	return &c.IncludeChildren
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpFolderLoggingServiceSink) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
 }

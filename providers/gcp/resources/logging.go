@@ -596,3 +596,142 @@ func (g *mqlGcpProjectLoggingserviceBucketView) id() (string, error) {
 	}
 	return fmt.Sprintf("gcp.project.loggingservice.bucket.view/%s", g.Id.Data), nil
 }
+
+// scopedSinks lists Cloud Logging sinks for an organization- or folder-level
+// parent and converts them into MQL resources of the given type.
+//
+// parentResourceName is "organizations/{id}" or "folders/{id}". resourceType
+// is the MQL resource name (e.g., "gcp.organization.loggingService.sink"),
+// parentFieldName is the field on the MQL sink that holds the parent
+// resource name (organizationName / folderName).
+func scopedSinks(
+	runtime *plugin.Runtime,
+	conn *connection.GcpConnection,
+	parentResourceName string,
+	resourceType string,
+	parentFieldName string,
+) ([]any, error) {
+	client, err := conn.Client(logging.CloudPlatformReadOnlyScope, logging.LoggingReadScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	loggingSvc, err := logging.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var sinks []any
+	var call interface {
+		Pages(context.Context, func(*logging.ListSinksResponse) error) error
+	}
+	switch {
+	case strings.HasPrefix(parentResourceName, "organizations/"):
+		call = loggingSvc.Organizations.Sinks.List(parentResourceName)
+	case strings.HasPrefix(parentResourceName, "folders/"):
+		call = loggingSvc.Folders.Sinks.List(parentResourceName)
+	default:
+		return nil, fmt.Errorf("unsupported logging parent: %s", parentResourceName)
+	}
+
+	err = call.Pages(ctx, func(page *logging.ListSinksResponse) error {
+		for _, s := range page.Sinks {
+			args := map[string]*llx.RawData{
+				parentFieldName:   llx.StringData(parentResourceName),
+				"name":            llx.StringData(s.Name),
+				"destination":     llx.StringData(s.Destination),
+				"filter":          llx.StringData(s.Filter),
+				"writerIdentity":  llx.StringData(s.WriterIdentity),
+				"includeChildren": llx.BoolData(s.IncludeChildren),
+				"disabled":        llx.BoolData(s.Disabled),
+				"description":     llx.StringData(s.Description),
+				"created":         llx.TimeDataPtr(parseTime(s.CreateTime)),
+				"updated":         llx.TimeDataPtr(parseTime(s.UpdateTime)),
+			}
+			mqlSink, err := CreateResource(runtime, resourceType, args)
+			if err != nil {
+				return err
+			}
+			sinks = append(sinks, mqlSink)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return sinks, nil
+}
+
+func (g *mqlGcpOrganizationLoggingService) id() (string, error) {
+	return g.OrganizationName.Data, g.OrganizationName.Error
+}
+
+func (g *mqlGcpOrganizationLoggingServiceSink) id() (string, error) {
+	if g.OrganizationName.Error != nil {
+		return "", g.OrganizationName.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return g.OrganizationName.Data + "/sinks/" + g.Name.Data, nil
+}
+
+func (g *mqlGcpOrganization) logging() (*mqlGcpOrganizationLoggingService, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	// g.Id.Data is "organizations/{id}" per initGcpOrganization
+	res, err := CreateResource(g.MqlRuntime, "gcp.organization.loggingService", map[string]*llx.RawData{
+		"organizationName": llx.StringData(g.Id.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpOrganizationLoggingService), nil
+}
+
+func (g *mqlGcpOrganizationLoggingService) sinks() ([]any, error) {
+	if g.OrganizationName.Error != nil {
+		return nil, g.OrganizationName.Error
+	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	return scopedSinks(g.MqlRuntime, conn, g.OrganizationName.Data,
+		"gcp.organization.loggingService.sink", "organizationName")
+}
+
+func (g *mqlGcpFolderLoggingService) id() (string, error) {
+	return g.FolderName.Data, g.FolderName.Error
+}
+
+func (g *mqlGcpFolderLoggingServiceSink) id() (string, error) {
+	if g.FolderName.Error != nil {
+		return "", g.FolderName.Error
+	}
+	if g.Name.Error != nil {
+		return "", g.Name.Error
+	}
+	return g.FolderName.Data + "/sinks/" + g.Name.Data, nil
+}
+
+func (g *mqlGcpFolder) logging() (*mqlGcpFolderLoggingService, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	res, err := CreateResource(g.MqlRuntime, "gcp.folder.loggingService", map[string]*llx.RawData{
+		"folderName": llx.StringData(folderResourceName(g.Id.Data)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpFolderLoggingService), nil
+}
+
+func (g *mqlGcpFolderLoggingService) sinks() ([]any, error) {
+	if g.FolderName.Error != nil {
+		return nil, g.FolderName.Error
+	}
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	return scopedSinks(g.MqlRuntime, conn, g.FolderName.Data,
+		"gcp.folder.loggingService.sink", "folderName")
+}

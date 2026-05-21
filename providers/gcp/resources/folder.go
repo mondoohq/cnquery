@@ -7,16 +7,29 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/v13/types"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 )
+
+// folderResourceName normalizes a folder id (either "123" or "folders/123")
+// into the canonical "folders/{id}" resource path expected by the
+// cloudresourcemanager APIs.
+func folderResourceName(id string) string {
+	if strings.HasPrefix(id, "folders/") {
+		return id
+	}
+	return "folders/" + id
+}
 
 func (g *mqlGcpFolders) id() (string, error) {
 	if g.ParentId.Error != nil {
@@ -200,4 +213,68 @@ func folderToMql(runtime *plugin.Runtime, f *cloudresourcemanager.Folder) (any, 
 		"state":      llx.StringData(f.State),
 		"deleteTime": llx.TimeDataPtr(parseTime(f.DeleteTime)),
 	})
+}
+
+func (g *mqlGcpFolder) iamPolicy() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	folderName := folderResourceName(g.Id.Data)
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := svc.Folders.GetIamPolicy(folderName, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(policy.Bindings))
+	for i, b := range policy.Bindings {
+		mqlBinding, err := CreateResource(g.MqlRuntime, "gcp.resourcemanager.binding", map[string]*llx.RawData{
+			"id":      llx.StringData(folderName + "-" + strconv.Itoa(i)),
+			"role":    llx.StringData(b.Role),
+			"members": llx.ArrayData(convert.SliceAnyToInterface(b.Members), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
+}
+
+func (g *mqlGcpFolder) auditConfig() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	folderName := folderResourceName(g.Id.Data)
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := svc.Folders.GetIamPolicy(folderName, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return extractAuditConfigs(g.MqlRuntime, folderName, policy.AuditConfigs)
 }
