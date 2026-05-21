@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	storage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
+	storage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v4"
 	"github.com/stretchr/testify/assert"
 )
 
