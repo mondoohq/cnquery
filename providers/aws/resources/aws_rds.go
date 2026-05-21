@@ -1411,11 +1411,11 @@ func (a *mqlAwsRdsSnapshot) attributes() ([]any, error) {
 // makes it restorable by anyone. RDS exposes this through the "restore" attribute
 // carrying the special value "all" in its list of authorized accounts.
 func (a *mqlAwsRdsSnapshot) isPublic() (bool, error) {
-	attributes, err := a.attributes()
-	if err != nil {
-		return false, err
+	result := a.GetAttributes()
+	if result.Error != nil {
+		return false, result.Error
 	}
-	for _, attr := range attributes {
+	for _, attr := range result.Data {
 		attrMap, ok := attr.(map[string]any)
 		if !ok {
 			continue
