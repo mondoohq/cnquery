@@ -5775,8 +5775,8 @@ aws.networkfirewall.rulegroup.tags 11.16.1
 aws.networkfirewall.rulegroup.type 11.16.1
 aws.networkfirewall.tlsInspectionConfiguration 13.26.3
 aws.networkfirewall.tlsInspectionConfiguration.arn 13.26.3
-aws.networkfirewall.tlsInspectionConfiguration.certificateAuthority 13.26.3
-aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorityArn 13.26.3
+aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorities 13.26.3
+aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorityArns 13.26.3
 aws.networkfirewall.tlsInspectionConfiguration.description 13.26.3
 aws.networkfirewall.tlsInspectionConfiguration.encryptionType 13.26.3
 aws.networkfirewall.tlsInspectionConfiguration.kmsKey 13.26.3

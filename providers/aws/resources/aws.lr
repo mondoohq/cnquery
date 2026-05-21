@@ -1268,14 +1268,13 @@ private aws.networkfirewall.tlsInspectionConfiguration @defaults("arn name regio
   // `destinations`, `sourcePorts`, `destinationPorts`, and `protocols`.
   // Convenience over iterating into `serverCertificateConfigurations[*].Scopes`.
   scopes []dict
-  // ACM ARN of the outbound CA certificate
+  // ACM ARNs of the outbound CA certificates
   //
-  // Set when a single `serverCertificateConfigurations` entry defines one
-  // outbound CA. When multiple entries are present, only the first ARN is
-  // reflected here; use `serverCertificateConfigurations` for the full list.
-  certificateAuthorityArn string
-  // ACM-managed CA certificate used for outbound TLS inspection
-  certificateAuthority() aws.acm.certificate
+  // One ARN per `serverCertificateConfigurations` entry that defines an
+  // outbound CA. Empty when the configuration only inspects inbound traffic.
+  certificateAuthorityArns []string
+  // ACM-managed CA certificates used for outbound TLS inspection
+  certificateAuthorities() []aws.acm.certificate
   // KMS encryption type for the TLS inspection configuration (AWS_OWNED_KMS_KEY or CUSTOMER_KMS)
   encryptionType string
   // KMS key used to encrypt the TLS inspection configuration (set when encryptionType is CUSTOMER_KMS)

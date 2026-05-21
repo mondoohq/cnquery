@@ -869,8 +869,8 @@ func nfTagsToMap(tags []nftypes.Tag) map[string]any {
 }
 
 type mqlAwsNetworkfirewallTlsInspectionConfigurationInternal struct {
-	cacheKmsKeyId      *string
-	cacheCertAuthority *string
+	cacheKmsKeyId          *string
+	cacheCertAuthorityArns []string
 }
 
 func (a *mqlAwsNetworkfirewallTlsInspectionConfiguration) id() (string, error) {
@@ -890,17 +890,21 @@ func (a *mqlAwsNetworkfirewallTlsInspectionConfiguration) kmsKey() (*mqlAwsKmsKe
 	return mqlKey.(*mqlAwsKmsKey), nil
 }
 
-func (a *mqlAwsNetworkfirewallTlsInspectionConfiguration) certificateAuthority() (*mqlAwsAcmCertificate, error) {
-	if a.cacheCertAuthority == nil || *a.cacheCertAuthority == "" {
-		a.CertificateAuthority.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
+func (a *mqlAwsNetworkfirewallTlsInspectionConfiguration) certificateAuthorities() ([]any, error) {
+	res := make([]any, 0, len(a.cacheCertAuthorityArns))
+	for _, arn := range a.cacheCertAuthorityArns {
+		if arn == "" {
+			continue
+		}
+		arnVal := arn
+		mqlCert, err := NewResource(a.MqlRuntime, "aws.acm.certificate",
+			map[string]*llx.RawData{"arn": llx.StringData(arnVal)})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlCert.(*mqlAwsAcmCertificate))
 	}
-	mqlCert, err := NewResource(a.MqlRuntime, "aws.acm.certificate",
-		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheCertAuthority)})
-	if err != nil {
-		return nil, err
-	}
-	return mqlCert.(*mqlAwsAcmCertificate), nil
+	return res, nil
 }
 
 func (a *mqlAwsNetworkfirewall) tlsInspectionConfigurations() ([]any, error) {
@@ -971,7 +975,7 @@ func (a *mqlAwsNetworkfirewall) getTLSInspectionConfigurations(conn *connection.
 func networkfirewallTLSInspectionConfigToMql(runtime *plugin.Runtime, resp *nftypes.TLSInspectionConfigurationResponse, tlsConfig *nftypes.TLSInspectionConfiguration, region string) (*mqlAwsNetworkfirewallTlsInspectionConfiguration, error) {
 	serverCertConfigs := []any{}
 	scopes := []any{}
-	var firstCAArn *string
+	caArns := []string{}
 	if tlsConfig != nil {
 		for _, scc := range tlsConfig.ServerCertificateConfigurations {
 			d, err := convert.JsonToDict(scc)
@@ -980,8 +984,8 @@ func networkfirewallTLSInspectionConfigToMql(runtime *plugin.Runtime, resp *nfty
 			} else {
 				serverCertConfigs = append(serverCertConfigs, d)
 			}
-			if scc.CertificateAuthorityArn != nil && firstCAArn == nil {
-				firstCAArn = scc.CertificateAuthorityArn
+			if scc.CertificateAuthorityArn != nil && *scc.CertificateAuthorityArn != "" {
+				caArns = append(caArns, *scc.CertificateAuthorityArn)
 			}
 			for _, scope := range scc.Scopes {
 				sd, sErr := convert.JsonToDict(scope)
@@ -1006,9 +1010,9 @@ func networkfirewallTLSInspectionConfigToMql(runtime *plugin.Runtime, resp *nfty
 		numberOfAssociations = int64(*resp.NumberOfAssociations)
 	}
 
-	var caArn string
-	if firstCAArn != nil {
-		caArn = *firstCAArn
+	caArnsAny := make([]any, 0, len(caArns))
+	for _, a := range caArns {
+		caArnsAny = append(caArnsAny, a)
 	}
 
 	tags := nfTagsToMap(resp.Tags)
@@ -1025,7 +1029,7 @@ func networkfirewallTLSInspectionConfigToMql(runtime *plugin.Runtime, resp *nfty
 			"lastModifiedTime":                llx.TimeDataPtr(resp.LastModifiedTime),
 			"serverCertificateConfigurations": llx.ArrayData(serverCertConfigs, "dict"),
 			"scopes":                          llx.ArrayData(scopes, "dict"),
-			"certificateAuthorityArn":         llx.StringData(caArn),
+			"certificateAuthorityArns":        llx.ArrayData(caArnsAny, "string"),
 			"encryptionType":                  llx.StringData(encryptionType),
 			"tags":                            llx.MapData(tags, "string"),
 		})
@@ -1034,6 +1038,6 @@ func networkfirewallTLSInspectionConfigToMql(runtime *plugin.Runtime, resp *nfty
 	}
 	mt := mqlTLS.(*mqlAwsNetworkfirewallTlsInspectionConfiguration)
 	mt.cacheKmsKeyId = kmsKeyId
-	mt.cacheCertAuthority = firstCAArn
+	mt.cacheCertAuthorityArns = caArns
 	return mt, nil
 }

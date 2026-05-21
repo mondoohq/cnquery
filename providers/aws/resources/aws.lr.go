@@ -5356,11 +5356,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.tlsInspectionConfiguration.scopes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetScopes()).ToDataRes(types.Array(types.Dict))
 	},
-	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorityArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetCertificateAuthorityArn()).ToDataRes(types.String)
+	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorityArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetCertificateAuthorityArns()).ToDataRes(types.Array(types.String))
 	},
-	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetCertificateAuthority()).ToDataRes(types.Resource("aws.acm.certificate"))
+	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetCertificateAuthorities()).ToDataRes(types.Array(types.Resource("aws.acm.certificate")))
 	},
 	"aws.networkfirewall.tlsInspectionConfiguration.encryptionType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetEncryptionType()).ToDataRes(types.String)
@@ -29803,12 +29803,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorityArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).CertificateAuthorityArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorityArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).CertificateAuthorityArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).CertificateAuthority, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
+	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).CertificateAuthorities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.tlsInspectionConfiguration.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68072,8 +68072,8 @@ type mqlAwsNetworkfirewallTlsInspectionConfiguration struct {
 	LastModifiedTime                plugin.TValue[*time.Time]
 	ServerCertificateConfigurations plugin.TValue[[]any]
 	Scopes                          plugin.TValue[[]any]
-	CertificateAuthorityArn         plugin.TValue[string]
-	CertificateAuthority            plugin.TValue[*mqlAwsAcmCertificate]
+	CertificateAuthorityArns        plugin.TValue[[]any]
+	CertificateAuthorities          plugin.TValue[[]any]
 	EncryptionType                  plugin.TValue[string]
 	KmsKey                          plugin.TValue[*mqlAwsKmsKey]
 	Tags                            plugin.TValue[map[string]any]
@@ -68156,23 +68156,23 @@ func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetScopes() *plugin.TV
 	return &c.Scopes
 }
 
-func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetCertificateAuthorityArn() *plugin.TValue[string] {
-	return &c.CertificateAuthorityArn
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetCertificateAuthorityArns() *plugin.TValue[[]any] {
+	return &c.CertificateAuthorityArns
 }
 
-func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetCertificateAuthority() *plugin.TValue[*mqlAwsAcmCertificate] {
-	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.CertificateAuthority, func() (*mqlAwsAcmCertificate, error) {
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetCertificateAuthorities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CertificateAuthorities, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.tlsInspectionConfiguration", c.__id, "certificateAuthority")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.tlsInspectionConfiguration", c.__id, "certificateAuthorities")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlAwsAcmCertificate), nil
+				return d.Value.([]any), nil
 			}
 		}
 
-		return c.certificateAuthority()
+		return c.certificateAuthorities()
 	})
 }
 
