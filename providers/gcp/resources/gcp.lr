@@ -7510,8 +7510,8 @@ private gcp.project.cloudSchedulerService.job @defaults("name state schedule") {
 // Google Cloud (GCP) App Engine
 //
 // Use this resource as the entry point for App Engine in the project. It
-// hosts the singleton `application` (with its location, serving status,
-// and identity settings) and the deployed `services` and their versions.
+// hosts the `application` (with its location, serving status, and
+// identity settings) and the deployed `services` and their versions.
 private gcp.project.appEngineService {
   // Project ID
   projectId string
@@ -7523,7 +7523,7 @@ private gcp.project.appEngineService {
 
 // Google Cloud (GCP) App Engine application
 //
-// Examine the singleton App Engine application for a project: its serving
+// Examine the App Engine application for a project: its serving
 // location, serving status (SERVING, USER_DISABLED, SYSTEM_DISABLED), default
 // hostname, Cloud Storage buckets for code staging and Blobstore, GCR domain
 // for managed Docker images, database type (Firestore or Datastore), auth
