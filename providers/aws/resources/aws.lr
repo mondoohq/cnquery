@@ -16563,16 +16563,23 @@ private aws.neptuneAnalytics.graph @defaults("arn name status region") {
 //
 // Use the Glue namespace to enumerate the data-integration service in the
 // account. Iterate `crawlers()` for the crawlers populating the Data
-// Catalog, `jobs()` for ETL jobs, `databases()` for the catalog databases,
+// Catalog, `jobs()` for ETL jobs, `triggers()` for the schedule, on-demand,
+// and event triggers that fire them, `databases()` for the catalog
+// databases (with their tables surfaced as `database.tables()`),
 // `workflows()` for orchestrated job/crawler workflows,
+// `connections()` for catalog-stored data store connections,
 // `securityConfigurations()` for the encryption settings reused across
-// jobs, and `catalogEncryptionSettings()` for the per-region Data Catalog
-// encryption posture.
+// jobs and crawlers, `catalogEncryptionSettings()` for the per-region
+// Data Catalog encryption posture, `schemaRegistries()` and `schemas()`
+// for the Glue Schema Registry, and `resourcePolicies()` for the Data
+// Catalog resource-based policies.
 aws.glue @defaults("crawlers") {
   // List of Glue crawlers
   crawlers() []aws.glue.crawler
   // List of Glue ETL jobs
   jobs() []aws.glue.job
+  // List of Glue triggers that start jobs or crawlers
+  triggers() []aws.glue.trigger
   // List of Glue security configurations
   securityConfigurations() []aws.glue.securityConfiguration
   // List of Glue Data Catalog databases
@@ -16583,34 +16590,76 @@ aws.glue @defaults("crawlers") {
   workflows() []aws.glue.workflow
   // List of Glue connections (catalog-stored data store connection definitions)
   connections() []aws.glue.connection
+  // List of Glue Schema Registries
+  schemaRegistries() []aws.glue.schemaRegistry
+  // List of schemas across all Glue Schema Registries in the account
+  schemas() []aws.glue.schema
+  // List of Glue Data Catalog resource policies (account-level and resource-scoped)
+  resourcePolicies() []aws.glue.resourcePolicy
 }
 
 // AWS Glue crawler
+//
+// Examine a single crawler that populates the Data Catalog with table
+// definitions from one or more data stores. Surfaces the crawl `targets`
+// (S3, JDBC, MongoDB, DynamoDB, Catalog, Delta, Iceberg, Hudi), the
+// `schedule`, the `state` (READY/RUNNING/STOPPING), the IAM `role` it
+// assumes (resolvable via `iamRole()`), the optional Glue security
+// configuration encrypting its logs and bookmarks (resolvable via
+// `glueSecurityConfiguration()`), the `schemaChangePolicy`,
+// `recrawlPolicy`, `lineageConfiguration`, `lakeFormationConfiguration`,
+// `tablePrefix`, and the `lastCrawl` summary.
 private aws.glue.crawler @defaults("name state databaseName region") {
   // Name of the crawler
   name string
   // ARN of the crawler
   arn string
-  // IAM role used by the crawler
+  // ARN or name of the IAM role used by the crawler
   role string
+  // IAM role assumed by the crawler when accessing data stores and writing to the Data Catalog
+  iamRole() aws.iam.role
   // Name of the database where results are stored
   databaseName string
   // Description of the crawler
   description string
   // Targets for the crawler
+  //
+  // Holds the data stores the crawler scans, keyed by target type: `S3Targets`, `JdbcTargets`, `MongoDBTargets`, `DynamoDBTargets`, `CatalogTargets`, `DeltaTargets`, `IcebergTargets`, and `HudiTargets`. Each entry contains the connection name, paths/tables, exclusions, and target-specific options.
   targets dict
-  // Schedule for the crawler
+  // Schedule for the crawler (cron expression)
   schedule string
   // Classifiers used by the crawler
   classifiers []string
-  // Schema change policy
+  // Schema change policy ({UpdateBehavior: LOG|UPDATE_IN_DATABASE, DeleteBehavior: LOG|DELETE_FROM_DATABASE|DEPRECATE_IN_DATABASE})
   schemaChangePolicy dict
+  // Recrawl policy
+  //
+  // Controls whether the crawler scans the entire dataset or only newly added folders. Shape: {RecrawlBehavior: CRAWL_EVERYTHING|CRAWL_NEW_FOLDERS_ONLY|CRAWL_EVENT_MODE}.
+  recrawlPolicy dict
+  // Lineage configuration that controls whether data lineage is captured for the crawler ({CrawlerLineageSettings: ENABLE|DISABLE})
+  lineageConfiguration dict
+  // Lake Formation configuration
+  //
+  // Controls whether the crawler uses Lake Formation credentials instead of the IAM role. Shape: {UseLakeFormationCredentials: bool, AccountId: string}.
+  lakeFormationConfiguration dict
   // Current state of the crawler: READY, RUNNING, or STOPPING
   state string
-  // Configuration for the crawler
+  // Crawler-versioned JSON configuration string (Version, CrawlerOutput, Grouping, etc.)
   configuration string
-  // Security configuration name
+  // Prefix added to the names of tables that are created
+  tablePrefix string
+  // Name of the Glue security configuration applied to the crawler
   securityConfiguration string
+  // Glue security configuration applied to the crawler
+  glueSecurityConfiguration() aws.glue.securityConfiguration
+  // Total time elapsed since the last crawl began, in seconds (0 when the crawler is idle)
+  crawlElapsedTime int
+  // Status of the last crawl
+  //
+  // Includes the last crawl status (SUCCEEDED, CANCELLED, FAILED), error message, log group, log stream, message prefix, and start time.
+  lastCrawl dict
+  // Monotonically incrementing crawler version, bumped each time the crawler definition is updated
+  version int
   // Date and time the crawler was created
   createdAt time
   // Date and time the crawler was last updated
@@ -16622,6 +16671,16 @@ private aws.glue.crawler @defaults("name state databaseName region") {
 }
 
 // AWS Glue ETL job
+//
+// Examine an ETL job definition. Surfaces the `command` that drives the
+// job (script location, Python/Ray runtime), the IAM `role` assumed at
+// runtime (resolvable via `iamRole()`), the worker fleet (`workerType`,
+// `numberOfWorkers`, or DPU-based `maxCapacity`), the `glueVersion` and
+// `executionClass`, the `executionProperty.MaxConcurrentRuns`, the
+// `notificationProperty.NotifyDelayAfter`, the optional Glue security
+// configuration encrypting logs and bookmarks (resolvable via
+// `glueSecurityConfiguration()`), and the `defaultArguments` passed to
+// every run.
 private aws.glue.job @defaults("name region") {
   // Name of the job
   name string
@@ -16629,28 +16688,36 @@ private aws.glue.job @defaults("name region") {
   arn string
   // Description of the job
   description string
-  // IAM role associated with this job
+  // ARN of the IAM role associated with this job
   role string
-  // Command that the job runs
+  // IAM role assumed by the job at runtime
+  iamRole() aws.iam.role
+  // Command that the job runs ({Name: glueetl|gluestreaming|pythonshell, ScriptLocation: s3://..., PythonVersion: 2|3, Runtime: Ray runtime version})
   command dict
   // Maximum number of times to retry this job if it fails
   maxRetries int
   // Job timeout in minutes
   timeout int
-  // Glue version used by this job
+  // Glue version used by this job (2.0, 3.0, 4.0, 5.0, ...)
   glueVersion string
   // Number of workers allocated to this job
   numberOfWorkers int
-  // Type of predefined worker allocated: Standard, G.1X, G.2X, G.025X
+  // Type of predefined worker allocated: Standard, G.1X, G.2X, G.4X, G.8X, G.025X, or Z.2X
   workerType string
-  // Maximum number of concurrent runs allowed for this job
+  // Maximum number of Glue data processing units (DPUs) allocated when MaxCapacity is set instead of WorkerType/NumberOfWorkers
   maxCapacity float
+  // Execution property of the job ({MaxConcurrentRuns: int})
+  executionProperty dict
+  // Notification property of the job ({NotifyDelayAfter: minutes before a delay notification is sent})
+  notificationProperty dict
   // Connections used by this job
   connections []string
   // Default arguments for this job
   defaultArguments map[string]string
-  // Security configuration name
+  // Name of the Glue security configuration applied to the job
   securityConfiguration string
+  // Glue security configuration applied to the job
+  glueSecurityConfiguration() aws.glue.securityConfiguration
   // Execution class of the job: FLEX or STANDARD
   executionClass string
   // Date and time the job was created
@@ -16680,6 +16747,14 @@ private aws.glue.securityConfiguration @defaults("name") {
 }
 
 // AWS Glue Data Catalog database
+//
+// Examine a Data Catalog database — the namespace that holds catalog
+// tables. Iterate `tables()` for the tables in the database. Surfaces
+// the owning `catalogId`, the optional `locationUri`, free-form
+// `parameters`, the Lake Formation `createTableDefaultPermissions`
+// granted on tables created inside the database, and the
+// `targetDatabase` / `federatedDatabase` pointers when the database is
+// a resource link or a federated reference to an external metastore.
 private aws.glue.database @defaults("name region") {
   // Name of the database
   name string
@@ -16691,6 +16766,14 @@ private aws.glue.database @defaults("name region") {
   locationUri string
   // Parameters of the database
   parameters map[string]string
+  // Lake Formation default permissions granted on tables newly created in this database
+  //
+  // Each entry: {Principal: {DataLakePrincipalIdentifier}, Permissions: [ALL|SELECT|ALTER|DROP|DELETE|INSERT|CREATE_DATABASE|CREATE_TABLE|DATA_LOCATION_ACCESS]}.
+  createTableDefaultPermissions []dict
+  // Target database reference for resource-linked databases ({CatalogId, DatabaseName, Region})
+  targetDatabase dict
+  // Federated database reference for databases backed by an external metastore ({Identifier, ConnectionName, ConnectionType})
+  federatedDatabase dict
   // Date and time the database was created
   createdAt time
   // Region where the database exists
@@ -16700,6 +16783,16 @@ private aws.glue.database @defaults("name region") {
 }
 
 // AWS Glue Data Catalog database table
+//
+// Examine a single Data Catalog table. Surfaces the `storageDescriptor`
+// (location, columns, input/output format, serde, encryption-relevant
+// subfields), the `partitionKeys`, the `tableType` (EXTERNAL_TABLE,
+// MANAGED_TABLE, VIRTUAL_VIEW, GOVERNED), the `viewExpandedText` for
+// views, free-form `parameters`, and the
+// `isRegisteredWithLakeFormation` flag indicating whether table access
+// is governed by Lake Formation. When the table is a resource link or
+// federated reference, `federatedTable` carries the underlying
+// identifier.
 private aws.glue.database.table @defaults("name databaseName region") {
   // Name of the table
   name string
@@ -16720,9 +16813,23 @@ private aws.glue.database.table @defaults("name databaseName region") {
   // Retention time for the table (in days)
   retention int
   // Storage descriptor containing column and location information
+  //
+  // Holds the table's physical layout: {Location, InputFormat, OutputFormat, Compressed, NumberOfBuckets, SerdeInfo: {Name, SerializationLibrary, Parameters}, BucketColumns, SortColumns, Parameters, SkewedInfo, StoredAsSubDirectories, SchemaReference, Columns: [{Name, Type, Comment, Parameters}]}.
   storageDescriptor dict
-  // Type of the table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.)
+  // Type of the table (EXTERNAL_TABLE, MANAGED_TABLE, VIRTUAL_VIEW, GOVERNED, ...)
   tableType string
+  // List of columns by which the table is partitioned
+  //
+  // Each entry: {Name, Type, Comment, Parameters}. Empty for unpartitioned tables.
+  partitionKeys []dict
+  // Original SQL of a view, expanded so identifiers resolve unambiguously (empty for non-views)
+  viewExpandedText string
+  // Whether the table is registered with AWS Lake Formation for fine-grained access control
+  isRegisteredWithLakeFormation bool
+  // Whether the table is a materialized view
+  isMaterializedView bool
+  // Federated table reference for tables backed by an external metastore ({Identifier, DatabaseIdentifier, ConnectionName, ConnectionType})
+  federatedTable dict
   // Properties associated with the table
   parameters map[string]string
   // Person or entity who created the table
@@ -17004,6 +17111,139 @@ private aws.glue.connection @defaults("name connectionType region") {
   // Date the connection was created
   createdAt time
   // Date the connection was last updated
+  updatedAt time
+}
+
+// AWS Glue trigger
+//
+// Examine a Glue trigger — the schedule, on-demand button, predicate, or
+// EventBridge event source that fires a chain of jobs and crawlers.
+// Surfaces the `type` (SCHEDULED, CONDITIONAL, ON_DEMAND, EVENT), the
+// `state` (CREATING, ACTIVATING, ACTIVATED, DEACTIVATING, DEACTIVATED,
+// DELETING, UPDATING), the cron `schedule`, the `actions` it runs
+// (jobs and crawlers with their per-run arguments), the `predicate`
+// linking it to upstream triggers in CONDITIONAL mode, the
+// `eventBatchingCondition` for EVENT triggers, and the optional
+// `workflowName` it belongs to.
+private aws.glue.trigger @defaults("name type state region") {
+  // Name of the trigger
+  name string
+  // ARN of the trigger
+  arn string
+  // Region where the trigger exists
+  region string
+  // Description of the trigger
+  description string
+  // Type of trigger: SCHEDULED, CONDITIONAL, ON_DEMAND, or EVENT
+  type string
+  // Current state: CREATING, CREATED, ACTIVATING, ACTIVATED, DEACTIVATING, DEACTIVATED, DELETING, or UPDATING
+  state string
+  // Cron expression for SCHEDULED triggers (for example, `cron(15 12 * * ? *)`); empty for other trigger types
+  schedule string
+  // Name of the workflow the trigger belongs to, if any
+  workflowName string
+  // Actions started by this trigger
+  //
+  // Each entry: {JobName, CrawlerName, Arguments (map), Timeout, SecurityConfiguration, NotificationProperty: {NotifyDelayAfter}}. Exactly one of JobName or CrawlerName is set per action.
+  actions []dict
+  // Predicate that determines when CONDITIONAL triggers fire
+  //
+  // Holds {Logical: AND|ANY, Conditions: [{LogicalOperator: EQUALS, JobName, State: SUCCEEDED|STOPPED|TIMEOUT|FAILED, CrawlerName, CrawlState: RUNNING|CANCELLING|CANCELLED|SUCCEEDED|FAILED|ERROR}]}. Empty for non-CONDITIONAL triggers.
+  predicate dict
+  // Batch condition for EVENT triggers ({BatchSize: events required before firing, BatchWindow: seconds to wait for events})
+  eventBatchingCondition dict
+  // Tags for the trigger
+  tags() map[string]string
+}
+
+// AWS Glue Schema Registry
+//
+// Examine a Glue Schema Registry — the namespace that groups schemas
+// (Avro, JSON, Protobuf) used by streaming applications and consumers
+// to validate message formats. Iterate `schemas()` on the top-level
+// `aws.glue` namespace and filter by `registryName` to list schemas in a
+// specific registry. Surfaces the `status` (AVAILABLE, DELETING) and
+// the create / update timestamps.
+private aws.glue.schemaRegistry @defaults("name region status") {
+  // Name of the registry
+  name string
+  // ARN of the registry
+  registryArn string
+  // Region where the registry exists
+  region string
+  // Description of the registry
+  description string
+  // Status of the registry: AVAILABLE or DELETING
+  status string
+  // Date and time the registry was created
+  createdAt time
+  // Date and time the registry was last updated
+  updatedAt time
+  // Tags for the registry
+  tags() map[string]string
+}
+
+// AWS Glue Schema Registry schema
+//
+// Examine a single schema in the Glue Schema Registry. Surfaces the
+// `dataFormat` (AVRO, JSON, PROTOBUF), the evolution `compatibility`
+// mode (NONE, DISABLED, BACKWARD, BACKWARD_ALL, FORWARD, FORWARD_ALL,
+// FULL, FULL_ALL), the `schemaStatus` (AVAILABLE, PENDING, DELETING),
+// the `latestVersionNumber` registered, the `nextSchemaVersionNumber`
+// that will be assigned to the next registered version, the
+// `schemaCheckpoint` version number (the last version at which the
+// compatibility mode was changed), and the `registryName` and
+// `registryArn` of the parent registry.
+private aws.glue.schema @defaults("schemaName registryName dataFormat compatibility") {
+  // Name of the schema
+  schemaName string
+  // ARN of the schema
+  schemaArn string
+  // Name of the registry that owns the schema
+  registryName string
+  // ARN of the registry that owns the schema
+  registryArn string
+  // Region where the schema exists
+  region string
+  // Description of the schema
+  description string
+  // Data format of the schema: AVRO, JSON, or PROTOBUF
+  dataFormat string
+  // Compatibility mode: NONE, DISABLED, BACKWARD, BACKWARD_ALL, FORWARD, FORWARD_ALL, FULL, or FULL_ALL
+  compatibility string
+  // Status of the schema: AVAILABLE, PENDING, or DELETING
+  schemaStatus string
+  // Latest schema version number registered
+  latestVersionNumber int
+  // Version number that will be assigned to the next registered schema version
+  nextSchemaVersionNumber int
+  // Version number of the checkpoint — the last version at which the compatibility mode was changed
+  schemaCheckpoint int
+  // Date and time the schema was created
+  createdAt time
+  // Date and time the schema was last updated
+  updatedAt time
+  // Tags for the schema
+  tags() map[string]string
+}
+
+// AWS Glue Data Catalog resource policy
+//
+// Examine a Glue Data Catalog resource-based policy. The policy
+// document in `policyInJson` grants cross-account or cross-service
+// access to catalog objects (databases, tables, connections). `GetResourcePolicies`
+// returns the account-wide default policy and any per-resource policies
+// attached in the region; each is identified by its `policyHash`.
+private aws.glue.resourcePolicy @defaults("region createdAt") {
+  // Policy hash that identifies this resource policy
+  policyHash string
+  // Region where the policy applies
+  region string
+  // IAM policy document attached to the Data Catalog resource (JSON-encoded)
+  policyInJson string
+  // Date and time the policy was created
+  createdAt time
+  // Date and time the policy was last updated
   updatedAt time
 }
 

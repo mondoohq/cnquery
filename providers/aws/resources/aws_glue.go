@@ -6,6 +6,8 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	glue_types "github.com/aws/aws-sdk-go-v2/service/glue/types"
@@ -79,6 +81,11 @@ func (a *mqlAwsGlue) getCrawlers(conn *connection.AwsConnection) []*jobpool.Job 
 	return tasks
 }
 
+type mqlAwsGlueCrawlerInternal struct {
+	cacheRoleArn                   *string
+	cacheSecurityConfigurationName *string
+}
+
 func newMqlAwsGlueCrawler(runtime *plugin.Runtime, region string, accountID string, crawler glue_types.Crawler) (*mqlAwsGlueCrawler, error) {
 	arn := fmt.Sprintf("arn:aws:glue:%s:%s:crawler/%s", region, accountID, convert.ToValue(crawler.Name))
 
@@ -92,6 +99,26 @@ func newMqlAwsGlueCrawler(runtime *plugin.Runtime, region string, accountID stri
 		return nil, err
 	}
 
+	recrawlPolicy, err := convert.JsonToDict(crawler.RecrawlPolicy)
+	if err != nil {
+		return nil, err
+	}
+
+	lineageConfiguration, err := convert.JsonToDict(crawler.LineageConfiguration)
+	if err != nil {
+		return nil, err
+	}
+
+	lakeFormationConfiguration, err := convert.JsonToDict(crawler.LakeFormationConfiguration)
+	if err != nil {
+		return nil, err
+	}
+
+	lastCrawl, err := convert.JsonToDict(crawler.LastCrawl)
+	if err != nil {
+		return nil, err
+	}
+
 	var schedule string
 	if crawler.Schedule != nil {
 		schedule = convert.ToValue(crawler.Schedule.ScheduleExpression)
@@ -99,27 +126,103 @@ func newMqlAwsGlueCrawler(runtime *plugin.Runtime, region string, accountID stri
 
 	resource, err := CreateResource(runtime, "aws.glue.crawler",
 		map[string]*llx.RawData{
-			"__id":                  llx.StringData(arn),
-			"arn":                   llx.StringData(arn),
-			"name":                  llx.StringDataPtr(crawler.Name),
-			"role":                  llx.StringDataPtr(crawler.Role),
-			"databaseName":          llx.StringDataPtr(crawler.DatabaseName),
-			"description":           llx.StringDataPtr(crawler.Description),
-			"targets":               llx.DictData(targets),
-			"schedule":              llx.StringData(schedule),
-			"classifiers":           llx.ArrayData(convert.SliceAnyToInterface(crawler.Classifiers), types.String),
-			"schemaChangePolicy":    llx.DictData(schemaChangePolicy),
-			"state":                 llx.StringData(string(crawler.State)),
-			"configuration":         llx.StringDataPtr(crawler.Configuration),
-			"securityConfiguration": llx.StringDataPtr(crawler.CrawlerSecurityConfiguration),
-			"createdAt":             llx.TimeDataPtr(crawler.CreationTime),
-			"updatedAt":             llx.TimeDataPtr(crawler.LastUpdated),
-			"region":                llx.StringData(region),
+			"__id":                       llx.StringData(arn),
+			"arn":                        llx.StringData(arn),
+			"name":                       llx.StringDataPtr(crawler.Name),
+			"role":                       llx.StringDataPtr(crawler.Role),
+			"databaseName":               llx.StringDataPtr(crawler.DatabaseName),
+			"description":                llx.StringDataPtr(crawler.Description),
+			"targets":                    llx.DictData(targets),
+			"schedule":                   llx.StringData(schedule),
+			"classifiers":                llx.ArrayData(convert.SliceAnyToInterface(crawler.Classifiers), types.String),
+			"schemaChangePolicy":         llx.DictData(schemaChangePolicy),
+			"recrawlPolicy":              llx.DictData(recrawlPolicy),
+			"lineageConfiguration":       llx.DictData(lineageConfiguration),
+			"lakeFormationConfiguration": llx.DictData(lakeFormationConfiguration),
+			"state":                      llx.StringData(string(crawler.State)),
+			"configuration":              llx.StringDataPtr(crawler.Configuration),
+			"tablePrefix":                llx.StringDataPtr(crawler.TablePrefix),
+			"securityConfiguration":      llx.StringDataPtr(crawler.CrawlerSecurityConfiguration),
+			"crawlElapsedTime":           llx.IntData(crawler.CrawlElapsedTime),
+			"lastCrawl":                  llx.DictData(lastCrawl),
+			"version":                    llx.IntData(crawler.Version),
+			"createdAt":                  llx.TimeDataPtr(crawler.CreationTime),
+			"updatedAt":                  llx.TimeDataPtr(crawler.LastUpdated),
+			"region":                     llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAwsGlueCrawler), nil
+	mqlCrawler := resource.(*mqlAwsGlueCrawler)
+	mqlCrawler.cacheRoleArn = crawler.Role
+	mqlCrawler.cacheSecurityConfigurationName = crawler.CrawlerSecurityConfiguration
+	return mqlCrawler, nil
+}
+
+func (a *mqlAwsGlueCrawler) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheRoleArn == nil || *a.cacheRoleArn == "" {
+		a.IamRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	args := glueRoleLookupArgs(*a.cacheRoleArn)
+	mqlRole, err := NewResource(a.MqlRuntime, "aws.iam.role", args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsGlueCrawler) glueSecurityConfiguration() (*mqlAwsGlueSecurityConfiguration, error) {
+	if a.cacheSecurityConfigurationName == nil || *a.cacheSecurityConfigurationName == "" {
+		a.GlueSecurityConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := findGlueSecurityConfiguration(a.MqlRuntime, a.Region.Data, *a.cacheSecurityConfigurationName)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.GlueSecurityConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res, nil
+}
+
+// glueRoleLookupArgs returns args for NewResource("aws.iam.role", ...) given a
+// crawler/job Role field that may be either an IAM role ARN or just the role
+// name (Glue accepts both).
+func glueRoleLookupArgs(role string) map[string]*llx.RawData {
+	if strings.HasPrefix(role, "arn:") {
+		return map[string]*llx.RawData{"arn": llx.StringData(role)}
+	}
+	return map[string]*llx.RawData{"name": llx.StringData(role)}
+}
+
+// findGlueSecurityConfiguration locates a Glue security configuration in a
+// region by name. It iterates the list returned by GetSecurityConfigurations
+// because there is no GetSecurityConfiguration-by-name single-fetch on the
+// list-and-filter side that returns the same shape as the listing.
+func findGlueSecurityConfiguration(runtime *plugin.Runtime, region, name string) (*mqlAwsGlueSecurityConfiguration, error) {
+	conn := runtime.Connection.(*connection.AwsConnection)
+	svc := conn.Glue(region)
+	ctx := context.Background()
+
+	paginator := glue.NewGetSecurityConfigurationsPaginator(svc, &glue.GetSecurityConfigurationsInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return nil, nil
+			}
+			return nil, err
+		}
+		for _, secConf := range page.SecurityConfigurations {
+			if convert.ToValue(secConf.Name) == name {
+				return newMqlAwsGlueSecurityConfiguration(runtime, region, conn.AccountId(), secConf)
+			}
+		}
+	}
+	return nil, nil
 }
 
 func (a *mqlAwsGlueCrawler) tags() (map[string]any, error) {
@@ -197,10 +300,25 @@ func (a *mqlAwsGlue) getJobs(conn *connection.AwsConnection) []*jobpool.Job {
 	return tasks
 }
 
+type mqlAwsGlueJobInternal struct {
+	cacheRoleArn                   *string
+	cacheSecurityConfigurationName *string
+}
+
 func newMqlAwsGlueJob(runtime *plugin.Runtime, region string, accountID string, job glue_types.Job) (*mqlAwsGlueJob, error) {
 	arn := fmt.Sprintf("arn:aws:glue:%s:%s:job/%s", region, accountID, convert.ToValue(job.Name))
 
 	command, err := convert.JsonToDict(job.Command)
+	if err != nil {
+		return nil, err
+	}
+
+	executionProperty, err := convert.JsonToDict(job.ExecutionProperty)
+	if err != nil {
+		return nil, err
+	}
+
+	notificationProperty, err := convert.JsonToDict(job.NotificationProperty)
 	if err != nil {
 		return nil, err
 	}
@@ -229,6 +347,8 @@ func newMqlAwsGlueJob(runtime *plugin.Runtime, region string, accountID string, 
 			"numberOfWorkers":       llx.IntDataDefault(job.NumberOfWorkers, 0),
 			"workerType":            llx.StringData(string(job.WorkerType)),
 			"maxCapacity":           llx.FloatData(maxCapacity),
+			"executionProperty":     llx.DictData(executionProperty),
+			"notificationProperty":  llx.DictData(notificationProperty),
 			"connections":           llx.ArrayData(connections, types.String),
 			"defaultArguments":      llx.MapData(toInterfaceMap(job.DefaultArguments), types.String),
 			"securityConfiguration": llx.StringDataPtr(job.SecurityConfiguration),
@@ -240,7 +360,39 @@ func newMqlAwsGlueJob(runtime *plugin.Runtime, region string, accountID string, 
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAwsGlueJob), nil
+	mqlJob := resource.(*mqlAwsGlueJob)
+	mqlJob.cacheRoleArn = job.Role
+	mqlJob.cacheSecurityConfigurationName = job.SecurityConfiguration
+	return mqlJob, nil
+}
+
+func (a *mqlAwsGlueJob) iamRole() (*mqlAwsIamRole, error) {
+	if a.cacheRoleArn == nil || *a.cacheRoleArn == "" {
+		a.IamRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	args := glueRoleLookupArgs(*a.cacheRoleArn)
+	mqlRole, err := NewResource(a.MqlRuntime, "aws.iam.role", args)
+	if err != nil {
+		return nil, err
+	}
+	return mqlRole.(*mqlAwsIamRole), nil
+}
+
+func (a *mqlAwsGlueJob) glueSecurityConfiguration() (*mqlAwsGlueSecurityConfiguration, error) {
+	if a.cacheSecurityConfigurationName == nil || *a.cacheSecurityConfigurationName == "" {
+		a.GlueSecurityConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := findGlueSecurityConfiguration(a.MqlRuntime, a.Region.Data, *a.cacheSecurityConfigurationName)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		a.GlueSecurityConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res, nil
 }
 
 func (a *mqlAwsGlueJob) tags() (map[string]any, error) {
@@ -421,16 +573,34 @@ func newMqlAwsGlueDatabase(runtime *plugin.Runtime, region string, db glue_types
 		params = toInterfaceMap(db.Parameters)
 	}
 
+	createTableDefaultPermissions, err := convert.JsonToDictSlice(db.CreateTableDefaultPermissions)
+	if err != nil {
+		return nil, err
+	}
+
+	targetDatabase, err := convert.JsonToDict(db.TargetDatabase)
+	if err != nil {
+		return nil, err
+	}
+
+	federatedDatabase, err := convert.JsonToDict(db.FederatedDatabase)
+	if err != nil {
+		return nil, err
+	}
+
 	resource, err := CreateResource(runtime, "aws.glue.database",
 		map[string]*llx.RawData{
-			"__id":        llx.StringData(id),
-			"name":        llx.StringDataPtr(db.Name),
-			"catalogId":   llx.StringDataPtr(db.CatalogId),
-			"description": llx.StringDataPtr(db.Description),
-			"locationUri": llx.StringDataPtr(db.LocationUri),
-			"parameters":  llx.MapData(params, types.String),
-			"createdAt":   llx.TimeDataPtr(db.CreateTime),
-			"region":      llx.StringData(region),
+			"__id":                          llx.StringData(id),
+			"name":                          llx.StringDataPtr(db.Name),
+			"catalogId":                     llx.StringDataPtr(db.CatalogId),
+			"description":                   llx.StringDataPtr(db.Description),
+			"locationUri":                   llx.StringDataPtr(db.LocationUri),
+			"parameters":                    llx.MapData(params, types.String),
+			"createTableDefaultPermissions": llx.ArrayData(createTableDefaultPermissions, types.Dict),
+			"targetDatabase":                llx.DictData(targetDatabase),
+			"federatedDatabase":             llx.DictData(federatedDatabase),
+			"createdAt":                     llx.TimeDataPtr(db.CreateTime),
+			"region":                        llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
@@ -476,6 +646,16 @@ func newMqlAwsGlueDatabaseTable(runtime *plugin.Runtime, region string, table gl
 		return nil, err
 	}
 
+	partitionKeys, err := convert.JsonToDictSlice(table.PartitionKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	federatedTable, err := convert.JsonToDict(table.FederatedTable)
+	if err != nil {
+		return nil, err
+	}
+
 	var params map[string]any
 	if table.Parameters != nil {
 		params = toInterfaceMap(table.Parameters)
@@ -483,21 +663,26 @@ func newMqlAwsGlueDatabaseTable(runtime *plugin.Runtime, region string, table gl
 
 	resource, err := CreateResource(runtime, "aws.glue.database.table",
 		map[string]*llx.RawData{
-			"__id":              llx.StringData(id),
-			"name":              llx.StringDataPtr(table.Name),
-			"databaseName":      llx.StringDataPtr(table.DatabaseName),
-			"catalogId":         llx.StringDataPtr(table.CatalogId),
-			"description":       llx.StringDataPtr(table.Description),
-			"owner":             llx.StringDataPtr(table.Owner),
-			"createdAt":         llx.TimeDataPtr(table.CreateTime),
-			"updatedAt":         llx.TimeDataPtr(table.UpdateTime),
-			"lastAccessedAt":    llx.TimeDataPtr(table.LastAccessTime),
-			"retention":         llx.IntData(int64(table.Retention)),
-			"storageDescriptor": llx.DictData(storageDescriptor),
-			"tableType":         llx.StringDataPtr(table.TableType),
-			"parameters":        llx.MapData(params, types.String),
-			"createdBy":         llx.StringDataPtr(table.CreatedBy),
-			"region":            llx.StringData(region),
+			"__id":                          llx.StringData(id),
+			"name":                          llx.StringDataPtr(table.Name),
+			"databaseName":                  llx.StringDataPtr(table.DatabaseName),
+			"catalogId":                     llx.StringDataPtr(table.CatalogId),
+			"description":                   llx.StringDataPtr(table.Description),
+			"owner":                         llx.StringDataPtr(table.Owner),
+			"createdAt":                     llx.TimeDataPtr(table.CreateTime),
+			"updatedAt":                     llx.TimeDataPtr(table.UpdateTime),
+			"lastAccessedAt":                llx.TimeDataPtr(table.LastAccessTime),
+			"retention":                     llx.IntData(int64(table.Retention)),
+			"storageDescriptor":             llx.DictData(storageDescriptor),
+			"tableType":                     llx.StringDataPtr(table.TableType),
+			"partitionKeys":                 llx.ArrayData(partitionKeys, types.Dict),
+			"viewExpandedText":              llx.StringDataPtr(table.ViewExpandedText),
+			"isRegisteredWithLakeFormation": llx.BoolData(table.IsRegisteredWithLakeFormation),
+			"isMaterializedView":            llx.BoolDataPtr(table.IsMaterializedView),
+			"federatedTable":                llx.DictData(federatedTable),
+			"parameters":                    llx.MapData(params, types.String),
+			"createdBy":                     llx.StringDataPtr(table.CreatedBy),
+			"region":                        llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
@@ -785,4 +970,488 @@ func redactedGlueConnectionProperties[K ~string](m map[K]string) map[string]any 
 		out[key] = v
 	}
 	return out
+}
+
+// --- Triggers -----------------------------------------------------------------
+
+func (a *mqlAwsGlue) triggers() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getTriggers(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGlue) getTriggers(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("glue>getTriggers>calling aws with region %s", region)
+
+			svc := conn.Glue(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := glue.NewGetTriggersPaginator(svc, &glue.GetTriggersInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, trigger := range page.Triggers {
+					mqlTrigger, err := newMqlAwsGlueTrigger(a.MqlRuntime, region, conn.AccountId(), trigger)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlTrigger)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsGlueTrigger(runtime *plugin.Runtime, region, accountID string, trigger glue_types.Trigger) (*mqlAwsGlueTrigger, error) {
+	arn := fmt.Sprintf("arn:aws:glue:%s:%s:trigger/%s", region, accountID, convert.ToValue(trigger.Name))
+
+	actions, err := convert.JsonToDictSlice(trigger.Actions)
+	if err != nil {
+		return nil, err
+	}
+
+	predicate, err := convert.JsonToDict(trigger.Predicate)
+	if err != nil {
+		return nil, err
+	}
+
+	eventBatchingCondition, err := convert.JsonToDict(trigger.EventBatchingCondition)
+	if err != nil {
+		return nil, err
+	}
+
+	resource, err := CreateResource(runtime, "aws.glue.trigger",
+		map[string]*llx.RawData{
+			"__id":                   llx.StringData(arn),
+			"arn":                    llx.StringData(arn),
+			"name":                   llx.StringDataPtr(trigger.Name),
+			"region":                 llx.StringData(region),
+			"description":            llx.StringDataPtr(trigger.Description),
+			"type":                   llx.StringData(string(trigger.Type)),
+			"state":                  llx.StringData(string(trigger.State)),
+			"schedule":               llx.StringDataPtr(trigger.Schedule),
+			"workflowName":           llx.StringDataPtr(trigger.WorkflowName),
+			"actions":                llx.ArrayData(actions, types.Dict),
+			"predicate":              llx.DictData(predicate),
+			"eventBatchingCondition": llx.DictData(eventBatchingCondition),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsGlueTrigger), nil
+}
+
+func (a *mqlAwsGlueTrigger) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Glue(a.Region.Data)
+	ctx := context.Background()
+	arn := a.Arn.Data
+
+	resp, err := svc.GetTags(ctx, &glue.GetTagsInput{ResourceArn: &arn})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return toInterfaceMap(resp.Tags), nil
+}
+
+// --- Schema Registries --------------------------------------------------------
+
+func (a *mqlAwsGlue) schemaRegistries() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getSchemaRegistries(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGlue) getSchemaRegistries(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("glue>getSchemaRegistries>calling aws with region %s", region)
+
+			svc := conn.Glue(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := glue.NewListRegistriesPaginator(svc, &glue.ListRegistriesInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, reg := range page.Registries {
+					mqlReg, err := newMqlAwsGlueSchemaRegistry(a.MqlRuntime, region, reg)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlReg)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsGlueSchemaRegistry(runtime *plugin.Runtime, region string, reg glue_types.RegistryListItem) (*mqlAwsGlueSchemaRegistry, error) {
+	regArn := convert.ToValue(reg.RegistryArn)
+	id := regArn
+	if id == "" {
+		id = fmt.Sprintf("glue/schema-registry/%s/%s", region, convert.ToValue(reg.RegistryName))
+	}
+
+	resource, err := CreateResource(runtime, "aws.glue.schemaRegistry",
+		map[string]*llx.RawData{
+			"__id":        llx.StringData(id),
+			"name":        llx.StringDataPtr(reg.RegistryName),
+			"registryArn": llx.StringDataPtr(reg.RegistryArn),
+			"region":      llx.StringData(region),
+			"description": llx.StringDataPtr(reg.Description),
+			"status":      llx.StringData(string(reg.Status)),
+			"createdAt":   llx.TimeDataPtr(parseGlueAPITime(reg.CreatedTime)),
+			"updatedAt":   llx.TimeDataPtr(parseGlueAPITime(reg.UpdatedTime)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsGlueSchemaRegistry), nil
+}
+
+func (a *mqlAwsGlueSchemaRegistry) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Glue(a.Region.Data)
+	ctx := context.Background()
+	arn := a.RegistryArn.Data
+
+	if arn == "" {
+		return nil, nil
+	}
+	resp, err := svc.GetTags(ctx, &glue.GetTagsInput{ResourceArn: &arn})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return toInterfaceMap(resp.Tags), nil
+}
+
+// --- Schemas ------------------------------------------------------------------
+
+func (a *mqlAwsGlue) schemas() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getSchemas(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGlue) getSchemas(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("glue>getSchemas>calling aws with region %s", region)
+
+			svc := conn.Glue(region)
+			ctx := context.Background()
+			res := []any{}
+
+			// ListSchemas with no RegistryId returns schemas across the default
+			// registry plus any user-managed registries in the region.
+			paginator := glue.NewListSchemasPaginator(svc, &glue.ListSchemasInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, s := range page.Schemas {
+					schemaDetails, _ := fetchGlueSchemaDetails(ctx, conn, region, s)
+					mqlSchema, err := newMqlAwsGlueSchema(a.MqlRuntime, region, s, schemaDetails)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlSchema)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+// glueSchemaDetails captures the fields returned by GetSchema that ListSchemas
+// does not include.
+type glueSchemaDetails struct {
+	dataFormat              string
+	compatibility           string
+	latestVersionNumber     int64
+	nextSchemaVersionNumber int64
+	schemaCheckpoint        int64
+	description             string
+	registryArn             string
+}
+
+// fetchGlueSchemaDetails enriches a SchemaListItem with the metadata returned
+// by GetSchema (data format, compatibility mode, version pointers, checkpoint,
+// registry ARN). Returns a zero-value details struct on access-denied or
+// transient failure so the schema is still listed.
+func fetchGlueSchemaDetails(ctx context.Context, conn *connection.AwsConnection, region string, s glue_types.SchemaListItem) (glueSchemaDetails, error) {
+	d := glueSchemaDetails{}
+	if s.SchemaArn == nil || *s.SchemaArn == "" {
+		return d, nil
+	}
+	svc := conn.Glue(region)
+	resp, err := svc.GetSchema(ctx, &glue.GetSchemaInput{SchemaId: &glue_types.SchemaId{SchemaArn: s.SchemaArn}})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return d, nil
+		}
+		log.Warn().Err(err).Str("schema", convert.ToValue(s.SchemaName)).Msg("glue>GetSchema failed; partial schema data only")
+		return d, nil
+	}
+	if resp == nil {
+		return d, nil
+	}
+	d.dataFormat = string(resp.DataFormat)
+	d.compatibility = string(resp.Compatibility)
+	if resp.LatestSchemaVersion != nil {
+		d.latestVersionNumber = *resp.LatestSchemaVersion
+	}
+	if resp.NextSchemaVersion != nil {
+		d.nextSchemaVersionNumber = *resp.NextSchemaVersion
+	}
+	if resp.SchemaCheckpoint != nil {
+		d.schemaCheckpoint = *resp.SchemaCheckpoint
+	}
+	if resp.Description != nil {
+		d.description = *resp.Description
+	}
+	if resp.RegistryArn != nil {
+		d.registryArn = *resp.RegistryArn
+	}
+	return d, nil
+}
+
+func newMqlAwsGlueSchema(runtime *plugin.Runtime, region string, s glue_types.SchemaListItem, d glueSchemaDetails) (*mqlAwsGlueSchema, error) {
+	id := convert.ToValue(s.SchemaArn)
+	if id == "" {
+		id = fmt.Sprintf("glue/schema/%s/%s/%s", region, convert.ToValue(s.RegistryName), convert.ToValue(s.SchemaName))
+	}
+
+	description := d.description
+	if description == "" {
+		description = convert.ToValue(s.Description)
+	}
+
+	resource, err := CreateResource(runtime, "aws.glue.schema",
+		map[string]*llx.RawData{
+			"__id":                    llx.StringData(id),
+			"schemaName":              llx.StringDataPtr(s.SchemaName),
+			"schemaArn":               llx.StringDataPtr(s.SchemaArn),
+			"registryName":            llx.StringDataPtr(s.RegistryName),
+			"registryArn":             llx.StringData(d.registryArn),
+			"region":                  llx.StringData(region),
+			"description":             llx.StringData(description),
+			"dataFormat":              llx.StringData(d.dataFormat),
+			"compatibility":           llx.StringData(d.compatibility),
+			"schemaStatus":            llx.StringData(string(s.SchemaStatus)),
+			"latestVersionNumber":     llx.IntData(d.latestVersionNumber),
+			"nextSchemaVersionNumber": llx.IntData(d.nextSchemaVersionNumber),
+			"schemaCheckpoint":        llx.IntData(d.schemaCheckpoint),
+			"createdAt":               llx.TimeDataPtr(parseGlueAPITime(s.CreatedTime)),
+			"updatedAt":               llx.TimeDataPtr(parseGlueAPITime(s.UpdatedTime)),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsGlueSchema), nil
+}
+
+func (a *mqlAwsGlueSchema) tags() (map[string]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Glue(a.Region.Data)
+	ctx := context.Background()
+	arn := a.SchemaArn.Data
+
+	if arn == "" {
+		return nil, nil
+	}
+	resp, err := svc.GetTags(ctx, &glue.GetTagsInput{ResourceArn: &arn})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return toInterfaceMap(resp.Tags), nil
+}
+
+// --- Resource Policies --------------------------------------------------------
+
+func (a *mqlAwsGlue) resourcePolicies() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getResourcePolicies(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsGlue) getResourcePolicies(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("glue>getResourcePolicies>calling aws with region %s", region)
+
+			svc := conn.Glue(region)
+			ctx := context.Background()
+			res := []any{}
+
+			paginator := glue.NewGetResourcePoliciesPaginator(svc, &glue.GetResourcePoliciesInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, policy := range page.GetResourcePoliciesResponseList {
+					mqlPolicy, err := newMqlAwsGlueResourcePolicy(a.MqlRuntime, region, policy)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlPolicy)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func newMqlAwsGlueResourcePolicy(runtime *plugin.Runtime, region string, policy glue_types.GluePolicy) (*mqlAwsGlueResourcePolicy, error) {
+	hash := convert.ToValue(policy.PolicyHash)
+	id := fmt.Sprintf("glue/resource-policy/%s/%s", region, hash)
+
+	resource, err := CreateResource(runtime, "aws.glue.resourcePolicy",
+		map[string]*llx.RawData{
+			"__id":         llx.StringData(id),
+			"policyHash":   llx.StringData(hash),
+			"region":       llx.StringData(region),
+			"policyInJson": llx.StringDataPtr(policy.PolicyInJson),
+			"createdAt":    llx.TimeDataPtr(policy.CreateTime),
+			"updatedAt":    llx.TimeDataPtr(policy.UpdateTime),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlAwsGlueResourcePolicy), nil
+}
+
+// parseGlueAPITime parses Glue's string-formatted timestamps (used by the
+// Schema Registry APIs). Returns nil time when the input is nil or unparseable.
+func parseGlueAPITime(s *string) *time.Time {
+	if s == nil || *s == "" {
+		return nil
+	}
+	// Try a few common layouts that Glue uses across Schema Registry APIs.
+	layouts := []string{
+		time.RFC3339Nano,
+		time.RFC3339,
+		"2006-01-02T15:04:05.000Z",
+		"2006-01-02T15:04:05Z",
+	}
+	for _, layout := range layouts {
+		if t, err := time.Parse(layout, *s); err == nil {
+			return &t
+		}
+	}
+	return nil
 }

@@ -362,9 +362,14 @@
     "glue:GetDataCatalogEncryptionSettings",
     "glue:GetDatabases",
     "glue:GetJobs",
+    "glue:GetResourcePolicies",
+    "glue:GetSchema",
     "glue:GetSecurityConfigurations",
     "glue:GetTables",
     "glue:GetTags",
+    "glue:GetTriggers",
+    "glue:ListRegistries",
+    "glue:ListSchemas",
     "glue:ListWorkflows",
     "guardduty:DescribePublishingDestination",
     "guardduty:GetCoverageStatistics",
@@ -3001,6 +3006,18 @@
       "source_file": "aws_glue.go"
     },
     {
+      "permission": "glue:GetResourcePolicies",
+      "service": "glue",
+      "action": "GetResourcePolicies",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetSchema",
+      "service": "glue",
+      "action": "GetSchema",
+      "source_file": "aws_glue.go"
+    },
+    {
       "permission": "glue:GetSecurityConfigurations",
       "service": "glue",
       "action": "GetSecurityConfigurations",
@@ -3016,6 +3033,24 @@
       "permission": "glue:GetTags",
       "service": "glue",
       "action": "GetTags",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetTriggers",
+      "service": "glue",
+      "action": "GetTriggers",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:ListRegistries",
+      "service": "glue",
+      "action": "ListRegistries",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:ListSchemas",
+      "service": "glue",
+      "action": "ListSchemas",
       "source_file": "aws_glue.go"
     },
     {
