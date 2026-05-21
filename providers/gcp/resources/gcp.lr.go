@@ -34509,7 +34509,7 @@ func (c *mqlGcpProjectRedisServiceClusterConnectionDetail) GetConnectionOrigin()
 type mqlGcpFolder struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpFolderInternal it will be used here
+	mqlGcpFolderInternal
 	Id          plugin.TValue[string]
 	Name        plugin.TValue[string]
 	Created     plugin.TValue[*time.Time]
@@ -48981,7 +48981,7 @@ func (c *mqlGcpProjectIamServiceRole) GetDeleted() *plugin.TValue[bool] {
 type mqlGcpProjectIamServiceServiceAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectIamServiceServiceAccountInternal it will be used here
+	mqlGcpProjectIamServiceServiceAccountInternal
 	ProjectId             plugin.TValue[string]
 	Name                  plugin.TValue[string]
 	UniqueId              plugin.TValue[string]
@@ -49113,7 +49113,7 @@ func (c *mqlGcpProjectIamServiceServiceAccount) GetLastAuthenticatedTime() *plug
 type mqlGcpProjectIamServiceServiceAccountKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlGcpProjectIamServiceServiceAccountKeyInternal it will be used here
+	mqlGcpProjectIamServiceServiceAccountKeyInternal
 	Name                  plugin.TValue[string]
 	KeyAlgorithm          plugin.TValue[string]
 	ValidAfterTime        plugin.TValue[*time.Time]

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -20,6 +21,12 @@ import (
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 )
+
+type mqlGcpFolderInternal struct {
+	iamPolicyOnce  sync.Once
+	iamPolicyCache *cloudresourcemanager.Policy
+	iamPolicyErr   error
+}
 
 // folderResourceName normalizes a folder id (either "123" or "folders/123")
 // into the canonical "folders/{id}" resource path expected by the
@@ -215,25 +222,40 @@ func folderToMql(runtime *plugin.Runtime, f *cloudresourcemanager.Folder) (any, 
 	})
 }
 
+func (g *mqlGcpFolder) fetchIamPolicy() (*cloudresourcemanager.Policy, error) {
+	g.iamPolicyOnce.Do(func() {
+		if g.Id.Error != nil {
+			g.iamPolicyErr = g.Id.Error
+			return
+		}
+		folderName := folderResourceName(g.Id.Data)
+
+		conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+		client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+		if err != nil {
+			g.iamPolicyErr = err
+			return
+		}
+
+		ctx := context.Background()
+		svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
+		if err != nil {
+			g.iamPolicyErr = err
+			return
+		}
+
+		g.iamPolicyCache, g.iamPolicyErr = svc.Folders.GetIamPolicy(folderName, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	})
+	return g.iamPolicyCache, g.iamPolicyErr
+}
+
 func (g *mqlGcpFolder) iamPolicy() ([]any, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
 	}
 	folderName := folderResourceName(g.Id.Data)
 
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-
-	policy, err := svc.Folders.GetIamPolicy(folderName, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	policy, err := g.fetchIamPolicy()
 	if err != nil {
 		return nil, err
 	}
@@ -259,19 +281,7 @@ func (g *mqlGcpFolder) auditConfig() ([]any, error) {
 	}
 	folderName := folderResourceName(g.Id.Data)
 
-	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-
-	policy, err := svc.Folders.GetIamPolicy(folderName, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	policy, err := g.fetchIamPolicy()
 	if err != nil {
 		return nil, err
 	}
