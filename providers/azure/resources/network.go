@@ -3506,8 +3506,12 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 		}
 	}
 
-	var direction, protocol, access, sourcePortRange, sourceAddressPrefix, destinationAddressPrefix, description *llx.RawData
+	var direction, protocol, access, sourcePortRange, sourceAddressPrefix, destinationAddressPrefix, description, provisioningState *llx.RawData
 	var priority *llx.RawData
+	sourcePortRanges := []any{}
+	destinationPortRanges := []any{}
+	sourceAddressPrefixes := []any{}
+	destinationAddressPrefixes := []any{}
 	if secRule.Properties != nil {
 		direction = llx.StringDataPtr((*string)(secRule.Properties.Direction))
 		if secRule.Properties.Protocol != nil {
@@ -3525,6 +3529,27 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 		sourceAddressPrefix = llx.StringDataPtr(secRule.Properties.SourceAddressPrefix)
 		destinationAddressPrefix = llx.StringDataPtr(secRule.Properties.DestinationAddressPrefix)
 		description = llx.StringDataPtr(secRule.Properties.Description)
+		provisioningState = llx.StringDataPtr((*string)(secRule.Properties.ProvisioningState))
+		for _, p := range secRule.Properties.SourcePortRanges {
+			if p != nil {
+				sourcePortRanges = append(sourcePortRanges, *p)
+			}
+		}
+		for _, p := range secRule.Properties.DestinationPortRanges {
+			if p != nil {
+				destinationPortRanges = append(destinationPortRanges, *p)
+			}
+		}
+		for _, p := range secRule.Properties.SourceAddressPrefixes {
+			if p != nil {
+				sourceAddressPrefixes = append(sourceAddressPrefixes, *p)
+			}
+		}
+		for _, p := range secRule.Properties.DestinationAddressPrefixes {
+			if p != nil {
+				destinationAddressPrefixes = append(destinationAddressPrefixes, *p)
+			}
+		}
 	} else {
 		direction = llx.StringData("")
 		protocol = llx.StringData("")
@@ -3534,23 +3559,29 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 		sourceAddressPrefix = llx.StringData("")
 		destinationAddressPrefix = llx.StringData("")
 		description = llx.StringData("")
+		provisioningState = llx.StringData("")
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.networkService.securityrule",
 		map[string]*llx.RawData{
-			"id":                       llx.StringDataPtr(secRule.ID),
-			"name":                     llx.StringDataPtr(secRule.Name),
-			"etag":                     llx.StringDataPtr(secRule.Etag),
-			"direction":                direction,
-			"properties":               llx.DictData(properties),
-			"destinationPortRange":     llx.ArrayData(destinationPortRange, types.String),
-			"protocol":                 protocol,
-			"access":                   access,
-			"priority":                 priority,
-			"sourcePortRange":          sourcePortRange,
-			"sourceAddressPrefix":      sourceAddressPrefix,
-			"destinationAddressPrefix": destinationAddressPrefix,
-			"description":              description,
+			"id":                         llx.StringDataPtr(secRule.ID),
+			"name":                       llx.StringDataPtr(secRule.Name),
+			"etag":                       llx.StringDataPtr(secRule.Etag),
+			"direction":                  direction,
+			"properties":                 llx.DictData(properties),
+			"destinationPortRange":       llx.ArrayData(destinationPortRange, types.String),
+			"protocol":                   protocol,
+			"access":                     access,
+			"priority":                   priority,
+			"sourcePortRange":            sourcePortRange,
+			"sourceAddressPrefix":        sourceAddressPrefix,
+			"destinationAddressPrefix":   destinationAddressPrefix,
+			"sourcePortRanges":           llx.ArrayData(sourcePortRanges, types.String),
+			"destinationPortRanges":      llx.ArrayData(destinationPortRanges, types.String),
+			"sourceAddressPrefixes":      llx.ArrayData(sourceAddressPrefixes, types.String),
+			"destinationAddressPrefixes": llx.ArrayData(destinationAddressPrefixes, types.String),
+			"description":                description,
+			"provisioningState":          provisioningState,
 		})
 	if err != nil {
 		return nil, err

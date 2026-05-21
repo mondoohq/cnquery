@@ -2562,8 +2562,10 @@ azure.subscription.networkService.securityrule 9.0.1
 azure.subscription.networkService.securityrule.access 11.4.28
 azure.subscription.networkService.securityrule.description 11.4.28
 azure.subscription.networkService.securityrule.destinationAddressPrefix 11.4.28
+azure.subscription.networkService.securityrule.destinationAddressPrefixes 13.12.2
 azure.subscription.networkService.securityrule.destinationApplicationSecurityGroups 13.11.2
 azure.subscription.networkService.securityrule.destinationPortRange 9.0.1
+azure.subscription.networkService.securityrule.destinationPortRanges 13.12.2
 azure.subscription.networkService.securityrule.direction 9.0.1
 azure.subscription.networkService.securityrule.etag 9.0.1
 azure.subscription.networkService.securityrule.id 9.0.1
@@ -2571,9 +2573,12 @@ azure.subscription.networkService.securityrule.name 9.0.1
 azure.subscription.networkService.securityrule.priority 11.4.28
 azure.subscription.networkService.securityrule.properties 9.0.1
 azure.subscription.networkService.securityrule.protocol 11.4.28
+azure.subscription.networkService.securityrule.provisioningState 13.12.2
 azure.subscription.networkService.securityrule.sourceAddressPrefix 11.4.28
+azure.subscription.networkService.securityrule.sourceAddressPrefixes 13.12.2
 azure.subscription.networkService.securityrule.sourceApplicationSecurityGroups 13.11.2
 azure.subscription.networkService.securityrule.sourcePortRange 11.4.28
+azure.subscription.networkService.securityrule.sourcePortRanges 13.12.2
 azure.subscription.networkService.serviceEndpointPolicies 13.3.3
 azure.subscription.networkService.serviceEndpointPolicy 13.3.3
 azure.subscription.networkService.serviceEndpointPolicy.definition 13.3.3

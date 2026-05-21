@@ -2170,12 +2170,22 @@ private azure.subscription.networkService.securityrule @defaults("id name") {
   sourceAddressPrefix string
   // Security rule destination address prefix (CIDR or *)
   destinationAddressPrefix string
+  // Security rule source port ranges (list form; empty when only `sourcePortRange` is set)
+  sourcePortRanges []string
+  // Security rule destination port ranges (raw list form preserving CIDR-style entries; empty when only `destinationPortRange` is set)
+  destinationPortRanges []string
+  // Security rule source address prefixes (list form; empty when only `sourceAddressPrefix` is set)
+  sourceAddressPrefixes []string
+  // Security rule destination address prefixes (list form; empty when only `destinationAddressPrefix` is set)
+  destinationAddressPrefixes []string
   // Application security groups the rule sources traffic from
   sourceApplicationSecurityGroups() []azure.subscription.networkService.appSecurityGroup
   // Application security groups the rule targets as destination
   destinationApplicationSecurityGroups() []azure.subscription.networkService.appSecurityGroup
   // Security rule description
   description string
+  // Provisioning state of the rule (e.g., "Succeeded", "Failed", "Updating")
+  provisioningState string
 }
 
 // Azure Network Watcher
