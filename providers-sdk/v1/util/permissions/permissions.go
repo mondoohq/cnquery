@@ -260,6 +260,7 @@ func listGoFiles(dir string) []string {
 // awsServiceNameOverrides maps AWS SDK package names to IAM service prefixes
 // where they differ from the Go package name.
 var awsServiceNameOverrides = map[string]string{
+	"bedrockagent":             "bedrock",
 	"cloudwatchlogs":           "logs",
 	"configservice":            "config",
 	"costexplorer":             "ce",
@@ -540,6 +541,8 @@ func awsConnectionMethodToService(method string) string {
 		"apigatewayv2":             "apigatewayv2",
 		"budgets":                  "budgets",
 		"costexplorer":             "costexplorer",
+		"bedrock":                  "bedrock",
+		"bedrockagent":             "bedrockagent",
 	}
 	if svc, ok := knownMethods[lower]; ok {
 		return svc

@@ -790,6 +790,12 @@ const (
 	ResourceAwsBedrockGuardrail                                                 string = "aws.bedrock.guardrail"
 	ResourceAwsBedrockModelInvocationLoggingConfiguration                       string = "aws.bedrock.modelInvocationLoggingConfiguration"
 	ResourceAwsBedrockProvisionedModelThroughput                                string = "aws.bedrock.provisionedModelThroughput"
+	ResourceAwsBedrockAgent                                                     string = "aws.bedrock.agent"
+	ResourceAwsBedrockKnowledgeBase                                             string = "aws.bedrock.knowledgeBase"
+	ResourceAwsBedrockFlow                                                      string = "aws.bedrock.flow"
+	ResourceAwsBedrockEvaluationJob                                             string = "aws.bedrock.evaluationJob"
+	ResourceAwsBedrockModelImportJob                                            string = "aws.bedrock.modelImportJob"
+	ResourceAwsBedrockBatchInferenceJob                                         string = "aws.bedrock.batchInferenceJob"
 	ResourceAwsStepfunctions                                                    string = "aws.stepfunctions"
 	ResourceAwsStepfunctionsStateMachine                                        string = "aws.stepfunctions.stateMachine"
 	ResourceAwsStepfunctionsStateMachineLoggingConfiguration                    string = "aws.stepfunctions.stateMachine.loggingConfiguration"
@@ -3901,6 +3907,30 @@ func init() {
 		"aws.bedrock.provisionedModelThroughput": {
 			// to override args, implement: initAwsBedrockProvisionedModelThroughput(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockProvisionedModelThroughput,
+		},
+		"aws.bedrock.agent": {
+			// to override args, implement: initAwsBedrockAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAgent,
+		},
+		"aws.bedrock.knowledgeBase": {
+			// to override args, implement: initAwsBedrockKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockKnowledgeBase,
+		},
+		"aws.bedrock.flow": {
+			// to override args, implement: initAwsBedrockFlow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockFlow,
+		},
+		"aws.bedrock.evaluationJob": {
+			// to override args, implement: initAwsBedrockEvaluationJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockEvaluationJob,
+		},
+		"aws.bedrock.modelImportJob": {
+			// to override args, implement: initAwsBedrockModelImportJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockModelImportJob,
+		},
+		"aws.bedrock.batchInferenceJob": {
+			// to override args, implement: initAwsBedrockBatchInferenceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockBatchInferenceJob,
 		},
 		"aws.stepfunctions": {
 			// to override args, implement: initAwsStepfunctions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -27326,6 +27356,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.advancedPromptOptimizationJobs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrock).GetAdvancedPromptOptimizationJobs()).ToDataRes(types.Array(types.Resource("aws.bedrock.advancedPromptOptimizationJob")))
 	},
+	"aws.bedrock.agents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetAgents()).ToDataRes(types.Array(types.Resource("aws.bedrock.agent")))
+	},
+	"aws.bedrock.knowledgeBases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetKnowledgeBases()).ToDataRes(types.Array(types.Resource("aws.bedrock.knowledgeBase")))
+	},
+	"aws.bedrock.flows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetFlows()).ToDataRes(types.Array(types.Resource("aws.bedrock.flow")))
+	},
+	"aws.bedrock.evaluationJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetEvaluationJobs()).ToDataRes(types.Array(types.Resource("aws.bedrock.evaluationJob")))
+	},
+	"aws.bedrock.modelImportJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetModelImportJobs()).ToDataRes(types.Array(types.Resource("aws.bedrock.modelImportJob")))
+	},
+	"aws.bedrock.batchInferenceJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrock).GetBatchInferenceJobs()).ToDataRes(types.Array(types.Resource("aws.bedrock.batchInferenceJob")))
+	},
 	"aws.bedrock.advancedPromptOptimizationJob.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).GetArn()).ToDataRes(types.String)
 	},
@@ -27499,6 +27547,243 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.bedrock.provisionedModelThroughput.commitmentDuration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockProvisionedModelThroughput).GetCommitmentDuration()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.foundationModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetFoundationModel()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.instruction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetInstruction()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.idleSessionTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetIdleSessionTtl()).ToDataRes(types.Int)
+	},
+	"aws.bedrock.agent.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.bedrock.agent.agentResourceRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetAgentResourceRoleArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agent.customerEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetCustomerEncryptionKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.agent.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agent.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agent.actionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetActionGroups()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.bedrock.agent.knowledgeBases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgent).GetKnowledgeBases()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.bedrock.knowledgeBase.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.bedrock.knowledgeBase.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.knowledgeBase.storageConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetStorageConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.knowledgeBase.knowledgeBaseConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetKnowledgeBaseConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.knowledgeBase.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.knowledgeBase.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.knowledgeBase.dataSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockKnowledgeBase).GetDataSources()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.bedrock.flow.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.flow.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.flow.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.flow.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.flow.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.flow.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetVersion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.flow.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.flow.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.bedrock.flow.executionRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetExecutionRoleArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.flow.customerEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetCustomerEncryptionKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.flow.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.flow.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockFlow).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.evaluationJob.jobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetJobArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.evaluationJob.jobName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetJobName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.evaluationJob.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.evaluationJob.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.evaluationJob.jobType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetJobType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.evaluationJob.modelIdentifiers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetModelIdentifiers()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.evaluationJob.applicationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetApplicationType()).ToDataRes(types.String)
+	},
+	"aws.bedrock.evaluationJob.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.bedrock.evaluationJob.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.evaluationJob.customerEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetCustomerEncryptionKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.evaluationJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.evaluationJob.jobDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockEvaluationJob).GetJobDescription()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelImportJob.jobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetJobArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelImportJob.jobName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetJobName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelImportJob.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelImportJob.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelImportJob.importedModelArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetImportedModelArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelImportJob.modelDataSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetModelDataSource()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.modelImportJob.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.bedrock.modelImportJob.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.modelImportJob.customerEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetCustomerEncryptionKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.bedrock.modelImportJob.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.modelImportJob.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.modelImportJob.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockModelImportJob).GetEndTime()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.batchInferenceJob.jobArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetJobArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.batchInferenceJob.jobName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetJobName()).ToDataRes(types.String)
+	},
+	"aws.bedrock.batchInferenceJob.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.bedrock.batchInferenceJob.modelId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetModelId()).ToDataRes(types.String)
+	},
+	"aws.bedrock.batchInferenceJob.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.bedrock.batchInferenceJob.inputDataConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetInputDataConfig()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.batchInferenceJob.outputDataConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetOutputDataConfig()).ToDataRes(types.Dict)
+	},
+	"aws.bedrock.batchInferenceJob.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.bedrock.batchInferenceJob.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.bedrock.batchInferenceJob.submitTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetSubmitTime()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.batchInferenceJob.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.batchInferenceJob.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetEndTime()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.batchInferenceJob.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetMessage()).ToDataRes(types.String)
+	},
+	"aws.bedrock.batchInferenceJob.timeoutDurationInHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockBatchInferenceJob).GetTimeoutDurationInHours()).ToDataRes(types.Int)
 	},
 	"aws.stepfunctions.stateMachines": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsStepfunctions).GetStateMachines()).ToDataRes(types.Array(types.Resource("aws.stepfunctions.stateMachine")))
@@ -61857,6 +62142,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrock).AdvancedPromptOptimizationJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.agents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).Agents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).KnowledgeBases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).Flows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).EvaluationJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).ModelImportJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrock).BatchInferenceJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.advancedPromptOptimizationJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAdvancedPromptOptimizationJob).__id, ok = v.Value.(string)
 		return
@@ -62111,6 +62420,346 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.bedrock.provisionedModelThroughput.commitmentDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockProvisionedModelThroughput).CommitmentDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agent.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.foundationModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).FoundationModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.instruction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).Instruction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.idleSessionTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).IdleSessionTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.agentResourceRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).AgentResourceRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.customerEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).CustomerEncryptionKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.actionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).ActionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agent.knowledgeBases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgent).KnowledgeBases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.knowledgeBase.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.storageConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).StorageConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.knowledgeBaseConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).KnowledgeBaseConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.knowledgeBase.dataSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockKnowledgeBase).DataSources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.flow.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.executionRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).ExecutionRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.customerEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).CustomerEncryptionKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.flow.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockFlow).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.evaluationJob.jobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).JobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.jobName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).JobName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.jobType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).JobType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.modelIdentifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).ModelIdentifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.applicationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).ApplicationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.customerEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).CustomerEncryptionKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.evaluationJob.jobDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockEvaluationJob).JobDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.modelImportJob.jobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).JobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.jobName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).JobName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.importedModelArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).ImportedModelArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.modelDataSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).ModelDataSource, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.customerEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).CustomerEncryptionKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.modelImportJob.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockModelImportJob).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.jobArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).JobArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.jobName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).JobName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.modelId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).ModelId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.inputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).InputDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.outputDataConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).OutputDataConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.submitTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).SubmitTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.batchInferenceJob.timeoutDurationInHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockBatchInferenceJob).TimeoutDurationInHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.stepfunctions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -150775,6 +151424,12 @@ type mqlAwsBedrock struct {
 	ModelInvocationLoggingConfigurations plugin.TValue[[]any]
 	ProvisionedModelThroughputs          plugin.TValue[[]any]
 	AdvancedPromptOptimizationJobs       plugin.TValue[[]any]
+	Agents                               plugin.TValue[[]any]
+	KnowledgeBases                       plugin.TValue[[]any]
+	Flows                                plugin.TValue[[]any]
+	EvaluationJobs                       plugin.TValue[[]any]
+	ModelImportJobs                      plugin.TValue[[]any]
+	BatchInferenceJobs                   plugin.TValue[[]any]
 }
 
 // createAwsBedrock creates a new instance of this resource
@@ -150907,6 +151562,102 @@ func (c *mqlAwsBedrock) GetAdvancedPromptOptimizationJobs() *plugin.TValue[[]any
 		}
 
 		return c.advancedPromptOptimizationJobs()
+	})
+}
+
+func (c *mqlAwsBedrock) GetAgents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Agents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "agents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.agents()
+	})
+}
+
+func (c *mqlAwsBedrock) GetKnowledgeBases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KnowledgeBases, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "knowledgeBases")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.knowledgeBases()
+	})
+}
+
+func (c *mqlAwsBedrock) GetFlows() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Flows, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "flows")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.flows()
+	})
+}
+
+func (c *mqlAwsBedrock) GetEvaluationJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EvaluationJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "evaluationJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.evaluationJobs()
+	})
+}
+
+func (c *mqlAwsBedrock) GetModelImportJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ModelImportJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "modelImportJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.modelImportJobs()
+	})
+}
+
+func (c *mqlAwsBedrock) GetBatchInferenceJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BatchInferenceJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock", c.__id, "batchInferenceJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.batchInferenceJobs()
 	})
 }
 
@@ -151544,6 +152295,835 @@ func (c *mqlAwsBedrockProvisionedModelThroughput) GetStatus() *plugin.TValue[str
 
 func (c *mqlAwsBedrockProvisionedModelThroughput) GetCommitmentDuration() *plugin.TValue[string] {
 	return &c.CommitmentDuration
+}
+
+// mqlAwsBedrockAgent for the aws.bedrock.agent resource
+type mqlAwsBedrockAgent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockAgentInternal
+	Id                    plugin.TValue[string]
+	Arn                   plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Region                plugin.TValue[string]
+	Status                plugin.TValue[string]
+	Description           plugin.TValue[string]
+	FoundationModel       plugin.TValue[string]
+	Instruction           plugin.TValue[string]
+	IdleSessionTtl        plugin.TValue[int64]
+	IamRole               plugin.TValue[*mqlAwsIamRole]
+	AgentResourceRoleArn  plugin.TValue[string]
+	CustomerEncryptionKey plugin.TValue[*mqlAwsKmsKey]
+	CreatedAt             plugin.TValue[*time.Time]
+	UpdatedAt             plugin.TValue[*time.Time]
+	ActionGroups          plugin.TValue[[]any]
+	KnowledgeBases        plugin.TValue[[]any]
+}
+
+// createAwsBedrockAgent creates a new instance of this resource
+func createAwsBedrockAgent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgent) MqlName() string {
+	return "aws.bedrock.agent"
+}
+
+func (c *mqlAwsBedrockAgent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgent) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockAgent) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockAgent) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockAgent) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockAgent) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetFoundationModel() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.FoundationModel, func() (string, error) {
+		return c.foundationModel()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetInstruction() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Instruction, func() (string, error) {
+		return c.instruction()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetIdleSessionTtl() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.IdleSessionTtl, func() (int64, error) {
+		return c.idleSessionTtl()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agent", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetAgentResourceRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AgentResourceRoleArn, func() (string, error) {
+		return c.agentResourceRoleArn()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetCustomerEncryptionKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.CustomerEncryptionKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agent", c.__id, "customerEncryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.customerEncryptionKey()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.UpdatedAt, func() (*time.Time, error) {
+		return c.updatedAt()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetActionGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ActionGroups, func() ([]any, error) {
+		return c.actionGroups()
+	})
+}
+
+func (c *mqlAwsBedrockAgent) GetKnowledgeBases() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KnowledgeBases, func() ([]any, error) {
+		return c.knowledgeBases()
+	})
+}
+
+// mqlAwsBedrockKnowledgeBase for the aws.bedrock.knowledgeBase resource
+type mqlAwsBedrockKnowledgeBase struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockKnowledgeBaseInternal
+	Id                         plugin.TValue[string]
+	Arn                        plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	Description                plugin.TValue[string]
+	IamRole                    plugin.TValue[*mqlAwsIamRole]
+	RoleArn                    plugin.TValue[string]
+	StorageConfiguration       plugin.TValue[any]
+	KnowledgeBaseConfiguration plugin.TValue[any]
+	CreatedAt                  plugin.TValue[*time.Time]
+	UpdatedAt                  plugin.TValue[*time.Time]
+	DataSources                plugin.TValue[[]any]
+}
+
+// createAwsBedrockKnowledgeBase creates a new instance of this resource
+func createAwsBedrockKnowledgeBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockKnowledgeBase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.knowledgeBase", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) MqlName() string {
+	return "aws.bedrock.knowledgeBase"
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arn, func() (string, error) {
+		return c.arn()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.knowledgeBase", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RoleArn, func() (string, error) {
+		return c.roleArn()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetStorageConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.StorageConfiguration, func() (any, error) {
+		return c.storageConfiguration()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetKnowledgeBaseConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.KnowledgeBaseConfiguration, func() (any, error) {
+		return c.knowledgeBaseConfiguration()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CreatedAt, func() (*time.Time, error) {
+		return c.createdAt()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.UpdatedAt, func() (*time.Time, error) {
+		return c.updatedAt()
+	})
+}
+
+func (c *mqlAwsBedrockKnowledgeBase) GetDataSources() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DataSources, func() ([]any, error) {
+		return c.dataSources()
+	})
+}
+
+// mqlAwsBedrockFlow for the aws.bedrock.flow resource
+type mqlAwsBedrockFlow struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockFlowInternal
+	Id                    plugin.TValue[string]
+	Arn                   plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Region                plugin.TValue[string]
+	Status                plugin.TValue[string]
+	Version               plugin.TValue[string]
+	Description           plugin.TValue[string]
+	IamRole               plugin.TValue[*mqlAwsIamRole]
+	ExecutionRoleArn      plugin.TValue[string]
+	CustomerEncryptionKey plugin.TValue[*mqlAwsKmsKey]
+	CreatedAt             plugin.TValue[*time.Time]
+	UpdatedAt             plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockFlow creates a new instance of this resource
+func createAwsBedrockFlow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockFlow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.flow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockFlow) MqlName() string {
+	return "aws.bedrock.flow"
+}
+
+func (c *mqlAwsBedrockFlow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockFlow) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsBedrockFlow) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsBedrockFlow) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsBedrockFlow) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockFlow) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockFlow) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlAwsBedrockFlow) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsBedrockFlow) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.flow", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsBedrockFlow) GetExecutionRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ExecutionRoleArn, func() (string, error) {
+		return c.executionRoleArn()
+	})
+}
+
+func (c *mqlAwsBedrockFlow) GetCustomerEncryptionKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.CustomerEncryptionKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.flow", c.__id, "customerEncryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.customerEncryptionKey()
+	})
+}
+
+func (c *mqlAwsBedrockFlow) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockFlow) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlAwsBedrockEvaluationJob for the aws.bedrock.evaluationJob resource
+type mqlAwsBedrockEvaluationJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockEvaluationJobInternal
+	JobArn                plugin.TValue[string]
+	JobName               plugin.TValue[string]
+	Region                plugin.TValue[string]
+	Status                plugin.TValue[string]
+	JobType               plugin.TValue[string]
+	ModelIdentifiers      plugin.TValue[[]any]
+	ApplicationType       plugin.TValue[string]
+	IamRole               plugin.TValue[*mqlAwsIamRole]
+	RoleArn               plugin.TValue[string]
+	CustomerEncryptionKey plugin.TValue[*mqlAwsKmsKey]
+	CreatedAt             plugin.TValue[*time.Time]
+	JobDescription        plugin.TValue[string]
+}
+
+// createAwsBedrockEvaluationJob creates a new instance of this resource
+func createAwsBedrockEvaluationJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockEvaluationJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.evaluationJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockEvaluationJob) MqlName() string {
+	return "aws.bedrock.evaluationJob"
+}
+
+func (c *mqlAwsBedrockEvaluationJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetJobArn() *plugin.TValue[string] {
+	return &c.JobArn
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetJobName() *plugin.TValue[string] {
+	return &c.JobName
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetJobType() *plugin.TValue[string] {
+	return &c.JobType
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetModelIdentifiers() *plugin.TValue[[]any] {
+	return &c.ModelIdentifiers
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetApplicationType() *plugin.TValue[string] {
+	return &c.ApplicationType
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.evaluationJob", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RoleArn, func() (string, error) {
+		return c.roleArn()
+	})
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetCustomerEncryptionKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.CustomerEncryptionKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.evaluationJob", c.__id, "customerEncryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.customerEncryptionKey()
+	})
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockEvaluationJob) GetJobDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.JobDescription, func() (string, error) {
+		return c.jobDescription()
+	})
+}
+
+// mqlAwsBedrockModelImportJob for the aws.bedrock.modelImportJob resource
+type mqlAwsBedrockModelImportJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsBedrockModelImportJobInternal
+	JobArn                plugin.TValue[string]
+	JobName               plugin.TValue[string]
+	Region                plugin.TValue[string]
+	Status                plugin.TValue[string]
+	ImportedModelArn      plugin.TValue[string]
+	ModelDataSource       plugin.TValue[any]
+	IamRole               plugin.TValue[*mqlAwsIamRole]
+	RoleArn               plugin.TValue[string]
+	CustomerEncryptionKey plugin.TValue[*mqlAwsKmsKey]
+	CreatedAt             plugin.TValue[*time.Time]
+	LastModifiedTime      plugin.TValue[*time.Time]
+	EndTime               plugin.TValue[*time.Time]
+}
+
+// createAwsBedrockModelImportJob creates a new instance of this resource
+func createAwsBedrockModelImportJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockModelImportJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.modelImportJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockModelImportJob) MqlName() string {
+	return "aws.bedrock.modelImportJob"
+}
+
+func (c *mqlAwsBedrockModelImportJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetJobArn() *plugin.TValue[string] {
+	return &c.JobArn
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetJobName() *plugin.TValue[string] {
+	return &c.JobName
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetImportedModelArn() *plugin.TValue[string] {
+	return &c.ImportedModelArn
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetModelDataSource() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.ModelDataSource, func() (any, error) {
+		return c.modelDataSource()
+	})
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelImportJob", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetRoleArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RoleArn, func() (string, error) {
+		return c.roleArn()
+	})
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetCustomerEncryptionKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.CustomerEncryptionKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.modelImportJob", c.__id, "customerEncryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.customerEncryptionKey()
+	})
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsBedrockModelImportJob) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+// mqlAwsBedrockBatchInferenceJob for the aws.bedrock.batchInferenceJob resource
+type mqlAwsBedrockBatchInferenceJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockBatchInferenceJobInternal it will be used here
+	JobArn                 plugin.TValue[string]
+	JobName                plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	ModelId                plugin.TValue[string]
+	Status                 plugin.TValue[string]
+	InputDataConfig        plugin.TValue[any]
+	OutputDataConfig       plugin.TValue[any]
+	IamRole                plugin.TValue[*mqlAwsIamRole]
+	RoleArn                plugin.TValue[string]
+	SubmitTime             plugin.TValue[*time.Time]
+	LastModifiedTime       plugin.TValue[*time.Time]
+	EndTime                plugin.TValue[*time.Time]
+	Message                plugin.TValue[string]
+	TimeoutDurationInHours plugin.TValue[int64]
+}
+
+// createAwsBedrockBatchInferenceJob creates a new instance of this resource
+func createAwsBedrockBatchInferenceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockBatchInferenceJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.batchInferenceJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) MqlName() string {
+	return "aws.bedrock.batchInferenceJob"
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetJobArn() *plugin.TValue[string] {
+	return &c.JobArn
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetJobName() *plugin.TValue[string] {
+	return &c.JobName
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetModelId() *plugin.TValue[string] {
+	return &c.ModelId
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetInputDataConfig() *plugin.TValue[any] {
+	return &c.InputDataConfig
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetOutputDataConfig() *plugin.TValue[any] {
+	return &c.OutputDataConfig
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.batchInferenceJob", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetRoleArn() *plugin.TValue[string] {
+	return &c.RoleArn
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetSubmitTime() *plugin.TValue[*time.Time] {
+	return &c.SubmitTime
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetMessage() *plugin.TValue[string] {
+	return &c.Message
+}
+
+func (c *mqlAwsBedrockBatchInferenceJob) GetTimeoutDurationInHours() *plugin.TValue[int64] {
+	return &c.TimeoutDurationInHours
 }
 
 // mqlAwsStepfunctions for the aws.stepfunctions resource

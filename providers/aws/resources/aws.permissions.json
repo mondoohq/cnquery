@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.26.2",
-  "generated_at": "2026-05-21T15:10:03-07:00",
+  "generated_at": "2026-05-21T15:32:32-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -68,9 +68,28 @@
     "batch:DescribeSchedulingPolicies",
     "batch:ListJobs",
     "batch:ListSchedulingPolicies",
+    "bedrock:GetAdvancedPromptOptimizationJob",
+    "bedrock:GetAgent",
+    "bedrock:GetCustomModel",
+    "bedrock:GetEvaluationJob",
+    "bedrock:GetFlow",
+    "bedrock:GetGuardrail",
+    "bedrock:GetKnowledgeBase",
+    "bedrock:GetModelImportJob",
+    "bedrock:GetModelInvocationLoggingConfiguration",
     "bedrock:ListAdvancedPromptOptimizationJobs",
+    "bedrock:ListAgentActionGroups",
+    "bedrock:ListAgentKnowledgeBases",
+    "bedrock:ListAgents",
     "bedrock:ListCustomModels",
+    "bedrock:ListDataSources",
+    "bedrock:ListEvaluationJobs",
+    "bedrock:ListFlows",
+    "bedrock:ListFoundationModels",
     "bedrock:ListGuardrails",
+    "bedrock:ListKnowledgeBases",
+    "bedrock:ListModelImportJobs",
+    "bedrock:ListModelInvocationJobs",
     "bedrock:ListProvisionedModelThroughputs",
     "budgets:DescribeBudgets",
     "budgets:DescribeNotificationsForBudget",
@@ -1170,9 +1189,81 @@
       "source_file": "aws_batch.go"
     },
     {
+      "permission": "bedrock:GetAdvancedPromptOptimizationJob",
+      "service": "bedrock",
+      "action": "GetAdvancedPromptOptimizationJob",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetAgent",
+      "service": "bedrock",
+      "action": "GetAgent",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetCustomModel",
+      "service": "bedrock",
+      "action": "GetCustomModel",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetEvaluationJob",
+      "service": "bedrock",
+      "action": "GetEvaluationJob",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetFlow",
+      "service": "bedrock",
+      "action": "GetFlow",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetGuardrail",
+      "service": "bedrock",
+      "action": "GetGuardrail",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetKnowledgeBase",
+      "service": "bedrock",
+      "action": "GetKnowledgeBase",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetModelImportJob",
+      "service": "bedrock",
+      "action": "GetModelImportJob",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:GetModelInvocationLoggingConfiguration",
+      "service": "bedrock",
+      "action": "GetModelInvocationLoggingConfiguration",
+      "source_file": "aws_bedrock.go"
+    },
+    {
       "permission": "bedrock:ListAdvancedPromptOptimizationJobs",
       "service": "bedrock",
       "action": "ListAdvancedPromptOptimizationJobs",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListAgentActionGroups",
+      "service": "bedrock",
+      "action": "ListAgentActionGroups",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListAgentKnowledgeBases",
+      "service": "bedrock",
+      "action": "ListAgentKnowledgeBases",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListAgents",
+      "service": "bedrock",
+      "action": "ListAgents",
       "source_file": "aws_bedrock.go"
     },
     {
@@ -1182,9 +1273,51 @@
       "source_file": "aws_bedrock.go"
     },
     {
+      "permission": "bedrock:ListDataSources",
+      "service": "bedrock",
+      "action": "ListDataSources",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListEvaluationJobs",
+      "service": "bedrock",
+      "action": "ListEvaluationJobs",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListFlows",
+      "service": "bedrock",
+      "action": "ListFlows",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListFoundationModels",
+      "service": "bedrock",
+      "action": "ListFoundationModels",
+      "source_file": "aws_bedrock.go"
+    },
+    {
       "permission": "bedrock:ListGuardrails",
       "service": "bedrock",
       "action": "ListGuardrails",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListKnowledgeBases",
+      "service": "bedrock",
+      "action": "ListKnowledgeBases",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListModelImportJobs",
+      "service": "bedrock",
+      "action": "ListModelImportJobs",
+      "source_file": "aws_bedrock.go"
+    },
+    {
+      "permission": "bedrock:ListModelInvocationJobs",
+      "service": "bedrock",
+      "action": "ListModelInvocationJobs",
       "source_file": "aws_bedrock.go"
     },
     {

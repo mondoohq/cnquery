@@ -19985,7 +19985,15 @@ private aws.controltower.enabledBaseline @defaults("arn baselineIdentifier") {
 // filters), `provisionedModelThroughputs()` for committed
 // model-throughput allocations, and
 // `modelInvocationLoggingConfigurations()` for the per-region delivery
-// of model invocation logs to S3 and CloudWatch.
+// of model invocation logs to S3 and CloudWatch. For generative-AI
+// applications built on Bedrock, iterate `agents()` for Bedrock Agents
+// (with their foundation model, instructions, IAM service role, and
+// linked action groups and knowledge bases), `knowledgeBases()` for
+// retrieval-augmented-generation data stores (with their vector-store
+// backend, embedding model, and data sources), and `flows()` for
+// authored generative-AI workflows. Iterate `evaluationJobs()` for
+// model-evaluation jobs, `modelImportJobs()` for custom-model imports,
+// and `batchInferenceJobs()` for batch model-invocation jobs.
 aws.bedrock {
   // Foundation models available in Bedrock
   foundationModels() []aws.bedrock.foundationModel
@@ -19999,6 +20007,18 @@ aws.bedrock {
   provisionedModelThroughputs() []aws.bedrock.provisionedModelThroughput
   // Advanced prompt optimization jobs in the account
   advancedPromptOptimizationJobs() []aws.bedrock.advancedPromptOptimizationJob
+  // Bedrock Agents in the account
+  agents() []aws.bedrock.agent
+  // Bedrock knowledge bases in the account
+  knowledgeBases() []aws.bedrock.knowledgeBase
+  // Bedrock flows in the account
+  flows() []aws.bedrock.flow
+  // Model-evaluation jobs in the account
+  evaluationJobs() []aws.bedrock.evaluationJob
+  // Custom-model import jobs in the account
+  modelImportJobs() []aws.bedrock.modelImportJob
+  // Batch inference (model-invocation) jobs in the account
+  batchInferenceJobs() []aws.bedrock.batchInferenceJob
 }
 
 // Amazon Bedrock advanced prompt optimization job
@@ -20147,6 +20167,248 @@ private aws.bedrock.provisionedModelThroughput @defaults("provisionedModelName m
   status string
   // Commitment duration: ONE_MONTH, SIX_MONTHS, or NO_COMMITMENT
   commitmentDuration string
+}
+
+// Amazon Bedrock Agent
+//
+// A Bedrock Agent is a generative-AI assistant configured with a
+// foundation model, a natural-language instruction prompt, an IAM
+// service role, and optional collaborators. Agents can call action
+// groups (Lambda-backed tools) and consult knowledge bases for
+// retrieval-augmented generation. Each row exposes the orchestration
+// foundation model, the long-form instruction prompt, the session
+// idle-timeout, the customer-managed encryption key, and lazy-loaded
+// `actionGroups()` and `knowledgeBases()` lists.
+private aws.bedrock.agent @defaults("name status foundationModel") {
+  // Unique identifier of the agent
+  id string
+  // ARN of the agent
+  arn() string
+  // Name of the agent
+  name string
+  // Region where the agent exists
+  region string
+  // Status of the agent
+  //
+  // One of CREATING, PREPARING, PREPARED, NOT_PREPARED, FAILED, UPDATING, DELETING, or VERSIONING.
+  status string
+  // Description of the agent
+  description() string
+  // Foundation model used for agent orchestration
+  foundationModel() string
+  // Instruction prompt that tells the agent what to do and how to interact
+  instruction() string
+  // Idle session time-to-live in seconds
+  idleSessionTtl() int
+  // IAM service role granting the agent permission to invoke API operations
+  iamRole() aws.iam.role
+  // ARN of the IAM service role associated with the agent
+  agentResourceRoleArn() string
+  // Customer-managed KMS key used to encrypt the agent
+  customerEncryptionKey() aws.kms.key
+  // Time the agent was created
+  createdAt() time
+  // Time the agent was last updated
+  updatedAt() time
+  // Action groups attached to the agent's DRAFT version
+  actionGroups() []dict
+  // Knowledge bases associated with the agent's DRAFT version
+  knowledgeBases() []dict
+}
+
+// Amazon Bedrock knowledge base
+//
+// A Bedrock knowledge base ingests source documents from configured
+// data sources into a vector store and serves them to agents and
+// retrieve-and-generate flows. Each row exposes the IAM role used for
+// ingestion and retrieval, the vector-store backing configuration
+// (OpenSearch Serverless, Pinecone, RDS, Redis Enterprise Cloud, or
+// MongoDB Atlas), the embedding-model configuration, and lazy-loaded
+// `dataSources()`.
+private aws.bedrock.knowledgeBase @defaults("name status") {
+  // Unique identifier of the knowledge base
+  id string
+  // ARN of the knowledge base
+  arn() string
+  // Name of the knowledge base
+  name string
+  // Region where the knowledge base exists
+  region string
+  // Status of the knowledge base
+  //
+  // One of CREATING, ACTIVE, DELETING, UPDATING, FAILED, DELETE_UNSUCCESSFUL, or DELETE_INACCESSIBLE_SOURCE.
+  status string
+  // Description of the knowledge base
+  description() string
+  // IAM service role granting permission to invoke API operations on the knowledge base
+  iamRole() aws.iam.role
+  // ARN of the IAM service role associated with the knowledge base
+  roleArn() string
+  // Storage configuration for the knowledge base's vector store
+  //
+  // Carries a `type` discriminator (OPENSEARCH_SERVERLESS, OPENSEARCH_MANAGED_CLUSTER, PINECONE, RDS, REDIS_ENTERPRISE_CLOUD, MONGO_DB_ATLAS, NEPTUNE_ANALYTICS, or S3_VECTORS) and the backend-specific configuration block.
+  storageConfiguration() dict
+  // Knowledge-base configuration including the type and embedding-model settings
+  //
+  // Carries a `type` discriminator (VECTOR, KENDRA, or SQL) and the backend-specific configuration including the embedding-model ARN for vector knowledge bases.
+  knowledgeBaseConfiguration() dict
+  // Time the knowledge base was created
+  createdAt() time
+  // Time the knowledge base was last updated
+  updatedAt() time
+  // Data sources connected to the knowledge base
+  dataSources() []dict
+}
+
+// Amazon Bedrock flow
+//
+// A Bedrock flow is an authored generative-AI workflow that connects
+// prompts, agents, knowledge bases, Lambda functions, conditions, and
+// other nodes into a directed graph. Each row exposes the execution
+// IAM role, the customer-managed encryption key, the flow version, and
+// flow status.
+private aws.bedrock.flow @defaults("name status version") {
+  // Unique identifier of the flow
+  id string
+  // ARN of the flow
+  arn string
+  // Name of the flow
+  name string
+  // Region where the flow exists
+  region string
+  // Status of the flow
+  //
+  // One of Failed, Prepared, Preparing, or NotPrepared.
+  status string
+  // Version of the flow for which information was retrieved
+  version() string
+  // Description of the flow
+  description() string
+  // IAM service role granting the flow permission to invoke other Bedrock and AWS services
+  iamRole() aws.iam.role
+  // ARN of the IAM service role associated with the flow
+  executionRoleArn() string
+  // Customer-managed KMS key used to encrypt the flow
+  customerEncryptionKey() aws.kms.key
+  // Time the flow was created
+  createdAt time
+  // Time the flow was last updated
+  updatedAt time
+}
+
+// Amazon Bedrock model-evaluation job
+//
+// A model-evaluation job benchmarks one or more foundation models or
+// knowledge-base configurations against a dataset, either automatically
+// or with human reviewers. Each row exposes the job type, model
+// identifiers under evaluation, the IAM service role, and the
+// customer-managed encryption key.
+private aws.bedrock.evaluationJob @defaults("jobName status jobType") {
+  // ARN of the evaluation job
+  jobArn string
+  // Name of the evaluation job
+  jobName string
+  // Region where the evaluation job exists
+  region string
+  // Status of the evaluation job
+  //
+  // One of InProgress, Completed, Failed, Stopping, Stopped, or Deleting.
+  status string
+  // Job type
+  //
+  // One of Automated or Human.
+  jobType string
+  // ARNs of the models or knowledge bases under evaluation
+  modelIdentifiers []string
+  // Application type
+  //
+  // One of ModelEvaluation or RagEvaluation.
+  applicationType string
+  // IAM service role used by the evaluation job
+  iamRole() aws.iam.role
+  // ARN of the IAM service role used by the evaluation job
+  roleArn() string
+  // Customer-managed KMS key used to encrypt the evaluation job
+  customerEncryptionKey() aws.kms.key
+  // Time the evaluation job was created
+  createdAt time
+  // Description of the evaluation job
+  jobDescription() string
+}
+
+// Amazon Bedrock model-import job
+//
+// A model-import job imports a custom foundation model from an Amazon
+// S3 bucket or other supported source so it can be used in Bedrock.
+// Each row exposes the resulting imported-model ARN, the input data
+// source, the IAM service role, and the customer-managed encryption
+// key applied to the imported model.
+private aws.bedrock.modelImportJob @defaults("jobName status") {
+  // ARN of the model-import job
+  jobArn string
+  // Name of the model-import job
+  jobName string
+  // Region where the model-import job exists
+  region string
+  // Status of the import job
+  //
+  // One of InProgress, Completed, or Failed.
+  status string
+  // ARN of the imported model produced by the job
+  importedModelArn string
+  // Data source for the imported model (S3 location and other source-specific details)
+  modelDataSource() dict
+  // IAM service role used by the model-import job
+  iamRole() aws.iam.role
+  // ARN of the IAM service role used by the model-import job
+  roleArn() string
+  // Customer-managed KMS key used to encrypt the imported model
+  customerEncryptionKey() aws.kms.key
+  // Time the import job was created
+  createdAt time
+  // Time the import job was last modified
+  lastModifiedTime time
+  // Time the import job ended
+  endTime time
+}
+
+// Amazon Bedrock batch inference job
+//
+// A batch inference job runs model invocations against records staged
+// in Amazon S3 and writes outputs back to S3. Each row exposes the
+// foundation model used, the IAM service role, the S3 input and output
+// configurations, and the job timeout.
+private aws.bedrock.batchInferenceJob @defaults("jobName modelId status") {
+  // ARN of the batch inference job
+  jobArn string
+  // Name of the batch inference job
+  jobName string
+  // Region where the batch inference job exists
+  region string
+  // Identifier of the foundation model used for inference
+  modelId string
+  // Status of the batch inference job
+  //
+  // One of Submitted, InProgress, Completed, Failed, Stopping, Stopped, PartiallyCompleted, Expired, Validating, or Scheduled.
+  status string
+  // Input data configuration (S3 location and input format)
+  inputDataConfig dict
+  // Output data configuration (S3 location and optional encryption key)
+  outputDataConfig dict
+  // IAM service role used by the batch inference job
+  iamRole() aws.iam.role
+  // ARN of the IAM service role used by the batch inference job
+  roleArn string
+  // Time the batch inference job was submitted
+  submitTime time
+  // Time the batch inference job was last modified
+  lastModifiedTime time
+  // Time the batch inference job ended
+  endTime time
+  // Failure message when the job failed
+  message string
+  // Number of hours after which the batch inference job times out
+  timeoutDurationInHours int
 }
 
 // AWS Step Functions
