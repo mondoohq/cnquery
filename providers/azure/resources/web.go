@@ -114,6 +114,7 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 		args["sshEnabled"] = llx.BoolDataPtr(site.Properties.SSHEnabled)
 		args["keyVaultReferenceIdentity"] = llx.StringDataPtr(site.Properties.KeyVaultReferenceIdentity)
 		args["publicNetworkAccess"] = llx.StringDataPtr(site.Properties.PublicNetworkAccess)
+		args["virtualNetworkSubnetId"] = llx.StringDataPtr(site.Properties.VirtualNetworkSubnetID)
 		if site.Properties.IPMode != nil {
 			args["ipMode"] = llx.StringData(string(*site.Properties.IPMode))
 		}
@@ -517,6 +518,7 @@ func (a *mqlAzureSubscriptionWebService) apps() ([]any, error) {
 				args["state"] = llx.StringDataPtr(entry.Properties.State)
 				args["sshEnabled"] = llx.BoolDataPtr(entry.Properties.SSHEnabled)
 				args["publicNetworkAccess"] = llx.StringDataPtr(entry.Properties.PublicNetworkAccess)
+				args["virtualNetworkSubnetId"] = llx.StringDataPtr(entry.Properties.VirtualNetworkSubnetID)
 				if entry.Properties.IPMode != nil {
 					args["ipMode"] = llx.StringData(string(*entry.Properties.IPMode))
 				}
@@ -668,6 +670,19 @@ func (a *mqlAzureSubscriptionWebService) availableRuntimes() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionWebServiceAppsite) virtualNetworkSubnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if a.VirtualNetworkSubnetId.Data == "" {
+		a.VirtualNetworkSubnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(a.VirtualNetworkSubnetId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+}
+
 func (a *mqlAzureSubscriptionWebServiceAppsite) configuration() (*mqlAzureSubscriptionWebServiceAppsiteconfig, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	return webAppSiteConfigToMql(a.MqlRuntime, conn, a.Id.Data)
@@ -725,6 +740,10 @@ func webAppSiteConfigToMql(runtime *plugin.Runtime, conn *connection.AzureConnec
 		args["remoteDebuggingEnabled"] = llx.BoolDataPtr(entry.Properties.RemoteDebuggingEnabled)
 		args["http20Enabled"] = llx.BoolDataPtr(entry.Properties.Http20Enabled)
 		args["alwaysOn"] = llx.BoolDataPtr(entry.Properties.AlwaysOn)
+		args["webSocketsEnabled"] = llx.BoolDataPtr(entry.Properties.WebSocketsEnabled)
+		args["httpLoggingEnabled"] = llx.BoolDataPtr(entry.Properties.HTTPLoggingEnabled)
+		args["detailedErrorLoggingEnabled"] = llx.BoolDataPtr(entry.Properties.DetailedErrorLoggingEnabled)
+		args["autoHealEnabled"] = llx.BoolDataPtr(entry.Properties.AutoHealEnabled)
 		if entry.Properties.MinTLSCipherSuite != nil {
 			args["minTlsCipherSuite"] = llx.StringData(string(*entry.Properties.MinTLSCipherSuite))
 		}
@@ -1164,6 +1183,10 @@ func (a *mqlAzureSubscriptionWebServiceAppslot) configuration() (*mqlAzureSubscr
 		args["remoteDebuggingEnabled"] = llx.BoolDataPtr(configuration.Properties.RemoteDebuggingEnabled)
 		args["http20Enabled"] = llx.BoolDataPtr(configuration.Properties.Http20Enabled)
 		args["alwaysOn"] = llx.BoolDataPtr(configuration.Properties.AlwaysOn)
+		args["webSocketsEnabled"] = llx.BoolDataPtr(configuration.Properties.WebSocketsEnabled)
+		args["httpLoggingEnabled"] = llx.BoolDataPtr(configuration.Properties.HTTPLoggingEnabled)
+		args["detailedErrorLoggingEnabled"] = llx.BoolDataPtr(configuration.Properties.DetailedErrorLoggingEnabled)
+		args["autoHealEnabled"] = llx.BoolDataPtr(configuration.Properties.AutoHealEnabled)
 		if configuration.Properties.ScmMinTLSVersion != nil {
 			args["scmMinTlsVersion"] = llx.StringData(string(*configuration.Properties.ScmMinTLSVersion))
 		}

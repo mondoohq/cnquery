@@ -3774,6 +3774,8 @@ azure.subscription.webService.appsite.virtualNetworkConnection.name 11.4.32
 azure.subscription.webService.appsite.virtualNetworkConnection.resyncRequired 11.4.32
 azure.subscription.webService.appsite.virtualNetworkConnection.vnetResourceId 11.4.32
 azure.subscription.webService.appsite.virtualNetworkConnections 11.4.32
+azure.subscription.webService.appsite.virtualNetworkSubnet 13.12.2
+azure.subscription.webService.appsite.virtualNetworkSubnetId 13.12.2
 azure.subscription.webService.appsiteauthsettings 9.0.1
 azure.subscription.webService.appsiteauthsettings.id 9.0.1
 azure.subscription.webService.appsiteauthsettings.kind 9.0.1
@@ -3782,8 +3784,11 @@ azure.subscription.webService.appsiteauthsettings.properties 9.0.1
 azure.subscription.webService.appsiteauthsettings.type 9.0.1
 azure.subscription.webService.appsiteconfig 9.0.1
 azure.subscription.webService.appsiteconfig.alwaysOn 11.4.28
+azure.subscription.webService.appsiteconfig.autoHealEnabled 13.12.2
+azure.subscription.webService.appsiteconfig.detailedErrorLoggingEnabled 13.12.2
 azure.subscription.webService.appsiteconfig.ftpsState 11.4.28
 azure.subscription.webService.appsiteconfig.http20Enabled 11.4.28
+azure.subscription.webService.appsiteconfig.httpLoggingEnabled 13.12.2
 azure.subscription.webService.appsiteconfig.id 9.0.1
 azure.subscription.webService.appsiteconfig.ipSecurityRestriction 13.1.8
 azure.subscription.webService.appsiteconfig.ipSecurityRestriction.action 13.1.8
@@ -3807,6 +3812,7 @@ azure.subscription.webService.appsiteconfig.remoteDebuggingEnabled 11.4.28
 azure.subscription.webService.appsiteconfig.scmIpSecurityRestrictions 13.1.8
 azure.subscription.webService.appsiteconfig.scmMinTlsVersion 13.1.8
 azure.subscription.webService.appsiteconfig.type 9.0.1
+azure.subscription.webService.appsiteconfig.webSocketsEnabled 13.12.2
 azure.subscription.webService.appslot 11.3.85
 azure.subscription.webService.appslot.applicationSettings 11.3.85
 azure.subscription.webService.appslot.authenticationSettings 11.3.85

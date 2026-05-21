@@ -5461,6 +5461,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appsite.virtualNetworkConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetVirtualNetworkConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.webService.appsite.virtualNetworkConnection")))
 	},
+	"azure.subscription.webService.appsite.virtualNetworkSubnetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetVirtualNetworkSubnetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsite.virtualNetworkSubnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetVirtualNetworkSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
 	"azure.subscription.webService.appsite.outboundVnetRouting.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).GetId()).ToDataRes(types.String)
 	},
@@ -5643,6 +5649,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.appsiteconfig.ipSecurityRestrictionsDefaultAction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetIpSecurityRestrictionsDefaultAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteconfig.webSocketsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetWebSocketsEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsiteconfig.httpLoggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetHttpLoggingEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsiteconfig.detailedErrorLoggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetDetailedErrorLoggingEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsiteconfig.autoHealEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetAutoHealEnabled()).ToDataRes(types.Bool)
 	},
 	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction).GetId()).ToDataRes(types.String)
@@ -17937,6 +17955,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebServiceAppsite).VirtualNetworkConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.webService.appsite.virtualNetworkSubnetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).VirtualNetworkSubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsite.virtualNetworkSubnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).VirtualNetworkSubnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.webService.appsite.outboundVnetRouting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting).__id, ok = v.Value.(string)
 		return
@@ -18207,6 +18233,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appsiteconfig.ipSecurityRestrictionsDefaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).IpSecurityRestrictionsDefaultAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.webSocketsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).WebSocketsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.httpLoggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).HttpLoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.detailedErrorLoggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).DetailedErrorLoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteconfig.autoHealEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).AutoHealEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsiteconfig.ipSecurityRestriction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40855,6 +40897,8 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	OutboundVnetRouting        plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteOutboundVnetRouting]
 	HostNameBindings           plugin.TValue[[]any]
 	VirtualNetworkConnections  plugin.TValue[[]any]
+	VirtualNetworkSubnetId     plugin.TValue[string]
+	VirtualNetworkSubnet       plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
 }
 
 // createAzureSubscriptionWebServiceAppsite creates a new instance of this resource
@@ -41167,6 +41211,26 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetVirtualNetworkConnections() *
 		}
 
 		return c.virtualNetworkConnections()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetVirtualNetworkSubnetId() *plugin.TValue[string] {
+	return &c.VirtualNetworkSubnetId
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetVirtualNetworkSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.VirtualNetworkSubnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "virtualNetworkSubnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.virtualNetworkSubnet()
 	})
 }
 
@@ -41778,6 +41842,10 @@ type mqlAzureSubscriptionWebServiceAppsiteconfig struct {
 	IpSecurityRestrictions              plugin.TValue[[]any]
 	ScmIpSecurityRestrictions           plugin.TValue[[]any]
 	IpSecurityRestrictionsDefaultAction plugin.TValue[string]
+	WebSocketsEnabled                   plugin.TValue[bool]
+	HttpLoggingEnabled                  plugin.TValue[bool]
+	DetailedErrorLoggingEnabled         plugin.TValue[bool]
+	AutoHealEnabled                     plugin.TValue[bool]
 }
 
 // createAzureSubscriptionWebServiceAppsiteconfig creates a new instance of this resource
@@ -41901,6 +41969,22 @@ func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetIpSecurityRestrictionsD
 	return plugin.GetOrCompute[string](&c.IpSecurityRestrictionsDefaultAction, func() (string, error) {
 		return c.ipSecurityRestrictionsDefaultAction()
 	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetWebSocketsEnabled() *plugin.TValue[bool] {
+	return &c.WebSocketsEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetHttpLoggingEnabled() *plugin.TValue[bool] {
+	return &c.HttpLoggingEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetDetailedErrorLoggingEnabled() *plugin.TValue[bool] {
+	return &c.DetailedErrorLoggingEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteconfig) GetAutoHealEnabled() *plugin.TValue[bool] {
+	return &c.AutoHealEnabled
 }
 
 // mqlAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction for the azure.subscription.webService.appsiteconfig.ipSecurityRestriction resource

@@ -3192,6 +3192,10 @@ azure.subscription.webService.appsite @defaults("id name location") {
   hostNameBindings() []azure.subscription.webService.appsite.hostNameBinding
   // Virtual network connections for the web app site
   virtualNetworkConnections() []azure.subscription.webService.appsite.virtualNetworkConnection
+  // ARM resource ID of the subnet the app is regionally VNet-integrated with; empty when no regional VNet integration is configured
+  virtualNetworkSubnetId string
+  // Subnet the app is regionally VNet-integrated with; null when no regional VNet integration is configured
+  virtualNetworkSubnet() azure.subscription.networkService.subnet
 }
 
 // Azure Web app site outbound VNet routing configuration
@@ -3342,6 +3346,14 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
   scmIpSecurityRestrictions() []azure.subscription.webService.appsiteconfig.ipSecurityRestriction
   // Default action for IP security restrictions when no rule matches ("Allow" or "Deny")
   ipSecurityRestrictionsDefaultAction() string
+  // Whether WebSockets are enabled for the app
+  webSocketsEnabled bool
+  // Whether HTTP logging is enabled for the app
+  httpLoggingEnabled bool
+  // Whether detailed error logging is enabled
+  detailedErrorLoggingEnabled bool
+  // Whether auto-heal is enabled (the app is automatically restarted on certain conditions)
+  autoHealEnabled bool
 }
 
 // Azure AppSite config IP security restriction rule
