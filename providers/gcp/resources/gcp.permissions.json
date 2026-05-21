@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
-  "version": "13.16.1",
-  "generated_at": "2026-05-21T06:31:08-07:00",
+  "version": "13.16.2",
+  "generated_at": "2026-05-21T14:45:31-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.customJobs.list",
@@ -52,6 +52,8 @@
     "cloudkms.cryptoKeys.get",
     "cloudkms.cryptoKeys.getIamPolicy",
     "cloudkms.cryptoKeys.list",
+    "cloudkms.ekmConnections.list",
+    "cloudkms.importJobs.list",
     "cloudkms.keyRings.list",
     "cloudkms.locations.list",
     "cloudkms.retiredResources.list",
@@ -522,6 +524,18 @@
       "permission": "cloudkms.cryptoKeys.list",
       "service": "cloudkms",
       "action": "ListCryptoKeys",
+      "source_file": "kms.go"
+    },
+    {
+      "permission": "cloudkms.ekmConnections.list",
+      "service": "cloudkms",
+      "action": "ListEkmConnections",
+      "source_file": "kms.go"
+    },
+    {
+      "permission": "cloudkms.importJobs.list",
+      "service": "cloudkms",
+      "action": "ListImportJobs",
       "source_file": "kms.go"
     },
     {

@@ -66,6 +66,8 @@ var validatedGCPPermissions = []string{
 	"cloudkms.cryptoKeys.get",
 	"cloudkms.cryptoKeys.getIamPolicy",
 	"cloudkms.cryptoKeys.list",
+	"cloudkms.ekmConnections.list",
+	"cloudkms.importJobs.list",
 	"cloudkms.keyRings.list",
 	"cloudkms.locations.list",
 	"cloudkms.retiredResources.list",

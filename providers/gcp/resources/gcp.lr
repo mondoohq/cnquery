@@ -94,6 +94,34 @@ gcp.organization @defaults("name") {
   networkSecurityProfiles() []gcp.organization.networkSecurityProfile
   // Network Security profile groups defined for the organization
   networkSecurityProfileGroups() []gcp.organization.networkSecurityProfileGroup
+  // Custom IAM roles defined at the organization level
+  customRoles() []gcp.organization.role
+}
+
+// Google Cloud (GCP) IAM custom role defined at the organization level
+//
+// Examine a custom IAM role defined on the organization rather than on
+// an individual project — its title, description, launch stage
+// (`ALPHA`, `BETA`, `GA`, `DEPRECATED`, `DISABLED`), the full list of
+// permissions it grants, and whether it has been soft-deleted.
+// Organization-level custom roles are reusable across every project in
+// the org, so an overly broad permission set has a wider blast radius
+// than the equivalent project-scoped role.
+private gcp.organization.role @defaults("title name") {
+  // Organization ID (without the "organizations/" prefix)
+  organizationId string
+  // Full resource name of the role (e.g., organizations/123/roles/myRole)
+  name string
+  // Title of the role
+  title string
+  // Human-readable description of the role
+  description string
+  // Launch stage of the role (ALPHA, BETA, GA, DEPRECATED, DISABLED)
+  stage string
+  // Permissions included in this role
+  includedPermissions []string
+  // Whether the role has been deleted
+  deleted bool
 }
 
 // Network Security profile for an organization
@@ -601,6 +629,8 @@ private gcp.folder @defaults("name") {
   folders() gcp.folders
   // List of projects
   projects() gcp.projects
+  // Organization policies applied to the folder
+  orgPolicies() []gcp.orgPolicy
 }
 
 // Google Cloud (GCP) projects
@@ -3776,6 +3806,8 @@ private gcp.project.kmsService {
   keyrings() []gcp.project.kmsService.keyring
   // Retired (deleted) KMS resources
   retiredResources() []gcp.project.kmsService.retiredResource
+  // EKM (External Key Manager) connections configured in the project
+  ekmConnections() []gcp.project.kmsService.ekmConnection
 }
 
 // Google Cloud (GCP) KMS keyring
@@ -3797,6 +3829,8 @@ private gcp.project.kmsService.keyring @defaults("name") {
   location string
   // List of cryptokeys in the current keyring
   cryptokeys() []gcp.project.kmsService.keyring.cryptokey
+  // Import jobs in the current keyring (used to wrap key material for import into Cloud KMS)
+  importJobs() []gcp.project.kmsService.keyring.importJob
 }
 
 // Google Cloud (GCP) KMS crypto key
@@ -3916,6 +3950,92 @@ private gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevel
   externalKeyUri string
   // Path to the external key material on the EKM when using EKM connection
   ekmConnectionKeyPath string
+}
+
+// Google Cloud (GCP) KMS EKM connection
+//
+// Examine a Cloud KMS connection to an External Key Manager (EKM)
+// service. EKM connections let Cloud KMS create and use keys that are
+// stored and managed outside Google, with cryptographic operations
+// performed by the external KMS over Service Directory. Query the
+// `keyManagementMode` (`MANUAL` lets EKM administrators control the key
+// material directly; `CLOUD_KMS` lets Cloud KMS coordinate operations
+// via the EKM crypto space identified by `cryptoSpacePath`), the
+// `serviceResolvers` that point to the EKM replicas reachable from the
+// connection, and the location the connection lives in. EKM
+// connections are the trust anchor for `EXTERNAL_VPC` protection-level
+// keys.
+private gcp.project.kmsService.ekmConnection @defaults("name keyManagementMode location") {
+  // Project ID
+  projectId string
+  // Full resource path (projects/*/locations/*/ekmConnections/*)
+  resourcePath string
+  // Short EKM connection name (the last segment of `resourcePath`)
+  name string
+  // Location the EKM connection lives in
+  location string
+  // Time the EKM connection was created
+  created time
+  // Etag for optimistic concurrency control
+  etag string
+  // Key management mode
+  //
+  // One of MANUAL (EKM administrators manage the key material directly; the default), CLOUD_KMS (Cloud KMS coordinates operations via the EKM crypto space identified by `cryptoSpacePath`), or KEY_MANAGEMENT_MODE_UNSPECIFIED.
+  keyManagementMode string
+  // EKM crypto-space path the connection maps to (populated when `keyManagementMode` is CLOUD_KMS)
+  cryptoSpacePath string
+  // Service Directory resolvers identifying the reachable EKM replicas
+  //
+  // Each entry exposes `serviceDirectoryService` (the Service Directory service pointing to an EKM replica), `endpointFilter` (optional endpoint filter), `hostname` (the EKM replica hostname used at the TLS and HTTP layers), and `serverCertificates` (the leaf certificates the EKM presents — each carries its issuer, subject, validity window, fingerprints, and the raw PEM).
+  serviceResolvers []dict
+}
+
+// Google Cloud (GCP) KMS import job
+//
+// Examine a Cloud KMS import job — the short-lived wrapping key used to
+// bring external key material into a Cloud KMS keyring. Query its
+// `importMethod` (the wrapping scheme, e.g.
+// `RSA_OAEP_3072_SHA256_AES_256`), `protectionLevel` (`SOFTWARE`, `HSM`,
+// `EXTERNAL`, `EXTERNAL_VPC`), lifecycle state (`PENDING_GENERATION`,
+// `ACTIVE`, `EXPIRED`), creation and generation timestamps,
+// `expireTime` / `expireEventTime`, the optional HSM `attestation`
+// produced at key creation, and the `cryptoKeyBackend` the job's
+// wrapping key is bound to. Import jobs expire 3 days after creation,
+// so an `EXPIRED` job that still appears in the keyring is a
+// candidate for cleanup.
+private gcp.project.kmsService.keyring.importJob @defaults("name state importMethod") {
+  // Project ID
+  projectId string
+  // Full resource path (projects/*/locations/*/keyRings/*/importJobs/*)
+  resourcePath string
+  // Short import job name (the last segment of `resourcePath`)
+  name string
+  // Keyring location
+  location string
+  // Wrapping method used for incoming key material
+  //
+  // One of RSA_OAEP_3072_SHA1_AES_256, RSA_OAEP_4096_SHA1_AES_256, RSA_OAEP_3072_SHA256_AES_256, RSA_OAEP_4096_SHA256_AES_256, RSA_OAEP_3072_SHA256, RSA_OAEP_4096_SHA256, or IMPORT_METHOD_UNSPECIFIED.
+  importMethod string
+  // Protection level of the import job
+  //
+  // One of SOFTWARE, HSM, EXTERNAL, EXTERNAL_VPC, or PROTECTION_LEVEL_UNSPECIFIED. Must match the protection level of the cryptokey the job will import into.
+  protectionLevel string
+  // Lifecycle state
+  //
+  // One of PENDING_GENERATION (wrapping key still being generated), ACTIVE (ready to import key material), EXPIRED (3-day expiry reached), or IMPORT_JOB_STATE_UNSPECIFIED.
+  state string
+  // Time the import job was created
+  created time
+  // Time the wrapping key was generated
+  generated time
+  // Time the import job is scheduled to expire (3 days after creation)
+  expireTime time
+  // Time the import job actually expired (set when `state` is EXPIRED)
+  expireEventTime time
+  // HSM attestation produced at key creation, when the import method has an HSM protection level
+  attestation dict
+  // Backend environment binding for the wrapping key (e.g., a single-tenant HSM instance), when applicable
+  cryptoKeyBackend string
 }
 
 // Google Cloud (GCP) KMS retired resource (deleted key tracking)

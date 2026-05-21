@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
 	"go.mondoo.com/mql/v13/llx"
@@ -74,4 +75,66 @@ func (g *mqlGcpProjectIamService) roles() ([]any, error) {
 
 func (g *mqlGcpProjectIamServiceRole) id() (string, error) {
 	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpOrganizationRole) id() (string, error) {
+	return g.Name.Data, g.Name.Error
+}
+
+func (g *mqlGcpOrganization) customRoles() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	// g.Id.Data is already in "organizations/{id}" format
+	orgParent := g.Id.Data
+	orgNumericId := strings.TrimPrefix(orgParent, "organizations/")
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(admin.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer adminSvc.Close()
+
+	var roles []any
+	it := adminSvc.ListRolesIter(ctx, &adminpb.ListRolesRequest{
+		Parent:      orgParent,
+		View:        adminpb.RoleView_FULL,
+		ShowDeleted: true,
+	})
+	for {
+		r, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		permissions := make([]any, 0, len(r.IncludedPermissions))
+		for _, p := range r.IncludedPermissions {
+			permissions = append(permissions, p)
+		}
+
+		mqlRole, err := CreateResource(g.MqlRuntime, "gcp.organization.role", map[string]*llx.RawData{
+			"organizationId":      llx.StringData(orgNumericId),
+			"name":                llx.StringData(r.Name),
+			"title":               llx.StringData(r.Title),
+			"description":         llx.StringData(r.Description),
+			"stage":               llx.StringData(r.Stage.String()),
+			"includedPermissions": llx.ArrayData(permissions, types.String),
+			"deleted":             llx.BoolData(r.Deleted),
+		})
+		if err != nil {
+			return nil, err
+		}
+		roles = append(roles, mqlRole)
+	}
+	return roles, nil
 }

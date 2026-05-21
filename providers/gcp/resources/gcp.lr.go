@@ -17,6 +17,7 @@ import (
 // The MQL type names exposed as public consts for ease of reference.
 const (
 	ResourceGcpOrganization                                                            string = "gcp.organization"
+	ResourceGcpOrganizationRole                                                        string = "gcp.organization.role"
 	ResourceGcpOrganizationNetworkSecurityProfile                                      string = "gcp.organization.networkSecurityProfile"
 	ResourceGcpOrganizationNetworkSecurityProfileGroup                                 string = "gcp.organization.networkSecurityProfileGroup"
 	ResourceGcpCloudIdentityGroup                                                      string = "gcp.cloudIdentity.group"
@@ -137,6 +138,8 @@ const (
 	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestation                     string = "gcp.project.kmsService.keyring.cryptokey.version.attestation"
 	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains    string = "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains"
 	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions  string = "gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions"
+	ResourceGcpProjectKmsServiceEkmConnection                                          string = "gcp.project.kmsService.ekmConnection"
+	ResourceGcpProjectKmsServiceKeyringImportJob                                       string = "gcp.project.kmsService.keyring.importJob"
 	ResourceGcpProjectKmsServiceRetiredResource                                        string = "gcp.project.kmsService.retiredResource"
 	ResourceGcpEssentialContact                                                        string = "gcp.essentialContact"
 	ResourceGcpProjectApiKey                                                           string = "gcp.project.apiKey"
@@ -421,6 +424,10 @@ func init() {
 		"gcp.organization": {
 			Init:   initGcpOrganization,
 			Create: createGcpOrganization,
+		},
+		"gcp.organization.role": {
+			// to override args, implement: initGcpOrganizationRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpOrganizationRole,
 		},
 		"gcp.organization.networkSecurityProfile": {
 			// to override args, implement: initGcpOrganizationNetworkSecurityProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -901,6 +908,14 @@ func init() {
 		"gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions": {
 			// to override args, implement: initGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions,
+		},
+		"gcp.project.kmsService.ekmConnection": {
+			// to override args, implement: initGcpProjectKmsServiceEkmConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectKmsServiceEkmConnection,
+		},
+		"gcp.project.kmsService.keyring.importJob": {
+			// to override args, implement: initGcpProjectKmsServiceKeyringImportJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectKmsServiceKeyringImportJob,
 		},
 		"gcp.project.kmsService.retiredResource": {
 			// to override args, implement: initGcpProjectKmsServiceRetiredResource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2145,6 +2160,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.organization.networkSecurityProfileGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganization).GetNetworkSecurityProfileGroups()).ToDataRes(types.Array(types.Resource("gcp.organization.networkSecurityProfileGroup")))
 	},
+	"gcp.organization.customRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganization).GetCustomRoles()).ToDataRes(types.Array(types.Resource("gcp.organization.role")))
+	},
+	"gcp.organization.role.organizationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationRole).GetOrganizationId()).ToDataRes(types.String)
+	},
+	"gcp.organization.role.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationRole).GetName()).ToDataRes(types.String)
+	},
+	"gcp.organization.role.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationRole).GetTitle()).ToDataRes(types.String)
+	},
+	"gcp.organization.role.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationRole).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.organization.role.stage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationRole).GetStage()).ToDataRes(types.String)
+	},
+	"gcp.organization.role.includedPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationRole).GetIncludedPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.organization.role.deleted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationRole).GetDeleted()).ToDataRes(types.Bool)
+	},
 	"gcp.organization.networkSecurityProfile.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationNetworkSecurityProfile).GetName()).ToDataRes(types.String)
 	},
@@ -2687,6 +2726,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.folder.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpFolder).GetProjects()).ToDataRes(types.Resource("gcp.projects"))
+	},
+	"gcp.folder.orgPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpFolder).GetOrgPolicies()).ToDataRes(types.Array(types.Resource("gcp.orgPolicy")))
 	},
 	"gcp.projects.parentId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjects).GetParentId()).ToDataRes(types.String)
@@ -6201,6 +6243,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.kmsService.retiredResources": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsService).GetRetiredResources()).ToDataRes(types.Array(types.Resource("gcp.project.kmsService.retiredResource")))
 	},
+	"gcp.project.kmsService.ekmConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsService).GetEkmConnections()).ToDataRes(types.Array(types.Resource("gcp.project.kmsService.ekmConnection")))
+	},
 	"gcp.project.kmsService.keyring.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyring).GetProjectId()).ToDataRes(types.String)
 	},
@@ -6218,6 +6263,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.kmsService.keyring.cryptokeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyring).GetCryptokeys()).ToDataRes(types.Array(types.Resource("gcp.project.kmsService.keyring.cryptokey")))
+	},
+	"gcp.project.kmsService.keyring.importJobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyring).GetImportJobs()).ToDataRes(types.Array(types.Resource("gcp.project.kmsService.keyring.importJob")))
 	},
 	"gcp.project.kmsService.keyring.cryptokey.resourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetResourcePath()).ToDataRes(types.String)
@@ -6344,6 +6392,72 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.ekmConnectionKeyPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions).GetEkmConnectionKeyPath()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.ekmConnection.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceEkmConnection).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.ekmConnection.resourcePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceEkmConnection).GetResourcePath()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.ekmConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceEkmConnection).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.ekmConnection.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceEkmConnection).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.ekmConnection.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceEkmConnection).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.kmsService.ekmConnection.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceEkmConnection).GetEtag()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.ekmConnection.keyManagementMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceEkmConnection).GetKeyManagementMode()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.ekmConnection.cryptoSpacePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceEkmConnection).GetCryptoSpacePath()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.ekmConnection.serviceResolvers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceEkmConnection).GetServiceResolvers()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.kmsService.keyring.importJob.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetProjectId()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.keyring.importJob.resourcePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetResourcePath()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.keyring.importJob.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.keyring.importJob.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetLocation()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.keyring.importJob.importMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetImportMethod()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.keyring.importJob.protectionLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetProtectionLevel()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.keyring.importJob.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetState()).ToDataRes(types.String)
+	},
+	"gcp.project.kmsService.keyring.importJob.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.kmsService.keyring.importJob.generated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetGenerated()).ToDataRes(types.Time)
+	},
+	"gcp.project.kmsService.keyring.importJob.expireTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetExpireTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.kmsService.keyring.importJob.expireEventTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetExpireEventTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.kmsService.keyring.importJob.attestation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetAttestation()).ToDataRes(types.Dict)
+	},
+	"gcp.project.kmsService.keyring.importJob.cryptoKeyBackend": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringImportJob).GetCryptoKeyBackend()).ToDataRes(types.String)
 	},
 	"gcp.project.kmsService.retiredResource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceRetiredResource).GetName()).ToDataRes(types.String)
@@ -14239,6 +14353,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpOrganization).NetworkSecurityProfileGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.organization.customRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganization).CustomRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationRole).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.organization.role.organizationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationRole).OrganizationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.role.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.role.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationRole).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.role.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationRole).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.role.stage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationRole).Stage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.role.includedPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationRole).IncludedPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.role.deleted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationRole).Deleted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"gcp.organization.networkSecurityProfile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganizationNetworkSecurityProfile).__id, ok = v.Value.(string)
 		return
@@ -15033,6 +15183,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.folder.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpFolder).Projects, ok = plugin.RawToTValue[*mqlGcpProjects](v.Value, v.Error)
+		return
+	},
+	"gcp.folder.orgPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpFolder).OrgPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.projects.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20103,6 +20257,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectKmsService).RetiredResources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.kmsService.ekmConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsService).EkmConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.kmsService.keyring.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyring).__id, ok = v.Value.(string)
 		return
@@ -20129,6 +20287,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.kmsService.keyring.cryptokeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyring).Cryptokeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyring).ImportJobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.kmsService.keyring.cryptokey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20317,6 +20479,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions.ekmConnectionKeyPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions).EkmConnectionKeyPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.ekmConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceEkmConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.kmsService.ekmConnection.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceEkmConnection).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.ekmConnection.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceEkmConnection).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.ekmConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceEkmConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.ekmConnection.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceEkmConnection).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.ekmConnection.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceEkmConnection).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.ekmConnection.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceEkmConnection).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.ekmConnection.keyManagementMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceEkmConnection).KeyManagementMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.ekmConnection.cryptoSpacePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceEkmConnection).CryptoSpacePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.ekmConnection.serviceResolvers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceEkmConnection).ServiceResolvers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.resourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).ResourcePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.importMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).ImportMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.protectionLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).ProtectionLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.generated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).Generated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.expireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).ExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.expireEventTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).ExpireEventTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.attestation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).Attestation, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.importJob.cryptoKeyBackend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringImportJob).CryptoKeyBackend, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.project.kmsService.retiredResource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31848,6 +32106,7 @@ type mqlGcpOrganization struct {
 	CloudIdentityGroups          plugin.TValue[[]any]
 	NetworkSecurityProfiles      plugin.TValue[[]any]
 	NetworkSecurityProfileGroups plugin.TValue[[]any]
+	CustomRoles                  plugin.TValue[[]any]
 }
 
 // createGcpOrganization creates a new instance of this resource
@@ -32189,6 +32448,101 @@ func (c *mqlGcpOrganization) GetNetworkSecurityProfileGroups() *plugin.TValue[[]
 
 		return c.networkSecurityProfileGroups()
 	})
+}
+
+func (c *mqlGcpOrganization) GetCustomRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.organization", c.__id, "customRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customRoles()
+	})
+}
+
+// mqlGcpOrganizationRole for the gcp.organization.role resource
+type mqlGcpOrganizationRole struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpOrganizationRoleInternal it will be used here
+	OrganizationId      plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Title               plugin.TValue[string]
+	Description         plugin.TValue[string]
+	Stage               plugin.TValue[string]
+	IncludedPermissions plugin.TValue[[]any]
+	Deleted             plugin.TValue[bool]
+}
+
+// createGcpOrganizationRole creates a new instance of this resource
+func createGcpOrganizationRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpOrganizationRole{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.organization.role", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpOrganizationRole) MqlName() string {
+	return "gcp.organization.role"
+}
+
+func (c *mqlGcpOrganizationRole) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpOrganizationRole) GetOrganizationId() *plugin.TValue[string] {
+	return &c.OrganizationId
+}
+
+func (c *mqlGcpOrganizationRole) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpOrganizationRole) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGcpOrganizationRole) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpOrganizationRole) GetStage() *plugin.TValue[string] {
+	return &c.Stage
+}
+
+func (c *mqlGcpOrganizationRole) GetIncludedPermissions() *plugin.TValue[[]any] {
+	return &c.IncludedPermissions
+}
+
+func (c *mqlGcpOrganizationRole) GetDeleted() *plugin.TValue[bool] {
+	return &c.Deleted
 }
 
 // mqlGcpOrganizationNetworkSecurityProfile for the gcp.organization.networkSecurityProfile resource
@@ -33900,15 +34254,16 @@ type mqlGcpFolder struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpFolderInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Created    plugin.TValue[*time.Time]
-	Updated    plugin.TValue[*time.Time]
-	ParentId   plugin.TValue[string]
-	State      plugin.TValue[string]
-	DeleteTime plugin.TValue[*time.Time]
-	Folders    plugin.TValue[*mqlGcpFolders]
-	Projects   plugin.TValue[*mqlGcpProjects]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Created     plugin.TValue[*time.Time]
+	Updated     plugin.TValue[*time.Time]
+	ParentId    plugin.TValue[string]
+	State       plugin.TValue[string]
+	DeleteTime  plugin.TValue[*time.Time]
+	Folders     plugin.TValue[*mqlGcpFolders]
+	Projects    plugin.TValue[*mqlGcpProjects]
+	OrgPolicies plugin.TValue[[]any]
 }
 
 // createGcpFolder creates a new instance of this resource
@@ -34005,6 +34360,22 @@ func (c *mqlGcpFolder) GetProjects() *plugin.TValue[*mqlGcpProjects] {
 		}
 
 		return c.projects()
+	})
+}
+
+func (c *mqlGcpFolder) GetOrgPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OrgPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.folder", c.__id, "orgPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.orgPolicies()
 	})
 }
 
@@ -46261,6 +46632,7 @@ type mqlGcpProjectKmsService struct {
 	Locations        plugin.TValue[[]any]
 	Keyrings         plugin.TValue[[]any]
 	RetiredResources plugin.TValue[[]any]
+	EkmConnections   plugin.TValue[[]any]
 }
 
 // createGcpProjectKmsService creates a new instance of this resource
@@ -46342,6 +46714,22 @@ func (c *mqlGcpProjectKmsService) GetRetiredResources() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlGcpProjectKmsService) GetEkmConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EkmConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.kmsService", c.__id, "ekmConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ekmConnections()
+	})
+}
+
 // mqlGcpProjectKmsServiceKeyring for the gcp.project.kmsService.keyring resource
 type mqlGcpProjectKmsServiceKeyring struct {
 	MqlRuntime *plugin.Runtime
@@ -46353,6 +46741,7 @@ type mqlGcpProjectKmsServiceKeyring struct {
 	Created      plugin.TValue[*time.Time]
 	Location     plugin.TValue[string]
 	Cryptokeys   plugin.TValue[[]any]
+	ImportJobs   plugin.TValue[[]any]
 }
 
 // createGcpProjectKmsServiceKeyring creates a new instance of this resource
@@ -46425,6 +46814,22 @@ func (c *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() *plugin.TValue[[]any] {
 		}
 
 		return c.cryptokeys()
+	})
+}
+
+func (c *mqlGcpProjectKmsServiceKeyring) GetImportJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImportJobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.kmsService.keyring", c.__id, "importJobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.importJobs()
 	})
 }
 
@@ -46884,6 +47289,204 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOp
 
 func (c *mqlGcpProjectKmsServiceKeyringCryptokeyVersionExternalProtectionLevelOptions) GetEkmConnectionKeyPath() *plugin.TValue[string] {
 	return &c.EkmConnectionKeyPath
+}
+
+// mqlGcpProjectKmsServiceEkmConnection for the gcp.project.kmsService.ekmConnection resource
+type mqlGcpProjectKmsServiceEkmConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectKmsServiceEkmConnectionInternal it will be used here
+	ProjectId         plugin.TValue[string]
+	ResourcePath      plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Location          plugin.TValue[string]
+	Created           plugin.TValue[*time.Time]
+	Etag              plugin.TValue[string]
+	KeyManagementMode plugin.TValue[string]
+	CryptoSpacePath   plugin.TValue[string]
+	ServiceResolvers  plugin.TValue[[]any]
+}
+
+// createGcpProjectKmsServiceEkmConnection creates a new instance of this resource
+func createGcpProjectKmsServiceEkmConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectKmsServiceEkmConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.kmsService.ekmConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) MqlName() string {
+	return "gcp.project.kmsService.ekmConnection"
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) GetResourcePath() *plugin.TValue[string] {
+	return &c.ResourcePath
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) GetKeyManagementMode() *plugin.TValue[string] {
+	return &c.KeyManagementMode
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) GetCryptoSpacePath() *plugin.TValue[string] {
+	return &c.CryptoSpacePath
+}
+
+func (c *mqlGcpProjectKmsServiceEkmConnection) GetServiceResolvers() *plugin.TValue[[]any] {
+	return &c.ServiceResolvers
+}
+
+// mqlGcpProjectKmsServiceKeyringImportJob for the gcp.project.kmsService.keyring.importJob resource
+type mqlGcpProjectKmsServiceKeyringImportJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectKmsServiceKeyringImportJobInternal it will be used here
+	ProjectId        plugin.TValue[string]
+	ResourcePath     plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Location         plugin.TValue[string]
+	ImportMethod     plugin.TValue[string]
+	ProtectionLevel  plugin.TValue[string]
+	State            plugin.TValue[string]
+	Created          plugin.TValue[*time.Time]
+	Generated        plugin.TValue[*time.Time]
+	ExpireTime       plugin.TValue[*time.Time]
+	ExpireEventTime  plugin.TValue[*time.Time]
+	Attestation      plugin.TValue[any]
+	CryptoKeyBackend plugin.TValue[string]
+}
+
+// createGcpProjectKmsServiceKeyringImportJob creates a new instance of this resource
+func createGcpProjectKmsServiceKeyringImportJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectKmsServiceKeyringImportJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.kmsService.keyring.importJob", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) MqlName() string {
+	return "gcp.project.kmsService.keyring.importJob"
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetProjectId() *plugin.TValue[string] {
+	return &c.ProjectId
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetResourcePath() *plugin.TValue[string] {
+	return &c.ResourcePath
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetImportMethod() *plugin.TValue[string] {
+	return &c.ImportMethod
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetProtectionLevel() *plugin.TValue[string] {
+	return &c.ProtectionLevel
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetGenerated() *plugin.TValue[*time.Time] {
+	return &c.Generated
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetExpireTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireTime
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetExpireEventTime() *plugin.TValue[*time.Time] {
+	return &c.ExpireEventTime
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetAttestation() *plugin.TValue[any] {
+	return &c.Attestation
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringImportJob) GetCryptoKeyBackend() *plugin.TValue[string] {
+	return &c.CryptoKeyBackend
 }
 
 // mqlGcpProjectKmsServiceRetiredResource for the gcp.project.kmsService.retiredResource resource

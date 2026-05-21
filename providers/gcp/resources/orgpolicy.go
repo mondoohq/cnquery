@@ -120,6 +120,17 @@ func (g *mqlGcpProject) orgPolicies() ([]any, error) {
 	return listOrgPolicies(g.MqlRuntime, conn, "projects/"+projectId)
 }
 
+func (g *mqlGcpFolder) orgPolicies() ([]any, error) {
+	if g.Id.Error != nil {
+		return nil, g.Id.Error
+	}
+	folderId := g.Id.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	return listOrgPolicies(g.MqlRuntime, conn, "folders/"+folderId)
+}
+
 func (g *mqlGcpOrgPolicyConstraint) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }

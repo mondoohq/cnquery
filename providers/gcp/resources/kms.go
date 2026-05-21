@@ -688,3 +688,159 @@ func (g *mqlGcpProjectKmsService) retiredResources() ([]any, error) {
 	}
 	return res, nil
 }
+
+func (g *mqlGcpProjectKmsServiceEkmConnection) id() (string, error) {
+	return g.ResourcePath.Data, g.ResourcePath.Error
+}
+
+func (g *mqlGcpProjectKmsService) ekmConnections() ([]any, error) {
+	if !g.serviceEnabled {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	locations := g.GetLocations()
+	if locations.Error != nil {
+		return nil, locations.Error
+	}
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	ekmSvc, err := kms.NewEkmClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer ekmSvc.Close()
+
+	var res []any
+	var mux sync.Mutex
+	var wg sync.WaitGroup
+	wg.Add(len(locations.Data))
+
+	for _, loc := range locations.Data {
+		go func(locStr string) {
+			defer wg.Done()
+			it := ekmSvc.ListEkmConnections(ctx, &kmspb.ListEkmConnectionsRequest{
+				Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, locStr),
+			})
+			for {
+				ec, err := it.Next()
+				if err == iterator.Done {
+					return
+				}
+				if err != nil {
+					log.Warn().Str("location", locStr).Err(err).Msg("could not list EKM connections")
+					return
+				}
+
+				resolvers := make([]any, 0, len(ec.ServiceResolvers))
+				for _, sr := range ec.ServiceResolvers {
+					d, err := protoToDict(sr)
+					if err != nil {
+						log.Warn().Err(err).Msg("could not convert EKM service resolver")
+						continue
+					}
+					resolvers = append(resolvers, d)
+				}
+
+				mqlEc, err := CreateResource(g.MqlRuntime, "gcp.project.kmsService.ekmConnection", map[string]*llx.RawData{
+					"projectId":         llx.StringData(projectId),
+					"resourcePath":      llx.StringData(ec.Name),
+					"name":              llx.StringData(parseResourceName(ec.Name)),
+					"location":          llx.StringData(locStr),
+					"created":           llx.TimeDataPtr(timestampAsTimePtr(ec.CreateTime)),
+					"etag":              llx.StringData(ec.Etag),
+					"keyManagementMode": llx.StringData(ec.KeyManagementMode.String()),
+					"cryptoSpacePath":   llx.StringData(ec.CryptoSpacePath),
+					"serviceResolvers":  llx.ArrayData(resolvers, types.Dict),
+				})
+				if err != nil {
+					log.Warn().Err(err).Msg("could not create EKM connection resource")
+					return
+				}
+				mux.Lock()
+				res = append(res, mqlEc)
+				mux.Unlock()
+			}
+		}(loc.(string))
+	}
+	wg.Wait()
+	return res, nil
+}
+
+func (g *mqlGcpProjectKmsServiceKeyringImportJob) id() (string, error) {
+	return g.ResourcePath.Data, g.ResourcePath.Error
+}
+
+func (g *mqlGcpProjectKmsServiceKeyring) importJobs() ([]any, error) {
+	if g.ResourcePath.Error != nil {
+		return nil, g.ResourcePath.Error
+	}
+	keyringPath := g.ResourcePath.Data
+
+	projectId := g.ProjectId.Data
+	location := g.Location.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	kmsSvc, err := kms.NewKeyManagementClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer kmsSvc.Close()
+
+	var res []any
+	it := kmsSvc.ListImportJobs(ctx, &kmspb.ListImportJobsRequest{Parent: keyringPath})
+	for {
+		ij, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		var attestation map[string]any
+		if ij.Attestation != nil {
+			attestation, err = protoToDict(ij.Attestation)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		mqlIj, err := CreateResource(g.MqlRuntime, "gcp.project.kmsService.keyring.importJob", map[string]*llx.RawData{
+			"projectId":        llx.StringData(projectId),
+			"resourcePath":     llx.StringData(ij.Name),
+			"name":             llx.StringData(parseResourceName(ij.Name)),
+			"location":         llx.StringData(location),
+			"importMethod":     llx.StringData(ij.ImportMethod.String()),
+			"protectionLevel":  llx.StringData(ij.ProtectionLevel.String()),
+			"state":            llx.StringData(ij.State.String()),
+			"created":          llx.TimeDataPtr(timestampAsTimePtr(ij.CreateTime)),
+			"generated":        llx.TimeDataPtr(timestampAsTimePtr(ij.GenerateTime)),
+			"expireTime":       llx.TimeDataPtr(timestampAsTimePtr(ij.ExpireTime)),
+			"expireEventTime":  llx.TimeDataPtr(timestampAsTimePtr(ij.ExpireEventTime)),
+			"attestation":      llx.DictData(attestation),
+			"cryptoKeyBackend": llx.StringData(ij.CryptoKeyBackend),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlIj)
+	}
+	return res, nil
+}
