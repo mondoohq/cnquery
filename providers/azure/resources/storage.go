@@ -708,7 +708,7 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 	}
 	staticWebsite, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountStaticWebsiteConfig,
 		map[string]*llx.RawData{
-			"id":                       llx.StringData(fmt.Sprintf("%s/%s/properties/staticWebsite", parentId, serviceType)),
+			"__id":                     llx.StringData(fmt.Sprintf("%s/%s/properties/staticWebsite", parentId, serviceType)),
 			"enabled":                  llx.BoolDataPtr(sw.Enabled),
 			"indexDocument":            llx.StringDataPtr(sw.IndexDocument),
 			"errorDocument404Path":     llx.StringDataPtr(sw.ErrorDocument404Path),
