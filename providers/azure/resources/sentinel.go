@@ -265,6 +265,17 @@ func sentinelAlertRuleToMql(runtime *plugin.Runtime, raw armsecurityinsights.Ale
 			}
 			propsDict = d
 		}
+	default:
+		// Kinds without a dedicated concrete type in the SDK
+		// (e.g. NRT, MLBehaviorAnalytics, ThreatIntelligence)
+		// deserialize as *armsecurityinsights.AlertRule, which
+		// carries only kind/id/name. Marshal the raw payload so
+		// kind-specific fields remain queryable via `properties`.
+		d, err := convert.JsonToDict(raw)
+		if err != nil {
+			return nil, err
+		}
+		propsDict = d
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.sentinelService.alertRule", map[string]*llx.RawData{

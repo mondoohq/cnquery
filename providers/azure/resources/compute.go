@@ -280,7 +280,11 @@ type mqlAzureSubscriptionComputeServiceVmInternal struct {
 
 func (a *mqlAzureSubscriptionComputeServiceVm) fetchExtensions() ([]*compute.VirtualMachineExtension, error) {
 	a.extensionsOnce.Do(func() {
-		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		if !ok {
+			a.extensionsError = errors.New("invalid connection provided, it is not an Azure connection")
+			return
+		}
 		resourceID, err := ParseResourceID(a.Id.Data)
 		if err != nil {
 			a.extensionsError = err
@@ -300,6 +304,11 @@ func (a *mqlAzureSubscriptionComputeServiceVm) fetchExtensions() ([]*compute.Vir
 		}
 		resp, err := client.List(context.Background(), resourceID.ResourceGroup, vm, &compute.VirtualMachineExtensionsClientListOptions{})
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Str("vm", a.Id.Data).Err(err).Msg("could not list VM extensions due to access denied")
+				return
+			}
 			a.extensionsError = err
 			return
 		}
