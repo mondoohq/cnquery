@@ -160,6 +160,8 @@ func (a *mqlAwsEcr) getPrivateRepositories(conn *connection.AwsConnection) []*jo
 			res := []any{}
 
 			paginator := ecr.NewDescribeRepositoriesPaginator(svc, &ecr.DescribeRepositoriesInput{
+				// AWS does not do partial results and returns an error if a single repository
+				// supplied in the filters is not found
 				RepositoryNames: conn.Filters.Ecr.PrivateRepositoryNames,
 			})
 			for paginator.HasMorePages() {
@@ -521,7 +523,9 @@ func (a *mqlAwsEcr) publicRepositories() ([]any, error) {
 	res := []any{}
 
 	paginator := ecrpublic.NewDescribeRepositoriesPaginator(svc, &ecrpublic.DescribeRepositoriesInput{
-		RegistryId:      aws.String(conn.AccountId()),
+		RegistryId: aws.String(conn.AccountId()),
+		// AWS does not do partial results and returns an error if a single repository
+		// supplied in the filters is not found
 		RepositoryNames: conn.Filters.Ecr.PublicRepositoryNames,
 	})
 	for paginator.HasMorePages() {
