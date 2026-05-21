@@ -187,6 +187,32 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 				normalized := strings.ToLower(*vm.ID)
 				id = &normalized
 			}
+
+			var bootDiagnosticsEnabled bool
+			var bootDiagnosticsStorageUri, userData string
+			if vm.Properties != nil {
+				if dp := vm.Properties.DiagnosticsProfile; dp != nil && dp.BootDiagnostics != nil {
+					if dp.BootDiagnostics.Enabled != nil {
+						bootDiagnosticsEnabled = *dp.BootDiagnostics.Enabled
+					}
+					if dp.BootDiagnostics.StorageURI != nil {
+						bootDiagnosticsStorageUri = *dp.BootDiagnostics.StorageURI
+					}
+				}
+				if vm.Properties.UserData != nil {
+					userData = *vm.Properties.UserData
+				}
+			}
+
+			vmIDStr := ""
+			if vm.ID != nil {
+				vmIDStr = *vm.ID
+			}
+			mqlImageRef, err := vmImageReferenceToMql(a.MqlRuntime, vmIDStr, vm.Properties)
+			if err != nil {
+				return nil, err
+			}
+
 			mqlAzureVm, err := CreateResource(a.MqlRuntime, "azure.subscription.computeService.vm",
 				map[string]*llx.RawData{
 					"id":                            llx.StringDataPtr(id),
@@ -219,6 +245,10 @@ func (a *mqlAzureSubscriptionComputeService) vms() ([]any, error) {
 					"provisionVMAgent":              llx.BoolDataPtr(provisionVMAgent),
 					"enableAutomaticUpdates":        llx.BoolDataPtr(enableAutomaticUpdates),
 					"patchMode":                     llx.StringData(patchMode),
+					"imageReference":                llx.ResourceData(mqlImageRef, "imageReference"),
+					"bootDiagnosticsEnabled":        llx.BoolData(bootDiagnosticsEnabled),
+					"bootDiagnosticsStorageUri":     llx.StringData(bootDiagnosticsStorageUri),
+					"userData":                      llx.StringData(userData),
 				})
 			if err != nil {
 				return nil, err
@@ -1423,4 +1453,62 @@ func (a *mqlAzureSubscriptionComputeServiceDisk) diskEncryptionSet() (*mqlAzureS
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
+}
+
+func vmImageReferenceToMql(runtime *plugin.Runtime, vmID string, props *compute.VirtualMachineProperties) (*mqlAzureSubscriptionComputeServiceVmImageReference, error) {
+	var ref *compute.ImageReference
+	if props != nil && props.StorageProfile != nil {
+		ref = props.StorageProfile.ImageReference
+	}
+	publisher := ""
+	offer := ""
+	sku := ""
+	version := ""
+	exactVersion := ""
+	imageId := ""
+	sharedGalleryId := ""
+	communityGalleryId := ""
+	if ref != nil {
+		if ref.Publisher != nil {
+			publisher = *ref.Publisher
+		}
+		if ref.Offer != nil {
+			offer = *ref.Offer
+		}
+		if ref.SKU != nil {
+			sku = *ref.SKU
+		}
+		if ref.Version != nil {
+			version = *ref.Version
+		}
+		if ref.ExactVersion != nil {
+			exactVersion = *ref.ExactVersion
+		}
+		if ref.ID != nil {
+			imageId = *ref.ID
+		}
+		if ref.SharedGalleryImageID != nil {
+			sharedGalleryId = *ref.SharedGalleryImageID
+		}
+		if ref.CommunityGalleryImageID != nil {
+			communityGalleryId = *ref.CommunityGalleryImageID
+		}
+	}
+	id := vmID + "/imageReference"
+	res, err := CreateResource(runtime, "azure.subscription.computeService.vm.imageReference",
+		map[string]*llx.RawData{
+			"__id":                    llx.StringData(id),
+			"publisher":               llx.StringData(publisher),
+			"offer":                   llx.StringData(offer),
+			"sku":                     llx.StringData(sku),
+			"version":                 llx.StringData(version),
+			"exactVersion":            llx.StringData(exactVersion),
+			"imageId":                 llx.StringData(imageId),
+			"sharedGalleryImageId":    llx.StringData(sharedGalleryId),
+			"communityGalleryImageId": llx.StringData(communityGalleryId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceVmImageReference), nil
 }

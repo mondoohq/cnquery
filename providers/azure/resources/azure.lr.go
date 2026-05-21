@@ -23,6 +23,7 @@ const (
 	ResourceAzureSubscriptionResource                                                            string = "azure.subscription.resource"
 	ResourceAzureSubscriptionComputeService                                                      string = "azure.subscription.computeService"
 	ResourceAzureSubscriptionComputeServiceVm                                                    string = "azure.subscription.computeService.vm"
+	ResourceAzureSubscriptionComputeServiceVmImageReference                                      string = "azure.subscription.computeService.vm.imageReference"
 	ResourceAzureSubscriptionComputeServiceHybridMachine                                         string = "azure.subscription.computeService.hybridMachine"
 	ResourceAzureSubscriptionComputeServiceHybridMachineExtension                                string = "azure.subscription.computeService.hybridMachine.extension"
 	ResourceAzureSubscriptionComputeServiceDisk                                                  string = "azure.subscription.computeService.disk"
@@ -399,6 +400,10 @@ func init() {
 		"azure.subscription.computeService.vm": {
 			Init:   initAzureSubscriptionComputeServiceVm,
 			Create: createAzureSubscriptionComputeServiceVm,
+		},
+		"azure.subscription.computeService.vm.imageReference": {
+			// to override args, implement: initAzureSubscriptionComputeServiceVmImageReference(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionComputeServiceVmImageReference,
 		},
 		"azure.subscription.computeService.hybridMachine": {
 			Init:   initAzureSubscriptionComputeServiceHybridMachine,
@@ -2128,6 +2133,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vm.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetProperties()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.computeService.vm.imageReference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetImageReference()).ToDataRes(types.Resource("azure.subscription.computeService.vm.imageReference"))
+	},
+	"azure.subscription.computeService.vm.bootDiagnosticsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetBootDiagnosticsEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.computeService.vm.bootDiagnosticsStorageUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetBootDiagnosticsStorageUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.userData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetUserData()).ToDataRes(types.String)
+	},
 	"azure.subscription.computeService.vm.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetExtensions()).ToDataRes(types.Array(types.Dict))
 	},
@@ -2226,6 +2243,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.computeService.vm.vmScaleSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetVmScaleSet()).ToDataRes(types.Resource("azure.subscription.computeService.vmScaleSet"))
+	},
+	"azure.subscription.computeService.vm.imageReference.publisher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmImageReference).GetPublisher()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.imageReference.offer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmImageReference).GetOffer()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.imageReference.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmImageReference).GetSku()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.imageReference.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmImageReference).GetVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.imageReference.exactVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmImageReference).GetExactVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.imageReference.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmImageReference).GetImageId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.imageReference.sharedGalleryImageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmImageReference).GetSharedGalleryImageId()).ToDataRes(types.String)
+	},
+	"azure.subscription.computeService.vm.imageReference.communityGalleryImageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmImageReference).GetCommunityGalleryImageId()).ToDataRes(types.String)
 	},
 	"azure.subscription.computeService.hybridMachine.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceHybridMachine).GetId()).ToDataRes(types.String)
@@ -13216,6 +13257,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVm).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.computeService.vm.imageReference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).ImageReference, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceVmImageReference](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.bootDiagnosticsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).BootDiagnosticsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.bootDiagnosticsStorageUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).BootDiagnosticsStorageUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.userData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).UserData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.computeService.vm.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -13346,6 +13403,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.computeService.vm.vmScaleSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionComputeServiceVm).VmScaleSet, ok = plugin.RawToTValue[*mqlAzureSubscriptionComputeServiceVmScaleSet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.imageReference.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmImageReference).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.computeService.vm.imageReference.publisher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmImageReference).Publisher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.imageReference.offer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmImageReference).Offer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.imageReference.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmImageReference).Sku, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.imageReference.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmImageReference).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.imageReference.exactVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmImageReference).ExactVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.imageReference.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmImageReference).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.imageReference.sharedGalleryImageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmImageReference).SharedGalleryImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.computeService.vm.imageReference.communityGalleryImageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmImageReference).CommunityGalleryImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.hybridMachine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30139,6 +30232,10 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	Tags                          plugin.TValue[map[string]any]
 	Type                          plugin.TValue[string]
 	Properties                    plugin.TValue[any]
+	ImageReference                plugin.TValue[*mqlAzureSubscriptionComputeServiceVmImageReference]
+	BootDiagnosticsEnabled        plugin.TValue[bool]
+	BootDiagnosticsStorageUri     plugin.TValue[string]
+	UserData                      plugin.TValue[string]
 	Extensions                    plugin.TValue[[]any]
 	MdeInstalled                  plugin.TValue[bool]
 	AmaInstalled                  plugin.TValue[bool]
@@ -30249,6 +30346,22 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetType() *plugin.TValue[string] 
 
 func (c *mqlAzureSubscriptionComputeServiceVm) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetImageReference() *plugin.TValue[*mqlAzureSubscriptionComputeServiceVmImageReference] {
+	return &c.ImageReference
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetBootDiagnosticsEnabled() *plugin.TValue[bool] {
+	return &c.BootDiagnosticsEnabled
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetBootDiagnosticsStorageUri() *plugin.TValue[string] {
+	return &c.BootDiagnosticsStorageUri
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVm) GetUserData() *plugin.TValue[string] {
+	return &c.UserData
 }
 
 func (c *mqlAzureSubscriptionComputeServiceVm) GetExtensions() *plugin.TValue[[]any] {
@@ -30451,6 +30564,85 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetVmScaleSet() *plugin.TValue[*m
 
 		return c.vmScaleSet()
 	})
+}
+
+// mqlAzureSubscriptionComputeServiceVmImageReference for the azure.subscription.computeService.vm.imageReference resource
+type mqlAzureSubscriptionComputeServiceVmImageReference struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionComputeServiceVmImageReferenceInternal it will be used here
+	Publisher               plugin.TValue[string]
+	Offer                   plugin.TValue[string]
+	Sku                     plugin.TValue[string]
+	Version                 plugin.TValue[string]
+	ExactVersion            plugin.TValue[string]
+	ImageId                 plugin.TValue[string]
+	SharedGalleryImageId    plugin.TValue[string]
+	CommunityGalleryImageId plugin.TValue[string]
+}
+
+// createAzureSubscriptionComputeServiceVmImageReference creates a new instance of this resource
+func createAzureSubscriptionComputeServiceVmImageReference(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionComputeServiceVmImageReference{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.computeService.vm.imageReference", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmImageReference) MqlName() string {
+	return "azure.subscription.computeService.vm.imageReference"
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmImageReference) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmImageReference) GetPublisher() *plugin.TValue[string] {
+	return &c.Publisher
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmImageReference) GetOffer() *plugin.TValue[string] {
+	return &c.Offer
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmImageReference) GetSku() *plugin.TValue[string] {
+	return &c.Sku
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmImageReference) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmImageReference) GetExactVersion() *plugin.TValue[string] {
+	return &c.ExactVersion
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmImageReference) GetImageId() *plugin.TValue[string] {
+	return &c.ImageId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmImageReference) GetSharedGalleryImageId() *plugin.TValue[string] {
+	return &c.SharedGalleryImageId
+}
+
+func (c *mqlAzureSubscriptionComputeServiceVmImageReference) GetCommunityGalleryImageId() *plugin.TValue[string] {
+	return &c.CommunityGalleryImageId
 }
 
 // mqlAzureSubscriptionComputeServiceHybridMachine for the azure.subscription.computeService.hybridMachine resource

@@ -255,6 +255,16 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   type string
   // VM properties
   properties dict
+  // VM image reference (marketplace publisher/offer/sku/version, or direct gallery image ID)
+  imageReference azure.subscription.computeService.vm.imageReference
+  // Whether boot diagnostics is enabled on the VM
+  bootDiagnosticsEnabled bool
+  // Boot diagnostics storage URI; empty when boot diagnostics writes to platform-managed storage
+  bootDiagnosticsStorageUri string
+  // Base64-encoded user data passed to the VM at provisioning time (cloud-init equivalent)
+  //
+  // Empty when user data is not set. Treat as sensitive — secrets and bootstrap credentials are sometimes embedded here.
+  userData string
   // VM extension
   extensions() []dict
   // Whether the Microsoft Defender for Endpoint (MDE) extension is installed on the VM
@@ -323,6 +333,35 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   patchMode string
   // Virtual Machine Scale Set that manages this VM, if any (resolved from managedBy)
   vmScaleSet() azure.subscription.computeService.vmScaleSet
+}
+
+// Azure VM image reference
+//
+// Examine the image a VM was deployed from. For marketplace images
+// the `publisher`, `offer`, `sku`, and `version` are populated. For
+// shared / community / direct gallery images, `imageId`,
+// `sharedGalleryImageId`, or `communityGalleryImageId` carries the
+// gallery resource path. `exactVersion` resolves the concrete version
+// when `version` was specified as `"latest"`. Audit queries typically
+// check `version != "latest"` to enforce pinning, or flag deployments
+// against unapproved publishers.
+private azure.subscription.computeService.vm.imageReference @defaults("publisher offer sku version") {
+  // Image publisher (marketplace images; empty for gallery images)
+  publisher string
+  // Image offer (marketplace images; empty for gallery images)
+  offer string
+  // Image SKU (marketplace images; empty for gallery images)
+  sku string
+  // Image version (marketplace or shared-gallery images); `"latest"` indicates the platform picks the newest at deploy time
+  version string
+  // Resolved concrete version when `version` was `"latest"` at deploy time; empty otherwise
+  exactVersion string
+  // Direct image resource ID (managed image or shared gallery); empty when deployed from a marketplace image
+  imageId string
+  // Shared-gallery image unique ID; empty when not deployed from a shared gallery
+  sharedGalleryImageId string
+  // Community-gallery image unique ID; empty when not deployed from a community gallery
+  communityGalleryImageId string
 }
 
 // Azure Arc-enabled server

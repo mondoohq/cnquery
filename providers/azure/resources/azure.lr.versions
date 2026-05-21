@@ -934,6 +934,8 @@ azure.subscription.computeService.subscriptionId 9.0.1
 azure.subscription.computeService.vm 9.0.1
 azure.subscription.computeService.vm.adminUsername 11.6.1
 azure.subscription.computeService.vm.amaInstalled 13.12.2
+azure.subscription.computeService.vm.bootDiagnosticsEnabled 13.12.2
+azure.subscription.computeService.vm.bootDiagnosticsStorageUri 13.12.2
 azure.subscription.computeService.vm.computerName 11.6.1
 azure.subscription.computeService.vm.dataDisks 9.0.1
 azure.subscription.computeService.vm.dependencyAgentInstalled 13.12.2
@@ -943,6 +945,15 @@ azure.subscription.computeService.vm.encryptionAtHost 11.4.28
 azure.subscription.computeService.vm.extensions 9.0.1
 azure.subscription.computeService.vm.fipsEncryptionEnabled 13.8.2
 azure.subscription.computeService.vm.id 9.0.1
+azure.subscription.computeService.vm.imageReference 13.12.2
+azure.subscription.computeService.vm.imageReference.communityGalleryImageId 13.12.2
+azure.subscription.computeService.vm.imageReference.exactVersion 13.12.2
+azure.subscription.computeService.vm.imageReference.imageId 13.12.2
+azure.subscription.computeService.vm.imageReference.offer 13.12.2
+azure.subscription.computeService.vm.imageReference.publisher 13.12.2
+azure.subscription.computeService.vm.imageReference.sharedGalleryImageId 13.12.2
+azure.subscription.computeService.vm.imageReference.sku 13.12.2
+azure.subscription.computeService.vm.imageReference.version 13.12.2
 azure.subscription.computeService.vm.isRunning 9.0.1
 azure.subscription.computeService.vm.licenseType 11.6.1
 azure.subscription.computeService.vm.location 9.0.1
@@ -970,6 +981,7 @@ azure.subscription.computeService.vm.systemData 13.8.2
 azure.subscription.computeService.vm.tags 9.0.1
 azure.subscription.computeService.vm.timeCreated 11.6.2
 azure.subscription.computeService.vm.type 9.0.1
+azure.subscription.computeService.vm.userData 13.12.2
 azure.subscription.computeService.vm.vmId 11.6.2
 azure.subscription.computeService.vm.vmScaleSet 13.7.1
 azure.subscription.computeService.vm.vtpmEnabled 11.4.28
