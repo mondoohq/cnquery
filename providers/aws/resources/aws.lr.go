@@ -73,6 +73,7 @@ const (
 	ResourceAwsNetworkfirewallFirewall                                          string = "aws.networkfirewall.firewall"
 	ResourceAwsNetworkfirewallPolicy                                            string = "aws.networkfirewall.policy"
 	ResourceAwsNetworkfirewallRulegroup                                         string = "aws.networkfirewall.rulegroup"
+	ResourceAwsNetworkfirewallTlsInspectionConfiguration                        string = "aws.networkfirewall.tlsInspectionConfiguration"
 	ResourceAwsEfs                                                              string = "aws.efs"
 	ResourceAwsEfsFilesystem                                                    string = "aws.efs.filesystem"
 	ResourceAwsEfsFilesystemLifecycleConfiguration                              string = "aws.efs.filesystem.lifecycleConfiguration"
@@ -1033,6 +1034,10 @@ func init() {
 		"aws.networkfirewall.rulegroup": {
 			Init:   initAwsNetworkfirewallRulegroup,
 			Create: createAwsNetworkfirewallRulegroup,
+		},
+		"aws.networkfirewall.tlsInspectionConfiguration": {
+			// to override args, implement: initAwsNetworkfirewallTlsInspectionConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsNetworkfirewallTlsInspectionConfiguration,
 		},
 		"aws.efs": {
 			// to override args, implement: initAwsEfs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5108,6 +5113,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.ruleGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewall).GetRuleGroups()).ToDataRes(types.Array(types.Resource("aws.networkfirewall.rulegroup")))
 	},
+	"aws.networkfirewall.tlsInspectionConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewall).GetTlsInspectionConfigurations()).ToDataRes(types.Array(types.Resource("aws.networkfirewall.tlsInspectionConfiguration")))
+	},
 	"aws.networkfirewall.firewall.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetArn()).ToDataRes(types.String)
 	},
@@ -5165,11 +5173,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.firewall.loggingDestinations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetLoggingDestinations()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.networkfirewall.firewall.loggingConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallFirewall).GetLoggingConfiguration()).ToDataRes(types.Dict)
+	},
 	"aws.networkfirewall.firewall.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallFirewall).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.networkfirewall.policy.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetArn()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.firewallPolicyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetFirewallPolicyId()).ToDataRes(types.String)
 	},
 	"aws.networkfirewall.policy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetName()).ToDataRes(types.String)
@@ -5179,6 +5193,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.networkfirewall.policy.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.firewallPolicyStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetFirewallPolicyStatus()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.policy.numberOfAssociations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetNumberOfAssociations()).ToDataRes(types.Int)
+	},
+	"aws.networkfirewall.policy.consumedStatelessRuleCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetConsumedStatelessRuleCapacity()).ToDataRes(types.Int)
+	},
+	"aws.networkfirewall.policy.consumedStatefulRuleCapacity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetConsumedStatefulRuleCapacity()).ToDataRes(types.Int)
+	},
+	"aws.networkfirewall.policy.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetLastModifiedTime()).ToDataRes(types.Time)
 	},
 	"aws.networkfirewall.policy.statelessDefaultActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetStatelessDefaultActions()).ToDataRes(types.Array(types.String))
@@ -5219,6 +5248,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.policy.tlsInspectionConfigurationArn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetTlsInspectionConfigurationArn()).ToDataRes(types.String)
 	},
+	"aws.networkfirewall.policy.tlsInspectionConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallPolicy).GetTlsInspectionConfiguration()).ToDataRes(types.Resource("aws.networkfirewall.tlsInspectionConfiguration"))
+	},
 	"aws.networkfirewall.policy.consumedStatefulDomainCapacity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallPolicy).GetConsumedStatefulDomainCapacity()).ToDataRes(types.Int)
 	},
@@ -5234,6 +5266,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.networkfirewall.rulegroup.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetArn()).ToDataRes(types.String)
 	},
+	"aws.networkfirewall.rulegroup.ruleGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetRuleGroupId()).ToDataRes(types.String)
+	},
 	"aws.networkfirewall.rulegroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetName()).ToDataRes(types.String)
 	},
@@ -5242,6 +5277,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.networkfirewall.rulegroup.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.rulegroup.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.networkfirewall.rulegroup.snsTopic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallRulegroup).GetSnsTopic()).ToDataRes(types.Resource("aws.sns.topic"))
 	},
 	"aws.networkfirewall.rulegroup.capacity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetCapacity()).ToDataRes(types.Int)
@@ -5284,6 +5325,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.networkfirewall.rulegroup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNetworkfirewallRulegroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetArn()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.tlsInspectionConfigurationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetTlsInspectionConfigurationId()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetName()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.numberOfAssociations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetNumberOfAssociations()).ToDataRes(types.Int)
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.serverCertificateConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetServerCertificateConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetScopes()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorityArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetCertificateAuthorityArn()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetCertificateAuthority()).ToDataRes(types.Resource("aws.acm.certificate"))
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"aws.efs.filesystems": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfs).GetFilesystems()).ToDataRes(types.Array(types.Resource("aws.efs.filesystem")))
@@ -29377,6 +29463,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewall).RuleGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.tlsInspectionConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewall).TlsInspectionConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.firewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallFirewall).__id, ok = v.Value.(string)
 		return
@@ -29457,6 +29547,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallFirewall).LoggingDestinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.firewall.loggingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallFirewall).LoggingConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.firewall.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallFirewall).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -29469,6 +29563,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallPolicy).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.policy.firewallPolicyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).FirewallPolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -29479,6 +29577,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.networkfirewall.policy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallPolicy).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.firewallPolicyStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).FirewallPolicyStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.numberOfAssociations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).NumberOfAssociations, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.consumedStatelessRuleCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).ConsumedStatelessRuleCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.consumedStatefulRuleCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).ConsumedStatefulRuleCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.policy.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.policy.statelessDefaultActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29533,6 +29651,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallPolicy).TlsInspectionConfigurationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.policy.tlsInspectionConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallPolicy).TlsInspectionConfiguration, ok = plugin.RawToTValue[*mqlAwsNetworkfirewallTlsInspectionConfiguration](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.policy.consumedStatefulDomainCapacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallPolicy).ConsumedStatefulDomainCapacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -29557,6 +29679,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNetworkfirewallRulegroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.networkfirewall.rulegroup.ruleGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).RuleGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.networkfirewall.rulegroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallRulegroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -29567,6 +29693,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.networkfirewall.rulegroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallRulegroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.rulegroup.snsTopic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallRulegroup).SnsTopic, ok = plugin.RawToTValue[*mqlAwsSnsTopic](v.Value, v.Error)
 		return
 	},
 	"aws.networkfirewall.rulegroup.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29623,6 +29757,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.networkfirewall.rulegroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNetworkfirewallRulegroup).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.tlsInspectionConfigurationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).TlsInspectionConfigurationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.numberOfAssociations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).NumberOfAssociations, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.serverCertificateConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).ServerCertificateConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthorityArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).CertificateAuthorityArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).CertificateAuthority, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.networkfirewall.tlsInspectionConfiguration.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNetworkfirewallTlsInspectionConfiguration).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"aws.efs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -67140,9 +67338,10 @@ type mqlAwsNetworkfirewall struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsNetworkfirewallInternal it will be used here
-	Firewalls  plugin.TValue[[]any]
-	Policies   plugin.TValue[[]any]
-	RuleGroups plugin.TValue[[]any]
+	Firewalls                   plugin.TValue[[]any]
+	Policies                    plugin.TValue[[]any]
+	RuleGroups                  plugin.TValue[[]any]
+	TlsInspectionConfigurations plugin.TValue[[]any]
 }
 
 // createAwsNetworkfirewall creates a new instance of this resource
@@ -67230,6 +67429,22 @@ func (c *mqlAwsNetworkfirewall) GetRuleGroups() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsNetworkfirewall) GetTlsInspectionConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TlsInspectionConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall", c.__id, "tlsInspectionConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tlsInspectionConfigurations()
+	})
+}
+
 // mqlAwsNetworkfirewallFirewall for the aws.networkfirewall.firewall resource
 type mqlAwsNetworkfirewallFirewall struct {
 	MqlRuntime *plugin.Runtime
@@ -67254,6 +67469,7 @@ type mqlAwsNetworkfirewallFirewall struct {
 	ConfigurationSyncStateSummary  plugin.TValue[string]
 	SyncStates                     plugin.TValue[[]any]
 	LoggingDestinations            plugin.TValue[[]any]
+	LoggingConfiguration           plugin.TValue[any]
 	Tags                           plugin.TValue[map[string]any]
 }
 
@@ -67426,6 +67642,12 @@ func (c *mqlAwsNetworkfirewallFirewall) GetLoggingDestinations() *plugin.TValue[
 	})
 }
 
+func (c *mqlAwsNetworkfirewallFirewall) GetLoggingConfiguration() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.LoggingConfiguration, func() (any, error) {
+		return c.loggingConfiguration()
+	})
+}
+
 func (c *mqlAwsNetworkfirewallFirewall) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
@@ -67436,9 +67658,15 @@ type mqlAwsNetworkfirewallPolicy struct {
 	__id       string
 	mqlAwsNetworkfirewallPolicyInternal
 	Arn                                 plugin.TValue[string]
+	FirewallPolicyId                    plugin.TValue[string]
 	Name                                plugin.TValue[string]
 	Description                         plugin.TValue[string]
 	Region                              plugin.TValue[string]
+	FirewallPolicyStatus                plugin.TValue[string]
+	NumberOfAssociations                plugin.TValue[int64]
+	ConsumedStatelessRuleCapacity       plugin.TValue[int64]
+	ConsumedStatefulRuleCapacity        plugin.TValue[int64]
+	LastModifiedTime                    plugin.TValue[*time.Time]
 	StatelessDefaultActions             plugin.TValue[[]any]
 	StatelessFragmentDefaultActions     plugin.TValue[[]any]
 	StatelessCustomActions              plugin.TValue[[]any]
@@ -67452,6 +67680,7 @@ type mqlAwsNetworkfirewallPolicy struct {
 	StatefulEngineStreamExceptionPolicy plugin.TValue[string]
 	PolicyVariables                     plugin.TValue[[]any]
 	TlsInspectionConfigurationArn       plugin.TValue[string]
+	TlsInspectionConfiguration          plugin.TValue[*mqlAwsNetworkfirewallTlsInspectionConfiguration]
 	ConsumedStatefulDomainCapacity      plugin.TValue[int64]
 	EncryptionType                      plugin.TValue[string]
 	KmsKey                              plugin.TValue[*mqlAwsKmsKey]
@@ -67499,6 +67728,10 @@ func (c *mqlAwsNetworkfirewallPolicy) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
+func (c *mqlAwsNetworkfirewallPolicy) GetFirewallPolicyId() *plugin.TValue[string] {
+	return &c.FirewallPolicyId
+}
+
 func (c *mqlAwsNetworkfirewallPolicy) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -67509,6 +67742,26 @@ func (c *mqlAwsNetworkfirewallPolicy) GetDescription() *plugin.TValue[string] {
 
 func (c *mqlAwsNetworkfirewallPolicy) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetFirewallPolicyStatus() *plugin.TValue[string] {
+	return &c.FirewallPolicyStatus
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetNumberOfAssociations() *plugin.TValue[int64] {
+	return &c.NumberOfAssociations
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetConsumedStatelessRuleCapacity() *plugin.TValue[int64] {
+	return &c.ConsumedStatelessRuleCapacity
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetConsumedStatefulRuleCapacity() *plugin.TValue[int64] {
+	return &c.ConsumedStatefulRuleCapacity
+}
+
+func (c *mqlAwsNetworkfirewallPolicy) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
 }
 
 func (c *mqlAwsNetworkfirewallPolicy) GetStatelessDefaultActions() *plugin.TValue[[]any] {
@@ -67587,6 +67840,22 @@ func (c *mqlAwsNetworkfirewallPolicy) GetTlsInspectionConfigurationArn() *plugin
 	return &c.TlsInspectionConfigurationArn
 }
 
+func (c *mqlAwsNetworkfirewallPolicy) GetTlsInspectionConfiguration() *plugin.TValue[*mqlAwsNetworkfirewallTlsInspectionConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsNetworkfirewallTlsInspectionConfiguration](&c.TlsInspectionConfiguration, func() (*mqlAwsNetworkfirewallTlsInspectionConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.policy", c.__id, "tlsInspectionConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsNetworkfirewallTlsInspectionConfiguration), nil
+			}
+		}
+
+		return c.tlsInspectionConfiguration()
+	})
+}
+
 func (c *mqlAwsNetworkfirewallPolicy) GetConsumedStatefulDomainCapacity() *plugin.TValue[int64] {
 	return &c.ConsumedStatefulDomainCapacity
 }
@@ -67621,9 +67890,12 @@ type mqlAwsNetworkfirewallRulegroup struct {
 	__id       string
 	mqlAwsNetworkfirewallRulegroupInternal
 	Arn                  plugin.TValue[string]
+	RuleGroupId          plugin.TValue[string]
 	Name                 plugin.TValue[string]
 	Description          plugin.TValue[string]
 	Region               plugin.TValue[string]
+	LastModifiedTime     plugin.TValue[*time.Time]
+	SnsTopic             plugin.TValue[*mqlAwsSnsTopic]
 	Capacity             plugin.TValue[int64]
 	ConsumedCapacity     plugin.TValue[int64]
 	NumberOfAssociations plugin.TValue[int64]
@@ -67681,6 +67953,10 @@ func (c *mqlAwsNetworkfirewallRulegroup) GetArn() *plugin.TValue[string] {
 	return &c.Arn
 }
 
+func (c *mqlAwsNetworkfirewallRulegroup) GetRuleGroupId() *plugin.TValue[string] {
+	return &c.RuleGroupId
+}
+
 func (c *mqlAwsNetworkfirewallRulegroup) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -67691,6 +67967,26 @@ func (c *mqlAwsNetworkfirewallRulegroup) GetDescription() *plugin.TValue[string]
 
 func (c *mqlAwsNetworkfirewallRulegroup) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsNetworkfirewallRulegroup) GetSnsTopic() *plugin.TValue[*mqlAwsSnsTopic] {
+	return plugin.GetOrCompute[*mqlAwsSnsTopic](&c.SnsTopic, func() (*mqlAwsSnsTopic, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.rulegroup", c.__id, "snsTopic")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSnsTopic), nil
+			}
+		}
+
+		return c.snsTopic()
+	})
 }
 
 func (c *mqlAwsNetworkfirewallRulegroup) GetCapacity() *plugin.TValue[int64] {
@@ -67758,6 +68054,149 @@ func (c *mqlAwsNetworkfirewallRulegroup) GetKmsKey() *plugin.TValue[*mqlAwsKmsKe
 }
 
 func (c *mqlAwsNetworkfirewallRulegroup) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsNetworkfirewallTlsInspectionConfiguration for the aws.networkfirewall.tlsInspectionConfiguration resource
+type mqlAwsNetworkfirewallTlsInspectionConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsNetworkfirewallTlsInspectionConfigurationInternal
+	Arn                             plugin.TValue[string]
+	TlsInspectionConfigurationId    plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Description                     plugin.TValue[string]
+	Region                          plugin.TValue[string]
+	Status                          plugin.TValue[string]
+	NumberOfAssociations            plugin.TValue[int64]
+	LastModifiedTime                plugin.TValue[*time.Time]
+	ServerCertificateConfigurations plugin.TValue[[]any]
+	Scopes                          plugin.TValue[[]any]
+	CertificateAuthorityArn         plugin.TValue[string]
+	CertificateAuthority            plugin.TValue[*mqlAwsAcmCertificate]
+	EncryptionType                  plugin.TValue[string]
+	KmsKey                          plugin.TValue[*mqlAwsKmsKey]
+	Tags                            plugin.TValue[map[string]any]
+}
+
+// createAwsNetworkfirewallTlsInspectionConfiguration creates a new instance of this resource
+func createAwsNetworkfirewallTlsInspectionConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsNetworkfirewallTlsInspectionConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.networkfirewall.tlsInspectionConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) MqlName() string {
+	return "aws.networkfirewall.tlsInspectionConfiguration"
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetTlsInspectionConfigurationId() *plugin.TValue[string] {
+	return &c.TlsInspectionConfigurationId
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetNumberOfAssociations() *plugin.TValue[int64] {
+	return &c.NumberOfAssociations
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetServerCertificateConfigurations() *plugin.TValue[[]any] {
+	return &c.ServerCertificateConfigurations
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetScopes() *plugin.TValue[[]any] {
+	return &c.Scopes
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetCertificateAuthorityArn() *plugin.TValue[string] {
+	return &c.CertificateAuthorityArn
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetCertificateAuthority() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.CertificateAuthority, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.tlsInspectionConfiguration", c.__id, "certificateAuthority")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.certificateAuthority()
+	})
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetEncryptionType() *plugin.TValue[string] {
+	return &c.EncryptionType
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.networkfirewall.tlsInspectionConfiguration", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsNetworkfirewallTlsInspectionConfiguration) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 

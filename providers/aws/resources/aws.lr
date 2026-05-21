@@ -1049,8 +1049,10 @@ private aws.waf.acl.loggingConfiguration @defaults("arn") {
 // deployments and the policy building blocks they reference. Iterate
 // `firewalls()` for each deployed firewall (with its associated VPC,
 // subnets, logging configuration, and attached policy), `policies()` for
-// firewall policies that compose stateless and stateful rule groups, and
-// `ruleGroups()` for reusable Suricata-compatible or stateless rule groups.
+// firewall policies that compose stateless and stateful rule groups,
+// `ruleGroups()` for reusable Suricata-compatible or stateless rule groups,
+// and `tlsInspectionConfigurations()` for the configurations that drive
+// SSL/TLS decryption performed by the firewall.
 aws.networkfirewall @defaults("firewalls") {
   // List of Network Firewall firewalls
   firewalls() []aws.networkfirewall.firewall
@@ -1058,6 +1060,8 @@ aws.networkfirewall @defaults("firewalls") {
   policies() []aws.networkfirewall.policy
   // List of Network Firewall rule groups
   ruleGroups() []aws.networkfirewall.rulegroup
+  // List of Network Firewall TLS inspection configurations
+  tlsInspectionConfigurations() []aws.networkfirewall.tlsInspectionConfiguration
 }
 
 // AWS Network Firewall firewall
@@ -1100,6 +1104,16 @@ private aws.networkfirewall.firewall @defaults("arn name region") {
   syncStates() []dict
   // Logging destinations configured on the firewall (one entry per log type)
   loggingDestinations() []dict
+  // Logging configuration for the firewall
+  //
+  // The full logging configuration returned by DescribeLoggingConfiguration.
+  // Contains `logDestinationConfigs`, an array of entries with `logType`
+  // (ALERT, FLOW, or TLS), `logDestinationType` (S3, CloudWatchLogs, or
+  // KinesisDataFirehose), and a `logDestination` map whose keys depend on
+  // the destination type (for example `bucketName`/`prefix` for S3,
+  // `logGroup` for CloudWatch Logs, or `deliveryStream` for Kinesis Data
+  // Firehose). Null when no logging is configured on the firewall.
+  loggingConfiguration() dict
   // Tags on the firewall
   tags map[string]string
 }
@@ -1108,12 +1122,26 @@ private aws.networkfirewall.firewall @defaults("arn name region") {
 private aws.networkfirewall.policy @defaults("arn name region") {
   // ARN of the firewall policy
   arn string
+  // Unique identifier for the firewall policy
+  firewallPolicyId string
   // Name of the firewall policy
   name string
   // Description of the firewall policy
   description string
   // Region of the firewall policy
   region string
+  // Status of the firewall policy
+  //
+  // One of ACTIVE, DELETING, or ERROR.
+  firewallPolicyStatus string
+  // Number of firewalls associated with this policy
+  numberOfAssociations int
+  // Capacity units currently consumed by the policy's stateless rules
+  consumedStatelessRuleCapacity int
+  // Capacity units currently consumed by the policy's stateful rules
+  consumedStatefulRuleCapacity int
+  // Last modification time of the firewall policy
+  lastModifiedTime time
   // Stateless default actions for packets
   statelessDefaultActions []string
   // Stateless default actions for fragmented packets
@@ -1140,6 +1168,8 @@ private aws.networkfirewall.policy @defaults("arn name region") {
   policyVariables []dict
   // ARN of the TLS inspection configuration associated with the policy
   tlsInspectionConfigurationArn string
+  // TLS inspection configuration associated with the policy
+  tlsInspectionConfiguration() aws.networkfirewall.tlsInspectionConfiguration
   // Domain-name specifications consumed by stateful-domain rule groups in the policy
   consumedStatefulDomainCapacity int
   // KMS encryption type for the firewall policy (AWS_OWNED_KMS_KEY or CUSTOMER_KMS)
@@ -1154,12 +1184,18 @@ private aws.networkfirewall.policy @defaults("arn name region") {
 private aws.networkfirewall.rulegroup @defaults("arn name region") {
   // ARN of the rule group
   arn string
+  // Unique identifier for the rule group
+  ruleGroupId string
   // Name of the rule group
   name string
   // Description of the rule group
   description string
   // Region of the rule group
   region string
+  // Last modification time of the rule group
+  lastModifiedTime time
+  // SNS topic that publishes change notifications for the managed rule group, when one is configured
+  snsTopic() aws.sns.topic
   // Capacity of the rule group
   capacity int
   // Capacity units currently consumed by the rule group rules
@@ -1187,6 +1223,64 @@ private aws.networkfirewall.rulegroup @defaults("arn name region") {
   // KMS key used to encrypt the rule group (set when encryptionType is CUSTOMER_KMS)
   kmsKey() aws.kms.key
   // Tags on the rule group
+  tags map[string]string
+}
+
+// AWS Network Firewall TLS inspection configuration
+//
+// Examine the SSL/TLS decryption settings that a firewall policy can attach
+// to perform deep inspection on TLS traffic. Each configuration carries one
+// or more `serverCertificateConfigurations` entries, each of which combines
+// the inbound `serverCertificates` (ACM-managed) and an outbound
+// `certificateAuthorityArn` (an imported CA in ACM) with `scopes` that
+// describe the traffic to decrypt. `encryptionType` and `kmsKey()` describe
+// how the configuration itself is encrypted at rest.
+private aws.networkfirewall.tlsInspectionConfiguration @defaults("arn name region") {
+  // ARN of the TLS inspection configuration
+  arn string
+  // Unique identifier for the TLS inspection configuration
+  tlsInspectionConfigurationId string
+  // Name of the TLS inspection configuration
+  name string
+  // Description of the TLS inspection configuration
+  description string
+  // Region of the TLS inspection configuration
+  region string
+  // Status of the TLS inspection configuration
+  //
+  // One of ACTIVE, DELETING, or ERROR.
+  status string
+  // Number of firewall policies that reference this TLS inspection configuration
+  numberOfAssociations int
+  // Last modification time of the TLS inspection configuration
+  lastModifiedTime time
+  // Per-certificate-configuration settings
+  //
+  // Each entry binds an outbound CA (`certificateAuthorityArn`, an imported
+  // CA in ACM), zero or more inbound `serverCertificates`, optional
+  // `checkCertificateRevocationStatus` actions, and the `scopes` (sources,
+  // destinations, source ports, destination ports, protocols) of traffic to
+  // decrypt.
+  serverCertificateConfigurations []dict
+  // Flattened decryption scopes across all server certificate configurations
+  //
+  // Each scope describes one block of traffic to decrypt with `sources`,
+  // `destinations`, `sourcePorts`, `destinationPorts`, and `protocols`.
+  // Convenience over iterating into `serverCertificateConfigurations[*].Scopes`.
+  scopes []dict
+  // ACM ARN of the outbound CA certificate
+  //
+  // Set when a single `serverCertificateConfigurations` entry defines one
+  // outbound CA. When multiple entries are present, only the first ARN is
+  // reflected here; use `serverCertificateConfigurations` for the full list.
+  certificateAuthorityArn string
+  // ACM-managed CA certificate used for outbound TLS inspection
+  certificateAuthority() aws.acm.certificate
+  // KMS encryption type for the TLS inspection configuration (AWS_OWNED_KMS_KEY or CUSTOMER_KMS)
+  encryptionType string
+  // KMS key used to encrypt the TLS inspection configuration (set when encryptionType is CUSTOMER_KMS)
+  kmsKey() aws.kms.key
+  // Tags on the TLS inspection configuration
   tags map[string]string
 }
 

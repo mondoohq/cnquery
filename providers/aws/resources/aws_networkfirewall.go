@@ -154,6 +154,7 @@ type mqlAwsNetworkfirewallPolicyInternal struct {
 
 type mqlAwsNetworkfirewallRulegroupInternal struct {
 	cacheKmsKeyId *string
+	cacheSnsTopic *string
 }
 
 func (a *mqlAwsNetworkfirewallFirewall) id() (string, error) {
@@ -279,6 +280,34 @@ func (a *mqlAwsNetworkfirewallFirewall) loggingDestinations() ([]any, error) {
 		res = append(res, entry)
 	}
 	return res, nil
+}
+
+func (a *mqlAwsNetworkfirewallFirewall) loggingConfiguration() (any, error) {
+	logCfg, err := a.fetchLoggingConfig()
+	if err != nil {
+		return nil, err
+	}
+	if logCfg == nil {
+		return nil, nil
+	}
+	cfgs := make([]any, 0, len(logCfg.LogDestinationConfigs))
+	for _, ld := range logCfg.LogDestinationConfigs {
+		entry := map[string]any{
+			"logDestinationType": string(ld.LogDestinationType),
+			"logType":            string(ld.LogType),
+		}
+		if len(ld.LogDestination) > 0 {
+			dest := make(map[string]any, len(ld.LogDestination))
+			for k, v := range ld.LogDestination {
+				dest[k] = v
+			}
+			entry["logDestination"] = dest
+		}
+		cfgs = append(cfgs, entry)
+	}
+	return map[string]any{
+		"logDestinationConfigs": cfgs,
+	}, nil
 }
 
 func (a *mqlAwsNetworkfirewallFirewall) fetchLoggingConfig() (*nftypes.LoggingConfiguration, error) {
@@ -453,6 +482,18 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 	if policyResp.ConsumedStatefulDomainCapacity != nil {
 		consumedStatefulDomain = int64(*policyResp.ConsumedStatefulDomainCapacity)
 	}
+	var consumedStatelessRule int64
+	if policyResp.ConsumedStatelessRuleCapacity != nil {
+		consumedStatelessRule = int64(*policyResp.ConsumedStatelessRuleCapacity)
+	}
+	var consumedStatefulRule int64
+	if policyResp.ConsumedStatefulRuleCapacity != nil {
+		consumedStatefulRule = int64(*policyResp.ConsumedStatefulRuleCapacity)
+	}
+	var numberOfAssociations int64
+	if policyResp.NumberOfAssociations != nil {
+		numberOfAssociations = int64(*policyResp.NumberOfAssociations)
+	}
 
 	statelessArns := make([]string, 0, len(policy.StatelessRuleGroupReferences))
 	for _, ref := range policy.StatelessRuleGroupReferences {
@@ -477,9 +518,15 @@ func networkfirewallPolicyToMql(runtime *plugin.Runtime, policyResp *nftypes.Fir
 	mqlPolicy, err := CreateResource(runtime, "aws.networkfirewall.policy",
 		map[string]*llx.RawData{
 			"arn":                                 llx.StringDataPtr(policyResp.FirewallPolicyArn),
+			"firewallPolicyId":                    llx.StringDataPtr(policyResp.FirewallPolicyId),
 			"name":                                llx.StringDataPtr(policyResp.FirewallPolicyName),
 			"description":                         llx.StringDataPtr(policyResp.Description),
 			"region":                              llx.StringData(region),
+			"firewallPolicyStatus":                llx.StringData(string(policyResp.FirewallPolicyStatus)),
+			"numberOfAssociations":                llx.IntData(numberOfAssociations),
+			"consumedStatelessRuleCapacity":       llx.IntData(consumedStatelessRule),
+			"consumedStatefulRuleCapacity":        llx.IntData(consumedStatefulRule),
+			"lastModifiedTime":                    llx.TimeDataPtr(policyResp.LastModifiedTime),
 			"statelessDefaultActions":             llx.ArrayData(llx.TArr2Raw(policy.StatelessDefaultActions), "string"),
 			"statelessFragmentDefaultActions":     llx.ArrayData(llx.TArr2Raw(policy.StatelessFragmentDefaultActions), "string"),
 			"statelessCustomActions":              llx.ArrayData(statelessCustomActions, "dict"),
@@ -524,6 +571,36 @@ func (a *mqlAwsNetworkfirewallPolicy) kmsKey() (*mqlAwsKmsKey, error) {
 		return nil, err
 	}
 	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsNetworkfirewallPolicy) tlsInspectionConfiguration() (*mqlAwsNetworkfirewallTlsInspectionConfiguration, error) {
+	if a.TlsInspectionConfigurationArn.Error != nil {
+		return nil, a.TlsInspectionConfigurationArn.Error
+	}
+	tlsArn := a.TlsInspectionConfigurationArn.Data
+	if tlsArn == "" {
+		a.TlsInspectionConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	if a.Region.Error != nil {
+		return nil, a.Region.Error
+	}
+	region := a.Region.Data
+
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.NetworkFirewall(region)
+	ctx := context.Background()
+	resp, err := svc.DescribeTLSInspectionConfiguration(ctx, &networkfirewall.DescribeTLSInspectionConfigurationInput{
+		TLSInspectionConfigurationArn: &tlsArn,
+	})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			a.TlsInspectionConfiguration.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return networkfirewallTLSInspectionConfigToMql(a.MqlRuntime, resp.TLSInspectionConfigurationResponse, resp.TLSInspectionConfiguration, region)
 }
 
 func ruleGroupsFromArns(runtime *plugin.Runtime, arns []string) ([]any, error) {
@@ -740,9 +817,11 @@ func networkfirewallRuleGroupToMql(runtime *plugin.Runtime, resp *nftypes.RuleGr
 	mqlRG, err := CreateResource(runtime, "aws.networkfirewall.rulegroup",
 		map[string]*llx.RawData{
 			"arn":                  llx.StringDataPtr(resp.RuleGroupArn),
+			"ruleGroupId":          llx.StringDataPtr(resp.RuleGroupId),
 			"name":                 llx.StringDataPtr(resp.RuleGroupName),
 			"description":          llx.StringDataPtr(resp.Description),
 			"region":               llx.StringData(region),
+			"lastModifiedTime":     llx.TimeDataPtr(resp.LastModifiedTime),
 			"capacity":             llx.IntDataDefault(resp.Capacity, 0),
 			"consumedCapacity":     llx.IntData(consumedCapacity),
 			"numberOfAssociations": llx.IntData(numberOfAssociations),
@@ -762,7 +841,21 @@ func networkfirewallRuleGroupToMql(runtime *plugin.Runtime, resp *nftypes.RuleGr
 	}
 	mrg := mqlRG.(*mqlAwsNetworkfirewallRulegroup)
 	mrg.cacheKmsKeyId = kmsKeyId
+	mrg.cacheSnsTopic = resp.SnsTopic
 	return mrg, nil
+}
+
+func (a *mqlAwsNetworkfirewallRulegroup) snsTopic() (*mqlAwsSnsTopic, error) {
+	if a.cacheSnsTopic == nil || *a.cacheSnsTopic == "" {
+		a.SnsTopic.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlTopic, err := NewResource(a.MqlRuntime, "aws.sns.topic",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheSnsTopic)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlTopic.(*mqlAwsSnsTopic), nil
 }
 
 func nfTagsToMap(tags []nftypes.Tag) map[string]any {
@@ -773,4 +866,174 @@ func nfTagsToMap(tags []nftypes.Tag) map[string]any {
 		}
 	}
 	return m
+}
+
+type mqlAwsNetworkfirewallTlsInspectionConfigurationInternal struct {
+	cacheKmsKeyId      *string
+	cacheCertAuthority *string
+}
+
+func (a *mqlAwsNetworkfirewallTlsInspectionConfiguration) id() (string, error) {
+	return a.Arn.Data, a.Arn.Error
+}
+
+func (a *mqlAwsNetworkfirewallTlsInspectionConfiguration) kmsKey() (*mqlAwsKmsKey, error) {
+	if a.cacheKmsKeyId == nil || *a.cacheKmsKeyId == "" {
+		a.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlKey, err := NewResource(a.MqlRuntime, "aws.kms.key",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheKmsKeyId)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKey.(*mqlAwsKmsKey), nil
+}
+
+func (a *mqlAwsNetworkfirewallTlsInspectionConfiguration) certificateAuthority() (*mqlAwsAcmCertificate, error) {
+	if a.cacheCertAuthority == nil || *a.cacheCertAuthority == "" {
+		a.CertificateAuthority.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlCert, err := NewResource(a.MqlRuntime, "aws.acm.certificate",
+		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.cacheCertAuthority)})
+	if err != nil {
+		return nil, err
+	}
+	return mqlCert.(*mqlAwsAcmCertificate), nil
+}
+
+func (a *mqlAwsNetworkfirewall) tlsInspectionConfigurations() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	res := []any{}
+	poolOfJobs := jobpool.CreatePool(a.getTLSInspectionConfigurations(conn), 5)
+	poolOfJobs.Run()
+
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	for i := range poolOfJobs.Jobs {
+		if poolOfJobs.Jobs[i].Result != nil {
+			res = append(res, poolOfJobs.Jobs[i].Result.([]any)...)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsNetworkfirewall) getTLSInspectionConfigurations(conn *connection.AwsConnection) []*jobpool.Job {
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := conn.Regions()
+	if err != nil {
+		return []*jobpool.Job{{Err: err}}
+	}
+
+	for _, region := range regions {
+		f := func() (jobpool.JobResult, error) {
+			svc := conn.NetworkFirewall(region)
+			ctx := context.Background()
+
+			res := []any{}
+			paginator := networkfirewall.NewListTLSInspectionConfigurationsPaginator(svc, &networkfirewall.ListTLSInspectionConfigurationsInput{})
+			for paginator.HasMorePages() {
+				page, err := paginator.NextPage(ctx)
+				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
+					return nil, err
+				}
+				for _, tlsMeta := range page.TLSInspectionConfigurations {
+					detail, err := svc.DescribeTLSInspectionConfiguration(ctx, &networkfirewall.DescribeTLSInspectionConfigurationInput{
+						TLSInspectionConfigurationArn: tlsMeta.Arn,
+					})
+					if err != nil {
+						if Is400AccessDeniedError(err) {
+							continue
+						}
+						return nil, err
+					}
+					mqlTLS, err := networkfirewallTLSInspectionConfigToMql(a.MqlRuntime, detail.TLSInspectionConfigurationResponse, detail.TLSInspectionConfiguration, region)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, mqlTLS)
+				}
+			}
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func networkfirewallTLSInspectionConfigToMql(runtime *plugin.Runtime, resp *nftypes.TLSInspectionConfigurationResponse, tlsConfig *nftypes.TLSInspectionConfiguration, region string) (*mqlAwsNetworkfirewallTlsInspectionConfiguration, error) {
+	serverCertConfigs := []any{}
+	scopes := []any{}
+	var firstCAArn *string
+	if tlsConfig != nil {
+		for _, scc := range tlsConfig.ServerCertificateConfigurations {
+			d, err := convert.JsonToDict(scc)
+			if err != nil {
+				log.Warn().Err(err).Msg("failed to convert server certificate configuration")
+			} else {
+				serverCertConfigs = append(serverCertConfigs, d)
+			}
+			if scc.CertificateAuthorityArn != nil && firstCAArn == nil {
+				firstCAArn = scc.CertificateAuthorityArn
+			}
+			for _, scope := range scc.Scopes {
+				sd, sErr := convert.JsonToDict(scope)
+				if sErr != nil {
+					log.Warn().Err(sErr).Msg("failed to convert tls inspection scope")
+					continue
+				}
+				scopes = append(scopes, sd)
+			}
+		}
+	}
+
+	var encryptionType string
+	var kmsKeyId *string
+	if resp.EncryptionConfiguration != nil {
+		encryptionType = string(resp.EncryptionConfiguration.Type)
+		kmsKeyId = resp.EncryptionConfiguration.KeyId
+	}
+
+	var numberOfAssociations int64
+	if resp.NumberOfAssociations != nil {
+		numberOfAssociations = int64(*resp.NumberOfAssociations)
+	}
+
+	var caArn string
+	if firstCAArn != nil {
+		caArn = *firstCAArn
+	}
+
+	tags := nfTagsToMap(resp.Tags)
+
+	mqlTLS, err := CreateResource(runtime, "aws.networkfirewall.tlsInspectionConfiguration",
+		map[string]*llx.RawData{
+			"arn":                             llx.StringDataPtr(resp.TLSInspectionConfigurationArn),
+			"tlsInspectionConfigurationId":    llx.StringDataPtr(resp.TLSInspectionConfigurationId),
+			"name":                            llx.StringDataPtr(resp.TLSInspectionConfigurationName),
+			"description":                     llx.StringDataPtr(resp.Description),
+			"region":                          llx.StringData(region),
+			"status":                          llx.StringData(string(resp.TLSInspectionConfigurationStatus)),
+			"numberOfAssociations":            llx.IntData(numberOfAssociations),
+			"lastModifiedTime":                llx.TimeDataPtr(resp.LastModifiedTime),
+			"serverCertificateConfigurations": llx.ArrayData(serverCertConfigs, "dict"),
+			"scopes":                          llx.ArrayData(scopes, "dict"),
+			"certificateAuthorityArn":         llx.StringData(caArn),
+			"encryptionType":                  llx.StringData(encryptionType),
+			"tags":                            llx.MapData(tags, "string"),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mt := mqlTLS.(*mqlAwsNetworkfirewallTlsInspectionConfiguration)
+	mt.cacheKmsKeyId = kmsKeyId
+	mt.cacheCertAuthority = firstCAArn
+	return mt, nil
 }
