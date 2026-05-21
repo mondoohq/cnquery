@@ -85,28 +85,23 @@ func (a *mqlAzureSubscriptionCosmosDbService) accounts() ([]any, error) {
 	ctx := context.Background()
 	subId := a.SubscriptionId.Data
 
-	res := []any{}
+	return fetchCosmosDBAccounts(ctx, a.MqlRuntime, conn, subId)
+}
 
-	// Fetch resources of different types - other than MongoDB and PostgreSQL
-	cosmosAccounts, err := fetchCosmosDBAccounts(ctx, a.MqlRuntime, conn, subId)
-	if err != nil {
-		return nil, err
-	}
-	res = append(res, cosmosAccounts...)
+func (a *mqlAzureSubscriptionCosmosDbService) mongoClusters() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	subId := a.SubscriptionId.Data
 
-	mongoAccounts, err := fetchMongoClusters(ctx, a.MqlRuntime, conn, subId)
-	if err != nil {
-		return nil, err
-	}
-	res = append(res, mongoAccounts...)
+	return fetchMongoClusters(ctx, a.MqlRuntime, conn, subId)
+}
 
-	postgresAccounts, err := fetchCosmosForPostgres(ctx, a.MqlRuntime, conn, subId)
-	if err != nil {
-		return nil, err
-	}
-	res = append(res, postgresAccounts...)
+func (a *mqlAzureSubscriptionCosmosDbService) postgresqlClusters() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	subId := a.SubscriptionId.Data
 
-	return res, nil
+	return fetchCosmosForPostgres(ctx, a.MqlRuntime, conn, subId)
 }
 
 type mqlAzureSubscriptionCosmosDbServiceAccountInternal struct {
@@ -239,8 +234,6 @@ func fetchCosmosDBAccounts(ctx context.Context, runtime *plugin.Runtime, conn *c
 					"backupRetentionIntervalInHours":     llx.IntData(backupRetentionHours),
 					"backupStorageRedundancy":            llx.StringData(backupRedundancy),
 					"virtualNetworkRules":                llx.ArrayData(virtualNetworkRules, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),
-					"mongoCluster":                       llx.NilData,
-					"postgresqlCluster":                  llx.NilData,
 				})
 			if err != nil {
 				return nil, err
@@ -265,10 +258,9 @@ func cosmosEnumStrPtr[T ~string](v *T) *string {
 	return &s
 }
 
-// fetchMongoClusters lists the Cosmos DB for MongoDB (vCore) clusters in the
-// subscription. The Cosmos-specific account fields do not apply to these
-// clusters and are left null; the MongoDB-specific configuration is exposed
-// through the account's mongoCluster field.
+// fetchMongoClusters lists the Cosmos DB for MongoDB (vCore) clusters
+// (Microsoft.DocumentDB/mongoClusters) in the subscription. These are
+// distinct Azure resources from classic Cosmos DB database accounts.
 func fetchMongoClusters(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string) ([]any, error) {
 	client, err := armmongocluster.NewMongoClustersClient(subId, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
@@ -288,61 +280,23 @@ func fetchMongoClusters(ctx context.Context, runtime *plugin.Runtime, conn *conn
 			if cluster == nil {
 				continue
 			}
-			properties, err := convert.JsonToDict(cluster.Properties)
-			if err != nil {
-				return nil, err
-			}
-
 			mqlCluster, err := newMongoClusterResource(runtime, cluster)
 			if err != nil {
 				return nil, err
 			}
-
-			var publicNetworkAccess *string
-			if cluster.Properties != nil {
-				publicNetworkAccess = cosmosEnumStrPtr(cluster.Properties.PublicNetworkAccess)
-			}
-
-			mqlResource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
-				map[string]*llx.RawData{
-					"__id":                               llx.StringDataPtr(cluster.ID),
-					"id":                                 llx.StringDataPtr(cluster.ID),
-					"name":                               llx.StringDataPtr(cluster.Name),
-					"tags":                               llx.MapData(convert.PtrMapStrToInterface(cluster.Tags), types.String),
-					"location":                           llx.StringDataPtr(cluster.Location),
-					"kind":                               llx.NilData,
-					"type":                               llx.StringDataPtr(cluster.Type),
-					"properties":                         llx.DictData(properties),
-					"publicNetworkAccess":                llx.StringDataPtr(publicNetworkAccess),
-					"disableLocalAuth":                   llx.NilData,
-					"isVirtualNetworkFilterEnabled":      llx.NilData,
-					"disableKeyBasedMetadataWriteAccess": llx.NilData,
-					"enableAutomaticFailover":            llx.NilData,
-					"enableMultipleWriteLocations":       llx.NilData,
-					"ipRangeFilter":                      llx.NilData,
-					"minimalTlsVersion":                  llx.NilData,
-					"defaultIdentity":                    llx.NilData,
-					"backupType":                         llx.NilData,
-					"backupIntervalInMinutes":            llx.NilData,
-					"backupRetentionIntervalInHours":     llx.NilData,
-					"backupStorageRedundancy":            llx.NilData,
-					"virtualNetworkRules":                llx.NilData,
-					"mongoCluster":                       llx.ResourceData(mqlCluster, "azure.subscription.cosmosDbService.account.mongoCluster"),
-					"postgresqlCluster":                  llx.NilData,
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlResource)
+			res = append(res, mqlCluster)
 		}
 	}
 	return res, nil
 }
 
-func newMongoClusterResource(runtime *plugin.Runtime, cluster *armmongocluster.MongoCluster) (*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster, error) {
+func newMongoClusterResource(runtime *plugin.Runtime, cluster *armmongocluster.MongoCluster) (*mqlAzureSubscriptionCosmosDbServiceMongoCluster, error) {
 	args := map[string]*llx.RawData{
 		"__id":                  llx.StringDataPtr(cluster.ID),
 		"id":                    llx.StringDataPtr(cluster.ID),
+		"name":                  llx.StringDataPtr(cluster.Name),
+		"location":              llx.StringDataPtr(cluster.Location),
+		"tags":                  llx.MapData(convert.PtrMapStrToInterface(cluster.Tags), types.String),
 		"provisioningState":     llx.NilData,
 		"clusterStatus":         llx.NilData,
 		"serverVersion":         llx.NilData,
@@ -398,7 +352,7 @@ func newMongoClusterResource(runtime *plugin.Runtime, cluster *armmongocluster.M
 			args["dataApiMode"] = llx.StringDataPtr(cosmosEnumStrPtr(p.DataAPI.Mode))
 		}
 		if p.Backup != nil {
-			args["earliestRestoreTime"] = llx.StringDataPtr(p.Backup.EarliestRestoreTime)
+			args["earliestRestoreTime"] = parseAzureDateString(p.Backup.EarliestRestoreTime)
 		}
 		if p.Replica != nil {
 			args["replicationRole"] = llx.StringDataPtr(cosmosEnumStrPtr(p.Replica.Role))
@@ -411,19 +365,18 @@ func newMongoClusterResource(runtime *plugin.Runtime, cluster *armmongocluster.M
 		}
 	}
 
-	resource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account.mongoCluster", args)
+	resource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.mongoCluster", args)
 	if err != nil {
 		return nil, err
 	}
-	mqlCluster := resource.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster)
+	mqlCluster := resource.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster)
 	mqlCluster.cacheKeyVaultKeyUri = keyVaultKeyUri
 	return mqlCluster, nil
 }
 
-// fetchCosmosForPostgres lists the Cosmos DB for PostgreSQL clusters in the
-// subscription. The Cosmos-specific account fields do not apply to these
-// clusters and are left null; the PostgreSQL-specific configuration is exposed
-// through the account's postgresqlCluster field.
+// fetchCosmosForPostgres lists the Cosmos DB for PostgreSQL clusters
+// (Microsoft.DBforPostgreSQL/serverGroupsv2) in the subscription. These
+// are distinct Azure resources from classic Cosmos DB database accounts.
 func fetchCosmosForPostgres(ctx context.Context, runtime *plugin.Runtime, conn *connection.AzureConnection, subId string) ([]any, error) {
 	resClient, err := armcosmosforpostgresql.NewClustersClient(subId, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
@@ -439,60 +392,27 @@ func fetchCosmosForPostgres(ctx context.Context, runtime *plugin.Runtime, conn *
 		if err != nil {
 			return nil, err
 		}
-		for _, account := range page.Value {
-			if account == nil {
+		for _, cluster := range page.Value {
+			if cluster == nil {
 				continue
 			}
-			properties, err := convert.JsonToDict(account.Properties)
+			mqlCluster, err := newPostgresClusterResource(runtime, cluster)
 			if err != nil {
 				return nil, err
 			}
-
-			mqlCluster, err := newPostgresClusterResource(runtime, account)
-			if err != nil {
-				return nil, err
-			}
-
-			mqlResource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
-				map[string]*llx.RawData{
-					"__id":                               llx.StringDataPtr(account.ID),
-					"id":                                 llx.StringDataPtr(account.ID),
-					"name":                               llx.StringDataPtr(account.Name),
-					"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-					"location":                           llx.StringDataPtr(account.Location),
-					"kind":                               llx.NilData,
-					"type":                               llx.StringDataPtr(account.Type),
-					"properties":                         llx.DictData(properties),
-					"publicNetworkAccess":                llx.NilData,
-					"disableLocalAuth":                   llx.NilData,
-					"isVirtualNetworkFilterEnabled":      llx.NilData,
-					"disableKeyBasedMetadataWriteAccess": llx.NilData,
-					"enableAutomaticFailover":            llx.NilData,
-					"enableMultipleWriteLocations":       llx.NilData,
-					"ipRangeFilter":                      llx.NilData,
-					"minimalTlsVersion":                  llx.NilData,
-					"defaultIdentity":                    llx.NilData,
-					"backupType":                         llx.NilData,
-					"backupIntervalInMinutes":            llx.NilData,
-					"backupRetentionIntervalInHours":     llx.NilData,
-					"backupStorageRedundancy":            llx.NilData,
-					"virtualNetworkRules":                llx.NilData,
-					"mongoCluster":                       llx.NilData,
-					"postgresqlCluster":                  llx.ResourceData(mqlCluster, "azure.subscription.cosmosDbService.account.postgresqlCluster"),
-				})
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, mqlResource)
+			res = append(res, mqlCluster)
 		}
 	}
 	return res, nil
 }
 
-func newPostgresClusterResource(runtime *plugin.Runtime, account *armcosmosforpostgresql.Cluster) (*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster, error) {
+func newPostgresClusterResource(runtime *plugin.Runtime, cluster *armcosmosforpostgresql.Cluster) (*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster, error) {
 	args := map[string]*llx.RawData{
-		"__id":                            llx.StringDataPtr(account.ID),
-		"id":                              llx.StringDataPtr(account.ID),
+		"__id":                            llx.StringDataPtr(cluster.ID),
+		"id":                              llx.StringDataPtr(cluster.ID),
+		"name":                            llx.StringDataPtr(cluster.Name),
+		"location":                        llx.StringDataPtr(cluster.Location),
+		"tags":                            llx.MapData(convert.PtrMapStrToInterface(cluster.Tags), types.String),
 		"provisioningState":               llx.NilData,
 		"state":                           llx.NilData,
 		"postgresqlVersion":               llx.NilData,
@@ -518,7 +438,7 @@ func newPostgresClusterResource(runtime *plugin.Runtime, account *armcosmosforpo
 		"serverNames":                     llx.NilData,
 	}
 
-	if p := account.Properties; p != nil {
+	if p := cluster.Properties; p != nil {
 		args["provisioningState"] = llx.StringDataPtr(p.ProvisioningState)
 		args["state"] = llx.StringDataPtr(p.State)
 		args["postgresqlVersion"] = llx.StringDataPtr(p.PostgresqlVersion)
@@ -572,11 +492,11 @@ func newPostgresClusterResource(runtime *plugin.Runtime, account *armcosmosforpo
 		}
 	}
 
-	resource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account.postgresqlCluster", args)
+	resource, err := CreateResource(runtime, "azure.subscription.cosmosDbService.postgresqlCluster", args)
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster), nil
+	return resource.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster), nil
 }
 
 func (a *mqlAzureSubscriptionCosmosDbServiceAccount) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
@@ -587,11 +507,11 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) encryptionKey() (*mqlAzureS
 	return newKeyVaultKeyResource(a.MqlRuntime, a.cacheKeyVaultKeyUri)
 }
 
-type mqlAzureSubscriptionCosmosDbServiceAccountMongoClusterInternal struct {
+type mqlAzureSubscriptionCosmosDbServiceMongoClusterInternal struct {
 	cacheKeyVaultKeyUri string
 }
 
-func (a *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+func (a *mqlAzureSubscriptionCosmosDbServiceMongoCluster) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
 	if a.cacheKeyVaultKeyUri == "" {
 		a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

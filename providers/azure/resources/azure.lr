@@ -4515,6 +4515,10 @@ private azure.subscription.cosmosDbService {
   subscriptionId string
   // List of Cosmos DB accounts
   accounts() []azure.subscription.cosmosDbService.account
+  // List of Cosmos DB for MongoDB (vCore) clusters
+  mongoClusters() []azure.subscription.cosmosDbService.mongoCluster
+  // List of Cosmos DB for PostgreSQL clusters
+  postgresqlClusters() []azure.subscription.cosmosDbService.postgresqlCluster
 }
 
 // Azure Cosmos DB account
@@ -4584,10 +4588,6 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // SQL API databases hosted on the account (Core SQL API)
   sqlDatabases() []azure.subscription.cosmosDbService.account.sqlDatabase
-  // MongoDB (vCore) cluster details (null unless the account is a MongoDB vCore cluster)
-  mongoCluster azure.subscription.cosmosDbService.account.mongoCluster
-  // PostgreSQL cluster details (null unless the account is a Cosmos DB for PostgreSQL cluster)
-  postgresqlCluster azure.subscription.cosmosDbService.account.postgresqlCluster
 }
 
 // Azure Cosmos DB account virtual network rule
@@ -4602,16 +4602,23 @@ private azure.subscription.cosmosDbService.account.virtualNetworkRule @defaults(
 
 // Azure Cosmos DB for MongoDB (vCore) cluster
 //
-// Examine the configuration of a MongoDB vCore cluster surfaced through a
-// Cosmos DB account. Covers the compute tier and data-disk size, shard
-// count, high availability mode, MongoDB server version, allowed
-// authentication modes, Mongo Data API access, public network access,
-// customer-managed encryption key, and replication role and state. The
-// account's `mongoCluster` field is null unless the account is a MongoDB
-// vCore cluster.
-private azure.subscription.cosmosDbService.account.mongoCluster @defaults("computeTier serverVersion provisioningState") {
+// Examine the configuration of a Cosmos DB for MongoDB (vCore) cluster
+// (`Microsoft.DocumentDB/mongoClusters`). Covers the compute tier and
+// data-disk size, shard count, high availability mode, MongoDB server
+// version, allowed authentication modes, Mongo Data API access, public
+// network access, customer-managed encryption key, and replication role
+// and state. vCore clusters are distinct Azure resources from classic
+// Cosmos DB accounts and are listed separately via
+// `cosmosDbService.mongoClusters`.
+private azure.subscription.cosmosDbService.mongoCluster @defaults("computeTier serverVersion provisioningState") {
   // MongoDB vCore cluster resource ID
   id string
+  // MongoDB vCore cluster resource name
+  name string
+  // Azure region the cluster is provisioned in
+  location string
+  // Resource tags
+  tags map[string]string
   // Provisioning state of the cluster
   provisioningState string
   // Status of the cluster
@@ -4638,8 +4645,8 @@ private azure.subscription.cosmosDbService.account.mongoCluster @defaults("compu
   authModes []string
   // Mongo Data API access mode ("Enabled" or "Disabled")
   dataApiMode string
-  // Earliest restore timestamp (UTC ISO8601)
-  earliestRestoreTime string
+  // Earliest restore point time for the cluster
+  earliestRestoreTime time
   // Replication role of the cluster ("Primary", "AsyncReplica", or "GeoAsyncReplica")
   replicationRole string
   // Replication link state of a replica cluster
@@ -4653,16 +4660,22 @@ private azure.subscription.cosmosDbService.account.mongoCluster @defaults("compu
 // Azure Cosmos DB for PostgreSQL cluster
 //
 // Examine the configuration of a Cosmos DB for PostgreSQL (Citus) cluster
-// surfaced through a Cosmos DB account. Covers the PostgreSQL and Citus
-// versions, coordinator and worker-node compute (vCores, storage quota,
-// server edition), worker node count, high availability, public IP access
-// on the coordinator and worker nodes, the maintenance window, read-replica
-// topology, and the server names in the cluster. The account's
-// `postgresqlCluster` field is null unless the account is a Cosmos DB for
-// PostgreSQL cluster.
-private azure.subscription.cosmosDbService.account.postgresqlCluster @defaults("postgresqlVersion nodeCount provisioningState") {
+// (`Microsoft.DBforPostgreSQL/serverGroupsv2`). Covers the PostgreSQL and
+// Citus versions, coordinator and worker-node compute (vCores, storage
+// quota, server edition), worker node count, high availability, public IP
+// access on the coordinator and worker nodes, the maintenance window,
+// read-replica topology, and the server names in the cluster. PostgreSQL
+// clusters are distinct Azure resources from classic Cosmos DB accounts
+// and are listed separately via `cosmosDbService.postgresqlClusters`.
+private azure.subscription.cosmosDbService.postgresqlCluster @defaults("postgresqlVersion nodeCount provisioningState") {
   // PostgreSQL cluster resource ID
   id string
+  // PostgreSQL cluster resource name
+  name string
+  // Azure region the cluster is provisioned in
+  location string
+  // Resource tags
+  tags map[string]string
   // Provisioning state of the cluster
   provisioningState string
   // State of the cluster visible to the user

@@ -175,8 +175,8 @@ const (
 	ResourceAzureSubscriptionCosmosDbService                                                     string = "azure.subscription.cosmosDbService"
 	ResourceAzureSubscriptionCosmosDbServiceAccount                                              string = "azure.subscription.cosmosDbService.account"
 	ResourceAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule                            string = "azure.subscription.cosmosDbService.account.virtualNetworkRule"
-	ResourceAzureSubscriptionCosmosDbServiceAccountMongoCluster                                  string = "azure.subscription.cosmosDbService.account.mongoCluster"
-	ResourceAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster                             string = "azure.subscription.cosmosDbService.account.postgresqlCluster"
+	ResourceAzureSubscriptionCosmosDbServiceMongoCluster                                         string = "azure.subscription.cosmosDbService.mongoCluster"
+	ResourceAzureSubscriptionCosmosDbServicePostgresqlCluster                                    string = "azure.subscription.cosmosDbService.postgresqlCluster"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition                             string = "azure.subscription.cosmosDbService.account.sqlRoleDefinition"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment                             string = "azure.subscription.cosmosDbService.account.sqlRoleAssignment"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlDatabase                                   string = "azure.subscription.cosmosDbService.account.sqlDatabase"
@@ -994,13 +994,13 @@ func init() {
 			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule,
 		},
-		"azure.subscription.cosmosDbService.account.mongoCluster": {
-			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountMongoCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAzureSubscriptionCosmosDbServiceAccountMongoCluster,
+		"azure.subscription.cosmosDbService.mongoCluster": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceMongoCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceMongoCluster,
 		},
-		"azure.subscription.cosmosDbService.account.postgresqlCluster": {
-			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
-			Create: createAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster,
+		"azure.subscription.cosmosDbService.postgresqlCluster": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServicePostgresqlCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServicePostgresqlCluster,
 		},
 		"azure.subscription.cosmosDbService.account.sqlRoleDefinition": {
 			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7080,6 +7080,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.accounts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbService).GetAccounts()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account")))
 	},
+	"azure.subscription.cosmosDbService.mongoClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbService).GetMongoClusters()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.mongoCluster")))
+	},
+	"azure.subscription.cosmosDbService.postgresqlClusters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbService).GetPostgresqlClusters()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.postgresqlCluster")))
+	},
 	"azure.subscription.cosmosDbService.account.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetId()).ToDataRes(types.String)
 	},
@@ -7161,12 +7167,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.sqlDatabases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetSqlDatabases()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.sqlDatabase")))
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetMongoCluster()).ToDataRes(types.Resource("azure.subscription.cosmosDbService.account.mongoCluster"))
-	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetPostgresqlCluster()).ToDataRes(types.Resource("azure.subscription.cosmosDbService.account.postgresqlCluster"))
-	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).GetId()).ToDataRes(types.String)
 	},
@@ -7176,134 +7176,152 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.virtualNetworkRule.ignoreMissingVNetServiceEndpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).GetIgnoreMissingVNetServiceEndpoint()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetId()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetId()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.provisioningState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetProvisioningState()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetName()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.clusterStatus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetClusterStatus()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetLocation()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.serverVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetServerVersion()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.infrastructureVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetInfrastructureVersion()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetProvisioningState()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetPublicNetworkAccess()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.clusterStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetClusterStatus()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.computeTier": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetComputeTier()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.serverVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetServerVersion()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.storageSizeGb": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetStorageSizeGb()).ToDataRes(types.Int)
+	"azure.subscription.cosmosDbService.mongoCluster.infrastructureVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetInfrastructureVersion()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.storageType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetStorageType()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetPublicNetworkAccess()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.shardCount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetShardCount()).ToDataRes(types.Int)
+	"azure.subscription.cosmosDbService.mongoCluster.computeTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetComputeTier()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.highAvailabilityMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetHighAvailabilityMode()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.storageSizeGb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetStorageSizeGb()).ToDataRes(types.Int)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.administratorLogin": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetAdministratorLogin()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.storageType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetStorageType()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.authModes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetAuthModes()).ToDataRes(types.Array(types.String))
+	"azure.subscription.cosmosDbService.mongoCluster.shardCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetShardCount()).ToDataRes(types.Int)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.dataApiMode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetDataApiMode()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.highAvailabilityMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetHighAvailabilityMode()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.earliestRestoreTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetEarliestRestoreTime()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.administratorLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetAdministratorLogin()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.replicationRole": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetReplicationRole()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.authModes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetAuthModes()).ToDataRes(types.Array(types.String))
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.replicationState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetReplicationState()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.dataApiMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetDataApiMode()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.replicationSourceId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetReplicationSourceId()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.earliestRestoreTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetEarliestRestoreTime()).ToDataRes(types.Time)
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).GetEncryptionKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
+	"azure.subscription.cosmosDbService.mongoCluster.replicationRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetReplicationRole()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetId()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.replicationState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetReplicationState()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.provisioningState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetProvisioningState()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.replicationSourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetReplicationSourceId()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.state": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetState()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.mongoCluster.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).GetEncryptionKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.postgresqlVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetPostgresqlVersion()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.postgresqlCluster.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetId()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.citusVersion": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetCitusVersion()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.postgresqlCluster.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetName()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.administratorLogin": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetAdministratorLogin()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.postgresqlCluster.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetLocation()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.enableHa": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetEnableHa()).ToDataRes(types.Bool)
+	"azure.subscription.cosmosDbService.postgresqlCluster.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.enableShardsOnCoordinator": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetEnableShardsOnCoordinator()).ToDataRes(types.Bool)
+	"azure.subscription.cosmosDbService.postgresqlCluster.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetProvisioningState()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.coordinatorEnablePublicIpAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetCoordinatorEnablePublicIpAccess()).ToDataRes(types.Bool)
+	"azure.subscription.cosmosDbService.postgresqlCluster.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetState()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.coordinatorServerEdition": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetCoordinatorServerEdition()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.postgresqlCluster.postgresqlVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetPostgresqlVersion()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.coordinatorStorageQuotaInMb": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetCoordinatorStorageQuotaInMb()).ToDataRes(types.Int)
+	"azure.subscription.cosmosDbService.postgresqlCluster.citusVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetCitusVersion()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.coordinatorVCores": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetCoordinatorVCores()).ToDataRes(types.Int)
+	"azure.subscription.cosmosDbService.postgresqlCluster.administratorLogin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetAdministratorLogin()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.nodeCount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetNodeCount()).ToDataRes(types.Int)
+	"azure.subscription.cosmosDbService.postgresqlCluster.enableHa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetEnableHa()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.nodeEnablePublicIpAccess": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetNodeEnablePublicIpAccess()).ToDataRes(types.Bool)
+	"azure.subscription.cosmosDbService.postgresqlCluster.enableShardsOnCoordinator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetEnableShardsOnCoordinator()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.nodeServerEdition": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetNodeServerEdition()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.postgresqlCluster.coordinatorEnablePublicIpAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetCoordinatorEnablePublicIpAccess()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.nodeStorageQuotaInMb": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetNodeStorageQuotaInMb()).ToDataRes(types.Int)
+	"azure.subscription.cosmosDbService.postgresqlCluster.coordinatorServerEdition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetCoordinatorServerEdition()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.nodeVCores": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetNodeVCores()).ToDataRes(types.Int)
+	"azure.subscription.cosmosDbService.postgresqlCluster.coordinatorStorageQuotaInMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetCoordinatorStorageQuotaInMb()).ToDataRes(types.Int)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.preferredPrimaryZone": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetPreferredPrimaryZone()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.postgresqlCluster.coordinatorVCores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetCoordinatorVCores()).ToDataRes(types.Int)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.earliestRestoreTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetEarliestRestoreTime()).ToDataRes(types.Time)
+	"azure.subscription.cosmosDbService.postgresqlCluster.nodeCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetNodeCount()).ToDataRes(types.Int)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.sourceLocation": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetSourceLocation()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.postgresqlCluster.nodeEnablePublicIpAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetNodeEnablePublicIpAccess()).ToDataRes(types.Bool)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.sourceResourceId": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetSourceResourceId()).ToDataRes(types.String)
+	"azure.subscription.cosmosDbService.postgresqlCluster.nodeServerEdition": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetNodeServerEdition()).ToDataRes(types.String)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.readReplicas": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetReadReplicas()).ToDataRes(types.Array(types.String))
+	"azure.subscription.cosmosDbService.postgresqlCluster.nodeStorageQuotaInMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetNodeStorageQuotaInMb()).ToDataRes(types.Int)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.maintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetMaintenanceWindow()).ToDataRes(types.Dict)
+	"azure.subscription.cosmosDbService.postgresqlCluster.nodeVCores": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetNodeVCores()).ToDataRes(types.Int)
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.serverNames": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).GetServerNames()).ToDataRes(types.Array(types.Dict))
+	"azure.subscription.cosmosDbService.postgresqlCluster.preferredPrimaryZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetPreferredPrimaryZone()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.earliestRestoreTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetEarliestRestoreTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.sourceLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetSourceLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.sourceResourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetSourceResourceId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.readReplicas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetReadReplicas()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetMaintenanceWindow()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.serverNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetServerNames()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetId()).ToDataRes(types.String)
@@ -20124,6 +20142,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbService).Accounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cosmosDbService.mongoClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbService).MongoClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlClusters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbService).PostgresqlClusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cosmosDbService.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).__id, ok = v.Value.(string)
 		return
@@ -20236,14 +20262,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).SqlDatabases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).MongoCluster, ok = plugin.RawToTValue[*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).PostgresqlCluster, ok = plugin.RawToTValue[*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster](v.Value, v.Error)
-		return
-	},
 	"azure.subscription.cosmosDbService.account.virtualNetworkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).__id, ok = v.Value.(string)
 		return
@@ -20260,184 +20278,208 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule).IgnoreMissingVNetServiceEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).__id, ok = v.Value.(string)
+	"azure.subscription.cosmosDbService.mongoCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).__id, ok = v.Value.(string)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.clusterStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).ClusterStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.serverVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).ServerVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.infrastructureVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).InfrastructureVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.clusterStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).ClusterStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.computeTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).ComputeTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.serverVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).ServerVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.storageSizeGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).StorageSizeGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.infrastructureVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).InfrastructureVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.shardCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).ShardCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.computeTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).ComputeTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.highAvailabilityMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).HighAvailabilityMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.storageSizeGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).StorageSizeGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.administratorLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).AdministratorLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.storageType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).StorageType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.authModes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).AuthModes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.shardCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).ShardCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.dataApiMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).DataApiMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.highAvailabilityMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).HighAvailabilityMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.earliestRestoreTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).EarliestRestoreTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.administratorLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).AdministratorLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.replicationRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).ReplicationRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.authModes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).AuthModes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.replicationState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).ReplicationState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.dataApiMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).DataApiMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.replicationSourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).ReplicationSourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.earliestRestoreTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).EarliestRestoreTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.mongoCluster.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster).EncryptionKey, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.replicationRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).ReplicationRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).__id, ok = v.Value.(string)
+	"azure.subscription.cosmosDbService.mongoCluster.replicationState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).ReplicationState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.replicationSourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).ReplicationSourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.mongoCluster.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceMongoCluster).EncryptionKey, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).__id, ok = v.Value.(string)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.postgresqlVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).PostgresqlVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.citusVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).CitusVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.administratorLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).AdministratorLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.enableHa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).EnableHa, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.enableShardsOnCoordinator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).EnableShardsOnCoordinator, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.coordinatorEnablePublicIpAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).CoordinatorEnablePublicIpAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.coordinatorServerEdition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).CoordinatorServerEdition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.postgresqlVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).PostgresqlVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.coordinatorStorageQuotaInMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).CoordinatorStorageQuotaInMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.citusVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).CitusVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.coordinatorVCores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).CoordinatorVCores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.administratorLogin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).AdministratorLogin, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.nodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).NodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.enableHa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).EnableHa, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.nodeEnablePublicIpAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).NodeEnablePublicIpAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.enableShardsOnCoordinator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).EnableShardsOnCoordinator, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.nodeServerEdition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).NodeServerEdition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.coordinatorEnablePublicIpAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).CoordinatorEnablePublicIpAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.nodeStorageQuotaInMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).NodeStorageQuotaInMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.coordinatorServerEdition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).CoordinatorServerEdition, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.nodeVCores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).NodeVCores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.coordinatorStorageQuotaInMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).CoordinatorStorageQuotaInMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.preferredPrimaryZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).PreferredPrimaryZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.coordinatorVCores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).CoordinatorVCores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.earliestRestoreTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).EarliestRestoreTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.nodeCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).NodeCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.sourceLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).SourceLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.nodeEnablePublicIpAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).NodeEnablePublicIpAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.sourceResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).SourceResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.nodeServerEdition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).NodeServerEdition, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.readReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).ReadReplicas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.nodeStorageQuotaInMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).NodeStorageQuotaInMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.maintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).MaintenanceWindow, ok = plugin.RawToTValue[any](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.nodeVCores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).NodeVCores, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cosmosDbService.account.postgresqlCluster.serverNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster).ServerNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.cosmosDbService.postgresqlCluster.preferredPrimaryZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).PreferredPrimaryZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.earliestRestoreTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).EarliestRestoreTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.sourceLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).SourceLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.sourceResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).SourceResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.readReplicas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).ReadReplicas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).MaintenanceWindow, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.serverNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).ServerNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46507,8 +46549,10 @@ type mqlAzureSubscriptionCosmosDbService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionCosmosDbServiceInternal it will be used here
-	SubscriptionId plugin.TValue[string]
-	Accounts       plugin.TValue[[]any]
+	SubscriptionId     plugin.TValue[string]
+	Accounts           plugin.TValue[[]any]
+	MongoClusters      plugin.TValue[[]any]
+	PostgresqlClusters plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCosmosDbService creates a new instance of this resource
@@ -46568,6 +46612,38 @@ func (c *mqlAzureSubscriptionCosmosDbService) GetAccounts() *plugin.TValue[[]any
 	})
 }
 
+func (c *mqlAzureSubscriptionCosmosDbService) GetMongoClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MongoClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService", c.__id, "mongoClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mongoClusters()
+	})
+}
+
+func (c *mqlAzureSubscriptionCosmosDbService) GetPostgresqlClusters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PostgresqlClusters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService", c.__id, "postgresqlClusters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.postgresqlClusters()
+	})
+}
+
 // mqlAzureSubscriptionCosmosDbServiceAccount for the azure.subscription.cosmosDbService.account resource
 type mqlAzureSubscriptionCosmosDbServiceAccount struct {
 	MqlRuntime *plugin.Runtime
@@ -46600,8 +46676,6 @@ type mqlAzureSubscriptionCosmosDbServiceAccount struct {
 	SqlRoleAssignments                 plugin.TValue[[]any]
 	DiagnosticSettings                 plugin.TValue[[]any]
 	SqlDatabases                       plugin.TValue[[]any]
-	MongoCluster                       plugin.TValue[*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster]
-	PostgresqlCluster                  plugin.TValue[*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster]
 }
 
 // createAzureSubscriptionCosmosDbServiceAccount creates a new instance of this resource
@@ -46816,14 +46890,6 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetSqlDatabases() *plugin.T
 	})
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetMongoCluster() *plugin.TValue[*mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster] {
-	return &c.MongoCluster
-}
-
-func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetPostgresqlCluster() *plugin.TValue[*mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster] {
-	return &c.PostgresqlCluster
-}
-
 // mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule for the azure.subscription.cosmosDbService.account.virtualNetworkRule resource
 type mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule struct {
 	MqlRuntime *plugin.Runtime
@@ -46878,12 +46944,15 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountVirtualNetworkRule) GetIgnore
 	return &c.IgnoreMissingVNetServiceEndpoint
 }
 
-// mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster for the azure.subscription.cosmosDbService.account.mongoCluster resource
-type mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster struct {
+// mqlAzureSubscriptionCosmosDbServiceMongoCluster for the azure.subscription.cosmosDbService.mongoCluster resource
+type mqlAzureSubscriptionCosmosDbServiceMongoCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAzureSubscriptionCosmosDbServiceAccountMongoClusterInternal
+	mqlAzureSubscriptionCosmosDbServiceMongoClusterInternal
 	Id                    plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Location              plugin.TValue[string]
+	Tags                  plugin.TValue[map[string]any]
 	ProvisioningState     plugin.TValue[string]
 	ClusterStatus         plugin.TValue[string]
 	ServerVersion         plugin.TValue[string]
@@ -46897,16 +46966,16 @@ type mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster struct {
 	AdministratorLogin    plugin.TValue[string]
 	AuthModes             plugin.TValue[[]any]
 	DataApiMode           plugin.TValue[string]
-	EarliestRestoreTime   plugin.TValue[string]
+	EarliestRestoreTime   plugin.TValue[*time.Time]
 	ReplicationRole       plugin.TValue[string]
 	ReplicationState      plugin.TValue[string]
 	ReplicationSourceId   plugin.TValue[string]
 	EncryptionKey         plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
 }
 
-// createAzureSubscriptionCosmosDbServiceAccountMongoCluster creates a new instance of this resource
-func createAzureSubscriptionCosmosDbServiceAccountMongoCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster{
+// createAzureSubscriptionCosmosDbServiceMongoCluster creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceMongoCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceMongoCluster{
 		MqlRuntime: runtime,
 	}
 
@@ -46918,7 +46987,7 @@ func createAzureSubscriptionCosmosDbServiceAccountMongoCluster(runtime *plugin.R
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.mongoCluster", res.__id)
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.mongoCluster", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -46928,90 +46997,102 @@ func createAzureSubscriptionCosmosDbServiceAccountMongoCluster(runtime *plugin.R
 	return res, nil
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) MqlName() string {
-	return "azure.subscription.cosmosDbService.account.mongoCluster"
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) MqlName() string {
+	return "azure.subscription.cosmosDbService.mongoCluster"
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) MqlID() string {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetId() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetProvisioningState() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetProvisioningState() *plugin.TValue[string] {
 	return &c.ProvisioningState
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetClusterStatus() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetClusterStatus() *plugin.TValue[string] {
 	return &c.ClusterStatus
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetServerVersion() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetServerVersion() *plugin.TValue[string] {
 	return &c.ServerVersion
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetInfrastructureVersion() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetInfrastructureVersion() *plugin.TValue[string] {
 	return &c.InfrastructureVersion
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetPublicNetworkAccess() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetPublicNetworkAccess() *plugin.TValue[string] {
 	return &c.PublicNetworkAccess
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetComputeTier() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetComputeTier() *plugin.TValue[string] {
 	return &c.ComputeTier
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetStorageSizeGb() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetStorageSizeGb() *plugin.TValue[int64] {
 	return &c.StorageSizeGb
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetStorageType() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetStorageType() *plugin.TValue[string] {
 	return &c.StorageType
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetShardCount() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetShardCount() *plugin.TValue[int64] {
 	return &c.ShardCount
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetHighAvailabilityMode() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetHighAvailabilityMode() *plugin.TValue[string] {
 	return &c.HighAvailabilityMode
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetAdministratorLogin() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetAdministratorLogin() *plugin.TValue[string] {
 	return &c.AdministratorLogin
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetAuthModes() *plugin.TValue[[]any] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetAuthModes() *plugin.TValue[[]any] {
 	return &c.AuthModes
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetDataApiMode() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetDataApiMode() *plugin.TValue[string] {
 	return &c.DataApiMode
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetEarliestRestoreTime() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetEarliestRestoreTime() *plugin.TValue[*time.Time] {
 	return &c.EarliestRestoreTime
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetReplicationRole() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetReplicationRole() *plugin.TValue[string] {
 	return &c.ReplicationRole
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetReplicationState() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetReplicationState() *plugin.TValue[string] {
 	return &c.ReplicationState
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetReplicationSourceId() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetReplicationSourceId() *plugin.TValue[string] {
 	return &c.ReplicationSourceId
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetEncryptionKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
+func (c *mqlAzureSubscriptionCosmosDbServiceMongoCluster) GetEncryptionKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKey](&c.EncryptionKey, func() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.account.mongoCluster", c.__id, "encryptionKey")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cosmosDbService.mongoCluster", c.__id, "encryptionKey")
 			if err != nil {
 				return nil, err
 			}
@@ -47024,12 +47105,15 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoCluster) GetEncryptionKe
 	})
 }
 
-// mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster for the azure.subscription.cosmosDbService.account.postgresqlCluster resource
-type mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster struct {
+// mqlAzureSubscriptionCosmosDbServicePostgresqlCluster for the azure.subscription.cosmosDbService.postgresqlCluster resource
+type mqlAzureSubscriptionCosmosDbServicePostgresqlCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlClusterInternal it will be used here
+	// optional: if you define mqlAzureSubscriptionCosmosDbServicePostgresqlClusterInternal it will be used here
 	Id                              plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Location                        plugin.TValue[string]
+	Tags                            plugin.TValue[map[string]any]
 	ProvisioningState               plugin.TValue[string]
 	State                           plugin.TValue[string]
 	PostgresqlVersion               plugin.TValue[string]
@@ -47055,9 +47139,9 @@ type mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster struct {
 	ServerNames                     plugin.TValue[[]any]
 }
 
-// createAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster creates a new instance of this resource
-func createAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster{
+// createAzureSubscriptionCosmosDbServicePostgresqlCluster creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServicePostgresqlCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServicePostgresqlCluster{
 		MqlRuntime: runtime,
 	}
 
@@ -47069,7 +47153,7 @@ func createAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster(runtime *plu
 	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.postgresqlCluster", res.__id)
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.postgresqlCluster", res.__id)
 		if err != nil || args == nil {
 			return res, err
 		}
@@ -47079,107 +47163,119 @@ func createAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster(runtime *plu
 	return res, nil
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) MqlName() string {
-	return "azure.subscription.cosmosDbService.account.postgresqlCluster"
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) MqlName() string {
+	return "azure.subscription.cosmosDbService.postgresqlCluster"
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) MqlID() string {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) MqlID() string {
 	return c.__id
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetId() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetId() *plugin.TValue[string] {
 	return &c.Id
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetProvisioningState() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetProvisioningState() *plugin.TValue[string] {
 	return &c.ProvisioningState
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetState() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetState() *plugin.TValue[string] {
 	return &c.State
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetPostgresqlVersion() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetPostgresqlVersion() *plugin.TValue[string] {
 	return &c.PostgresqlVersion
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetCitusVersion() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetCitusVersion() *plugin.TValue[string] {
 	return &c.CitusVersion
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetAdministratorLogin() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetAdministratorLogin() *plugin.TValue[string] {
 	return &c.AdministratorLogin
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetEnableHa() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetEnableHa() *plugin.TValue[bool] {
 	return &c.EnableHa
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetEnableShardsOnCoordinator() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetEnableShardsOnCoordinator() *plugin.TValue[bool] {
 	return &c.EnableShardsOnCoordinator
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetCoordinatorEnablePublicIpAccess() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetCoordinatorEnablePublicIpAccess() *plugin.TValue[bool] {
 	return &c.CoordinatorEnablePublicIpAccess
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetCoordinatorServerEdition() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetCoordinatorServerEdition() *plugin.TValue[string] {
 	return &c.CoordinatorServerEdition
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetCoordinatorStorageQuotaInMb() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetCoordinatorStorageQuotaInMb() *plugin.TValue[int64] {
 	return &c.CoordinatorStorageQuotaInMb
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetCoordinatorVCores() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetCoordinatorVCores() *plugin.TValue[int64] {
 	return &c.CoordinatorVCores
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetNodeCount() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetNodeCount() *plugin.TValue[int64] {
 	return &c.NodeCount
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetNodeEnablePublicIpAccess() *plugin.TValue[bool] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetNodeEnablePublicIpAccess() *plugin.TValue[bool] {
 	return &c.NodeEnablePublicIpAccess
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetNodeServerEdition() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetNodeServerEdition() *plugin.TValue[string] {
 	return &c.NodeServerEdition
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetNodeStorageQuotaInMb() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetNodeStorageQuotaInMb() *plugin.TValue[int64] {
 	return &c.NodeStorageQuotaInMb
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetNodeVCores() *plugin.TValue[int64] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetNodeVCores() *plugin.TValue[int64] {
 	return &c.NodeVCores
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetPreferredPrimaryZone() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetPreferredPrimaryZone() *plugin.TValue[string] {
 	return &c.PreferredPrimaryZone
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetEarliestRestoreTime() *plugin.TValue[*time.Time] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetEarliestRestoreTime() *plugin.TValue[*time.Time] {
 	return &c.EarliestRestoreTime
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetSourceLocation() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetSourceLocation() *plugin.TValue[string] {
 	return &c.SourceLocation
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetSourceResourceId() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetSourceResourceId() *plugin.TValue[string] {
 	return &c.SourceResourceId
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetReadReplicas() *plugin.TValue[[]any] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetReadReplicas() *plugin.TValue[[]any] {
 	return &c.ReadReplicas
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetMaintenanceWindow() *plugin.TValue[any] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetMaintenanceWindow() *plugin.TValue[any] {
 	return &c.MaintenanceWindow
 }
 
-func (c *mqlAzureSubscriptionCosmosDbServiceAccountPostgresqlCluster) GetServerNames() *plugin.TValue[[]any] {
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetServerNames() *plugin.TValue[[]any] {
 	return &c.ServerNames
 }
 
