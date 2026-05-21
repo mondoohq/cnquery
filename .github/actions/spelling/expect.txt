@@ -297,6 +297,7 @@ junie
 junos
 jupyter
 jwks
+KENDRA
 kerberoastable
 keymanager
 KEYSTORE
