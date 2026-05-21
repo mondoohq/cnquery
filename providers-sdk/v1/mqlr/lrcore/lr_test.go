@@ -6,6 +6,7 @@ package lrcore
 import (
 	"bytes"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -175,6 +176,7 @@ first {
 // ============================================================
 
 // Second resource
+//
 // with extra detail
 second {
 	val type
@@ -185,6 +187,140 @@ second {
 		assert.Equal(t, "", res.Resources[0].desc)
 		assert.Equal(t, "Second resource", res.Resources[1].title)
 		assert.Equal(t, "with extra detail", res.Resources[1].desc)
+	})
+
+	t.Run("rejects multi-line resource comment without blank separator", func(t *testing.T) {
+		_, err := Parse(`
+option provider = "test"
+
+// Title that the author intended to wrap
+// onto a second source line for readability
+name {
+	field type
+}
+`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "resource name")
+		assert.Contains(t, err.Error(), "missing the required blank `//` separator")
+	})
+
+	t.Run("rejects multi-line field comment without blank separator", func(t *testing.T) {
+		ast, err := Parse(`
+option provider = "test"
+
+// Resource title
+name {
+	// Budget type: COST, USAGE, RI_UTILIZATION,
+	// SAVINGS_PLANS_UTILIZATION, or SAVINGS_PLANS_COVERAGE
+	budgetType string
+}
+`)
+		require.NoError(t, err)
+		_, err = Schema(ast)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "field name.budgetType")
+		assert.Contains(t, err.Error(), "missing the required blank `//` separator")
+	})
+
+	t.Run("accepts single-line field comment", func(t *testing.T) {
+		ast := parse(t, `
+option provider = "test"
+
+// Resource title
+name {
+	// Just a title, no description
+	field type
+}
+`)
+		schema, err := Schema(ast)
+		require.NoError(t, err)
+		require.NotNil(t, schema.Resources["name"])
+		f := schema.Resources["name"].Fields["field"]
+		require.NotNil(t, f)
+		assert.Equal(t, "Just a title, no description", f.Title)
+		assert.Equal(t, "", f.Desc)
+	})
+
+	t.Run("rejects resource title over 150 characters", func(t *testing.T) {
+		longTitle := strings.Repeat("x", 151)
+		_, err := Parse(`
+option provider = "test"
+
+// ` + longTitle + `
+name {
+	field type
+}
+`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "resource name")
+		assert.Contains(t, err.Error(), "title is 151 characters")
+		assert.Contains(t, err.Error(), "max is 150")
+	})
+
+	t.Run("accepts resource title at exactly 150 characters", func(t *testing.T) {
+		title := strings.Repeat("x", 150)
+		_, err := Parse(`
+option provider = "test"
+
+// ` + title + `
+name {
+	field type
+}
+`)
+		require.NoError(t, err)
+	})
+
+	t.Run("rejects field title over 150 characters", func(t *testing.T) {
+		longTitle := strings.Repeat("y", 200)
+		ast, err := Parse(`
+option provider = "test"
+
+// Title
+name {
+	// ` + longTitle + `
+	field type
+}
+`)
+		require.NoError(t, err)
+		_, err = Schema(ast)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "field name.field")
+		assert.Contains(t, err.Error(), "title is 200 characters")
+	})
+
+	t.Run("title length counts runes, not bytes", func(t *testing.T) {
+		// 150 multi-byte runes (each "é" is 2 bytes) — under the rune limit,
+		// over the byte limit. Must pass.
+		title := strings.Repeat("é", 150)
+		_, err := Parse(`
+option provider = "test"
+
+// ` + title + `
+name {
+	field type
+}
+`)
+		require.NoError(t, err)
+	})
+
+	t.Run("accepts two-part field comment with blank separator", func(t *testing.T) {
+		ast := parse(t, `
+option provider = "test"
+
+// Resource title
+name {
+	// Budget type
+	//
+	// One of COST, USAGE, RI_UTILIZATION, RI_COVERAGE.
+	field type
+}
+`)
+		schema, err := Schema(ast)
+		require.NoError(t, err)
+		f := schema.Resources["name"].Fields["field"]
+		require.NotNil(t, f)
+		assert.Equal(t, "Budget type", f.Title)
+		assert.Equal(t, "One of COST, USAGE, RI_UTILIZATION, RI_COVERAGE.", f.Desc)
 	})
 
 	t.Run("resource with a list type", func(t *testing.T) {

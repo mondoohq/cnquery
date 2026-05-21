@@ -25,7 +25,7 @@ Resources are defined in `.lr` files (e.g., `providers/aws/resources/aws.lr`). T
 
 Every top-level resource (anything users will query directly — including singular records like `aws.ec2.instance` and namespace roots like `aws`) must have a two-part doc-comment immediately above the `resource {` line:
 
-1. **Title.** A simple, technically correct one-line name for the item — a noun phrase, no leading article ("A" / "An"), no trailing verbs like "static analysis" or "configuration analysis". The title belongs to *what the resource is*, not what you do with it. Deprecated resources keep `DEPRECATED:` at the start of the title.
+1. **Title.** A simple, technically correct one-line name for the item — a noun phrase, no leading article ("A" / "An"), no trailing verbs like "static analysis" or "configuration analysis". The title belongs to *what the resource is*, not what you do with it. Deprecated resources keep `DEPRECATED:` at the start of the title. **Max 150 characters (enforced).** Titles render in CLI tables, auto-complete prompts, and the website resource docs, so they have a length cap; descriptions don't.
 2. **Single empty `//` line.**
 3. **Description.** Multi-line prose describing what's queryable through the resource — fields, sub-resources, derived predicates, the audits it enables. Lead with `Examine ...` (or `Iterate ...` for collection wrappers, `Use ...` for namespaces that exist mainly to host other resources). When the resource is keyed by a specific field, mention that field as the selection key with a concrete example. The description gets machine-parsed into the website-rendered resource docs, so favor depth and self-containment over single-line brevity.
 
@@ -59,7 +59,45 @@ arista.eos.runningConfig.section { ... }
 - Cross-reference sibling resources only when it genuinely helps the reader — e.g., pointing from a raw view (`apache2.conf`) at a richer typed view (`apache2.conf.module`).
 - Private resources and pure sub-row types (rows of a parent collection like `*.entry`) typically don't need the two-part form — a single-line comment is fine.
 
-Field-level comments (`// foo bar` above a field declaration) stay as one-line summaries, no blank `//` separator. The two-part form is for the *resource* doc-comment only.
+**Doc-comment shape — applies to both resources AND fields (enforced by the parser):**
+
+A doc-comment is **either**:
+
+1. **One line** — title only, no description. Use this for fields whose name already says it all (`// Account ID that owns the budget`) or short summaries that fit on one line.
+2. **Two parts** — title, then a **single blank `//` separator**, then a multi-line description. Use this whenever you need more than a title (resources almost always; fields when you need to enumerate enum values, give examples, or explain non-obvious semantics).
+
+**There is no third option.** Two contiguous comment lines with no blank `//` between them — the pattern you'd produce when wrapping a long one-liner across two source lines for readability — is **rejected at parse time**. The validator (`lrcore/lr.go: validateDocCommentStructure`) will fail the build with a precise location.
+
+**Title length:** the title line is capped at **150 characters** (`lrcore.MaxTitleLength`, also enforced at parse time, rune-counted so multi-byte characters count as one). Descriptions have no cap. If a title doesn't fit in 150 chars, that's a signal that some of what you wrote belongs in the description — split using the two-part form.
+
+**Why this is enforced:** the parser is positional — line 1 → `title`, everything after → `desc`. A wrapped one-liner produces a title truncated mid-clause (often with a trailing comma) and an orphaned description fragment. The blank `//` rule eliminates the ambiguity. The length cap keeps titles usable in the UI surfaces that show them: CLI tables, auto-complete prompts, and the rendered docs.
+
+```
+// One-line summary, complete on its own.
+foo string
+
+// Title
+//
+// Multi-line description that can span as many lines as needed.
+// The blank `//` above is mandatory whenever the comment has more
+// than one line.
+bar string
+```
+
+**Wrong** (will fail parse):
+```
+// Title that the author meant as one logical summary
+// but accidentally wrapped onto a second line
+baz string
+```
+
+Fix by either collapsing to one line or inserting a blank `//`. For enum lists, prefer the two-part form:
+```
+// Budget type
+//
+// One of COST, USAGE, RI_UTILIZATION, RI_COVERAGE, SAVINGS_PLANS_UTILIZATION, or SAVINGS_PLANS_COVERAGE.
+budgetType string
+```
 
 ### Step 2: Code Generation
 **Crucial:** You must generate Go interfaces after modifying `.lr` files.

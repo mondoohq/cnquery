@@ -34,10 +34,14 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		}
 	}
 
+	var schemaErrs []error
 	for i := range ast.Resources {
 		x, err := resourceSchema(ast.Resources[i], ast)
 		if err != nil {
-			return res, err
+			schemaErrs = append(schemaErrs, err)
+			if x == nil {
+				continue
+			}
 		}
 
 		res.Resources[x.Id] = x
@@ -49,7 +53,10 @@ func Schema(ast *LR) (*resources.Schema, error) {
 			var err error
 			x, err = resourceSchema(r, ast)
 			if err != nil {
-				return res, err
+				schemaErrs = append(schemaErrs, err)
+				if x == nil {
+					continue
+				}
 			}
 		}
 		res.Resources[defName] = x
@@ -140,6 +147,9 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		}
 	}
 
+	if len(schemaErrs) > 0 {
+		return res, errors.Join(schemaErrs...)
+	}
 	return res, nil
 }
 
@@ -185,6 +195,7 @@ func resourceInit(r *Resource, fields map[string]*resources.Field, ast *LR) (*re
 func resourceFields(r *Resource, ast *LR) (map[string]*resources.Field, error) {
 	fields := make(map[string]*resources.Field)
 
+	var validationErrs []error
 	for _, f := range r.Body.Fields {
 		if f.BasicField == nil {
 			continue
@@ -199,6 +210,9 @@ func resourceFields(r *Resource, ast *LR) (map[string]*resources.Field, error) {
 
 		f.Comments = SanitizeComments(f.Comments)
 		f.Comments = lastCommentGroup(f.Comments)
+		if verr := validateDocCommentStructure(f.Comments, "field "+r.ID+"."+f.BasicField.ID); verr != nil {
+			validationErrs = append(validationErrs, verr)
+		}
 		title, desc := extractTitleAndDescription(f.Comments)
 		fields[f.BasicField.ID] = &resources.Field{
 			Name:        f.BasicField.ID,
@@ -212,18 +226,20 @@ func resourceFields(r *Resource, ast *LR) (map[string]*resources.Field, error) {
 		}
 	}
 
+	if len(validationErrs) > 0 {
+		return fields, errors.Join(validationErrs...)
+	}
 	return fields, nil
 }
 
 func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
-	fields, err := resourceFields(r, ast)
-	if err != nil {
-		return nil, err
-	}
+	// Keep going even if fields had validation errors so we can collect every
+	// violation in one pass and the caller can report them all at once.
+	fields, fieldsErr := resourceFields(r, ast)
 
 	init, err := resourceInit(r, fields, ast)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(fieldsErr, err)
 	}
 
 	if init != nil && r.IsExtension {
@@ -248,5 +264,5 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 		res.ListType = string(r.ListType.Type.typeItems(ast))
 	}
 
-	return res, nil
+	return res, fieldsErr
 }

@@ -10,6 +10,7 @@ import (
 	"io"
 	"strings"
 	"text/scanner"
+	"unicode/utf8"
 
 	"github.com/alecthomas/participle"
 	"github.com/alecthomas/participle/lexer"
@@ -258,12 +259,67 @@ func extractTitleAndDescription(raw []CommentToken) (string, string) {
 		return "", ""
 	}
 	title := raw[0].Text
-	rest := make([]string, len(raw)-1)
-	for i, c := range raw[1:] {
-		rest[i] = c.Text
+	// Skip the mandatory blank `//` separator between title and description
+	// (enforced by validateDocCommentStructure), so it doesn't show up as a
+	// leading space in the joined description.
+	rest := raw[1:]
+	if len(rest) > 0 && rest[0].Text == "" {
+		rest = rest[1:]
 	}
-	desc := strings.Join(rest, " ")
+	parts := make([]string, len(rest))
+	for i, c := range rest {
+		parts[i] = c.Text
+	}
+	desc := strings.Join(parts, " ")
 	return title, desc
+}
+
+// MaxTitleLength caps the rune count of a doc-comment title line. Titles
+// render in CLI tables, auto-complete prompts, and the website resource
+// docs, where a sprawling title looks bad and wrecks layout. Descriptions
+// have no length cap.
+const MaxTitleLength = 150
+
+// validateDocCommentStructure enforces the doc-comment shape for resources
+// and fields:
+//   - 0 lines: nothing to validate.
+//   - 1+ lines: line 1 is the title; it must be at most MaxTitleLength runes.
+//   - 2+ lines: line 2 MUST be a blank `//` separator (Text == ""), so the
+//     title stays a single line and the description starts cleanly. This
+//     prevents accidentally truncated titles when a long one-liner wraps
+//     onto two source lines.
+//
+// `context` is included verbatim in the error to identify the offending
+// resource or field (e.g. "resource aws.billing.budget" or
+// "field aws.billing.budget.budgetType").
+func validateDocCommentStructure(comments []CommentToken, context string) error {
+	if len(comments) == 0 {
+		return nil
+	}
+
+	var errs []error
+
+	if n := utf8.RuneCountInString(comments[0].Text); n > MaxTitleLength {
+		errs = append(errs, fmt.Errorf(
+			"%s: doc-comment title is %d characters (line %d), max is %d. "+
+				"Titles render in CLI tables, auto-complete, and the website docs — keep them short. "+
+				"Move the rest into the description (a blank `//` followed by the longer text).",
+			context, n, comments[0].Pos.Line, MaxTitleLength,
+		))
+	}
+
+	if len(comments) >= 2 && comments[1].Text != "" {
+		errs = append(errs, fmt.Errorf(
+			"%s: doc-comment has %d lines but is missing the required blank `//` separator after the title (line %d). "+
+				"Either collapse the comment to a single line, or insert a blank `//` line between the title and the description.",
+			context, len(comments), comments[0].Pos.Line,
+		))
+	}
+
+	if len(errs) == 0 {
+		return nil
+	}
+	return errors.Join(errs...)
 }
 
 // Parse the input leise string to an AST
@@ -278,10 +334,14 @@ func Parse(input string) (*LR, error) {
 	err := parser.Parse(strings.NewReader(input), res)
 
 	// clean up the parsed results
+	var validationErrs []error
 	for i := range res.Resources {
 		resource := res.Resources[i]
 		resource.Comments = SanitizeComments(resource.Comments)
 		resource.Comments = lastCommentGroup(resource.Comments)
+		if verr := validateDocCommentStructure(resource.Comments, "resource "+resource.ID); verr != nil {
+			validationErrs = append(validationErrs, verr)
+		}
 		resource.title, resource.desc = extractTitleAndDescription(resource.Comments)
 		resource.Comments = nil
 
@@ -370,6 +430,9 @@ func Parse(input string) (*LR, error) {
 		}
 	}
 
+	if len(validationErrs) > 0 {
+		return res, errors.Join(append([]error{err}, validationErrs...)...)
+	}
 	return res, err
 }
 
