@@ -7537,6 +7537,21 @@ aws.cloudwatch {
   logDestinations() []aws.cloudwatch.logDestination
   // List of CloudWatch Logs Insights saved queries
   logInsightQueries() []aws.cloudwatch.logInsightQuery
+  // CloudWatch Logs account-level policies
+  //
+  // Account-level policies returned by `DescribeAccountPolicies` across all
+  // policy types — data protection, subscription filter, field index,
+  // transformer, and metric extraction. Each entry exposes the policy
+  // document, the policy type, the scope (ALL or SELECTION), and the
+  // selection criteria that scopes the policy to a subset of log groups.
+  accountPolicies() []aws.cloudwatch.logAccountPolicy
+  // CloudWatch Logs anomaly detectors in the account
+  //
+  // Anomaly detectors continuously analyze log events in one or more log
+  // groups and surface anomalies as findings. Each entry exposes the
+  // detector ARN, status, evaluation frequency, KMS key (if customer
+  // managed), filter pattern, and the list of log groups it watches.
+  anomalyDetectors() []aws.cloudwatch.logAnomalyDetector
 }
 
 // Amazon CloudWatch metrics alarm
@@ -7653,26 +7668,68 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   retentionInDays int
   // Tags for the log group
   tags() map[string]string
-  // Data protection policy status (ACTIVATED, DELETED, ARCHIVED, DISABLED)
+  // Data protection policy status
+  //
+  // One of ACTIVATED, DELETED, or ARCHIVED. ACTIVATED indicates that the log
+  // group has a data protection policy currently in effect; DELETED and
+  // ARCHIVED indicate that the group had a policy in the past. Unset when
+  // the group has never had a data protection policy.
   dataProtectionStatus string
   // Whether deletion protection is enabled for the log group
   deletionProtectionEnabled bool
-  // Log class: STANDARD or INFREQUENT_ACCESS
+  // Log class
+  //
+  // One of STANDARD, INFREQUENT_ACCESS, or DELIVERY. STANDARD supports the
+  // full feature set of CloudWatch Logs; INFREQUENT_ACCESS supports a
+  // reduced feature set at lower cost; DELIVERY is reserved for Lambda log
+  // delivery to S3 or Firehose with a one-day retention.
   logGroupClass string
   // Number of bytes stored in the log group
   storedBytes int
+  // Properties this log group has inherited from account-level settings
+  //
+  // Each entry is the name of a property covered by an account-level policy
+  // — for example `ACCOUNT_DATA_PROTECTION` when an account-level data
+  // protection policy applies to this log group.
+  inheritedProperties []string
+  // Data protection policy document for the log group
+  //
+  // The PII masking policy returned by `GetDataProtectionPolicy` parsed as a
+  // dict, with `Name`, `Description`, `Version`, and `Statement` keys. Null
+  // when the group has no data protection policy attached.
+  dataProtectionPolicy() dict
+  // Account-level CloudWatch Logs resource policy that applies to this log group
+  //
+  // Returns the resource policy whose `resourceArn` matches this log group's
+  // ARN. Null when no resource-scoped policy applies — note that this does
+  // not include broader account-scoped policies that may still permit
+  // delivery into the group.
+  resourcePolicy() aws.cloudwatch.resourcepolicy
 }
 
 // Amazon CloudWatch log group metrics filter
-private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
-  // Unique ID for the metric
+private aws.cloudwatch.loggroup.metricsfilter @defaults("filterName") {
+  // Unique ID for the metric filter
   id string
   // Filter name associated with the metric
   filterName string
   // Filter pattern associated with the metric
   filterPattern string
+  // Name of the log group this filter belongs to
+  logGroupName string
   // List of CloudWatch metrics
   metrics []aws.cloudwatch.metric
+  // Metric transformations applied when a log event matches the filter pattern
+  //
+  // Each entry has `metricName`, `metricNamespace`, `metricValue`,
+  // `defaultValue`, `dimensions`, and `unit` keys. CloudWatch publishes one
+  // datapoint per transformation to the named metric whenever the filter
+  // pattern matches a log event.
+  metricTransformations []dict
+  // Whether the filter runs against transformed log events
+  applyOnTransformedLogs bool
+  // Creation time of the metric filter
+  createdAt time
 }
 
 // Amazon CloudWatch log group subscription filter
@@ -7732,6 +7789,84 @@ private aws.cloudwatch.resourcepolicy @defaults("policyName") {
   // ARN of the resource the policy is attached to (only for resource-scoped policies)
   resourceArn string
   // Region where the resource policy exists
+  region string
+}
+
+// Amazon CloudWatch Logs account policy
+//
+// Examine an account-level CloudWatch Logs policy returned by
+// `DescribeAccountPolicies`. Account policies cover data protection
+// (PII masking), subscription filters, field indexes, transformers, and
+// metric extraction; each applies either to every log group in the
+// account or to a subset selected by `selectionCriteria`. The
+// `policyDocument` field holds the parsed JSON document so audits can
+// inspect masked identifier types, destination ARNs, or filter
+// patterns without re-fetching.
+private aws.cloudwatch.logAccountPolicy @defaults("policyName policyType") {
+  // Name of the account policy
+  policyName string
+  // Policy type
+  //
+  // One of DATA_PROTECTION_POLICY, SUBSCRIPTION_FILTER_POLICY,
+  // FIELD_INDEX_POLICY, TRANSFORMER_POLICY, or METRIC_EXTRACTION_POLICY.
+  policyType string
+  // Parsed policy document
+  policyDocument dict
+  // Time the policy was last updated
+  lastUpdatedTime time
+  // Policy scope
+  //
+  // ALL when the policy applies to every log group in the account, or
+  // SELECTION when it applies only to log groups matched by
+  // `selectionCriteria`.
+  scope string
+  // Log group selection criteria
+  //
+  // Filter expression that scopes the policy to a subset of log groups
+  // when `scope` is SELECTION — for example
+  // `LogGroupName LIKE 'aws/lambda/%'`. Unset when `scope` is ALL.
+  selectionCriteria string
+  // Account ID that owns the policy
+  accountId string
+  // Region where the policy was retrieved
+  region string
+}
+
+// Amazon CloudWatch Logs anomaly detector
+//
+// Examine a CloudWatch Logs anomaly detector — a managed model that
+// continuously analyzes log events from one or more log groups and
+// surfaces anomalies as findings. The `logGroupArnList` selects the log
+// groups under analysis, `kmsKey()` is the customer-managed key
+// protecting the model (if any), `evaluationFrequency` controls how
+// often the model re-evaluates, and `filterPattern` restricts which log
+// events feed into the model.
+private aws.cloudwatch.logAnomalyDetector @defaults("detectorName anomalyDetectorStatus") {
+  // ARN of the anomaly detector
+  anomalyDetectorArn string
+  // Name of the anomaly detector
+  detectorName string
+  // Anomaly detector status
+  //
+  // One of INITIALIZING, TRAINING, ANALYZING, FAILED, DELETED, or PAUSED.
+  anomalyDetectorStatus string
+  // Evaluation frequency
+  //
+  // One of ONE_MIN, FIVE_MIN, TEN_MIN, FIFTEEN_MIN, THIRTY_MIN, or ONE_HOUR.
+  evaluationFrequency string
+  // Filter pattern restricting which log events feed the model
+  filterPattern string
+  // KMS key protecting the anomaly detector model
+  kmsKey() aws.kms.key
+  // Days of anomaly visibility before findings are baselined as normal
+  anomalyVisibilityTime int
+  // ARNs of the log groups this detector watches
+  logGroupArnList []string
+  // Time the anomaly detector was created
+  creationTimeStamp time
+  // Time the anomaly detector was last modified
+  lastModifiedTimeStamp time
+  // Region where the anomaly detector exists
   region string
 }
 

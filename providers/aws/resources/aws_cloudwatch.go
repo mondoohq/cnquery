@@ -612,6 +612,12 @@ func (a *mqlAwsCloudwatch) getLogGroups(conn *connection.AwsConnection) []*jobpo
 					args["logGroupClass"] = llx.StringData(string(loggroup.LogGroupClass))
 					args["storedBytes"] = llx.IntDataDefault(loggroup.StoredBytes, 0)
 
+					inherited := make([]any, 0, len(loggroup.InheritedProperties))
+					for _, ip := range loggroup.InheritedProperties {
+						inherited = append(inherited, string(ip))
+					}
+					args["inheritedProperties"] = llx.ArrayData(inherited, types.String)
+
 					// add kms key if there is one
 					if loggroup.KmsKeyId != nil {
 						mqlKeyResource, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
@@ -704,6 +710,7 @@ func initAwsCloudwatchLoggroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 		args["dataProtectionStatus"] = llx.StringData("")
 		args["deletionProtectionEnabled"] = llx.BoolData(false)
 		args["logGroupClass"] = llx.StringData("")
+		args["inheritedProperties"] = llx.ArrayData([]any{}, types.String)
 		return args, nil, nil
 	}
 
@@ -785,6 +792,7 @@ func (a *mqlAwsCloudwatchLoggroup) metricsFilters() ([]any, error) {
 		}
 		for _, m := range metricsResp.MetricFilters {
 			mqlCloudwatchMetrics := []any{}
+			transformations := make([]any, 0, len(m.MetricTransformations))
 			for _, mt := range m.MetricTransformations {
 				mqlAwsMetric, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.metric",
 					map[string]*llx.RawData{
@@ -796,13 +804,33 @@ func (a *mqlAwsCloudwatchLoggroup) metricsFilters() ([]any, error) {
 					return nil, err
 				}
 				mqlCloudwatchMetrics = append(mqlCloudwatchMetrics, mqlAwsMetric)
+
+				dims := map[string]any{}
+				for dk, dv := range mt.Dimensions {
+					dims[dk] = dv
+				}
+				transformation := map[string]any{
+					"metricName":      convert.ToValue(mt.MetricName),
+					"metricNamespace": convert.ToValue(mt.MetricNamespace),
+					"metricValue":     convert.ToValue(mt.MetricValue),
+					"dimensions":      dims,
+					"unit":            string(mt.Unit),
+				}
+				if mt.DefaultValue != nil {
+					transformation["defaultValue"] = *mt.DefaultValue
+				}
+				transformations = append(transformations, transformation)
 			}
 			mqlAwsLogGroupMetricFilters, err := CreateResource(a.MqlRuntime, "aws.cloudwatch.loggroup.metricsfilter",
 				map[string]*llx.RawData{
-					"id":            llx.StringData(groupName + "/" + region + "/" + convert.ToValue(m.FilterName)),
-					"filterName":    llx.StringDataPtr(m.FilterName),
-					"filterPattern": llx.StringDataPtr(m.FilterPattern),
-					"metrics":       llx.ArrayData(mqlCloudwatchMetrics, types.Resource("aws.cloudwatch.metric")),
+					"id":                     llx.StringData(groupName + "/" + region + "/" + convert.ToValue(m.FilterName)),
+					"filterName":             llx.StringDataPtr(m.FilterName),
+					"filterPattern":          llx.StringDataPtr(m.FilterPattern),
+					"logGroupName":           llx.StringData(groupName),
+					"metrics":                llx.ArrayData(mqlCloudwatchMetrics, types.Resource("aws.cloudwatch.metric")),
+					"metricTransformations":  llx.ArrayData(transformations, types.Dict),
+					"applyOnTransformedLogs": llx.BoolData(m.ApplyOnTransformedLogs),
+					"createdAt":              llx.TimeDataPtr(int64MillisToTime(m.CreationTime)),
 				})
 			if err != nil {
 				return nil, err

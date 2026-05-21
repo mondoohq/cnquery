@@ -349,6 +349,8 @@ const (
 	ResourceAwsCloudwatchLoggroupSubscriptionfilter                             string = "aws.cloudwatch.loggroup.subscriptionfilter"
 	ResourceAwsCloudwatchLoggroupLogstream                                      string = "aws.cloudwatch.loggroup.logstream"
 	ResourceAwsCloudwatchResourcepolicy                                         string = "aws.cloudwatch.resourcepolicy"
+	ResourceAwsCloudwatchLogAccountPolicy                                       string = "aws.cloudwatch.logAccountPolicy"
+	ResourceAwsCloudwatchLogAnomalyDetector                                     string = "aws.cloudwatch.logAnomalyDetector"
 	ResourceAwsCloudfront                                                       string = "aws.cloudfront"
 	ResourceAwsCloudfrontTrustStore                                             string = "aws.cloudfront.trustStore"
 	ResourceAwsCloudfrontAnycastIpList                                          string = "aws.cloudfront.anycastIpList"
@@ -2137,6 +2139,14 @@ func init() {
 		"aws.cloudwatch.resourcepolicy": {
 			// to override args, implement: initAwsCloudwatchResourcepolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCloudwatchResourcepolicy,
+		},
+		"aws.cloudwatch.logAccountPolicy": {
+			// to override args, implement: initAwsCloudwatchLogAccountPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudwatchLogAccountPolicy,
+		},
+		"aws.cloudwatch.logAnomalyDetector": {
+			// to override args, implement: initAwsCloudwatchLogAnomalyDetector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCloudwatchLogAnomalyDetector,
 		},
 		"aws.cloudfront": {
 			// to override args, implement: initAwsCloudfront(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12725,6 +12735,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudwatch.logInsightQueries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatch).GetLogInsightQueries()).ToDataRes(types.Array(types.Resource("aws.cloudwatch.logInsightQuery")))
 	},
+	"aws.cloudwatch.accountPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatch).GetAccountPolicies()).ToDataRes(types.Array(types.Resource("aws.cloudwatch.logAccountPolicy")))
+	},
+	"aws.cloudwatch.anomalyDetectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatch).GetAnomalyDetectors()).ToDataRes(types.Array(types.Resource("aws.cloudwatch.logAnomalyDetector")))
+	},
 	"aws.cloudwatch.metricsalarm.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchMetricsalarm).GetArn()).ToDataRes(types.String)
 	},
@@ -12857,6 +12873,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudwatch.loggroup.storedBytes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroup).GetStoredBytes()).ToDataRes(types.Int)
 	},
+	"aws.cloudwatch.loggroup.inheritedProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroup).GetInheritedProperties()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cloudwatch.loggroup.dataProtectionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroup).GetDataProtectionPolicy()).ToDataRes(types.Dict)
+	},
+	"aws.cloudwatch.loggroup.resourcePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroup).GetResourcePolicy()).ToDataRes(types.Resource("aws.cloudwatch.resourcepolicy"))
+	},
 	"aws.cloudwatch.loggroup.metricsfilter.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetId()).ToDataRes(types.String)
 	},
@@ -12866,8 +12891,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudwatch.loggroup.metricsfilter.filterPattern": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetFilterPattern()).ToDataRes(types.String)
 	},
+	"aws.cloudwatch.loggroup.metricsfilter.logGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetLogGroupName()).ToDataRes(types.String)
+	},
 	"aws.cloudwatch.loggroup.metricsfilter.metrics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetMetrics()).ToDataRes(types.Array(types.Resource("aws.cloudwatch.metric")))
+	},
+	"aws.cloudwatch.loggroup.metricsfilter.metricTransformations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetMetricTransformations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.cloudwatch.loggroup.metricsfilter.applyOnTransformedLogs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetApplyOnTransformedLogs()).ToDataRes(types.Bool)
+	},
+	"aws.cloudwatch.loggroup.metricsfilter.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroupMetricsfilter).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.cloudwatch.loggroup.subscriptionfilter.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroupSubscriptionfilter).GetId()).ToDataRes(types.String)
@@ -12937,6 +12974,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cloudwatch.resourcepolicy.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchResourcepolicy).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAccountPolicy.policyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAccountPolicy).GetPolicyName()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAccountPolicy.policyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAccountPolicy).GetPolicyType()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAccountPolicy.policyDocument": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAccountPolicy).GetPolicyDocument()).ToDataRes(types.Dict)
+	},
+	"aws.cloudwatch.logAccountPolicy.lastUpdatedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAccountPolicy).GetLastUpdatedTime()).ToDataRes(types.Time)
+	},
+	"aws.cloudwatch.logAccountPolicy.scope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAccountPolicy).GetScope()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAccountPolicy.selectionCriteria": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAccountPolicy).GetSelectionCriteria()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAccountPolicy.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAccountPolicy).GetAccountId()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAccountPolicy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAccountPolicy).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAnomalyDetector.anomalyDetectorArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetAnomalyDetectorArn()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAnomalyDetector.detectorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetDetectorName()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAnomalyDetector.anomalyDetectorStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetAnomalyDetectorStatus()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAnomalyDetector.evaluationFrequency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetEvaluationFrequency()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAnomalyDetector.filterPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetFilterPattern()).ToDataRes(types.String)
+	},
+	"aws.cloudwatch.logAnomalyDetector.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.cloudwatch.logAnomalyDetector.anomalyVisibilityTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetAnomalyVisibilityTime()).ToDataRes(types.Int)
+	},
+	"aws.cloudwatch.logAnomalyDetector.logGroupArnList": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetLogGroupArnList()).ToDataRes(types.Array(types.String))
+	},
+	"aws.cloudwatch.logAnomalyDetector.creationTimeStamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetCreationTimeStamp()).ToDataRes(types.Time)
+	},
+	"aws.cloudwatch.logAnomalyDetector.lastModifiedTimeStamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetLastModifiedTimeStamp()).ToDataRes(types.Time)
+	},
+	"aws.cloudwatch.logAnomalyDetector.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLogAnomalyDetector).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.cloudfront.distributions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfront).GetDistributions()).ToDataRes(types.Array(types.Resource("aws.cloudfront.distribution")))
@@ -40609,6 +40703,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudwatch).LogInsightQueries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.cloudwatch.accountPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatch).AccountPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.anomalyDetectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatch).AnomalyDetectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.cloudwatch.metricsalarm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchMetricsalarm).__id, ok = v.Value.(string)
 		return
@@ -40809,6 +40911,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudwatchLoggroup).StoredBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.cloudwatch.loggroup.inheritedProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroup).InheritedProperties, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.dataProtectionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroup).DataProtectionPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.resourcePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroup).ResourcePolicy, ok = plugin.RawToTValue[*mqlAwsCloudwatchResourcepolicy](v.Value, v.Error)
+		return
+	},
 	"aws.cloudwatch.loggroup.metricsfilter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).__id, ok = v.Value.(string)
 		return
@@ -40825,8 +40939,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).FilterPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.cloudwatch.loggroup.metricsfilter.logGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).LogGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.cloudwatch.loggroup.metricsfilter.metrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).Metrics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.metricsfilter.metricTransformations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).MetricTransformations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.metricsfilter.applyOnTransformedLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).ApplyOnTransformedLogs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.metricsfilter.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroupMetricsfilter).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.loggroup.subscriptionfilter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40931,6 +41061,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudwatch.resourcepolicy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchResourcepolicy).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAccountPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAccountPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudwatch.logAccountPolicy.policyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAccountPolicy).PolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAccountPolicy.policyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAccountPolicy).PolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAccountPolicy.policyDocument": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAccountPolicy).PolicyDocument, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAccountPolicy.lastUpdatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAccountPolicy).LastUpdatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAccountPolicy.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAccountPolicy).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAccountPolicy.selectionCriteria": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAccountPolicy).SelectionCriteria, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAccountPolicy.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAccountPolicy).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAccountPolicy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAccountPolicy).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.anomalyDetectorArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).AnomalyDetectorArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.detectorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).DetectorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.anomalyDetectorStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).AnomalyDetectorStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.evaluationFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).EvaluationFrequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.filterPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).FilterPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.anomalyVisibilityTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).AnomalyVisibilityTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.logGroupArnList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).LogGroupArnList, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.creationTimeStamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).CreationTimeStamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.lastModifiedTimeStamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).LastModifiedTimeStamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.logAnomalyDetector.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLogAnomalyDetector).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cloudfront.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -97680,6 +97894,8 @@ type mqlAwsCloudwatch struct {
 	ResourcePolicies  plugin.TValue[[]any]
 	LogDestinations   plugin.TValue[[]any]
 	LogInsightQueries plugin.TValue[[]any]
+	AccountPolicies   plugin.TValue[[]any]
+	AnomalyDetectors  plugin.TValue[[]any]
 }
 
 // createAwsCloudwatch creates a new instance of this resource
@@ -97812,6 +98028,38 @@ func (c *mqlAwsCloudwatch) GetLogInsightQueries() *plugin.TValue[[]any] {
 		}
 
 		return c.logInsightQueries()
+	})
+}
+
+func (c *mqlAwsCloudwatch) GetAccountPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccountPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch", c.__id, "accountPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accountPolicies()
+	})
+}
+
+func (c *mqlAwsCloudwatch) GetAnomalyDetectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AnomalyDetectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch", c.__id, "anomalyDetectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.anomalyDetectors()
 	})
 }
 
@@ -98244,6 +98492,9 @@ type mqlAwsCloudwatchLoggroup struct {
 	DeletionProtectionEnabled plugin.TValue[bool]
 	LogGroupClass             plugin.TValue[string]
 	StoredBytes               plugin.TValue[int64]
+	InheritedProperties       plugin.TValue[[]any]
+	DataProtectionPolicy      plugin.TValue[any]
+	ResourcePolicy            plugin.TValue[*mqlAwsCloudwatchResourcepolicy]
 }
 
 // createAwsCloudwatchLoggroup creates a new instance of this resource
@@ -98385,15 +98636,45 @@ func (c *mqlAwsCloudwatchLoggroup) GetStoredBytes() *plugin.TValue[int64] {
 	return &c.StoredBytes
 }
 
+func (c *mqlAwsCloudwatchLoggroup) GetInheritedProperties() *plugin.TValue[[]any] {
+	return &c.InheritedProperties
+}
+
+func (c *mqlAwsCloudwatchLoggroup) GetDataProtectionPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.DataProtectionPolicy, func() (any, error) {
+		return c.dataProtectionPolicy()
+	})
+}
+
+func (c *mqlAwsCloudwatchLoggroup) GetResourcePolicy() *plugin.TValue[*mqlAwsCloudwatchResourcepolicy] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchResourcepolicy](&c.ResourcePolicy, func() (*mqlAwsCloudwatchResourcepolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch.loggroup", c.__id, "resourcePolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchResourcepolicy), nil
+			}
+		}
+
+		return c.resourcePolicy()
+	})
+}
+
 // mqlAwsCloudwatchLoggroupMetricsfilter for the aws.cloudwatch.loggroup.metricsfilter resource
 type mqlAwsCloudwatchLoggroupMetricsfilter struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsCloudwatchLoggroupMetricsfilterInternal it will be used here
-	Id            plugin.TValue[string]
-	FilterName    plugin.TValue[string]
-	FilterPattern plugin.TValue[string]
-	Metrics       plugin.TValue[[]any]
+	Id                     plugin.TValue[string]
+	FilterName             plugin.TValue[string]
+	FilterPattern          plugin.TValue[string]
+	LogGroupName           plugin.TValue[string]
+	Metrics                plugin.TValue[[]any]
+	MetricTransformations  plugin.TValue[[]any]
+	ApplyOnTransformedLogs plugin.TValue[bool]
+	CreatedAt              plugin.TValue[*time.Time]
 }
 
 // createAwsCloudwatchLoggroupMetricsfilter creates a new instance of this resource
@@ -98445,8 +98726,24 @@ func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetFilterPattern() *plugin.TValu
 	return &c.FilterPattern
 }
 
+func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetLogGroupName() *plugin.TValue[string] {
+	return &c.LogGroupName
+}
+
 func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetMetrics() *plugin.TValue[[]any] {
 	return &c.Metrics
+}
+
+func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetMetricTransformations() *plugin.TValue[[]any] {
+	return &c.MetricTransformations
+}
+
+func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetApplyOnTransformedLogs() *plugin.TValue[bool] {
+	return &c.ApplyOnTransformedLogs
+}
+
+func (c *mqlAwsCloudwatchLoggroupMetricsfilter) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlAwsCloudwatchLoggroupSubscriptionfilter for the aws.cloudwatch.loggroup.subscriptionfilter resource
@@ -98705,6 +99002,201 @@ func (c *mqlAwsCloudwatchResourcepolicy) GetResourceArn() *plugin.TValue[string]
 }
 
 func (c *mqlAwsCloudwatchResourcepolicy) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsCloudwatchLogAccountPolicy for the aws.cloudwatch.logAccountPolicy resource
+type mqlAwsCloudwatchLogAccountPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudwatchLogAccountPolicyInternal it will be used here
+	PolicyName        plugin.TValue[string]
+	PolicyType        plugin.TValue[string]
+	PolicyDocument    plugin.TValue[any]
+	LastUpdatedTime   plugin.TValue[*time.Time]
+	Scope             plugin.TValue[string]
+	SelectionCriteria plugin.TValue[string]
+	AccountId         plugin.TValue[string]
+	Region            plugin.TValue[string]
+}
+
+// createAwsCloudwatchLogAccountPolicy creates a new instance of this resource
+func createAwsCloudwatchLogAccountPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudwatchLogAccountPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudwatch.logAccountPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudwatchLogAccountPolicy) MqlName() string {
+	return "aws.cloudwatch.logAccountPolicy"
+}
+
+func (c *mqlAwsCloudwatchLogAccountPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudwatchLogAccountPolicy) GetPolicyName() *plugin.TValue[string] {
+	return &c.PolicyName
+}
+
+func (c *mqlAwsCloudwatchLogAccountPolicy) GetPolicyType() *plugin.TValue[string] {
+	return &c.PolicyType
+}
+
+func (c *mqlAwsCloudwatchLogAccountPolicy) GetPolicyDocument() *plugin.TValue[any] {
+	return &c.PolicyDocument
+}
+
+func (c *mqlAwsCloudwatchLogAccountPolicy) GetLastUpdatedTime() *plugin.TValue[*time.Time] {
+	return &c.LastUpdatedTime
+}
+
+func (c *mqlAwsCloudwatchLogAccountPolicy) GetScope() *plugin.TValue[string] {
+	return &c.Scope
+}
+
+func (c *mqlAwsCloudwatchLogAccountPolicy) GetSelectionCriteria() *plugin.TValue[string] {
+	return &c.SelectionCriteria
+}
+
+func (c *mqlAwsCloudwatchLogAccountPolicy) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlAwsCloudwatchLogAccountPolicy) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+// mqlAwsCloudwatchLogAnomalyDetector for the aws.cloudwatch.logAnomalyDetector resource
+type mqlAwsCloudwatchLogAnomalyDetector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCloudwatchLogAnomalyDetectorInternal it will be used here
+	AnomalyDetectorArn    plugin.TValue[string]
+	DetectorName          plugin.TValue[string]
+	AnomalyDetectorStatus plugin.TValue[string]
+	EvaluationFrequency   plugin.TValue[string]
+	FilterPattern         plugin.TValue[string]
+	KmsKey                plugin.TValue[*mqlAwsKmsKey]
+	AnomalyVisibilityTime plugin.TValue[int64]
+	LogGroupArnList       plugin.TValue[[]any]
+	CreationTimeStamp     plugin.TValue[*time.Time]
+	LastModifiedTimeStamp plugin.TValue[*time.Time]
+	Region                plugin.TValue[string]
+}
+
+// createAwsCloudwatchLogAnomalyDetector creates a new instance of this resource
+func createAwsCloudwatchLogAnomalyDetector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCloudwatchLogAnomalyDetector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cloudwatch.logAnomalyDetector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) MqlName() string {
+	return "aws.cloudwatch.logAnomalyDetector"
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetAnomalyDetectorArn() *plugin.TValue[string] {
+	return &c.AnomalyDetectorArn
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetDetectorName() *plugin.TValue[string] {
+	return &c.DetectorName
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetAnomalyDetectorStatus() *plugin.TValue[string] {
+	return &c.AnomalyDetectorStatus
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetEvaluationFrequency() *plugin.TValue[string] {
+	return &c.EvaluationFrequency
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetFilterPattern() *plugin.TValue[string] {
+	return &c.FilterPattern
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cloudwatch.logAnomalyDetector", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetAnomalyVisibilityTime() *plugin.TValue[int64] {
+	return &c.AnomalyVisibilityTime
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetLogGroupArnList() *plugin.TValue[[]any] {
+	return &c.LogGroupArnList
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetCreationTimeStamp() *plugin.TValue[*time.Time] {
+	return &c.CreationTimeStamp
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetLastModifiedTimeStamp() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTimeStamp
+}
+
+func (c *mqlAwsCloudwatchLogAnomalyDetector) GetRegion() *plugin.TValue[string] {
 	return &c.Region
 }
 

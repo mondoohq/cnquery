@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.26.2",
-  "generated_at": "2026-05-21T15:10:03-07:00",
+  "generated_at": "2026-05-21T15:32:32-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -450,6 +450,7 @@
     "lightsail:GetInstances",
     "lightsail:GetLoadBalancers",
     "lightsail:GetRelationalDatabases",
+    "logs:DescribeAccountPolicies",
     "logs:DescribeDestinations",
     "logs:DescribeLogGroups",
     "logs:DescribeLogStreams",
@@ -457,6 +458,8 @@
     "logs:DescribeQueryDefinitions",
     "logs:DescribeResourcePolicies",
     "logs:DescribeSubscriptionFilters",
+    "logs:GetDataProtectionPolicy",
+    "logs:ListLogAnomalyDetectors",
     "logs:ListTagsForResource",
     "macie2:DescribeBuckets",
     "macie2:DescribeClassificationJob",
@@ -3522,6 +3525,12 @@
       "source_file": "aws_lightsail.go"
     },
     {
+      "permission": "logs:DescribeAccountPolicies",
+      "service": "logs",
+      "action": "DescribeAccountPolicies",
+      "source_file": "aws_cloudwatch_logs.go"
+    },
+    {
       "permission": "logs:DescribeDestinations",
       "service": "logs",
       "action": "DescribeDestinations",
@@ -3562,6 +3571,18 @@
       "service": "logs",
       "action": "DescribeSubscriptionFilters",
       "source_file": "aws_cloudwatch.go"
+    },
+    {
+      "permission": "logs:GetDataProtectionPolicy",
+      "service": "logs",
+      "action": "GetDataProtectionPolicy",
+      "source_file": "aws_cloudwatch_logs.go"
+    },
+    {
+      "permission": "logs:ListLogAnomalyDetectors",
+      "service": "logs",
+      "action": "ListLogAnomalyDetectors",
+      "source_file": "aws_cloudwatch_logs.go"
     },
     {
       "permission": "logs:ListTagsForResource",
