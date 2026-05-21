@@ -11861,12 +11861,27 @@ aws.ssm @defaults("instances") {
   documents() []aws.ssm.document
   // List of SSM patch baselines
   patchBaselines() []aws.ssm.patchBaseline
+  // Patch group registrations mapping a patch group name to the baseline it consumes
+  patchGroups() []aws.ssm.patchGroup
   // List of SSM maintenance windows
   maintenanceWindows() []aws.ssm.maintenanceWindow
   // List of SSM State Manager associations
   associations() []aws.ssm.association
   // List of SSM compliance summaries
   complianceSummaries() []aws.ssm.complianceSummary
+  // Account-level SSM service settings relevant to Session Manager, Parameter Store, and document sharing
+  //
+  // Covers a fixed set of session-manager- and document-sharing-relevant setting IDs queried via
+  // `GetServiceSetting`, including `/ssm/documents/console/public-sharing-permission`,
+  // `/ssm/managed-instance/activation-tier`, `/ssm/automation/customer-script-log-destination`,
+  // `/ssm/parameter-store/default-parameter-tier`, and `/ssm/parameter-store/high-throughput-enabled`.
+  serviceSettings() []aws.ssm.serviceSetting
+  // Session Manager preferences document body (`SSM-SessionManagerRunShell`)
+  //
+  // Returns the JSON content of the Session Manager run-shell preferences document — including
+  // S3/CloudWatch logging destinations, KMS key ID for session encryption, idle timeout, and
+  // run-as configuration. Empty when the document has not been customized in the account.
+  sessionManagerPreferences() dict
 }
 
 
@@ -11894,6 +11909,14 @@ private aws.ssm.parameter {
   type string
   // Version of the parameter
   version int
+  // ARN of the principal that most recently changed the parameter
+  lastModifiedUser string
+  // Inline parameter policies attached to the parameter (Advanced tier)
+  //
+  // Each entry has `policyType` (one of `Expiration`, `ExpirationNotification`, or
+  // `NoChangeNotification`), `policyText` (the JSON policy body), and `policyStatus`
+  // (one of `Pending`, `Finished`, `Failed`, `InProgress`).
+  policies []dict
 }
 
 // Amazon SSM instance
@@ -19273,32 +19296,141 @@ private aws.ssm.maintenanceWindow @defaults("id name") {
   schedule string
   // Timezone for the schedule
   scheduleTimezone string
+  // Days to wait after the scheduled cron expression date before running the window
+  scheduleOffset int
   // Duration in hours
   duration int
   // Hours before the end of the window to stop scheduling new tasks
   cutoff int
+  // Earliest date and time the window may run
+  startDate time
+  // Date and time after which the window stops scheduling work
+  endDate time
+  // Next scheduled execution time of the window
+  nextExecutionTime time
+  // Date the window was last modified
+  modifiedDate() time
   // Whether targets that are not associated with the window can be run
   allowUnassociatedTargets() bool
+  // Tasks registered to the maintenance window
+  tasks() []aws.ssm.maintenanceWindow.task
+  // Targets registered to the maintenance window
+  targets() []aws.ssm.maintenanceWindow.target
   // Tags on the maintenance window
   tags() map[string]string
+}
+
+// Maintenance window task registration
+//
+// Examine a task that the maintenance window runs against its registered targets — the document or
+// function `taskArn` points to, the IAM `iamRole()` SSM assumes to execute it, the priority within
+// the window, and the parallelism guardrails (`maxConcurrency`, `maxErrors`, `cutoffBehavior`).
+// `taskType` is one of `RUN_COMMAND`, `AUTOMATION`, `LAMBDA`, or `STEP_FUNCTIONS`. Selected by the
+// composite `region/windowId/windowTaskId` key returned by `DescribeMaintenanceWindowTasks`.
+private aws.ssm.maintenanceWindow.task @defaults("name taskType priority") {
+  // Maintenance window ID the task is registered to
+  windowId string
+  // Task ID within the maintenance window
+  windowTaskId string
+  // Region where the task is registered
+  region string
+  // Task name
+  name string
+  // Description of the task
+  description string
+  // Task type
+  //
+  // One of `RUN_COMMAND`, `AUTOMATION`, `LAMBDA`, or `STEP_FUNCTIONS`.
+  taskType string
+  // Resource the task uses during execution
+  //
+  // For `RUN_COMMAND` and `AUTOMATION`, the SSM document name or ARN; for `LAMBDA`, the function
+  // name or ARN; for `STEP_FUNCTIONS`, the state machine ARN.
+  taskArn string
+  // ARN of the IAM service role SSM assumes when running the task
+  serviceRoleArn string
+  // IAM service role SSM assumes when running the task
+  iamRole() aws.iam.role
+  // Priority of the task within the window (lower number = higher priority)
+  priority int
+  // Maximum number of targets the task runs against in parallel
+  maxConcurrency string
+  // Maximum number of errors allowed before the task stops being scheduled
+  maxErrors string
+  // Cutoff behavior for tasks still running when the window closes
+  //
+  // One of `CONTINUE_TASK` or `CANCEL_TASK`.
+  cutoffBehavior string
+  // Targets the task runs against (key/values pairs from the registration)
+  targets []dict
+}
+
+// Maintenance window target registration
+//
+// Examine a target group bound to the maintenance window — the managed nodes or resource tags
+// `targets` selects, and the `resourceType` (`INSTANCE` or `RESOURCE_GROUP`). Selected by the
+// composite `region/windowId/windowTargetId` key returned by `DescribeMaintenanceWindowTargets`.
+private aws.ssm.maintenanceWindow.target @defaults("name resourceType") {
+  // Maintenance window ID the target is registered to
+  windowId string
+  // Target ID within the maintenance window
+  windowTargetId string
+  // Region where the target is registered
+  region string
+  // Target name
+  name string
+  // Description of the target
+  description string
+  // Resource type
+  //
+  // One of `INSTANCE` or `RESOURCE_GROUP`.
+  resourceType string
+  // Owner information attached to the target, surfaced in CloudWatch Events
+  ownerInformation string
+  // Key/values pairs identifying the target nodes or tags
+  targets []dict
 }
 
 // Amazon SSM State Manager association
 private aws.ssm.association @defaults("associationId name") {
   // Association ID
   associationId string
-  // Document name
+  // Document name bound by the association
   name string
+  // User-provided association name
+  associationName string
   // Region where the association exists
   region string
+  // Document version pinned by the association (`$DEFAULT`, `$LATEST`, or a numeric version)
+  documentVersion string
+  // Managed node ID the association targets when not using the `targets` selector
+  instanceId string
   // Targets for the association
   targets []dict
   // Cron or rate schedule expression
   schedule string
+  // Status of the most recent association run
+  //
+  // Includes `date` (when the status changed), `name` (one of `Pending`, `Success`, or `Failed`),
+  // `message` (human-readable reason), and `additionalInfo` (free-form user string).
+  status() dict
   // Last execution date
   lastExecutionDate time
+  // Last date the association ran successfully
+  lastSuccessfulExecutionDate() time
   // Overview of the association execution status (status, detailedStatus, associationStatusAggregatedCount)
   overview dict
+  // Severity assigned to non-compliant associations
+  //
+  // One of `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, or `UNSPECIFIED`.
+  complianceSeverity() string
+  // Compliance sync mode
+  //
+  // `AUTO` means State Manager derives compliance from execution status; `MANUAL` means compliance
+  // is reported externally via `PutComplianceItems`.
+  syncCompliance() string
+  // Whether the association skips the immediate post-create run and waits for the next cron tick
+  applyOnlyAtCronInterval() bool
 }
 
 // Amazon SSM compliance summary per resource
@@ -19319,6 +19451,61 @@ private aws.ssm.complianceSummary @defaults("complianceType resourceId status") 
   nonCompliantCount int
   // Execution summary
   executionSummary dict
+}
+
+// Patch group to patch baseline mapping
+//
+// Examine which patch baseline a Patch Manager patch group consumes. A patch group is a tag-valued
+// label (the `Patch Group` tag on managed nodes) bound to one baseline per operating system. The
+// `baselineIdentity` dict carries the baseline ID, name, description, operating system, and default
+// flag returned by `DescribePatchGroups`; the typed `baseline()` accessor resolves the matching
+// `aws.ssm.patchBaseline`.
+private aws.ssm.patchGroup @defaults("patchGroup operatingSystem baselineName") {
+  // Patch group name (the value of the `Patch Group` tag on managed nodes)
+  patchGroup string
+  // Region where the mapping is registered
+  region string
+  // ID of the baseline the patch group is bound to
+  baselineId string
+  // Name of the baseline the patch group is bound to
+  baselineName string
+  // Operating system the binding applies to
+  //
+  // One of `WINDOWS`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `AMAZON_LINUX_2023`, `UBUNTU`,
+  // `REDHAT_ENTERPRISE_LINUX`, `SUSE`, `CENTOS`, `ORACLE_LINUX`, `DEBIAN`, `MACOS`, `RASPBIAN`, or
+  // `ROCKY_LINUX`.
+  operatingSystem string
+  // Identity of the baseline the patch group is bound to (id, name, description, OS, default flag)
+  baselineIdentity dict
+  // Patch baseline the patch group is bound to
+  baseline() aws.ssm.patchBaseline
+}
+
+// SSM account-level service setting
+//
+// Examine the value, status, and last modifier of a single SSM account-level service setting
+// returned by `GetServiceSetting`. The `settingId` field selects the setting — for example
+// `aws.ssm.serviceSetting(settingId: "/ssm/documents/console/public-sharing-permission")` — and
+// `status` is one of `Default`, `Customized`, or `PendingUpdate`. Settings of interest for posture
+// audits include the document public-sharing toggle, Session Manager logging destinations,
+// Parameter Store default tier, and managed-instance activation tier.
+private aws.ssm.serviceSetting @defaults("settingId settingValue status") {
+  // Setting ID (e.g., `/ssm/documents/console/public-sharing-permission`)
+  settingId string
+  // Region where the setting was queried
+  region string
+  // Current value of the setting
+  settingValue string
+  // Status of the setting
+  //
+  // One of `Default`, `Customized`, or `PendingUpdate`.
+  status string
+  // ARN of the setting
+  arn string
+  // Date the setting was last modified
+  lastModifiedDate time
+  // ARN of the principal that last modified the setting
+  lastModifiedUser string
 }
 
 // Amazon CloudWatch Logs cross-account destination

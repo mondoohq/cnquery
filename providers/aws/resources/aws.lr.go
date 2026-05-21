@@ -742,8 +742,12 @@ const (
 	ResourceAwsSsmDocument                                                      string = "aws.ssm.document"
 	ResourceAwsSsmPatchBaseline                                                 string = "aws.ssm.patchBaseline"
 	ResourceAwsSsmMaintenanceWindow                                             string = "aws.ssm.maintenanceWindow"
+	ResourceAwsSsmMaintenanceWindowTask                                         string = "aws.ssm.maintenanceWindow.task"
+	ResourceAwsSsmMaintenanceWindowTarget                                       string = "aws.ssm.maintenanceWindow.target"
 	ResourceAwsSsmAssociation                                                   string = "aws.ssm.association"
 	ResourceAwsSsmComplianceSummary                                             string = "aws.ssm.complianceSummary"
+	ResourceAwsSsmPatchGroup                                                    string = "aws.ssm.patchGroup"
+	ResourceAwsSsmServiceSetting                                                string = "aws.ssm.serviceSetting"
 	ResourceAwsCloudwatchLogDestination                                         string = "aws.cloudwatch.logDestination"
 	ResourceAwsCloudwatchLogInsightQuery                                        string = "aws.cloudwatch.logInsightQuery"
 	ResourceAwsEc2VpcEndpointServiceConfigurationConnection                     string = "aws.ec2.vpcEndpointServiceConfiguration.connection"
@@ -3723,6 +3727,14 @@ func init() {
 			// to override args, implement: initAwsSsmMaintenanceWindow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSsmMaintenanceWindow,
 		},
+		"aws.ssm.maintenanceWindow.task": {
+			// to override args, implement: initAwsSsmMaintenanceWindowTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSsmMaintenanceWindowTask,
+		},
+		"aws.ssm.maintenanceWindow.target": {
+			// to override args, implement: initAwsSsmMaintenanceWindowTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSsmMaintenanceWindowTarget,
+		},
 		"aws.ssm.association": {
 			// to override args, implement: initAwsSsmAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSsmAssociation,
@@ -3730,6 +3742,14 @@ func init() {
 		"aws.ssm.complianceSummary": {
 			// to override args, implement: initAwsSsmComplianceSummary(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSsmComplianceSummary,
+		},
+		"aws.ssm.patchGroup": {
+			// to override args, implement: initAwsSsmPatchGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSsmPatchGroup,
+		},
+		"aws.ssm.serviceSetting": {
+			Init:   initAwsSsmServiceSetting,
+			Create: createAwsSsmServiceSetting,
 		},
 		"aws.cloudwatch.logDestination": {
 			// to override args, implement: initAwsCloudwatchLogDestination(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -17704,6 +17724,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ssm.patchBaselines": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsm).GetPatchBaselines()).ToDataRes(types.Array(types.Resource("aws.ssm.patchBaseline")))
 	},
+	"aws.ssm.patchGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsm).GetPatchGroups()).ToDataRes(types.Array(types.Resource("aws.ssm.patchGroup")))
+	},
 	"aws.ssm.maintenanceWindows": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsm).GetMaintenanceWindows()).ToDataRes(types.Array(types.Resource("aws.ssm.maintenanceWindow")))
 	},
@@ -17712,6 +17735,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ssm.complianceSummaries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsm).GetComplianceSummaries()).ToDataRes(types.Array(types.Resource("aws.ssm.complianceSummary")))
+	},
+	"aws.ssm.serviceSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsm).GetServiceSettings()).ToDataRes(types.Array(types.Resource("aws.ssm.serviceSetting")))
+	},
+	"aws.ssm.sessionManagerPreferences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsm).GetSessionManagerPreferences()).ToDataRes(types.Dict)
 	},
 	"aws.ssm.parameter.allowedPattern": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmParameter).GetAllowedPattern()).ToDataRes(types.String)
@@ -17745,6 +17774,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ssm.parameter.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmParameter).GetVersion()).ToDataRes(types.Int)
+	},
+	"aws.ssm.parameter.lastModifiedUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetLastModifiedUser()).ToDataRes(types.String)
+	},
+	"aws.ssm.parameter.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmParameter).GetPolicies()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.ssm.instance.instanceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmInstance).GetInstanceId()).ToDataRes(types.String)
@@ -26404,17 +26439,104 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ssm.maintenanceWindow.scheduleTimezone": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmMaintenanceWindow).GetScheduleTimezone()).ToDataRes(types.String)
 	},
+	"aws.ssm.maintenanceWindow.scheduleOffset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindow).GetScheduleOffset()).ToDataRes(types.Int)
+	},
 	"aws.ssm.maintenanceWindow.duration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmMaintenanceWindow).GetDuration()).ToDataRes(types.Int)
 	},
 	"aws.ssm.maintenanceWindow.cutoff": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmMaintenanceWindow).GetCutoff()).ToDataRes(types.Int)
 	},
+	"aws.ssm.maintenanceWindow.startDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindow).GetStartDate()).ToDataRes(types.Time)
+	},
+	"aws.ssm.maintenanceWindow.endDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindow).GetEndDate()).ToDataRes(types.Time)
+	},
+	"aws.ssm.maintenanceWindow.nextExecutionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindow).GetNextExecutionTime()).ToDataRes(types.Time)
+	},
+	"aws.ssm.maintenanceWindow.modifiedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindow).GetModifiedDate()).ToDataRes(types.Time)
+	},
 	"aws.ssm.maintenanceWindow.allowUnassociatedTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmMaintenanceWindow).GetAllowUnassociatedTargets()).ToDataRes(types.Bool)
 	},
+	"aws.ssm.maintenanceWindow.tasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindow).GetTasks()).ToDataRes(types.Array(types.Resource("aws.ssm.maintenanceWindow.task")))
+	},
+	"aws.ssm.maintenanceWindow.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindow).GetTargets()).ToDataRes(types.Array(types.Resource("aws.ssm.maintenanceWindow.target")))
+	},
 	"aws.ssm.maintenanceWindow.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmMaintenanceWindow).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ssm.maintenanceWindow.task.windowId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetWindowId()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.windowTaskId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetWindowTaskId()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetName()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.taskType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetTaskType()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.taskArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetTaskArn()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.serviceRoleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetServiceRoleArn()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.ssm.maintenanceWindow.task.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetPriority()).ToDataRes(types.Int)
+	},
+	"aws.ssm.maintenanceWindow.task.maxConcurrency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetMaxConcurrency()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.maxErrors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetMaxErrors()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.cutoffBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetCutoffBehavior()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.task.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTask).GetTargets()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ssm.maintenanceWindow.target.windowId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTarget).GetWindowId()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.target.windowTargetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTarget).GetWindowTargetId()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.target.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTarget).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.target.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTarget).GetName()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.target.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTarget).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.target.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTarget).GetResourceType()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.target.ownerInformation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTarget).GetOwnerInformation()).ToDataRes(types.String)
+	},
+	"aws.ssm.maintenanceWindow.target.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmMaintenanceWindowTarget).GetTargets()).ToDataRes(types.Array(types.Dict))
 	},
 	"aws.ssm.association.associationId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmAssociation).GetAssociationId()).ToDataRes(types.String)
@@ -26422,8 +26544,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ssm.association.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmAssociation).GetName()).ToDataRes(types.String)
 	},
+	"aws.ssm.association.associationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetAssociationName()).ToDataRes(types.String)
+	},
 	"aws.ssm.association.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmAssociation).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ssm.association.documentVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetDocumentVersion()).ToDataRes(types.String)
+	},
+	"aws.ssm.association.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetInstanceId()).ToDataRes(types.String)
 	},
 	"aws.ssm.association.targets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmAssociation).GetTargets()).ToDataRes(types.Array(types.Dict))
@@ -26431,11 +26562,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ssm.association.schedule": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmAssociation).GetSchedule()).ToDataRes(types.String)
 	},
+	"aws.ssm.association.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetStatus()).ToDataRes(types.Dict)
+	},
 	"aws.ssm.association.lastExecutionDate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmAssociation).GetLastExecutionDate()).ToDataRes(types.Time)
 	},
+	"aws.ssm.association.lastSuccessfulExecutionDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetLastSuccessfulExecutionDate()).ToDataRes(types.Time)
+	},
 	"aws.ssm.association.overview": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmAssociation).GetOverview()).ToDataRes(types.Dict)
+	},
+	"aws.ssm.association.complianceSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetComplianceSeverity()).ToDataRes(types.String)
+	},
+	"aws.ssm.association.syncCompliance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetSyncCompliance()).ToDataRes(types.String)
+	},
+	"aws.ssm.association.applyOnlyAtCronInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmAssociation).GetApplyOnlyAtCronInterval()).ToDataRes(types.Bool)
 	},
 	"aws.ssm.complianceSummary.complianceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmComplianceSummary).GetComplianceType()).ToDataRes(types.String)
@@ -26460,6 +26606,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ssm.complianceSummary.executionSummary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSsmComplianceSummary).GetExecutionSummary()).ToDataRes(types.Dict)
+	},
+	"aws.ssm.patchGroup.patchGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmPatchGroup).GetPatchGroup()).ToDataRes(types.String)
+	},
+	"aws.ssm.patchGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmPatchGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ssm.patchGroup.baselineId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmPatchGroup).GetBaselineId()).ToDataRes(types.String)
+	},
+	"aws.ssm.patchGroup.baselineName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmPatchGroup).GetBaselineName()).ToDataRes(types.String)
+	},
+	"aws.ssm.patchGroup.operatingSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmPatchGroup).GetOperatingSystem()).ToDataRes(types.String)
+	},
+	"aws.ssm.patchGroup.baselineIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmPatchGroup).GetBaselineIdentity()).ToDataRes(types.Dict)
+	},
+	"aws.ssm.patchGroup.baseline": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmPatchGroup).GetBaseline()).ToDataRes(types.Resource("aws.ssm.patchBaseline"))
+	},
+	"aws.ssm.serviceSetting.settingId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmServiceSetting).GetSettingId()).ToDataRes(types.String)
+	},
+	"aws.ssm.serviceSetting.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmServiceSetting).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.ssm.serviceSetting.settingValue": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmServiceSetting).GetSettingValue()).ToDataRes(types.String)
+	},
+	"aws.ssm.serviceSetting.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmServiceSetting).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.ssm.serviceSetting.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmServiceSetting).GetArn()).ToDataRes(types.String)
+	},
+	"aws.ssm.serviceSetting.lastModifiedDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmServiceSetting).GetLastModifiedDate()).ToDataRes(types.Time)
+	},
+	"aws.ssm.serviceSetting.lastModifiedUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSsmServiceSetting).GetLastModifiedUser()).ToDataRes(types.String)
 	},
 	"aws.cloudwatch.logDestination.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLogDestination).GetName()).ToDataRes(types.String)
@@ -48461,6 +48649,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSsm).PatchBaselines, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.ssm.patchGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsm).PatchGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ssm.maintenanceWindows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsm).MaintenanceWindows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -48471,6 +48663,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ssm.complianceSummaries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsm).ComplianceSummaries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.serviceSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsm).ServiceSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.sessionManagerPreferences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsm).SessionManagerPreferences, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.parameter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48519,6 +48719,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ssm.parameter.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmParameter).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.lastModifiedUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).LastModifiedUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.parameter.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmParameter).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.instance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61089,6 +61297,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSsmMaintenanceWindow).ScheduleTimezone, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ssm.maintenanceWindow.scheduleOffset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindow).ScheduleOffset, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.ssm.maintenanceWindow.duration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmMaintenanceWindow).Duration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -61097,12 +61309,132 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSsmMaintenanceWindow).Cutoff, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"aws.ssm.maintenanceWindow.startDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindow).StartDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.endDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindow).EndDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.nextExecutionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindow).NextExecutionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.modifiedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindow).ModifiedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.ssm.maintenanceWindow.allowUnassociatedTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmMaintenanceWindow).AllowUnassociatedTargets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.ssm.maintenanceWindow.tasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindow).Tasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindow).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.ssm.maintenanceWindow.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmMaintenanceWindow).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.windowId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).WindowId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.windowTaskId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).WindowTaskId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.taskType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).TaskType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.taskArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).TaskArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.serviceRoleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).ServiceRoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.maxConcurrency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).MaxConcurrency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.maxErrors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).MaxErrors, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.cutoffBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).CutoffBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.task.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTask).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.target.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ssm.maintenanceWindow.target.windowId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTarget).WindowId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.target.windowTargetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTarget).WindowTargetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.target.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTarget).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.target.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTarget).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.target.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTarget).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.target.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTarget).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.target.ownerInformation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTarget).OwnerInformation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.maintenanceWindow.target.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmMaintenanceWindowTarget).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.association.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61117,8 +61449,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSsmAssociation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ssm.association.associationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).AssociationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ssm.association.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmAssociation).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.documentVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).DocumentVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.association.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61129,12 +61473,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSsmAssociation).Schedule, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.ssm.association.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).Status, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"aws.ssm.association.lastExecutionDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmAssociation).LastExecutionDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.ssm.association.lastSuccessfulExecutionDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).LastSuccessfulExecutionDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"aws.ssm.association.overview": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmAssociation).Overview, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.complianceSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).ComplianceSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.syncCompliance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).SyncCompliance, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.association.applyOnlyAtCronInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmAssociation).ApplyOnlyAtCronInterval, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.ssm.complianceSummary.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61171,6 +61535,70 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ssm.complianceSummary.executionSummary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSsmComplianceSummary).ExecutionSummary, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.patchGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmPatchGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ssm.patchGroup.patchGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmPatchGroup).PatchGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.patchGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmPatchGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.patchGroup.baselineId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmPatchGroup).BaselineId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.patchGroup.baselineName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmPatchGroup).BaselineName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.patchGroup.operatingSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmPatchGroup).OperatingSystem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.patchGroup.baselineIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmPatchGroup).BaselineIdentity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.patchGroup.baseline": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmPatchGroup).Baseline, ok = plugin.RawToTValue[*mqlAwsSsmPatchBaseline](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.serviceSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmServiceSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ssm.serviceSetting.settingId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmServiceSetting).SettingId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.serviceSetting.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmServiceSetting).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.serviceSetting.settingValue": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmServiceSetting).SettingValue, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.serviceSetting.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmServiceSetting).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.serviceSetting.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmServiceSetting).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.serviceSetting.lastModifiedDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmServiceSetting).LastModifiedDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.ssm.serviceSetting.lastModifiedUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSsmServiceSetting).LastModifiedUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.logDestination.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -116866,13 +117294,16 @@ type mqlAwsSsm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsSsmInternal it will be used here
-	Instances           plugin.TValue[[]any]
-	Parameters          plugin.TValue[[]any]
-	Documents           plugin.TValue[[]any]
-	PatchBaselines      plugin.TValue[[]any]
-	MaintenanceWindows  plugin.TValue[[]any]
-	Associations        plugin.TValue[[]any]
-	ComplianceSummaries plugin.TValue[[]any]
+	Instances                 plugin.TValue[[]any]
+	Parameters                plugin.TValue[[]any]
+	Documents                 plugin.TValue[[]any]
+	PatchBaselines            plugin.TValue[[]any]
+	PatchGroups               plugin.TValue[[]any]
+	MaintenanceWindows        plugin.TValue[[]any]
+	Associations              plugin.TValue[[]any]
+	ComplianceSummaries       plugin.TValue[[]any]
+	ServiceSettings           plugin.TValue[[]any]
+	SessionManagerPreferences plugin.TValue[any]
 }
 
 // createAwsSsm creates a new instance of this resource
@@ -116976,6 +117407,22 @@ func (c *mqlAwsSsm) GetPatchBaselines() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsSsm) GetPatchGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PatchGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm", c.__id, "patchGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.patchGroups()
+	})
+}
+
 func (c *mqlAwsSsm) GetMaintenanceWindows() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.MaintenanceWindows, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -117024,6 +117471,28 @@ func (c *mqlAwsSsm) GetComplianceSummaries() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsSsm) GetServiceSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm", c.__id, "serviceSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serviceSettings()
+	})
+}
+
+func (c *mqlAwsSsm) GetSessionManagerPreferences() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.SessionManagerPreferences, func() (any, error) {
+		return c.sessionManagerPreferences()
+	})
+}
+
 // mqlAwsSsmParameter for the aws.ssm.parameter resource
 type mqlAwsSsmParameter struct {
 	MqlRuntime *plugin.Runtime
@@ -117040,6 +117509,8 @@ type mqlAwsSsmParameter struct {
 	Tier             plugin.TValue[string]
 	Type             plugin.TValue[string]
 	Version          plugin.TValue[int64]
+	LastModifiedUser plugin.TValue[string]
+	Policies         plugin.TValue[[]any]
 }
 
 // createAwsSsmParameter creates a new instance of this resource
@@ -117133,6 +117604,14 @@ func (c *mqlAwsSsmParameter) GetType() *plugin.TValue[string] {
 
 func (c *mqlAwsSsmParameter) GetVersion() *plugin.TValue[int64] {
 	return &c.Version
+}
+
+func (c *mqlAwsSsmParameter) GetLastModifiedUser() *plugin.TValue[string] {
+	return &c.LastModifiedUser
+}
+
+func (c *mqlAwsSsmParameter) GetPolicies() *plugin.TValue[[]any] {
+	return &c.Policies
 }
 
 // mqlAwsSsmInstance for the aws.ssm.instance resource
@@ -148282,9 +148761,16 @@ type mqlAwsSsmMaintenanceWindow struct {
 	Enabled                  plugin.TValue[bool]
 	Schedule                 plugin.TValue[string]
 	ScheduleTimezone         plugin.TValue[string]
+	ScheduleOffset           plugin.TValue[int64]
 	Duration                 plugin.TValue[int64]
 	Cutoff                   plugin.TValue[int64]
+	StartDate                plugin.TValue[*time.Time]
+	EndDate                  plugin.TValue[*time.Time]
+	NextExecutionTime        plugin.TValue[*time.Time]
+	ModifiedDate             plugin.TValue[*time.Time]
 	AllowUnassociatedTargets plugin.TValue[bool]
+	Tasks                    plugin.TValue[[]any]
+	Targets                  plugin.TValue[[]any]
 	Tags                     plugin.TValue[map[string]any]
 }
 
@@ -148357,6 +148843,10 @@ func (c *mqlAwsSsmMaintenanceWindow) GetScheduleTimezone() *plugin.TValue[string
 	return &c.ScheduleTimezone
 }
 
+func (c *mqlAwsSsmMaintenanceWindow) GetScheduleOffset() *plugin.TValue[int64] {
+	return &c.ScheduleOffset
+}
+
 func (c *mqlAwsSsmMaintenanceWindow) GetDuration() *plugin.TValue[int64] {
 	return &c.Duration
 }
@@ -148365,9 +148855,59 @@ func (c *mqlAwsSsmMaintenanceWindow) GetCutoff() *plugin.TValue[int64] {
 	return &c.Cutoff
 }
 
+func (c *mqlAwsSsmMaintenanceWindow) GetStartDate() *plugin.TValue[*time.Time] {
+	return &c.StartDate
+}
+
+func (c *mqlAwsSsmMaintenanceWindow) GetEndDate() *plugin.TValue[*time.Time] {
+	return &c.EndDate
+}
+
+func (c *mqlAwsSsmMaintenanceWindow) GetNextExecutionTime() *plugin.TValue[*time.Time] {
+	return &c.NextExecutionTime
+}
+
+func (c *mqlAwsSsmMaintenanceWindow) GetModifiedDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.ModifiedDate, func() (*time.Time, error) {
+		return c.modifiedDate()
+	})
+}
+
 func (c *mqlAwsSsmMaintenanceWindow) GetAllowUnassociatedTargets() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.AllowUnassociatedTargets, func() (bool, error) {
 		return c.allowUnassociatedTargets()
+	})
+}
+
+func (c *mqlAwsSsmMaintenanceWindow) GetTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tasks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm.maintenanceWindow", c.__id, "tasks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tasks()
+	})
+}
+
+func (c *mqlAwsSsmMaintenanceWindow) GetTargets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Targets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm.maintenanceWindow", c.__id, "targets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.targets()
 	})
 }
 
@@ -148377,18 +148917,236 @@ func (c *mqlAwsSsmMaintenanceWindow) GetTags() *plugin.TValue[map[string]any] {
 	})
 }
 
+// mqlAwsSsmMaintenanceWindowTask for the aws.ssm.maintenanceWindow.task resource
+type mqlAwsSsmMaintenanceWindowTask struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsSsmMaintenanceWindowTaskInternal
+	WindowId       plugin.TValue[string]
+	WindowTaskId   plugin.TValue[string]
+	Region         plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	TaskType       plugin.TValue[string]
+	TaskArn        plugin.TValue[string]
+	ServiceRoleArn plugin.TValue[string]
+	IamRole        plugin.TValue[*mqlAwsIamRole]
+	Priority       plugin.TValue[int64]
+	MaxConcurrency plugin.TValue[string]
+	MaxErrors      plugin.TValue[string]
+	CutoffBehavior plugin.TValue[string]
+	Targets        plugin.TValue[[]any]
+}
+
+// createAwsSsmMaintenanceWindowTask creates a new instance of this resource
+func createAwsSsmMaintenanceWindowTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSsmMaintenanceWindowTask{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ssm.maintenanceWindow.task", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) MqlName() string {
+	return "aws.ssm.maintenanceWindow.task"
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetWindowId() *plugin.TValue[string] {
+	return &c.WindowId
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetWindowTaskId() *plugin.TValue[string] {
+	return &c.WindowTaskId
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetTaskType() *plugin.TValue[string] {
+	return &c.TaskType
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetTaskArn() *plugin.TValue[string] {
+	return &c.TaskArn
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetServiceRoleArn() *plugin.TValue[string] {
+	return &c.ServiceRoleArn
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm.maintenanceWindow.task", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetMaxConcurrency() *plugin.TValue[string] {
+	return &c.MaxConcurrency
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetMaxErrors() *plugin.TValue[string] {
+	return &c.MaxErrors
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetCutoffBehavior() *plugin.TValue[string] {
+	return &c.CutoffBehavior
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTask) GetTargets() *plugin.TValue[[]any] {
+	return &c.Targets
+}
+
+// mqlAwsSsmMaintenanceWindowTarget for the aws.ssm.maintenanceWindow.target resource
+type mqlAwsSsmMaintenanceWindowTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSsmMaintenanceWindowTargetInternal it will be used here
+	WindowId         plugin.TValue[string]
+	WindowTargetId   plugin.TValue[string]
+	Region           plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	ResourceType     plugin.TValue[string]
+	OwnerInformation plugin.TValue[string]
+	Targets          plugin.TValue[[]any]
+}
+
+// createAwsSsmMaintenanceWindowTarget creates a new instance of this resource
+func createAwsSsmMaintenanceWindowTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSsmMaintenanceWindowTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ssm.maintenanceWindow.target", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTarget) MqlName() string {
+	return "aws.ssm.maintenanceWindow.target"
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTarget) GetWindowId() *plugin.TValue[string] {
+	return &c.WindowId
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTarget) GetWindowTargetId() *plugin.TValue[string] {
+	return &c.WindowTargetId
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTarget) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTarget) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTarget) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTarget) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTarget) GetOwnerInformation() *plugin.TValue[string] {
+	return &c.OwnerInformation
+}
+
+func (c *mqlAwsSsmMaintenanceWindowTarget) GetTargets() *plugin.TValue[[]any] {
+	return &c.Targets
+}
+
 // mqlAwsSsmAssociation for the aws.ssm.association resource
 type mqlAwsSsmAssociation struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsSsmAssociationInternal it will be used here
-	AssociationId     plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Region            plugin.TValue[string]
-	Targets           plugin.TValue[[]any]
-	Schedule          plugin.TValue[string]
-	LastExecutionDate plugin.TValue[*time.Time]
-	Overview          plugin.TValue[any]
+	mqlAwsSsmAssociationInternal
+	AssociationId               plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	AssociationName             plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	DocumentVersion             plugin.TValue[string]
+	InstanceId                  plugin.TValue[string]
+	Targets                     plugin.TValue[[]any]
+	Schedule                    plugin.TValue[string]
+	Status                      plugin.TValue[any]
+	LastExecutionDate           plugin.TValue[*time.Time]
+	LastSuccessfulExecutionDate plugin.TValue[*time.Time]
+	Overview                    plugin.TValue[any]
+	ComplianceSeverity          plugin.TValue[string]
+	SyncCompliance              plugin.TValue[string]
+	ApplyOnlyAtCronInterval     plugin.TValue[bool]
 }
 
 // createAwsSsmAssociation creates a new instance of this resource
@@ -148436,8 +149194,20 @@ func (c *mqlAwsSsmAssociation) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
 
+func (c *mqlAwsSsmAssociation) GetAssociationName() *plugin.TValue[string] {
+	return &c.AssociationName
+}
+
 func (c *mqlAwsSsmAssociation) GetRegion() *plugin.TValue[string] {
 	return &c.Region
+}
+
+func (c *mqlAwsSsmAssociation) GetDocumentVersion() *plugin.TValue[string] {
+	return &c.DocumentVersion
+}
+
+func (c *mqlAwsSsmAssociation) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
 }
 
 func (c *mqlAwsSsmAssociation) GetTargets() *plugin.TValue[[]any] {
@@ -148448,12 +149218,42 @@ func (c *mqlAwsSsmAssociation) GetSchedule() *plugin.TValue[string] {
 	return &c.Schedule
 }
 
+func (c *mqlAwsSsmAssociation) GetStatus() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.Status, func() (any, error) {
+		return c.status()
+	})
+}
+
 func (c *mqlAwsSsmAssociation) GetLastExecutionDate() *plugin.TValue[*time.Time] {
 	return &c.LastExecutionDate
 }
 
+func (c *mqlAwsSsmAssociation) GetLastSuccessfulExecutionDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastSuccessfulExecutionDate, func() (*time.Time, error) {
+		return c.lastSuccessfulExecutionDate()
+	})
+}
+
 func (c *mqlAwsSsmAssociation) GetOverview() *plugin.TValue[any] {
 	return &c.Overview
+}
+
+func (c *mqlAwsSsmAssociation) GetComplianceSeverity() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ComplianceSeverity, func() (string, error) {
+		return c.complianceSeverity()
+	})
+}
+
+func (c *mqlAwsSsmAssociation) GetSyncCompliance() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SyncCompliance, func() (string, error) {
+		return c.syncCompliance()
+	})
+}
+
+func (c *mqlAwsSsmAssociation) GetApplyOnlyAtCronInterval() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ApplyOnlyAtCronInterval, func() (bool, error) {
+		return c.applyOnlyAtCronInterval()
+	})
 }
 
 // mqlAwsSsmComplianceSummary for the aws.ssm.complianceSummary resource
@@ -148538,6 +149338,176 @@ func (c *mqlAwsSsmComplianceSummary) GetNonCompliantCount() *plugin.TValue[int64
 
 func (c *mqlAwsSsmComplianceSummary) GetExecutionSummary() *plugin.TValue[any] {
 	return &c.ExecutionSummary
+}
+
+// mqlAwsSsmPatchGroup for the aws.ssm.patchGroup resource
+type mqlAwsSsmPatchGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSsmPatchGroupInternal it will be used here
+	PatchGroup       plugin.TValue[string]
+	Region           plugin.TValue[string]
+	BaselineId       plugin.TValue[string]
+	BaselineName     plugin.TValue[string]
+	OperatingSystem  plugin.TValue[string]
+	BaselineIdentity plugin.TValue[any]
+	Baseline         plugin.TValue[*mqlAwsSsmPatchBaseline]
+}
+
+// createAwsSsmPatchGroup creates a new instance of this resource
+func createAwsSsmPatchGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSsmPatchGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ssm.patchGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSsmPatchGroup) MqlName() string {
+	return "aws.ssm.patchGroup"
+}
+
+func (c *mqlAwsSsmPatchGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSsmPatchGroup) GetPatchGroup() *plugin.TValue[string] {
+	return &c.PatchGroup
+}
+
+func (c *mqlAwsSsmPatchGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSsmPatchGroup) GetBaselineId() *plugin.TValue[string] {
+	return &c.BaselineId
+}
+
+func (c *mqlAwsSsmPatchGroup) GetBaselineName() *plugin.TValue[string] {
+	return &c.BaselineName
+}
+
+func (c *mqlAwsSsmPatchGroup) GetOperatingSystem() *plugin.TValue[string] {
+	return &c.OperatingSystem
+}
+
+func (c *mqlAwsSsmPatchGroup) GetBaselineIdentity() *plugin.TValue[any] {
+	return &c.BaselineIdentity
+}
+
+func (c *mqlAwsSsmPatchGroup) GetBaseline() *plugin.TValue[*mqlAwsSsmPatchBaseline] {
+	return plugin.GetOrCompute[*mqlAwsSsmPatchBaseline](&c.Baseline, func() (*mqlAwsSsmPatchBaseline, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ssm.patchGroup", c.__id, "baseline")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSsmPatchBaseline), nil
+			}
+		}
+
+		return c.baseline()
+	})
+}
+
+// mqlAwsSsmServiceSetting for the aws.ssm.serviceSetting resource
+type mqlAwsSsmServiceSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSsmServiceSettingInternal it will be used here
+	SettingId        plugin.TValue[string]
+	Region           plugin.TValue[string]
+	SettingValue     plugin.TValue[string]
+	Status           plugin.TValue[string]
+	Arn              plugin.TValue[string]
+	LastModifiedDate plugin.TValue[*time.Time]
+	LastModifiedUser plugin.TValue[string]
+}
+
+// createAwsSsmServiceSetting creates a new instance of this resource
+func createAwsSsmServiceSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSsmServiceSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ssm.serviceSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSsmServiceSetting) MqlName() string {
+	return "aws.ssm.serviceSetting"
+}
+
+func (c *mqlAwsSsmServiceSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSsmServiceSetting) GetSettingId() *plugin.TValue[string] {
+	return &c.SettingId
+}
+
+func (c *mqlAwsSsmServiceSetting) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSsmServiceSetting) GetSettingValue() *plugin.TValue[string] {
+	return &c.SettingValue
+}
+
+func (c *mqlAwsSsmServiceSetting) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSsmServiceSetting) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSsmServiceSetting) GetLastModifiedDate() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedDate
+}
+
+func (c *mqlAwsSsmServiceSetting) GetLastModifiedUser() *plugin.TValue[string] {
+	return &c.LastModifiedUser
 }
 
 // mqlAwsCloudwatchLogDestination for the aws.cloudwatch.logDestination resource

@@ -497,18 +497,27 @@ func (a *mqlAwsSsm) getMaintenanceWindows(conn *connection.AwsConnection) []*job
 				for _, mw := range resp.WindowIdentities {
 					arn := fmt.Sprintf(ssmMaintenanceWindowArnPattern, region, conn.AccountId(), convert.ToValue(mw.WindowId))
 
+					var scheduleOffset int64
+					if mw.ScheduleOffset != nil {
+						scheduleOffset = int64(*mw.ScheduleOffset)
+					}
+
 					mqlMW, err := CreateResource(a.MqlRuntime, "aws.ssm.maintenanceWindow",
 						map[string]*llx.RawData{
-							"id":               llx.StringDataPtr(mw.WindowId),
-							"arn":              llx.StringData(arn),
-							"name":             llx.StringDataPtr(mw.Name),
-							"region":           llx.StringData(region),
-							"description":      llx.StringDataPtr(mw.Description),
-							"enabled":          llx.BoolData(mw.Enabled),
-							"schedule":         llx.StringDataPtr(mw.Schedule),
-							"scheduleTimezone": llx.StringDataPtr(mw.ScheduleTimezone),
-							"duration":         llx.IntData(int64(convert.ToValue(mw.Duration))),
-							"cutoff":           llx.IntData(int64(mw.Cutoff)),
+							"id":                llx.StringDataPtr(mw.WindowId),
+							"arn":               llx.StringData(arn),
+							"name":              llx.StringDataPtr(mw.Name),
+							"region":            llx.StringData(region),
+							"description":       llx.StringDataPtr(mw.Description),
+							"enabled":           llx.BoolData(mw.Enabled),
+							"schedule":          llx.StringDataPtr(mw.Schedule),
+							"scheduleTimezone":  llx.StringDataPtr(mw.ScheduleTimezone),
+							"scheduleOffset":    llx.IntData(scheduleOffset),
+							"duration":          llx.IntData(int64(convert.ToValue(mw.Duration))),
+							"cutoff":            llx.IntData(int64(mw.Cutoff)),
+							"startDate":         llx.TimeData(parseTimeOrZero(mw.StartDate)),
+							"endDate":           llx.TimeData(parseTimeOrZero(mw.EndDate)),
+							"nextExecutionTime": llx.TimeData(parseTimeOrZero(mw.NextExecutionTime)),
 						})
 					if err != nil {
 						return nil, err
@@ -601,17 +610,7 @@ func (a *mqlAwsSsm) getAssociations(conn *connection.AwsConnection) []*jobpool.J
 				}
 
 				for _, assoc := range resp.Associations {
-					targets := []any{}
-					for _, t := range assoc.Targets {
-						vals := make([]any, 0, len(t.Values))
-						for _, v := range t.Values {
-							vals = append(vals, v)
-						}
-						targets = append(targets, map[string]any{
-							"key":    convert.ToValue(t.Key),
-							"values": vals,
-						})
-					}
+					targets := assocTargetsToDict(assoc.Targets)
 
 					var overview map[string]any
 					if assoc.Overview != nil {
@@ -626,11 +625,15 @@ func (a *mqlAwsSsm) getAssociations(conn *connection.AwsConnection) []*jobpool.J
 						}
 					}
 
+					assocId := convert.ToValue(assoc.AssociationId)
 					mqlAssoc, err := CreateResource(a.MqlRuntime, "aws.ssm.association",
 						map[string]*llx.RawData{
-							"associationId":     llx.StringDataPtr(assoc.AssociationId),
-							"name":              llx.StringDataPtr(assoc.AssociationName),
+							"associationId":     llx.StringData(assocId),
+							"name":              llx.StringDataPtr(assoc.Name),
+							"associationName":   llx.StringDataPtr(assoc.AssociationName),
 							"region":            llx.StringData(region),
+							"documentVersion":   llx.StringDataPtr(assoc.DocumentVersion),
+							"instanceId":        llx.StringDataPtr(assoc.InstanceId),
 							"targets":           llx.ArrayData(targets, mqlTypes.Dict),
 							"schedule":          llx.StringDataPtr(assoc.ScheduleExpression),
 							"lastExecutionDate": llx.TimeDataPtr(assoc.LastExecutionDate),
@@ -647,6 +650,21 @@ func (a *mqlAwsSsm) getAssociations(conn *connection.AwsConnection) []*jobpool.J
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func assocTargetsToDict(in []types.Target) []any {
+	targets := []any{}
+	for _, t := range in {
+		vals := make([]any, 0, len(t.Values))
+		for _, v := range t.Values {
+			vals = append(vals, v)
+		}
+		targets = append(targets, map[string]any{
+			"key":    convert.ToValue(t.Key),
+			"values": vals,
+		})
+	}
+	return targets
 }
 
 func (a *mqlAwsSsmAssociation) id() (string, error) {

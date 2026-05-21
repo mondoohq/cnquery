@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
 	"go.mondoo.com/mql/v13/providers/aws/connection"
+	mqlTypes "go.mondoo.com/mql/v13/types"
 )
 
 func (e *mqlAwsSsm) id() (string, error) {
@@ -74,6 +75,14 @@ func (a *mqlAwsSsm) getParameters(conn *connection.AwsConnection) []*jobpool.Job
 				}
 
 				for _, param := range resp.Parameters {
+					policies := make([]any, 0, len(param.Policies))
+					for _, p := range param.Policies {
+						policies = append(policies, map[string]any{
+							"policyType":   convert.ToValue(p.PolicyType),
+							"policyText":   convert.ToValue(p.PolicyText),
+							"policyStatus": convert.ToValue(p.PolicyStatus),
+						})
+					}
 					mqlParam, err := CreateResource(a.MqlRuntime, "aws.ssm.parameter",
 						map[string]*llx.RawData{
 							"allowedPattern":   llx.StringDataPtr(param.AllowedPattern),
@@ -82,10 +91,12 @@ func (a *mqlAwsSsm) getParameters(conn *connection.AwsConnection) []*jobpool.Job
 							"dataType":         llx.StringDataPtr(param.DataType),
 							"description":      llx.StringDataPtr(param.Description),
 							"lastModifiedDate": llx.TimeDataPtr(param.LastModifiedDate),
+							"lastModifiedUser": llx.StringDataPtr(param.LastModifiedUser),
 							"name":             llx.StringDataPtr(param.Name),
 							"tier":             llx.StringData(string(param.Tier)),
 							"type":             llx.StringData(string(param.Type)),
 							"version":          llx.IntData(param.Version),
+							"policies":         llx.ArrayData(policies, mqlTypes.Dict),
 						})
 					if err != nil {
 						return nil, err
