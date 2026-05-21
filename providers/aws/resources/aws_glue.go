@@ -198,31 +198,23 @@ func glueRoleLookupArgs(role string) map[string]*llx.RawData {
 	return map[string]*llx.RawData{"name": llx.StringData(role)}
 }
 
-// findGlueSecurityConfiguration locates a Glue security configuration in a
-// region by name. It iterates the list returned by GetSecurityConfigurations
-// because there is no GetSecurityConfiguration-by-name single-fetch on the
-// list-and-filter side that returns the same shape as the listing.
+// findGlueSecurityConfiguration looks up a Glue security configuration in a
+// region by name via the singular GetSecurityConfiguration API.
 func findGlueSecurityConfiguration(runtime *plugin.Runtime, region, name string) (*mqlAwsGlueSecurityConfiguration, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 	svc := conn.Glue(region)
-	ctx := context.Background()
-
-	paginator := glue.NewGetSecurityConfigurationsPaginator(svc, &glue.GetSecurityConfigurationsInput{})
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if err != nil {
-			if Is400AccessDeniedError(err) {
-				return nil, nil
-			}
-			return nil, err
+	resp, err := svc.GetSecurityConfiguration(context.Background(),
+		&glue.GetSecurityConfigurationInput{Name: &name})
+	if err != nil {
+		if Is400AccessDeniedError(err) {
+			return nil, nil
 		}
-		for _, secConf := range page.SecurityConfigurations {
-			if convert.ToValue(secConf.Name) == name {
-				return newMqlAwsGlueSecurityConfiguration(runtime, region, conn.AccountId(), secConf)
-			}
-		}
+		return nil, err
 	}
-	return nil, nil
+	if resp == nil || resp.SecurityConfiguration == nil {
+		return nil, nil
+	}
+	return newMqlAwsGlueSecurityConfiguration(runtime, region, conn.AccountId(), *resp.SecurityConfiguration)
 }
 
 func (a *mqlAwsGlueCrawler) tags() (map[string]any, error) {
@@ -1235,7 +1227,7 @@ func (a *mqlAwsGlue) getSchemas(conn *connection.AwsConnection) []*jobpool.Job {
 					return nil, err
 				}
 				for _, s := range page.Schemas {
-					schemaDetails, _ := fetchGlueSchemaDetails(ctx, conn, region, s)
+					schemaDetails := fetchGlueSchemaDetails(ctx, conn, region, s)
 					mqlSchema, err := newMqlAwsGlueSchema(a.MqlRuntime, region, s, schemaDetails)
 					if err != nil {
 						return nil, err
@@ -1264,24 +1256,24 @@ type glueSchemaDetails struct {
 
 // fetchGlueSchemaDetails enriches a SchemaListItem with the metadata returned
 // by GetSchema (data format, compatibility mode, version pointers, checkpoint,
-// registry ARN). Returns a zero-value details struct on access-denied or
-// transient failure so the schema is still listed.
-func fetchGlueSchemaDetails(ctx context.Context, conn *connection.AwsConnection, region string, s glue_types.SchemaListItem) (glueSchemaDetails, error) {
+// registry ARN). On access-denied or any other GetSchema failure the error is
+// logged and a zero-value details struct is returned so the schema is still
+// listed with the fields that ListSchemas provided.
+func fetchGlueSchemaDetails(ctx context.Context, conn *connection.AwsConnection, region string, s glue_types.SchemaListItem) glueSchemaDetails {
 	d := glueSchemaDetails{}
 	if s.SchemaArn == nil || *s.SchemaArn == "" {
-		return d, nil
+		return d
 	}
 	svc := conn.Glue(region)
 	resp, err := svc.GetSchema(ctx, &glue.GetSchemaInput{SchemaId: &glue_types.SchemaId{SchemaArn: s.SchemaArn}})
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return d, nil
+		if !Is400AccessDeniedError(err) {
+			log.Warn().Err(err).Str("schema", convert.ToValue(s.SchemaName)).Msg("glue>GetSchema failed; partial schema data only")
 		}
-		log.Warn().Err(err).Str("schema", convert.ToValue(s.SchemaName)).Msg("glue>GetSchema failed; partial schema data only")
-		return d, nil
+		return d
 	}
 	if resp == nil {
-		return d, nil
+		return d
 	}
 	d.dataFormat = string(resp.DataFormat)
 	d.compatibility = string(resp.Compatibility)
@@ -1300,7 +1292,7 @@ func fetchGlueSchemaDetails(ctx context.Context, conn *connection.AwsConnection,
 	if resp.RegistryArn != nil {
 		d.registryArn = *resp.RegistryArn
 	}
-	return d, nil
+	return d
 }
 
 func newMqlAwsGlueSchema(runtime *plugin.Runtime, region string, s glue_types.SchemaListItem, d glueSchemaDetails) (*mqlAwsGlueSchema, error) {

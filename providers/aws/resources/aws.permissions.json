@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.26.2",
-  "generated_at": "2026-05-21T15:32:32-07:00",
+  "generated_at": "2026-05-21T16:12:14-07:00",
   "permissions": [
     "access-analyzer:ListAnalyzers",
     "access-analyzer:ListFindingsV2",
@@ -364,6 +364,7 @@
     "glue:GetJobs",
     "glue:GetResourcePolicies",
     "glue:GetSchema",
+    "glue:GetSecurityConfiguration",
     "glue:GetSecurityConfigurations",
     "glue:GetTables",
     "glue:GetTags",
@@ -3015,6 +3016,12 @@
       "permission": "glue:GetSchema",
       "service": "glue",
       "action": "GetSchema",
+      "source_file": "aws_glue.go"
+    },
+    {
+      "permission": "glue:GetSecurityConfiguration",
+      "service": "glue",
+      "action": "GetSecurityConfiguration",
       "source_file": "aws_glue.go"
     },
     {
