@@ -76,6 +76,7 @@ backupsetting
 backupshorttermretentionpolicy
 baselined
 Beixb
+bert
 bfc
 bigquery
 bigtable
@@ -352,6 +353,7 @@ itunes
 ixgbe
 Jailbroken
 jamf
+jan
 JFi
 jira
 jkl
@@ -367,7 +369,10 @@ junie
 junos
 jupyter
 jwk
+jwks
+KEDA
 KENDRA
+keras
 kerberoastable
 kexec
 keymanager
@@ -398,6 +403,7 @@ linklayer
 linuxbrew
 linuxefi
 liveanalytics
+lmstudio
 localos
 loggedin
 loggingservice
@@ -444,6 +450,8 @@ mildner
 minfree
 MINIMALUSER
 Mirrorings
+mistralai
+mixtral
 mkey
 mlag
 mls
@@ -529,6 +537,7 @@ onbuild
 ondemand
 ONELOGIN
 oneof
+onnx
 ontap
 oopsed
 opcplc
@@ -594,6 +603,7 @@ PVEAPI
 pveproxy
 pyspark
 pythonshell
+pytorch
 pzi
 pzs
 QAwr
@@ -648,9 +658,11 @@ rulegroup
 rulegroupreferencestatement
 rxtx
 saas
+safetensors
 samesite
 sas
 sasl
+savedmodel
 sbfm
 sbom
 scc
@@ -738,6 +750,7 @@ temurin
 tensorboard
 testutils
 tfa
+tfhub
 tgw
 tokenauth
 tokenid

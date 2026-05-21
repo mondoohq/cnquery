@@ -5300,6 +5300,44 @@ zfs.dataset @defaults("name type usedBytes") {
   snapshots() []zfs.dataset
 }
 
+// AI Model Cache
+//
+// Examine locally cached AI models from tools such as Ollama, Hugging Face
+// Hub, LM Studio, GPT4All, PyTorch Hub, Keras, TensorFlow Hub, and Jan.
+// Iterate over all discovered models to audit what AI models are present
+// on the system, their sizes, formats, and sources.
+ai @maturity("preview") {
+  // All locally cached AI models across all supported sources
+  models() []ai.model
+}
+
+// AI Model
+//
+// Examine a single locally cached AI model. The `name` field identifies
+// the model and `source` indicates which tool cached it — for example
+// `"ollama"`, `"huggingface"`, `"lmstudio"`, `"gpt4all"`, `"pytorch"`,
+// `"keras"`, `"tfhub"`, or `"jan"`. Use `ai.models.where(source == "ollama")` to filter by
+// source, or inspect `size` and `modifiedAt` to find the largest or most
+// recently used models on the system.
+private ai.model @defaults("name source") @maturity("preview") {
+  // Model name (e.g., "llama3:latest", "meta-llama/Llama-2-7b-hf")
+  name string
+  // Source tool that cached this model (ollama, huggingface, lmstudio, gpt4all, pytorch, keras, tfhub, jan)
+  source string
+  // Publisher or organization that released the model (e.g., "meta-llama", "google", "mistralai")
+  vendor string
+  // Base architecture family (e.g., "llama", "qwen2", "bert", "mixtral")
+  family string
+  // Filesystem path to the model
+  path string
+  // Total size in bytes
+  size int
+  // Last modification time
+  modifiedAt time
+  // Model file format (gguf, safetensors, pytorch, h5, savedmodel, mlx, onnx, keras)
+  format string
+}
+
 // Claude Code (Anthropic CLI agent) instance
 //
 // Examine account, plugins, skills, projects, and configured MCP servers
