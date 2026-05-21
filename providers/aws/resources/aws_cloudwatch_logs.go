@@ -441,5 +441,6 @@ func (a *mqlAwsCloudwatchLogAnomalyDetector) id() (string, error) {
 }
 
 func (a *mqlAwsCloudwatchLogAnomalyDetector) kmsKey() (*mqlAwsKmsKey, error) {
-	return a.KmsKey.Data, nil
+	a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }
