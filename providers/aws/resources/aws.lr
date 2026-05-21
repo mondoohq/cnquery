@@ -18815,7 +18815,9 @@ private aws.ec2.ipam @defaults("id region tier state") {
   description string
   // IPAM tier: free or advanced — the advanced tier unlocks public-scope features and resource discovery
   tier string
-  // State of the IPAM: create-in-progress, create-complete, modify-in-progress, modify-complete, delete-in-progress, delete-complete, isolate-in-progress, isolate-complete, restore-in-progress
+  // State of the IPAM
+  //
+  // One of: create-in-progress, create-complete, modify-in-progress, modify-complete, delete-in-progress, delete-complete, isolate-in-progress, isolate-complete, restore-in-progress.
   state string
   // Diagnostic message that accompanies a non-terminal state
   stateMessage string
@@ -18911,7 +18913,9 @@ private aws.ec2.ipam.pool @defaults("id addressFamily state region") {
   locale string
   // AWS service the pool is restricted to (e.g., ec2). Empty when the pool can be used by any service.
   awsService string
-  // State of the pool: create-in-progress, create-complete, modify-in-progress, modify-complete, delete-in-progress, delete-complete, isolate-in-progress, isolate-complete, restore-in-progress
+  // State of the pool
+  //
+  // One of: create-in-progress, create-complete, modify-in-progress, modify-complete, delete-in-progress, delete-complete, isolate-in-progress, isolate-complete, restore-in-progress.
   state string
   // Diagnostic message that accompanies a non-terminal state
   stateMessage string

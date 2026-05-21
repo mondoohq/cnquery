@@ -301,17 +301,17 @@ func validateDocCommentStructure(comments []CommentToken, context string) error 
 
 	if n := utf8.RuneCountInString(comments[0].Text); n > MaxTitleLength {
 		errs = append(errs, fmt.Errorf(
-			"%s: doc-comment title is %d characters (line %d), max is %d. "+
-				"Titles render in CLI tables, auto-complete, and the website docs — keep them short. "+
-				"Move the rest into the description (a blank `//` followed by the longer text).",
+			"%s: doc-comment title is %d characters (line %d), max is %d - "+
+				"titles render in CLI tables, auto-complete, and the website docs, so keep them short; "+
+				"move the rest into the description (a blank `//` followed by the longer text)",
 			context, n, comments[0].Pos.Line, MaxTitleLength,
 		))
 	}
 
 	if len(comments) >= 2 && comments[1].Text != "" {
 		errs = append(errs, fmt.Errorf(
-			"%s: doc-comment has %d lines but is missing the required blank `//` separator after the title (line %d). "+
-				"Either collapse the comment to a single line, or insert a blank `//` line between the title and the description.",
+			"%s: doc-comment has %d lines but is missing the required blank `//` separator after the title (line %d) - "+
+				"either collapse the comment to a single line, or insert a blank `//` line between the title and the description",
 			context, len(comments), comments[0].Pos.Line,
 		))
 	}
