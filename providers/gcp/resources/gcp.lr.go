@@ -546,7 +546,7 @@ func init() {
 			Create: createGcpProjectComputeServiceRegion,
 		},
 		"gcp.project.computeService.zone": {
-			// to override args, implement: initGcpProjectComputeServiceZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectComputeServiceZone,
 			Create: createGcpProjectComputeServiceZone,
 		},
 		"gcp.project.computeService.machineType": {
@@ -3256,6 +3256,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.address.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceAddress).GetRegionUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.address.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceAddress).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
+	},
 	"gcp.project.computeService.address.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceAddress).GetStatus()).ToDataRes(types.String)
 	},
@@ -3330,6 +3333,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.forwardingRule.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceForwardingRule).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.forwardingRule.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceForwardingRule).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.forwardingRule.serviceDirectoryRegistrations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceForwardingRule).GetServiceDirectoryRegistrations()).ToDataRes(types.Array(types.Dict))
@@ -4266,6 +4272,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.backendService.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceBackendService).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.backendService.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceBackendService).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.backendService.securityPolicyUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceBackendService).GetSecurityPolicyUrl()).ToDataRes(types.String)
@@ -7024,6 +7033,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudFunction.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetServiceAccountEmail()).ToDataRes(types.String)
 	},
+	"gcp.project.cloudFunction.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunction).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
+	},
 	"gcp.project.cloudFunction.updated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetUpdated()).ToDataRes(types.Time)
 	},
@@ -7221,6 +7233,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudFunctionV2.eventTrigger.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.cloudFunctionV2.eventTrigger.retryPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetRetryPolicy()).ToDataRes(types.String)
@@ -9163,6 +9178,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.securityPolicy.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetRegionUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.securityPolicy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
+	},
 	"gcp.project.computeService.securityPolicy.selfLink": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetSelfLink()).ToDataRes(types.String)
 	},
@@ -9232,6 +9250,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.sslPolicy.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetRegionUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.sslPolicy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
+	},
 	"gcp.project.computeService.sslPolicy.selfLink": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslPolicy).GetSelfLink()).ToDataRes(types.String)
 	},
@@ -9261,6 +9282,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.sslCertificate.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslCertificate).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.sslCertificate.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceSslCertificate).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.sslCertificate.selfLink": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSslCertificate).GetSelfLink()).ToDataRes(types.String)
@@ -9297,6 +9321,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.vpnGateway.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceVpnGateway).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.vpnGateway.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceVpnGateway).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.vpnGateway.vpnInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceVpnGateway).GetVpnInterfaces()).ToDataRes(types.Array(types.Dict))
@@ -9351,6 +9378,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.vpnTunnel.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceVpnTunnel).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.vpnTunnel.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceVpnTunnel).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.vpnTunnel.routerUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceVpnTunnel).GetRouterUrl()).ToDataRes(types.String)
@@ -9952,6 +9982,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instanceGroup.zoneUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetZoneUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.instanceGroup.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetZone()).ToDataRes(types.Resource("gcp.project.computeService.zone"))
+	},
 	"gcp.project.computeService.instanceGroup.networkUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceGroup).GetNetworkUrl()).ToDataRes(types.String)
 	},
@@ -9988,8 +10021,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.instanceGroupManager.zoneUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetZoneUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.instanceGroupManager.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetZone()).ToDataRes(types.Resource("gcp.project.computeService.zone"))
+	},
 	"gcp.project.computeService.instanceGroupManager.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.instanceGroupManager.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.instanceGroupManager.instanceTemplateUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInstanceGroupManager).GetInstanceTemplateUrl()).ToDataRes(types.String)
@@ -10047,6 +10086,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.firewallPolicy.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.firewallPolicy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.firewallPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceFirewallPolicy).GetRules()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.firewallPolicy.rule")))
@@ -10771,6 +10813,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.healthCheck.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetRegionUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.healthCheck.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceHealthCheck).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
+	},
 	"gcp.project.computeService.urlMap.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetId()).ToDataRes(types.String)
 	},
@@ -10804,6 +10849,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.urlMap.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetRegionUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.urlMap.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceUrlMap).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
+	},
 	"gcp.project.computeService.targetHttpProxy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetId()).ToDataRes(types.String)
 	},
@@ -10833,6 +10881,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.targetHttpProxy.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpProxy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpProxy).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.targetHttpsProxy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetId()).ToDataRes(types.String)
@@ -10875,6 +10926,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.targetHttpsProxy.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetHttpsProxy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.network.peering.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetworkPeering).GetId()).ToDataRes(types.String)
@@ -11020,6 +11074,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.serviceAttachment.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceServiceAttachment).GetRegionUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.serviceAttachment.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceServiceAttachment).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
+	},
 	"gcp.project.computeService.serviceAttachment.selfLink": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceServiceAttachment).GetSelfLink()).ToDataRes(types.String)
 	},
@@ -11062,8 +11119,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.networkEndpointGroup.zoneUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetworkEndpointGroup).GetZoneUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.networkEndpointGroup.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkEndpointGroup).GetZone()).ToDataRes(types.Resource("gcp.project.computeService.zone"))
+	},
 	"gcp.project.computeService.networkEndpointGroup.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetworkEndpointGroup).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.networkEndpointGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceNetworkEndpointGroup).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.networkEndpointGroup.cloudRun": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceNetworkEndpointGroup).GetCloudRun()).ToDataRes(types.Dict)
@@ -11233,6 +11296,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.interconnectAttachment.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInterconnectAttachment).GetRegionUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.interconnectAttachment.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceInterconnectAttachment).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
+	},
 	"gcp.project.computeService.interconnectAttachment.selfLink": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceInterconnectAttachment).GetSelfLink()).ToDataRes(types.String)
 	},
@@ -11286,6 +11352,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.targetTcpProxy.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceTargetTcpProxy).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetTcpProxy.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetTcpProxy).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.targetTcpProxy.selfLink": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceTargetTcpProxy).GetSelfLink()).ToDataRes(types.String)
@@ -11356,6 +11425,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.packetMirroring.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServicePacketMirroring).GetRegionUrl()).ToDataRes(types.String)
 	},
+	"gcp.project.computeService.packetMirroring.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServicePacketMirroring).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
+	},
 	"gcp.project.computeService.packetMirroring.selfLink": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServicePacketMirroring).GetSelfLink()).ToDataRes(types.String)
 	},
@@ -11424,6 +11496,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.targetPool.regionUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceTargetPool).GetRegionUrl()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.targetPool.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceTargetPool).GetRegion()).ToDataRes(types.Resource("gcp.project.computeService.region"))
 	},
 	"gcp.project.computeService.targetPool.selfLink": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceTargetPool).GetSelfLink()).ToDataRes(types.String)
@@ -13671,6 +13746,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudBuildService.trigger.pubsubConfig.serviceAccountEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).GetServiceAccountEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).GetServiceAccount()).ToDataRes(types.Resource("gcp.project.iamService.serviceAccount"))
 	},
 	"gcp.project.cloudBuildService.trigger.pubsubConfig.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).GetState()).ToDataRes(types.String)
@@ -16037,6 +16115,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceAddress).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.address.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceAddress).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.address.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceAddress).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -16139,6 +16221,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.forwardingRule.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceForwardingRule).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.forwardingRule.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceForwardingRule).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.forwardingRule.serviceDirectoryRegistrations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17463,6 +17549,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.backendService.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceBackendService).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.backendService.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceBackendService).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.backendService.securityPolicyUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21537,6 +21627,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudFunction).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudFunction.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunction).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudFunction.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunction).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -21815,6 +21909,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudFunctionV2.eventTrigger.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.eventTrigger.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2EventTrigger).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudFunctionV2.eventTrigger.retryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24669,6 +24767,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceSecurityPolicy).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.securityPolicy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSecurityPolicy).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.securityPolicy.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSecurityPolicy).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -24769,6 +24871,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceSslPolicy).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.sslPolicy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSslPolicy).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.sslPolicy.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSslPolicy).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -24811,6 +24917,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.sslCertificate.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSslCertificate).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.sslCertificate.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceSslCertificate).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.sslCertificate.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24863,6 +24973,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.vpnGateway.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceVpnGateway).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.vpnGateway.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceVpnGateway).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.vpnGateway.vpnInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24939,6 +25053,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.vpnTunnel.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceVpnTunnel).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.vpnTunnel.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceVpnTunnel).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.vpnTunnel.routerUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25817,6 +25935,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInstanceGroup).ZoneUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instanceGroup.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroup).Zone, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceZone](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.instanceGroup.networkUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstanceGroup).NetworkUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -25869,8 +25991,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).ZoneUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.instanceGroupManager.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).Zone, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceZone](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.instanceGroupManager.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.instanceGroupManager.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInstanceGroupManager).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.instanceGroupManager.instanceTemplateUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25951,6 +26081,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.firewallPolicy.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceFirewallPolicy).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.firewallPolicy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceFirewallPolicy).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.firewallPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27045,6 +27179,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceHealthCheck).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.healthCheck.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceHealthCheck).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.urlMap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceUrlMap).__id, ok = v.Value.(string)
 		return
@@ -27093,6 +27231,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceUrlMap).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.urlMap.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceUrlMap).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.targetHttpProxy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).__id, ok = v.Value.(string)
 		return
@@ -27135,6 +27277,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.targetHttpProxy.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpProxy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpProxy).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.targetHttpsProxy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27195,6 +27341,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.targetHttpsProxy.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetHttpsProxy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetHttpsProxy).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.network.peering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27401,6 +27551,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceServiceAttachment).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.serviceAttachment.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceServiceAttachment).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.serviceAttachment.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceServiceAttachment).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -27461,8 +27615,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceNetworkEndpointGroup).ZoneUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.networkEndpointGroup.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkEndpointGroup).Zone, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceZone](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.networkEndpointGroup.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceNetworkEndpointGroup).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.networkEndpointGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceNetworkEndpointGroup).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.networkEndpointGroup.cloudRun": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27697,6 +27859,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceInterconnectAttachment).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.interconnectAttachment.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceInterconnectAttachment).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.interconnectAttachment.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceInterconnectAttachment).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -27775,6 +27941,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.targetTcpProxy.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceTargetTcpProxy).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetTcpProxy.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetTcpProxy).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.targetTcpProxy.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27877,6 +28047,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServicePacketMirroring).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.packetMirroring.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServicePacketMirroring).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.packetMirroring.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServicePacketMirroring).SelfLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -27975,6 +28149,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.targetPool.regionUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceTargetPool).RegionUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.targetPool.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceTargetPool).Region, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceRegion](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.targetPool.selfLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31315,6 +31493,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudBuildService.trigger.pubsubConfig.serviceAccountEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).ServiceAccountEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudBuildService.trigger.pubsubConfig.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig).ServiceAccount, ok = plugin.RawToTValue[*mqlGcpProjectIamServiceServiceAccount](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudBuildService.trigger.pubsubConfig.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37136,6 +37318,7 @@ type mqlGcpProjectComputeServiceAddress struct {
 	PrefixLength     plugin.TValue[int64]
 	Purpose          plugin.TValue[string]
 	RegionUrl        plugin.TValue[string]
+	Region           plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	Status           plugin.TValue[string]
 	SubnetworkUrl    plugin.TValue[string]
 	Subnetwork       plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
@@ -37251,6 +37434,22 @@ func (c *mqlGcpProjectComputeServiceAddress) GetRegionUrl() *plugin.TValue[strin
 	return &c.RegionUrl
 }
 
+func (c *mqlGcpProjectComputeServiceAddress) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.address", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
+}
+
 func (c *mqlGcpProjectComputeServiceAddress) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
@@ -37305,6 +37504,7 @@ type mqlGcpProjectComputeServiceForwardingRule struct {
 	PortRange                     plugin.TValue[string]
 	Ports                         plugin.TValue[[]any]
 	RegionUrl                     plugin.TValue[string]
+	Region                        plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	ServiceDirectoryRegistrations plugin.TValue[[]any]
 	ServiceLabel                  plugin.TValue[string]
 	ServiceName                   plugin.TValue[string]
@@ -37449,6 +37649,22 @@ func (c *mqlGcpProjectComputeServiceForwardingRule) GetPorts() *plugin.TValue[[]
 
 func (c *mqlGcpProjectComputeServiceForwardingRule) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceForwardingRule) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.forwardingRule", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceForwardingRule) GetServiceDirectoryRegistrations() *plugin.TValue[[]any] {
@@ -39976,6 +40192,7 @@ type mqlGcpProjectComputeServiceBackendService struct {
 	PortName                 plugin.TValue[string]
 	Protocol                 plugin.TValue[string]
 	RegionUrl                plugin.TValue[string]
+	Region                   plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SecurityPolicyUrl        plugin.TValue[string]
 	SecurityPolicy           plugin.TValue[*mqlGcpProjectComputeServiceSecurityPolicy]
 	CloudArmorEnabled        plugin.TValue[bool]
@@ -40153,6 +40370,22 @@ func (c *mqlGcpProjectComputeServiceBackendService) GetProtocol() *plugin.TValue
 
 func (c *mqlGcpProjectComputeServiceBackendService) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceBackendService) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.backendService", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceBackendService) GetSecurityPolicyUrl() *plugin.TValue[string] {
@@ -49842,6 +50075,7 @@ type mqlGcpProjectCloudFunction struct {
 	Timeout             plugin.TValue[*time.Time]
 	AvailableMemoryMb   plugin.TValue[int64]
 	ServiceAccountEmail plugin.TValue[string]
+	ServiceAccount      plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	Updated             plugin.TValue[*time.Time]
 	VersionId           plugin.TValue[int64]
 	Labels              plugin.TValue[map[string]any]
@@ -49959,6 +50193,22 @@ func (c *mqlGcpProjectCloudFunction) GetAvailableMemoryMb() *plugin.TValue[int64
 
 func (c *mqlGcpProjectCloudFunction) GetServiceAccountEmail() *plugin.TValue[string] {
 	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectCloudFunction) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunction", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 func (c *mqlGcpProjectCloudFunction) GetUpdated() *plugin.TValue[*time.Time] {
@@ -50412,6 +50662,7 @@ type mqlGcpProjectCloudFunctionV2EventTrigger struct {
 	PubsubTopic         plugin.TValue[string]
 	Topic               plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
 	ServiceAccountEmail plugin.TValue[string]
+	ServiceAccount      plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	RetryPolicy         plugin.TValue[string]
 	Channel             plugin.TValue[string]
 }
@@ -50495,6 +50746,22 @@ func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetTopic() *plugin.TValue[*mq
 
 func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetServiceAccountEmail() *plugin.TValue[string] {
 	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunctionV2.eventTrigger", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 func (c *mqlGcpProjectCloudFunctionV2EventTrigger) GetRetryPolicy() *plugin.TValue[string] {
@@ -57122,6 +57389,7 @@ type mqlGcpProjectComputeServiceSecurityPolicy struct {
 	Fingerprint              plugin.TValue[string]
 	UserDefinedFields        plugin.TValue[[]any]
 	RegionUrl                plugin.TValue[string]
+	Region                   plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SelfLink                 plugin.TValue[string]
 	CreatedAt                plugin.TValue[*time.Time]
 	Rules                    plugin.TValue[[]any]
@@ -57210,6 +57478,22 @@ func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetUserDefinedFields() *plug
 
 func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.securityPolicy", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceSecurityPolicy) GetSelfLink() *plugin.TValue[string] {
@@ -57349,6 +57633,7 @@ type mqlGcpProjectComputeServiceSslPolicy struct {
 	CustomFeatures  plugin.TValue[[]any]
 	EnabledFeatures plugin.TValue[[]any]
 	RegionUrl       plugin.TValue[string]
+	Region          plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SelfLink        plugin.TValue[string]
 	Warnings        plugin.TValue[[]any]
 	CreatedAt       plugin.TValue[*time.Time]
@@ -57429,6 +57714,22 @@ func (c *mqlGcpProjectComputeServiceSslPolicy) GetRegionUrl() *plugin.TValue[str
 	return &c.RegionUrl
 }
 
+func (c *mqlGcpProjectComputeServiceSslPolicy) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.sslPolicy", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
+}
+
 func (c *mqlGcpProjectComputeServiceSslPolicy) GetSelfLink() *plugin.TValue[string] {
 	return &c.SelfLink
 }
@@ -57453,6 +57754,7 @@ type mqlGcpProjectComputeServiceSslCertificate struct {
 	SubjectAlternativeNames plugin.TValue[[]any]
 	Managed                 plugin.TValue[any]
 	RegionUrl               plugin.TValue[string]
+	Region                  plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SelfLink                plugin.TValue[string]
 	ExpireTime              plugin.TValue[string]
 	CreatedAt               plugin.TValue[*time.Time]
@@ -57523,6 +57825,22 @@ func (c *mqlGcpProjectComputeServiceSslCertificate) GetRegionUrl() *plugin.TValu
 	return &c.RegionUrl
 }
 
+func (c *mqlGcpProjectComputeServiceSslCertificate) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.sslCertificate", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
+}
+
 func (c *mqlGcpProjectComputeServiceSslCertificate) GetSelfLink() *plugin.TValue[string] {
 	return &c.SelfLink
 }
@@ -57549,6 +57867,7 @@ type mqlGcpProjectComputeServiceVpnGateway struct {
 	GatewayIpVersion    plugin.TValue[string]
 	StackType           plugin.TValue[string]
 	RegionUrl           plugin.TValue[string]
+	Region              plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	VpnInterfaces       plugin.TValue[[]any]
 	ResourceManagerTags plugin.TValue[map[string]any]
 }
@@ -57638,6 +57957,22 @@ func (c *mqlGcpProjectComputeServiceVpnGateway) GetRegionUrl() *plugin.TValue[st
 	return &c.RegionUrl
 }
 
+func (c *mqlGcpProjectComputeServiceVpnGateway) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.vpnGateway", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
+}
+
 func (c *mqlGcpProjectComputeServiceVpnGateway) GetVpnInterfaces() *plugin.TValue[[]any] {
 	return &c.VpnInterfaces
 }
@@ -57667,6 +58002,7 @@ type mqlGcpProjectComputeServiceVpnTunnel struct {
 	PeerGcpVpnGateway            plugin.TValue[*mqlGcpProjectComputeServiceVpnGateway]
 	PeerIp                       plugin.TValue[string]
 	RegionUrl                    plugin.TValue[string]
+	Region                       plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	RouterUrl                    plugin.TValue[string]
 	Router                       plugin.TValue[*mqlGcpProjectComputeServiceRouter]
 	SharedSecretHash             plugin.TValue[string]
@@ -57801,6 +58137,22 @@ func (c *mqlGcpProjectComputeServiceVpnTunnel) GetPeerIp() *plugin.TValue[string
 
 func (c *mqlGcpProjectComputeServiceVpnTunnel) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceVpnTunnel) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.vpnTunnel", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceVpnTunnel) GetRouterUrl() *plugin.TValue[string] {
@@ -59739,6 +60091,7 @@ type mqlGcpProjectComputeServiceInstanceGroup struct {
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
 	ZoneUrl     plugin.TValue[string]
+	Zone        plugin.TValue[*mqlGcpProjectComputeServiceZone]
 	NetworkUrl  plugin.TValue[string]
 	Network     plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
 	Subnetwork  plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
@@ -59805,6 +60158,22 @@ func (c *mqlGcpProjectComputeServiceInstanceGroup) GetZoneUrl() *plugin.TValue[s
 	return &c.ZoneUrl
 }
 
+func (c *mqlGcpProjectComputeServiceInstanceGroup) GetZone() *plugin.TValue[*mqlGcpProjectComputeServiceZone] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceZone](&c.Zone, func() (*mqlGcpProjectComputeServiceZone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.instanceGroup", c.__id, "zone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceZone), nil
+			}
+		}
+
+		return c.zone()
+	})
+}
+
 func (c *mqlGcpProjectComputeServiceInstanceGroup) GetNetworkUrl() *plugin.TValue[string] {
 	return &c.NetworkUrl
 }
@@ -59867,7 +60236,9 @@ type mqlGcpProjectComputeServiceInstanceGroupManager struct {
 	Name                plugin.TValue[string]
 	Description         plugin.TValue[string]
 	ZoneUrl             plugin.TValue[string]
+	Zone                plugin.TValue[*mqlGcpProjectComputeServiceZone]
 	RegionUrl           plugin.TValue[string]
+	Region              plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	InstanceTemplateUrl plugin.TValue[string]
 	TargetSize          plugin.TValue[int64]
 	CurrentActions      plugin.TValue[any]
@@ -59937,8 +60308,40 @@ func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetZoneUrl() *plugin.T
 	return &c.ZoneUrl
 }
 
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetZone() *plugin.TValue[*mqlGcpProjectComputeServiceZone] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceZone](&c.Zone, func() (*mqlGcpProjectComputeServiceZone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.instanceGroupManager", c.__id, "zone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceZone), nil
+			}
+		}
+
+		return c.zone()
+	})
+}
+
 func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.instanceGroupManager", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceInstanceGroupManager) GetInstanceTemplateUrl() *plugin.TValue[string] {
@@ -59995,6 +60398,7 @@ type mqlGcpProjectComputeServiceFirewallPolicy struct {
 	RuleTupleCount plugin.TValue[int64]
 	Created        plugin.TValue[*time.Time]
 	RegionUrl      plugin.TValue[string]
+	Region         plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	Rules          plugin.TValue[[]any]
 	Associations   plugin.TValue[[]any]
 }
@@ -60070,6 +60474,22 @@ func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetCreated() *plugin.TValue[
 
 func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.firewallPolicy", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceFirewallPolicy) GetRules() *plugin.TValue[[]any] {
@@ -62784,6 +63204,7 @@ type mqlGcpProjectComputeServiceHealthCheck struct {
 	GrpcHealthCheck    plugin.TValue[any]
 	LogConfig          plugin.TValue[any]
 	RegionUrl          plugin.TValue[string]
+	Region             plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 }
 
 // createGcpProjectComputeServiceHealthCheck creates a new instance of this resource
@@ -62899,6 +63320,22 @@ func (c *mqlGcpProjectComputeServiceHealthCheck) GetRegionUrl() *plugin.TValue[s
 	return &c.RegionUrl
 }
 
+func (c *mqlGcpProjectComputeServiceHealthCheck) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.healthCheck", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
+}
+
 // mqlGcpProjectComputeServiceUrlMap for the gcp.project.computeService.urlMap resource
 type mqlGcpProjectComputeServiceUrlMap struct {
 	MqlRuntime *plugin.Runtime
@@ -62915,6 +63352,7 @@ type mqlGcpProjectComputeServiceUrlMap struct {
 	Created        plugin.TValue[*time.Time]
 	SelfLink       plugin.TValue[string]
 	RegionUrl      plugin.TValue[string]
+	Region         plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 }
 
 // createGcpProjectComputeServiceUrlMap creates a new instance of this resource
@@ -62998,6 +63436,22 @@ func (c *mqlGcpProjectComputeServiceUrlMap) GetRegionUrl() *plugin.TValue[string
 	return &c.RegionUrl
 }
 
+func (c *mqlGcpProjectComputeServiceUrlMap) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.urlMap", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
+}
+
 // mqlGcpProjectComputeServiceTargetHttpProxy for the gcp.project.computeService.targetHttpProxy resource
 type mqlGcpProjectComputeServiceTargetHttpProxy struct {
 	MqlRuntime *plugin.Runtime
@@ -63013,6 +63467,7 @@ type mqlGcpProjectComputeServiceTargetHttpProxy struct {
 	SelfLink    plugin.TValue[string]
 	ProxyBind   plugin.TValue[bool]
 	RegionUrl   plugin.TValue[string]
+	Region      plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 }
 
 // createGcpProjectComputeServiceTargetHttpProxy creates a new instance of this resource
@@ -63104,6 +63559,22 @@ func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetRegionUrl() *plugin.TVal
 	return &c.RegionUrl
 }
 
+func (c *mqlGcpProjectComputeServiceTargetHttpProxy) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.targetHttpProxy", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
+}
+
 // mqlGcpProjectComputeServiceTargetHttpsProxy for the gcp.project.computeService.targetHttpsProxy resource
 type mqlGcpProjectComputeServiceTargetHttpsProxy struct {
 	MqlRuntime *plugin.Runtime
@@ -63123,6 +63594,7 @@ type mqlGcpProjectComputeServiceTargetHttpsProxy struct {
 	SelfLink           plugin.TValue[string]
 	ProxyBind          plugin.TValue[bool]
 	RegionUrl          plugin.TValue[string]
+	Region             plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 }
 
 // createGcpProjectComputeServiceTargetHttpsProxy creates a new instance of this resource
@@ -63240,6 +63712,22 @@ func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetProxyBind() *plugin.TVa
 
 func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceTargetHttpsProxy) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.targetHttpsProxy", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 // mqlGcpProjectComputeServiceNetworkPeering for the gcp.project.computeService.network.peering resource
@@ -63543,6 +64031,7 @@ type mqlGcpProjectComputeServiceServiceAttachment struct {
 	TargetService          plugin.TValue[string]
 	ReconcileConnections   plugin.TValue[bool]
 	RegionUrl              plugin.TValue[string]
+	Region                 plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SelfLink               plugin.TValue[string]
 	Fingerprint            plugin.TValue[string]
 	Created                plugin.TValue[*time.Time]
@@ -63641,6 +64130,22 @@ func (c *mqlGcpProjectComputeServiceServiceAttachment) GetRegionUrl() *plugin.TV
 	return &c.RegionUrl
 }
 
+func (c *mqlGcpProjectComputeServiceServiceAttachment) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.serviceAttachment", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
+}
+
 func (c *mqlGcpProjectComputeServiceServiceAttachment) GetSelfLink() *plugin.TValue[string] {
 	return &c.SelfLink
 }
@@ -63669,7 +64174,9 @@ type mqlGcpProjectComputeServiceNetworkEndpointGroup struct {
 	SubnetworkUrl       plugin.TValue[string]
 	Subnetwork          plugin.TValue[*mqlGcpProjectComputeServiceSubnetwork]
 	ZoneUrl             plugin.TValue[string]
+	Zone                plugin.TValue[*mqlGcpProjectComputeServiceZone]
 	RegionUrl           plugin.TValue[string]
+	Region              plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	CloudRun            plugin.TValue[any]
 	AppEngine           plugin.TValue[any]
 	CloudFunction       plugin.TValue[any]
@@ -63785,8 +64292,40 @@ func (c *mqlGcpProjectComputeServiceNetworkEndpointGroup) GetZoneUrl() *plugin.T
 	return &c.ZoneUrl
 }
 
+func (c *mqlGcpProjectComputeServiceNetworkEndpointGroup) GetZone() *plugin.TValue[*mqlGcpProjectComputeServiceZone] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceZone](&c.Zone, func() (*mqlGcpProjectComputeServiceZone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.networkEndpointGroup", c.__id, "zone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceZone), nil
+			}
+		}
+
+		return c.zone()
+	})
+}
+
 func (c *mqlGcpProjectComputeServiceNetworkEndpointGroup) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceNetworkEndpointGroup) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.networkEndpointGroup", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceNetworkEndpointGroup) GetCloudRun() *plugin.TValue[any] {
@@ -64022,6 +64561,7 @@ type mqlGcpProjectComputeServiceInterconnectAttachment struct {
 	PartnerMetadata           plugin.TValue[any]
 	PrivateInterconnectInfo   plugin.TValue[any]
 	RegionUrl                 plugin.TValue[string]
+	Region                    plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SelfLink                  plugin.TValue[string]
 	DataplaneVersion          plugin.TValue[int64]
 	Created                   plugin.TValue[*time.Time]
@@ -64176,6 +64716,22 @@ func (c *mqlGcpProjectComputeServiceInterconnectAttachment) GetRegionUrl() *plug
 	return &c.RegionUrl
 }
 
+func (c *mqlGcpProjectComputeServiceInterconnectAttachment) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.interconnectAttachment", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
+}
+
 func (c *mqlGcpProjectComputeServiceInterconnectAttachment) GetSelfLink() *plugin.TValue[string] {
 	return &c.SelfLink
 }
@@ -64284,6 +64840,7 @@ type mqlGcpProjectComputeServiceTargetTcpProxy struct {
 	ProxyBind   plugin.TValue[bool]
 	ServiceUrl  plugin.TValue[string]
 	RegionUrl   plugin.TValue[string]
+	Region      plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SelfLink    plugin.TValue[string]
 	Created     plugin.TValue[*time.Time]
 }
@@ -64351,6 +64908,22 @@ func (c *mqlGcpProjectComputeServiceTargetTcpProxy) GetServiceUrl() *plugin.TVal
 
 func (c *mqlGcpProjectComputeServiceTargetTcpProxy) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceTargetTcpProxy) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.targetTcpProxy", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceTargetTcpProxy) GetSelfLink() *plugin.TValue[string] {
@@ -64487,6 +65060,7 @@ type mqlGcpProjectComputeServicePacketMirroring struct {
 	MirroredResources plugin.TValue[any]
 	Filter            plugin.TValue[any]
 	RegionUrl         plugin.TValue[string]
+	Region            plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SelfLink          plugin.TValue[string]
 	Created           plugin.TValue[*time.Time]
 }
@@ -64566,6 +65140,22 @@ func (c *mqlGcpProjectComputeServicePacketMirroring) GetFilter() *plugin.TValue[
 
 func (c *mqlGcpProjectComputeServicePacketMirroring) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServicePacketMirroring) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.packetMirroring", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlGcpProjectComputeServicePacketMirroring) GetSelfLink() *plugin.TValue[string] {
@@ -64690,6 +65280,7 @@ type mqlGcpProjectComputeServiceTargetPool struct {
 	InstanceUrls    plugin.TValue[[]any]
 	SecurityPolicy  plugin.TValue[string]
 	RegionUrl       plugin.TValue[string]
+	Region          plugin.TValue[*mqlGcpProjectComputeServiceRegion]
 	SelfLink        plugin.TValue[string]
 	Created         plugin.TValue[*time.Time]
 }
@@ -64769,6 +65360,22 @@ func (c *mqlGcpProjectComputeServiceTargetPool) GetSecurityPolicy() *plugin.TVal
 
 func (c *mqlGcpProjectComputeServiceTargetPool) GetRegionUrl() *plugin.TValue[string] {
 	return &c.RegionUrl
+}
+
+func (c *mqlGcpProjectComputeServiceTargetPool) GetRegion() *plugin.TValue[*mqlGcpProjectComputeServiceRegion] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceRegion](&c.Region, func() (*mqlGcpProjectComputeServiceRegion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService.targetPool", c.__id, "region")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceRegion), nil
+			}
+		}
+
+		return c.region()
+	})
 }
 
 func (c *mqlGcpProjectComputeServiceTargetPool) GetSelfLink() *plugin.TValue[string] {
@@ -72959,6 +73566,7 @@ type mqlGcpProjectCloudBuildServiceTriggerPubsubConfig struct {
 	PubsubTopic         plugin.TValue[*mqlGcpProjectPubsubServiceTopic]
 	Subscription        plugin.TValue[string]
 	ServiceAccountEmail plugin.TValue[string]
+	ServiceAccount      plugin.TValue[*mqlGcpProjectIamServiceServiceAccount]
 	State               plugin.TValue[string]
 }
 
@@ -73029,6 +73637,22 @@ func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) GetSubscription() *p
 
 func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) GetServiceAccountEmail() *plugin.TValue[string] {
 	return &c.ServiceAccountEmail
+}
+
+func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) GetServiceAccount() *plugin.TValue[*mqlGcpProjectIamServiceServiceAccount] {
+	return plugin.GetOrCompute[*mqlGcpProjectIamServiceServiceAccount](&c.ServiceAccount, func() (*mqlGcpProjectIamServiceServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudBuildService.trigger.pubsubConfig", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectIamServiceServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 func (c *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) GetState() *plugin.TValue[string] {

@@ -217,6 +217,29 @@ func (g *mqlGcpProjectCloudFunction) kmsKey() (*mqlGcpProjectKmsServiceKeyringCr
 	return res.(*mqlGcpProjectKmsServiceKeyringCryptokey), nil
 }
 
+func (g *mqlGcpProjectCloudFunction) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ServiceAccountEmail.Error != nil {
+		return nil, g.ServiceAccountEmail.Error
+	}
+	email := g.ServiceAccountEmail.Data
+	if email == "" {
+		g.ServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount",
+		map[string]*llx.RawData{
+			"email":     llx.StringData(email),
+			"projectId": llx.StringData(g.ProjectId.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
+}
+
 func (g *mqlGcpProjectCloudFunction) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error

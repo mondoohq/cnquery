@@ -102,10 +102,94 @@ func initGcpProjectComputeServiceRegion(runtime *plugin.Runtime, args map[string
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
 
-	projectId := conn.ResourceID()
-	args["projectId"] = llx.StringData(projectId)
+	if pid, ok := args["projectId"]; !ok || pid == nil {
+		args["projectId"] = llx.StringData(conn.ResourceID())
+	}
 
-	return args, nil, nil
+	// When the caller passes a name, fetch the single region directly via
+	// Regions.Get rather than relying on a downstream regions() scan. This
+	// makes `NewResource("...region", {name, projectId})` cheap for typed
+	// references (e.g. instance.region()) when regions() has not been listed.
+	nameArg, hasName := args["name"]
+	if !hasName || nameArg == nil {
+		return args, nil, nil
+	}
+	name, ok := nameArg.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
+	projectId := args["projectId"].Value.(string)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, compute.ComputeReadonlyScope)
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc, err := compute.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := computeSvc.Regions.Get(projectId, name).Do()
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlRegion, err := newMqlRegion(runtime, region)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlRegion.(plugin.Resource), nil
+}
+
+func initGcpProjectComputeServiceZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+
+	if pid, ok := args["projectId"]; !ok || pid == nil {
+		args["projectId"] = llx.StringData(conn.ResourceID())
+	}
+
+	nameArg, hasName := args["name"]
+	if !hasName || nameArg == nil {
+		return args, nil, nil
+	}
+	name, ok := nameArg.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
+	projectId := args["projectId"].Value.(string)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, compute.ComputeReadonlyScope)
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc, err := compute.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		return nil, nil, err
+	}
+	zone, err := computeSvc.Zones.Get(projectId, name).Do()
+	if err != nil {
+		return nil, nil, err
+	}
+	mqlZone, err := newMqlZone(runtime, zone)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, mqlZone.(plugin.Resource), nil
+}
+
+func newMqlZone(runtime *plugin.Runtime, z *compute.Zone) (any, error) {
+	return CreateResource(runtime, "gcp.project.computeService.zone", map[string]*llx.RawData{
+		"id":          llx.StringData(strconv.FormatInt(int64(z.Id), 10)),
+		"name":        llx.StringData(z.Name),
+		"description": llx.StringData(z.Description),
+		"status":      llx.StringData(z.Status),
+		"created":     llx.TimeDataPtr(parseTime(z.CreationTimestamp)),
+	})
 }
 
 func (g *mqlGcpProjectComputeService) regions() ([]any, error) {
@@ -186,13 +270,7 @@ func (g *mqlGcpProjectComputeService) zones() ([]any, error) {
 	req := computeSvc.Zones.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.ZoneList) error {
 		for _, zone := range page.Items {
-			mqlZone, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.zone", map[string]*llx.RawData{
-				"id":          llx.StringData(strconv.FormatInt(int64(zone.Id), 10)),
-				"name":        llx.StringData(zone.Name),
-				"description": llx.StringData(zone.Description),
-				"status":      llx.StringData(zone.Status),
-				"created":     llx.TimeDataPtr(parseTime(zone.CreationTimestamp)),
-			})
+			mqlZone, err := newMqlZone(g.MqlRuntime, zone)
 			if err != nil {
 				return err
 			}

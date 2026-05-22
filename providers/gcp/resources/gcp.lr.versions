@@ -888,6 +888,7 @@ gcp.project.cloudBuildService.trigger.projectId 13.7.2
 gcp.project.cloudBuildService.trigger.pubsubConfig 13.7.2
 gcp.project.cloudBuildService.trigger.pubsubConfig.id 13.7.2
 gcp.project.cloudBuildService.trigger.pubsubConfig.pubsubTopic 13.7.2
+gcp.project.cloudBuildService.trigger.pubsubConfig.serviceAccount 13.16.3
 gcp.project.cloudBuildService.trigger.pubsubConfig.serviceAccountEmail 13.7.2
 gcp.project.cloudBuildService.trigger.pubsubConfig.state 13.7.2
 gcp.project.cloudBuildService.trigger.pubsubConfig.subscription 13.7.2
@@ -998,6 +999,7 @@ gcp.project.cloudFunction.projectId 9.0.0
 gcp.project.cloudFunction.runtime 9.0.0
 gcp.project.cloudFunction.secretEnvVars 9.0.0
 gcp.project.cloudFunction.secretVolumes 9.0.0
+gcp.project.cloudFunction.serviceAccount 13.16.3
 gcp.project.cloudFunction.serviceAccountEmail 9.0.0
 gcp.project.cloudFunction.sourceArchiveUrl 9.0.0
 gcp.project.cloudFunction.sourceRepository 9.0.0
@@ -1027,6 +1029,7 @@ gcp.project.cloudFunctionV2.eventTrigger.eventType 13.7.2
 gcp.project.cloudFunctionV2.eventTrigger.id 13.7.2
 gcp.project.cloudFunctionV2.eventTrigger.pubsubTopic 13.7.2
 gcp.project.cloudFunctionV2.eventTrigger.retryPolicy 13.7.2
+gcp.project.cloudFunctionV2.eventTrigger.serviceAccount 13.16.3
 gcp.project.cloudFunctionV2.eventTrigger.serviceAccountEmail 13.7.2
 gcp.project.cloudFunctionV2.eventTrigger.topic 13.7.2
 gcp.project.cloudFunctionV2.eventTrigger.trigger 13.7.2
@@ -1259,6 +1262,7 @@ gcp.project.computeService.address.networkTier 9.0.0
 gcp.project.computeService.address.networkUrl 9.0.0
 gcp.project.computeService.address.prefixLength 9.0.0
 gcp.project.computeService.address.purpose 9.0.0
+gcp.project.computeService.address.region 13.16.3
 gcp.project.computeService.address.regionUrl 9.0.0
 gcp.project.computeService.address.resourceUrls 9.0.0
 gcp.project.computeService.address.status 9.0.0
@@ -1355,6 +1359,7 @@ gcp.project.computeService.backendService.networkUrl 9.0.0
 gcp.project.computeService.backendService.port 11.6.6
 gcp.project.computeService.backendService.portName 9.0.0
 gcp.project.computeService.backendService.protocol 9.0.0
+gcp.project.computeService.backendService.region 13.16.3
 gcp.project.computeService.backendService.regionUrl 9.0.0
 gcp.project.computeService.backendService.securityPolicy 13.6.1
 gcp.project.computeService.backendService.securityPolicyUrl 9.0.0
@@ -1441,6 +1446,7 @@ gcp.project.computeService.firewallPolicy.displayName 11.6.6
 gcp.project.computeService.firewallPolicy.id 11.6.6
 gcp.project.computeService.firewallPolicy.name 11.6.6
 gcp.project.computeService.firewallPolicy.projectId 11.6.6
+gcp.project.computeService.firewallPolicy.region 13.16.3
 gcp.project.computeService.firewallPolicy.regionUrl 11.6.6
 gcp.project.computeService.firewallPolicy.rule 11.6.6
 gcp.project.computeService.firewallPolicy.rule.action 11.6.6
@@ -1491,6 +1497,7 @@ gcp.project.computeService.forwardingRule.noAutomateDnsZone 9.0.0
 gcp.project.computeService.forwardingRule.portRange 9.0.0
 gcp.project.computeService.forwardingRule.ports 9.0.0
 gcp.project.computeService.forwardingRule.pscConnectionStatus 11.6.6
+gcp.project.computeService.forwardingRule.region 13.16.3
 gcp.project.computeService.forwardingRule.regionUrl 9.0.0
 gcp.project.computeService.forwardingRule.serviceDirectoryRegistrations 9.0.0
 gcp.project.computeService.forwardingRule.serviceLabel 9.0.0
@@ -1514,6 +1521,7 @@ gcp.project.computeService.healthCheck.id 11.6.6
 gcp.project.computeService.healthCheck.logConfig 11.6.6
 gcp.project.computeService.healthCheck.name 11.6.6
 gcp.project.computeService.healthCheck.projectId 11.6.6
+gcp.project.computeService.healthCheck.region 13.16.3
 gcp.project.computeService.healthCheck.regionUrl 11.6.6
 gcp.project.computeService.healthCheck.selfLink 11.6.6
 gcp.project.computeService.healthCheck.sslHealthCheck 11.6.6
@@ -1627,6 +1635,7 @@ gcp.project.computeService.instanceGroup.projectId 11.6.6
 gcp.project.computeService.instanceGroup.selfLink 11.6.6
 gcp.project.computeService.instanceGroup.size 11.6.6
 gcp.project.computeService.instanceGroup.subnetwork 11.6.6
+gcp.project.computeService.instanceGroup.zone 13.16.3
 gcp.project.computeService.instanceGroup.zoneUrl 11.6.6
 gcp.project.computeService.instanceGroupManager 11.6.6
 gcp.project.computeService.instanceGroupManager.autoHealingPolicies 11.6.6
@@ -1639,11 +1648,13 @@ gcp.project.computeService.instanceGroupManager.instanceGroupUrl 11.6.6
 gcp.project.computeService.instanceGroupManager.instanceTemplateUrl 11.6.6
 gcp.project.computeService.instanceGroupManager.name 11.6.6
 gcp.project.computeService.instanceGroupManager.projectId 11.6.6
+gcp.project.computeService.instanceGroupManager.region 13.16.3
 gcp.project.computeService.instanceGroupManager.regionUrl 11.6.6
 gcp.project.computeService.instanceGroupManager.selfLink 11.6.6
 gcp.project.computeService.instanceGroupManager.statefulPolicy 11.6.6
 gcp.project.computeService.instanceGroupManager.status 11.6.6
 gcp.project.computeService.instanceGroupManager.targetSize 11.6.6
+gcp.project.computeService.instanceGroupManager.zone 13.16.3
 gcp.project.computeService.instanceGroupManager.zoneUrl 11.6.6
 gcp.project.computeService.instanceGroupManagers 11.6.6
 gcp.project.computeService.instanceGroups 11.6.6
@@ -1702,6 +1713,7 @@ gcp.project.computeService.interconnectAttachment.interconnectUrl 13.6.1
 gcp.project.computeService.interconnectAttachment.name 13.6.1
 gcp.project.computeService.interconnectAttachment.partnerMetadata 13.6.1
 gcp.project.computeService.interconnectAttachment.privateInterconnectInfo 13.6.1
+gcp.project.computeService.interconnectAttachment.region 13.16.3
 gcp.project.computeService.interconnectAttachment.regionUrl 13.6.1
 gcp.project.computeService.interconnectAttachment.router 13.6.1
 gcp.project.computeService.interconnectAttachment.routerUrl 13.6.1
@@ -1773,11 +1785,13 @@ gcp.project.computeService.networkEndpointGroup.networkEndpointType 13.6.1
 gcp.project.computeService.networkEndpointGroup.networkUrl 13.6.1
 gcp.project.computeService.networkEndpointGroup.pscData 13.6.1
 gcp.project.computeService.networkEndpointGroup.pscTargetService 13.6.1
+gcp.project.computeService.networkEndpointGroup.region 13.16.3
 gcp.project.computeService.networkEndpointGroup.regionUrl 13.6.1
 gcp.project.computeService.networkEndpointGroup.selfLink 13.6.1
 gcp.project.computeService.networkEndpointGroup.size 13.6.1
 gcp.project.computeService.networkEndpointGroup.subnetwork 13.6.1
 gcp.project.computeService.networkEndpointGroup.subnetworkUrl 13.6.1
+gcp.project.computeService.networkEndpointGroup.zone 13.16.3
 gcp.project.computeService.networkEndpointGroup.zoneUrl 13.6.1
 gcp.project.computeService.networkEndpointGroups 13.6.1
 gcp.project.computeService.networks 9.0.0
@@ -1792,6 +1806,7 @@ gcp.project.computeService.packetMirroring.mirroredResources 13.6.1
 gcp.project.computeService.packetMirroring.name 13.6.1
 gcp.project.computeService.packetMirroring.network 13.6.1
 gcp.project.computeService.packetMirroring.priority 13.6.1
+gcp.project.computeService.packetMirroring.region 13.16.3
 gcp.project.computeService.packetMirroring.regionUrl 13.6.1
 gcp.project.computeService.packetMirroring.selfLink 13.6.1
 gcp.project.computeService.packetMirrorings 13.6.1
@@ -1888,6 +1903,7 @@ gcp.project.computeService.securityPolicy.id 11.5.1
 gcp.project.computeService.securityPolicy.labels 11.5.1
 gcp.project.computeService.securityPolicy.name 11.5.1
 gcp.project.computeService.securityPolicy.recaptchaOptionsConfig 11.5.1
+gcp.project.computeService.securityPolicy.region 13.16.3
 gcp.project.computeService.securityPolicy.regionUrl 11.5.1
 gcp.project.computeService.securityPolicy.rule 11.5.1
 gcp.project.computeService.securityPolicy.rule.action 11.5.1
@@ -1920,6 +1936,7 @@ gcp.project.computeService.serviceAttachment.name 13.6.1
 gcp.project.computeService.serviceAttachment.natSubnets 13.6.1
 gcp.project.computeService.serviceAttachment.producerForwardingRule 13.6.1
 gcp.project.computeService.serviceAttachment.reconcileConnections 13.6.1
+gcp.project.computeService.serviceAttachment.region 13.16.3
 gcp.project.computeService.serviceAttachment.regionUrl 13.6.1
 gcp.project.computeService.serviceAttachment.selfLink 13.6.1
 gcp.project.computeService.serviceAttachment.targetService 13.6.1
@@ -1963,6 +1980,7 @@ gcp.project.computeService.sslCertificate.expireTime 11.5.1
 gcp.project.computeService.sslCertificate.id 11.5.1
 gcp.project.computeService.sslCertificate.managed 11.5.1
 gcp.project.computeService.sslCertificate.name 11.5.1
+gcp.project.computeService.sslCertificate.region 13.16.3
 gcp.project.computeService.sslCertificate.regionUrl 11.5.1
 gcp.project.computeService.sslCertificate.selfLink 11.5.1
 gcp.project.computeService.sslCertificate.subjectAlternativeNames 11.5.1
@@ -1978,6 +1996,7 @@ gcp.project.computeService.sslPolicy.id 11.5.1
 gcp.project.computeService.sslPolicy.minTlsVersion 11.5.1
 gcp.project.computeService.sslPolicy.name 11.5.1
 gcp.project.computeService.sslPolicy.profile 11.5.1
+gcp.project.computeService.sslPolicy.region 13.16.3
 gcp.project.computeService.sslPolicy.regionUrl 11.5.1
 gcp.project.computeService.sslPolicy.selfLink 11.5.1
 gcp.project.computeService.sslPolicy.warnings 11.5.1
@@ -2039,6 +2058,7 @@ gcp.project.computeService.targetHttpProxy.id 11.6.6
 gcp.project.computeService.targetHttpProxy.name 11.6.6
 gcp.project.computeService.targetHttpProxy.projectId 11.6.6
 gcp.project.computeService.targetHttpProxy.proxyBind 11.6.6
+gcp.project.computeService.targetHttpProxy.region 13.16.3
 gcp.project.computeService.targetHttpProxy.regionUrl 11.6.6
 gcp.project.computeService.targetHttpProxy.selfLink 11.6.6
 gcp.project.computeService.targetHttpProxy.urlMap 11.6.6
@@ -2052,6 +2072,7 @@ gcp.project.computeService.targetHttpsProxy.name 11.6.6
 gcp.project.computeService.targetHttpsProxy.projectId 11.6.6
 gcp.project.computeService.targetHttpsProxy.proxyBind 11.6.6
 gcp.project.computeService.targetHttpsProxy.quicOverride 11.6.6
+gcp.project.computeService.targetHttpsProxy.region 13.16.3
 gcp.project.computeService.targetHttpsProxy.regionUrl 11.6.6
 gcp.project.computeService.targetHttpsProxy.selfLink 11.6.6
 gcp.project.computeService.targetHttpsProxy.sslCertificateUrls 11.6.6
@@ -2068,6 +2089,7 @@ gcp.project.computeService.targetPool.healthCheckUrls 13.6.1
 gcp.project.computeService.targetPool.id 13.6.1
 gcp.project.computeService.targetPool.instanceUrls 13.6.1
 gcp.project.computeService.targetPool.name 13.6.1
+gcp.project.computeService.targetPool.region 13.16.3
 gcp.project.computeService.targetPool.regionUrl 13.6.1
 gcp.project.computeService.targetPool.securityPolicy 13.6.1
 gcp.project.computeService.targetPool.selfLink 13.6.1
@@ -2094,6 +2116,7 @@ gcp.project.computeService.targetTcpProxy.id 13.6.1
 gcp.project.computeService.targetTcpProxy.name 13.6.1
 gcp.project.computeService.targetTcpProxy.proxyBind 13.6.1
 gcp.project.computeService.targetTcpProxy.proxyHeader 13.6.1
+gcp.project.computeService.targetTcpProxy.region 13.16.3
 gcp.project.computeService.targetTcpProxy.regionUrl 13.6.1
 gcp.project.computeService.targetTcpProxy.selfLink 13.6.1
 gcp.project.computeService.targetTcpProxy.serviceUrl 13.6.1
@@ -2106,6 +2129,7 @@ gcp.project.computeService.urlMap.id 11.6.6
 gcp.project.computeService.urlMap.name 11.6.6
 gcp.project.computeService.urlMap.pathMatchers 11.6.6
 gcp.project.computeService.urlMap.projectId 11.6.6
+gcp.project.computeService.urlMap.region 13.16.3
 gcp.project.computeService.urlMap.regionUrl 11.6.6
 gcp.project.computeService.urlMap.selfLink 11.6.6
 gcp.project.computeService.urlMap.tests 11.6.6
@@ -2118,6 +2142,7 @@ gcp.project.computeService.vpnGateway.id 11.6.6
 gcp.project.computeService.vpnGateway.labels 11.6.6
 gcp.project.computeService.vpnGateway.name 11.6.6
 gcp.project.computeService.vpnGateway.network 11.6.6
+gcp.project.computeService.vpnGateway.region 13.16.3
 gcp.project.computeService.vpnGateway.regionUrl 11.6.6
 gcp.project.computeService.vpnGateway.resourceManagerTags 13.5.0
 gcp.project.computeService.vpnGateway.stackType 11.6.6
@@ -2138,6 +2163,7 @@ gcp.project.computeService.vpnTunnel.peerExternalVpnGateway 13.6.1
 gcp.project.computeService.vpnTunnel.peerGcpGateway 11.6.6
 gcp.project.computeService.vpnTunnel.peerGcpVpnGateway 13.6.1
 gcp.project.computeService.vpnTunnel.peerIp 11.6.6
+gcp.project.computeService.vpnTunnel.region 13.16.3
 gcp.project.computeService.vpnTunnel.regionUrl 11.6.6
 gcp.project.computeService.vpnTunnel.remoteTrafficSelector 11.6.6
 gcp.project.computeService.vpnTunnel.resourceManagerTags 13.5.0

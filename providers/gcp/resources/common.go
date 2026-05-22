@@ -287,3 +287,70 @@ func getDiskIdByUrl(diskUrl string) (*resourceId, error) {
 	parts := strings.Split(params, "/")
 	return &resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}, nil
 }
+
+// parseProjectFromComputeUrl extracts the project id from a Compute self-link.
+// Returns "" when the URL doesn't match either compute self-link prefix.
+func parseProjectFromComputeUrl(url string) string {
+	params := strings.TrimPrefix(url, "https://www.googleapis.com/compute/v1/")
+	params = strings.TrimPrefix(params, "https://compute.googleapis.com/compute/v1/")
+	parts := strings.Split(params, "/")
+	if len(parts) < 2 || parts[0] != "projects" {
+		return ""
+	}
+	return parts[1]
+}
+
+// getRegionByUrl resolves the typed region resource matching a region URL.
+// Returns (nil, nil) for empty URLs (global resources). The init function on
+// `gcp.project.computeService.region` does the actual fetch — either via
+// `Regions.Get(projectId, name)` when the region isn't already in the
+// runtime cache, or by returning the cached entry if `regions()` was
+// previously listed on the same project.
+func getRegionByUrl(regionUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceRegion, error) {
+	if regionUrl == "" {
+		return nil, nil
+	}
+	regionName := RegionNameFromRegionUrl(regionUrl)
+	if regionName == "" {
+		return nil, fmt.Errorf("could not extract region name from %q", regionUrl)
+	}
+	projectId := parseProjectFromComputeUrl(regionUrl)
+	if projectId == "" {
+		return nil, fmt.Errorf("could not extract project id from region url %q", regionUrl)
+	}
+	res, err := NewResource(runtime, "gcp.project.computeService.region", map[string]*llx.RawData{
+		"name":      llx.StringData(regionName),
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceRegion), nil
+}
+
+// getZoneByUrl resolves the typed zone resource matching a zone URL.
+// Returns (nil, nil) for empty URLs (regional resources). Resolution goes
+// through the zone resource's init function (single `Zones.Get` call, or
+// runtime cache hit if `zones()` was previously listed).
+func getZoneByUrl(zoneUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComputeServiceZone, error) {
+	if zoneUrl == "" {
+		return nil, nil
+	}
+	segments := strings.Split(zoneUrl, "/")
+	zoneName := segments[len(segments)-1]
+	if zoneName == "" {
+		return nil, fmt.Errorf("could not extract zone name from %q", zoneUrl)
+	}
+	projectId := parseProjectFromComputeUrl(zoneUrl)
+	if projectId == "" {
+		return nil, fmt.Errorf("could not extract project id from zone url %q", zoneUrl)
+	}
+	res, err := NewResource(runtime, "gcp.project.computeService.zone", map[string]*llx.RawData{
+		"name":      llx.StringData(zoneName),
+		"projectId": llx.StringData(projectId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectComputeServiceZone), nil
+}

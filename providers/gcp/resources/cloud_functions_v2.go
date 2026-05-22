@@ -79,7 +79,7 @@ func (g *mqlGcpProject) cloudFunctionsV2() ([]any, error) {
 			return nil, err
 		}
 
-		eventTrigger, err := fnV2EventTrigger(g.MqlRuntime, fn.Name, fn.EventTrigger)
+		eventTrigger, err := fnV2EventTrigger(g.MqlRuntime, fn.Name, projectId, fn.EventTrigger)
 		if err != nil {
 			return nil, err
 		}
@@ -276,7 +276,7 @@ func (g *mqlGcpProjectCloudFunctionV2ServiceConfig) iamServiceAccount() (*mqlGcp
 	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
-func fnV2EventTrigger(runtime *plugin.Runtime, parentName string, cfg *functionspb.EventTrigger) (*mqlGcpProjectCloudFunctionV2EventTrigger, error) {
+func fnV2EventTrigger(runtime *plugin.Runtime, parentName string, projectId string, cfg *functionspb.EventTrigger) (*mqlGcpProjectCloudFunctionV2EventTrigger, error) {
 	if cfg == nil {
 		return nil, nil
 	}
@@ -308,6 +308,7 @@ func fnV2EventTrigger(runtime *plugin.Runtime, parentName string, cfg *functions
 	// Populate Internal struct for cross-reference
 	et := res.(*mqlGcpProjectCloudFunctionV2EventTrigger)
 	et.cachePubsubTopic = cfg.PubsubTopic
+	et.cacheProjectId = projectId
 
 	return et, nil
 }
@@ -318,6 +319,27 @@ func (g *mqlGcpProjectCloudFunctionV2EventTrigger) id() (string, error) {
 
 type mqlGcpProjectCloudFunctionV2EventTriggerInternal struct {
 	cachePubsubTopic string
+	cacheProjectId   string
+}
+
+func (g *mqlGcpProjectCloudFunctionV2EventTrigger) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ServiceAccountEmail.Error != nil {
+		return nil, g.ServiceAccountEmail.Error
+	}
+	email := g.ServiceAccountEmail.Data
+	if email == "" {
+		g.ServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount",
+		map[string]*llx.RawData{
+			"email":     llx.StringData(email),
+			"projectId": llx.StringData(g.cacheProjectId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
 func (g *mqlGcpProjectCloudFunctionV2EventTrigger) topic() (*mqlGcpProjectPubsubServiceTopic, error) {

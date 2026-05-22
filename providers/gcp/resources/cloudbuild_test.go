@@ -21,7 +21,7 @@ func TestBuildTriggerGithubConfig(t *testing.T) {
 
 func TestBuildTriggerPubsubConfig(t *testing.T) {
 	t.Run("nil input returns nil", func(t *testing.T) {
-		result, err := buildTriggerPubsubConfig(nil, "parent", nil)
+		result, err := buildTriggerPubsubConfig(nil, "parent", "", nil)
 		require.NoError(t, err)
 		assert.Nil(t, result)
 	})

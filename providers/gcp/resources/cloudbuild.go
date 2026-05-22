@@ -107,7 +107,7 @@ func (g *mqlGcpProjectCloudBuildService) triggers() ([]any, error) {
 		}
 
 		// Build Pub/Sub config sub-resource
-		pubsubConfig, err := buildTriggerPubsubConfig(g.MqlRuntime, trigger.Name, trigger.GetPubsubConfig())
+		pubsubConfig, err := buildTriggerPubsubConfig(g.MqlRuntime, trigger.Name, projectId, trigger.GetPubsubConfig())
 		if err != nil {
 			return nil, err
 		}
@@ -246,7 +246,7 @@ func (g *mqlGcpProjectCloudBuildServiceTriggerGithubEventsConfig) id() (string, 
 	return g.Id.Data, nil
 }
 
-func buildTriggerPubsubConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.PubsubConfig) (*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig, error) {
+func buildTriggerPubsubConfig(runtime *plugin.Runtime, parentName string, projectId string, cfg *cloudbuildpb.PubsubConfig) (*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig, error) {
 	if cfg == nil {
 		return nil, nil
 	}
@@ -265,6 +265,7 @@ func buildTriggerPubsubConfig(runtime *plugin.Runtime, parentName string, cfg *c
 	// Populate Internal struct cache for cross-reference
 	pc := res.(*mqlGcpProjectCloudBuildServiceTriggerPubsubConfig)
 	pc.cacheTopic = cfg.Topic
+	pc.cacheProjectId = projectId
 
 	return pc, nil
 }
@@ -277,7 +278,8 @@ func (g *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) id() (string, error)
 }
 
 type mqlGcpProjectCloudBuildServiceTriggerPubsubConfigInternal struct {
-	cacheTopic string
+	cacheTopic     string
+	cacheProjectId string
 }
 
 func (g *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) pubsubTopic() (*mqlGcpProjectPubsubServiceTopic, error) {
@@ -293,6 +295,26 @@ func (g *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) pubsubTopic() (*mqlG
 		return nil, err
 	}
 	return res.(*mqlGcpProjectPubsubServiceTopic), nil
+}
+
+func (g *mqlGcpProjectCloudBuildServiceTriggerPubsubConfig) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	if g.ServiceAccountEmail.Error != nil {
+		return nil, g.ServiceAccountEmail.Error
+	}
+	email := g.ServiceAccountEmail.Data
+	if email == "" {
+		g.ServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res, err := NewResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount",
+		map[string]*llx.RawData{
+			"email":     llx.StringData(email),
+			"projectId": llx.StringData(g.cacheProjectId),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlGcpProjectIamServiceServiceAccount), nil
 }
 
 func buildTriggerWebhookConfig(runtime *plugin.Runtime, parentName string, cfg *cloudbuildpb.WebhookConfig) (*mqlGcpProjectCloudBuildServiceTriggerWebhookConfig, error) {
