@@ -64,16 +64,22 @@ func WriteAssets(w io.Writer, assets []*inventory.Asset, format Format) error {
 	}
 
 	bw := bufio.NewWriter(w)
-	defer bw.Flush()
 
+	var writeErr error
 	switch format {
 	case FormatJSONL:
-		return writeJSONL(bw, redacted)
+		writeErr = writeJSONL(bw, redacted)
 	case FormatJSON, FormatYAML:
-		return writeInventoryDoc(bw, redacted, format)
+		writeErr = writeInventoryDoc(bw, redacted, format)
 	default:
 		return fmt.Errorf("unknown format %q", format)
 	}
+	if writeErr != nil {
+		return writeErr
+	}
+	// Flush explicitly so a buffered-write failure (disk full, broken
+	// pipe) surfaces as an error instead of a silently truncated file.
+	return bw.Flush()
 }
 
 func writeJSONL(bw *bufio.Writer, assets []*inventory.Asset) error {

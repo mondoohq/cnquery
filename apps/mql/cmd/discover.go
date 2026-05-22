@@ -56,12 +56,14 @@ var DiscoverCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes
 
 	// Enable staged discovery so providers can split discovery into phases —
 	// same posture mql run uses, keeps memory bounded for large inventories.
-	for _, asset := range in.Spec.Assets {
-		for _, conn := range asset.Connections {
-			if conn.Options == nil {
-				conn.Options = map[string]string{}
+	if in.Spec != nil {
+		for _, asset := range in.Spec.Assets {
+			for _, conn := range asset.Connections {
+				if conn.Options == nil {
+					conn.Options = map[string]string{}
+				}
+				conn.Options[plugin.OptionStagedDiscovery] = ""
 			}
-			conn.Options[plugin.OptionStagedDiscovery] = ""
 		}
 	}
 
@@ -90,10 +92,15 @@ var DiscoverCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes
 	if err != nil {
 		log.Fatal().Err(err).Str("path", outPath).Msg("failed to create output file")
 	}
-	defer f.Close()
 
 	if err := export.WriteAssets(f, assets, format); err != nil {
+		_ = f.Close()
 		log.Fatal().Err(err).Msg("failed to write discovered assets")
+	}
+	// Explicit close so a late writeback failure (NFS, full disk) surfaces
+	// before we log success. defer wouldn't run on the log.Fatal path above.
+	if err := f.Close(); err != nil {
+		log.Fatal().Err(err).Str("path", outPath).Msg("failed to close output file")
 	}
 	log.Info().Str("path", outPath).Str("format", string(format)).Msg("discovered assets written")
 }
