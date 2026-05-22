@@ -583,13 +583,32 @@
     "route53:GetHealthCheck",
     "route53:GetHealthCheckStatus",
     "route53:GetHostedZone",
+    "route53:GetTrafficPolicy",
+    "route53:ListCidrBlocks",
+    "route53:ListCidrCollections",
+    "route53:ListCidrLocations",
     "route53:ListHealthChecks",
     "route53:ListHostedZones",
     "route53:ListQueryLoggingConfigs",
     "route53:ListResourceRecordSets",
     "route53:ListTagsForResource",
+    "route53:ListTrafficPolicies",
+    "route53:ListTrafficPolicyInstances",
     "route53domains:GetDomainDetail",
     "route53domains:ListDomains",
+    "route53resolver:GetFirewallDomainList",
+    "route53resolver:GetFirewallRuleGroup",
+    "route53resolver:ListFirewallConfigs",
+    "route53resolver:ListFirewallDomainLists",
+    "route53resolver:ListFirewallRuleGroupAssociations",
+    "route53resolver:ListFirewallRuleGroups",
+    "route53resolver:ListFirewallRules",
+    "route53resolver:ListResolverEndpointIpAddresses",
+    "route53resolver:ListResolverEndpoints",
+    "route53resolver:ListResolverQueryLogConfigAssociations",
+    "route53resolver:ListResolverQueryLogConfigs",
+    "route53resolver:ListResolverRuleAssociations",
+    "route53resolver:ListResolverRules",
     "s3:GetAccessPoint",
     "s3:GetAccessPointPolicy",
     "s3:GetBucketAcl",
@@ -4442,6 +4461,30 @@
       "source_file": "aws_route53.go"
     },
     {
+      "permission": "route53:GetTrafficPolicy",
+      "service": "route53",
+      "action": "GetTrafficPolicy",
+      "source_file": "aws_route53_ext.go"
+    },
+    {
+      "permission": "route53:ListCidrBlocks",
+      "service": "route53",
+      "action": "ListCidrBlocks",
+      "source_file": "aws_route53_ext.go"
+    },
+    {
+      "permission": "route53:ListCidrCollections",
+      "service": "route53",
+      "action": "ListCidrCollections",
+      "source_file": "aws_route53_ext.go"
+    },
+    {
+      "permission": "route53:ListCidrLocations",
+      "service": "route53",
+      "action": "ListCidrLocations",
+      "source_file": "aws_route53_ext.go"
+    },
+    {
       "permission": "route53:ListHealthChecks",
       "service": "route53",
       "action": "ListHealthChecks",
@@ -4472,6 +4515,18 @@
       "source_file": "aws_route53.go"
     },
     {
+      "permission": "route53:ListTrafficPolicies",
+      "service": "route53",
+      "action": "ListTrafficPolicies",
+      "source_file": "aws_route53_ext.go"
+    },
+    {
+      "permission": "route53:ListTrafficPolicyInstances",
+      "service": "route53",
+      "action": "ListTrafficPolicyInstances",
+      "source_file": "aws_route53_ext.go"
+    },
+    {
       "permission": "route53domains:GetDomainDetail",
       "service": "route53domains",
       "action": "GetDomainDetail",
@@ -4482,6 +4537,84 @@
       "service": "route53domains",
       "action": "ListDomains",
       "source_file": "aws_route53.go"
+    },
+    {
+      "permission": "route53resolver:GetFirewallDomainList",
+      "service": "route53resolver",
+      "action": "GetFirewallDomainList",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:GetFirewallRuleGroup",
+      "service": "route53resolver",
+      "action": "GetFirewallRuleGroup",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListFirewallConfigs",
+      "service": "route53resolver",
+      "action": "ListFirewallConfigs",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListFirewallDomainLists",
+      "service": "route53resolver",
+      "action": "ListFirewallDomainLists",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListFirewallRuleGroupAssociations",
+      "service": "route53resolver",
+      "action": "ListFirewallRuleGroupAssociations",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListFirewallRuleGroups",
+      "service": "route53resolver",
+      "action": "ListFirewallRuleGroups",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListFirewallRules",
+      "service": "route53resolver",
+      "action": "ListFirewallRules",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListResolverEndpointIpAddresses",
+      "service": "route53resolver",
+      "action": "ListResolverEndpointIpAddresses",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListResolverEndpoints",
+      "service": "route53resolver",
+      "action": "ListResolverEndpoints",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListResolverQueryLogConfigAssociations",
+      "service": "route53resolver",
+      "action": "ListResolverQueryLogConfigAssociations",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListResolverQueryLogConfigs",
+      "service": "route53resolver",
+      "action": "ListResolverQueryLogConfigs",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListResolverRuleAssociations",
+      "service": "route53resolver",
+      "action": "ListResolverRuleAssociations",
+      "source_file": "aws_route53_resolver.go"
+    },
+    {
+      "permission": "route53resolver:ListResolverRules",
+      "service": "route53resolver",
+      "action": "ListResolverRules",
+      "source_file": "aws_route53_resolver.go"
     },
     {
       "permission": "s3:GetAccessPoint",

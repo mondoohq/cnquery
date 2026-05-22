@@ -476,6 +476,7 @@ func awsConnectionMethodToService(method string) string {
 		"elbv2":                    "elasticloadbalancingv2",
 		"route53":                  "route53",
 		"route53domains":           "route53domains",
+		"route53resolver":          "route53resolver",
 		"eks":                      "eks",
 		"efs":                      "efs",
 		"apigateway":               "apigateway",

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/route53"
@@ -227,8 +228,10 @@ func initAwsRoute53HostedZone(runtime *plugin.Runtime, args map[string]*llx.RawD
 type mqlAwsRoute53HostedZoneInternal struct {
 	getHostedZoneResp *route53.GetHostedZoneOutput
 	getHostedZoneDone bool
+	getHostedZoneLock sync.Mutex
 	getDNSSECResp     *route53.GetDNSSECOutput
 	getDNSSECDone     bool
+	getDNSSECLock     sync.Mutex
 }
 
 func (a *mqlAwsRoute53HostedZone) id() (string, error) {
@@ -238,6 +241,11 @@ func (a *mqlAwsRoute53HostedZone) id() (string, error) {
 // getHostedZone fetches and caches the GetHostedZone response so that vpcs()
 // and nameServers() don't each make a separate API call for the same data.
 func (a *mqlAwsRoute53HostedZone) getHostedZone() (*route53.GetHostedZoneOutput, error) {
+	if a.getHostedZoneDone {
+		return a.getHostedZoneResp, nil
+	}
+	a.getHostedZoneLock.Lock()
+	defer a.getHostedZoneLock.Unlock()
 	if a.getHostedZoneDone {
 		return a.getHostedZoneResp, nil
 	}
@@ -261,9 +269,14 @@ func (a *mqlAwsRoute53HostedZone) getHostedZone() (*route53.GetHostedZoneOutput,
 	return resp, nil
 }
 
-// getDNSSEC fetches and caches the GetDNSSEC response so that dnssecStatus()
-// and keySigningKeys() don't each make a separate API call for the same data.
+// getDNSSEC fetches and caches the GetDNSSEC response so that dnssecStatus(),
+// dnssec(), and keySigningKeys() share a single API call per hosted zone.
 func (a *mqlAwsRoute53HostedZone) getDNSSEC() (*route53.GetDNSSECOutput, error) {
+	if a.getDNSSECDone {
+		return a.getDNSSECResp, nil
+	}
+	a.getDNSSECLock.Lock()
+	defer a.getDNSSECLock.Unlock()
 	if a.getDNSSECDone {
 		return a.getDNSSECResp, nil
 	}
@@ -390,28 +403,6 @@ func (a *mqlAwsRoute53HostedZone) queryLoggingConfig() (*mqlAwsRoute53QueryLoggi
 
 	a.QueryLoggingConfig.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
-}
-
-func (a *mqlAwsRoute53HostedZone) dnssecStatus() (any, error) {
-	// DNSSEC is not supported on private hosted zones
-	if a.IsPrivate.Data {
-		return map[string]any{"serveSignature": "NOT_SIGNING", "statusMessage": "DNSSEC is not supported for private hosted zones"}, nil
-	}
-
-	resp, err := a.getDNSSEC()
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil {
-		return nil, nil
-	}
-
-	result := map[string]any{}
-	if resp.Status != nil {
-		result["serveSignature"] = convert.ToValue(resp.Status.ServeSignature)
-		result["statusMessage"] = convert.ToValue(resp.Status.StatusMessage)
-	}
-	return result, nil
 }
 
 func (a *mqlAwsRoute53HostedZone) keySigningKeys() ([]any, error) {

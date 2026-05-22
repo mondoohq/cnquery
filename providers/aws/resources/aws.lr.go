@@ -447,12 +447,26 @@ const (
 	ResourceAwsRedshiftScheduledAction                                          string = "aws.redshift.scheduledAction"
 	ResourceAwsRedshiftSnapshotSchedule                                         string = "aws.redshift.snapshotSchedule"
 	ResourceAwsRoute53                                                          string = "aws.route53"
+	ResourceAwsRoute53Resolver                                                  string = "aws.route53.resolver"
 	ResourceAwsRoute53HostedZone                                                string = "aws.route53.hostedZone"
+	ResourceAwsRoute53HostedZoneDnssec                                          string = "aws.route53.hostedZone.dnssec"
 	ResourceAwsRoute53Record                                                    string = "aws.route53.record"
 	ResourceAwsRoute53HealthCheck                                               string = "aws.route53.healthCheck"
 	ResourceAwsRoute53QueryLoggingConfig                                        string = "aws.route53.queryLoggingConfig"
 	ResourceAwsRoute53KeySigningKey                                             string = "aws.route53.keySigningKey"
 	ResourceAwsRoute53Domain                                                    string = "aws.route53.domain"
+	ResourceAwsRoute53TrafficPolicy                                             string = "aws.route53.trafficPolicy"
+	ResourceAwsRoute53TrafficPolicyInstance                                     string = "aws.route53.trafficPolicyInstance"
+	ResourceAwsRoute53CidrCollection                                            string = "aws.route53.cidrCollection"
+	ResourceAwsRoute53ResolverEndpoint                                          string = "aws.route53.resolver.endpoint"
+	ResourceAwsRoute53ResolverRule                                              string = "aws.route53.resolver.rule"
+	ResourceAwsRoute53ResolverRuleAssociation                                   string = "aws.route53.resolver.ruleAssociation"
+	ResourceAwsRoute53ResolverQueryLogConfig                                    string = "aws.route53.resolver.queryLogConfig"
+	ResourceAwsRoute53ResolverQueryLogConfigAssociation                         string = "aws.route53.resolver.queryLogConfigAssociation"
+	ResourceAwsRoute53ResolverFirewallRuleGroup                                 string = "aws.route53.resolver.firewallRuleGroup"
+	ResourceAwsRoute53ResolverFirewallRuleGroupAssociation                      string = "aws.route53.resolver.firewallRuleGroupAssociation"
+	ResourceAwsRoute53ResolverFirewallDomainList                                string = "aws.route53.resolver.firewallDomainList"
+	ResourceAwsRoute53ResolverFirewallConfig                                    string = "aws.route53.resolver.firewallConfig"
 	ResourceAwsEcr                                                              string = "aws.ecr"
 	ResourceAwsEcrRepository                                                    string = "aws.ecr.repository"
 	ResourceAwsEcrLifecyclePolicy                                               string = "aws.ecr.lifecyclePolicy"
@@ -2555,9 +2569,17 @@ func init() {
 			// to override args, implement: initAwsRoute53(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRoute53,
 		},
+		"aws.route53.resolver": {
+			// to override args, implement: initAwsRoute53Resolver(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53Resolver,
+		},
 		"aws.route53.hostedZone": {
 			Init:   initAwsRoute53HostedZone,
 			Create: createAwsRoute53HostedZone,
+		},
+		"aws.route53.hostedZone.dnssec": {
+			// to override args, implement: initAwsRoute53HostedZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53HostedZoneDnssec,
 		},
 		"aws.route53.record": {
 			// to override args, implement: initAwsRoute53Record(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2578,6 +2600,54 @@ func init() {
 		"aws.route53.domain": {
 			// to override args, implement: initAwsRoute53Domain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsRoute53Domain,
+		},
+		"aws.route53.trafficPolicy": {
+			Init:   initAwsRoute53TrafficPolicy,
+			Create: createAwsRoute53TrafficPolicy,
+		},
+		"aws.route53.trafficPolicyInstance": {
+			// to override args, implement: initAwsRoute53TrafficPolicyInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53TrafficPolicyInstance,
+		},
+		"aws.route53.cidrCollection": {
+			// to override args, implement: initAwsRoute53CidrCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53CidrCollection,
+		},
+		"aws.route53.resolver.endpoint": {
+			Init:   initAwsRoute53ResolverEndpoint,
+			Create: createAwsRoute53ResolverEndpoint,
+		},
+		"aws.route53.resolver.rule": {
+			Init:   initAwsRoute53ResolverRule,
+			Create: createAwsRoute53ResolverRule,
+		},
+		"aws.route53.resolver.ruleAssociation": {
+			// to override args, implement: initAwsRoute53ResolverRuleAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53ResolverRuleAssociation,
+		},
+		"aws.route53.resolver.queryLogConfig": {
+			Init:   initAwsRoute53ResolverQueryLogConfig,
+			Create: createAwsRoute53ResolverQueryLogConfig,
+		},
+		"aws.route53.resolver.queryLogConfigAssociation": {
+			// to override args, implement: initAwsRoute53ResolverQueryLogConfigAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53ResolverQueryLogConfigAssociation,
+		},
+		"aws.route53.resolver.firewallRuleGroup": {
+			Init:   initAwsRoute53ResolverFirewallRuleGroup,
+			Create: createAwsRoute53ResolverFirewallRuleGroup,
+		},
+		"aws.route53.resolver.firewallRuleGroupAssociation": {
+			// to override args, implement: initAwsRoute53ResolverFirewallRuleGroupAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53ResolverFirewallRuleGroupAssociation,
+		},
+		"aws.route53.resolver.firewallDomainList": {
+			// to override args, implement: initAwsRoute53ResolverFirewallDomainList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53ResolverFirewallDomainList,
+		},
+		"aws.route53.resolver.firewallConfig": {
+			// to override args, implement: initAwsRoute53ResolverFirewallConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsRoute53ResolverFirewallConfig,
 		},
 		"aws.ecr": {
 			// to override args, implement: initAwsEcr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -16390,6 +16460,45 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.route53.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53).GetDomains()).ToDataRes(types.Array(types.Resource("aws.route53.domain")))
 	},
+	"aws.route53.trafficPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53).GetTrafficPolicies()).ToDataRes(types.Array(types.Resource("aws.route53.trafficPolicy")))
+	},
+	"aws.route53.trafficPolicyInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53).GetTrafficPolicyInstances()).ToDataRes(types.Array(types.Resource("aws.route53.trafficPolicyInstance")))
+	},
+	"aws.route53.cidrCollections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53).GetCidrCollections()).ToDataRes(types.Array(types.Resource("aws.route53.cidrCollection")))
+	},
+	"aws.route53.resolver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53).GetResolver()).ToDataRes(types.Resource("aws.route53.resolver"))
+	},
+	"aws.route53.resolver.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Resolver).GetEndpoints()).ToDataRes(types.Array(types.Resource("aws.route53.resolver.endpoint")))
+	},
+	"aws.route53.resolver.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Resolver).GetRules()).ToDataRes(types.Array(types.Resource("aws.route53.resolver.rule")))
+	},
+	"aws.route53.resolver.ruleAssociations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Resolver).GetRuleAssociations()).ToDataRes(types.Array(types.Resource("aws.route53.resolver.ruleAssociation")))
+	},
+	"aws.route53.resolver.queryLogConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Resolver).GetQueryLogConfigs()).ToDataRes(types.Array(types.Resource("aws.route53.resolver.queryLogConfig")))
+	},
+	"aws.route53.resolver.queryLogConfigAssociations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Resolver).GetQueryLogConfigAssociations()).ToDataRes(types.Array(types.Resource("aws.route53.resolver.queryLogConfigAssociation")))
+	},
+	"aws.route53.resolver.firewallRuleGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Resolver).GetFirewallRuleGroups()).ToDataRes(types.Array(types.Resource("aws.route53.resolver.firewallRuleGroup")))
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Resolver).GetFirewallRuleGroupAssociations()).ToDataRes(types.Array(types.Resource("aws.route53.resolver.firewallRuleGroupAssociation")))
+	},
+	"aws.route53.resolver.firewallDomainLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Resolver).GetFirewallDomainLists()).ToDataRes(types.Array(types.Resource("aws.route53.resolver.firewallDomainList")))
+	},
+	"aws.route53.resolver.firewallConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53Resolver).GetFirewallConfigs()).ToDataRes(types.Array(types.Resource("aws.route53.resolver.firewallConfig")))
+	},
 	"aws.route53.hostedZone.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53HostedZone).GetId()).ToDataRes(types.String)
 	},
@@ -16432,8 +16541,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.route53.hostedZone.dnssecStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53HostedZone).GetDnssecStatus()).ToDataRes(types.Dict)
 	},
+	"aws.route53.hostedZone.dnssec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZone).GetDnssec()).ToDataRes(types.Resource("aws.route53.hostedZone.dnssec"))
+	},
 	"aws.route53.hostedZone.keySigningKeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53HostedZone).GetKeySigningKeys()).ToDataRes(types.Array(types.Resource("aws.route53.keySigningKey")))
+	},
+	"aws.route53.hostedZone.dnssec.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZoneDnssec).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.hostedZone.dnssec.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZoneDnssec).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.route53.hostedZone.dnssec.keySigningKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53HostedZoneDnssec).GetKeySigningKeys()).ToDataRes(types.Array(types.Resource("aws.route53.keySigningKey")))
 	},
 	"aws.route53.record.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53Record).GetHostedZoneId()).ToDataRes(types.String)
@@ -16677,6 +16798,402 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.route53.domain.abuseContactEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRoute53Domain).GetAbuseContactEmail()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicy).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicy.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicy).GetVersion()).ToDataRes(types.Int)
+	},
+	"aws.route53.trafficPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicy).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicy.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicy).GetType()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicy.document": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicy).GetDocument()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicy.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicy).GetComment()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicy.latestVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicy).GetLatestVersion()).ToDataRes(types.Bool)
+	},
+	"aws.route53.trafficPolicyInstance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicyInstance.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicyInstance.hostedZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetHostedZoneId()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicyInstance.hostedZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetHostedZone()).ToDataRes(types.Resource("aws.route53.hostedZone"))
+	},
+	"aws.route53.trafficPolicyInstance.trafficPolicyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetTrafficPolicyId()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicyInstance.trafficPolicyVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetTrafficPolicyVersion()).ToDataRes(types.Int)
+	},
+	"aws.route53.trafficPolicyInstance.trafficPolicyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetTrafficPolicyType()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicyInstance.trafficPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetTrafficPolicy()).ToDataRes(types.Resource("aws.route53.trafficPolicy"))
+	},
+	"aws.route53.trafficPolicyInstance.ttl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetTtl()).ToDataRes(types.Int)
+	},
+	"aws.route53.trafficPolicyInstance.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetState()).ToDataRes(types.String)
+	},
+	"aws.route53.trafficPolicyInstance.message": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53TrafficPolicyInstance).GetMessage()).ToDataRes(types.String)
+	},
+	"aws.route53.cidrCollection.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53CidrCollection).GetArn()).ToDataRes(types.String)
+	},
+	"aws.route53.cidrCollection.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53CidrCollection).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.cidrCollection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53CidrCollection).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.cidrCollection.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53CidrCollection).GetVersion()).ToDataRes(types.Int)
+	},
+	"aws.route53.cidrCollection.locations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53CidrCollection).GetLocations()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.route53.resolver.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.endpoint.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetArn()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.endpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.endpoint.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.endpoint.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetDirection()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.endpoint.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.endpoint.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.endpoint.hostVpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetHostVpcId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.endpoint.hostVpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetHostVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.route53.resolver.endpoint.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.route53.resolver.endpoint.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetIpAddresses()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.route53.resolver.endpoint.resolverEndpointType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetResolverEndpointType()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.endpoint.ipAddressCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetIpAddressCount()).ToDataRes(types.Int)
+	},
+	"aws.route53.resolver.endpoint.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetCreationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.endpoint.modificationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverEndpoint).GetModificationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetArn()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetDomainName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.ruleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetRuleType()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.resolverEndpointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetResolverEndpointId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.resolverEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetResolverEndpoint()).ToDataRes(types.Resource("aws.route53.resolver.endpoint"))
+	},
+	"aws.route53.resolver.rule.targetIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetTargetIps()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.route53.resolver.rule.shareStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetShareStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.ownerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetOwnerId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetCreationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.rule.modificationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRule).GetModificationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.ruleAssociation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRuleAssociation).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.ruleAssociation.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRuleAssociation).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.ruleAssociation.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRuleAssociation).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.ruleAssociation.resolverRuleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRuleAssociation).GetResolverRuleId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.ruleAssociation.resolverRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRuleAssociation).GetResolverRule()).ToDataRes(types.Resource("aws.route53.resolver.rule"))
+	},
+	"aws.route53.resolver.ruleAssociation.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRuleAssociation).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.ruleAssociation.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRuleAssociation).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.route53.resolver.ruleAssociation.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRuleAssociation).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.ruleAssociation.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverRuleAssociation).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfig.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetArn()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfig.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfig.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfig.ownerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetOwnerId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfig.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfig.shareStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetShareStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfig.associationCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetAssociationCount()).ToDataRes(types.Int)
+	},
+	"aws.route53.resolver.queryLogConfig.destinationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetDestinationArn()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfig.s3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetS3Bucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.route53.resolver.queryLogConfig.cloudwatchLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetCloudwatchLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.route53.resolver.queryLogConfig.firehoseDeliveryStream": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetFirehoseDeliveryStream()).ToDataRes(types.Resource("aws.kinesis.firehoseDeliveryStream"))
+	},
+	"aws.route53.resolver.queryLogConfig.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetCreationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfig.creatorRequestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfig).GetCreatorRequestId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.resolverQueryLogConfigId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).GetResolverQueryLogConfigId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.resolverQueryLogConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).GetResolverQueryLogConfig()).ToDataRes(types.Resource("aws.route53.resolver.queryLogConfig"))
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).GetResourceId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).GetError()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.errorMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).GetErrorMessage()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).GetCreationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetArn()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.ruleCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetRuleCount()).ToDataRes(types.Int)
+	},
+	"aws.route53.resolver.firewallRuleGroup.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.ownerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetOwnerId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.shareStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetShareStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetCreationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.modificationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetModificationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.creatorRequestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetCreatorRequestId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroup.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroup).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetArn()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.firewallRuleGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetFirewallRuleGroupId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.firewallRuleGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetFirewallRuleGroup()).ToDataRes(types.Resource("aws.route53.resolver.firewallRuleGroup"))
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.vpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetVpcId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetPriority()).ToDataRes(types.Int)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.mutationProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetMutationProtection()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.managedOwnerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetManagedOwnerName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetCreationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.modificationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetModificationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.creatorRequestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).GetCreatorRequestId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetArn()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.domainCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetDomainCount()).ToDataRes(types.Int)
+	},
+	"aws.route53.resolver.firewallDomainList.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.managedOwnerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetManagedOwnerName()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetCreationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.modificationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetModificationTime()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallDomainList.creatorRequestId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallDomainList).GetCreatorRequestId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallConfig.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallConfig).GetId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallConfig.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallConfig).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallConfig.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallConfig).GetResourceId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallConfig.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallConfig).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
+	},
+	"aws.route53.resolver.firewallConfig.ownerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallConfig).GetOwnerId()).ToDataRes(types.String)
+	},
+	"aws.route53.resolver.firewallConfig.firewallFailOpen": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRoute53ResolverFirewallConfig).GetFirewallFailOpen()).ToDataRes(types.String)
 	},
 	"aws.ecr.privateRepositories": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcr).GetPrivateRepositories()).ToDataRes(types.Array(types.Resource("aws.ecr.repository")))
@@ -46957,6 +47474,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRoute53).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.route53.trafficPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53).TrafficPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53).TrafficPolicyInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.cidrCollections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53).CidrCollections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53).Resolver, ok = plugin.RawToTValue[*mqlAwsRoute53Resolver](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Resolver).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Resolver).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Resolver).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.ruleAssociations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Resolver).RuleAssociations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Resolver).QueryLogConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Resolver).QueryLogConfigAssociations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Resolver).FirewallRuleGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Resolver).FirewallRuleGroupAssociations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Resolver).FirewallDomainLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53Resolver).FirewallConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.route53.hostedZone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53HostedZone).__id, ok = v.Value.(string)
 		return
@@ -47017,8 +47590,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRoute53HostedZone).DnssecStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.route53.hostedZone.dnssec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZone).Dnssec, ok = plugin.RawToTValue[*mqlAwsRoute53HostedZoneDnssec](v.Value, v.Error)
+		return
+	},
 	"aws.route53.hostedZone.keySigningKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53HostedZone).KeySigningKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.dnssec.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZoneDnssec).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.hostedZone.dnssec.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZoneDnssec).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.dnssec.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZoneDnssec).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.hostedZone.dnssec.keySigningKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53HostedZoneDnssec).KeySigningKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.route53.record.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47363,6 +47956,582 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.route53.domain.abuseContactEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRoute53Domain).AbuseContactEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.trafficPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicy.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicy).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicy.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicy).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicy.document": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicy).Document, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicy.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicy).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicy.latestVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicy).LatestVersion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.hostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).HostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.hostedZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).HostedZone, ok = plugin.RawToTValue[*mqlAwsRoute53HostedZone](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.trafficPolicyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).TrafficPolicyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.trafficPolicyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).TrafficPolicyVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.trafficPolicyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).TrafficPolicyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.trafficPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).TrafficPolicy, ok = plugin.RawToTValue[*mqlAwsRoute53TrafficPolicy](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.trafficPolicyInstance.message": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53TrafficPolicyInstance).Message, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.cidrCollection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53CidrCollection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.cidrCollection.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53CidrCollection).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.cidrCollection.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53CidrCollection).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.cidrCollection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53CidrCollection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.cidrCollection.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53CidrCollection).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.cidrCollection.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53CidrCollection).Locations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.endpoint.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.hostVpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).HostVpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.hostVpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).HostVpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).IpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.resolverEndpointType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).ResolverEndpointType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.ipAddressCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).IpAddressCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).CreationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.endpoint.modificationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverEndpoint).ModificationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.rule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.ruleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).RuleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.resolverEndpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).ResolverEndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.resolverEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).ResolverEndpoint, ok = plugin.RawToTValue[*mqlAwsRoute53ResolverEndpoint](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.targetIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).TargetIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.shareStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).ShareStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.ownerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).OwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).CreationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.rule.modificationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRule).ModificationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.ruleAssociation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRuleAssociation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.ruleAssociation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRuleAssociation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.ruleAssociation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRuleAssociation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.ruleAssociation.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRuleAssociation).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.ruleAssociation.resolverRuleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRuleAssociation).ResolverRuleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.ruleAssociation.resolverRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRuleAssociation).ResolverRule, ok = plugin.RawToTValue[*mqlAwsRoute53ResolverRule](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.ruleAssociation.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRuleAssociation).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.ruleAssociation.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRuleAssociation).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.ruleAssociation.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRuleAssociation).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.ruleAssociation.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverRuleAssociation).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.ownerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).OwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.shareStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).ShareStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.associationCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).AssociationCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.destinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).DestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.s3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).S3Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.cloudwatchLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).CloudwatchLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.firehoseDeliveryStream": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).FirehoseDeliveryStream, ok = plugin.RawToTValue[*mqlAwsKinesisFirehoseDeliveryStream](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).CreationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfig.creatorRequestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfig).CreatorRequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.resolverQueryLogConfigId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).ResolverQueryLogConfigId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.resolverQueryLogConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).ResolverQueryLogConfig, ok = plugin.RawToTValue[*mqlAwsRoute53ResolverQueryLogConfig](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.errorMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).ErrorMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.queryLogConfigAssociation.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverQueryLogConfigAssociation).CreationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.ruleCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).RuleCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.ownerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).OwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.shareStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).ShareStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).CreationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.modificationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).ModificationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.creatorRequestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).CreatorRequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroup.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroup).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.firewallRuleGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).FirewallRuleGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.firewallRuleGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).FirewallRuleGroup, ok = plugin.RawToTValue[*mqlAwsRoute53ResolverFirewallRuleGroup](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.vpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).VpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.mutationProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).MutationProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.managedOwnerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).ManagedOwnerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).CreationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.modificationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).ModificationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallRuleGroupAssociation.creatorRequestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallRuleGroupAssociation).CreatorRequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.domainCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).DomainCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.managedOwnerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).ManagedOwnerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).CreationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.modificationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).ModificationTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallDomainList.creatorRequestId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallDomainList).CreatorRequestId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.route53.resolver.firewallConfig.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallConfig).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallConfig.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallConfig).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallConfig.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallConfig).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallConfig.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallConfig).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallConfig.ownerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallConfig).OwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.route53.resolver.firewallConfig.firewallFailOpen": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRoute53ResolverFirewallConfig).FirewallFailOpen, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecr.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -113236,10 +114405,14 @@ type mqlAwsRoute53 struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsRoute53Internal it will be used here
-	HostedZones         plugin.TValue[[]any]
-	HealthChecks        plugin.TValue[[]any]
-	QueryLoggingConfigs plugin.TValue[[]any]
-	Domains             plugin.TValue[[]any]
+	HostedZones            plugin.TValue[[]any]
+	HealthChecks           plugin.TValue[[]any]
+	QueryLoggingConfigs    plugin.TValue[[]any]
+	Domains                plugin.TValue[[]any]
+	TrafficPolicies        plugin.TValue[[]any]
+	TrafficPolicyInstances plugin.TValue[[]any]
+	CidrCollections        plugin.TValue[[]any]
+	Resolver               plugin.TValue[*mqlAwsRoute53Resolver]
 }
 
 // createAwsRoute53 creates a new instance of this resource
@@ -113343,6 +114516,267 @@ func (c *mqlAwsRoute53) GetDomains() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsRoute53) GetTrafficPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrafficPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53", c.__id, "trafficPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trafficPolicies()
+	})
+}
+
+func (c *mqlAwsRoute53) GetTrafficPolicyInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrafficPolicyInstances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53", c.__id, "trafficPolicyInstances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trafficPolicyInstances()
+	})
+}
+
+func (c *mqlAwsRoute53) GetCidrCollections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CidrCollections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53", c.__id, "cidrCollections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.cidrCollections()
+	})
+}
+
+func (c *mqlAwsRoute53) GetResolver() *plugin.TValue[*mqlAwsRoute53Resolver] {
+	return plugin.GetOrCompute[*mqlAwsRoute53Resolver](&c.Resolver, func() (*mqlAwsRoute53Resolver, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53", c.__id, "resolver")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53Resolver), nil
+			}
+		}
+
+		return c.resolver()
+	})
+}
+
+// mqlAwsRoute53Resolver for the aws.route53.resolver resource
+type mqlAwsRoute53Resolver struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53ResolverInternal it will be used here
+	Endpoints                     plugin.TValue[[]any]
+	Rules                         plugin.TValue[[]any]
+	RuleAssociations              plugin.TValue[[]any]
+	QueryLogConfigs               plugin.TValue[[]any]
+	QueryLogConfigAssociations    plugin.TValue[[]any]
+	FirewallRuleGroups            plugin.TValue[[]any]
+	FirewallRuleGroupAssociations plugin.TValue[[]any]
+	FirewallDomainLists           plugin.TValue[[]any]
+	FirewallConfigs               plugin.TValue[[]any]
+}
+
+// createAwsRoute53Resolver creates a new instance of this resource
+func createAwsRoute53Resolver(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53Resolver{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53Resolver) MqlName() string {
+	return "aws.route53.resolver"
+}
+
+func (c *mqlAwsRoute53Resolver) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53Resolver) GetEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver", c.__id, "endpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpoints()
+	})
+}
+
+func (c *mqlAwsRoute53Resolver) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+func (c *mqlAwsRoute53Resolver) GetRuleAssociations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RuleAssociations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver", c.__id, "ruleAssociations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ruleAssociations()
+	})
+}
+
+func (c *mqlAwsRoute53Resolver) GetQueryLogConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.QueryLogConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver", c.__id, "queryLogConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.queryLogConfigs()
+	})
+}
+
+func (c *mqlAwsRoute53Resolver) GetQueryLogConfigAssociations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.QueryLogConfigAssociations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver", c.__id, "queryLogConfigAssociations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.queryLogConfigAssociations()
+	})
+}
+
+func (c *mqlAwsRoute53Resolver) GetFirewallRuleGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallRuleGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver", c.__id, "firewallRuleGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallRuleGroups()
+	})
+}
+
+func (c *mqlAwsRoute53Resolver) GetFirewallRuleGroupAssociations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallRuleGroupAssociations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver", c.__id, "firewallRuleGroupAssociations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallRuleGroupAssociations()
+	})
+}
+
+func (c *mqlAwsRoute53Resolver) GetFirewallDomainLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallDomainLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver", c.__id, "firewallDomainLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallDomainLists()
+	})
+}
+
+func (c *mqlAwsRoute53Resolver) GetFirewallConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FirewallConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver", c.__id, "firewallConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.firewallConfigs()
+	})
+}
+
 // mqlAwsRoute53HostedZone for the aws.route53.hostedZone resource
 type mqlAwsRoute53HostedZone struct {
 	MqlRuntime *plugin.Runtime
@@ -113362,6 +114796,7 @@ type mqlAwsRoute53HostedZone struct {
 	NameServers            plugin.TValue[[]any]
 	QueryLoggingConfig     plugin.TValue[*mqlAwsRoute53QueryLoggingConfig]
 	DnssecStatus           plugin.TValue[any]
+	Dnssec                 plugin.TValue[*mqlAwsRoute53HostedZoneDnssec]
 	KeySigningKeys         plugin.TValue[[]any]
 }
 
@@ -113488,10 +114923,92 @@ func (c *mqlAwsRoute53HostedZone) GetDnssecStatus() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsRoute53HostedZone) GetDnssec() *plugin.TValue[*mqlAwsRoute53HostedZoneDnssec] {
+	return plugin.GetOrCompute[*mqlAwsRoute53HostedZoneDnssec](&c.Dnssec, func() (*mqlAwsRoute53HostedZoneDnssec, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.hostedZone", c.__id, "dnssec")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53HostedZoneDnssec), nil
+			}
+		}
+
+		return c.dnssec()
+	})
+}
+
 func (c *mqlAwsRoute53HostedZone) GetKeySigningKeys() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.KeySigningKeys, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.hostedZone", c.__id, "keySigningKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keySigningKeys()
+	})
+}
+
+// mqlAwsRoute53HostedZoneDnssec for the aws.route53.hostedZone.dnssec resource
+type mqlAwsRoute53HostedZoneDnssec struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53HostedZoneDnssecInternal
+	Status         plugin.TValue[string]
+	StatusMessage  plugin.TValue[string]
+	KeySigningKeys plugin.TValue[[]any]
+}
+
+// createAwsRoute53HostedZoneDnssec creates a new instance of this resource
+func createAwsRoute53HostedZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53HostedZoneDnssec{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.hostedZone.dnssec", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53HostedZoneDnssec) MqlName() string {
+	return "aws.route53.hostedZone.dnssec"
+}
+
+func (c *mqlAwsRoute53HostedZoneDnssec) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53HostedZoneDnssec) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRoute53HostedZoneDnssec) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsRoute53HostedZoneDnssec) GetKeySigningKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KeySigningKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.hostedZone.dnssec", c.__id, "keySigningKeys")
 			if err != nil {
 				return nil, err
 			}
@@ -114225,6 +115742,1380 @@ func (c *mqlAwsRoute53Domain) GetAbuseContactEmail() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.AbuseContactEmail, func() (string, error) {
 		return c.abuseContactEmail()
 	})
+}
+
+// mqlAwsRoute53TrafficPolicy for the aws.route53.trafficPolicy resource
+type mqlAwsRoute53TrafficPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53TrafficPolicyInternal it will be used here
+	Id            plugin.TValue[string]
+	Version       plugin.TValue[int64]
+	Name          plugin.TValue[string]
+	Type          plugin.TValue[string]
+	Document      plugin.TValue[string]
+	Comment       plugin.TValue[string]
+	LatestVersion plugin.TValue[bool]
+}
+
+// createAwsRoute53TrafficPolicy creates a new instance of this resource
+func createAwsRoute53TrafficPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53TrafficPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.trafficPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53TrafficPolicy) MqlName() string {
+	return "aws.route53.trafficPolicy"
+}
+
+func (c *mqlAwsRoute53TrafficPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53TrafficPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53TrafficPolicy) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlAwsRoute53TrafficPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53TrafficPolicy) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsRoute53TrafficPolicy) GetDocument() *plugin.TValue[string] {
+	return &c.Document
+}
+
+func (c *mqlAwsRoute53TrafficPolicy) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlAwsRoute53TrafficPolicy) GetLatestVersion() *plugin.TValue[bool] {
+	return &c.LatestVersion
+}
+
+// mqlAwsRoute53TrafficPolicyInstance for the aws.route53.trafficPolicyInstance resource
+type mqlAwsRoute53TrafficPolicyInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53TrafficPolicyInstanceInternal it will be used here
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	HostedZoneId         plugin.TValue[string]
+	HostedZone           plugin.TValue[*mqlAwsRoute53HostedZone]
+	TrafficPolicyId      plugin.TValue[string]
+	TrafficPolicyVersion plugin.TValue[int64]
+	TrafficPolicyType    plugin.TValue[string]
+	TrafficPolicy        plugin.TValue[*mqlAwsRoute53TrafficPolicy]
+	Ttl                  plugin.TValue[int64]
+	State                plugin.TValue[string]
+	Message              plugin.TValue[string]
+}
+
+// createAwsRoute53TrafficPolicyInstance creates a new instance of this resource
+func createAwsRoute53TrafficPolicyInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53TrafficPolicyInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.trafficPolicyInstance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) MqlName() string {
+	return "aws.route53.trafficPolicyInstance"
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetHostedZoneId() *plugin.TValue[string] {
+	return &c.HostedZoneId
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetHostedZone() *plugin.TValue[*mqlAwsRoute53HostedZone] {
+	return plugin.GetOrCompute[*mqlAwsRoute53HostedZone](&c.HostedZone, func() (*mqlAwsRoute53HostedZone, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.trafficPolicyInstance", c.__id, "hostedZone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53HostedZone), nil
+			}
+		}
+
+		return c.hostedZone()
+	})
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetTrafficPolicyId() *plugin.TValue[string] {
+	return &c.TrafficPolicyId
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetTrafficPolicyVersion() *plugin.TValue[int64] {
+	return &c.TrafficPolicyVersion
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetTrafficPolicyType() *plugin.TValue[string] {
+	return &c.TrafficPolicyType
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetTrafficPolicy() *plugin.TValue[*mqlAwsRoute53TrafficPolicy] {
+	return plugin.GetOrCompute[*mqlAwsRoute53TrafficPolicy](&c.TrafficPolicy, func() (*mqlAwsRoute53TrafficPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.trafficPolicyInstance", c.__id, "trafficPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53TrafficPolicy), nil
+			}
+		}
+
+		return c.trafficPolicy()
+	})
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetTtl() *plugin.TValue[int64] {
+	return &c.Ttl
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsRoute53TrafficPolicyInstance) GetMessage() *plugin.TValue[string] {
+	return &c.Message
+}
+
+// mqlAwsRoute53CidrCollection for the aws.route53.cidrCollection resource
+type mqlAwsRoute53CidrCollection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53CidrCollectionInternal
+	Arn       plugin.TValue[string]
+	Id        plugin.TValue[string]
+	Name      plugin.TValue[string]
+	Version   plugin.TValue[int64]
+	Locations plugin.TValue[[]any]
+}
+
+// createAwsRoute53CidrCollection creates a new instance of this resource
+func createAwsRoute53CidrCollection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53CidrCollection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.cidrCollection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53CidrCollection) MqlName() string {
+	return "aws.route53.cidrCollection"
+}
+
+func (c *mqlAwsRoute53CidrCollection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53CidrCollection) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRoute53CidrCollection) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53CidrCollection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53CidrCollection) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlAwsRoute53CidrCollection) GetLocations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Locations, func() ([]any, error) {
+		return c.locations()
+	})
+}
+
+// mqlAwsRoute53ResolverEndpoint for the aws.route53.resolver.endpoint resource
+type mqlAwsRoute53ResolverEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53ResolverEndpointInternal
+	Id                   plugin.TValue[string]
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Region               plugin.TValue[string]
+	Direction            plugin.TValue[string]
+	Status               plugin.TValue[string]
+	StatusMessage        plugin.TValue[string]
+	HostVpcId            plugin.TValue[string]
+	HostVpc              plugin.TValue[*mqlAwsVpc]
+	SecurityGroups       plugin.TValue[[]any]
+	IpAddresses          plugin.TValue[[]any]
+	ResolverEndpointType plugin.TValue[string]
+	IpAddressCount       plugin.TValue[int64]
+	CreationTime         plugin.TValue[string]
+	ModificationTime     plugin.TValue[string]
+}
+
+// createAwsRoute53ResolverEndpoint creates a new instance of this resource
+func createAwsRoute53ResolverEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53ResolverEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver.endpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) MqlName() string {
+	return "aws.route53.resolver.endpoint"
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetHostVpcId() *plugin.TValue[string] {
+	return &c.HostVpcId
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetHostVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.HostVpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.endpoint", c.__id, "hostVpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.hostVpc()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.endpoint", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetIpAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpAddresses, func() ([]any, error) {
+		return c.ipAddresses()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetResolverEndpointType() *plugin.TValue[string] {
+	return &c.ResolverEndpointType
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetIpAddressCount() *plugin.TValue[int64] {
+	return &c.IpAddressCount
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetCreationTime() *plugin.TValue[string] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsRoute53ResolverEndpoint) GetModificationTime() *plugin.TValue[string] {
+	return &c.ModificationTime
+}
+
+// mqlAwsRoute53ResolverRule for the aws.route53.resolver.rule resource
+type mqlAwsRoute53ResolverRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53ResolverRuleInternal
+	Id                 plugin.TValue[string]
+	Arn                plugin.TValue[string]
+	Name               plugin.TValue[string]
+	Region             plugin.TValue[string]
+	Status             plugin.TValue[string]
+	StatusMessage      plugin.TValue[string]
+	DomainName         plugin.TValue[string]
+	RuleType           plugin.TValue[string]
+	ResolverEndpointId plugin.TValue[string]
+	ResolverEndpoint   plugin.TValue[*mqlAwsRoute53ResolverEndpoint]
+	TargetIps          plugin.TValue[[]any]
+	ShareStatus        plugin.TValue[string]
+	OwnerId            plugin.TValue[string]
+	CreationTime       plugin.TValue[string]
+	ModificationTime   plugin.TValue[string]
+}
+
+// createAwsRoute53ResolverRule creates a new instance of this resource
+func createAwsRoute53ResolverRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53ResolverRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53ResolverRule) MqlName() string {
+	return "aws.route53.resolver.rule"
+}
+
+func (c *mqlAwsRoute53ResolverRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetRuleType() *plugin.TValue[string] {
+	return &c.RuleType
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetResolverEndpointId() *plugin.TValue[string] {
+	return &c.ResolverEndpointId
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetResolverEndpoint() *plugin.TValue[*mqlAwsRoute53ResolverEndpoint] {
+	return plugin.GetOrCompute[*mqlAwsRoute53ResolverEndpoint](&c.ResolverEndpoint, func() (*mqlAwsRoute53ResolverEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.rule", c.__id, "resolverEndpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53ResolverEndpoint), nil
+			}
+		}
+
+		return c.resolverEndpoint()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetTargetIps() *plugin.TValue[[]any] {
+	return &c.TargetIps
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetShareStatus() *plugin.TValue[string] {
+	return &c.ShareStatus
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetOwnerId() *plugin.TValue[string] {
+	return &c.OwnerId
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetCreationTime() *plugin.TValue[string] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsRoute53ResolverRule) GetModificationTime() *plugin.TValue[string] {
+	return &c.ModificationTime
+}
+
+// mqlAwsRoute53ResolverRuleAssociation for the aws.route53.resolver.ruleAssociation resource
+type mqlAwsRoute53ResolverRuleAssociation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53ResolverRuleAssociationInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Region         plugin.TValue[string]
+	ResolverRuleId plugin.TValue[string]
+	ResolverRule   plugin.TValue[*mqlAwsRoute53ResolverRule]
+	VpcId          plugin.TValue[string]
+	Vpc            plugin.TValue[*mqlAwsVpc]
+	Status         plugin.TValue[string]
+	StatusMessage  plugin.TValue[string]
+}
+
+// createAwsRoute53ResolverRuleAssociation creates a new instance of this resource
+func createAwsRoute53ResolverRuleAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53ResolverRuleAssociation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver.ruleAssociation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) MqlName() string {
+	return "aws.route53.resolver.ruleAssociation"
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) GetResolverRuleId() *plugin.TValue[string] {
+	return &c.ResolverRuleId
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) GetResolverRule() *plugin.TValue[*mqlAwsRoute53ResolverRule] {
+	return plugin.GetOrCompute[*mqlAwsRoute53ResolverRule](&c.ResolverRule, func() (*mqlAwsRoute53ResolverRule, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.ruleAssociation", c.__id, "resolverRule")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53ResolverRule), nil
+			}
+		}
+
+		return c.resolverRule()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.ruleAssociation", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRoute53ResolverRuleAssociation) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+// mqlAwsRoute53ResolverQueryLogConfig for the aws.route53.resolver.queryLogConfig resource
+type mqlAwsRoute53ResolverQueryLogConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53ResolverQueryLogConfigInternal it will be used here
+	Id                     plugin.TValue[string]
+	Arn                    plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Region                 plugin.TValue[string]
+	OwnerId                plugin.TValue[string]
+	Status                 plugin.TValue[string]
+	ShareStatus            plugin.TValue[string]
+	AssociationCount       plugin.TValue[int64]
+	DestinationArn         plugin.TValue[string]
+	S3Bucket               plugin.TValue[*mqlAwsS3Bucket]
+	CloudwatchLogGroup     plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	FirehoseDeliveryStream plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStream]
+	CreationTime           plugin.TValue[string]
+	CreatorRequestId       plugin.TValue[string]
+}
+
+// createAwsRoute53ResolverQueryLogConfig creates a new instance of this resource
+func createAwsRoute53ResolverQueryLogConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53ResolverQueryLogConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver.queryLogConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) MqlName() string {
+	return "aws.route53.resolver.queryLogConfig"
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetOwnerId() *plugin.TValue[string] {
+	return &c.OwnerId
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetShareStatus() *plugin.TValue[string] {
+	return &c.ShareStatus
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetAssociationCount() *plugin.TValue[int64] {
+	return &c.AssociationCount
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetDestinationArn() *plugin.TValue[string] {
+	return &c.DestinationArn
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetS3Bucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.S3Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.queryLogConfig", c.__id, "s3Bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.s3Bucket()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetCloudwatchLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.CloudwatchLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.queryLogConfig", c.__id, "cloudwatchLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.cloudwatchLogGroup()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetFirehoseDeliveryStream() *plugin.TValue[*mqlAwsKinesisFirehoseDeliveryStream] {
+	return plugin.GetOrCompute[*mqlAwsKinesisFirehoseDeliveryStream](&c.FirehoseDeliveryStream, func() (*mqlAwsKinesisFirehoseDeliveryStream, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.queryLogConfig", c.__id, "firehoseDeliveryStream")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKinesisFirehoseDeliveryStream), nil
+			}
+		}
+
+		return c.firehoseDeliveryStream()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetCreationTime() *plugin.TValue[string] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfig) GetCreatorRequestId() *plugin.TValue[string] {
+	return &c.CreatorRequestId
+}
+
+// mqlAwsRoute53ResolverQueryLogConfigAssociation for the aws.route53.resolver.queryLogConfigAssociation resource
+type mqlAwsRoute53ResolverQueryLogConfigAssociation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53ResolverQueryLogConfigAssociationInternal it will be used here
+	Id                       plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	ResolverQueryLogConfigId plugin.TValue[string]
+	ResolverQueryLogConfig   plugin.TValue[*mqlAwsRoute53ResolverQueryLogConfig]
+	ResourceId               plugin.TValue[string]
+	Vpc                      plugin.TValue[*mqlAwsVpc]
+	Status                   plugin.TValue[string]
+	Error                    plugin.TValue[string]
+	ErrorMessage             plugin.TValue[string]
+	CreationTime             plugin.TValue[string]
+}
+
+// createAwsRoute53ResolverQueryLogConfigAssociation creates a new instance of this resource
+func createAwsRoute53ResolverQueryLogConfigAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53ResolverQueryLogConfigAssociation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver.queryLogConfigAssociation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) MqlName() string {
+	return "aws.route53.resolver.queryLogConfigAssociation"
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) GetResolverQueryLogConfigId() *plugin.TValue[string] {
+	return &c.ResolverQueryLogConfigId
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) GetResolverQueryLogConfig() *plugin.TValue[*mqlAwsRoute53ResolverQueryLogConfig] {
+	return plugin.GetOrCompute[*mqlAwsRoute53ResolverQueryLogConfig](&c.ResolverQueryLogConfig, func() (*mqlAwsRoute53ResolverQueryLogConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.queryLogConfigAssociation", c.__id, "resolverQueryLogConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53ResolverQueryLogConfig), nil
+			}
+		}
+
+		return c.resolverQueryLogConfig()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.queryLogConfigAssociation", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) GetError() *plugin.TValue[string] {
+	return &c.Error
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) GetErrorMessage() *plugin.TValue[string] {
+	return &c.ErrorMessage
+}
+
+func (c *mqlAwsRoute53ResolverQueryLogConfigAssociation) GetCreationTime() *plugin.TValue[string] {
+	return &c.CreationTime
+}
+
+// mqlAwsRoute53ResolverFirewallRuleGroup for the aws.route53.resolver.firewallRuleGroup resource
+type mqlAwsRoute53ResolverFirewallRuleGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsRoute53ResolverFirewallRuleGroupInternal
+	Id               plugin.TValue[string]
+	Arn              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Region           plugin.TValue[string]
+	RuleCount        plugin.TValue[int64]
+	Status           plugin.TValue[string]
+	StatusMessage    plugin.TValue[string]
+	OwnerId          plugin.TValue[string]
+	ShareStatus      plugin.TValue[string]
+	CreationTime     plugin.TValue[string]
+	ModificationTime plugin.TValue[string]
+	CreatorRequestId plugin.TValue[string]
+	Rules            plugin.TValue[[]any]
+}
+
+// createAwsRoute53ResolverFirewallRuleGroup creates a new instance of this resource
+func createAwsRoute53ResolverFirewallRuleGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53ResolverFirewallRuleGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver.firewallRuleGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) MqlName() string {
+	return "aws.route53.resolver.firewallRuleGroup"
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetRuleCount() *plugin.TValue[int64] {
+	return &c.RuleCount
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetOwnerId() *plugin.TValue[string] {
+	return &c.OwnerId
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetShareStatus() *plugin.TValue[string] {
+	return &c.ShareStatus
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetCreationTime() *plugin.TValue[string] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetModificationTime() *plugin.TValue[string] {
+	return &c.ModificationTime
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetCreatorRequestId() *plugin.TValue[string] {
+	return &c.CreatorRequestId
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroup) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		return c.rules()
+	})
+}
+
+// mqlAwsRoute53ResolverFirewallRuleGroupAssociation for the aws.route53.resolver.firewallRuleGroupAssociation resource
+type mqlAwsRoute53ResolverFirewallRuleGroupAssociation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53ResolverFirewallRuleGroupAssociationInternal it will be used here
+	Id                  plugin.TValue[string]
+	Arn                 plugin.TValue[string]
+	Name                plugin.TValue[string]
+	Region              plugin.TValue[string]
+	FirewallRuleGroupId plugin.TValue[string]
+	FirewallRuleGroup   plugin.TValue[*mqlAwsRoute53ResolverFirewallRuleGroup]
+	VpcId               plugin.TValue[string]
+	Vpc                 plugin.TValue[*mqlAwsVpc]
+	Priority            plugin.TValue[int64]
+	MutationProtection  plugin.TValue[string]
+	ManagedOwnerName    plugin.TValue[string]
+	Status              plugin.TValue[string]
+	StatusMessage       plugin.TValue[string]
+	CreationTime        plugin.TValue[string]
+	ModificationTime    plugin.TValue[string]
+	CreatorRequestId    plugin.TValue[string]
+}
+
+// createAwsRoute53ResolverFirewallRuleGroupAssociation creates a new instance of this resource
+func createAwsRoute53ResolverFirewallRuleGroupAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53ResolverFirewallRuleGroupAssociation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver.firewallRuleGroupAssociation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) MqlName() string {
+	return "aws.route53.resolver.firewallRuleGroupAssociation"
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetFirewallRuleGroupId() *plugin.TValue[string] {
+	return &c.FirewallRuleGroupId
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetFirewallRuleGroup() *plugin.TValue[*mqlAwsRoute53ResolverFirewallRuleGroup] {
+	return plugin.GetOrCompute[*mqlAwsRoute53ResolverFirewallRuleGroup](&c.FirewallRuleGroup, func() (*mqlAwsRoute53ResolverFirewallRuleGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.firewallRuleGroupAssociation", c.__id, "firewallRuleGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsRoute53ResolverFirewallRuleGroup), nil
+			}
+		}
+
+		return c.firewallRuleGroup()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetVpcId() *plugin.TValue[string] {
+	return &c.VpcId
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.firewallRuleGroupAssociation", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetMutationProtection() *plugin.TValue[string] {
+	return &c.MutationProtection
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetManagedOwnerName() *plugin.TValue[string] {
+	return &c.ManagedOwnerName
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetCreationTime() *plugin.TValue[string] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetModificationTime() *plugin.TValue[string] {
+	return &c.ModificationTime
+}
+
+func (c *mqlAwsRoute53ResolverFirewallRuleGroupAssociation) GetCreatorRequestId() *plugin.TValue[string] {
+	return &c.CreatorRequestId
+}
+
+// mqlAwsRoute53ResolverFirewallDomainList for the aws.route53.resolver.firewallDomainList resource
+type mqlAwsRoute53ResolverFirewallDomainList struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53ResolverFirewallDomainListInternal it will be used here
+	Id               plugin.TValue[string]
+	Arn              plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Region           plugin.TValue[string]
+	DomainCount      plugin.TValue[int64]
+	Status           plugin.TValue[string]
+	StatusMessage    plugin.TValue[string]
+	ManagedOwnerName plugin.TValue[string]
+	CreationTime     plugin.TValue[string]
+	ModificationTime plugin.TValue[string]
+	CreatorRequestId plugin.TValue[string]
+}
+
+// createAwsRoute53ResolverFirewallDomainList creates a new instance of this resource
+func createAwsRoute53ResolverFirewallDomainList(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53ResolverFirewallDomainList{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver.firewallDomainList", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) MqlName() string {
+	return "aws.route53.resolver.firewallDomainList"
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetDomainCount() *plugin.TValue[int64] {
+	return &c.DomainCount
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetManagedOwnerName() *plugin.TValue[string] {
+	return &c.ManagedOwnerName
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetCreationTime() *plugin.TValue[string] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetModificationTime() *plugin.TValue[string] {
+	return &c.ModificationTime
+}
+
+func (c *mqlAwsRoute53ResolverFirewallDomainList) GetCreatorRequestId() *plugin.TValue[string] {
+	return &c.CreatorRequestId
+}
+
+// mqlAwsRoute53ResolverFirewallConfig for the aws.route53.resolver.firewallConfig resource
+type mqlAwsRoute53ResolverFirewallConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsRoute53ResolverFirewallConfigInternal it will be used here
+	Id               plugin.TValue[string]
+	Region           plugin.TValue[string]
+	ResourceId       plugin.TValue[string]
+	Vpc              plugin.TValue[*mqlAwsVpc]
+	OwnerId          plugin.TValue[string]
+	FirewallFailOpen plugin.TValue[string]
+}
+
+// createAwsRoute53ResolverFirewallConfig creates a new instance of this resource
+func createAwsRoute53ResolverFirewallConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsRoute53ResolverFirewallConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.route53.resolver.firewallConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsRoute53ResolverFirewallConfig) MqlName() string {
+	return "aws.route53.resolver.firewallConfig"
+}
+
+func (c *mqlAwsRoute53ResolverFirewallConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsRoute53ResolverFirewallConfig) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsRoute53ResolverFirewallConfig) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsRoute53ResolverFirewallConfig) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlAwsRoute53ResolverFirewallConfig) GetVpc() *plugin.TValue[*mqlAwsVpc] {
+	return plugin.GetOrCompute[*mqlAwsVpc](&c.Vpc, func() (*mqlAwsVpc, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.route53.resolver.firewallConfig", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsVpc), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAwsRoute53ResolverFirewallConfig) GetOwnerId() *plugin.TValue[string] {
+	return &c.OwnerId
+}
+
+func (c *mqlAwsRoute53ResolverFirewallConfig) GetFirewallFailOpen() *plugin.TValue[string] {
+	return &c.FirewallFailOpen
 }
 
 // mqlAwsEcr for the aws.ecr resource

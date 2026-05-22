@@ -10780,8 +10780,13 @@ private aws.redshift.snapshotSchedule @defaults("id description") {
 // private hosted zones (with their record sets, DNSSEC configuration, and
 // VPC associations), `healthChecks()` for the health checks used in
 // failover routing and CloudWatch alarms, `queryLoggingConfigs()` for the
-// CloudWatch Logs delivery of public-zone queries, and `domains()` for
-// domains registered through Route 53 Domains.
+// CloudWatch Logs delivery of public-zone queries, `domains()` for
+// domains registered through Route 53 Domains, `trafficPolicies()` and
+// `trafficPolicyInstances()` for DNS routing logic backed by traffic
+// policies, `cidrCollections()` for CIDR-based routing data sets, and
+// `resolver` for the regional Route 53 Resolver (endpoints, rules, query
+// log configs, and DNS Firewall rule groups, domain lists, and per-VPC
+// configuration).
 aws.route53 {
   // List of all hosted zones in the account
   hostedZones() []aws.route53.hostedZone
@@ -10791,6 +10796,48 @@ aws.route53 {
   queryLoggingConfigs() []aws.route53.queryLoggingConfig
   // List of registered domains (via Route 53 Domains)
   domains() []aws.route53.domain
+  // Latest version of each traffic policy in the account
+  trafficPolicies() []aws.route53.trafficPolicy
+  // DNS records created from traffic policies (one per hosted zone target)
+  trafficPolicyInstances() []aws.route53.trafficPolicyInstance
+  // CIDR collections used for CIDR-based routing
+  cidrCollections() []aws.route53.cidrCollection
+  // Route 53 Resolver namespace (regional)
+  resolver() aws.route53.resolver
+}
+
+// Route 53 Resolver namespace
+//
+// Examine the regional Route 53 Resolver service that handles DNS queries
+// for VPCs. Iterate `endpoints()` for inbound and outbound resolver
+// endpoints (the network interfaces that bridge a VPC to on-premises DNS),
+// `rules()` for the forwarding rules that route specific domains to those
+// endpoints and `ruleAssociations()` for the VPCs they apply to, and
+// `queryLogConfigs()` plus `queryLogConfigAssociations()` for VPC DNS
+// query logging targeted at CloudWatch Logs, S3, or Kinesis Data Firehose.
+// For DNS Firewall, iterate `firewallRuleGroups()` and their per-VPC
+// `firewallRuleGroupAssociations()`, the `firewallDomainLists()` used to
+// match traffic, and the per-VPC `firewallConfigs()` that select fail-open
+// vs fail-closed behavior.
+aws.route53.resolver {
+  // Resolver endpoints (inbound and outbound) across all regions
+  endpoints() []aws.route53.resolver.endpoint
+  // Resolver rules across all regions
+  rules() []aws.route53.resolver.rule
+  // VPC associations for resolver rules
+  ruleAssociations() []aws.route53.resolver.ruleAssociation
+  // Resolver query log configurations
+  queryLogConfigs() []aws.route53.resolver.queryLogConfig
+  // VPC associations for resolver query log configurations
+  queryLogConfigAssociations() []aws.route53.resolver.queryLogConfigAssociation
+  // DNS Firewall rule groups
+  firewallRuleGroups() []aws.route53.resolver.firewallRuleGroup
+  // DNS Firewall rule group associations to VPCs
+  firewallRuleGroupAssociations() []aws.route53.resolver.firewallRuleGroupAssociation
+  // DNS Firewall domain lists
+  firewallDomainLists() []aws.route53.resolver.firewallDomainList
+  // Per-VPC DNS Firewall configurations
+  firewallConfigs() []aws.route53.resolver.firewallConfig
 }
 
 // Route 53 hosted zone
@@ -10821,9 +10868,35 @@ private aws.route53.hostedZone @defaults("id name type isPrivate") {
   nameServers() []string
   // Query logging configuration, if enabled
   queryLoggingConfig() aws.route53.queryLoggingConfig
-  // DNSSEC status for this zone
-  dnssecStatus() dict
+  // DEPRECATED: use `dnssec` instead — the typed `aws.route53.hostedZone.dnssec` resource exposes status, status message, and key signing keys together
+  dnssecStatus() @maturity("deprecated") dict
+  // DNSSEC signing posture and key signing keys for this zone
+  //
+  // Wraps `GetDNSSEC` so a single accessor returns both the signing status
+  // (`SIGNING`, `NOT_SIGNING`, `INTERNAL_FAILURE`, or `DELETING`) and the
+  // backing key signing keys.
+  dnssec() aws.route53.hostedZone.dnssec
   // Key signing keys for DNSSEC
+  keySigningKeys() []aws.route53.keySigningKey
+}
+
+// Route 53 DNSSEC view for a hosted zone
+//
+// Examine the DNSSEC signing posture of a single hosted zone — whether
+// Route 53 is currently signing (`SIGNING`, `NOT_SIGNING`, or
+// `INTERNAL_FAILURE`), any status message returned by the API, and the
+// `keySigningKeys()` that back the chain of trust. DNSSEC is only
+// available on public hosted zones; on private zones the status is fixed
+// to `NOT_SIGNING`.
+private aws.route53.hostedZone.dnssec @defaults("status") {
+  // DNSSEC signing status
+  //
+  // One of `SIGNING`, `NOT_SIGNING`, `INTERNAL_FAILURE`, or
+  // `DELETING` while DNSSEC is being torn down.
+  status string
+  // Status message returned by the Route 53 API
+  statusMessage string
+  // Key signing keys configured for this zone
   keySigningKeys() []aws.route53.keySigningKey
 }
 
@@ -11011,6 +11084,442 @@ private aws.route53.domain @defaults("domainName autoRenew transferLock") {
   registrarName() string
   // Abuse contact email
   abuseContactEmail() string
+}
+
+// Route 53 traffic policy
+//
+// Examine the JSON-encoded routing logic of a single traffic policy — the
+// rules, endpoints, and decision tree that Route 53 uses when this policy
+// is applied to a hosted zone through a `trafficPolicyInstance`. The
+// `document` field carries the raw policy JSON in the format documented at
+// https://docs.aws.amazon.com/Route53/latest/APIReference/api-policies-traffic-policy-document-format.html.
+// Listing returns the latest version of each policy; use `version` to
+// distinguish versions when the same `id` has multiple revisions.
+private aws.route53.trafficPolicy @defaults("id name version type") {
+  // Unique identifier for the traffic policy
+  id string
+  // Traffic policy version
+  version int
+  // Name of the traffic policy
+  name string
+  // DNS record type the policy produces (A, AAAA, CNAME, etc.)
+  type string
+  // Traffic policy document in JSON form
+  document string
+  // Comment associated with this policy version
+  comment string
+  // Whether this is the latest version of the policy
+  latestVersion bool
+}
+
+// Route 53 traffic policy instance
+//
+// Examine a single traffic policy applied to a hosted zone. A traffic
+// policy instance is the materialized record set that Route 53 creates
+// when a `trafficPolicy` is bound to a DNS name in a hosted zone. Use
+// `trafficPolicy()` to traverse to the policy version that produced it,
+// `hostedZone()` to reach the zone, `state` to confirm the records are
+// `Applied` (vs. `Creating`, `Failed`, or `Deleting`), and `message` for
+// the failure reason when state is `Failed`.
+private aws.route53.trafficPolicyInstance @defaults("id name state") {
+  // Unique identifier for the traffic policy instance
+  id string
+  // DNS name the instance manages
+  name string
+  // Hosted zone ID the instance belongs to
+  hostedZoneId string
+  // Associated hosted zone
+  hostedZone() aws.route53.hostedZone
+  // Traffic policy ID used to create this instance
+  trafficPolicyId string
+  // Traffic policy version used to create this instance
+  trafficPolicyVersion int
+  // DNS record type the traffic policy produced (A, AAAA, CNAME, etc.)
+  trafficPolicyType string
+  // Traffic policy version backing this instance
+  trafficPolicy() aws.route53.trafficPolicy
+  // TTL applied to the resource record sets created from the policy
+  ttl int
+  // Current state of the instance: Applied, Creating, Deleting, or Failed
+  state string
+  // Explanation of the state when state is Failed; empty otherwise
+  message string
+}
+
+// Route 53 CIDR collection
+//
+// Examine a single CIDR collection — a named bag of IP ranges grouped
+// into locations that backs CIDR-based DNS routing on resource record
+// sets. Use `locations` to enumerate the locations defined for the
+// collection along with the CIDR blocks they cover; the collection is
+// referenced from `aws.route53.record.cidrRoutingConfig` by `id` and
+// `locationName`.
+private aws.route53.cidrCollection @defaults("name id version") {
+  // ARN of the CIDR collection
+  arn string
+  // Unique identifier for the CIDR collection
+  id string
+  // Name of the CIDR collection
+  name string
+  // Monotonically increasing version counter
+  version int
+  // Locations defined for the collection
+  //
+  // Each entry has `locationName` (string) and `cidrBlocks` ([]string).
+  locations() []dict
+}
+
+// Route 53 Resolver endpoint
+//
+// Examine a single resolver endpoint — the ENI-backed bridge that
+// connects a VPC to DNS resolvers either inside or outside AWS. Inbound
+// endpoints (`direction == "INBOUND"`) accept DNS queries from
+// on-premises networks into Route 53 Resolver; outbound endpoints
+// (`direction == "OUTBOUND"`) forward VPC queries out through the
+// `targetIps` of resolver `rule`s. Each endpoint pins two or more IP
+// addresses (`ipAddresses`) in subnets of the host VPC (`hostVpc()`) and
+// is protected by security groups (`securityGroups()`). Use `status` and
+// `statusMessage` to verify the endpoint is healthy.
+private aws.route53.resolver.endpoint @defaults("id name direction status") {
+  // Unique identifier for the resolver endpoint
+  id string
+  // ARN of the resolver endpoint
+  arn string
+  // Name of the resolver endpoint
+  name string
+  // Region the endpoint resides in
+  region string
+  // Direction of DNS traffic
+  //
+  // One of `INBOUND`, `OUTBOUND`, or `INBOUND_DELEGATION`.
+  direction string
+  // Current status of the endpoint
+  //
+  // One of `CREATING`, `OPERATIONAL`, `UPDATING`, `AUTO_RECOVERING`,
+  // `ACTION_NEEDED`, or `DELETING`.
+  status string
+  // Status message returned by the Route 53 Resolver API
+  statusMessage string
+  // VPC ID hosting the endpoint
+  hostVpcId string
+  // VPC hosting the endpoint
+  hostVpc() aws.vpc
+  // Security groups attached to the endpoint
+  securityGroups() []aws.ec2.securitygroup
+  // IP addresses the endpoint uses for DNS queries
+  //
+  // Each entry has `ipId`, `subnetId`, `ip`, `ipv6`, and `status`.
+  ipAddresses() []dict
+  // Endpoint IP address type
+  //
+  // One of `IPV4`, `IPV6`, or `DUALSTACK`.
+  resolverEndpointType string
+  // Number of IP addresses associated with the endpoint
+  ipAddressCount int
+  // Creation timestamp
+  creationTime string
+  // Last modification timestamp
+  modificationTime string
+}
+
+// Route 53 Resolver rule
+//
+// Examine a single resolver rule — the DNS forwarding decision applied
+// to outbound queries from a VPC. The `domainName` field selects which
+// queries the rule matches and `ruleType` (`FORWARD`, `SYSTEM`, or
+// `RECURSIVE`) determines how the rule behaves: `FORWARD` rules ship
+// matching queries to `targetIps` through the outbound `resolverEndpoint()`,
+// `SYSTEM` rules intentionally override a broader forwarding rule for a
+// subdomain, and `RECURSIVE` rules are managed by Resolver itself. Use
+// `shareStatus` and `ownerId` to identify rules shared via Resource Access
+// Manager.
+private aws.route53.resolver.rule @defaults("id name domainName ruleType status") {
+  // Unique identifier for the resolver rule
+  id string
+  // ARN of the resolver rule
+  arn string
+  // Name of the resolver rule
+  name string
+  // Region the rule resides in
+  region string
+  // Current status of the rule
+  status string
+  // Status message returned by the Route 53 Resolver API
+  statusMessage string
+  // Domain name the rule applies to
+  domainName string
+  // Rule type: FORWARD, SYSTEM, or RECURSIVE
+  ruleType string
+  // Resolver endpoint ID used by FORWARD rules; empty otherwise
+  resolverEndpointId string
+  // Outbound resolver endpoint used by the rule
+  resolverEndpoint() aws.route53.resolver.endpoint
+  // Target DNS resolvers for FORWARD rules
+  //
+  // Each entry has `ip`, `ipv6`, `port`, and `protocol`.
+  targetIps []dict
+  // Sharing status: NOT_SHARED, SHARED_BY_ME, or SHARED_WITH_ME
+  shareStatus string
+  // Account ID that owns the rule
+  ownerId string
+  // Creation timestamp
+  creationTime string
+  // Last modification timestamp
+  modificationTime string
+}
+
+// Route 53 Resolver rule association
+//
+// Examine a single VPC↔resolver-rule association. Use `vpc()` to reach
+// the VPC the rule applies to and `resolverRule()` to traverse back to
+// the rule definition. The `status` field reflects whether the binding
+// is `CREATING`, `COMPLETE`, `DELETING`, `FAILED`, or `OVERRIDDEN`.
+private aws.route53.resolver.ruleAssociation @defaults("id name status") {
+  // Unique identifier for the association
+  id string
+  // Name of the association
+  name string
+  // Region the association resides in
+  region string
+  // Resolver rule ID
+  resolverRuleId string
+  // Associated resolver rule
+  resolverRule() aws.route53.resolver.rule
+  // VPC ID the rule is associated with
+  vpcId string
+  // Associated VPC
+  vpc() aws.vpc
+  // Status of the association
+  status string
+  // Status message returned by the Route 53 Resolver API
+  statusMessage string
+}
+
+// Route 53 Resolver query log configuration
+//
+// Examine a single query log configuration — the destination Route 53
+// Resolver uses to log DNS queries originating in associated VPCs. The
+// `destinationArn` field carries the raw ARN of the target (S3 bucket,
+// CloudWatch Logs log group, or Kinesis Data Firehose delivery stream)
+// and the typed `s3Bucket()`, `cloudwatchLogGroup()`, and
+// `firehoseDeliveryStream()` accessors resolve to whichever destination
+// is in use. Use `associationCount` for a quick check that the
+// configuration is in active use and pair with
+// `aws.route53.resolver.queryLogConfigAssociations` to enumerate the VPCs.
+private aws.route53.resolver.queryLogConfig @defaults("id name status destinationArn") {
+  // Unique identifier for the query log configuration
+  id string
+  // ARN of the query log configuration
+  arn string
+  // Name of the query log configuration
+  name string
+  // Region the configuration resides in
+  region string
+  // Account ID that owns the configuration
+  ownerId string
+  // Configuration status: CREATING, CREATED, DELETING, or FAILED
+  status string
+  // Sharing status: NOT_SHARED, SHARED_BY_ME, or SHARED_WITH_ME
+  shareStatus string
+  // Number of VPCs currently associated with this configuration
+  associationCount int
+  // Destination ARN that receives query logs
+  //
+  // Points at an S3 bucket, CloudWatch Logs log group, or Kinesis Data
+  // Firehose delivery stream.
+  destinationArn string
+  // S3 bucket destination when destinationArn points at S3
+  s3Bucket() aws.s3.bucket
+  // CloudWatch Logs log group destination when destinationArn points at CloudWatch Logs
+  cloudwatchLogGroup() aws.cloudwatch.loggroup
+  // Kinesis Data Firehose destination when destinationArn points at Firehose
+  firehoseDeliveryStream() aws.kinesis.firehoseDeliveryStream
+  // Creation timestamp
+  creationTime string
+  // Caller-supplied request id used to create the configuration
+  creatorRequestId string
+}
+
+// Route 53 Resolver query log configuration association
+//
+// Examine a single VPC↔query-log-configuration binding. Use `vpc()` to
+// reach the VPC whose DNS queries are being logged and
+// `resolverQueryLogConfig()` for the configuration. When `status` is
+// `FAILED`, `error` and `errorMessage` indicate the cause (such as
+// `DESTINATION_NOT_FOUND` or `ACCESS_DENIED`).
+private aws.route53.resolver.queryLogConfigAssociation @defaults("id status") {
+  // Unique identifier for the association
+  id string
+  // Region the association resides in
+  region string
+  // Query log configuration ID
+  resolverQueryLogConfigId string
+  // Associated query log configuration
+  resolverQueryLogConfig() aws.route53.resolver.queryLogConfig
+  // ID of the associated resource (typically a VPC ID)
+  resourceId string
+  // Associated VPC
+  vpc() aws.vpc
+  // Association status: CREATING, ACTIVE, ACTION_NEEDED, DELETING, or FAILED
+  status string
+  // Error code when status is FAILED
+  //
+  // One of `NONE`, `DESTINATION_NOT_FOUND`, `ACCESS_DENIED`, or `INTERNAL_SERVICE_ERROR`.
+  error string
+  // Error message when status is FAILED
+  errorMessage string
+  // Creation timestamp
+  creationTime string
+}
+
+// Route 53 Resolver DNS Firewall rule group
+//
+// Examine a single DNS Firewall rule group — the ordered set of rules
+// that DNS Firewall applies to queries originating in VPCs the group is
+// associated with. Iterate `rules` to inspect every rule in priority
+// order, including the `action` (`ALLOW`, `ALERT`, `BLOCK`), the
+// `firewallDomainListId` that supplies the match list, the optional
+// `blockResponse` and `blockOverride*` fields for `BLOCK` rules, and
+// `qtype` to scope a rule to a specific DNS record type. Pair with
+// `aws.route53.resolver.firewallRuleGroupAssociation` to find the VPCs
+// the group filters.
+private aws.route53.resolver.firewallRuleGroup @defaults("id name ruleCount status") {
+  // Unique identifier for the rule group
+  id string
+  // ARN of the rule group
+  arn string
+  // Name of the rule group
+  name string
+  // Region the rule group resides in
+  region string
+  // Number of rules in the group
+  ruleCount int
+  // Rule group status
+  status string
+  // Status message returned by the Route 53 Resolver API
+  statusMessage string
+  // Account ID that owns the rule group
+  ownerId string
+  // Sharing status: NOT_SHARED, SHARED_BY_ME, or SHARED_WITH_ME
+  shareStatus string
+  // Creation timestamp
+  creationTime string
+  // Last modification timestamp
+  modificationTime string
+  // Caller-supplied request id used to create the rule group
+  creatorRequestId string
+  // Ordered list of rules in the group
+  //
+  // Each entry has `name`, `priority`, `action`
+  // (`ALLOW`/`BLOCK`/`ALERT`), `blockResponse`, `blockOverrideDomain`,
+  // `blockOverrideDnsType`, `blockOverrideTtl`, `firewallDomainListId`,
+  // `qtype`, `creationTime`, and `modificationTime`.
+  rules() []dict
+}
+
+// Route 53 Resolver DNS Firewall rule group association
+//
+// Examine a single binding between a DNS Firewall rule group and a VPC.
+// Use `vpc()` to reach the VPC and `firewallRuleGroup()` for the rules
+// applied. The `priority` field controls evaluation order when multiple
+// rule groups are bound to the same VPC; `mutationProtection`
+// (`ENABLED`/`DISABLED`) controls whether the association can be removed
+// without first turning off protection.
+private aws.route53.resolver.firewallRuleGroupAssociation @defaults("id name status priority") {
+  // Unique identifier for the association
+  id string
+  // ARN of the association
+  arn string
+  // Name of the association
+  name string
+  // Region the association resides in
+  region string
+  // ID of the firewall rule group
+  firewallRuleGroupId string
+  // Associated rule group
+  firewallRuleGroup() aws.route53.resolver.firewallRuleGroup
+  // VPC ID the rule group is associated with
+  vpcId string
+  // Associated VPC
+  vpc() aws.vpc
+  // Evaluation priority among rule groups bound to the same VPC
+  priority int
+  // Whether the association is protected against accidental modification
+  //
+  // One of `ENABLED` or `DISABLED`.
+  mutationProtection string
+  // Owner of the association when managed externally (e.g., Firewall Manager)
+  managedOwnerName string
+  // Association status
+  status string
+  // Status message returned by the Route 53 Resolver API
+  statusMessage string
+  // Creation timestamp
+  creationTime string
+  // Last modification timestamp
+  modificationTime string
+  // Caller-supplied request id used to create the association
+  creatorRequestId string
+}
+
+// Route 53 Resolver DNS Firewall domain list
+//
+// Examine a single DNS Firewall domain list — the named bag of domain
+// names that `firewallRuleGroup` rules match against. `managedOwnerName`
+// is populated for AWS-managed lists (such as
+// `AWSManagedDomainsMalwareDomainList`) and empty for user-managed
+// lists; in either case `domainCount` reflects the total entries
+// regardless of how many `domains()` are materialized.
+private aws.route53.resolver.firewallDomainList @defaults("id name domainCount status") {
+  // Unique identifier for the domain list
+  id string
+  // ARN of the domain list
+  arn string
+  // Name of the domain list
+  name string
+  // Region the domain list resides in
+  region string
+  // Number of domains in the list
+  domainCount int
+  // Domain list status
+  status string
+  // Status message returned by the Route 53 Resolver API
+  statusMessage string
+  // Owner of the list when managed by AWS (e.g., AWSManagedDomainsMalwareDomainList); empty for customer-managed lists
+  managedOwnerName string
+  // Creation timestamp
+  creationTime string
+  // Last modification timestamp
+  modificationTime string
+  // Caller-supplied request id used to create the domain list
+  creatorRequestId string
+}
+
+// Route 53 Resolver DNS Firewall per-VPC configuration
+//
+// Examine the DNS Firewall per-VPC configuration that controls how the
+// firewall fails when it cannot evaluate a query. With
+// `firewallFailOpen == "ENABLED"`, queries are allowed through when the
+// firewall cannot reach a decision (availability over security); with
+// `firewallFailOpen == "DISABLED"` (the default), queries are dropped
+// (security over availability). Use `vpc()` to reach the VPC the
+// configuration applies to.
+private aws.route53.resolver.firewallConfig @defaults("resourceId firewallFailOpen") {
+  // Unique identifier for the firewall configuration
+  id string
+  // Region the configuration resides in
+  region string
+  // VPC ID the configuration applies to
+  resourceId string
+  // Associated VPC
+  vpc() aws.vpc
+  // Account ID that owns the VPC
+  ownerId string
+  // Fail-open behavior
+  //
+  // One of `ENABLED` (allow queries on failure) or `DISABLED` (block on
+  // failure, the default).
+  firewallFailOpen string
 }
 
 // Amazon Elastic Container Registry (ECR)
