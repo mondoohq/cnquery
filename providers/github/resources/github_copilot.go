@@ -218,6 +218,8 @@ func newMqlCopilotSeat(runtime *plugin.Runtime, orgLogin string, seat *github.Co
 	if userRes != nil {
 		args["user"] = llx.ResourceData(userRes, "github.user")
 	} else {
+		// Team/Org-level seats have no user; NilData sets StateIsSet|StateIsNull
+		// on the field so `.user` reads as null rather than panicking.
 		args["user"] = llx.NilData
 	}
 	return CreateResource(runtime, "github.organization.copilot.seat", args)

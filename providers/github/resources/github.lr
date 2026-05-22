@@ -474,7 +474,7 @@ private github.organization.copilot @defaults("seatManagementSetting seatsTotal"
 // seat is granted via team membership, the `planType`, the
 // `pendingCancellationDate` if the seat is scheduled for removal, and last-activity
 // tracking (`lastActivityAt`, `lastActivityEditor`).
-private github.organization.copilot.seat @defaults("user.login planType lastActivityAt") {
+private github.organization.copilot.seat @defaults("assigneeLogin planType lastActivityAt") {
   // Login of the user the seat is assigned to (empty when the assignee is a team)
   assigneeLogin string
   // Type of assignee
