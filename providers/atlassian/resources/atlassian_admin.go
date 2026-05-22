@@ -92,13 +92,14 @@ func (a *mqlAtlassianAdminOrganization) managedUsers() ([]any, error) {
 
 		mqlAtlassianAdminManagedUser, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.managedUser",
 			map[string]*llx.RawData{
-				"id":            llx.StringData(user.AccountID),
-				"name":          llx.StringData(user.Name),
-				"type":          llx.StringData(user.AccountType),
-				"status":        llx.StringData(user.AccountStatus),
-				"email":         llx.StringData(user.Email),
-				"lastActive":    llx.TimeDataPtr(lastActive),
-				"productAccess": llx.ArrayData(productArray, types.Dict),
+				"id":             llx.StringData(user.AccountID),
+				"name":           llx.StringData(user.Name),
+				"type":           llx.StringData(user.AccountType),
+				"status":         llx.StringData(user.AccountStatus),
+				"email":          llx.StringData(user.Email),
+				"lastActive":     llx.TimeDataPtr(lastActive),
+				"productAccess":  llx.ArrayData(productArray, types.Dict),
+				"organizationId": llx.StringData(a.Id.Data),
 			})
 		if err != nil {
 			return nil, err
@@ -183,4 +184,46 @@ func (a *mqlAtlassianAdminOrganizationPolicy) id() (string, error) {
 
 func (a *mqlAtlassianAdminOrganization) id() (string, error) {
 	return a.Id.Data, nil
+}
+
+func (a *mqlAtlassianAdminOrganizationManagedUser) apiTokens() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*admin.AdminConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow admin access")
+	}
+	client := conn.Client()
+
+	tokens, resp, err := client.User.Token.Gets(context.Background(), a.Id.Data)
+	if err != nil {
+		// Some accounts (apps, customers) don't expose token APIs; surface as empty rather than fail the whole query.
+		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	res := make([]any, 0, len(tokens))
+	for _, t := range tokens {
+		if t == nil {
+			continue
+		}
+		createdAt := t.CreatedAt
+		lastAccess := t.LastAccess
+		mqlToken, err := CreateResource(a.MqlRuntime, "atlassian.admin.organization.managedUser.apiToken",
+			map[string]*llx.RawData{
+				"id":         llx.StringData(t.ID),
+				"label":      llx.StringData(t.Label),
+				"createdAt":  llx.TimeDataPtr(&createdAt),
+				"lastAccess": llx.TimeDataPtr(&lastAccess),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlToken)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianAdminOrganizationManagedUserApiToken) id() (string, error) {
+	return "atlassian.admin.organization.managedUser.apiToken/" + a.Id.Data, nil
 }

@@ -6,6 +6,8 @@ package resources
 import (
 	"context"
 	"errors"
+	"sync"
+	"time"
 
 	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
 	"go.mondoo.com/mql/v13/llx"
@@ -87,7 +89,7 @@ func (a *mqlAtlassianConfluence) spaces() ([]any, error) {
 	}
 	client := conn.Client()
 
-	options := &models.GetSpacesOptionScheme{Expand: []string{"permissions"}}
+	options := &models.GetSpacesOptionScheme{Expand: []string{"permissions", "history", "homepage"}}
 	res := []any{}
 	startAt := 0
 
@@ -170,6 +172,15 @@ func (a *mqlAtlassianConfluence) spaces() ([]any, error) {
 				}
 			}
 
+			homepage, err := mqlConfluencePageFromContent(a.MqlRuntime, space.HomePage, space.Key)
+			if err != nil {
+				return nil, err
+			}
+			createdBy, err := mqlConfluenceUserFromContent(a.MqlRuntime, spaceHistoryCreator(space))
+			if err != nil {
+				return nil, err
+			}
+
 			mqlSpace, err := CreateResource(a.MqlRuntime, "atlassian.confluence.space",
 				map[string]*llx.RawData{
 					"id":               llx.IntData(int64(space.ID)),
@@ -180,6 +191,9 @@ func (a *mqlAtlassianConfluence) spaces() ([]any, error) {
 					"anonymousAccess":  llx.BoolData(anon),
 					"unlicensedAccess": llx.BoolData(unlicensed),
 					"permissions":      llx.ArrayData(perms, types.Dict),
+					"homepage":         homepage,
+					"createdBy":        createdBy,
+					"createdAt":        llx.TimeDataPtr(parseConfluenceTime(spaceHistoryCreatedDate(space))),
 				})
 			if err != nil {
 				return nil, err
@@ -284,10 +298,19 @@ func (a *mqlAtlassianConfluenceSpace) pages() ([]any, error) {
 	res := []any{}
 	startAt := 0
 
+	expand := []string{
+		"restrictions.read.restrictions.user",
+		"restrictions.read.restrictions.group",
+		"version",
+		"history",
+		"metadata.labels",
+		"ancestors",
+	}
+
 	for {
 		// Use ContentByType so we get only pages and don't mix in blogposts, comments, attachments.
 		// status="current" excludes trashed and draft pages — better for audit use cases.
-		page, _, err := client.Space.ContentByType(context.Background(), spaceKey, "page", "current", []string{"restrictions.read.restrictions.user", "restrictions.read.restrictions.group"}, startAt, CONFLUENCE_PAGE_LIMIT)
+		page, _, err := client.Space.ContentByType(context.Background(), spaceKey, "page", "current", expand, startAt, CONFLUENCE_PAGE_LIMIT)
 		if err != nil {
 			return nil, err
 		}
@@ -309,6 +332,7 @@ func (a *mqlAtlassianConfluenceSpace) pages() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlPage.(*mqlAtlassianConfluencePage).cacheFromContent(content)
 			res = append(res, mqlPage)
 		}
 		startAt += len(page.Results)
@@ -469,4 +493,236 @@ func (a *mqlAtlassianConfluencePageRestriction) groups() ([]any, error) {
 		res = append(res, mqlGroup)
 	}
 	return res, nil
+}
+
+// parseConfluenceTime parses Confluence's RFC3339-style timestamps. Returns nil
+// when the input is empty or unparseable.
+func parseConfluenceTime(s string) *time.Time {
+	if s == "" {
+		return nil
+	}
+	if t, err := time.Parse(time.RFC3339, s); err == nil {
+		ut := t.UTC()
+		return &ut
+	}
+	return nil
+}
+
+// spaceHistoryCreator returns the user who created the space, or nil when the
+// History block is absent.
+func spaceHistoryCreator(space *models.SpaceScheme) *models.ContentUserScheme {
+	if space == nil || space.History == nil {
+		return nil
+	}
+	return space.History.CreatedBy
+}
+
+// spaceHistoryCreatedDate returns the raw createdDate string from the space
+// history, or "" when absent.
+func spaceHistoryCreatedDate(space *models.SpaceScheme) string {
+	if space == nil || space.History == nil {
+		return ""
+	}
+	return space.History.CreatedDate
+}
+
+// mqlConfluenceUserFromContent builds a typed atlassian.confluence.user from a
+// ContentUserScheme returned by content/history APIs. Returns NilData when the
+// input is nil or has no accountId.
+func mqlConfluenceUserFromContent(runtime *plugin.Runtime, user *models.ContentUserScheme) (*llx.RawData, error) {
+	if user == nil || user.AccountID == "" {
+		return llx.NilData, nil
+	}
+	mqlUser, err := NewResource(runtime, "atlassian.confluence.user",
+		map[string]*llx.RawData{
+			"id":   llx.StringData(user.AccountID),
+			"name": llx.StringData(user.DisplayName),
+			"type": llx.StringData(user.AccountType),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return llx.AnyData(mqlUser), nil
+}
+
+// mqlConfluencePageFromContent builds a typed atlassian.confluence.page from a
+// ContentScheme. Used for space homepage and page ancestors. The spaceKey is
+// passed in because the embedded Space pointer is not always populated.
+func mqlConfluencePageFromContent(runtime *plugin.Runtime, content *models.ContentScheme, spaceKey string) (*llx.RawData, error) {
+	if content == nil || content.ID == "" {
+		return llx.NilData, nil
+	}
+	effectiveSpaceKey := spaceKey
+	if effectiveSpaceKey == "" && content.Space != nil {
+		effectiveSpaceKey = content.Space.Key
+	}
+	mqlPage, err := NewResource(runtime, "atlassian.confluence.page",
+		map[string]*llx.RawData{
+			"id":       llx.StringData(content.ID),
+			"title":    llx.StringData(content.Title),
+			"status":   llx.StringData(content.Status),
+			"type":     llx.StringData(content.Type),
+			"spaceKey": llx.StringData(effectiveSpaceKey),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return llx.AnyData(mqlPage), nil
+}
+
+// mqlAtlassianConfluencePageInternal caches metadata pulled from the Content
+// API so the version/history/labels/parent methods can be served without a
+// re-fetch when the page was loaded through space.pages() with the right
+// expansions. Pages reached via space.homepage or page.parent start with an
+// empty cache and trigger a lazy fetch on first access.
+type mqlAtlassianConfluencePageInternal struct {
+	fetched        bool
+	lock           sync.Mutex
+	cacheVersion   int64
+	cacheCreatedAt *time.Time
+	cacheUpdatedAt *time.Time
+	cacheCreatedBy *models.ContentUserScheme
+	cacheParent    *models.ContentScheme
+	cacheLabels    []string
+}
+
+// cacheFromContent populates the Internal cache from a ContentScheme with the
+// expected expansions (version, history, metadata.labels, ancestors).
+func (a *mqlAtlassianConfluencePage) cacheFromContent(content *models.ContentScheme) {
+	if content == nil {
+		return
+	}
+	if content.Version != nil {
+		a.cacheVersion = int64(content.Version.Number)
+	}
+	if content.History != nil {
+		a.cacheCreatedAt = parseConfluenceTime(content.History.CreatedDate)
+		a.cacheCreatedBy = content.History.CreatedBy
+	}
+	if content.Version != nil && content.Version.When != "" {
+		a.cacheUpdatedAt = parseConfluenceTime(content.Version.When)
+	}
+	if content.Metadata != nil && content.Metadata.Labels != nil {
+		labels := make([]string, 0, len(content.Metadata.Labels.Results))
+		for _, l := range content.Metadata.Labels.Results {
+			if l == nil || l.Name == "" {
+				continue
+			}
+			labels = append(labels, l.Name)
+		}
+		a.cacheLabels = labels
+	}
+	if len(content.Ancestors) > 0 {
+		// Direct parent is the last ancestor returned by the API.
+		a.cacheParent = content.Ancestors[len(content.Ancestors)-1]
+	}
+	a.fetched = true
+}
+
+// ensureFetched populates the Internal cache by calling Content.Get when the
+// page was created without an inline expansion (e.g., via space.homepage or
+// page.parent). It is safe to call repeatedly.
+func (a *mqlAtlassianConfluencePage) ensureFetched() error {
+	if a.fetched {
+		return nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.fetched {
+		return nil
+	}
+
+	conn, ok := a.MqlRuntime.Connection.(*confluence.ConfluenceConnection)
+	if !ok {
+		return errors.New("Current connection does not allow confluence access")
+	}
+	client := conn.Client()
+
+	contentID := a.Id.Data
+	if contentID == "" {
+		a.fetched = true
+		return nil
+	}
+
+	content, _, err := client.Content.Get(context.Background(), contentID, []string{"version", "history", "metadata.labels", "ancestors"}, 0)
+	if err != nil {
+		return err
+	}
+	a.cacheFromContent(content)
+	a.fetched = true
+	return nil
+}
+
+func (a *mqlAtlassianConfluencePage) version() (int64, error) {
+	if err := a.ensureFetched(); err != nil {
+		return 0, err
+	}
+	return a.cacheVersion, nil
+}
+
+func (a *mqlAtlassianConfluencePage) createdAt() (*time.Time, error) {
+	if err := a.ensureFetched(); err != nil {
+		return nil, err
+	}
+	return a.cacheCreatedAt, nil
+}
+
+func (a *mqlAtlassianConfluencePage) updatedAt() (*time.Time, error) {
+	if err := a.ensureFetched(); err != nil {
+		return nil, err
+	}
+	return a.cacheUpdatedAt, nil
+}
+
+func (a *mqlAtlassianConfluencePage) createdBy() (*mqlAtlassianConfluenceUser, error) {
+	if err := a.ensureFetched(); err != nil {
+		return nil, err
+	}
+	if a.cacheCreatedBy == nil || a.cacheCreatedBy.AccountID == "" {
+		a.CreatedBy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlUser, err := NewResource(a.MqlRuntime, "atlassian.confluence.user",
+		map[string]*llx.RawData{
+			"id":   llx.StringData(a.cacheCreatedBy.AccountID),
+			"name": llx.StringData(a.cacheCreatedBy.DisplayName),
+			"type": llx.StringData(a.cacheCreatedBy.AccountType),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlUser.(*mqlAtlassianConfluenceUser), nil
+}
+
+func (a *mqlAtlassianConfluencePage) parent() (*mqlAtlassianConfluencePage, error) {
+	if err := a.ensureFetched(); err != nil {
+		return nil, err
+	}
+	if a.cacheParent == nil || a.cacheParent.ID == "" {
+		a.Parent.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlPage, err := NewResource(a.MqlRuntime, "atlassian.confluence.page",
+		map[string]*llx.RawData{
+			"id":       llx.StringData(a.cacheParent.ID),
+			"title":    llx.StringData(a.cacheParent.Title),
+			"status":   llx.StringData(a.cacheParent.Status),
+			"type":     llx.StringData(a.cacheParent.Type),
+			"spaceKey": llx.StringData(a.SpaceKey.Data),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return mqlPage.(*mqlAtlassianConfluencePage), nil
+}
+
+func (a *mqlAtlassianConfluencePage) labels() ([]any, error) {
+	if err := a.ensureFetched(); err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(a.cacheLabels))
+	for _, l := range a.cacheLabels {
+		out = append(out, l)
+	}
+	return out, nil
 }

@@ -72,8 +72,9 @@ atlassian.admin.organization @defaults("name") {
 //
 // Examine a user managed by an Atlassian organization: account type
 // (atlassian / customer / app), email, status (active / inactive / closed),
-// last-active timestamp, and per-product access — the granularity needed
-// for managed-account access reviews and dormant-account cleanup.
+// last-active timestamp, per-product access, the parent organization, and
+// any outstanding API tokens — the granularity needed for managed-account
+// access reviews, dormant-account cleanup, and stale-token cleanup.
 atlassian.admin.organization.managedUser @defaults("name") {
   // User ID
   id string
@@ -89,6 +90,27 @@ atlassian.admin.organization.managedUser @defaults("name") {
   lastActive time
   // Product access permissions
   productAccess []dict
+  // ID of the parent Atlassian organization that manages this user
+  organizationId string
+  // Outstanding API tokens issued to this managed user
+  apiTokens() []atlassian.admin.organization.managedUser.apiToken
+}
+
+// API token issued to a managed Atlassian account
+//
+// Examine an outstanding API token issued to a managed user: its identity,
+// the label set at creation, the creation timestamp, and the last access
+// timestamp. Use this to find dormant or unrotated tokens that should be
+// revoked as part of a credential-hygiene audit.
+private atlassian.admin.organization.managedUser.apiToken @defaults("label createdAt lastAccess") {
+  // Token ID
+  id string
+  // Label set at creation time
+  label string
+  // Token creation timestamp
+  createdAt time
+  // Last time the token was used
+  lastAccess time
 }
 
 // Atlassian Admin organization policy
@@ -186,7 +208,11 @@ atlassian.jira.auditRecord @defaults("summary createdAt") {
 // Examine the full state of a single issue: identity (key, summary,
 // description), workflow state and resolution, parent project, type,
 // priority, labels, the lifecycle timestamps (created, updated, resolved,
-// due), and the typed creator / assignee / reporter user references.
+// due), the typed creator / assignee / reporter user references, the
+// components and fix versions it belongs to, the issue-security level
+// applied to it, and the watcher / vote counters and comment list — the
+// inputs auditors use to look for stale, mis-secured, or
+// inappropriately-disclosed tickets.
 atlassian.jira.issue @defaults("key summary status") {
   // Issue ID
   id string
@@ -224,6 +250,23 @@ atlassian.jira.issue @defaults("key summary status") {
   reporter atlassian.jira.user
   // Issue type (e.g., Bug, Story, Task)
   typeName string
+  // Components the issue belongs to (each entry has `id` and `name`)
+  components []dict
+  // Fix versions the issue targets (each entry has `id`, `name`, `released`, `archived`, `releaseDate`)
+  fixVersions []dict
+  // Issue-security level applied to the issue (id, name, description). Null when no level is set.
+  securityLevel dict
+  // Number of users watching this issue
+  watcherCount int
+  // Number of votes on this issue
+  voteCount int
+  // Comments posted on the issue
+  //
+  // Each entry has `id`, `body`, `author` (accountId), `authorName`
+  // (displayName), `created`, `updated`, `visibility` (object with `type` /
+  // `value` when restricted; null otherwise), and `jsdPublic` (whether the
+  // comment is visible to Service Desk customers).
+  comments []dict
 }
 
 // Jira server information
@@ -245,9 +288,10 @@ atlassian.jira.serverInfo @defaults("serverTitle") {
 // Jira user account
 //
 // Examine an Atlassian account as it appears in Jira: account ID, display
-// name, account type (atlassian / app / customer), avatar, group memberships,
-// and the application roles the user is granted (e.g., jira-software-users).
-atlassian.jira.user @defaults("name") {
+// name, account type (atlassian / app / customer), avatar, email, active
+// status, timezone, locale, group memberships, and the application roles
+// the user is granted (e.g., jira-software-users).
+atlassian.jira.user @defaults("name active") {
   // Atlassian account ID
   id string
   // Display name
@@ -256,6 +300,14 @@ atlassian.jira.user @defaults("name") {
   type string
   // Avatar URL
   picture string
+  // Email address. Empty when hidden by the user's privacy settings.
+  email string
+  // Whether the account is active
+  active bool
+  // IANA time zone identifier (e.g., America/Los_Angeles)
+  timezone string
+  // Locale identifier (e.g., en_US)
+  locale string
   // Group memberships
   groups() []atlassian.jira.group
   // Application role assignments
@@ -277,10 +329,11 @@ atlassian.jira.applicationRole @defaults("name") {
 // Jira project
 //
 // Examine a project's identity (id, key, name, UUID, URL, email), its
-// privacy / archived / deleted state, custom properties, and the typed
-// permission scheme attached to it — the unit of access control for
-// project-level audits.
-atlassian.jira.project @defaults("name") {
+// project-type key (software / service_desk / business), privacy / archived
+// / deleted state, custom properties, the project lead, the typed
+// permission scheme attached to it, and the components and versions defined
+// on the project — the unit of access control for project-level audits.
+atlassian.jira.project @defaults("name projectTypeKey") {
   // Project ID
   id string
   // Project display name
@@ -293,18 +346,75 @@ atlassian.jira.project @defaults("name") {
   url string
   // Project email address
   email string
+  // Project type key (e.g., software, service_desk, business)
+  projectTypeKey string
   // Whether the project is private
   private bool
   // Whether the project is deleted
   deleted bool
   // Whether the project is archived
   archived bool
+  // User account designated as project lead. Null when no lead is set.
+  lead atlassian.jira.user
   // Custom project properties
   properties() []atlassian.jira.project.property
   // Permission scheme assigned to the project
   permissionScheme() atlassian.jira.permissionScheme
   // Project roles and their actors (users/groups assigned to each role)
   roles() []atlassian.jira.project.role
+  // Components defined on this project
+  components() []atlassian.jira.project.component
+  // Versions defined on this project
+  versions() []atlassian.jira.project.version
+}
+
+// Jira project component
+//
+// Examine a component defined on a Jira project: identity, description, the
+// default assignee strategy, and the typed lead and assignee users.
+// Components categorize issues within a project and can drive default
+// assignment, so they appear in audits that verify ownership of issue
+// categories.
+private atlassian.jira.project.component @defaults("name") {
+  // Component ID
+  id string
+  // Parent project key (e.g., PROJ)
+  projectKey string
+  // Component name
+  name string
+  // Component description
+  description string
+  // Default assignee strategy (PROJECT_DEFAULT, COMPONENT_LEAD, PROJECT_LEAD, UNASSIGNED)
+  assigneeType string
+  // Component lead. Null when no lead is set.
+  lead atlassian.jira.user
+  // Resolved default assignee for issues with this component. Null when none.
+  assignee atlassian.jira.user
+}
+
+// Jira project version
+//
+// Examine a version defined on a Jira project: identity, name, description,
+// release / archived flags, the release date, and whether the unreleased
+// version is overdue. Versions drive fix-version tracking and release
+// reports.
+private atlassian.jira.project.version @defaults("name released") {
+  // Version ID
+  id string
+  // Parent project key (e.g., PROJ)
+  projectKey string
+  // Version name (e.g., 1.0.0)
+  name string
+  // Version description
+  description string
+  // Whether the version has been released
+  released bool
+  // Whether the version has been archived
+  archived bool
+  // Release date (YYYY-MM-DD format from the API)
+  releaseDate string
+  // Whether an unreleased version is past its release date
+  overdue bool
 }
 
 // Jira permission scheme
@@ -521,8 +631,9 @@ private atlassian.confluence.group @defaults("id name") {
 // Examine a single Confluence space: identity (key, name, id), type
 // (global / personal), status (current / archived), whether anonymous or
 // unlicensed users have any access, the raw permission entries, the typed
-// users and groups they reference, and the pages within the space —
-// everything needed for space-level access reviews.
+// users and groups they reference, the homepage, the creator and creation
+// timestamp, and the pages within the space — everything needed for
+// space-level access reviews.
 atlassian.confluence.space @defaults("name key type") {
   // Numeric space ID
   id int
@@ -544,6 +655,12 @@ atlassian.confluence.space @defaults("name key type") {
   permissionUsers() []atlassian.confluence.user
   // Distinct groups referenced by space permissions (typed)
   permissionGroups() []atlassian.confluence.group
+  // Homepage of the space. Null when no homepage is set.
+  homepage atlassian.confluence.page
+  // User who created the space. Null when the API does not return creator details.
+  createdBy atlassian.confluence.user
+  // Creation timestamp (UTC). Null when the API does not return a creation date.
+  createdAt time
   // Pages in this space (top-level Get; lazy)
   pages() []atlassian.confluence.page
 }
@@ -551,9 +668,11 @@ atlassian.confluence.space @defaults("name key type") {
 // Confluence page (content with type=page)
 //
 // Examine a single page: identity, status (current / trashed / draft), the
-// space it lives in, whether any explicit read or update restrictions are
-// applied, and the per-operation restriction set with its users and groups
-// — the unit of page-level access reviews.
+// space it lives in, the current version number, the creator and last
+// update timestamps, the typed creator user, the typed parent page (when
+// the page is nested), the labels applied to it, whether any explicit read
+// or update restrictions are applied, and the per-operation restriction
+// set with its users and groups — the unit of page-level access reviews.
 atlassian.confluence.page @defaults("title status") {
   // Content ID
   id string
@@ -565,6 +684,18 @@ atlassian.confluence.page @defaults("title status") {
   type string
   // Key of the space the page lives in
   spaceKey string
+  // Current version number of the page (1 for the first publish, increments per edit)
+  version() int
+  // Creation timestamp (UTC). Null when the API does not return a creation date.
+  createdAt() time
+  // Last update timestamp (UTC). Null when the API does not return an update timestamp.
+  updatedAt() time
+  // User who created the page. Null when the API does not return creator details.
+  createdBy() atlassian.confluence.user
+  // Direct parent page. Null for top-level pages or when no ancestors are returned.
+  parent() atlassian.confluence.page
+  // Labels applied to the page (label name only, without prefix)
+  labels() []string
   // Whether this page has any explicit read or update restrictions applied
   hasRestrictions() bool
   // Per-operation restrictions on this page (read/update; users + groups)

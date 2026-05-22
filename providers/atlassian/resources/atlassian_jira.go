@@ -48,10 +48,14 @@ func (a *mqlAtlassianJira) users() ([]any, error) {
 		for _, user := range users {
 			mqlAtlassianJiraUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
 				map[string]*llx.RawData{
-					"id":      llx.StringData(user.AccountID),
-					"name":    llx.StringData(user.DisplayName),
-					"type":    llx.StringData(user.AccountType),
-					"picture": llx.StringData(user.AvatarURLs.One6X16),
+					"id":       llx.StringData(user.AccountID),
+					"name":     llx.StringData(user.DisplayName),
+					"type":     llx.StringData(user.AccountType),
+					"picture":  llx.StringData(jiraUserAvatar(user)),
+					"email":    llx.StringData(user.EmailAddress),
+					"active":   llx.BoolData(user.Active),
+					"timezone": llx.StringData(user.TimeZone),
+					"locale":   llx.StringData(user.Locale),
 				})
 			if err != nil {
 				return nil, err
@@ -172,25 +176,33 @@ func (a *mqlAtlassianJira) projects() ([]any, error) {
 	res := []any{}
 	startAt := 0
 	total := JIRA_SEARCH_MAX_RESULTS
+	options := &models.ProjectSearchOptionsScheme{Expand: []string{"lead"}}
 
 	for startAt < total {
-		projects, _, err := jira.Project.Search(context.Background(), nil, startAt, JIRA_SEARCH_MAX_RESULTS)
+		projects, _, err := jira.Project.Search(context.Background(), options, startAt, JIRA_SEARCH_MAX_RESULTS)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, project := range projects.Values {
+			lead, err := mqlJiraUser(a.MqlRuntime, project.Lead)
+			if err != nil {
+				return nil, err
+			}
+
 			mqlAtlassianJiraProject, err := CreateResource(a.MqlRuntime, "atlassian.jira.project",
 				map[string]*llx.RawData{
-					"id":       llx.StringData(project.ID),
-					"name":     llx.StringData(project.Name),
-					"uuid":     llx.StringData(project.UUID),
-					"key":      llx.StringData(project.Key),
-					"url":      llx.StringData(project.URL),
-					"email":    llx.StringData(project.Email),
-					"private":  llx.BoolData(project.IsPrivate),
-					"deleted":  llx.BoolData(project.Deleted),
-					"archived": llx.BoolData(project.Archived),
+					"id":             llx.StringData(project.ID),
+					"name":           llx.StringData(project.Name),
+					"uuid":           llx.StringData(project.UUID),
+					"key":            llx.StringData(project.Key),
+					"url":            llx.StringData(project.URL),
+					"email":          llx.StringData(project.Email),
+					"projectTypeKey": llx.StringData(project.ProjectTypeKey),
+					"private":        llx.BoolData(project.IsPrivate),
+					"deleted":        llx.BoolData(project.Deleted),
+					"archived":       llx.BoolData(project.Archived),
+					"lead":           lead,
 				})
 			if err != nil {
 				return nil, err
@@ -216,6 +228,7 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 		"summary", "status", "project", "issuetype", "description", "labels",
 		"priority", "resolution", "creator", "assignee", "reporter",
 		"created", "updated", "resolutiondate", "duedate",
+		"components", "fixVersions", "security", "watches", "votes", "comment",
 	}
 	expands := []string{"changelog", "renderedFields", "names", "schema", "transitions", "operations", "editmeta"}
 
@@ -244,24 +257,30 @@ func (a *mqlAtlassianJira) issues() ([]any, error) {
 
 			mqlAtlassianJiraIssue, err := CreateResource(a.MqlRuntime, "atlassian.jira.issue",
 				map[string]*llx.RawData{
-					"id":          llx.StringData(issue.ID),
-					"key":         llx.StringData(issue.Key),
-					"summary":     llx.StringData(issue.Fields.Summary),
-					"project":     llx.StringData(issue.Fields.Project.Name),
-					"projectKey":  llx.StringData(issue.Fields.Project.Key),
-					"status":      llx.StringData(issue.Fields.Status.Name),
-					"description": llx.StringData(issue.Fields.Description),
-					"priority":    llx.StringData(jiraPriorityName(issue.Fields.Priority)),
-					"resolution":  llx.StringData(jiraResolutionName(issue.Fields.Resolution)),
-					"labels":      llx.ArrayData(stringsToAny(issue.Fields.Labels), types.String),
-					"createdAt":   llx.TimeDataPtr(jiraDateTime(issue.Fields.Created)),
-					"updatedAt":   llx.TimeDataPtr(jiraDateTime(issue.Fields.Updated)),
-					"resolvedAt":  llx.TimeDataPtr(jiraDateTime(issue.Fields.ResolutionDate)),
-					"dueDate":     llx.TimeDataPtr(jiraDate(issue.Fields.DueDate)),
-					"creator":     creator,
-					"assignee":    assignee,
-					"reporter":    reporter,
-					"typeName":    llx.StringData(issue.Fields.IssueType.Name),
+					"id":            llx.StringData(issue.ID),
+					"key":           llx.StringData(issue.Key),
+					"summary":       llx.StringData(issue.Fields.Summary),
+					"project":       llx.StringData(issue.Fields.Project.Name),
+					"projectKey":    llx.StringData(issue.Fields.Project.Key),
+					"status":        llx.StringData(issue.Fields.Status.Name),
+					"description":   llx.StringData(issue.Fields.Description),
+					"priority":      llx.StringData(jiraPriorityName(issue.Fields.Priority)),
+					"resolution":    llx.StringData(jiraResolutionName(issue.Fields.Resolution)),
+					"labels":        llx.ArrayData(stringsToAny(issue.Fields.Labels), types.String),
+					"createdAt":     llx.TimeDataPtr(jiraDateTime(issue.Fields.Created)),
+					"updatedAt":     llx.TimeDataPtr(jiraDateTime(issue.Fields.Updated)),
+					"resolvedAt":    llx.TimeDataPtr(jiraDateTime(issue.Fields.ResolutionDate)),
+					"dueDate":       llx.TimeDataPtr(jiraDate(issue.Fields.DueDate)),
+					"creator":       creator,
+					"assignee":      assignee,
+					"reporter":      reporter,
+					"typeName":      llx.StringData(issue.Fields.IssueType.Name),
+					"components":    llx.ArrayData(jiraIssueComponents(issue.Fields.Components), types.Dict),
+					"fixVersions":   llx.ArrayData(jiraIssueVersions(issue.Fields.FixVersions), types.Dict),
+					"securityLevel": llx.DictData(jiraIssueSecurity(issue.Fields.Security)),
+					"watcherCount":  llx.IntData(int64(jiraWatcherCount(issue.Fields.Watcher))),
+					"voteCount":     llx.IntData(int64(jiraVoteCount(issue.Fields.Votes))),
+					"comments":      llx.ArrayData(jiraIssueComments(issue.Fields.Comment), types.Dict),
 				})
 			if err != nil {
 				return nil, err
@@ -280,21 +299,28 @@ func mqlJiraUser(runtime *plugin.Runtime, user *models.UserScheme) (*llx.RawData
 	if user == nil {
 		return llx.NilData, nil
 	}
-	picture := ""
-	if user.AvatarURLs != nil {
-		picture = user.AvatarURLs.One6X16
-	}
 	resource, err := CreateResource(runtime, "atlassian.jira.user",
 		map[string]*llx.RawData{
-			"id":      llx.StringData(user.AccountID),
-			"name":    llx.StringData(user.DisplayName),
-			"type":    llx.StringData(user.AccountType),
-			"picture": llx.StringData(picture),
+			"id":       llx.StringData(user.AccountID),
+			"name":     llx.StringData(user.DisplayName),
+			"type":     llx.StringData(user.AccountType),
+			"picture":  llx.StringData(jiraUserAvatar(user)),
+			"email":    llx.StringData(user.EmailAddress),
+			"active":   llx.BoolData(user.Active),
+			"timezone": llx.StringData(user.TimeZone),
+			"locale":   llx.StringData(user.Locale),
 		})
 	if err != nil {
 		return nil, err
 	}
 	return llx.AnyData(resource), nil
+}
+
+func jiraUserAvatar(user *models.UserScheme) string {
+	if user == nil || user.AvatarURLs == nil {
+		return ""
+	}
+	return user.AvatarURLs.One6X16
 }
 
 func jiraPriorityName(p *models.PriorityScheme) string {
@@ -331,6 +357,98 @@ func stringsToAny(in []string) []any {
 	out := make([]any, len(in))
 	for i, v := range in {
 		out[i] = v
+	}
+	return out
+}
+
+func jiraIssueComponents(in []*models.ComponentScheme) []any {
+	out := make([]any, 0, len(in))
+	for _, c := range in {
+		if c == nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"id":   c.ID,
+			"name": c.Name,
+		})
+	}
+	return out
+}
+
+func jiraIssueVersions(in []*models.VersionScheme) []any {
+	out := make([]any, 0, len(in))
+	for _, v := range in {
+		if v == nil {
+			continue
+		}
+		out = append(out, map[string]any{
+			"id":          v.ID,
+			"name":        v.Name,
+			"released":    v.Released,
+			"archived":    v.Archived,
+			"releaseDate": v.ReleaseDate,
+		})
+	}
+	return out
+}
+
+func jiraIssueSecurity(s *models.SecurityScheme) any {
+	if s == nil {
+		return nil
+	}
+	return map[string]any{
+		"id":          s.ID,
+		"name":        s.Name,
+		"description": s.Description,
+	}
+}
+
+func jiraWatcherCount(w *models.IssueWatcherScheme) int {
+	if w == nil {
+		return 0
+	}
+	return w.WatchCount
+}
+
+func jiraVoteCount(v *models.IssueVoteScheme) int {
+	if v == nil {
+		return 0
+	}
+	return v.Votes
+}
+
+func jiraIssueComments(page *models.IssueCommentPageSchemeV2) []any {
+	if page == nil {
+		return []any{}
+	}
+	out := make([]any, 0, len(page.Comments))
+	for _, c := range page.Comments {
+		if c == nil {
+			continue
+		}
+		authorID := ""
+		authorName := ""
+		if c.Author != nil {
+			authorID = c.Author.AccountID
+			authorName = c.Author.DisplayName
+		}
+		var visibility any
+		if c.Visibility != nil {
+			visibility = map[string]any{
+				"type":  c.Visibility.Type,
+				"value": c.Visibility.Value,
+			}
+		}
+		out = append(out, map[string]any{
+			"id":         c.ID,
+			"body":       c.Body,
+			"author":     authorID,
+			"authorName": authorName,
+			"created":    c.Created,
+			"updated":    c.Updated,
+			"visibility": visibility,
+			"jsdPublic":  c.JSDPublic,
+		})
 	}
 	return out
 }
@@ -625,4 +743,116 @@ func (a *mqlAtlassianJiraPermissionScheme) grants() ([]any, error) {
 
 func (a *mqlAtlassianJiraPermissionSchemeGrant) id() (string, error) {
 	return "atlassian.jira.permissionScheme.grant/" + a.Id.Data, nil
+}
+
+func (a *mqlAtlassianJiraProject) components() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
+	jiraClient := conn.Client()
+
+	projectKey := a.Key.Data
+	if projectKey == "" {
+		projectKey = a.Id.Data
+	}
+	if projectKey == "" {
+		return []any{}, nil
+	}
+
+	components, _, err := jiraClient.Project.Component.Gets(context.Background(), projectKey)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(components))
+	for _, c := range components {
+		if c == nil {
+			continue
+		}
+		lead, err := mqlJiraUser(a.MqlRuntime, c.Lead)
+		if err != nil {
+			return nil, err
+		}
+		assignee, err := mqlJiraUser(a.MqlRuntime, c.Assignee)
+		if err != nil {
+			return nil, err
+		}
+		mqlComponent, err := CreateResource(a.MqlRuntime, "atlassian.jira.project.component",
+			map[string]*llx.RawData{
+				"id":           llx.StringData(c.ID),
+				"projectKey":   llx.StringData(projectKey),
+				"name":         llx.StringData(c.Name),
+				"description":  llx.StringData(c.Description),
+				"assigneeType": llx.StringData(c.AssigneeType),
+				"lead":         lead,
+				"assignee":     assignee,
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlComponent)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJiraProjectComponent) id() (string, error) {
+	return "atlassian.jira.project.component/" + a.Id.Data, nil
+}
+
+func (a *mqlAtlassianJiraProject) versions() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
+	jiraClient := conn.Client()
+
+	projectKey := a.Key.Data
+	if projectKey == "" {
+		projectKey = a.Id.Data
+	}
+	if projectKey == "" {
+		return []any{}, nil
+	}
+
+	res := []any{}
+	startAt := 0
+	for {
+		page, _, err := jiraClient.Project.Version.Search(context.Background(), projectKey, nil, startAt, JIRA_SEARCH_MAX_RESULTS)
+		if err != nil {
+			return nil, err
+		}
+		if page == nil || len(page.Values) == 0 {
+			break
+		}
+		for _, v := range page.Values {
+			if v == nil {
+				continue
+			}
+			mqlVersion, err := CreateResource(a.MqlRuntime, "atlassian.jira.project.version",
+				map[string]*llx.RawData{
+					"id":          llx.StringData(v.ID),
+					"projectKey":  llx.StringData(projectKey),
+					"name":        llx.StringData(v.Name),
+					"description": llx.StringData(v.Description),
+					"released":    llx.BoolData(v.Released),
+					"archived":    llx.BoolData(v.Archived),
+					"releaseDate": llx.StringData(v.ReleaseDate),
+					"overdue":     llx.BoolData(v.Overdue),
+				})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlVersion)
+		}
+		if page.IsLast || len(page.Values) < JIRA_SEARCH_MAX_RESULTS {
+			break
+		}
+		startAt += len(page.Values)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJiraProjectVersion) id() (string, error) {
+	return "atlassian.jira.project.version/" + a.Id.Data, nil
 }
