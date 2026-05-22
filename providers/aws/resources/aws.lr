@@ -7209,13 +7209,19 @@ private aws.emr.studio @defaults("studioId name region") {
 //
 // Use the EventBridge namespace to enumerate event-driven plumbing in the
 // account: event buses and the rules attached to them, EventBridge Pipes
-// for source-to-target streaming, and EventBridge Scheduler schedules and
-// schedule groups. Iterate `eventBuses()` for every bus (with its
-// resource policy, KMS encryption, and dead-letter configuration),
-// `rules()` for every rule across buses (with the event pattern or
-// schedule, targets, and IAM role), `pipes()` for filter/enrichment
-// pipelines, and `schedules()`/`scheduleGroups()` for cron and one-time
-// scheduled invocations.
+// for source-to-target streaming, EventBridge Scheduler schedules and
+// schedule groups, the connections and API destinations that carry events
+// to external HTTP endpoints, archives and replays of recorded events,
+// and global endpoints for multi-Region routing. Iterate `eventBuses()`
+// for every bus (with its resource policy, KMS encryption, and
+// dead-letter configuration), `rules()` for every rule across buses
+// (with the event pattern or schedule, targets, and IAM role), `pipes()`
+// for filter/enrichment pipelines, `schedules()`/`scheduleGroups()` for
+// cron and one-time scheduled invocations, `connections()` and
+// `apiDestinations()` for outbound webhook integrations,
+// `archives()`/`replays()` for event retention and replay, and
+// `endpoints()` for global endpoints with failover and event
+// replication.
 aws.eventbridge @defaults("eventBuses") {
   // List of EventBridge event buses
   eventBuses() []aws.eventbridge.eventBus
@@ -7227,6 +7233,16 @@ aws.eventbridge @defaults("eventBuses") {
   schedules() []aws.eventbridge.schedule
   // List of EventBridge Scheduler schedule groups
   scheduleGroups() []aws.eventbridge.scheduleGroup
+  // List of EventBridge connections (credentials for outbound HTTP targets)
+  connections() []aws.eventbridge.connection
+  // List of EventBridge API destinations (HTTP invocation endpoints)
+  apiDestinations() []aws.eventbridge.apiDestination
+  // List of EventBridge archives (recorded events from an event bus)
+  archives() []aws.eventbridge.archive
+  // List of EventBridge replays (replays of archived events)
+  replays() []aws.eventbridge.replay
+  // List of EventBridge global endpoints (multi-Region routing)
+  endpoints() []aws.eventbridge.endpoint
 }
 
 // Amazon EventBridge event bus
@@ -7271,6 +7287,236 @@ private aws.eventbridge.rule @defaults("arn name state") {
   tags() map[string]string
   // Targets for this rule
   targets() []dict
+}
+
+// Amazon EventBridge connection
+//
+// Examine an EventBridge connection — the named credential record used by
+// API destinations to authenticate against an outbound HTTP endpoint.
+// Reveals the authorization type (BASIC, OAUTH_CLIENT_CREDENTIALS, or
+// API_KEY), the connection lifecycle state, the linked Secrets Manager
+// secret that holds the credentials, and the *shape* of the
+// `authParameters` and `invocationHttpParameters` (header / query /
+// body parameter names, OAuth endpoints, API-key header name). Secret
+// values — passwords, OAuth client secrets, and API-key values — are
+// never returned; only `*Present` indicator booleans and non-secret
+// metadata are surfaced.
+private aws.eventbridge.connection @defaults("arn name authorizationType connectionState") {
+  // ARN of the connection
+  arn string
+  // Name of the connection
+  name string
+  // Region of the connection
+  region string
+  // Description of the connection
+  description() string
+  // Authorization type
+  //
+  // One of BASIC, OAUTH_CLIENT_CREDENTIALS, or API_KEY.
+  authorizationType string
+  // Connection state
+  //
+  // One of CREATING, UPDATING, DELETING, AUTHORIZED, DEAUTHORIZED, AUTHORIZING, DEAUTHORIZING, ACTIVE, FAILED_CONNECTIVITY.
+  connectionState string
+  // Reason the connection is in its current state
+  stateReason string
+  // Time the connection was created
+  creationTime time
+  // Time the connection was last modified
+  lastModifiedTime time
+  // Time the connection was last authorized
+  lastAuthorizedTime time
+  // ARN of the Secrets Manager secret that stores the connection credentials
+  secretArn() string
+  // Secrets Manager secret that stores the connection credentials
+  secret() aws.secretsmanager.secret
+  // Shape of the authorization parameters with secret values redacted
+  //
+  // For BASIC: `{type: "BASIC", usernamePresent: bool, username: string}`.
+  // For OAUTH: `{type: "OAUTH", authorizationEndpoint, httpMethod, clientID, clientSecretPresent: bool, oauthHttpParameters}`.
+  // For API_KEY: `{type: "API_KEY", apiKeyName, apiKeyValuePresent: bool}`.
+  // All passwords, OAuth client secrets, and API-key values are masked —
+  // only the presence booleans and non-secret metadata are returned.
+  authParameters() dict
+  // Additional HTTP parameters sent with every target invocation, with secret values redacted
+  //
+  // Mirrors the `headerParameters`, `queryStringParameters`, and
+  // `bodyParameters` blocks of the connection's
+  // `InvocationHttpParameters`. Each entry is reported as
+  // `{key, isValueSecret: bool, valuePresent: bool, value: string?}`;
+  // `value` is omitted entirely when `isValueSecret` is true.
+  invocationHttpParameters() dict
+}
+
+// Amazon EventBridge API destination
+//
+// Examine an EventBridge API destination — the named HTTP invocation
+// target (URL + method + per-second rate limit) that rules and pipes can
+// route events to. The destination borrows its credentials from a linked
+// `aws.eventbridge.connection`; traverse `connection()` to inspect the
+// authorization type and credential metadata.
+private aws.eventbridge.apiDestination @defaults("arn name apiDestinationState invocationEndpoint") {
+  // ARN of the API destination
+  arn string
+  // Name of the API destination
+  name string
+  // Region of the API destination
+  region string
+  // Description of the API destination
+  description() string
+  // API destination state
+  //
+  // One of ACTIVE or INACTIVE.
+  apiDestinationState string
+  // ARN of the connection that supplies credentials for this destination
+  connectionArn string
+  // Connection that supplies credentials for this destination
+  connection() aws.eventbridge.connection
+  // URL of the HTTP endpoint invoked when the destination is triggered
+  invocationEndpoint string
+  // HTTP method used to invoke the endpoint
+  //
+  // One of POST, GET, HEAD, OPTIONS, PUT, PATCH, or DELETE.
+  httpMethod string
+  // Maximum number of invocations per second to send to the endpoint
+  invocationRateLimitPerSecond int
+  // Time the API destination was created
+  creationTime time
+  // Time the API destination was last modified
+  lastModifiedTime time
+}
+
+// Amazon EventBridge archive
+//
+// Examine an EventBridge archive — recorded events from a single event
+// bus retained for the configured number of days and available for
+// replay through `aws.eventbridge.replay`. Reveals the source bus, the
+// optional event-pattern filter applied while recording, the current
+// archive state, the retention window, and the running event count and
+// size on disk.
+private aws.eventbridge.archive @defaults("arn archiveName state retentionDays") {
+  // ARN of the archive
+  arn string
+  // Name of the archive
+  archiveName string
+  // Region of the archive
+  region string
+  // ARN of the event bus whose events are recorded into the archive
+  eventSourceArn string
+  // Event bus whose events are recorded into the archive
+  eventSource() aws.eventbridge.eventBus
+  // Archive state
+  //
+  // One of ENABLED, DISABLED, CREATING, UPDATING, CREATE_FAILED, or UPDATE_FAILED.
+  state string
+  // Reason the archive is in its current state
+  stateReason string
+  // Number of days events are retained in the archive (0 for indefinite)
+  retentionDays int
+  // Size of the archive in bytes
+  sizeBytes int
+  // Number of events stored in the archive
+  eventCount int
+  // Time the archive was created
+  creationTime time
+  // Description of the archive
+  description() string
+  // Event pattern used to filter events recorded into the archive (JSON; empty when no filter is set)
+  eventPattern() string
+}
+
+// Amazon EventBridge replay
+//
+// Examine an EventBridge replay — a one-time job that re-emits events
+// from an archive into one or more rules on a destination event bus.
+// Reveals the source archive, the destination bus, the replay state,
+// the event time window being replayed, and the lifecycle timestamps.
+private aws.eventbridge.replay @defaults("arn replayName state") {
+  // ARN of the replay
+  arn string
+  // Name of the replay
+  replayName string
+  // Region of the replay
+  region string
+  // ARN of the archive whose events are being replayed
+  eventSourceArn string
+  // Archive whose events are being replayed
+  eventSource() aws.eventbridge.archive
+  // ARN of the event bus that receives the replayed events
+  destinationArn string
+  // Event bus that receives the replayed events
+  destination() aws.eventbridge.eventBus
+  // ARNs of the rules on the destination bus that scope which events are replayed
+  filterArns []string
+  // Replay state
+  //
+  // One of STARTING, RUNNING, CANCELLING, COMPLETED, CANCELLED, or FAILED.
+  state string
+  // Reason the replay is in its current state
+  stateReason string
+  // Earliest event timestamp included in the replay window
+  eventStartTime time
+  // Latest event timestamp included in the replay window
+  eventEndTime time
+  // Timestamp of the last event that was replayed
+  eventLastReplayedTime time
+  // Time the replay started
+  replayStartTime time
+  // Time the replay finished
+  replayEndTime time
+  // Description of the replay
+  description() string
+}
+
+// Amazon EventBridge global endpoint
+//
+// Examine an EventBridge global endpoint — a Regional-fault-tolerant
+// front door for one or more event buses that fails over to a secondary
+// Region based on a Route 53 health check and (optionally) replicates
+// events to the secondary in steady state. Reveals the primary /
+// secondary Region routing, the health check arn, the replication
+// state, the linked event buses, and the IAM role used for replication.
+private aws.eventbridge.endpoint @defaults("arn name state") {
+  // ARN of the endpoint
+  arn string
+  // Name of the endpoint
+  name string
+  // Description of the endpoint
+  description string
+  // Endpoint state
+  //
+  // One of ACTIVE, CREATING, UPDATING, DELETING, CREATE_FAILED, UPDATE_FAILED, or DELETE_FAILED.
+  state string
+  // Reason the endpoint is in its current state
+  stateReason string
+  // Subdomain prefix of the endpoint URL (the leading portion of the URL before the EventBridge endpoint domain)
+  endpointId string
+  // URL of the endpoint
+  endpointUrl string
+  // Event buses that the endpoint fronts
+  //
+  // Each entry is `{eventBusArn: string}`. The bus referenced by
+  // `eventBusArn` lives in either the primary or secondary Region of
+  // the endpoint's routing configuration.
+  eventBuses []dict
+  // Routing configuration with primary and secondary Region failover
+  //
+  // Shape: `{failoverConfig: {primary: {healthCheck: arn}, secondary: {route: region}}}`.
+  routingConfig dict
+  // Event replication configuration
+  //
+  // Shape: `{state: "ENABLED" | "DISABLED"}`. When ENABLED, events are
+  // replicated from the primary to the secondary Region; a `roleArn`
+  // with permission to put events on the secondary bus is required.
+  replicationConfig dict
+  // ARN of the IAM role used to replicate events to the secondary Region
+  roleArn string
+  // IAM role used to replicate events to the secondary Region
+  iamRole() aws.iam.role
+  // Time the endpoint was created
+  creationTime time
+  // Time the endpoint was last modified
+  lastModifiedTime time
 }
 
 // Amazon EventBridge pipe

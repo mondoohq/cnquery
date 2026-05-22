@@ -348,8 +348,17 @@
     "es:DescribeElasticsearchDomain",
     "es:ListDomainNames",
     "es:ListTags",
+    "events:DescribeApiDestination",
+    "events:DescribeArchive",
+    "events:DescribeConnection",
     "events:DescribeEventBus",
+    "events:DescribeReplay",
+    "events:ListApiDestinations",
+    "events:ListArchives",
+    "events:ListConnections",
+    "events:ListEndpoints",
     "events:ListEventBuses",
+    "events:ListReplays",
     "events:ListRules",
     "events:ListTagsForResource",
     "events:ListTargetsByRule",
@@ -2948,16 +2957,70 @@
       "source_file": "aws_opensearch.go"
     },
     {
+      "permission": "events:DescribeApiDestination",
+      "service": "events",
+      "action": "DescribeApiDestination",
+      "source_file": "aws_eventbridge_connections.go"
+    },
+    {
+      "permission": "events:DescribeArchive",
+      "service": "events",
+      "action": "DescribeArchive",
+      "source_file": "aws_eventbridge_connections.go"
+    },
+    {
+      "permission": "events:DescribeConnection",
+      "service": "events",
+      "action": "DescribeConnection",
+      "source_file": "aws_eventbridge_connections.go"
+    },
+    {
       "permission": "events:DescribeEventBus",
       "service": "events",
       "action": "DescribeEventBus",
       "source_file": "aws_eventbridge.go"
     },
     {
+      "permission": "events:DescribeReplay",
+      "service": "events",
+      "action": "DescribeReplay",
+      "source_file": "aws_eventbridge_connections.go"
+    },
+    {
+      "permission": "events:ListApiDestinations",
+      "service": "events",
+      "action": "ListApiDestinations",
+      "source_file": "aws_eventbridge_connections.go"
+    },
+    {
+      "permission": "events:ListArchives",
+      "service": "events",
+      "action": "ListArchives",
+      "source_file": "aws_eventbridge_connections.go"
+    },
+    {
+      "permission": "events:ListConnections",
+      "service": "events",
+      "action": "ListConnections",
+      "source_file": "aws_eventbridge_connections.go"
+    },
+    {
+      "permission": "events:ListEndpoints",
+      "service": "events",
+      "action": "ListEndpoints",
+      "source_file": "aws_eventbridge_connections.go"
+    },
+    {
       "permission": "events:ListEventBuses",
       "service": "events",
       "action": "ListEventBuses",
       "source_file": "aws_eventbridge.go"
+    },
+    {
+      "permission": "events:ListReplays",
+      "service": "events",
+      "action": "ListReplays",
+      "source_file": "aws_eventbridge_connections.go"
     },
     {
       "permission": "events:ListRules",

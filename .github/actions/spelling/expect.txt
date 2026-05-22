@@ -149,6 +149,8 @@ DATAUSER
 DBfor
 ddl
 ddos
+DEAUTHORIZED
+DEAUTHORIZING
 dedup
 dedupratio
 defc

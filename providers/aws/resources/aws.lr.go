@@ -306,6 +306,11 @@ const (
 	ResourceAwsEventbridge                                                      string = "aws.eventbridge"
 	ResourceAwsEventbridgeEventBus                                              string = "aws.eventbridge.eventBus"
 	ResourceAwsEventbridgeRule                                                  string = "aws.eventbridge.rule"
+	ResourceAwsEventbridgeConnection                                            string = "aws.eventbridge.connection"
+	ResourceAwsEventbridgeApiDestination                                        string = "aws.eventbridge.apiDestination"
+	ResourceAwsEventbridgeArchive                                               string = "aws.eventbridge.archive"
+	ResourceAwsEventbridgeReplay                                                string = "aws.eventbridge.replay"
+	ResourceAwsEventbridgeEndpoint                                              string = "aws.eventbridge.endpoint"
 	ResourceAwsEventbridgePipe                                                  string = "aws.eventbridge.pipe"
 	ResourceAwsEventbridgePipeFilterCriteria                                    string = "aws.eventbridge.pipe.filterCriteria"
 	ResourceAwsEventbridgePipeSourceParameters                                  string = "aws.eventbridge.pipe.sourceParameters"
@@ -1990,6 +1995,26 @@ func init() {
 		"aws.eventbridge.rule": {
 			// to override args, implement: initAwsEventbridgeRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEventbridgeRule,
+		},
+		"aws.eventbridge.connection": {
+			Init:   initAwsEventbridgeConnection,
+			Create: createAwsEventbridgeConnection,
+		},
+		"aws.eventbridge.apiDestination": {
+			Init:   initAwsEventbridgeApiDestination,
+			Create: createAwsEventbridgeApiDestination,
+		},
+		"aws.eventbridge.archive": {
+			Init:   initAwsEventbridgeArchive,
+			Create: createAwsEventbridgeArchive,
+		},
+		"aws.eventbridge.replay": {
+			Init:   initAwsEventbridgeReplay,
+			Create: createAwsEventbridgeReplay,
+		},
+		"aws.eventbridge.endpoint": {
+			Init:   initAwsEventbridgeEndpoint,
+			Create: createAwsEventbridgeEndpoint,
 		},
 		"aws.eventbridge.pipe": {
 			// to override args, implement: initAwsEventbridgePipe(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12397,6 +12422,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eventbridge.scheduleGroups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridge).GetScheduleGroups()).ToDataRes(types.Array(types.Resource("aws.eventbridge.scheduleGroup")))
 	},
+	"aws.eventbridge.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridge).GetConnections()).ToDataRes(types.Array(types.Resource("aws.eventbridge.connection")))
+	},
+	"aws.eventbridge.apiDestinations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridge).GetApiDestinations()).ToDataRes(types.Array(types.Resource("aws.eventbridge.apiDestination")))
+	},
+	"aws.eventbridge.archives": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridge).GetArchives()).ToDataRes(types.Array(types.Resource("aws.eventbridge.archive")))
+	},
+	"aws.eventbridge.replays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridge).GetReplays()).ToDataRes(types.Array(types.Resource("aws.eventbridge.replay")))
+	},
+	"aws.eventbridge.endpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridge).GetEndpoints()).ToDataRes(types.Array(types.Resource("aws.eventbridge.endpoint")))
+	},
 	"aws.eventbridge.eventBus.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeEventBus).GetArn()).ToDataRes(types.String)
 	},
@@ -12450,6 +12490,213 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eventbridge.rule.targets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgeRule).GetTargets()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.connection.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.connection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.connection.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.connection.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.connection.authorizationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetAuthorizationType()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.connection.connectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetConnectionState()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.connection.stateReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetStateReason()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.connection.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.connection.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.connection.lastAuthorizedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetLastAuthorizedTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.connection.secretArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetSecretArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.connection.secret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetSecret()).ToDataRes(types.Resource("aws.secretsmanager.secret"))
+	},
+	"aws.eventbridge.connection.authParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetAuthParameters()).ToDataRes(types.Dict)
+	},
+	"aws.eventbridge.connection.invocationHttpParameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeConnection).GetInvocationHttpParameters()).ToDataRes(types.Dict)
+	},
+	"aws.eventbridge.apiDestination.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.apiDestination.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.apiDestination.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.apiDestination.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.apiDestination.apiDestinationState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetApiDestinationState()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.apiDestination.connectionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetConnectionArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.apiDestination.connection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetConnection()).ToDataRes(types.Resource("aws.eventbridge.connection"))
+	},
+	"aws.eventbridge.apiDestination.invocationEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetInvocationEndpoint()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.apiDestination.httpMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetHttpMethod()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.apiDestination.invocationRateLimitPerSecond": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetInvocationRateLimitPerSecond()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.apiDestination.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.apiDestination.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeApiDestination).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.archive.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.archive.archiveName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetArchiveName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.archive.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.archive.eventSourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetEventSourceArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.archive.eventSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetEventSource()).ToDataRes(types.Resource("aws.eventbridge.eventBus"))
+	},
+	"aws.eventbridge.archive.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetState()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.archive.stateReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetStateReason()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.archive.retentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetRetentionDays()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.archive.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.archive.eventCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetEventCount()).ToDataRes(types.Int)
+	},
+	"aws.eventbridge.archive.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.archive.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.archive.eventPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeArchive).GetEventPattern()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.replay.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.replay.replayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetReplayName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.replay.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.replay.eventSourceArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetEventSourceArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.replay.eventSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetEventSource()).ToDataRes(types.Resource("aws.eventbridge.archive"))
+	},
+	"aws.eventbridge.replay.destinationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetDestinationArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.replay.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetDestination()).ToDataRes(types.Resource("aws.eventbridge.eventBus"))
+	},
+	"aws.eventbridge.replay.filterArns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetFilterArns()).ToDataRes(types.Array(types.String))
+	},
+	"aws.eventbridge.replay.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetState()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.replay.stateReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetStateReason()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.replay.eventStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetEventStartTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.replay.eventEndTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetEventEndTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.replay.eventLastReplayedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetEventLastReplayedTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.replay.replayStartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetReplayStartTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.replay.replayEndTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetReplayEndTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.replay.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeReplay).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.endpoint.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.endpoint.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetName()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.endpoint.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetDescription()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.endpoint.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetState()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.endpoint.stateReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetStateReason()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.endpoint.endpointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetEndpointId()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.endpoint.endpointUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetEndpointUrl()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.endpoint.eventBuses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetEventBuses()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.eventbridge.endpoint.routingConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetRoutingConfig()).ToDataRes(types.Dict)
+	},
+	"aws.eventbridge.endpoint.replicationConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetReplicationConfig()).ToDataRes(types.Dict)
+	},
+	"aws.eventbridge.endpoint.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetRoleArn()).ToDataRes(types.String)
+	},
+	"aws.eventbridge.endpoint.iamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.eventbridge.endpoint.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"aws.eventbridge.endpoint.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEventbridgeEndpoint).GetLastModifiedTime()).ToDataRes(types.Time)
 	},
 	"aws.eventbridge.pipe.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEventbridgePipe).GetArn()).ToDataRes(types.String)
@@ -41061,6 +41308,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEventbridge).ScheduleGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.eventbridge.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestinations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).ApiDestinations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archives": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).Archives, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).Replays, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridge).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.eventbridge.eventBus.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgeEventBus).__id, ok = v.Value.(string)
 		return
@@ -41139,6 +41406,302 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eventbridge.rule.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEventbridgeRule).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.connection.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.authorizationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).AuthorizationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.connectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).ConnectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.stateReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).StateReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.lastAuthorizedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).LastAuthorizedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.secretArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).SecretArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.secret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).Secret, ok = plugin.RawToTValue[*mqlAwsSecretsmanagerSecret](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.authParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).AuthParameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.connection.invocationHttpParameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeConnection).InvocationHttpParameters, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.apiDestination.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.apiDestinationState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).ApiDestinationState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.connectionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).ConnectionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.connection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).Connection, ok = plugin.RawToTValue[*mqlAwsEventbridgeConnection](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.invocationEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).InvocationEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.httpMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).HttpMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.invocationRateLimitPerSecond": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).InvocationRateLimitPerSecond, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.apiDestination.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeApiDestination).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.archive.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.archiveName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).ArchiveName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.eventSourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).EventSourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.eventSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).EventSource, ok = plugin.RawToTValue[*mqlAwsEventbridgeEventBus](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.stateReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).StateReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.retentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).RetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.eventCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).EventCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.archive.eventPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeArchive).EventPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.replay.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.replayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).ReplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.eventSourceArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).EventSourceArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.eventSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).EventSource, ok = plugin.RawToTValue[*mqlAwsEventbridgeArchive](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.destinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).DestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).Destination, ok = plugin.RawToTValue[*mqlAwsEventbridgeEventBus](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.filterArns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).FilterArns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.stateReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).StateReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.eventStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).EventStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.eventEndTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).EventEndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.eventLastReplayedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).EventLastReplayedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.replayStartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).ReplayStartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.replayEndTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).ReplayEndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.replay.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeReplay).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eventbridge.endpoint.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.stateReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).StateReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.endpointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).EndpointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.endpointUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).EndpointUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.eventBuses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).EventBuses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.routingConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).RoutingConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.replicationConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).ReplicationConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.iamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).IamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.eventbridge.endpoint.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEventbridgeEndpoint).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.eventbridge.pipe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -97627,11 +98190,16 @@ type mqlAwsEventbridge struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsEventbridgeInternal it will be used here
-	EventBuses     plugin.TValue[[]any]
-	Rules          plugin.TValue[[]any]
-	Pipes          plugin.TValue[[]any]
-	Schedules      plugin.TValue[[]any]
-	ScheduleGroups plugin.TValue[[]any]
+	EventBuses      plugin.TValue[[]any]
+	Rules           plugin.TValue[[]any]
+	Pipes           plugin.TValue[[]any]
+	Schedules       plugin.TValue[[]any]
+	ScheduleGroups  plugin.TValue[[]any]
+	Connections     plugin.TValue[[]any]
+	ApiDestinations plugin.TValue[[]any]
+	Archives        plugin.TValue[[]any]
+	Replays         plugin.TValue[[]any]
+	Endpoints       plugin.TValue[[]any]
 }
 
 // createAwsEventbridge creates a new instance of this resource
@@ -97748,6 +98316,86 @@ func (c *mqlAwsEventbridge) GetScheduleGroups() *plugin.TValue[[]any] {
 		}
 
 		return c.scheduleGroups()
+	})
+}
+
+func (c *mqlAwsEventbridge) GetConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Connections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge", c.__id, "connections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.connections()
+	})
+}
+
+func (c *mqlAwsEventbridge) GetApiDestinations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiDestinations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge", c.__id, "apiDestinations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiDestinations()
+	})
+}
+
+func (c *mqlAwsEventbridge) GetArchives() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Archives, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge", c.__id, "archives")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.archives()
+	})
+}
+
+func (c *mqlAwsEventbridge) GetReplays() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Replays, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge", c.__id, "replays")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.replays()
+	})
+}
+
+func (c *mqlAwsEventbridge) GetEndpoints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge", c.__id, "endpoints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.endpoints()
 	})
 }
 
@@ -97949,6 +98597,634 @@ func (c *mqlAwsEventbridgeRule) GetTargets() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Targets, func() ([]any, error) {
 		return c.targets()
 	})
+}
+
+// mqlAwsEventbridgeConnection for the aws.eventbridge.connection resource
+type mqlAwsEventbridgeConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgeConnectionInternal
+	Arn                      plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	Description              plugin.TValue[string]
+	AuthorizationType        plugin.TValue[string]
+	ConnectionState          plugin.TValue[string]
+	StateReason              plugin.TValue[string]
+	CreationTime             plugin.TValue[*time.Time]
+	LastModifiedTime         plugin.TValue[*time.Time]
+	LastAuthorizedTime       plugin.TValue[*time.Time]
+	SecretArn                plugin.TValue[string]
+	Secret                   plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	AuthParameters           plugin.TValue[any]
+	InvocationHttpParameters plugin.TValue[any]
+}
+
+// createAwsEventbridgeConnection creates a new instance of this resource
+func createAwsEventbridgeConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.connection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeConnection) MqlName() string {
+	return "aws.eventbridge.connection"
+}
+
+func (c *mqlAwsEventbridgeConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeConnection) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEventbridgeConnection) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEventbridgeConnection) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsEventbridgeConnection) GetAuthorizationType() *plugin.TValue[string] {
+	return &c.AuthorizationType
+}
+
+func (c *mqlAwsEventbridgeConnection) GetConnectionState() *plugin.TValue[string] {
+	return &c.ConnectionState
+}
+
+func (c *mqlAwsEventbridgeConnection) GetStateReason() *plugin.TValue[string] {
+	return &c.StateReason
+}
+
+func (c *mqlAwsEventbridgeConnection) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsEventbridgeConnection) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAwsEventbridgeConnection) GetLastAuthorizedTime() *plugin.TValue[*time.Time] {
+	return &c.LastAuthorizedTime
+}
+
+func (c *mqlAwsEventbridgeConnection) GetSecretArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SecretArn, func() (string, error) {
+		return c.secretArn()
+	})
+}
+
+func (c *mqlAwsEventbridgeConnection) GetSecret() *plugin.TValue[*mqlAwsSecretsmanagerSecret] {
+	return plugin.GetOrCompute[*mqlAwsSecretsmanagerSecret](&c.Secret, func() (*mqlAwsSecretsmanagerSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.connection", c.__id, "secret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecretsmanagerSecret), nil
+			}
+		}
+
+		return c.secret()
+	})
+}
+
+func (c *mqlAwsEventbridgeConnection) GetAuthParameters() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.AuthParameters, func() (any, error) {
+		return c.authParameters()
+	})
+}
+
+func (c *mqlAwsEventbridgeConnection) GetInvocationHttpParameters() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.InvocationHttpParameters, func() (any, error) {
+		return c.invocationHttpParameters()
+	})
+}
+
+// mqlAwsEventbridgeApiDestination for the aws.eventbridge.apiDestination resource
+type mqlAwsEventbridgeApiDestination struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgeApiDestinationInternal
+	Arn                          plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Region                       plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	ApiDestinationState          plugin.TValue[string]
+	ConnectionArn                plugin.TValue[string]
+	Connection                   plugin.TValue[*mqlAwsEventbridgeConnection]
+	InvocationEndpoint           plugin.TValue[string]
+	HttpMethod                   plugin.TValue[string]
+	InvocationRateLimitPerSecond plugin.TValue[int64]
+	CreationTime                 plugin.TValue[*time.Time]
+	LastModifiedTime             plugin.TValue[*time.Time]
+}
+
+// createAwsEventbridgeApiDestination creates a new instance of this resource
+func createAwsEventbridgeApiDestination(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeApiDestination{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.apiDestination", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeApiDestination) MqlName() string {
+	return "aws.eventbridge.apiDestination"
+}
+
+func (c *mqlAwsEventbridgeApiDestination) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetApiDestinationState() *plugin.TValue[string] {
+	return &c.ApiDestinationState
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetConnectionArn() *plugin.TValue[string] {
+	return &c.ConnectionArn
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetConnection() *plugin.TValue[*mqlAwsEventbridgeConnection] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeConnection](&c.Connection, func() (*mqlAwsEventbridgeConnection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.apiDestination", c.__id, "connection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeConnection), nil
+			}
+		}
+
+		return c.connection()
+	})
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetInvocationEndpoint() *plugin.TValue[string] {
+	return &c.InvocationEndpoint
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetHttpMethod() *plugin.TValue[string] {
+	return &c.HttpMethod
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetInvocationRateLimitPerSecond() *plugin.TValue[int64] {
+	return &c.InvocationRateLimitPerSecond
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsEventbridgeApiDestination) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+// mqlAwsEventbridgeArchive for the aws.eventbridge.archive resource
+type mqlAwsEventbridgeArchive struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgeArchiveInternal
+	Arn            plugin.TValue[string]
+	ArchiveName    plugin.TValue[string]
+	Region         plugin.TValue[string]
+	EventSourceArn plugin.TValue[string]
+	EventSource    plugin.TValue[*mqlAwsEventbridgeEventBus]
+	State          plugin.TValue[string]
+	StateReason    plugin.TValue[string]
+	RetentionDays  plugin.TValue[int64]
+	SizeBytes      plugin.TValue[int64]
+	EventCount     plugin.TValue[int64]
+	CreationTime   plugin.TValue[*time.Time]
+	Description    plugin.TValue[string]
+	EventPattern   plugin.TValue[string]
+}
+
+// createAwsEventbridgeArchive creates a new instance of this resource
+func createAwsEventbridgeArchive(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeArchive{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.archive", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeArchive) MqlName() string {
+	return "aws.eventbridge.archive"
+}
+
+func (c *mqlAwsEventbridgeArchive) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeArchive) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeArchive) GetArchiveName() *plugin.TValue[string] {
+	return &c.ArchiveName
+}
+
+func (c *mqlAwsEventbridgeArchive) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEventbridgeArchive) GetEventSourceArn() *plugin.TValue[string] {
+	return &c.EventSourceArn
+}
+
+func (c *mqlAwsEventbridgeArchive) GetEventSource() *plugin.TValue[*mqlAwsEventbridgeEventBus] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeEventBus](&c.EventSource, func() (*mqlAwsEventbridgeEventBus, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.archive", c.__id, "eventSource")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeEventBus), nil
+			}
+		}
+
+		return c.eventSource()
+	})
+}
+
+func (c *mqlAwsEventbridgeArchive) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEventbridgeArchive) GetStateReason() *plugin.TValue[string] {
+	return &c.StateReason
+}
+
+func (c *mqlAwsEventbridgeArchive) GetRetentionDays() *plugin.TValue[int64] {
+	return &c.RetentionDays
+}
+
+func (c *mqlAwsEventbridgeArchive) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlAwsEventbridgeArchive) GetEventCount() *plugin.TValue[int64] {
+	return &c.EventCount
+}
+
+func (c *mqlAwsEventbridgeArchive) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsEventbridgeArchive) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+func (c *mqlAwsEventbridgeArchive) GetEventPattern() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EventPattern, func() (string, error) {
+		return c.eventPattern()
+	})
+}
+
+// mqlAwsEventbridgeReplay for the aws.eventbridge.replay resource
+type mqlAwsEventbridgeReplay struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEventbridgeReplayInternal
+	Arn                   plugin.TValue[string]
+	ReplayName            plugin.TValue[string]
+	Region                plugin.TValue[string]
+	EventSourceArn        plugin.TValue[string]
+	EventSource           plugin.TValue[*mqlAwsEventbridgeArchive]
+	DestinationArn        plugin.TValue[string]
+	Destination           plugin.TValue[*mqlAwsEventbridgeEventBus]
+	FilterArns            plugin.TValue[[]any]
+	State                 plugin.TValue[string]
+	StateReason           plugin.TValue[string]
+	EventStartTime        plugin.TValue[*time.Time]
+	EventEndTime          plugin.TValue[*time.Time]
+	EventLastReplayedTime plugin.TValue[*time.Time]
+	ReplayStartTime       plugin.TValue[*time.Time]
+	ReplayEndTime         plugin.TValue[*time.Time]
+	Description           plugin.TValue[string]
+}
+
+// createAwsEventbridgeReplay creates a new instance of this resource
+func createAwsEventbridgeReplay(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeReplay{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.replay", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeReplay) MqlName() string {
+	return "aws.eventbridge.replay"
+}
+
+func (c *mqlAwsEventbridgeReplay) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeReplay) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeReplay) GetReplayName() *plugin.TValue[string] {
+	return &c.ReplayName
+}
+
+func (c *mqlAwsEventbridgeReplay) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsEventbridgeReplay) GetEventSourceArn() *plugin.TValue[string] {
+	return &c.EventSourceArn
+}
+
+func (c *mqlAwsEventbridgeReplay) GetEventSource() *plugin.TValue[*mqlAwsEventbridgeArchive] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeArchive](&c.EventSource, func() (*mqlAwsEventbridgeArchive, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.replay", c.__id, "eventSource")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeArchive), nil
+			}
+		}
+
+		return c.eventSource()
+	})
+}
+
+func (c *mqlAwsEventbridgeReplay) GetDestinationArn() *plugin.TValue[string] {
+	return &c.DestinationArn
+}
+
+func (c *mqlAwsEventbridgeReplay) GetDestination() *plugin.TValue[*mqlAwsEventbridgeEventBus] {
+	return plugin.GetOrCompute[*mqlAwsEventbridgeEventBus](&c.Destination, func() (*mqlAwsEventbridgeEventBus, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.replay", c.__id, "destination")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEventbridgeEventBus), nil
+			}
+		}
+
+		return c.destination()
+	})
+}
+
+func (c *mqlAwsEventbridgeReplay) GetFilterArns() *plugin.TValue[[]any] {
+	return &c.FilterArns
+}
+
+func (c *mqlAwsEventbridgeReplay) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEventbridgeReplay) GetStateReason() *plugin.TValue[string] {
+	return &c.StateReason
+}
+
+func (c *mqlAwsEventbridgeReplay) GetEventStartTime() *plugin.TValue[*time.Time] {
+	return &c.EventStartTime
+}
+
+func (c *mqlAwsEventbridgeReplay) GetEventEndTime() *plugin.TValue[*time.Time] {
+	return &c.EventEndTime
+}
+
+func (c *mqlAwsEventbridgeReplay) GetEventLastReplayedTime() *plugin.TValue[*time.Time] {
+	return &c.EventLastReplayedTime
+}
+
+func (c *mqlAwsEventbridgeReplay) GetReplayStartTime() *plugin.TValue[*time.Time] {
+	return &c.ReplayStartTime
+}
+
+func (c *mqlAwsEventbridgeReplay) GetReplayEndTime() *plugin.TValue[*time.Time] {
+	return &c.ReplayEndTime
+}
+
+func (c *mqlAwsEventbridgeReplay) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
+	})
+}
+
+// mqlAwsEventbridgeEndpoint for the aws.eventbridge.endpoint resource
+type mqlAwsEventbridgeEndpoint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEventbridgeEndpointInternal it will be used here
+	Arn               plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	State             plugin.TValue[string]
+	StateReason       plugin.TValue[string]
+	EndpointId        plugin.TValue[string]
+	EndpointUrl       plugin.TValue[string]
+	EventBuses        plugin.TValue[[]any]
+	RoutingConfig     plugin.TValue[any]
+	ReplicationConfig plugin.TValue[any]
+	RoleArn           plugin.TValue[string]
+	IamRole           plugin.TValue[*mqlAwsIamRole]
+	CreationTime      plugin.TValue[*time.Time]
+	LastModifiedTime  plugin.TValue[*time.Time]
+}
+
+// createAwsEventbridgeEndpoint creates a new instance of this resource
+func createAwsEventbridgeEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEventbridgeEndpoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eventbridge.endpoint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEventbridgeEndpoint) MqlName() string {
+	return "aws.eventbridge.endpoint"
+}
+
+func (c *mqlAwsEventbridgeEndpoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetStateReason() *plugin.TValue[string] {
+	return &c.StateReason
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetEndpointId() *plugin.TValue[string] {
+	return &c.EndpointId
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetEndpointUrl() *plugin.TValue[string] {
+	return &c.EndpointUrl
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetEventBuses() *plugin.TValue[[]any] {
+	return &c.EventBuses
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetRoutingConfig() *plugin.TValue[any] {
+	return &c.RoutingConfig
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetReplicationConfig() *plugin.TValue[any] {
+	return &c.ReplicationConfig
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetRoleArn() *plugin.TValue[string] {
+	return &c.RoleArn
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.IamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eventbridge.endpoint", c.__id, "iamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.iamRole()
+	})
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAwsEventbridgeEndpoint) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
 }
 
 // mqlAwsEventbridgePipe for the aws.eventbridge.pipe resource
