@@ -164,10 +164,204 @@ private googleworkspace.user @defaults("primaryEmail") {
   lastLoginTime time
   // User's account creation time
   creationTime time
+  // User's deletion time (empty unless the account was soft-deleted)
+  deletionTime time
+  // Hash format of the password property (MD5, SHA-1, crypt)
+  //
+  // Empty unless explicitly set during user creation. Surface to spot weak password storage on imported accounts.
+  hashFunction string
+  // SSH public keys configured on the user
+  //
+  // High-signal for audits that ask which workspace identities can SSH into GCE/POSIX-linked hosts.
+  sshPublicKeys []googleworkspace.user.sshPublicKey
+  // POSIX accounts linked to the user
+  //
+  // Ties the workspace identity to Linux/UNIX system accounts via username, uid, gid, home directory, and shell.
+  posixAccounts []googleworkspace.user.posixAccount
+  // Secondary email addresses
+  //
+  // Spoofing and account-recovery audits often start here.
+  emails []googleworkspace.user.email
+  // External identifiers
+  //
+  // Holds employee IDs, network IDs, and other HR/identity-system references.
+  externalIds []googleworkspace.user.externalId
+  // Phone numbers
+  //
+  // Includes MFA/recovery fallback numbers and on-call contacts.
+  phones []googleworkspace.user.phone
+  // Organizations the user belongs to
+  //
+  // Maps the workspace identity to its employer or division.
+  organizations []googleworkspace.user.organization
+  // Postal addresses
+  //
+  // Relevant for data-residency and compliance audits.
+  addresses []googleworkspace.user.address
+  // Custom org-defined schema fields keyed by schema name
+  //
+  // Each value is a dict of `{field_name: field_value}`. Workspace admins use this to attach org-specific attributes (e.g. cost center, badge number, clearance) — audits that care about those attributes need this surface. Kept as `dict` because the inner schema varies per organization.
+  customSchemas dict
   // Retrieves latest report for the user
   usageReport() googleworkspace.report.usage
   // Returns the user-issued tokens to 3rd party applications
   tokens() []googleworkspace.token
+}
+
+// Secondary email address attached to a Google Workspace user
+private googleworkspace.user.email @defaults("address type primary") {
+  // Email address
+  address string
+  // Email type
+  //
+  // One of `work`, `home`, `other`, or `custom`. When `custom`, `customType` carries the label.
+  type string
+  // Custom type label (populated when `type` is `custom`)
+  customType string
+  // Whether this is the user's primary email
+  primary bool
+}
+
+// Phone number attached to a Google Workspace user
+private googleworkspace.user.phone @defaults("value type primary") {
+  // Phone number (free-form; consumers should not assume E.164)
+  value string
+  // Phone type (work, home, mobile, main, pager, callback, fax variants, custom)
+  type string
+  // Custom type label (populated when `type` is `custom`)
+  customType string
+  // Whether this is the user's primary phone
+  primary bool
+}
+
+// External identifier attached to a Google Workspace user
+//
+// Examine a single entry from the user's external-ID list — the employee
+// IDs, network IDs, account IDs, and organization-defined identifiers HR
+// and identity-management systems hang off the workspace identity.
+private googleworkspace.user.externalId @defaults("value type") {
+  // External ID value
+  value string
+  // External ID type
+  //
+  // One of `account`, `customer`, `login_id`, `network`, `organization`, or `custom`. When `custom`, `customType` carries the label.
+  type string
+  // Custom type label (populated when `type` is `custom`)
+  customType string
+}
+
+// Postal address attached to a Google Workspace user
+//
+// Examine a single entry from the user's address list — used for
+// data-residency, jurisdiction, and contact-information audits.
+// `sourceIsStructured` reports whether the address was supplied as
+// individual fields (true) or as the free-form `formatted` string (false).
+private googleworkspace.user.address @defaults("formatted type primary") {
+  // Formatted single-line address
+  formatted string
+  // Address type (work, home, other, custom)
+  type string
+  // Custom type label (populated when `type` is `custom`)
+  customType string
+  // Whether the address was supplied as structured fields (true) or only as `formatted` (false)
+  sourceIsStructured bool
+  // PO box
+  poBox string
+  // Extended address line (apartment, suite, etc.)
+  extendedAddress string
+  // Street address
+  streetAddress string
+  // City or locality
+  locality string
+  // State, province, or region
+  region string
+  // Postal or ZIP code
+  postalCode string
+  // Country name
+  country string
+  // ISO 3166 country code
+  countryCode string
+  // Whether this is the user's primary address
+  primary bool
+}
+
+// Organization a Google Workspace user belongs to
+//
+// Examine a single entry from the user's organization list — the employer,
+// department, title, location, cost center, and full-time-equivalent fraction
+// reported against the workspace identity. The `primary` entry is the one
+// that drives the user's display in the directory.
+private googleworkspace.user.organization @defaults("name title department primary") {
+  // Organization name (typically the employer)
+  name string
+  // Job title
+  title string
+  // Whether this is the user's primary organization
+  primary bool
+  // Organization type
+  //
+  // One of `work`, `school`, `domain_only`, `unknown`, or `custom`. When `custom`, `customType` carries the label.
+  type string
+  // Custom type label (populated when `type` is `custom`)
+  customType string
+  // Department within the organization
+  department string
+  // Stock or organization-defined symbol
+  symbol string
+  // Office or branch location
+  location string
+  // Free-form description
+  description string
+  // Cost-center identifier
+  costCenter string
+  // Full-time-equivalent fraction in basis points (e.g. 10000 = 100% FTE)
+  fullTimeEquivalent int
+  // Email domain associated with the organization
+  domain string
+}
+
+// POSIX account linked to a Google Workspace user
+//
+// Examine a single entry from the user's POSIX-account list — the Linux /
+// UNIX-style username, uid, gid, home directory, and shell associated with
+// the workspace identity. Used by Linux SSO integrations (sssd, ldap) and
+// any audit that ties Google identities to OS-level accounts.
+private googleworkspace.user.posixAccount @defaults("username uid systemId primary") {
+  // POSIX username
+  username string
+  // POSIX user id
+  uid int
+  // POSIX group id
+  gid int
+  // Home directory path
+  homeDirectory string
+  // Login shell
+  shell string
+  // System identifier the POSIX account is scoped to
+  systemId string
+  // Account identifier within the system
+  accountId string
+  // Operating-system type of the account (LINUX, WINDOWS, UNSPECIFIED)
+  operatingSystemType string
+  // Whether this is the user's primary POSIX account
+  primary bool
+}
+
+// SSH public key registered against a Google Workspace user
+//
+// Examine a single SSH public key — high-signal for audits asking which
+// workspace identities can SSH into GCE / POSIX-linked hosts. `key` is the
+// raw public key blob (OpenSSH or RFC 4716 format). `expirationTimeUsec`
+// is the key's expiration timestamp in microseconds since the Unix epoch
+// (empty for non-expiring keys). `fingerprint` is Google's SHA-256
+// fingerprint of the key.
+private googleworkspace.user.sshPublicKey @defaults("fingerprint expirationTimeUsec") {
+  // Public key material
+  key string
+  // Expiration timestamp in microseconds since the Unix epoch (empty for non-expiring keys)
+  expirationTimeUsec string
+  // SHA-256 fingerprint of the key
+  fingerprint string
 }
 
 // Google Workspace token
@@ -258,6 +452,21 @@ private googleworkspace.role @defaults("name") {
   isSuperAdminRole bool
   // The set of privileges
   privileges []dict
+  // The set of privileges as typed entries with `privilegeName` and `serviceId`
+  rolePrivileges []googleworkspace.role.privilege
+}
+
+// Google Workspace role privilege
+//
+// Examine a single privilege granted by a Workspace admin role. The
+// `privilegeName` is the admin API privilege string (for example
+// `USERS_READ` or `MANAGE_DOMAIN_SETTINGS`); `serviceId` is the obfuscated
+// ID of the service the privilege scopes to.
+private googleworkspace.role.privilege @defaults("privilegeName serviceId") {
+  // The name of the privilege
+  privilegeName string
+  // The obfuscated ID of the service this privilege is for
+  serviceId string
 }
 
 // Google Workspace apps reports
@@ -383,6 +592,24 @@ private googleworkspace.endpoint @defaults("deviceType model serialNumber manage
   androidAttributes dict
   // Endpoint Verification signals — certificate inventory, browser inventory, and additional signals (hotfixes, AV, firewall, secure boot)
   endpointVerificationAttributes dict
+  // Whether antivirus software is installed (parsed from `endpointVerificationAttributes.additionalSignals.av_installed`)
+  //
+  // Null when the device does not report antivirus state (non-Endpoint-Verification platforms, missing signal).
+  antivirusInstalled bool
+  // Whether antivirus software is enabled (parsed from `endpointVerificationAttributes.additionalSignals.av_enabled`)
+  //
+  // Null when the device does not report antivirus state.
+  antivirusEnabled bool
+  // Whether the OS-native firewall is enabled (parsed from `endpointVerificationAttributes.additionalSignals.is_os_native_firewall_enabled`)
+  //
+  // Null when the device does not report firewall state.
+  osFirewallEnabled bool
+  // Whether Secure Boot is enabled (parsed from `endpointVerificationAttributes.additionalSignals.is_secure_boot_enabled`)
+  //
+  // Null when the device does not report Secure Boot state.
+  secureBootEnabled bool
+  // Windows domain name reported by the device (empty for non-Windows or non-domain-joined devices)
+  windowsDomainName string
   // Users registered on the device (BYOD devices may have multiple)
   users() []googleworkspace.endpoint.user
 }

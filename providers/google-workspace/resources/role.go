@@ -53,6 +53,22 @@ func newMqlGoogleWorkspaceRole(runtime *plugin.Runtime, entry *directory.Role) (
 	if err != nil {
 		return nil, err
 	}
+
+	typedPrivileges := make([]any, 0, len(entry.RolePrivileges))
+	for _, p := range entry.RolePrivileges {
+		if p == nil {
+			continue
+		}
+		mqlPriv, err := CreateResource(runtime, "googleworkspace.role.privilege", map[string]*llx.RawData{
+			"privilegeName": llx.StringData(p.PrivilegeName),
+			"serviceId":     llx.StringData(p.ServiceId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		typedPrivileges = append(typedPrivileges, mqlPriv)
+	}
+
 	return CreateResource(runtime, "googleworkspace.role", map[string]*llx.RawData{
 		"id":               llx.IntData(entry.RoleId),
 		"name":             llx.StringData(entry.RoleName),
@@ -60,7 +76,12 @@ func newMqlGoogleWorkspaceRole(runtime *plugin.Runtime, entry *directory.Role) (
 		"isSystemRole":     llx.BoolData(entry.IsSystemRole),
 		"isSuperAdminRole": llx.BoolData(entry.IsSuperAdminRole),
 		"privileges":       llx.ArrayData(privileges, types.Any),
+		"rolePrivileges":   llx.ArrayData(typedPrivileges, types.Resource("googleworkspace.role.privilege")),
 	})
+}
+
+func (g *mqlGoogleworkspaceRolePrivilege) id() (string, error) {
+	return "googleworkspace.role.privilege/" + g.PrivilegeName.Data + "/" + g.ServiceId.Data, nil
 }
 
 func (g *mqlGoogleworkspaceRole) id() (string, error) {

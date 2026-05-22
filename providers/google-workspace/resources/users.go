@@ -4,7 +4,9 @@
 package resources
 
 import (
+	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +18,7 @@ import (
 
 	directory "google.golang.org/api/admin/directory/v1"
 	reports "google.golang.org/api/admin/reports/v1"
+	"google.golang.org/api/googleapi"
 )
 
 func (g *mqlGoogleworkspace) users() ([]any, error) {
@@ -57,16 +60,53 @@ func (g *mqlGoogleworkspace) users() ([]any, error) {
 func newMqlGoogleWorkspaceUser(runtime *plugin.Runtime, entry *directory.User) (any, error) {
 	var lastLoginTime *time.Time
 	var creationTime *time.Time
+	var deletionTime *time.Time
 
-	llt, err := time.Parse(time.RFC3339, entry.LastLoginTime)
-	if err == nil {
+	if llt, err := time.Parse(time.RFC3339, entry.LastLoginTime); err == nil {
 		lastLoginTime = &llt
 	}
-
-	ct, err := time.Parse(time.RFC3339, entry.CreationTime)
-	if err == nil {
+	if ct, err := time.Parse(time.RFC3339, entry.CreationTime); err == nil {
 		creationTime = &ct
 	}
+	if dt, err := time.Parse(time.RFC3339, entry.DeletionTime); err == nil {
+		deletionTime = &dt
+	}
+
+	// User multi-value fields (SshPublicKeys, PosixAccounts, Emails,
+	// ExternalIds, Phones, Organizations, Addresses) are typed `interface{}` on
+	// the SDK struct because the create/update API accepts a single entry as
+	// well as a list, but list responses always return an array. Marshal once
+	// into the documented shape so we can construct typed sub-resources per
+	// entry.
+	sshKeys, err := buildUserSshPublicKeys(runtime, entry.SshPublicKeys)
+	if err != nil {
+		return nil, err
+	}
+	posix, err := buildUserPosixAccounts(runtime, entry.PosixAccounts)
+	if err != nil {
+		return nil, err
+	}
+	emails, err := buildUserEmails(runtime, entry.Emails)
+	if err != nil {
+		return nil, err
+	}
+	externalIds, err := buildUserExternalIds(runtime, entry.ExternalIds)
+	if err != nil {
+		return nil, err
+	}
+	phones, err := buildUserPhones(runtime, entry.Phones)
+	if err != nil {
+		return nil, err
+	}
+	orgs, err := buildUserOrganizations(runtime, entry.Organizations)
+	if err != nil {
+		return nil, err
+	}
+	addresses, err := buildUserAddresses(runtime, entry.Addresses)
+	if err != nil {
+		return nil, err
+	}
+	customSchemas := customSchemasToDict(entry.CustomSchemas)
 
 	return CreateResource(runtime, "googleworkspace.user", map[string]*llx.RawData{
 		"id":                         llx.StringData(entry.Id),
@@ -96,11 +136,326 @@ func newMqlGoogleWorkspaceUser(runtime *plugin.Runtime, entry *directory.User) (
 		"customerId":                 llx.StringData(entry.CustomerId),
 		"lastLoginTime":              llx.TimeDataPtr(lastLoginTime),
 		"creationTime":               llx.TimeDataPtr(creationTime),
+		"deletionTime":               llx.TimeDataPtr(deletionTime),
+		"hashFunction":               llx.StringData(entry.HashFunction),
+		"sshPublicKeys":              llx.ArrayData(sshKeys, types.Resource("googleworkspace.user.sshPublicKey")),
+		"posixAccounts":              llx.ArrayData(posix, types.Resource("googleworkspace.user.posixAccount")),
+		"emails":                     llx.ArrayData(emails, types.Resource("googleworkspace.user.email")),
+		"externalIds":                llx.ArrayData(externalIds, types.Resource("googleworkspace.user.externalId")),
+		"phones":                     llx.ArrayData(phones, types.Resource("googleworkspace.user.phone")),
+		"organizations":              llx.ArrayData(orgs, types.Resource("googleworkspace.user.organization")),
+		"addresses":                  llx.ArrayData(addresses, types.Resource("googleworkspace.user.address")),
+		"customSchemas":              llx.DictData(customSchemas),
 	})
 }
 
 func (g *mqlGoogleworkspaceUser) id() (string, error) {
 	return "googleworkspace.user/" + g.Id.Data, g.Id.Error
+}
+
+// unmarshalUserMultiValue converts a `directory.User` multi-value field
+// (`interface{}` on the SDK struct because the API accepts a single entry
+// or an array on create/update) into a typed slice. nil and non-array
+// payloads collapse to an empty slice — list responses always return an
+// array but we tolerate the create/update shape too. Unmarshal errors are
+// also swallowed: an unexpected wire-format change should leave the user
+// queryable, just with an empty multi-value slice for the field in question.
+func unmarshalUserMultiValue[T any](v any) []T {
+	if v == nil {
+		return nil
+	}
+	data, err := json.Marshal(v)
+	if err != nil {
+		return nil
+	}
+	var out []T
+	if err := json.Unmarshal(data, &out); err != nil {
+		return nil
+	}
+	return out
+}
+
+type userEmail struct {
+	Address    string `json:"address"`
+	Type       string `json:"type"`
+	CustomType string `json:"customType"`
+	Primary    bool   `json:"primary"`
+}
+
+func buildUserEmails(runtime *plugin.Runtime, v any) ([]any, error) {
+	entries := unmarshalUserMultiValue[userEmail](v)
+	out := make([]any, 0, len(entries))
+	for _, e := range entries {
+		mql, err := CreateResource(runtime, "googleworkspace.user.email", map[string]*llx.RawData{
+			"address":    llx.StringData(e.Address),
+			"type":       llx.StringData(e.Type),
+			"customType": llx.StringData(e.CustomType),
+			"primary":    llx.BoolData(e.Primary),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mql)
+	}
+	return out, nil
+}
+
+type userPhone struct {
+	Value      string `json:"value"`
+	Type       string `json:"type"`
+	CustomType string `json:"customType"`
+	Primary    bool   `json:"primary"`
+}
+
+func buildUserPhones(runtime *plugin.Runtime, v any) ([]any, error) {
+	entries := unmarshalUserMultiValue[userPhone](v)
+	out := make([]any, 0, len(entries))
+	for _, e := range entries {
+		mql, err := CreateResource(runtime, "googleworkspace.user.phone", map[string]*llx.RawData{
+			"value":      llx.StringData(e.Value),
+			"type":       llx.StringData(e.Type),
+			"customType": llx.StringData(e.CustomType),
+			"primary":    llx.BoolData(e.Primary),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mql)
+	}
+	return out, nil
+}
+
+type userExternalId struct {
+	Value      string `json:"value"`
+	Type       string `json:"type"`
+	CustomType string `json:"customType"`
+}
+
+func buildUserExternalIds(runtime *plugin.Runtime, v any) ([]any, error) {
+	entries := unmarshalUserMultiValue[userExternalId](v)
+	out := make([]any, 0, len(entries))
+	for _, e := range entries {
+		mql, err := CreateResource(runtime, "googleworkspace.user.externalId", map[string]*llx.RawData{
+			"value":      llx.StringData(e.Value),
+			"type":       llx.StringData(e.Type),
+			"customType": llx.StringData(e.CustomType),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mql)
+	}
+	return out, nil
+}
+
+type userAddress struct {
+	Formatted          string `json:"formatted"`
+	Type               string `json:"type"`
+	CustomType         string `json:"customType"`
+	SourceIsStructured bool   `json:"sourceIsStructured"`
+	PoBox              string `json:"poBox"`
+	ExtendedAddress    string `json:"extendedAddress"`
+	StreetAddress      string `json:"streetAddress"`
+	Locality           string `json:"locality"`
+	Region             string `json:"region"`
+	PostalCode         string `json:"postalCode"`
+	Country            string `json:"country"`
+	CountryCode        string `json:"countryCode"`
+	Primary            bool   `json:"primary"`
+}
+
+func buildUserAddresses(runtime *plugin.Runtime, v any) ([]any, error) {
+	entries := unmarshalUserMultiValue[userAddress](v)
+	out := make([]any, 0, len(entries))
+	for _, e := range entries {
+		mql, err := CreateResource(runtime, "googleworkspace.user.address", map[string]*llx.RawData{
+			"formatted":          llx.StringData(e.Formatted),
+			"type":               llx.StringData(e.Type),
+			"customType":         llx.StringData(e.CustomType),
+			"sourceIsStructured": llx.BoolData(e.SourceIsStructured),
+			"poBox":              llx.StringData(e.PoBox),
+			"extendedAddress":    llx.StringData(e.ExtendedAddress),
+			"streetAddress":      llx.StringData(e.StreetAddress),
+			"locality":           llx.StringData(e.Locality),
+			"region":             llx.StringData(e.Region),
+			"postalCode":         llx.StringData(e.PostalCode),
+			"country":            llx.StringData(e.Country),
+			"countryCode":        llx.StringData(e.CountryCode),
+			"primary":            llx.BoolData(e.Primary),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mql)
+	}
+	return out, nil
+}
+
+type userOrganization struct {
+	Name               string `json:"name"`
+	Title              string `json:"title"`
+	Primary            bool   `json:"primary"`
+	Type               string `json:"type"`
+	CustomType         string `json:"customType"`
+	Department         string `json:"department"`
+	Symbol             string `json:"symbol"`
+	Location           string `json:"location"`
+	Description        string `json:"description"`
+	CostCenter         string `json:"costCenter"`
+	FullTimeEquivalent int64  `json:"fullTimeEquivalent"`
+	Domain             string `json:"domain"`
+}
+
+func buildUserOrganizations(runtime *plugin.Runtime, v any) ([]any, error) {
+	entries := unmarshalUserMultiValue[userOrganization](v)
+	out := make([]any, 0, len(entries))
+	for _, e := range entries {
+		mql, err := CreateResource(runtime, "googleworkspace.user.organization", map[string]*llx.RawData{
+			"name":               llx.StringData(e.Name),
+			"title":              llx.StringData(e.Title),
+			"primary":            llx.BoolData(e.Primary),
+			"type":               llx.StringData(e.Type),
+			"customType":         llx.StringData(e.CustomType),
+			"department":         llx.StringData(e.Department),
+			"symbol":             llx.StringData(e.Symbol),
+			"location":           llx.StringData(e.Location),
+			"description":        llx.StringData(e.Description),
+			"costCenter":         llx.StringData(e.CostCenter),
+			"fullTimeEquivalent": llx.IntData(e.FullTimeEquivalent),
+			"domain":             llx.StringData(e.Domain),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mql)
+	}
+	return out, nil
+}
+
+type userPosixAccount struct {
+	Username            string `json:"username"`
+	Uid                 string `json:"uid"` // SDK encodes as string ("uint64-as-string")
+	Gid                 string `json:"gid"`
+	HomeDirectory       string `json:"homeDirectory"`
+	Shell               string `json:"shell"`
+	SystemId            string `json:"systemId"`
+	AccountId           string `json:"accountId"`
+	OperatingSystemType string `json:"operatingSystemType"`
+	Primary             bool   `json:"primary"`
+}
+
+func buildUserPosixAccounts(runtime *plugin.Runtime, v any) ([]any, error) {
+	entries := unmarshalUserMultiValue[userPosixAccount](v)
+	out := make([]any, 0, len(entries))
+	for _, e := range entries {
+		mql, err := CreateResource(runtime, "googleworkspace.user.posixAccount", map[string]*llx.RawData{
+			"username":            llx.StringData(e.Username),
+			"uid":                 llx.IntData(parseInt64(e.Uid)),
+			"gid":                 llx.IntData(parseInt64(e.Gid)),
+			"homeDirectory":       llx.StringData(e.HomeDirectory),
+			"shell":               llx.StringData(e.Shell),
+			"systemId":            llx.StringData(e.SystemId),
+			"accountId":           llx.StringData(e.AccountId),
+			"operatingSystemType": llx.StringData(e.OperatingSystemType),
+			"primary":             llx.BoolData(e.Primary),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mql)
+	}
+	return out, nil
+}
+
+type userSshPublicKey struct {
+	Key                string `json:"key"`
+	ExpirationTimeUsec string `json:"expirationTimeUsec"`
+	Fingerprint        string `json:"fingerprint"`
+}
+
+func buildUserSshPublicKeys(runtime *plugin.Runtime, v any) ([]any, error) {
+	entries := unmarshalUserMultiValue[userSshPublicKey](v)
+	out := make([]any, 0, len(entries))
+	for _, e := range entries {
+		mql, err := CreateResource(runtime, "googleworkspace.user.sshPublicKey", map[string]*llx.RawData{
+			"key":                llx.StringData(e.Key),
+			"expirationTimeUsec": llx.StringData(e.ExpirationTimeUsec),
+			"fingerprint":        llx.StringData(e.Fingerprint),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, mql)
+	}
+	return out, nil
+}
+
+// parseInt64 best-effort converts a numeric string (typically a uint64 the
+// SDK encoded as a string for JSON-safety) into an int64. Empty / invalid
+// values collapse to 0, consistent with the SDK semantics for unset fields.
+func parseInt64(s string) int64 {
+	if s == "" {
+		return 0
+	}
+	n, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return n
+}
+
+// customSchemasToDict converts the directory.User.CustomSchemas map (each
+// value a JSON-encoded blob of org-defined custom fields) into a flat
+// dict-of-dicts keyed by schema name. Schemas that fail to decode are
+// skipped.
+func customSchemasToDict(schemas map[string]googleapi.RawMessage) map[string]any {
+	if len(schemas) == 0 {
+		return nil
+	}
+	out := make(map[string]any, len(schemas))
+	for name, raw := range schemas {
+		var v map[string]any
+		if err := json.Unmarshal(raw, &v); err != nil {
+			continue
+		}
+		out[name] = v
+	}
+	return out
+}
+
+// id() impls for the user multi-value sub-resources. The values come from
+// the Directory API as part of the user's payload, so a stable id needs to
+// be derived from the entry's content rather than a server-side handle.
+
+func (g *mqlGoogleworkspaceUserEmail) id() (string, error) {
+	return "googleworkspace.user.email/" + g.Address.Data + "/" + g.Type.Data, nil
+}
+
+func (g *mqlGoogleworkspaceUserPhone) id() (string, error) {
+	return "googleworkspace.user.phone/" + g.Value.Data + "/" + g.Type.Data, nil
+}
+
+func (g *mqlGoogleworkspaceUserExternalId) id() (string, error) {
+	return "googleworkspace.user.externalId/" + g.Type.Data + "/" + g.Value.Data, nil
+}
+
+func (g *mqlGoogleworkspaceUserAddress) id() (string, error) {
+	return "googleworkspace.user.address/" + g.Type.Data + "/" + g.Formatted.Data, nil
+}
+
+func (g *mqlGoogleworkspaceUserOrganization) id() (string, error) {
+	return "googleworkspace.user.organization/" + g.Name.Data + "/" + g.Department.Data + "/" + g.Title.Data, nil
+}
+
+func (g *mqlGoogleworkspaceUserPosixAccount) id() (string, error) {
+	return "googleworkspace.user.posixAccount/" + g.SystemId.Data + "/" + g.Username.Data, nil
+}
+
+func (g *mqlGoogleworkspaceUserSshPublicKey) id() (string, error) {
+	if g.Fingerprint.Data != "" {
+		return "googleworkspace.user.sshPublicKey/" + g.Fingerprint.Data, nil
+	}
+	return "googleworkspace.user.sshPublicKey/" + g.Key.Data, nil
 }
 
 func (g *mqlGoogleworkspaceUser) usageReport() (*mqlGoogleworkspaceReportUsage, error) {

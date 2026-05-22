@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -72,7 +73,9 @@ func newMqlGoogleWorkspaceEndpoint(runtime *plugin.Runtime, entry *cloudidentity
 		return nil, err
 	}
 
-	return CreateResource(runtime, "googleworkspace.endpoint", map[string]*llx.RawData{
+	signals := parseEndpointAdditionalSignals(entry.EndpointVerificationSpecificAttributes)
+
+	args := map[string]*llx.RawData{
 		"id":                             llx.StringData(entry.DeviceId),
 		"name":                           llx.StringData(entry.Name),
 		"deviceType":                     llx.StringData(entry.DeviceType),
@@ -105,7 +108,49 @@ func newMqlGoogleWorkspaceEndpoint(runtime *plugin.Runtime, entry *cloudidentity
 		"lastSyncTime":                   llx.TimeDataPtr(parseRFC3339(entry.LastSyncTime)),
 		"androidAttributes":              llx.DictData(androidAttrs),
 		"endpointVerificationAttributes": llx.DictData(endpointVerificationAttrs),
-	})
+		"windowsDomainName":              llx.StringData(signals.WindowsDomainName),
+	}
+	// Only set the booleans when the device actually reported them. Leaving
+	// the key unset surfaces as null on query, which is what auditors want for
+	// "device does not report AV/firewall/secureBoot state" — false would be
+	// indistinguishable from "explicitly disabled".
+	if signals.AvInstalled != nil {
+		args["antivirusInstalled"] = llx.BoolData(*signals.AvInstalled)
+	}
+	if signals.AvEnabled != nil {
+		args["antivirusEnabled"] = llx.BoolData(*signals.AvEnabled)
+	}
+	if signals.IsOsNativeFirewallEnabled != nil {
+		args["osFirewallEnabled"] = llx.BoolData(*signals.IsOsNativeFirewallEnabled)
+	}
+	if signals.IsSecureBootEnabled != nil {
+		args["secureBootEnabled"] = llx.BoolData(*signals.IsSecureBootEnabled)
+	}
+
+	return CreateResource(runtime, "googleworkspace.endpoint", args)
+}
+
+// endpointAdditionalSignals mirrors the documented shape of
+// EndpointVerificationSpecificAttributes.additionalSignals (a googleapi.RawMessage).
+// `*bool` lets us distinguish "device did not report this signal" (nil) from
+// "device reported false" — auditors generally want these separated.
+type endpointAdditionalSignals struct {
+	AvInstalled               *bool  `json:"av_installed,omitempty"`
+	AvEnabled                 *bool  `json:"av_enabled,omitempty"`
+	IsOsNativeFirewallEnabled *bool  `json:"is_os_native_firewall_enabled,omitempty"`
+	IsSecureBootEnabled       *bool  `json:"is_secure_boot_enabled,omitempty"`
+	WindowsDomainName         string `json:"windows_domain_name,omitempty"`
+}
+
+func parseEndpointAdditionalSignals(attrs *cloudidentity.GoogleAppsCloudidentityDevicesV1EndpointVerificationSpecificAttributes) endpointAdditionalSignals {
+	var sig endpointAdditionalSignals
+	if attrs == nil || len(attrs.AdditionalSignals) == 0 {
+		return sig
+	}
+	// AdditionalSignals is googleapi.RawMessage; Unmarshal errors mean the
+	// payload changed shape — skip rather than fail the whole device listing.
+	_ = json.Unmarshal(attrs.AdditionalSignals, &sig)
+	return sig
 }
 
 func parseRFC3339(s string) *time.Time {

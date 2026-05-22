@@ -23,11 +23,19 @@ const (
 	ResourceGoogleworkspaceOrgUnit              string = "googleworkspace.orgUnit"
 	ResourceGoogleworkspaceDomain               string = "googleworkspace.domain"
 	ResourceGoogleworkspaceUser                 string = "googleworkspace.user"
+	ResourceGoogleworkspaceUserEmail            string = "googleworkspace.user.email"
+	ResourceGoogleworkspaceUserPhone            string = "googleworkspace.user.phone"
+	ResourceGoogleworkspaceUserExternalId       string = "googleworkspace.user.externalId"
+	ResourceGoogleworkspaceUserAddress          string = "googleworkspace.user.address"
+	ResourceGoogleworkspaceUserOrganization     string = "googleworkspace.user.organization"
+	ResourceGoogleworkspaceUserPosixAccount     string = "googleworkspace.user.posixAccount"
+	ResourceGoogleworkspaceUserSshPublicKey     string = "googleworkspace.user.sshPublicKey"
 	ResourceGoogleworkspaceToken                string = "googleworkspace.token"
 	ResourceGoogleworkspaceConnectedApp         string = "googleworkspace.connectedApp"
 	ResourceGoogleworkspaceGroup                string = "googleworkspace.group"
 	ResourceGoogleworkspaceMember               string = "googleworkspace.member"
 	ResourceGoogleworkspaceRole                 string = "googleworkspace.role"
+	ResourceGoogleworkspaceRolePrivilege        string = "googleworkspace.role.privilege"
 	ResourceGoogleworkspaceReportApps           string = "googleworkspace.report.apps"
 	ResourceGoogleworkspaceReportActivity       string = "googleworkspace.report.activity"
 	ResourceGoogleworkspaceReportUsers          string = "googleworkspace.report.users"
@@ -68,6 +76,34 @@ func init() {
 			// to override args, implement: initGoogleworkspaceUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoogleworkspaceUser,
 		},
+		"googleworkspace.user.email": {
+			// to override args, implement: initGoogleworkspaceUserEmail(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceUserEmail,
+		},
+		"googleworkspace.user.phone": {
+			// to override args, implement: initGoogleworkspaceUserPhone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceUserPhone,
+		},
+		"googleworkspace.user.externalId": {
+			// to override args, implement: initGoogleworkspaceUserExternalId(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceUserExternalId,
+		},
+		"googleworkspace.user.address": {
+			// to override args, implement: initGoogleworkspaceUserAddress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceUserAddress,
+		},
+		"googleworkspace.user.organization": {
+			// to override args, implement: initGoogleworkspaceUserOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceUserOrganization,
+		},
+		"googleworkspace.user.posixAccount": {
+			// to override args, implement: initGoogleworkspaceUserPosixAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceUserPosixAccount,
+		},
+		"googleworkspace.user.sshPublicKey": {
+			// to override args, implement: initGoogleworkspaceUserSshPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceUserSshPublicKey,
+		},
 		"googleworkspace.token": {
 			// to override args, implement: initGoogleworkspaceToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoogleworkspaceToken,
@@ -87,6 +123,10 @@ func init() {
 		"googleworkspace.role": {
 			// to override args, implement: initGoogleworkspaceRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGoogleworkspaceRole,
+		},
+		"googleworkspace.role.privilege": {
+			// to override args, implement: initGoogleworkspaceRolePrivilege(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGoogleworkspaceRolePrivilege,
 		},
 		"googleworkspace.report.apps": {
 			// to override args, implement: initGoogleworkspaceReportApps(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -366,11 +406,185 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.user.creationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUser).GetCreationTime()).ToDataRes(types.Time)
 	},
+	"googleworkspace.user.deletionTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetDeletionTime()).ToDataRes(types.Time)
+	},
+	"googleworkspace.user.hashFunction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetHashFunction()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.sshPublicKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetSshPublicKeys()).ToDataRes(types.Array(types.Resource("googleworkspace.user.sshPublicKey")))
+	},
+	"googleworkspace.user.posixAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetPosixAccounts()).ToDataRes(types.Array(types.Resource("googleworkspace.user.posixAccount")))
+	},
+	"googleworkspace.user.emails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetEmails()).ToDataRes(types.Array(types.Resource("googleworkspace.user.email")))
+	},
+	"googleworkspace.user.externalIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetExternalIds()).ToDataRes(types.Array(types.Resource("googleworkspace.user.externalId")))
+	},
+	"googleworkspace.user.phones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetPhones()).ToDataRes(types.Array(types.Resource("googleworkspace.user.phone")))
+	},
+	"googleworkspace.user.organizations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetOrganizations()).ToDataRes(types.Array(types.Resource("googleworkspace.user.organization")))
+	},
+	"googleworkspace.user.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetAddresses()).ToDataRes(types.Array(types.Resource("googleworkspace.user.address")))
+	},
+	"googleworkspace.user.customSchemas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUser).GetCustomSchemas()).ToDataRes(types.Dict)
+	},
 	"googleworkspace.user.usageReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUser).GetUsageReport()).ToDataRes(types.Resource("googleworkspace.report.usage"))
 	},
 	"googleworkspace.user.tokens": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceUser).GetTokens()).ToDataRes(types.Array(types.Resource("googleworkspace.token")))
+	},
+	"googleworkspace.user.email.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserEmail).GetAddress()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.email.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserEmail).GetType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.email.customType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserEmail).GetCustomType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.email.primary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserEmail).GetPrimary()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.phone.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPhone).GetValue()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.phone.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPhone).GetType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.phone.customType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPhone).GetCustomType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.phone.primary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPhone).GetPrimary()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.externalId.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserExternalId).GetValue()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.externalId.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserExternalId).GetType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.externalId.customType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserExternalId).GetCustomType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.formatted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetFormatted()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.customType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetCustomType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.sourceIsStructured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetSourceIsStructured()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.address.poBox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetPoBox()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.extendedAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetExtendedAddress()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.streetAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetStreetAddress()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.locality": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetLocality()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetRegion()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.postalCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetPostalCode()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.country": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetCountry()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.countryCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetCountryCode()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.address.primary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserAddress).GetPrimary()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.organization.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetName()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.organization.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetTitle()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.organization.primary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetPrimary()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.organization.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.organization.customType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetCustomType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.organization.department": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetDepartment()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.organization.symbol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetSymbol()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.organization.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetLocation()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.organization.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetDescription()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.organization.costCenter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetCostCenter()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.organization.fullTimeEquivalent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetFullTimeEquivalent()).ToDataRes(types.Int)
+	},
+	"googleworkspace.user.organization.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserOrganization).GetDomain()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.posixAccount.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPosixAccount).GetUsername()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.posixAccount.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPosixAccount).GetUid()).ToDataRes(types.Int)
+	},
+	"googleworkspace.user.posixAccount.gid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPosixAccount).GetGid()).ToDataRes(types.Int)
+	},
+	"googleworkspace.user.posixAccount.homeDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPosixAccount).GetHomeDirectory()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.posixAccount.shell": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPosixAccount).GetShell()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.posixAccount.systemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPosixAccount).GetSystemId()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.posixAccount.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPosixAccount).GetAccountId()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.posixAccount.operatingSystemType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPosixAccount).GetOperatingSystemType()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.posixAccount.primary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserPosixAccount).GetPrimary()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.user.sshPublicKey.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserSshPublicKey).GetKey()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.sshPublicKey.expirationTimeUsec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserSshPublicKey).GetExpirationTimeUsec()).ToDataRes(types.String)
+	},
+	"googleworkspace.user.sshPublicKey.fingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceUserSshPublicKey).GetFingerprint()).ToDataRes(types.String)
 	},
 	"googleworkspace.token.anonymous": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceToken).GetAnonymous()).ToDataRes(types.Bool)
@@ -476,6 +690,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.role.privileges": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceRole).GetPrivileges()).ToDataRes(types.Array(types.Dict))
+	},
+	"googleworkspace.role.rolePrivileges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRole).GetRolePrivileges()).ToDataRes(types.Array(types.Resource("googleworkspace.role.privilege")))
+	},
+	"googleworkspace.role.privilege.privilegeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRolePrivilege).GetPrivilegeName()).ToDataRes(types.String)
+	},
+	"googleworkspace.role.privilege.serviceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceRolePrivilege).GetServiceId()).ToDataRes(types.String)
 	},
 	"googleworkspace.report.apps.drive": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceReportApps).GetDrive()).ToDataRes(types.Array(types.Resource("googleworkspace.report.activity")))
@@ -626,6 +849,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.endpoint.endpointVerificationAttributes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceEndpoint).GetEndpointVerificationAttributes()).ToDataRes(types.Dict)
+	},
+	"googleworkspace.endpoint.antivirusInstalled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetAntivirusInstalled()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.endpoint.antivirusEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetAntivirusEnabled()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.endpoint.osFirewallEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetOsFirewallEnabled()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.endpoint.secureBootEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetSecureBootEnabled()).ToDataRes(types.Bool)
+	},
+	"googleworkspace.endpoint.windowsDomainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGoogleworkspaceEndpoint).GetWindowsDomainName()).ToDataRes(types.String)
 	},
 	"googleworkspace.endpoint.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceEndpoint).GetUsers()).ToDataRes(types.Array(types.Resource("googleworkspace.endpoint.user")))
@@ -944,12 +1182,272 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspaceUser).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"googleworkspace.user.deletionTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).DeletionTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.hashFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).HashFunction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.sshPublicKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).SshPublicKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.posixAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).PosixAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.emails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).Emails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.externalIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).ExternalIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.phones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).Phones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).Organizations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).Addresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.customSchemas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUser).CustomSchemas, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"googleworkspace.user.usageReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceUser).UsageReport, ok = plugin.RawToTValue[*mqlGoogleworkspaceReportUsage](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.user.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceUser).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.email.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserEmail).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.user.email.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserEmail).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.email.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserEmail).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.email.customType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserEmail).CustomType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.email.primary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserEmail).Primary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.phone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPhone).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.user.phone.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPhone).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.phone.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPhone).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.phone.customType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPhone).CustomType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.phone.primary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPhone).Primary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.externalId.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserExternalId).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.user.externalId.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserExternalId).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.externalId.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserExternalId).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.externalId.customType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserExternalId).CustomType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.user.address.formatted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).Formatted, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.customType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).CustomType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.sourceIsStructured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).SourceIsStructured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.poBox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).PoBox, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.extendedAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).ExtendedAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.streetAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).StreetAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.locality": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).Locality, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.postalCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).PostalCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.country": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).Country, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.countryCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).CountryCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.address.primary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserAddress).Primary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.user.organization.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.primary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).Primary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.customType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).CustomType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.department": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).Department, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.symbol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).Symbol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.costCenter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).CostCenter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.fullTimeEquivalent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).FullTimeEquivalent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.organization.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserOrganization).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.posixAccount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPosixAccount).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.user.posixAccount.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPosixAccount).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.posixAccount.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPosixAccount).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.posixAccount.gid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPosixAccount).Gid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.posixAccount.homeDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPosixAccount).HomeDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.posixAccount.shell": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPosixAccount).Shell, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.posixAccount.systemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPosixAccount).SystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.posixAccount.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPosixAccount).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.posixAccount.operatingSystemType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPosixAccount).OperatingSystemType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.posixAccount.primary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserPosixAccount).Primary, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.sshPublicKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserSshPublicKey).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.user.sshPublicKey.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserSshPublicKey).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.sshPublicKey.expirationTimeUsec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserSshPublicKey).ExpirationTimeUsec, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.user.sshPublicKey.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceUserSshPublicKey).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.token.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1110,6 +1608,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.role.privileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceRole).Privileges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.rolePrivileges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRole).RolePrivileges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.privilege.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRolePrivilege).__id, ok = v.Value.(string)
+		return
+	},
+	"googleworkspace.role.privilege.privilegeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRolePrivilege).PrivilegeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.role.privilege.serviceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceRolePrivilege).ServiceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.apps.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1330,6 +1844,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.endpoint.endpointVerificationAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceEndpoint).EndpointVerificationAttributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.antivirusInstalled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).AntivirusInstalled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.antivirusEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).AntivirusEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.osFirewallEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).OsFirewallEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.secureBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).SecureBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"googleworkspace.endpoint.windowsDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGoogleworkspaceEndpoint).WindowsDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.endpoint.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1963,6 +2497,16 @@ type mqlGoogleworkspaceUser struct {
 	CustomerId                 plugin.TValue[string]
 	LastLoginTime              plugin.TValue[*time.Time]
 	CreationTime               plugin.TValue[*time.Time]
+	DeletionTime               plugin.TValue[*time.Time]
+	HashFunction               plugin.TValue[string]
+	SshPublicKeys              plugin.TValue[[]any]
+	PosixAccounts              plugin.TValue[[]any]
+	Emails                     plugin.TValue[[]any]
+	ExternalIds                plugin.TValue[[]any]
+	Phones                     plugin.TValue[[]any]
+	Organizations              plugin.TValue[[]any]
+	Addresses                  plugin.TValue[[]any]
+	CustomSchemas              plugin.TValue[any]
 	UsageReport                plugin.TValue[*mqlGoogleworkspaceReportUsage]
 	Tokens                     plugin.TValue[[]any]
 }
@@ -2112,6 +2656,46 @@ func (c *mqlGoogleworkspaceUser) GetCreationTime() *plugin.TValue[*time.Time] {
 	return &c.CreationTime
 }
 
+func (c *mqlGoogleworkspaceUser) GetDeletionTime() *plugin.TValue[*time.Time] {
+	return &c.DeletionTime
+}
+
+func (c *mqlGoogleworkspaceUser) GetHashFunction() *plugin.TValue[string] {
+	return &c.HashFunction
+}
+
+func (c *mqlGoogleworkspaceUser) GetSshPublicKeys() *plugin.TValue[[]any] {
+	return &c.SshPublicKeys
+}
+
+func (c *mqlGoogleworkspaceUser) GetPosixAccounts() *plugin.TValue[[]any] {
+	return &c.PosixAccounts
+}
+
+func (c *mqlGoogleworkspaceUser) GetEmails() *plugin.TValue[[]any] {
+	return &c.Emails
+}
+
+func (c *mqlGoogleworkspaceUser) GetExternalIds() *plugin.TValue[[]any] {
+	return &c.ExternalIds
+}
+
+func (c *mqlGoogleworkspaceUser) GetPhones() *plugin.TValue[[]any] {
+	return &c.Phones
+}
+
+func (c *mqlGoogleworkspaceUser) GetOrganizations() *plugin.TValue[[]any] {
+	return &c.Organizations
+}
+
+func (c *mqlGoogleworkspaceUser) GetAddresses() *plugin.TValue[[]any] {
+	return &c.Addresses
+}
+
+func (c *mqlGoogleworkspaceUser) GetCustomSchemas() *plugin.TValue[any] {
+	return &c.CustomSchemas
+}
+
 func (c *mqlGoogleworkspaceUser) GetUsageReport() *plugin.TValue[*mqlGoogleworkspaceReportUsage] {
 	return plugin.GetOrCompute[*mqlGoogleworkspaceReportUsage](&c.UsageReport, func() (*mqlGoogleworkspaceReportUsage, error) {
 		if c.MqlRuntime.HasRecording {
@@ -2142,6 +2726,554 @@ func (c *mqlGoogleworkspaceUser) GetTokens() *plugin.TValue[[]any] {
 
 		return c.tokens()
 	})
+}
+
+// mqlGoogleworkspaceUserEmail for the googleworkspace.user.email resource
+type mqlGoogleworkspaceUserEmail struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceUserEmailInternal it will be used here
+	Address    plugin.TValue[string]
+	Type       plugin.TValue[string]
+	CustomType plugin.TValue[string]
+	Primary    plugin.TValue[bool]
+}
+
+// createGoogleworkspaceUserEmail creates a new instance of this resource
+func createGoogleworkspaceUserEmail(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceUserEmail{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.user.email", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceUserEmail) MqlName() string {
+	return "googleworkspace.user.email"
+}
+
+func (c *mqlGoogleworkspaceUserEmail) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceUserEmail) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlGoogleworkspaceUserEmail) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGoogleworkspaceUserEmail) GetCustomType() *plugin.TValue[string] {
+	return &c.CustomType
+}
+
+func (c *mqlGoogleworkspaceUserEmail) GetPrimary() *plugin.TValue[bool] {
+	return &c.Primary
+}
+
+// mqlGoogleworkspaceUserPhone for the googleworkspace.user.phone resource
+type mqlGoogleworkspaceUserPhone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceUserPhoneInternal it will be used here
+	Value      plugin.TValue[string]
+	Type       plugin.TValue[string]
+	CustomType plugin.TValue[string]
+	Primary    plugin.TValue[bool]
+}
+
+// createGoogleworkspaceUserPhone creates a new instance of this resource
+func createGoogleworkspaceUserPhone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceUserPhone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.user.phone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceUserPhone) MqlName() string {
+	return "googleworkspace.user.phone"
+}
+
+func (c *mqlGoogleworkspaceUserPhone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceUserPhone) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlGoogleworkspaceUserPhone) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGoogleworkspaceUserPhone) GetCustomType() *plugin.TValue[string] {
+	return &c.CustomType
+}
+
+func (c *mqlGoogleworkspaceUserPhone) GetPrimary() *plugin.TValue[bool] {
+	return &c.Primary
+}
+
+// mqlGoogleworkspaceUserExternalId for the googleworkspace.user.externalId resource
+type mqlGoogleworkspaceUserExternalId struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceUserExternalIdInternal it will be used here
+	Value      plugin.TValue[string]
+	Type       plugin.TValue[string]
+	CustomType plugin.TValue[string]
+}
+
+// createGoogleworkspaceUserExternalId creates a new instance of this resource
+func createGoogleworkspaceUserExternalId(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceUserExternalId{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.user.externalId", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceUserExternalId) MqlName() string {
+	return "googleworkspace.user.externalId"
+}
+
+func (c *mqlGoogleworkspaceUserExternalId) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceUserExternalId) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlGoogleworkspaceUserExternalId) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGoogleworkspaceUserExternalId) GetCustomType() *plugin.TValue[string] {
+	return &c.CustomType
+}
+
+// mqlGoogleworkspaceUserAddress for the googleworkspace.user.address resource
+type mqlGoogleworkspaceUserAddress struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceUserAddressInternal it will be used here
+	Formatted          plugin.TValue[string]
+	Type               plugin.TValue[string]
+	CustomType         plugin.TValue[string]
+	SourceIsStructured plugin.TValue[bool]
+	PoBox              plugin.TValue[string]
+	ExtendedAddress    plugin.TValue[string]
+	StreetAddress      plugin.TValue[string]
+	Locality           plugin.TValue[string]
+	Region             plugin.TValue[string]
+	PostalCode         plugin.TValue[string]
+	Country            plugin.TValue[string]
+	CountryCode        plugin.TValue[string]
+	Primary            plugin.TValue[bool]
+}
+
+// createGoogleworkspaceUserAddress creates a new instance of this resource
+func createGoogleworkspaceUserAddress(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceUserAddress{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.user.address", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceUserAddress) MqlName() string {
+	return "googleworkspace.user.address"
+}
+
+func (c *mqlGoogleworkspaceUserAddress) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetFormatted() *plugin.TValue[string] {
+	return &c.Formatted
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetCustomType() *plugin.TValue[string] {
+	return &c.CustomType
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetSourceIsStructured() *plugin.TValue[bool] {
+	return &c.SourceIsStructured
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetPoBox() *plugin.TValue[string] {
+	return &c.PoBox
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetExtendedAddress() *plugin.TValue[string] {
+	return &c.ExtendedAddress
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetStreetAddress() *plugin.TValue[string] {
+	return &c.StreetAddress
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetLocality() *plugin.TValue[string] {
+	return &c.Locality
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetPostalCode() *plugin.TValue[string] {
+	return &c.PostalCode
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetCountry() *plugin.TValue[string] {
+	return &c.Country
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetCountryCode() *plugin.TValue[string] {
+	return &c.CountryCode
+}
+
+func (c *mqlGoogleworkspaceUserAddress) GetPrimary() *plugin.TValue[bool] {
+	return &c.Primary
+}
+
+// mqlGoogleworkspaceUserOrganization for the googleworkspace.user.organization resource
+type mqlGoogleworkspaceUserOrganization struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceUserOrganizationInternal it will be used here
+	Name               plugin.TValue[string]
+	Title              plugin.TValue[string]
+	Primary            plugin.TValue[bool]
+	Type               plugin.TValue[string]
+	CustomType         plugin.TValue[string]
+	Department         plugin.TValue[string]
+	Symbol             plugin.TValue[string]
+	Location           plugin.TValue[string]
+	Description        plugin.TValue[string]
+	CostCenter         plugin.TValue[string]
+	FullTimeEquivalent plugin.TValue[int64]
+	Domain             plugin.TValue[string]
+}
+
+// createGoogleworkspaceUserOrganization creates a new instance of this resource
+func createGoogleworkspaceUserOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceUserOrganization{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.user.organization", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) MqlName() string {
+	return "googleworkspace.user.organization"
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetPrimary() *plugin.TValue[bool] {
+	return &c.Primary
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetCustomType() *plugin.TValue[string] {
+	return &c.CustomType
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetDepartment() *plugin.TValue[string] {
+	return &c.Department
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetSymbol() *plugin.TValue[string] {
+	return &c.Symbol
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetCostCenter() *plugin.TValue[string] {
+	return &c.CostCenter
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetFullTimeEquivalent() *plugin.TValue[int64] {
+	return &c.FullTimeEquivalent
+}
+
+func (c *mqlGoogleworkspaceUserOrganization) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+// mqlGoogleworkspaceUserPosixAccount for the googleworkspace.user.posixAccount resource
+type mqlGoogleworkspaceUserPosixAccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceUserPosixAccountInternal it will be used here
+	Username            plugin.TValue[string]
+	Uid                 plugin.TValue[int64]
+	Gid                 plugin.TValue[int64]
+	HomeDirectory       plugin.TValue[string]
+	Shell               plugin.TValue[string]
+	SystemId            plugin.TValue[string]
+	AccountId           plugin.TValue[string]
+	OperatingSystemType plugin.TValue[string]
+	Primary             plugin.TValue[bool]
+}
+
+// createGoogleworkspaceUserPosixAccount creates a new instance of this resource
+func createGoogleworkspaceUserPosixAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceUserPosixAccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.user.posixAccount", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) MqlName() string {
+	return "googleworkspace.user.posixAccount"
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) GetUid() *plugin.TValue[int64] {
+	return &c.Uid
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) GetGid() *plugin.TValue[int64] {
+	return &c.Gid
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) GetHomeDirectory() *plugin.TValue[string] {
+	return &c.HomeDirectory
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) GetShell() *plugin.TValue[string] {
+	return &c.Shell
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) GetSystemId() *plugin.TValue[string] {
+	return &c.SystemId
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) GetOperatingSystemType() *plugin.TValue[string] {
+	return &c.OperatingSystemType
+}
+
+func (c *mqlGoogleworkspaceUserPosixAccount) GetPrimary() *plugin.TValue[bool] {
+	return &c.Primary
+}
+
+// mqlGoogleworkspaceUserSshPublicKey for the googleworkspace.user.sshPublicKey resource
+type mqlGoogleworkspaceUserSshPublicKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceUserSshPublicKeyInternal it will be used here
+	Key                plugin.TValue[string]
+	ExpirationTimeUsec plugin.TValue[string]
+	Fingerprint        plugin.TValue[string]
+}
+
+// createGoogleworkspaceUserSshPublicKey creates a new instance of this resource
+func createGoogleworkspaceUserSshPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceUserSshPublicKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.user.sshPublicKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceUserSshPublicKey) MqlName() string {
+	return "googleworkspace.user.sshPublicKey"
+}
+
+func (c *mqlGoogleworkspaceUserSshPublicKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceUserSshPublicKey) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlGoogleworkspaceUserSshPublicKey) GetExpirationTimeUsec() *plugin.TValue[string] {
+	return &c.ExpirationTimeUsec
+}
+
+func (c *mqlGoogleworkspaceUserSshPublicKey) GetFingerprint() *plugin.TValue[string] {
+	return &c.Fingerprint
 }
 
 // mqlGoogleworkspaceToken for the googleworkspace.token resource
@@ -2504,6 +3636,7 @@ type mqlGoogleworkspaceRole struct {
 	IsSystemRole     plugin.TValue[bool]
 	IsSuperAdminRole plugin.TValue[bool]
 	Privileges       plugin.TValue[[]any]
+	RolePrivileges   plugin.TValue[[]any]
 }
 
 // createGoogleworkspaceRole creates a new instance of this resource
@@ -2565,6 +3698,64 @@ func (c *mqlGoogleworkspaceRole) GetIsSuperAdminRole() *plugin.TValue[bool] {
 
 func (c *mqlGoogleworkspaceRole) GetPrivileges() *plugin.TValue[[]any] {
 	return &c.Privileges
+}
+
+func (c *mqlGoogleworkspaceRole) GetRolePrivileges() *plugin.TValue[[]any] {
+	return &c.RolePrivileges
+}
+
+// mqlGoogleworkspaceRolePrivilege for the googleworkspace.role.privilege resource
+type mqlGoogleworkspaceRolePrivilege struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGoogleworkspaceRolePrivilegeInternal it will be used here
+	PrivilegeName plugin.TValue[string]
+	ServiceId     plugin.TValue[string]
+}
+
+// createGoogleworkspaceRolePrivilege creates a new instance of this resource
+func createGoogleworkspaceRolePrivilege(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGoogleworkspaceRolePrivilege{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("googleworkspace.role.privilege", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGoogleworkspaceRolePrivilege) MqlName() string {
+	return "googleworkspace.role.privilege"
+}
+
+func (c *mqlGoogleworkspaceRolePrivilege) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGoogleworkspaceRolePrivilege) GetPrivilegeName() *plugin.TValue[string] {
+	return &c.PrivilegeName
+}
+
+func (c *mqlGoogleworkspaceRolePrivilege) GetServiceId() *plugin.TValue[string] {
+	return &c.ServiceId
 }
 
 // mqlGoogleworkspaceReportApps for the googleworkspace.report.apps resource
@@ -2912,6 +4103,11 @@ type mqlGoogleworkspaceEndpoint struct {
 	LastSyncTime                   plugin.TValue[*time.Time]
 	AndroidAttributes              plugin.TValue[any]
 	EndpointVerificationAttributes plugin.TValue[any]
+	AntivirusInstalled             plugin.TValue[bool]
+	AntivirusEnabled               plugin.TValue[bool]
+	OsFirewallEnabled              plugin.TValue[bool]
+	SecureBootEnabled              plugin.TValue[bool]
+	WindowsDomainName              plugin.TValue[string]
 	Users                          plugin.TValue[[]any]
 }
 
@@ -3078,6 +4274,26 @@ func (c *mqlGoogleworkspaceEndpoint) GetAndroidAttributes() *plugin.TValue[any] 
 
 func (c *mqlGoogleworkspaceEndpoint) GetEndpointVerificationAttributes() *plugin.TValue[any] {
 	return &c.EndpointVerificationAttributes
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetAntivirusInstalled() *plugin.TValue[bool] {
+	return &c.AntivirusInstalled
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetAntivirusEnabled() *plugin.TValue[bool] {
+	return &c.AntivirusEnabled
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetOsFirewallEnabled() *plugin.TValue[bool] {
+	return &c.OsFirewallEnabled
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetSecureBootEnabled() *plugin.TValue[bool] {
+	return &c.SecureBootEnabled
+}
+
+func (c *mqlGoogleworkspaceEndpoint) GetWindowsDomainName() *plugin.TValue[string] {
+	return &c.WindowsDomainName
 }
 
 func (c *mqlGoogleworkspaceEndpoint) GetUsers() *plugin.TValue[[]any] {
