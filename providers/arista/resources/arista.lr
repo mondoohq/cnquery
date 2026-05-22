@@ -61,6 +61,10 @@ arista.eos {
   controlPlanePolicer() arista.eos.controlPlanePolicer
   // Per-interface switchport port-security configurations
   portSecurity() []arista.eos.portSecurity
+  // eAPI (management API) service configuration
+  eapi() arista.eos.eapi
+  // VRRP (Virtual Router Redundancy Protocol) configuration
+  vrrp() arista.eos.vrrp
 }
 
 // Arista EOS running-config (full device configuration)
@@ -720,4 +724,96 @@ private arista.eos.portSecurity @defaults("interface enabled violationAction") {
   violationAction string
   // Whether sticky MAC learning is configured
   stickyLearning bool
+}
+
+// Arista EOS eAPI (management API) configuration
+//
+// Examine the management-API service surface so audits can verify that
+// the data plane through which mql itself connects is locked down.
+// `enabled` indicates whether eAPI is configured at all; the per-protocol
+// fields (`httpServerConfigured` / `httpServerRunning` / `httpServerPort`,
+// the matching `httpsServer*` and `localHttpServer*` triplets, and the
+// `unixSocketServer*` pair) tell you which transports are actually
+// listening. Common compliance audits check that `httpServerConfigured`
+// is false (no plaintext HTTP) while `httpsServerConfigured` and
+// `httpsServerRunning` are both true.
+arista.eos.eapi @defaults("enabled httpsServerRunning httpServerRunning") {
+  // Whether eAPI is enabled on the device
+  enabled bool
+  // Whether the plaintext HTTP eAPI server is configured
+  httpServerConfigured bool
+  // Whether the plaintext HTTP eAPI server is currently running
+  httpServerRunning bool
+  // TCP port the HTTP eAPI server listens on
+  httpServerPort int
+  // Whether the HTTPS eAPI server is configured
+  httpsServerConfigured bool
+  // Whether the HTTPS eAPI server is currently running
+  httpsServerRunning bool
+  // TCP port the HTTPS eAPI server listens on
+  httpsServerPort int
+  // Whether the local (loopback-only) HTTP eAPI server is configured
+  localHttpServerConfigured bool
+  // Whether the local HTTP eAPI server is currently running
+  localHttpServerRunning bool
+  // TCP port the local HTTP eAPI server listens on
+  localHttpServerPort int
+  // Whether the Unix-domain-socket eAPI server is configured
+  unixSocketServerConfigured bool
+  // Whether the Unix-domain-socket eAPI server is currently running
+  unixSocketServerRunning bool
+}
+
+// Arista EOS VRRP (Virtual Router Redundancy Protocol) configuration
+//
+// Examine the VRRP first-hop redundancy state. `groups` lists every VRRP
+// instance configured on the device (each with its parent `interface`,
+// `groupId`, `priority`, `preempt` behavior, `state` of master / backup /
+// initial, the `virtualIps` it advertises, and the `virtualMac`). Use this
+// to audit gateway redundancy — for example asserting that every L3
+// subnet has a VRRP group, that priorities are split between the pair of
+// switches, or that preempt is enabled.
+arista.eos.vrrp {
+  // VRRP groups configured on this device
+  groups() []arista.eos.vrrp.group
+}
+
+// Arista EOS VRRP group
+//
+// Examine a single VRRP group. The group is keyed by `interface`/`groupId`
+// (a `Vlan100` SVI typically hosts group `1`); `priority` plus `preempt`
+// determine which device becomes master, `state` reports the current FSM
+// state (master / backup / initial), and `virtualIps` is the list of
+// gateway addresses the group advertises. `virtualMac` is the synthetic
+// MAC the group answers ARP for.
+private arista.eos.vrrp.group @defaults("interface groupId state priority") {
+  // Parent interface (the SVI or routed port the group runs on)
+  interface string
+  // VRRP group ID (1-255)
+  groupId int
+  // VRRP protocol version (2 for IPv4, 3 for IPv4/IPv6)
+  version int
+  // Configured priority (1-254; higher wins, 255 reserved for IP owner)
+  priority int
+  // Whether preemption is enabled
+  //
+  // When true, a higher-priority device that comes online will take over
+  // from a lower-priority current master.
+  preempt bool
+  // Preempt delay in seconds (time the new master waits before taking over)
+  preemptDelay int
+  // Current FSM state
+  //
+  // One of `master`, `backup`, or `initial`.
+  state string
+  // Primary (source) IP address used in VRRP advertisements
+  primaryIp string
+  // Synthetic virtual MAC address the group answers ARP for
+  virtualMac string
+  // Advertisement interval in seconds (typically 1.0)
+  advertisementInterval float
+  // Skew time in seconds (priority-derived component of the master-down interval)
+  skewTime float
+  // Virtual IP addresses the group advertises (the gateways clients use)
+  virtualIps []string
 }
