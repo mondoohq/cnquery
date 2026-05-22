@@ -521,12 +521,15 @@ func newNpmPackage(runtime *plugin.Runtime, pkg *languages.Package) (*mqlNpmPack
 		}
 	}
 	mqlPkg, err := CreateResource(runtime, "npm.package", map[string]*llx.RawData{
-		"id":      llx.StringData(pkg.Name + path),
-		"name":    llx.StringData(pkg.Name),
-		"version": llx.StringData(pkg.Version),
-		"purl":    llx.StringData(pkg.Purl),
-		"cpes":    llx.ArrayData(cpes, types.Resource("cpe")),
-		"files":   llx.ArrayData(mqlFiles, types.Resource("pkgFileInfo")),
+		"id":          llx.StringData(pkg.Name + path),
+		"name":        llx.StringData(pkg.Name),
+		"version":     llx.StringData(pkg.Version),
+		"purl":        llx.StringData(pkg.Purl),
+		"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
+		"files":       llx.ArrayData(mqlFiles, types.Resource("pkgFileInfo")),
+		"description": llx.StringData(pkg.Description),
+		"author":      llx.StringData(pkg.Author),
+		"license":     llx.StringData(pkg.License),
 	})
 	if err != nil {
 		return nil, err

@@ -2764,6 +2764,20 @@ npm.package @defaults("name version purl") {
   cpes() []core.cpe
   // Package files
   files() []pkgFileInfo
+  // Package description from package.json
+  description string
+  // Package author
+  //
+  // From package.json `author`. Accepts the SPDX-style string form
+  // ("Name <email>") and the object form ({"name":..., "email":...,
+  // "url":...}); only the name portion is surfaced.
+  author string
+  // Package license
+  //
+  // SPDX expression from package.json `license`. The deprecated
+  // `licenses` array is not yet supported — the field is empty in that
+  // case.
+  license string
 }
 
 // Go module inventory

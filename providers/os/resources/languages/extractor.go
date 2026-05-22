@@ -55,6 +55,12 @@ type Package struct {
 	Origin string `json:"origin,omitempty"`
 	// Package Vendor/Publisher
 	Vendor string `json:"vendor,omitempty"`
+	// Package Author — distinct from Vendor; some ecosystems
+	// (npm/python) only carry a free-form author string.
+	Author string `json:"author,omitempty"`
+	// Package License — SPDX expression where the source can provide
+	// one (npm package.json `license`, python METADATA `License`).
+	License string `json:"license,omitempty"`
 }
 
 // SortFn is a helper function for slices.SortFunc to sort a slice of Package

@@ -4199,6 +4199,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"npm.package.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNpmPackage).GetFiles()).ToDataRes(types.Array(types.Resource("pkgFileInfo")))
 	},
+	"npm.package.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackage).GetDescription()).ToDataRes(types.String)
+	},
+	"npm.package.author": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackage).GetAuthor()).ToDataRes(types.String)
+	},
+	"npm.package.license": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNpmPackage).GetLicense()).ToDataRes(types.String)
+	},
 	"go.packages.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoPackages).GetPath()).ToDataRes(types.String)
 	},
@@ -10963,6 +10972,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"npm.package.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNpmPackage).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"npm.package.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"npm.package.author": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackage).Author, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"npm.package.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNpmPackage).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"go.packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29058,12 +29079,15 @@ type mqlNpmPackage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNpmPackageInternal it will be used here
-	Id      plugin.TValue[string]
-	Name    plugin.TValue[string]
-	Version plugin.TValue[string]
-	Purl    plugin.TValue[string]
-	Cpes    plugin.TValue[[]any]
-	Files   plugin.TValue[[]any]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Version     plugin.TValue[string]
+	Purl        plugin.TValue[string]
+	Cpes        plugin.TValue[[]any]
+	Files       plugin.TValue[[]any]
+	Description plugin.TValue[string]
+	Author      plugin.TValue[string]
+	License     plugin.TValue[string]
 }
 
 // createNpmPackage creates a new instance of this resource
@@ -29155,6 +29179,18 @@ func (c *mqlNpmPackage) GetFiles() *plugin.TValue[[]any] {
 
 		return c.files()
 	})
+}
+
+func (c *mqlNpmPackage) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlNpmPackage) GetAuthor() *plugin.TValue[string] {
+	return &c.Author
+}
+
+func (c *mqlNpmPackage) GetLicense() *plugin.TValue[string] {
+	return &c.License
 }
 
 // mqlGoPackages for the go.packages resource

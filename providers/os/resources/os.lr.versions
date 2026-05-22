@@ -1214,9 +1214,12 @@ nginx.conf.workerProcesses 13.14.1
 nginx.modules 13.14.1
 nginx.version 13.14.1
 npm.package 10.2.1
+npm.package.author 13.16.10
 npm.package.cpes 10.2.1
+npm.package.description 13.16.10
 npm.package.files 10.2.1
 npm.package.id 10.2.1
+npm.package.license 13.16.10
 npm.package.name 10.2.1
 npm.package.purl 10.2.1
 npm.package.version 10.2.1

@@ -46,12 +46,35 @@ func (p *packageJson) Root() *languages.Package {
 	root := &languages.Package{
 		Name:         p.Name,
 		Version:      p.Version,
+		Description:  p.Description,
+		Author:       p.authorName(),
+		License:      p.licenseExpression(),
 		Purl:         javascript.NewPackageUrl(p.Name, p.Version),
 		Cpes:         javascript.NewCpes(p.Name, p.Version),
 		EvidenceList: javascript.NewEvidenceList(p.evidence),
 	}
 
 	return root
+}
+
+// authorName surfaces only the name portion of package.json `author`,
+// matching the npm convention. Returns empty when author is omitted.
+func (p *packageJson) authorName() string {
+	if p.Author == nil {
+		return ""
+	}
+	return p.Author.Name
+}
+
+// licenseExpression returns the SPDX expression from package.json
+// `license`. Older packages may use the deprecated `licenses` array;
+// we don't support that here yet — surface empty in that case and add
+// it later if a real package hits it.
+func (p *packageJson) licenseExpression() string {
+	if p.License == nil {
+		return ""
+	}
+	return p.License.Value
 }
 
 func (p *packageJson) Direct() languages.Packages {
