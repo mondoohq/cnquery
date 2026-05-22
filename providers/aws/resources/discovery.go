@@ -356,7 +356,7 @@ func discover(runtime *plugin.Runtime, awsAccount *mqlAwsAccount, target string,
 					name: l["Name"], labels: l,
 					awsObject: awsObject{
 						account: accountId, region: a.Region.Data, arn: a.Arn.Data,
-						id: a.Uri.Data, service: "ecr", objectType: "image",
+						id: a.Uri.Data + "/" + a.Digest.Data, service: "ecr", objectType: "image",
 					},
 				}, conn))
 		}
