@@ -272,6 +272,11 @@ RUN echo hello | cat
 				require.Nil(t, actualMqlDockerFileStage.Cmd.Data)
 			} else {
 				require.Equal(t, kase.expectedCmd.Data.Script.Data, actualMqlDockerFileStage.Cmd.Data.Script.Data)
+				// CMD has no --mount/--network/--security flags, but the fields
+				// must be initialized so queries return empty rather than unset.
+				require.Equal(t, plugin.StateIsSet, actualMqlDockerFileStage.Cmd.Data.Mounts.State&plugin.StateIsSet)
+				require.Equal(t, plugin.StateIsSet, actualMqlDockerFileStage.Cmd.Data.Network.State&plugin.StateIsSet)
+				require.Equal(t, plugin.StateIsSet, actualMqlDockerFileStage.Cmd.Data.Security.State&plugin.StateIsSet)
 			}
 
 			if kase.expectedUser.Data == nil {
@@ -285,6 +290,9 @@ RUN echo hello | cat
 				require.Nil(t, actualMqlDockerFileStage.Entrypoint.Data)
 			} else {
 				require.Equal(t, kase.expectedEntrypoint.Data.Script.Data, actualMqlDockerFileStage.Entrypoint.Data.Script.Data)
+				require.Equal(t, plugin.StateIsSet, actualMqlDockerFileStage.Entrypoint.Data.Mounts.State&plugin.StateIsSet)
+				require.Equal(t, plugin.StateIsSet, actualMqlDockerFileStage.Entrypoint.Data.Network.State&plugin.StateIsSet)
+				require.Equal(t, plugin.StateIsSet, actualMqlDockerFileStage.Entrypoint.Data.Security.State&plugin.StateIsSet)
 			}
 
 			require.Equal(t, len(kase.expectedCopyStruct), len(actualMqlDockerFileStage.Copy.Data))

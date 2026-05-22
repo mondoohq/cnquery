@@ -421,8 +421,11 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 	if entrypointRaw != nil {
 		script := strings.Join(entrypointRaw.CmdLine, "\n")
 		runResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
-			"__id":   llx.StringData(p.locationID(entrypointRaw.Location())),
-			"script": llx.StringData(script),
+			"__id":     llx.StringData(p.locationID(entrypointRaw.Location())),
+			"script":   llx.StringData(script),
+			"mounts":   llx.ArrayData(nil, types.Resource(ResourceDockerFileRunMount)),
+			"network":  llx.StringData(""),
+			"security": llx.StringData(""),
 		})
 		if err != nil {
 			return nil, err
@@ -435,8 +438,11 @@ func (p *mqlDockerFile) stage2resource(stage instructions.Stage) (*mqlDockerFile
 	if cmdRaw != nil {
 		script := strings.Join(cmdRaw.CmdLine, "\n")
 		cmdResource, err := CreateResource(p.MqlRuntime, ResourceDockerFileRun, map[string]*llx.RawData{
-			"__id":   llx.StringData(p.locationID(cmdRaw.Location())),
-			"script": llx.StringData(script),
+			"__id":     llx.StringData(p.locationID(cmdRaw.Location())),
+			"script":   llx.StringData(script),
+			"mounts":   llx.ArrayData(nil, types.Resource(ResourceDockerFileRunMount)),
+			"network":  llx.StringData(""),
+			"security": llx.StringData(""),
 		})
 		if err != nil {
 			return nil, err
