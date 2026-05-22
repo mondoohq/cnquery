@@ -5963,6 +5963,113 @@ windows.hotfix {
   installedBy string
 }
 
+// Windows Update Agent
+//
+// Use to examine how a Windows host receives updates and what it has applied
+// or has pending. The `config` field surfaces Windows Update Agent
+// configuration and freshness — the effective catalog source, WSUS settings,
+// the last successful detection / download / install times, and whether a
+// reboot is pending. `installed` lists the updates the agent has applied
+// (the installed-KB history), and `available` lists updates the agent has
+// found but not yet installed. Configuration is read from the registry and
+// works even on connections that cannot run commands; the installed and
+// available collections fall back to the Windows Update Agent COM API when
+// commands are available.
+windows.update {
+  // Windows Update Agent configuration and freshness
+  config() windows.update.config
+  // Updates that have been installed (Windows Update Agent history)
+  installed() []windows.update.entry
+  // Updates that are available but not yet installed
+  available() []windows.update.entry
+}
+
+// Windows update record
+//
+// Examine a single update reported by the Windows Update Agent — the `kbId`
+// (e.g., "KB5034441"), human-readable `title`, `classification` (such as
+// "Security Updates", "Critical Updates", or "Definition Updates"), the
+// support URL, and the CVEs it addresses. Installed updates carry the install
+// `date` and `operation`; available updates carry the `severity` and whether
+// they require a reboot. Iterated from `windows.update.installed` and
+// `windows.update.available`.
+private windows.update.entry @defaults("kbId title classification") {
+  // Update identity (Windows Update Agent UpdateID GUID, or package name when read from the registry)
+  updateId string
+  // Knowledge base article ID (e.g., "KB5034441"); empty for updates without a KB
+  kbId string
+  // Human-readable update title
+  title string
+  // Update classification
+  //
+  // Microsoft's update category, such as "Security Updates", "Critical
+  // Updates", "Update Rollups", "Definition Updates", "Drivers", or
+  // "Feature Packs". Empty when the agent does not report a category.
+  classification string
+  // Microsoft severity rating for security updates (e.g., "Critical", "Important", "Moderate", "Low")
+  severity string
+  // Vendor support or knowledge base URL
+  supportUrl string
+  // CVE identifiers addressed by this update
+  cveIds []string
+  // Date the update was installed (installed updates only)
+  date time
+  // Operation that produced this history entry (e.g., "Installation", "Uninstallation")
+  operation string
+  // Whether installing the update requires a reboot
+  rebootRequired bool
+  // Update categories reported by the Windows Update Agent
+  categories []string
+}
+
+// Windows Update Agent configuration and freshness
+//
+// Examine where a Windows host gets its updates and whether the Windows
+// Update Agent is healthy. `catalogSource` summarizes the effective source
+// ("windowsUpdate", "wsus", "windowsUpdateForBusiness", "disabled", or
+// "unknown"); `wsusServerUrl` / `useWUServer` reveal WSUS configuration; the
+// `lastDetectionSuccess` / `lastDownloadSuccess` / `lastInstallSuccess` times
+// expose how recently the agent refreshed its view; and `rebootPending` flags
+// hosts waiting on a restart before update state can be trusted. Read from
+// the Windows registry, so it is available even on connections that cannot
+// run commands.
+private windows.update.config @defaults("catalogSource rebootPending") {
+  // Effective update catalog source
+  //
+  // One of "windowsUpdate" (direct Microsoft Update), "wsus" (a configured
+  // WSUS server), "windowsUpdateForBusiness", "disabled" (the agent or
+  // automatic updates are turned off), or "unknown" (the relevant registry
+  // keys could not be read).
+  catalogSource string
+  // Configured WSUS server URL (HKLM\...\WindowsUpdate\WUServer)
+  wsusServerUrl string
+  // Configured WSUS status reporting server URL (HKLM\...\WindowsUpdate\WUStatusServer)
+  wsusStatusServerUrl string
+  // Whether the host is directed to use the WSUS server (HKLM\...\AU\UseWUServer)
+  useWUServer bool
+  // Automatic update behavior
+  //
+  // The HKLM\...\AU\AUOptions value: 1=keep my computer up to date disabled,
+  // 2=notify before download, 3=auto-download and notify of install,
+  // 4=auto-download and schedule install, 5=allow local admin to choose.
+  // 0 when not configured.
+  auOptions int
+  // The Windows Update service (wuauserv)
+  service() service
+  // Time of the last successful update detection
+  lastDetectionSuccess time
+  // Last detection error code (e.g., "0x80244022"); empty when the last detection succeeded
+  lastDetectionError string
+  // Time of the last successful update download
+  lastDownloadSuccess time
+  // Time of the last successful update install
+  lastInstallSuccess time
+  // Whether a reboot is pending from a previous update
+  rebootPending bool
+  // Windows Update for Business policy state (HKLM\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\PolicyState)
+  policyState int
+}
+
 // Windows Server feature resource
 private windows.serverFeature @defaults("name") {
   init(name string)

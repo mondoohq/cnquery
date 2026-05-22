@@ -1,0 +1,22 @@
+[
+  {
+    "UpdateID": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "Title": "2024-03 Cumulative Update for Windows Server 2022 (KB5035857)",
+    "MsrcSeverity": "Critical",
+    "SupportUrl": "https://support.microsoft.com/help/5035857",
+    "RebootRequired": true,
+    "KBArticleIDs": ["5035857"],
+    "CveIDs": ["CVE-2024-21334", "CVE-2024-21433"],
+    "Categories": ["Security Updates"]
+  },
+  {
+    "UpdateID": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    "Title": "Security Intelligence Update for Microsoft Defender Antivirus - KB2267602 (Version 1.407.0.0)",
+    "MsrcSeverity": "",
+    "SupportUrl": "https://go.microsoft.com/fwlink/?LinkId=52661",
+    "RebootRequired": false,
+    "KBArticleIDs": [],
+    "CveIDs": [],
+    "Categories": ["Definition Updates"]
+  }
+]

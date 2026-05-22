@@ -308,6 +308,9 @@ const (
 	ResourceLaunchd                       string = "launchd"
 	ResourceLaunchdJob                    string = "launchd.job"
 	ResourceWindowsHotfix                 string = "windows.hotfix"
+	ResourceWindowsUpdate                 string = "windows.update"
+	ResourceWindowsUpdateEntry            string = "windows.update.entry"
+	ResourceWindowsUpdateConfig           string = "windows.update.config"
 	ResourceWindowsServerFeature          string = "windows.serverFeature"
 	ResourceWindowsOptionalFeature        string = "windows.optionalFeature"
 	ResourceWindowsFirewall               string = "windows.firewall"
@@ -1589,6 +1592,18 @@ func init() {
 		"windows.hotfix": {
 			Init:   initWindowsHotfix,
 			Create: createWindowsHotfix,
+		},
+		"windows.update": {
+			// to override args, implement: initWindowsUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsUpdate,
+		},
+		"windows.update.entry": {
+			// to override args, implement: initWindowsUpdateEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsUpdateEntry,
+		},
+		"windows.update.config": {
+			// to override args, implement: initWindowsUpdateConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsUpdateConfig,
 		},
 		"windows.serverFeature": {
 			Init:   initWindowsServerFeature,
@@ -7354,6 +7369,84 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.hotfix.installedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsHotfix).GetInstalledBy()).ToDataRes(types.String)
+	},
+	"windows.update.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdate).GetConfig()).ToDataRes(types.Resource("windows.update.config"))
+	},
+	"windows.update.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdate).GetInstalled()).ToDataRes(types.Array(types.Resource("windows.update.entry")))
+	},
+	"windows.update.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdate).GetAvailable()).ToDataRes(types.Array(types.Resource("windows.update.entry")))
+	},
+	"windows.update.entry.updateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetUpdateId()).ToDataRes(types.String)
+	},
+	"windows.update.entry.kbId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetKbId()).ToDataRes(types.String)
+	},
+	"windows.update.entry.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetTitle()).ToDataRes(types.String)
+	},
+	"windows.update.entry.classification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetClassification()).ToDataRes(types.String)
+	},
+	"windows.update.entry.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetSeverity()).ToDataRes(types.String)
+	},
+	"windows.update.entry.supportUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetSupportUrl()).ToDataRes(types.String)
+	},
+	"windows.update.entry.cveIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetCveIds()).ToDataRes(types.Array(types.String))
+	},
+	"windows.update.entry.date": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetDate()).ToDataRes(types.Time)
+	},
+	"windows.update.entry.operation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetOperation()).ToDataRes(types.String)
+	},
+	"windows.update.entry.rebootRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetRebootRequired()).ToDataRes(types.Bool)
+	},
+	"windows.update.entry.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateEntry).GetCategories()).ToDataRes(types.Array(types.String))
+	},
+	"windows.update.config.catalogSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetCatalogSource()).ToDataRes(types.String)
+	},
+	"windows.update.config.wsusServerUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetWsusServerUrl()).ToDataRes(types.String)
+	},
+	"windows.update.config.wsusStatusServerUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetWsusStatusServerUrl()).ToDataRes(types.String)
+	},
+	"windows.update.config.useWUServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetUseWUServer()).ToDataRes(types.Bool)
+	},
+	"windows.update.config.auOptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetAuOptions()).ToDataRes(types.Int)
+	},
+	"windows.update.config.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetService()).ToDataRes(types.Resource("service"))
+	},
+	"windows.update.config.lastDetectionSuccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetLastDetectionSuccess()).ToDataRes(types.Time)
+	},
+	"windows.update.config.lastDetectionError": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetLastDetectionError()).ToDataRes(types.String)
+	},
+	"windows.update.config.lastDownloadSuccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetLastDownloadSuccess()).ToDataRes(types.Time)
+	},
+	"windows.update.config.lastInstallSuccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetLastInstallSuccess()).ToDataRes(types.Time)
+	},
+	"windows.update.config.rebootPending": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetRebootPending()).ToDataRes(types.Bool)
+	},
+	"windows.update.config.policyState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsUpdateConfig).GetPolicyState()).ToDataRes(types.Int)
 	},
 	"windows.serverFeature.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsServerFeature).GetPath()).ToDataRes(types.String)
@@ -17421,6 +17514,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.hotfix.installedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsHotfix).InstalledBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdate).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.update.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdate).Config, ok = plugin.RawToTValue[*mqlWindowsUpdateConfig](v.Value, v.Error)
+		return
+	},
+	"windows.update.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdate).Installed, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.update.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdate).Available, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.update.entry.updateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).UpdateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.kbId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).KbId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.classification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).Classification, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.supportUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).SupportUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.cveIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).CveIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.operation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).Operation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.rebootRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).RebootRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.update.entry.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateEntry).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.update.config.catalogSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).CatalogSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.wsusServerUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).WsusServerUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.wsusStatusServerUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).WsusStatusServerUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.useWUServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).UseWUServer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.auOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).AuOptions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).Service, ok = plugin.RawToTValue[*mqlService](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.lastDetectionSuccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).LastDetectionSuccess, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.lastDetectionError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).LastDetectionError, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.lastDownloadSuccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).LastDownloadSuccess, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.lastInstallSuccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).LastInstallSuccess, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.rebootPending": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).RebootPending, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.update.config.policyState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsUpdateConfig).PolicyState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.serverFeature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46446,6 +46655,316 @@ func (c *mqlWindowsHotfix) GetInstalledOn() *plugin.TValue[*time.Time] {
 
 func (c *mqlWindowsHotfix) GetInstalledBy() *plugin.TValue[string] {
 	return &c.InstalledBy
+}
+
+// mqlWindowsUpdate for the windows.update resource
+type mqlWindowsUpdate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsUpdateInternal it will be used here
+	Config    plugin.TValue[*mqlWindowsUpdateConfig]
+	Installed plugin.TValue[[]any]
+	Available plugin.TValue[[]any]
+}
+
+// createWindowsUpdate creates a new instance of this resource
+func createWindowsUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsUpdate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.update", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsUpdate) MqlName() string {
+	return "windows.update"
+}
+
+func (c *mqlWindowsUpdate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsUpdate) GetConfig() *plugin.TValue[*mqlWindowsUpdateConfig] {
+	return plugin.GetOrCompute[*mqlWindowsUpdateConfig](&c.Config, func() (*mqlWindowsUpdateConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.update", c.__id, "config")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsUpdateConfig), nil
+			}
+		}
+
+		return c.config()
+	})
+}
+
+func (c *mqlWindowsUpdate) GetInstalled() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Installed, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.update", c.__id, "installed")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.installed()
+	})
+}
+
+func (c *mqlWindowsUpdate) GetAvailable() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Available, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.update", c.__id, "available")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.available()
+	})
+}
+
+// mqlWindowsUpdateEntry for the windows.update.entry resource
+type mqlWindowsUpdateEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsUpdateEntryInternal it will be used here
+	UpdateId       plugin.TValue[string]
+	KbId           plugin.TValue[string]
+	Title          plugin.TValue[string]
+	Classification plugin.TValue[string]
+	Severity       plugin.TValue[string]
+	SupportUrl     plugin.TValue[string]
+	CveIds         plugin.TValue[[]any]
+	Date           plugin.TValue[*time.Time]
+	Operation      plugin.TValue[string]
+	RebootRequired plugin.TValue[bool]
+	Categories     plugin.TValue[[]any]
+}
+
+// createWindowsUpdateEntry creates a new instance of this resource
+func createWindowsUpdateEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsUpdateEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.update.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsUpdateEntry) MqlName() string {
+	return "windows.update.entry"
+}
+
+func (c *mqlWindowsUpdateEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsUpdateEntry) GetUpdateId() *plugin.TValue[string] {
+	return &c.UpdateId
+}
+
+func (c *mqlWindowsUpdateEntry) GetKbId() *plugin.TValue[string] {
+	return &c.KbId
+}
+
+func (c *mqlWindowsUpdateEntry) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlWindowsUpdateEntry) GetClassification() *plugin.TValue[string] {
+	return &c.Classification
+}
+
+func (c *mqlWindowsUpdateEntry) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlWindowsUpdateEntry) GetSupportUrl() *plugin.TValue[string] {
+	return &c.SupportUrl
+}
+
+func (c *mqlWindowsUpdateEntry) GetCveIds() *plugin.TValue[[]any] {
+	return &c.CveIds
+}
+
+func (c *mqlWindowsUpdateEntry) GetDate() *plugin.TValue[*time.Time] {
+	return &c.Date
+}
+
+func (c *mqlWindowsUpdateEntry) GetOperation() *plugin.TValue[string] {
+	return &c.Operation
+}
+
+func (c *mqlWindowsUpdateEntry) GetRebootRequired() *plugin.TValue[bool] {
+	return &c.RebootRequired
+}
+
+func (c *mqlWindowsUpdateEntry) GetCategories() *plugin.TValue[[]any] {
+	return &c.Categories
+}
+
+// mqlWindowsUpdateConfig for the windows.update.config resource
+type mqlWindowsUpdateConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsUpdateConfigInternal it will be used here
+	CatalogSource        plugin.TValue[string]
+	WsusServerUrl        plugin.TValue[string]
+	WsusStatusServerUrl  plugin.TValue[string]
+	UseWUServer          plugin.TValue[bool]
+	AuOptions            plugin.TValue[int64]
+	Service              plugin.TValue[*mqlService]
+	LastDetectionSuccess plugin.TValue[*time.Time]
+	LastDetectionError   plugin.TValue[string]
+	LastDownloadSuccess  plugin.TValue[*time.Time]
+	LastInstallSuccess   plugin.TValue[*time.Time]
+	RebootPending        plugin.TValue[bool]
+	PolicyState          plugin.TValue[int64]
+}
+
+// createWindowsUpdateConfig creates a new instance of this resource
+func createWindowsUpdateConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsUpdateConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.update.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsUpdateConfig) MqlName() string {
+	return "windows.update.config"
+}
+
+func (c *mqlWindowsUpdateConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsUpdateConfig) GetCatalogSource() *plugin.TValue[string] {
+	return &c.CatalogSource
+}
+
+func (c *mqlWindowsUpdateConfig) GetWsusServerUrl() *plugin.TValue[string] {
+	return &c.WsusServerUrl
+}
+
+func (c *mqlWindowsUpdateConfig) GetWsusStatusServerUrl() *plugin.TValue[string] {
+	return &c.WsusStatusServerUrl
+}
+
+func (c *mqlWindowsUpdateConfig) GetUseWUServer() *plugin.TValue[bool] {
+	return &c.UseWUServer
+}
+
+func (c *mqlWindowsUpdateConfig) GetAuOptions() *plugin.TValue[int64] {
+	return &c.AuOptions
+}
+
+func (c *mqlWindowsUpdateConfig) GetService() *plugin.TValue[*mqlService] {
+	return plugin.GetOrCompute[*mqlService](&c.Service, func() (*mqlService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.update.config", c.__id, "service")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlService), nil
+			}
+		}
+
+		return c.service()
+	})
+}
+
+func (c *mqlWindowsUpdateConfig) GetLastDetectionSuccess() *plugin.TValue[*time.Time] {
+	return &c.LastDetectionSuccess
+}
+
+func (c *mqlWindowsUpdateConfig) GetLastDetectionError() *plugin.TValue[string] {
+	return &c.LastDetectionError
+}
+
+func (c *mqlWindowsUpdateConfig) GetLastDownloadSuccess() *plugin.TValue[*time.Time] {
+	return &c.LastDownloadSuccess
+}
+
+func (c *mqlWindowsUpdateConfig) GetLastInstallSuccess() *plugin.TValue[*time.Time] {
+	return &c.LastInstallSuccess
+}
+
+func (c *mqlWindowsUpdateConfig) GetRebootPending() *plugin.TValue[bool] {
+	return &c.RebootPending
+}
+
+func (c *mqlWindowsUpdateConfig) GetPolicyState() *plugin.TValue[int64] {
+	return &c.PolicyState
 }
 
 // mqlWindowsServerFeature for the windows.serverFeature resource
