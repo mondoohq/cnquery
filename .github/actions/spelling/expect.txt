@@ -723,6 +723,7 @@ WAFV
 Wasi
 webauthn
 webide
+webservers
 WEBSERVERS
 websockets
 Webstore
