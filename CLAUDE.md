@@ -6,8 +6,6 @@ This directory contains information to help Claude AI assistants understand and 
 
 **mql** (formerly cnquery) is a cloud-native infrastructure querying tool. It uses **MQL (Mondoo Query Language)** to query over 1,300 resources across cloud accounts (AWS, Azure, GCP), Kubernetes, containers, OS internals, and APIs.
 
-> **v13 Rename:** In v13 the project was renamed from `cnquery` to `mql`. The Go module is `go.mondoo.com/mql/v13`, the CLI binary is `mql`, and all build targets use the `mql/` prefix. The `scan` and `sbom` subcommands have moved to **cnspec**.
-
 ### Critical Distinction
 *   **mql**: The core inventory tool. Defines resources, implements MQL, and handles **data gathering**.
 *   **cnspec**: The security scanning tool built *on top* of mql. It implements **policy assertions**, vulnerability checks, **scanning** (`scan`), and **SBOM generation** (`sbom`).
@@ -312,6 +310,17 @@ make test/lint/extended
 make race/go
 ```
 
+### Provider Version Updates
+```bash
+alias version="go run providers-sdk/v1/util/version/version.go"
+version check providers/*/                              # check which need updates
+version update providers/*/                              # interactive update
+version update providers/*/ --increment=patch --commit   # auto-increment and commit
+```
+
+### Go Workspaces for Multi-Repo Development
+When developing mql alongside cnspec, create a `go.work` in a parent directory with `use (./mql, ./mql/providers/aws, ./cnspec)` etc.
+
 ### Tips
 *   **MCP Tools**: Use the GitHub MCP to check tickets/PRs. Use Notion MCP for internal docs. We're going to be talking about tickets and PRs (so that's github mcp), and there's also notion for company-wide docs (focus on Engineering stuff, infra, dev env, etc)
 *   **Auth**: The environment usually has AWS/Azure CLI tools authenticated (so you can use them when needed). If they're not present or logged in, stop and let me know so I can setup the provider's needs (tools, auth, whatever)
@@ -475,22 +484,7 @@ When implementing or modifying builtin functions in `llx/` (e.g., array/dict ope
   filters = append(filters[0:j], filters[j+1:]...)  // safe — original untouched
   ```
 
-## 6. Development Workflow Patterns
-
-The primary workflow for provider changes is the "Local Provider Debugging" pattern in Section 4. For resource-only changes, follow Steps 1-4 in Section 2.
-
-### Provider Version Updates
-```bash
-alias version="go run providers-sdk/v1/util/version/version.go"
-version check providers/*/                              # check which need updates
-version update providers/*/                              # interactive update
-version update providers/*/ --increment=patch --commit   # auto-increment and commit
-```
-
-### Go Workspaces for Multi-Repo Development
-When developing mql alongside cnspec, create a `go.work` in a parent directory with `use (./mql, ./mql/providers/aws, ./cnspec)` etc.
-
-## 7. Important Implementation Details
+## 6. Important Implementation Details
 
 ### Copyright & License Headers
 Every source file (`.go`, `.lr`, `.proto`, etc.) must begin with:
@@ -642,7 +636,7 @@ Key directories for user-facing functionality:
 
 **Always use the codebase's patterns.**
 
-## 8. Pre-PR Checklist
+## 7. Pre-PR Checklist
 
 When work appears complete, present this checklist to the user for local verification:
 
@@ -713,7 +707,7 @@ CI runs [check-spelling/check-spelling](https://github.com/check-spelling/check-
 - If it's a genuine typo: fix the spelling
 - Removing words from `expect.txt` is fine as long as the spell check CI job passes
 
-## 9. Commit Conventions
+## 8. Commit Conventions
 
 When committing or opening a PR, **start the title with one of these emoji** to mark the change kind:
 - 🛑 breaking changes
